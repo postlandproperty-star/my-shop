@@ -667,6 +667,11 @@ function shopView(){
   <section class="section" id="checkout"><div class="wrap">
     <h2>สั่งซื้อ ${esc(p.name)}</h2>
     <div class="card">
+      ${p.stripeLink?`
+      <p class="amount" style="text-align:center;margin-bottom:16px">${baht(p.price)}</p>
+      <a class="btn btn-cta btn-block" href="${esc(p.stripeLink)}" target="_blank" rel="noopener noreferrer">ชำระด้วยบัตร/PromptPay ผ่าน Stripe</a>
+      <p class="fine" style="text-align:center;margin-top:10px">ปลอดภัย จ่ายเงินแล้วได้ลิงก์ดาวน์โหลดทันที</p>
+      `:`
       <div class="field"><label for="f-name">ชื่อ</label>
         <input class="input" id="f-name" data-f="name" autocomplete="name" value="${esc(f.name)}" placeholder="ชื่อที่ใช้ออกใบเสร็จ"></div>
       <div class="field"><label for="f-email">อีเมลสำหรับรับลิงก์ดาวน์โหลด</label>
@@ -677,8 +682,6 @@ function shopView(){
         ${S.couponErr?`<span class="err">${esc(S.couponErr)}</span>`:''}
         ${c.coupon?`<span class="okmsg">ใช้โค้ด ${esc(c.coupon.code)} แล้ว ลด ${baht(c.discount)}</span>`:''}
       </div>
-      ${p.stripeLink?`<a class="btn btn-cta btn-block" href="${esc(p.stripeLink)}" target="_blank" rel="noopener noreferrer">ชำระด้วยบัตร/PromptPay ผ่าน Stripe (ปลอดภัย อัตโนมัติ)</a>
-      <p class="fine" style="text-align:center;margin:8px 0 16px">หรือโอนเงินเองแบบด้านล่าง</p>`:''}
       <div class="methods" role="radiogroup" aria-label="วิธีชำระเงิน">
         <label class="method"><input type="radio" name="method" value="promptpay" ${S.method==='promptpay'?'checked':''}><span>PromptPay QR</span></label>
         ${hasAdminAccess()?`<label class="method"><input type="radio" name="method" value="card" ${S.method==='card'?'checked':''}><span>บัตรเครดิต หรือบัตรเดบิต (ยังไม่เปิดใช้จริง)</span></label>`:''}
@@ -692,6 +695,7 @@ function shopView(){
       ${bp?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${f.bump?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>เพิ่ม ${esc(bp.name)} <span class="was">${baht(bp.price)}</span> ${baht(p.bumpPrice)}</b><p>สั่งพร้อมกันวันนี้ ได้ลิงก์ดาวน์โหลดทั้งสองไฟล์ทันที</p></label></div>`:''}
       ${S.err?`<p class="err" style="margin-bottom:10px">${esc(S.err)}</p>`:''}
       <button class="btn btn-cta btn-block" data-a="createOrder">ชำระเงิน ${baht(c.total+(f.bump&&bp?p.bumpPrice:0))}</button>
+      `}
     </div>
     ${p.guarantee?`<div class="guar"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><p>${esc(p.guarantee)}</p></div>`:''}
     ${p.terms?`<p class="fine terms">${esc(p.terms)}</p>`:''}
