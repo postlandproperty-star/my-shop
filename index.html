@@ -466,7 +466,7 @@ function drawLB(){
 
 let D=normalize(load()||seed());
 const S={view:'shop',tab:'orders',filter:'all',pfilter:'all',productId:null,edit:null,draft:null,zoom:null,ad:null,src:'',
-  form:{name:'',email:'',coupon:'',bump:false},method:'promptpay',coupon:'',couponErr:'',err:'',currentId:null,open:{},confirm:'',toast:''};
+  form:{name:'',email:'',coupon:'',bump:false},method:'promptpay',coupon:'',couponErr:'',err:'',currentId:null,open:{},confirm:'',toast:'',stripeReturn:false};
 
 /* ---------- logic ---------- */
 function track(name,data){
@@ -474,6 +474,8 @@ function track(name,data){
   D.events=D.events.slice(0,60);save();
 }
 const getProduct=id=>D.products.find(p=>p.id===id);
+const validLink=l=>l&&/^https?:\/\//.test(l)&&!l.includes('ใส่ลิงก์');
+const linkBtn=(l,label)=>validLink(l)?`<a class="btn btn-cta btn-block" href="${esc(l)}" target="_blank" rel="noopener noreferrer">${label}</a>`:`<p class="fine" style="color:var(--bad)">ลิงก์ดาวน์โหลดยังไม่ถูกตั้งค่า ทางร้านจะส่งไฟล์ให้ทางแชทโดยตรง</p>`;
 const getOrder=id=>D.orders.find(o=>o.id===id);
 function curProduct(){return getProduct(S.productId)||D.products.find(p=>p.status==='published')||D.products[0]||null;}
 function calc(p,code){
@@ -588,6 +590,11 @@ function shopView(){
     <select id="pick" aria-label="เลือกเซลเพจที่จะดู">${opts}</select>
     <code>${DOMAIN}${esc(p.slug)}</code>
     ${D.campaigns.length?`<span class="fine">จำลองว่าลูกค้ามาจาก</span><select id="src" aria-label="จำลองแหล่งที่มาของลูกค้า"><option value="">เข้าตรง ไม่ได้มาจากโฆษณา</option>${D.campaigns.map(c=>`<option value="${esc(c.name)}" ${S.src===c.name?'selected':''}>โฆษณา ${esc(c.name)}</option>`).join('')}</select>`:''}
+  </div></div>`:''}
+  ${S.stripeReturn?`<div class="wrap section" style="padding-top:20px;padding-bottom:0"><div class="card center">
+    <h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
+    <p class="muted" style="margin-bottom:14px">ลิงก์ดาวน์โหลดของคุณอยู่ด้านล่างนี้</p>
+    ${linkBtn(p.link,'ดาวน์โหลดไฟล์')}
   </div></div>`:''}
   ${p.status==='draft'?`<div class="draftnote">ฉบับร่าง ลูกค้ายังเปิดหน้านี้ไม่ได้ จนกว่าคุณจะเผยแพร่</div>`:''}
   <section class="hero" style="--hero:${esc(p.color)}"><div class="wrap wide hero-in">
@@ -755,8 +762,6 @@ function thanksView(){
   const p=getProduct(o.productId);
   const boughtIds=(o.items&&o.items.length?o.items.map(it=>it.productId):[o.productId]);
   const names=o.items&&o.items.length>1?o.items.map(it=>esc(it.name)).join(' และ '):esc(o.pname);
-  const validLink=l=>l&&/^https?:\/\//.test(l)&&!l.includes('ใส่ลิงก์');
-  const linkBtn=(l,label)=>validLink(l)?`<a class="btn btn-cta btn-block" href="${esc(l)}" target="_blank" rel="noopener noreferrer">${label}</a>`:`<p class="fine" style="color:var(--bad)">ลิงก์ดาวน์โหลดยังไม่ถูกตั้งค่า ทางร้านจะส่งไฟล์ให้ทางแชทโดยตรง</p>`;
   const links=o.items&&o.items.length>1?o.items.map(it=>{const ip=getProduct(it.productId);return ip?linkBtn(ip.link,'ดาวน์โหลด '+esc(ip.name)):'';}).join(''):linkBtn(p?p.link:'','ดาวน์โหลดไฟล์');
   const up=D.products.find(x=>x.status==='published'&&!boughtIds.includes(x.id));
   return `<div class="wrap section"><div class="card center">
@@ -1292,6 +1297,7 @@ document.addEventListener('change',e=>{
     const q=new URLSearchParams(location.search);
     const camp=q.get('utm_campaign');
     if(camp)S.src=camp;
+    if(q.get('paid')==='1')S.stripeReturn=true;
   }catch(e){}
 })();
 track('PageView');
