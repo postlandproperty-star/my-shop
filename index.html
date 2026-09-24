@@ -307,7 +307,7 @@ const DOMAIN=(location.origin&&location.origin!=='null'?location.origin:'https:/
 const SB_URL='https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY='sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
 const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
-let sbSession=null,remoteReady=false;
+let sbSession=null,remoteReady=false,needsMigrate=false;
 const CACHE='dp-cache-v1',LEGACY='dp-demo-v3';
 const PUBLIC_KEYS=['settings','products','coupons'],PRIVATE_KEYS=['orders','campaigns','events'];
 const pick=(o,keys)=>{const r={};keys.forEach(k=>{if(o[k]!==undefined)r[k]=o[k];});return r;};
@@ -330,7 +330,11 @@ async function flushRemote(){
   if(!savePending||!sb||!sbSession)return;
   savePending=false;
   const now=new Date().toISOString();
-  const rows=[{id:'main',data:pick(D,PUBLIC_KEYS),updated_at:now},{id:'private',data:pick(D,PRIVATE_KEYS),updated_at:now}];
+  // ลิงก์ไฟล์สินค้า (link) เป็นความลับ: แยกออกจากข้อมูลสาธารณะไปเก็บในแถว private
+  const pub=pick(D,PUBLIC_KEYS),links={};
+  pub.products=D.products.map(p=>{links[p.id]=p.link||'';const q=Object.assign({},p);delete q.link;return q;});
+  const priv=pick(D,PRIVATE_KEYS);priv.links=links;
+  const rows=[{id:'main',data:pub,updated_at:now},{id:'private',data:priv,updated_at:now}];
   const {error}=await sb.from('shop_state').upsert(rows);
   if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);}
 }
@@ -342,6 +346,9 @@ async function loadRemote(){
   remoteReady=true;
   if(!main||!main.data||!Array.isArray(main.data.products))return false; // ยังไม่เคยตั้งค่าข้อมูลบนระบบ
   const merged=Object.assign({},main.data,priv&&priv.data?priv.data:{});
+  const links=(priv&&priv.data&&priv.data.links)||{};delete merged.links;
+  needsMigrate=!!sbSession&&(main.data.products||[]).some(p=>p.link);
+  merged.products=(merged.products||[]).map(p=>Object.assign({},p,{link:p.link||links[p.id]||''}));
   if(!sbSession){ // ลูกค้าเห็นแค่ข้อมูลสาธารณะ ส่วนออเดอร์ทดลองของเขาอยู่ในแคชเครื่องเขาเอง
     const cached=load()||{};
     PRIVATE_KEYS.forEach(k=>{if(merged[k]===undefined)merged[k]=cached[k]||[];});
@@ -473,7 +480,7 @@ function normalize(d){
   if(!d.campaigns)d.campaigns=[];
   d.orders.forEach(o=>{if(o.campaign===undefined)o.campaign='';});
   if(!d.settings)d.settings={};
-  ['pixelId','promptpayId','bankInfo','contactInfo'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
+  ['pixelId','promptpayId','bankInfo','contactInfo','chatLink'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
   return d;
 }
 function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',price:199,fullPrice:390,features:'',link:'https://',color:COLORS[0][0],status:'draft'};}
@@ -658,8 +665,8 @@ function shopView(){
   </div></div>`:''}
   ${S.stripeReturn?`<div class="wrap section" style="padding-top:20px;padding-bottom:0"><div class="card center">
     <h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
-    <p class="muted" style="margin-bottom:14px">ลิงก์ดาวน์โหลดของคุณอยู่ด้านล่างนี้</p>
-    ${linkBtn(p.link,'ดาวน์โหลดไฟล์')}
+    <p class="muted" style="margin-bottom:14px">ลิงก์ดาวน์โหลดอยู่ในหน้ายืนยันการชำระเงินของ Stripe และในอีเมลใบเสร็จที่ส่งให้คุณ</p>
+    ${D.settings.chatLink?`<a class="btn btn-line btn-block" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ไม่ได้รับไฟล์? ทักแชทหาร้าน</a>`:''}
   </div></div>`:''}
   ${p.status==='draft'?`<div class="draftnote">ฉบับร่าง ลูกค้ายังเปิดหน้านี้ไม่ได้ จนกว่าคุณจะเผยแพร่</div>`:''}
   <section class="hero" style="--hero:${esc(p.color)}"><div class="wrap wide hero-in">
@@ -736,6 +743,7 @@ function shopView(){
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(p.price)}</p>
       <a class="btn btn-cta btn-block" href="${esc(p.stripeLink)}" target="_blank" rel="noopener noreferrer">ชำระด้วยบัตร/PromptPay ผ่าน Stripe</a>
       <p class="fine" style="text-align:center;margin-top:10px">ปลอดภัย จ่ายเงินแล้วได้ลิงก์ดาวน์โหลดทันที</p>
+      ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
       `:`
       <div class="field"><label for="f-name">ชื่อ</label>
         <input class="input" id="f-name" data-f="name" autocomplete="name" value="${esc(f.name)}" placeholder="ชื่อที่ใช้ออกใบเสร็จ"></div>
@@ -1001,6 +1009,7 @@ function productsTab(){
     <p class="muted" style="margin-bottom:12px">ข้อมูลทั้งหมดเก็บบน Supabase แก้ที่นี่แล้วลูกค้าทุกคนเห็นเหมือนกัน</p>
     <div class="row" style="flex-wrap:wrap;gap:8px">
       ${loadLegacy()?`<button class="btn ${S.confirm==='import'?'btn-danger':'btn-line'} btn-sm" data-a="importLegacy">${S.confirm==='import'?'กดอีกครั้ง: ทับข้อมูลบนระบบด้วยข้อมูลเก่าในเบราว์เซอร์นี้':'นำเข้าข้อมูลเก่าจากเบราว์เซอร์นี้'}</button>`:''}
+      <button class="btn ${S.confirm==='clearDemo'?'btn-danger':'btn-line'} btn-sm" data-a="clearDemo">${S.confirm==='clearDemo'?'กดอีกครั้ง: ลบออเดอร์/แคมเปญทั้งหมด (สินค้าอยู่ครบ)':'ล้างออเดอร์และแคมเปญตัวอย่าง'}</button>
       <button class="btn ${S.confirm==='reset'?'btn-danger':'btn-line'} btn-sm" data-a="reset">${S.confirm==='reset'?'กดอีกครั้งเพื่อยืนยัน ลบทุกอย่างบนระบบ':'รีเซ็ตเป็นข้อมูลตัวอย่าง'}</button>
     </div>
   </div>`;
@@ -1037,6 +1046,9 @@ function payTab(){
       <textarea class="input" id="s-bank" rows="2" placeholder="เช่น ธนาคารกสิกรไทย เลขบัญชี 123-4-56789-0 ชื่อบัญชี Danaipong K.">${esc(D.settings.bankInfo||'')}</textarea></div>
     <div class="field"><label for="s-contact">ช่องทางติดต่อรับสลิป (Line/Messenger)</label>
       <input class="input" id="s-contact" value="${esc(D.settings.contactInfo||'')}" placeholder="เช่น Line: @yourshop"></div>
+    <div class="field"><label for="s-chat">ลิงก์ปุ่ม "ทักแชทถามก่อนซื้อ" (Messenger หรือ LINE)</label>
+      <input class="input" id="s-chat" value="${esc(D.settings.chatLink||'')}" placeholder="เช่น https://m.me/ชื่อเพจ หรือ https://line.me/ti/p/@ไอดีไลน์">
+      <span class="fine">ใส่แล้วปุ่มจะขึ้นใต้ปุ่มชำระเงินและในหน้าหลังจ่ายเงิน เว้นว่างถ้าไม่ต้องการ</span></div>
     <button class="btn btn-dark btn-sm" data-a="savePay">บันทึก</button>
   </div>
   <p class="fine" style="margin-top:12px">ตอนนี้ระบบยังไม่ได้ต่อกับธนาคารหรือ Omise จริง ลูกค้าจะเห็นข้อมูลนี้ในหน้าชำระเงินแทน QR จำลอง แล้วต้องส่งสลิปมาทางช่องทางที่กรอกไว้ จากนั้นคุณเข้ามากดยืนยันในแท็บออเดอร์เองเมื่อเช็กเงินเข้าแล้ว และส่งลิงก์ดาวน์โหลดให้ลูกค้าด้วยตัวเองในแชทนั้น</p>`;
@@ -1209,6 +1221,7 @@ async function afterLogin(){
     if(legacy&&Array.isArray(legacy.products)&&confirm('พบข้อมูลสินค้าที่เคยแก้ไว้ในเบราว์เซอร์นี้ ต้องการนำเข้าขึ้นระบบไหม')){D=normalize(legacy);}
     await pushAll();toast('ตั้งค่าข้อมูลบนระบบเรียบร้อย');
   }
+  if(needsMigrate){needsMigrate=false;await pushAll();}
   S.view='admin';S.err='';render(false);
 }
 function render(keep){
@@ -1358,8 +1371,11 @@ function act(a,el){
 
     /* pixel + reset */
     case 'savePixel':D.settings.pixelId=$('#s-pixel').value.trim();save();toast('บันทึก Pixel ID แล้ว');break;
-    case 'savePay':{D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
+    case 'savePay':{const chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat)){toast('ลิงก์ทักแชทต้องขึ้นต้นด้วย https://');break;}D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
     case 'clearEvents':D.events=[];save();render(true);break;
+    case 'clearDemo':
+      if(S.confirm==='clearDemo'){D.orders=[];D.campaigns=[];D.events=[];S.confirm='';S.currentId=null;save();render(true);toast('ล้างออเดอร์และแคมเปญตัวอย่างแล้ว');}
+      else{S.confirm='clearDemo';render(true);}break;
     case 'reset':
       if(S.confirm==='reset'){D=normalize(seed());save();S.confirm='';S.coupon='';S.productId=null;S.open={};S.edit=null;render(true);toast('รีเซ็ตแล้ว');}
       else{S.confirm='reset';render(true);}break;
