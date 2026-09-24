@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ร้านหนังสือ/ชีทเรียน</title>
+<!--OG-START--><meta property="og:type" content="website"><meta property="og:title" content="ร้านหนังสือ/ชีทเรียน"><meta property="og:description" content="ชีทสรุปและอีบุ๊ก PDF ชำระเงินแล้วดาวน์โหลดได้ทันที"><meta name="twitter:card" content="summary_large_image"><!--OG-END-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Mitr:wght@500;600&display=swap" rel="stylesheet">
@@ -944,7 +945,7 @@ function productForm(){
     <div class="field">${lb('e-stripelink','ลิงก์จ่ายเงิน Stripe Payment Link (ถ้ามี)')}<input class="input" id="e-stripelink" data-d="stripeLink" value="${esc(d.stripeLink)}" placeholder="https://buy.stripe.com/..."></div>
     <div class="field"><span class="lbl" id="lbl-color">สีหลักของเซลเพจ</span>
       <div class="swatches" role="radiogroup" aria-labelledby="lbl-color">${COLORS.map(c=>`<label class="sw" style="--c:${c[0]}"><input type="radio" name="theme" data-d="color" value="${c[0]}" ${d.color===c[0]?'checked':''}><span class="dot"></span><span>${c[1]}</span></label>`).join('')}</div></div>
-    <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล)</span>
+    <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
       <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button></div>`).join('')}
       ${d.images.length<5?`<label class="add"><input type="file" id="e-img" accept="image/*" multiple>+ เพิ่มภาพ</label>`:''}</div>
       <span class="fine">ระบบจัดภาพเป็นสี่เหลี่ยมจัตุรัส 1200×1200 พิกเซล และแสดงภาพเต็มไม่ตัดขอบ ถ้าภาพไม่เป็นจัตุรัส จะเติมพื้นขาวรอบภาพ ภาพแรกเป็นภาพปกหลัก ภาพถัดไปเป็นตัวอย่างหน้าในไฟล์ ควรเลือกเฉพาะบางหน้า ไม่ใส่เนื้อหาทั้งเล่ม ผู้ซื้อกดที่ภาพเพื่อดูขยายเต็มจอได้ ถ้าไม่ใส่ภาพ จะใช้ภาพวาดตัวอย่างแทน</span></div>
