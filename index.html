@@ -171,6 +171,10 @@ footer{padding:28px 0 110px;text-align:center}
 .ev b{font-weight:600}
 .h3{font-size:18px;margin:6px 0 10px}
 .note{background:var(--warnbg);color:var(--warn);border-radius:12px;padding:10px 14px;font-size:14px;margin-bottom:14px}
+.field.hot{background:var(--badbg);border:2px solid var(--bad);border-radius:12px;padding:12px}
+.field.hot label,.field.hot .lbl{color:var(--bad);font-weight:600}
+.field.hot .input{border-color:var(--bad)}
+.prod .warnline{color:var(--bad);font-size:14px;font-weight:500;margin:4px 0}
 .toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:15px;z-index:40;max-width:90vw;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 
 /* sales page extras */
@@ -919,6 +923,7 @@ function productRow(p){
   const cf=S.confirm==='del:'+p.id;
   return `<div class="prod" style="--c:${esc(p.color)}">
     <div class="prod-top"><b>${esc(p.name)}</b><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span></div>
+    ${pub&&!p.stripeLink?`<div class="warnline">⚠️ ยังไม่มีลิงก์ Stripe ลูกค้าจ่ายเงินไม่ได้ กดแก้ไขเพื่อใส่</div>`:''}${pub&&/buy\.stripe\.com\/test_/.test(p.stripeLink||'')?`<div class="warnline">⚠️ ลิงก์ Stripe เป็นโหมดทดสอบ รับเงินจริงไม่ได้</div>`:''}
     <div class="prod-stats"><span>${KINDS[p.kind]||'สินค้าดิจิทัล'}</span><span>ราคา ${baht(p.price)}</span><span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
     <div class="linkline"><span class="fine">ลิงก์สำหรับแอด</span><code>${DOMAIN}${esc(p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอก</button></div>
     <div class="acts">
@@ -959,7 +964,8 @@ function productForm(){
     ${ta('e-features','features','สิ่งที่ลูกค้าจะได้รับ (บรรทัดละข้อ)')}
     <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — ไม่บังคับ')}<input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/...">
       <span class="fine">เก็บไว้ให้แอดมินดูเท่านั้น ลูกค้าไม่เห็น ตอนนี้ไฟล์ถูกส่งผ่านข้อความ After payment ของ Stripe (ช่องนี้จะใช้เมื่อทำระบบส่งไฟล์อัตโนมัติ)</span></div>
-    <div class="field">${lb('e-stripelink','ลิงก์จ่ายเงิน Stripe Payment Link (ถ้ามี)')}<input class="input" id="e-stripelink" data-d="stripeLink" value="${esc(d.stripeLink)}" placeholder="https://buy.stripe.com/..."></div>
+    <div class="field hot">${lb('e-stripelink','💳 ลิงก์จ่ายเงิน Stripe Payment Link — จำเป็น ไม่งั้นลูกค้าจ่ายเงินไม่ได้')}<input class="input" id="e-stripelink" data-d="stripeLink" value="${esc(d.stripeLink)}" placeholder="https://buy.stripe.com/...">
+      <span class="fine">สร้างลิงก์ใน Stripe → Payment Links (โหมด live ต้องไม่มีคำว่า test_) แล้วมาวางที่นี่ ${/buy\.stripe\.com\/test_/.test(d.stripeLink||'')?'<b style="color:var(--bad)">ลิงก์ที่ใส่อยู่เป็นโหมดทดสอบ รับเงินจริงไม่ได้</b>':''}</span></div>
     <div class="field"><span class="lbl" id="lbl-color">สีหลักของเซลเพจ</span>
       <div class="swatches" role="radiogroup" aria-labelledby="lbl-color">${COLORS.map(c=>`<label class="sw" style="--c:${c[0]}"><input type="radio" name="theme" data-d="color" value="${c[0]}" ${d.color===c[0]?'checked':''}><span class="dot"></span><span>${c[1]}</span></label>`).join('')}</div></div>
     <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
@@ -1049,22 +1055,25 @@ function couponsTab(){
 function payTab(){
   return `
   <div class="card">
-    <div class="field"><label for="s-pp">เบอร์พร้อมเพย์ หรือเลขบัตรประชาชน (ใช้สร้าง QR จริง)</label>
-      <input class="input" id="s-pp" value="${esc(D.settings.promptpayId||'')}" placeholder="เช่น 0812345678"></div>
-    <div class="field"><label for="s-bank">ข้อมูลบัญชีธนาคาร (สำรอง กรณีลูกค้าโอนแทน)</label>
-      <textarea class="input" id="s-bank" rows="2" placeholder="เช่น ธนาคารกสิกรไทย เลขบัญชี 123-4-56789-0 ชื่อบัญชี Danaipong K.">${esc(D.settings.bankInfo||'')}</textarea></div>
-    <div class="field"><label for="s-contact">ช่องทางติดต่อรับสลิป (Line/Messenger)</label>
-      <input class="input" id="s-contact" value="${esc(D.settings.contactInfo||'')}" placeholder="เช่น Line: @yourshop"></div>
+    <h3 class="h3">ข้อมูลร้าน (แสดงให้ลูกค้าเห็น)</h3>
     <div class="field"><label for="s-shop">ชื่อร้าน/ชื่อผู้ขาย (แสดงท้ายเว็บทุกหน้า ควรตรงกับที่แจ้ง Stripe)</label>
       <input class="input" id="s-shop" value="${esc(D.settings.shopName||'')}" placeholder="เช่น salepage"></div>
-    <div class="field"><label for="s-refund">นโยบายการคืนเงิน/เงื่อนไข (แสดงท้ายเว็บ)</label>
-      <textarea class="input" id="s-refund" rows="2" placeholder="เช่น สินค้าเป็นไฟล์ดิจิทัล ดาวน์โหลดได้ทันทีหลังชำระเงิน จึงไม่รับคืนเงิน หากไฟล์มีปัญหาติดต่อร้านเพื่อรับไฟล์ใหม่">${esc(D.settings.refundPolicy||'')}</textarea></div>
+    <div class="field"><label for="s-contact">ช่องทางติดต่อร้าน (แสดงท้ายเว็บ)</label>
+      <input class="input" id="s-contact" value="${esc(D.settings.contactInfo||'')}" placeholder="เช่น Line: @yourshop หรือ อีเมล"></div>
     <div class="field"><label for="s-chat">ลิงก์ปุ่ม "ทักแชทถามก่อนซื้อ" (Messenger หรือ LINE)</label>
       <input class="input" id="s-chat" value="${esc(D.settings.chatLink||'')}" placeholder="เช่น https://m.me/ชื่อเพจ หรือ https://line.me/ti/p/@ไอดีไลน์">
       <span class="fine">ใส่แล้วปุ่มจะขึ้นใต้ปุ่มชำระเงินและในหน้าหลังจ่ายเงิน เว้นว่างถ้าไม่ต้องการ</span></div>
+    <div class="field"><label for="s-refund">นโยบายการคืนเงิน/เงื่อนไข (แสดงท้ายเว็บ)</label>
+      <textarea class="input" id="s-refund" rows="2" placeholder="เช่น สินค้าเป็นไฟล์ดิจิทัล ดาวน์โหลดได้ทันทีหลังชำระเงิน จึงไม่รับคืนเงิน หากไฟล์มีปัญหาติดต่อร้านเพื่อรับไฟล์ใหม่">${esc(D.settings.refundPolicy||'')}</textarea></div>
+    <details style="margin:6px 0 14px"><summary class="fine">ช่องรับโอนเงินเอง (ไม่ได้ใช้ ถ้ารับเงินผ่าน Stripe)</summary>
+      <p class="fine" style="margin:8px 0">ใช้เฉพาะสินค้าที่ไม่มีลิงก์ Stripe: ลูกค้าจะเห็นข้อมูลนี้แล้วโอนเงินเองและส่งสลิปมาให้ร้าน</p>
+      <div class="field"><label for="s-pp">เบอร์พร้อมเพย์ หรือเลขบัตรประชาชน</label>
+        <input class="input" id="s-pp" value="${esc(D.settings.promptpayId||'')}" placeholder="เช่น 0812345678"></div>
+      <div class="field"><label for="s-bank">ข้อมูลบัญชีธนาคาร</label>
+        <textarea class="input" id="s-bank" rows="2" placeholder="เช่น ธนาคารกสิกรไทย เลขบัญชี 123-4-56789-0 ชื่อบัญชี ...">${esc(D.settings.bankInfo||'')}</textarea></div>
+    </details>
     <button class="btn btn-dark btn-sm" data-a="savePay">บันทึก</button>
-  </div>
-  <p class="fine" style="margin-top:12px">ตอนนี้ระบบยังไม่ได้ต่อกับธนาคารหรือ Omise จริง ลูกค้าจะเห็นข้อมูลนี้ในหน้าชำระเงินแทน QR จำลอง แล้วต้องส่งสลิปมาทางช่องทางที่กรอกไว้ จากนั้นคุณเข้ามากดยืนยันในแท็บออเดอร์เองเมื่อเช็กเงินเข้าแล้ว และส่งลิงก์ดาวน์โหลดให้ลูกค้าด้วยตัวเองในแชทนั้น</p>`;
+  </div>`;
 }
 
 function pixelTab(){
@@ -1190,7 +1199,7 @@ function adsTab(){
 }
 
 function adminView(){
-  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','การรับเงิน'],['pixel','Facebook Pixel']];
+  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel']];
   const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}</button>`).join('')}</div>
