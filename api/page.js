@@ -9,21 +9,27 @@ const html = readFileSync(join(process.cwd(), 'index.html'), 'utf8');
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-async function findProduct(slug) {
+async function loadShop() {
   const r = await fetch(`${SB_URL}/rest/v1/shop_state?id=eq.main&select=data`, {
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
   });
-  if (!r.ok) return null;
+  if (!r.ok) return { products: [], settings: {} };
   const rows = await r.json();
-  const products = rows?.[0]?.data?.products || [];
-  return products.find((p) => p.slug === slug && p.status === 'published') || null;
+  const data = rows?.[0]?.data || {};
+  return { products: data.products || [], settings: data.settings || {} };
 }
 
 export default async function handler(req, res) {
   const slug = String(req.query.slug || '');
   let out = html;
   try {
-    const p = /^[a-z0-9-]+$/.test(slug) ? await findProduct(slug) : null;
+    const shop = await loadShop();
+    // แท็กยืนยันโดเมนกับ Meta (Facebook) ต้องอยู่ใน HTML ดิบของทุกหน้า รวมหน้าแรก
+    const verify = String(shop.settings.fbDomainVerify || '').trim();
+    if (/^[A-Za-z0-9_-]{5,100}$/.test(verify)) {
+      out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
+    }
+    const p = /^[a-z0-9-]+$/.test(slug) ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
     if (p) {
       const proto = req.headers['x-forwarded-proto'] || 'https';
       const url = `${proto}://${req.headers.host}/p/${p.slug}`;

@@ -492,7 +492,7 @@ function normalize(d){
   if(!d.campaigns)d.campaigns=[];
   d.orders.forEach(o=>{if(o.campaign===undefined)o.campaign='';});
   if(!d.settings)d.settings={};
-  ['pixelId','promptpayId','bankInfo','contactInfo','chatLink','shopName','refundPolicy'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
+  ['pixelId','promptpayId','bankInfo','contactInfo','chatLink','shopName','refundPolicy','fbDomainVerify'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
   return d;
 }
 function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',price:199,fullPrice:390,features:'',link:'https://',color:COLORS[0][0],status:'draft'};}
@@ -553,7 +553,18 @@ const S={view:'shop',tab:'orders',filter:'all',pfilter:'all',productId:null,edit
   form:{name:'',email:'',coupon:'',bump:false},method:'promptpay',coupon:'',couponErr:'',err:'',currentId:null,open:{},confirm:'',toast:'',stripeReturn:false};
 
 /* ---------- logic ---------- */
+/* Facebook Pixel: โหลดเมื่อมี Pixel ID ในตั้งค่า แล้วส่ง event มาตรฐานของ Meta */
+const FB_EVENTS={PageView:1,ViewContent:1,InitiateCheckout:1,Purchase:1,Lead:1};
+let pixelReady=false;
+function initPixel(id){
+  if(pixelReady||!/^\d{6,20}$/.test(String(id||'')))return;
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init',String(id));pixelReady=true;
+}
 function track(name,data){
+  if(pixelReady&&FB_EVENTS[name]&&!hasAdminAccess()){ // ไม่นับการเข้าดูของแอดมินเอง
+    try{const d=Object.assign({},data||{});delete d.campaign;fbq('track',name,d);}catch(e){}
+  }
   D.events.unshift({t:Date.now(),name,data:data||{}});
   D.events=D.events.slice(0,60);saveCache();
 }
@@ -753,7 +764,7 @@ function shopView(){
     <div class="card">
       ${p.stripeLink?`
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(p.price)}</p>
-      <a class="btn btn-cta btn-block" href="${esc(p.stripeLink)}" target="_blank" rel="noopener noreferrer">ชำระด้วยบัตร/PromptPay ผ่าน Stripe</a>
+      <a class="btn btn-cta btn-block" href="${esc(p.stripeLink)}" target="_blank" rel="noopener noreferrer" data-track="InitiateCheckout">ชำระด้วยบัตร/PromptPay ผ่าน Stripe</a>
       <p class="fine" style="text-align:center;margin-top:10px">ปลอดภัย จ่ายเงินแล้วได้ลิงก์ดาวน์โหลดทันที</p>
       ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
       `:`
@@ -1077,12 +1088,21 @@ function payTab(){
 }
 
 function pixelTab(){
+  const live=/^\d{6,20}$/.test(String(D.settings.pixelId||''));
   return `
   <div class="card">
-    <div class="field"><label for="s-pixel">Facebook Pixel ID</label>
-      <div class="row"><input class="input" id="s-pixel" inputmode="numeric" value="${esc(D.settings.pixelId)}" placeholder="วาง Pixel ID ที่นี่">
-      <button class="btn btn-dark btn-sm" data-a="savePixel">บันทึก</button></div></div>
-    <p class="fine">ใช้ Pixel เดียวกันได้กับทุกสินค้า โดยแต่ละเหตุการณ์จะระบุชื่อสินค้าไปด้วย ในโหมดทดลอง ระบบยังไม่ได้โหลดสคริปต์ของ Facebook รายการด้านล่างคือเหตุการณ์ที่จะถูกส่งเมื่อต่อระบบจริง ตอนใช้งานจริง Purchase จะส่งซ้ำจากเซิร์ฟเวอร์ผ่าน Conversions API โดยใช้ event_id เดียวกับออเดอร์ เพื่อไม่ให้ Facebook นับซ้ำ</p>
+    <div class="field"><label for="s-pixel">Facebook Pixel ID (Meta Pixel / Dataset ID)</label>
+      <div class="row"><input class="input" id="s-pixel" inputmode="numeric" value="${esc(D.settings.pixelId)}" placeholder="ตัวเลข 15-16 หลัก">
+      <button class="btn btn-dark btn-sm" data-a="savePixel">บันทึก</button></div>
+      <span class="fine">หาได้ที่ Meta Events Manager → Data sources → เลือก Pixel → เลข ID ใต้ชื่อ ${live?'<b style="color:var(--ok)">Pixel ทำงานอยู่บนหน้าลูกค้า</b>':'<b style="color:var(--bad)">ยังไม่ได้ใส่ Pixel เว็บยังไม่ส่งข้อมูลไป Facebook</b>'}</span></div>
+    <div class="field"><label for="s-fbverify">รหัสยืนยันโดเมนกับ Meta (facebook-domain-verification)</label>
+      <div class="row"><input class="input" id="s-fbverify" value="${esc(D.settings.fbDomainVerify||'')}" placeholder="วางเฉพาะรหัส เช่น a1b2c3d4e5...">
+      <button class="btn btn-dark btn-sm" data-a="saveFbVerify">บันทึก</button></div>
+      <span class="fine">Meta Business Suite → Settings → Brand safety → Domains → Add → ใส่ my-shop-lake-ten.vercel.app → เลือก "Meta-tag verification" → คัดลอกเฉพาะค่าใน content="..." มาวาง → บันทึก แล้วกด Verify ในฝั่ง Meta (มีผลใน ~1 นาที)</span></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3 class="h3">เหตุการณ์ที่เว็บส่งไป Facebook</h3>
+    <p class="fine" style="margin:0"><b>PageView</b> ทุกหน้า · <b>ViewContent</b> เมื่อดูสินค้า (ส่งชื่อ+ราคา) · <b>InitiateCheckout</b> เมื่อกดปุ่มจ่ายเงิน (ส่งชื่อ+ราคา) · <b>Purchase</b> ยังไม่มี ต้องต่อระบบตรวจการจ่ายเงินกับ Stripe ก่อน · การเข้าดูของแอดมินเองจะไม่ถูกนับ</p>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px">
     <h3 class="h3" style="margin:0">เหตุการณ์ล่าสุด</h3>
@@ -1393,7 +1413,8 @@ function act(a,el){
     case 'delCoupon':{D.coupons=D.coupons.filter(x=>x.code!==el.dataset.code);if(S.coupon===el.dataset.code)S.coupon='';save();render(true);break;}
 
     /* pixel + reset */
-    case 'savePixel':D.settings.pixelId=$('#s-pixel').value.trim();save();toast('บันทึก Pixel ID แล้ว');break;
+    case 'savePixel':{const id=$('#s-pixel').value.trim();if(id&&!/^\d{6,20}$/.test(id)){toast('Pixel ID ต้องเป็นตัวเลขล้วน');break;}D.settings.pixelId=id;save();render(true);toast('บันทึก Pixel ID แล้ว');break;}
+    case 'saveFbVerify':{let v=$('#s-fbverify').value.trim();const m=v.match(/content=["']([^"']+)/);if(m)v=m[1];D.settings.fbDomainVerify=v;save();render(true);toast('บันทึกรหัสยืนยันโดเมนแล้ว');break;}
     case 'savePay':{D.settings.shopName=$('#s-shop').value.trim();D.settings.refundPolicy=$('#s-refund').value.trim();let chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat))chat='https://'+chat;D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
     case 'clearEvents':D.events=[];save();render(true);break;
     case 'clearDemo':
@@ -1410,7 +1431,11 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='ArrowRight')act('zoomNext',{dataset:{}});
   else if(e.key==='ArrowLeft')act('zoomPrev',{dataset:{}});
 });
-document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(el)act(el.dataset.a,el);});
+document.addEventListener('click',e=>{
+  const tr=e.target.closest('[data-track]');
+  if(tr){const p=curProduct();if(p)track(tr.dataset.track,Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));}
+  const el=e.target.closest('[data-a]');if(el)act(el.dataset.a,el);
+});
 document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
   if(ds.f)S.form[ds.f]=t.value;
@@ -1468,6 +1493,7 @@ function applyUrl(){
   }
   S.loading=false;
   applyUrl();
+  initPixel(D.settings.pixelId);
   track('PageView');
   {const p=curProduct();if(p)track('ViewContent',{content_name:p.name,value:p.price,currency:'THB'});}
   render(false);
