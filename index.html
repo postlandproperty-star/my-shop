@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Mitr:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root{
   --bg:#EDF1F7;--surface:#FFFFFF;--ink:#0F1B33;--muted:#56637D;--line:#D3DBE8;
@@ -278,7 +279,7 @@ footer{padding:28px 0 110px;text-align:center}
 </head>
 <body>
 <div class="bar" id="bar" style="display:none"><div class="bar-in">
-  <div class="bar-note">โหมดทดลอง<br>ข้อมูลเก็บในเบราว์เซอร์นี้เท่านั้น</div>
+  <div class="bar-note" id="bar-note"></div>
   <div class="seg" id="seg"></div>
 </div></div>
 <div id="app"></div>
@@ -297,13 +298,61 @@ const COLORS=[['#2440E8','น้ำเงิน'],['#0F6B4F','เขียว'],
 const KINDS={book:'หนังสือ',sheet:'ชีทเรียน',other:'สินค้าอื่น'};
 const DOMAIN=(location.origin&&location.origin!=='null'?location.origin:'https://yourshop.com')+'/p/';
 
-/* ---------- storage ---------- */
-const KEY='dp-demo-v3';
-function load(){try{const r=localStorage.getItem(KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
+/* ---------- storage (Supabase) ----------
+   ข้อมูลร้านเก็บในตาราง shop_state 2 แถว
+   - 'main'    : สินค้า คูปอง ตั้งค่า  → ทุกคนอ่านได้ แอดมินเขียนได้
+   - 'private' : ออเดอร์ แคมเปญ อีเวนต์ → แอดมินเท่านั้น
+   localStorage ใช้เป็นแคชให้หน้าเปิดเร็ว และเป็นที่พักข้อมูลฝั่งลูกค้า (เช่นออเดอร์ทดลอง) */
+const SB_URL='https://lpeqaorswhwzlplsaqpe.supabase.co';
+const SB_KEY='sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
+const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+let sbSession=null,remoteReady=false;
+const CACHE='dp-cache-v1',LEGACY='dp-demo-v3';
+const PUBLIC_KEYS=['settings','products','coupons'],PRIVATE_KEYS=['orders','campaigns','events'];
+const pick=(o,keys)=>{const r={};keys.forEach(k=>{if(o[k]!==undefined)r[k]=o[k];});return r;};
+function load(){try{const r=localStorage.getItem(CACHE);if(r)return JSON.parse(r);}catch(e){}return null;}
+function loadLegacy(){try{const r=localStorage.getItem(LEGACY);if(r)return JSON.parse(r);}catch(e){}return null;}
 let saveWarned=false;
-function save(){
-  try{localStorage.setItem(KEY,JSON.stringify(D));saveWarned=false;}
+function saveCache(){
+  try{localStorage.setItem(CACHE,JSON.stringify(D));saveWarned=false;}
   catch(e){if(!saveWarned){saveWarned=true;try{toast('พื้นที่จัดเก็บในเบราว์เซอร์เต็ม ลองลดจำนวนหรือขนาดภาพ');}catch(_){}}}
+}
+let saveTimer=null,savePending=false;
+function save(){
+  saveCache();
+  if(!sb||!sbSession)return; // ลูกค้าทั่วไปไม่มีสิทธิ์เขียน เก็บแค่แคช
+  savePending=true;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(flushRemote,400);
+}
+async function flushRemote(){
+  if(!savePending||!sb||!sbSession)return;
+  savePending=false;
+  const now=new Date().toISOString();
+  const rows=[{id:'main',data:pick(D,PUBLIC_KEYS),updated_at:now},{id:'private',data:pick(D,PRIVATE_KEYS),updated_at:now}];
+  const {error}=await sb.from('shop_state').upsert(rows);
+  if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);}
+}
+async function loadRemote(){
+  if(!sb)return false;
+  const {data,error}=await sb.from('shop_state').select('id,data');
+  if(error){console.error(error);return false;}
+  const main=(data||[]).find(r=>r.id==='main'),priv=(data||[]).find(r=>r.id==='private');
+  remoteReady=true;
+  if(!main||!main.data||!Array.isArray(main.data.products))return false; // ยังไม่เคยตั้งค่าข้อมูลบนระบบ
+  const merged=Object.assign({},main.data,priv&&priv.data?priv.data:{});
+  if(!sbSession){ // ลูกค้าเห็นแค่ข้อมูลสาธารณะ ส่วนออเดอร์ทดลองของเขาอยู่ในแคชเครื่องเขาเอง
+    const cached=load()||{};
+    PRIVATE_KEYS.forEach(k=>{if(merged[k]===undefined)merged[k]=cached[k]||[];});
+  }
+  D=normalize(merged);
+  saveCache();
+  return true;
+}
+/* บันทึกข้อมูลที่แสดงอยู่ตอนนี้ขึ้นระบบทั้งก้อน (ใช้ตอนตั้งค่าครั้งแรก / นำเข้าข้อมูลเก่า) */
+async function pushAll(){
+  if(!sb||!sbSession)return false;
+  savePending=true;await flushRemote();return true;
 }
 
 function seed(){
@@ -413,6 +462,7 @@ function square(file){
   });
 }
 function normalize(d){
+  ['products','orders','coupons','campaigns','events'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[];});
   d.products.forEach(p=>{
     const base={kind:'other',specs:'',toc:'',forwho:'',notfor:'',authorName:'',authorBio:'',sampleLink:'',terms:'',proof:'',promoEnd:0,pains:'',bonus:'',reviews:'',faq:'',guarantee:'',images:[],stripeLink:''};
     Object.keys(base).forEach(k=>{if(p[k]===undefined)p[k]=base[k];});
@@ -447,12 +497,26 @@ async function addImages(files){
   const room=5-S.draft.images.length,list=Array.from(files).slice(0,Math.max(0,room));
   if(files.length>room)toast('ใส่ภาพได้สูงสุด 5 ภาพ');
   const small=[];
+  if(list.length)toast('กำลังอัปโหลดภาพ...');
   for(const f of list){
-    try{const r=await square(f);S.draft.images.push(r.url);if(Math.max(r.w,r.h)<1200)small.push(f.name);}
-    catch(e){toast('อ่านไฟล์ '+f.name+' ไม่ได้');}
+    try{
+      const r=await square(f);
+      S.draft.images.push(await uploadImage(r.url));
+      if(Math.max(r.w,r.h)<1200)small.push(f.name);
+    }
+    catch(e){console.error(e);toast('อัปโหลด '+f.name+' ไม่สำเร็จ: '+(e.message||e));}
   }
   render(true);
   if(small.length)toast('ภาพเล็กกว่า 1200 พิกเซล อาจไม่คมชัดเมื่อขยาย');
+}
+/* อัปโหลดภาพ (data URL จาก square()) ขึ้น Supabase Storage แล้วคืน URL สาธารณะ */
+async function uploadImage(dataUrl){
+  if(!sb||!sbSession)throw new Error('ต้องล็อกอินก่อนอัปโหลดภาพ');
+  const blob=await (await fetch(dataUrl)).blob();
+  const path='products/'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)+'.jpg';
+  const {error}=await sb.storage.from('product-images').upload(path,blob,{contentType:'image/jpeg',cacheControl:'31536000'});
+  if(error)throw error;
+  return sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;
 }
 function drawLB(){
   const p=curProduct(),imgs=p&&p.images||[],src=S.zoom!=null?imgs[S.zoom]:null;
@@ -932,9 +996,12 @@ function productsTab(){
   </div>
   ${D.products.length?D.products.map(productRow).join(''):`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าแรก แล้วระบบจะสร้างเซลเพจและลิงก์สำหรับแอดให้</p><button class="btn btn-dark btn-sm" data-a="newProduct">เพิ่มสินค้าใหม่</button></div>`}
   <div class="card" style="margin-top:18px">
-    <h3 class="h3">ล้างข้อมูลทดลอง</h3>
-    <p class="muted" style="margin-bottom:12px">ลบสินค้า ออเดอร์ และโค้ดที่เพิ่มไว้ แล้วกลับไปใช้ข้อมูลตัวอย่างเริ่มต้น</p>
-    <button class="btn ${S.confirm==='reset'?'btn-danger':'btn-line'} btn-sm" data-a="reset">${S.confirm==='reset'?'กดอีกครั้งเพื่อยืนยัน':'รีเซ็ตข้อมูลทดลอง'}</button>
+    <h3 class="h3">ข้อมูลร้าน</h3>
+    <p class="muted" style="margin-bottom:12px">ข้อมูลทั้งหมดเก็บบน Supabase แก้ที่นี่แล้วลูกค้าทุกคนเห็นเหมือนกัน</p>
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      ${loadLegacy()?`<button class="btn ${S.confirm==='import'?'btn-danger':'btn-line'} btn-sm" data-a="importLegacy">${S.confirm==='import'?'กดอีกครั้ง: ทับข้อมูลบนระบบด้วยข้อมูลเก่าในเบราว์เซอร์นี้':'นำเข้าข้อมูลเก่าจากเบราว์เซอร์นี้'}</button>`:''}
+      <button class="btn ${S.confirm==='reset'?'btn-danger':'btn-line'} btn-sm" data-a="reset">${S.confirm==='reset'?'กดอีกครั้งเพื่อยืนยัน ลบทุกอย่างบนระบบ':'รีเซ็ตเป็นข้อมูลตัวอย่าง'}</button>
+    </div>
   </div>`;
 }
 
@@ -1101,27 +1168,56 @@ function adminView(){
   const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}</button>`).join('')}</div>
-    ${S.tab==='orders'?`<div class="note" style="margin-top:12px">ตัวอย่างนี้เปิดหลังบ้านได้โดยไม่ต้องล็อกอิน ระบบจริงต้องมีหน้าล็อกอินสำหรับแอดมิน</div>`:''}
     ${body}
   </div>`;
 }
 
 /* ---------- render ---------- */
 let io=null;
-const ADMIN_CODE='dan2569';
-function hasAdminAccess(){
-  try{
-    const q=new URLSearchParams(location.search);
-    if(q.get('shopadmin')===ADMIN_CODE){sessionStorage.setItem('shopadmin_ok','1');return true;}
-    return sessionStorage.getItem('shopadmin_ok')==='1';
-  }catch(e){return false;}
+/* ---------- แอดมิน: ล็อกอินด้วย Supabase Auth ---------- */
+function hasAdminAccess(){return !!sbSession;}
+function loginView(){
+  return `<div class="wrap" style="max-width:420px;padding-top:40px;padding-bottom:60px">
+    <div class="card">
+      <h2 style="margin-bottom:6px">เข้าสู่ระบบหลังบ้าน</h2>
+      <p class="muted" style="margin-bottom:16px">ใช้อีเมลและรหัสผ่านแอดมินที่ตั้งไว้ใน Supabase</p>
+      <form id="login-form">
+        <div class="field"><label for="l-email">อีเมล</label>
+          <input class="input" id="l-email" type="email" autocomplete="username" inputmode="email" value="${esc(S.loginEmail||'')}" required></div>
+        <div class="field"><label for="l-pass">รหัสผ่าน</label>
+          <input class="input" id="l-pass" type="password" autocomplete="current-password" required></div>
+        ${S.err?`<p class="err" style="margin-bottom:10px">${esc(S.err)}</p>`:''}
+        <button class="btn btn-cta btn-block" type="submit" ${S.busy?'disabled':''}>${S.busy?'กำลังเข้าสู่ระบบ...':'เข้าสู่ระบบ'}</button>
+      </form>
+      <p class="fine" style="margin-top:14px"><a href="${location.pathname}">กลับหน้าร้าน</a></p>
+    </div>
+  </div>`;
+}
+async function doLogin(email,pass){
+  if(!sb){S.err='โหลดไลบรารี Supabase ไม่ได้ ลองรีเฟรชหน้า';render(true);return;}
+  S.loginEmail=email;S.busy=true;S.err='';render(true);
+  const {error}=await sb.auth.signInWithPassword({email,password:pass});
+  S.busy=false;
+  if(error){S.err=/invalid/i.test(error.message)?'อีเมลหรือรหัสผ่านไม่ถูกต้อง':error.message;render(true);}
+  // สำเร็จ: onAuthStateChange จะจัดการต่อ
+}
+async function afterLogin(){
+  const had=await loadRemote();
+  if(!had){ // ระบบยังว่าง: ถ้ามีข้อมูลเก่าในเบราว์เซอร์นี้ให้นำเข้า ไม่งั้นใช้ข้อมูลที่แสดงอยู่
+    const legacy=loadLegacy();
+    if(legacy&&Array.isArray(legacy.products)&&confirm('พบข้อมูลสินค้าที่เคยแก้ไว้ในเบราว์เซอร์นี้ ต้องการนำเข้าขึ้นระบบไหม')){D=normalize(legacy);}
+    await pushAll();toast('ตั้งค่าข้อมูลบนระบบเรียบร้อย');
+  }
+  S.view='admin';S.err='';render(false);
 }
 function render(keep){
   const y=window.scrollY,v=S.view;
   const isAdmin=hasAdminAccess();
   $('#bar').style.display=isAdmin?'':'none';
+  $('#bar-note').innerHTML=isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a>`:'';
   $('#seg').innerHTML=isAdmin?`<button data-a="toShop" aria-pressed="${v!=='admin'}">หน้าลูกค้า</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button>`:'';
-  $('#app').innerHTML=({shop:shopView,pay:payView,thanks:thanksView,admin:adminView}[v])();
+  if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
+  $('#app').innerHTML=({shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
   window.scrollTo(0,keep?y:0);
   tick();
   if(io){io.disconnect();io=null;}
@@ -1132,7 +1228,7 @@ function render(keep){
   }
 }
 function go(v){
-  if(v==='admin'&&!hasAdminAccess()){v='shop';}
+  if(v==='admin'&&!hasAdminAccess()){v='login';}
   S.view=v;S.err='';S.confirm='';S.zoom=null;drawLB();
   if(v==='shop'){const p=curProduct();if(p)track('ViewContent',{content_name:p.name,value:p.price,currency:'THB'});}
   render(false);
@@ -1150,6 +1246,10 @@ function act(a,el){
     case 'toShop':go('shop');break;
     case 'viewUpsell':selectProduct(id);go('shop');break;
     case 'toAdmin':go('admin');break;
+    case 'logout':if(sb)sb.auth.signOut();break;
+    case 'importLegacy':{
+      if(S.confirm==='import'){const l=loadLegacy();if(l){D=normalize(l);S.confirm='';S.productId=null;pushAll().then(()=>{render(true);toast('นำเข้าข้อมูลเก่าแล้ว');});}}
+      else{S.confirm='import';render(true);}break;}
     case 'toCheckout':{const c=document.getElementById('checkout');if(c)c.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});break;}
     case 'applyCoupon':{
       const p=curProduct(),code=(S.form.coupon||'').trim().toUpperCase();S.form.coupon=code;
@@ -1290,8 +1390,12 @@ document.addEventListener('change',e=>{
   else if(t.id==='f-bump'){S.form.bump=t.checked;render(true);}
 });
 
+document.addEventListener('submit',e=>{
+  if(e.target.id==='login-form'){e.preventDefault();doLogin($('#l-email').value.trim(),$('#l-pass').value);}
+});
+
 /* ---------- start ---------- */
-(function initFromUrl(){
+function applyUrl(){
   try{
     const m=location.pathname.match(/\/p\/([a-z0-9-]+)\/?$/i);
     if(m){
@@ -1302,11 +1406,32 @@ document.addEventListener('change',e=>{
     const camp=q.get('utm_campaign');
     if(camp)S.src=camp;
     if(q.get('paid')==='1')S.stripeReturn=true;
+    if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';
   }catch(e){}
+}
+(async function boot(){
+  const hadCache=!!load();
+  S.loading=!hadCache&&!!sb; // ไม่มีแคช: รอข้อมูลจากระบบก่อน จะได้ไม่เห็นข้อมูลตัวอย่างแวบขึ้นมา
+  applyUrl();
+  render(false);
+  if(sb){
+    try{
+      const {data}=await sb.auth.getSession();
+      sbSession=data&&data.session||null;
+      await loadRemote();
+      sb.auth.onAuthStateChange((ev,session)=>{
+        const was=!!sbSession;sbSession=session||null;
+        if(ev==='SIGNED_IN'&&!was){afterLogin();}
+        else if(ev==='SIGNED_OUT'){S.view='shop';S.tab='orders';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
+      });
+    }catch(e){console.error(e);}
+  }
+  S.loading=false;
+  applyUrl();
+  track('PageView');
+  {const p=curProduct();if(p)track('ViewContent',{content_name:p.name,value:p.price,currency:'THB'});}
+  render(false);
 })();
-track('PageView');
-{const p=curProduct();if(p)track('ViewContent',{content_name:p.name,value:p.price,currency:'THB'});}
-render(false);
 </script>
 </body>
 </html>
