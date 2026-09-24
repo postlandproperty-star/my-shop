@@ -307,7 +307,7 @@ const DOMAIN=(location.origin&&location.origin!=='null'?location.origin:'https:/
 const SB_URL='https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY='sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
 const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
-let sbSession=null,remoteReady=false,needsMigrate=false;
+let sbSession=null,remoteReady=false,needsMigrate=false,remoteStamp='';
 const CACHE='dp-cache-v1',LEGACY='dp-demo-v3';
 const PUBLIC_KEYS=['settings','products','coupons'],PRIVATE_KEYS=['orders','campaigns','events'];
 const pick=(o,keys)=>{const r={};keys.forEach(k=>{if(o[k]!==undefined)r[k]=o[k];});return r;};
@@ -329,6 +329,12 @@ function save(){
 async function flushRemote(){
   if(!savePending||!sb||!sbSession)return;
   savePending=false;
+  const chk=await sb.from('shop_state').select('id,updated_at');
+  const newest=(chk.data||[]).map(r=>r.updated_at||'').sort().pop()||'';
+  if(remoteStamp&&Date.parse(newest)>Date.parse(remoteStamp)){ // มีคนบันทึกจากแท็บ/เครื่องอื่นหลังจากเราโหลด
+    await loadRemote();S.edit=null;S.draft=null;render(true);
+    toast('ข้อมูลถูกแก้จากที่อื่นก่อนหน้านี้ โหลดข้อมูลล่าสุดมาแล้ว กรุณาแก้อีกครั้ง');return;
+  }
   const now=new Date().toISOString();
   // ลิงก์ไฟล์สินค้า (link) เป็นความลับ: แยกออกจากข้อมูลสาธารณะไปเก็บในแถว private
   const pub=pick(D,PUBLIC_KEYS),links={};
@@ -337,11 +343,13 @@ async function flushRemote(){
   const rows=[{id:'main',data:pub,updated_at:now},{id:'private',data:priv,updated_at:now}];
   const {error}=await sb.from('shop_state').upsert(rows);
   if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);}
+  else remoteStamp=now;
 }
 async function loadRemote(){
   if(!sb)return false;
-  const {data,error}=await sb.from('shop_state').select('id,data');
+  const {data,error}=await sb.from('shop_state').select('id,data,updated_at');
   if(error){console.error(error);return false;}
+  remoteStamp=(data||[]).map(r=>r.updated_at||'').sort().pop()||'';
   const main=(data||[]).find(r=>r.id==='main'),priv=(data||[]).find(r=>r.id==='private');
   remoteReady=true;
   if(!main||!main.data||!Array.isArray(main.data.products))return false; // ยังไม่เคยตั้งค่าข้อมูลบนระบบ
@@ -543,7 +551,7 @@ const S={view:'shop',tab:'orders',filter:'all',pfilter:'all',productId:null,edit
 /* ---------- logic ---------- */
 function track(name,data){
   D.events.unshift({t:Date.now(),name,data:data||{}});
-  D.events=D.events.slice(0,60);save();
+  D.events=D.events.slice(0,60);saveCache();
 }
 const getProduct=id=>D.products.find(p=>p.id===id);
 const validLink=l=>l&&/^https?:\/\//.test(l)&&!l.includes('ใส่ลิงก์');
@@ -1350,7 +1358,8 @@ function act(a,el){
       const data={slug,name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price,fullPrice:full,features:d.features,link,color:d.color,status:d.status,
         specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
         proof:t('proof'),promoEnd,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:d.images.slice(),
-        bumpProductId:d.bumpProductId||'',bumpPrice};
+        bumpProductId:d.bumpProductId||'',bumpPrice,stripeLink:t('stripeLink')};
+      if(data.stripeLink&&!/^https:\/\/buy\.stripe\.com\//.test(data.stripeLink)){S.err='ลิงก์ Stripe ต้องขึ้นต้นด้วย https://buy.stripe.com/';render(true);break;}
       let saved;
       if(isNew){saved=Object.assign({id:'p'+Date.now().toString(36)},data);D.products.push(saved);}
       else{saved=getProduct(selfId);Object.assign(saved,data);}
@@ -1371,7 +1380,7 @@ function act(a,el){
 
     /* pixel + reset */
     case 'savePixel':D.settings.pixelId=$('#s-pixel').value.trim();save();toast('บันทึก Pixel ID แล้ว');break;
-    case 'savePay':{const chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat)){toast('ลิงก์ทักแชทต้องขึ้นต้นด้วย https://');break;}D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
+    case 'savePay':{let chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat))chat='https://'+chat;D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
     case 'clearEvents':D.events=[];save();render(true);break;
     case 'clearDemo':
       if(S.confirm==='clearDemo'){D.orders=[];D.campaigns=[];D.events=[];S.confirm='';S.currentId=null;save();render(true);toast('ล้างออเดอร์และแคมเปญตัวอย่างแล้ว');}
