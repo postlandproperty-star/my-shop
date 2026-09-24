@@ -488,7 +488,7 @@ function normalize(d){
   if(!d.campaigns)d.campaigns=[];
   d.orders.forEach(o=>{if(o.campaign===undefined)o.campaign='';});
   if(!d.settings)d.settings={};
-  ['pixelId','promptpayId','bankInfo','contactInfo','chatLink'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
+  ['pixelId','promptpayId','bankInfo','contactInfo','chatLink','shopName','refundPolicy'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
   return d;
 }
 function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',price:199,fullPrice:390,features:'',link:'https://',color:COLORS[0][0],status:'draft'};}
@@ -786,7 +786,7 @@ function shopView(){
     <h2>คำถามที่พบบ่อย</h2>
     ${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}
   </div></section>
-  <footer class="fine">${esc(p.name)}</footer>
+  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}</footer>
 
   <div class="sticky" id="sticky"><div class="sticky-in">
     <span class="p">${baht(p.price)}</span>
@@ -957,7 +957,8 @@ function productForm(){
       <div class="field">${lb('e-full','ราคาปกติที่ขีดฆ่า (บาท)')}<input class="input" id="e-full" data-d="fullPrice" type="number" inputmode="numeric" min="0" value="${esc(d.fullPrice)}"></div>
     </div>
     ${ta('e-features','features','สิ่งที่ลูกค้าจะได้รับ (บรรทัดละข้อ)')}
-    <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive)')}<input class="input" id="e-link" data-d="link" value="${esc(d.link)}"></div>
+    <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — ไม่บังคับ')}<input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/...">
+      <span class="fine">เก็บไว้ให้แอดมินดูเท่านั้น ลูกค้าไม่เห็น ตอนนี้ไฟล์ถูกส่งผ่านข้อความ After payment ของ Stripe (ช่องนี้จะใช้เมื่อทำระบบส่งไฟล์อัตโนมัติ)</span></div>
     <div class="field">${lb('e-stripelink','ลิงก์จ่ายเงิน Stripe Payment Link (ถ้ามี)')}<input class="input" id="e-stripelink" data-d="stripeLink" value="${esc(d.stripeLink)}" placeholder="https://buy.stripe.com/..."></div>
     <div class="field"><span class="lbl" id="lbl-color">สีหลักของเซลเพจ</span>
       <div class="swatches" role="radiogroup" aria-labelledby="lbl-color">${COLORS.map(c=>`<label class="sw" style="--c:${c[0]}"><input type="radio" name="theme" data-d="color" value="${c[0]}" ${d.color===c[0]?'checked':''}><span class="dot"></span><span>${c[1]}</span></label>`).join('')}</div></div>
@@ -1054,6 +1055,10 @@ function payTab(){
       <textarea class="input" id="s-bank" rows="2" placeholder="เช่น ธนาคารกสิกรไทย เลขบัญชี 123-4-56789-0 ชื่อบัญชี Danaipong K.">${esc(D.settings.bankInfo||'')}</textarea></div>
     <div class="field"><label for="s-contact">ช่องทางติดต่อรับสลิป (Line/Messenger)</label>
       <input class="input" id="s-contact" value="${esc(D.settings.contactInfo||'')}" placeholder="เช่น Line: @yourshop"></div>
+    <div class="field"><label for="s-shop">ชื่อร้าน/ชื่อผู้ขาย (แสดงท้ายเว็บทุกหน้า ควรตรงกับที่แจ้ง Stripe)</label>
+      <input class="input" id="s-shop" value="${esc(D.settings.shopName||'')}" placeholder="เช่น salepage"></div>
+    <div class="field"><label for="s-refund">นโยบายการคืนเงิน/เงื่อนไข (แสดงท้ายเว็บ)</label>
+      <textarea class="input" id="s-refund" rows="2" placeholder="เช่น สินค้าเป็นไฟล์ดิจิทัล ดาวน์โหลดได้ทันทีหลังชำระเงิน จึงไม่รับคืนเงิน หากไฟล์มีปัญหาติดต่อร้านเพื่อรับไฟล์ใหม่">${esc(D.settings.refundPolicy||'')}</textarea></div>
     <div class="field"><label for="s-chat">ลิงก์ปุ่ม "ทักแชทถามก่อนซื้อ" (Messenger หรือ LINE)</label>
       <input class="input" id="s-chat" value="${esc(D.settings.chatLink||'')}" placeholder="เช่น https://m.me/ชื่อเพจ หรือ https://line.me/ti/p/@ไอดีไลน์">
       <span class="fine">ใส่แล้วปุ่มจะขึ้นใต้ปุ่มชำระเงินและในหน้าหลังจ่ายเงิน เว้นว่างถ้าไม่ต้องการ</span></div>
@@ -1347,7 +1352,7 @@ function act(a,el){
       if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)){S.err='ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น calculus-1-summary';render(true);break;}
       if(slugTaken(slug,selfId)){S.err='ชื่อในลิงก์นี้ถูกใช้แล้ว เลือกชื่ออื่น';render(true);break;}
       if(!(price>=1)){S.err='ราคาขายต้องเป็นตัวเลขตั้งแต่ 1 บาทขึ้นไป';render(true);break;}
-      if(!/^https?:\/\//.test(link)||link==='https://'){S.err='ใส่ลิงก์ไฟล์ให้ครบ โดยขึ้นต้นด้วย https://';render(true);break;}
+      if(link&&link!=='https://'&&!/^https?:\/\//.test(link)){S.err='ลิงก์ไฟล์ต้องขึ้นต้นด้วย https://';render(true);break;}
       if(sample&&sample!=='https://'&&!/^https?:\/\//.test(sample)){S.err='ลิงก์ไฟล์ตัวอย่างต้องขึ้นต้นด้วย https://';render(true);break;}
       const promoEnd=d.promoEndStr?new Date(d.promoEndStr).getTime():0;
       if(d.promoEndStr&&!(promoEnd>0)){S.err='วันเวลาโปรโมชันไม่ถูกต้อง';render(true);break;}
@@ -1355,7 +1360,7 @@ function act(a,el){
       if(d.bumpProductId&&!(bumpPrice>=0)){S.err='ราคาพิเศษของ order bump ต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป';render(true);break;}
       if(d.bumpProductId&&d.bumpProductId===selfId){S.err='เลือกสินค้าอื่นสำหรับ order bump ไม่ใช่สินค้านี้เอง';render(true);break;}
       const t=k=>String(d[k]==null?'':d[k]).trim();
-      const data={slug,name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price,fullPrice:full,features:d.features,link,color:d.color,status:d.status,
+      const data={slug,name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price,fullPrice:full,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
         specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
         proof:t('proof'),promoEnd,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:d.images.slice(),
         bumpProductId:d.bumpProductId||'',bumpPrice,stripeLink:t('stripeLink')};
@@ -1380,7 +1385,7 @@ function act(a,el){
 
     /* pixel + reset */
     case 'savePixel':D.settings.pixelId=$('#s-pixel').value.trim();save();toast('บันทึก Pixel ID แล้ว');break;
-    case 'savePay':{let chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat))chat='https://'+chat;D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
+    case 'savePay':{D.settings.shopName=$('#s-shop').value.trim();D.settings.refundPolicy=$('#s-refund').value.trim();let chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat))chat='https://'+chat;D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
     case 'clearEvents':D.events=[];save();render(true);break;
     case 'clearDemo':
       if(S.confirm==='clearDemo'){D.orders=[];D.campaigns=[];D.events=[];S.confirm='';S.currentId=null;save();render(true);toast('ล้างออเดอร์และแคมเปญตัวอย่างแล้ว');}
