@@ -799,7 +799,7 @@ function shopView(){
     ${bonusSum>0?`<p class="fine">รวมของแถมมูลค่า ${baht(bonusSum)} ไม่ต้องจ่ายเพิ่ม</p>`:''}
   </div></section>`:''}
 
-  ${p.authorName||p.authorBio?`<section class="section"><div class="wrap">
+  ${p.authorName?`<section class="section"><div class="wrap">
     <h2>${authorTitle}</h2>
     <div class="author" style="--c:${esc(p.color)}"><span class="avatar" aria-hidden="true">${esc(Array.from(p.authorName||'?')[0])}</span><div><b>${esc(p.authorName)}</b>${p.authorBio?`<p class="muted">${esc(p.authorBio)}</p>`:''}</div></div>
   </div></section>`:''}
