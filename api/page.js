@@ -29,6 +29,9 @@ export default async function handler(req, res) {
     if (/^[A-Za-z0-9_-]{5,100}$/.test(verify)) {
       out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
     }
+    // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
+    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [] }).replace(/<\//g, '<\\/');
+    out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     const p = /^[a-z0-9-]+$/.test(slug) ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
     if (p) {
       const proto = req.headers['x-forwarded-proto'] || 'https';

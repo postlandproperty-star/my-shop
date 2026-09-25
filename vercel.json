@@ -1,12 +1,26 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/api/page" },
-    { "source": "/p/:slug", "destination": "/api/page?slug=:slug" }
+    {
+      "source": "/",
+      "destination": "/api/page"
+    },
+    {
+      "source": "/p/:slug",
+      "destination": "/api/page?slug=:slug"
+    }
   ],
   "functions": {
-    "api/page.js": { "includeFiles": "index.html" }
+    "api/page.js": {
+      "includeFiles": "index.html"
+    }
   },
   "crons": [
-    { "path": "/api/keepalive", "schedule": "0 3 * * *" }
+    {
+      "path": "/api/keepalive",
+      "schedule": "0 3 * * *"
+    }
+  ],
+  "regions": [
+    "sin1"
   ]
 }

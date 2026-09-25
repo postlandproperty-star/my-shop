@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Mitr:wght@500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!--SHOP-DATA-->
 <style>
 :root{
   --bg:#EDF1F7;--surface:#FFFFFF;--ink:#0F1B33;--muted:#56637D;--line:#D3DBE8;
@@ -326,7 +326,17 @@ const DOMAIN=(location.origin&&location.origin!=='null'?location.origin:'https:/
    localStorage ใช้เป็นแคชให้หน้าเปิดเร็ว และเป็นที่พักข้อมูลฝั่งลูกค้า (เช่นออเดอร์ทดลอง) */
 const SB_URL='https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY='sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
-const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+let sb=null; // สร้างเมื่อจำเป็น (แอดมิน) เท่านั้น ลูกค้าทั่วไปไม่ต้องโหลดไลบรารี 200KB
+function loadSb(){
+  if(sb)return Promise.resolve(sb);
+  return new Promise((res,rej)=>{
+    if(window.supabase){sb=window.supabase.createClient(SB_URL,SB_KEY);return res(sb);}
+    const t=document.createElement('script');t.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    t.onload=()=>{sb=window.supabase.createClient(SB_URL,SB_KEY);res(sb);};t.onerror=()=>rej(new Error('โหลด Supabase ไม่ได้'));
+    document.head.appendChild(t);
+  });
+}
+const hasAdminToken=()=>{try{return !!localStorage.getItem('sb-lpeqaorswhwzlplsaqpe-auth-token');}catch(e){return false;}};
 let sbSession=null,remoteReady=false,needsMigrate=false,remoteStamp='';
 const CACHE='dp-cache-v1',LEGACY='dp-demo-v3';
 const PUBLIC_KEYS=['settings','products','coupons'],PRIVATE_KEYS=['orders','campaigns','events'];
@@ -1326,7 +1336,8 @@ function loginView(){
   </div>`;
 }
 async function doLogin(email,pass){
-  if(!sb){S.err='โหลดไลบรารี Supabase ไม่ได้ ลองรีเฟรชหน้า';render(true);return;}
+  try{await loadSb();}catch(e){S.err='โหลดไลบรารี Supabase ไม่ได้ ลองรีเฟรชหน้า';render(true);return;}
+  if(!authWired)wireAuth();
   S.loginEmail=email;S.busy=true;S.err='';render(true);
   const {error}=await sb.auth.signInWithPassword({email,password:pass});
   S.busy=false;
@@ -1592,22 +1603,34 @@ function applyUrl(){
     if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';
   }catch(e){}
 }
+let authWired=false;
+function wireAuth(){
+  authWired=true;
+  sb.auth.onAuthStateChange((ev,session)=>{
+    const was=!!sbSession;sbSession=session||null;
+    if(ev==='SIGNED_IN'&&!was){afterLogin();}
+    else if(ev==='SIGNED_OUT'){S.view='shop';S.tab='orders';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
+  });
+}
 (async function boot(){
-  const hadCache=!!load();
-  S.loading=!hadCache&&!!sb; // ไม่มีแคช: รอข้อมูลจากระบบก่อน จะได้ไม่เห็นข้อมูลตัวอย่างแวบขึ้นมา
+  const inline=window.__SHOP__;
+  if(inline&&Array.isArray(inline.products)){ // ข้อมูลฝังมากับหน้า: แสดงได้ทันที
+    const cached=load()||{};
+    D=normalize(Object.assign({},cached,inline));remoteReady=true;saveCache();
+  }
+  const q=new URLSearchParams(location.search);
+  const wantAdmin=q.has('admin')||location.hash==='#admin'||hasAdminToken();
+  S.loading=!inline&&!load(); // ไม่มีข้อมูลฝังและไม่มีแคช: รอโหลดจากระบบก่อน
   applyUrl();
   render(false);
-  if(sb){
+  if(wantAdmin||!inline){ // แอดมิน (หรือหน้าที่ไม่มีข้อมูลฝัง เช่นเปิดไฟล์ตรงๆ) ค่อยโหลดไลบรารีและดึงจากระบบ
     try{
+      await loadSb();
       const {data}=await sb.auth.getSession();
       sbSession=data&&data.session||null;
       await loadRemote();
       if(needsMigrate&&sbSession){needsMigrate=false;await pushAll();}
-      sb.auth.onAuthStateChange((ev,session)=>{
-        const was=!!sbSession;sbSession=session||null;
-        if(ev==='SIGNED_IN'&&!was){afterLogin();}
-        else if(ev==='SIGNED_OUT'){S.view='shop';S.tab='orders';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
-      });
+      wireAuth();
     }catch(e){console.error(e);}
   }
   S.loading=false;
