@@ -34,6 +34,6 @@ export default async function handler(req, res) {
     res.redirect(303, session.url);
   } catch (e) {
     console.error(e);
-    htmlError(res, 'เปิดหน้าชำระเงินไม่สำเร็จ', 'ลองใหม่อีกครั้ง หรือทักแชทหาร้าน');
+    htmlError(res, 'เปิดหน้าชำระเงินไม่สำเร็จ', 'ลองใหม่อีกครั้ง หรือทักแชทหาร้าน<br><small style="color:#999">' + String(e.message || e).replace(/[<>]/g, '') + '</small>');
   }
 }
