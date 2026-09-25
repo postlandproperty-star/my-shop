@@ -187,6 +187,10 @@ footer{padding:28px 0 110px;text-align:center}
 .field.hot label,.field.hot .lbl{color:var(--bad);font-weight:600}
 .field.hot .input{border-color:var(--bad)}
 .prod .warnline{color:var(--bad);font-size:14px;font-weight:500;margin:4px 0}
+.quick{background:var(--bg);border-radius:12px;padding:12px;margin:10px 0;display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.quick .full{grid-column:1/-1}
+.quick label{font-size:13px;color:var(--muted);display:block;margin-bottom:4px}
+@media(max-width:520px){.quick{grid-template-columns:1fr}}
 .toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:15px;z-index:40;max-width:90vw;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 
 /* sales page extras */
@@ -997,9 +1001,18 @@ function productRow(p){
     ${pub&&!(p.link&&validLink(p.link))?`<div class="warnline">⚠️ ยังไม่ได้ใส่ลิงก์ไฟล์ (Google Drive) ลูกค้าจ่ายแล้วจะไม่ได้ไฟล์อัตโนมัติ</div>`:''}
     <div class="prod-stats"><span>${KINDS[p.kind]||'สินค้าดิจิทัล'}</span><span>ราคา ${baht(p.price)}</span><span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
     <div class="linkline"><span class="fine">ลิงก์สำหรับแอด</span><code>${DOMAIN}${esc(p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอก</button></div>
+    ${S.quick===p.id?`<div class="quick">
+      <div><label for="q-price-${p.id}">ราคาขาย (บาท) — เก็บเงินจริง</label><input class="input" id="q-price-${p.id}" inputmode="decimal" value="${esc(p.price)}"></div>
+      <div><label for="q-full-${p.id}">ราคาเต็มที่ขีดฆ่า (บาท)</label><input class="input" id="q-full-${p.id}" inputmode="decimal" value="${esc(p.fullPrice||'')}"></div>
+      <div class="full"><label for="q-link-${p.id}">ลิงก์ไฟล์สินค้า (Google Drive) — ลูกค้าได้รับหลังจ่าย</label><input class="input" id="q-link-${p.id}" value="${esc(p.link||'')}" placeholder="https://drive.google.com/..."></div>
+      <div><label for="q-status-${p.id}">สถานะ</label><select class="input" id="q-status-${p.id}"><option value="published" ${pub?'selected':''}>เผยแพร่แล้ว</option><option value="draft" ${!pub?'selected':''}>ฉบับร่าง</option></select></div>
+      <div style="display:flex;align-items:flex-end;gap:8px"><button class="btn btn-dark btn-sm" data-a="saveQuick" data-id="${p.id}">บันทึก</button><button class="btn btn-line btn-sm" data-a="quickEdit" data-id="${p.id}">ยกเลิก</button></div>
+      ${S.err?`<p class="err full" style="margin:0">${esc(S.err)}</p>`:''}
+    </div>`:''}
     <div class="acts">
+      <button class="btn btn-cta btn-sm" data-a="quickEdit" data-id="${p.id}">${S.quick===p.id?'ปิดแก้ไขด่วน':'แก้ไขด่วน'}</button>
       <button class="btn btn-dark btn-sm" data-a="viewPage" data-id="${p.id}">ดูเซลเพจ</button>
-      <button class="btn btn-line btn-sm" data-a="editProduct" data-id="${p.id}">แก้ไข</button>
+      <button class="btn btn-line btn-sm" data-a="editProduct" data-id="${p.id}">แก้ไขทั้งหมด</button>
       <button class="btn btn-line btn-sm" data-a="dupProduct" data-id="${p.id}">ทำสำเนา</button>
       <button class="btn btn-line btn-sm" data-a="togglePub" data-id="${p.id}">${pub?'เปลี่ยนเป็นฉบับร่าง':'เผยแพร่'}</button>
       <button class="btn ${cf?'btn-danger':'btn-line'} btn-sm" data-a="delProduct" data-id="${p.id}">${cf?'กดอีกครั้งเพื่อยืนยันลบ':'ลบ'}</button>
@@ -1419,7 +1432,7 @@ function act(a,el){
     case 'closeZoom':S.zoom=null;drawLB();break;
     case 'zoomPrev':case 'zoomNext':{const n=(curProduct().images||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
     case 'filter':S.filter=el.dataset.v;render(true);break;
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;render(false);if(S.tab==='orders')autoSync();break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;render(false);if(S.tab==='orders')autoSync();break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
@@ -1430,6 +1443,15 @@ function act(a,el){
     /* products */
     case 'viewPage':selectProduct(id);go('shop');break;
     case 'copyLink':{const p=getProduct(id);copyText(DOMAIN+p.slug);break;}
+    case 'quickEdit':S.quick=S.quick===id?null:id;S.err='';render(true);break;
+    case 'saveQuick':{
+      const p=getProduct(id);if(!p)break;
+      const price=Number($('#q-price-'+id).value),full=Number($('#q-full-'+id).value)||0,link=$('#q-link-'+id).value.trim(),status=$('#q-status-'+id).value;
+      if(!(price>=10)){S.err='ราคาขายต้องเป็นตัวเลขตั้งแต่ 10 บาทขึ้นไป (ขั้นต่ำของ Stripe)';render(true);break;}
+      if(link&&!/^https?:\/\//.test(link)){S.err='ลิงก์ไฟล์ต้องขึ้นต้นด้วย https://';render(true);break;}
+      if(status==='published'&&!link){S.err='ใส่ลิงก์ไฟล์ก่อนเผยแพร่ ไม่งั้นลูกค้าจ่ายแล้วไม่ได้ไฟล์';render(true);break;}
+      Object.assign(p,{price,fullPrice:full,link,status});
+      S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');break;}
     case 'newProduct':S.draft=initDraft(blankProduct());S.edit='new';S.err='';render(false);break;
     case 'editProduct':S.draft=initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
     case 'cancelEdit':S.edit=null;S.draft=null;S.err='';render(false);break;
