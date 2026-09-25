@@ -15,14 +15,20 @@ export default async function handler(req, res) {
     if (s.payment_status !== 'paid') return res.status(200).json({ ok: true, paid: false, status: s.payment_status });
     const shop = await loadShop();
     const p = shop.products.find((x) => x.id === order.product_id) || null;
-    let link = '';
-    if (cfg.supabase) { try { link = (await loadLinks())[order.product_id] || ''; } catch (e) { console.error(e); } }
+    let links = {};
+    if (cfg.supabase) { try { links = await loadLinks(); } catch (e) { console.error(e); } }
+    const m = s.metadata || {};
+    const items = [{ productId: order.product_id, name: p ? p.name : order.product_name, link: links[order.product_id] || '' }];
+    if (m.bumpProductId) {
+      const bp = shop.products.find((x) => x.id === m.bumpProductId);
+      items.push({ productId: m.bumpProductId, name: bp ? bp.name : m.bumpProductName, link: links[m.bumpProductId] || '' });
+    }
     res.status(200).json({
       ok: true, paid: true,
       orderId: s.id.slice(-8).toUpperCase(),
-      productId: order.product_id, productName: p ? p.name : order.product_name,
+      productId: order.product_id, productName: items.map((it) => it.name).join(' + '),
       amount: order.amount, currency: order.currency, email: order.email,
-      link, sampleLink: p ? p.sampleLink || '' : '',
+      link: items[0].link, items,
     });
   } catch (e) {
     console.error(e);

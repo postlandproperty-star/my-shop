@@ -726,7 +726,7 @@ function shopView(){
     ${!S.order?`<h2 style="margin-bottom:8px">กำลังตรวจสอบการชำระเงิน...</h2><p class="muted">รอสักครู่</p>`:
       S.order.paid?`<h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
         <p class="muted" style="margin-bottom:14px">${esc(S.order.productName||'')} · ${baht(S.order.amount)} · เลขออเดอร์ ${esc(S.order.orderId)}${S.order.email?`<br>ใบเสร็จส่งไปที่ ${esc(S.order.email)}`:''}</p>
-        ${S.order.link?linkBtn(S.order.link,'ดาวน์โหลดไฟล์'):`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของสินค้านี้ กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`}
+        ${(S.order.items&&S.order.items.length?S.order.items:[{name:S.order.productName,link:S.order.link}]).map(it=>it.link?`<div style="margin-bottom:8px">${linkBtn(it.link,'ดาวน์โหลด '+esc(it.name||'ไฟล์'))}</div>`:`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของ ${esc(it.name||'สินค้านี้')} กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`).join('')}
         <p class="fine" style="margin-top:12px">เก็บหน้านี้ไว้ กดลิงก์ดาวน์โหลดซ้ำได้ตลอด${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">มีปัญหา? ทักแชท</a>`:''}</p>`:
       S.order.error?`<h2 style="margin-bottom:8px">ตรวจสอบไม่สำเร็จ</h2><p class="muted">${esc(S.order.error)}</p><button class="btn btn-line btn-sm" data-a="recheckOrder">ลองใหม่</button>`:
       `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
@@ -802,8 +802,10 @@ function shopView(){
   <section class="section" id="checkout"><div class="wrap">
     <h2>สั่งซื้อ ${esc(p.name)}</h2>
     <div class="card">
-      <p class="amount" style="text-align:center;margin-bottom:16px">${baht(p.price)}</p>
-      <a class="btn btn-cta btn-block" href="/api/checkout?p=${encodeURIComponent(p.slug)}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">ชำระเงิน ${baht(p.price)} (PromptPay / บัตร)</a>
+      ${(()=>{const bp2=bp&&bp.status==='published'&&Number(p.bumpPrice)>0?bp:null,on=!!(f.bump&&bp2),total=p.price+(on?Number(p.bumpPrice):0),pct=bp2?Math.round((1-Number(p.bumpPrice)/bp2.price)*100):0;return `
+      ${bp2?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${on?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>ซื้อคู่กับ ${esc(bp2.name)} <span class="was">${baht(bp2.price)}</span> ${baht(p.bumpPrice)}${pct>0?` <span class="badge ok">ลด ${pct}%</span>`:''}</b><p>ติ๊กเพิ่มแล้วจ่ายรวมครั้งเดียว ได้ไฟล์ทั้งสองทันทีหลังชำระเงิน</p></label></div>`:''}
+      <p class="amount" style="text-align:center;margin-bottom:16px">${baht(total)}${on?` <span class="fine">(${baht(p.price)} + ${baht(p.bumpPrice)})</span>`:''}</p>
+      <a class="btn btn-cta btn-block" href="/api/checkout?p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">ชำระเงิน ${baht(total)} (PromptPay / บัตร)</a>`;})()}
       <p class="fine" style="text-align:center;margin-top:10px">ชำระผ่าน Stripe ปลอดภัย จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
       ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
     </div>
@@ -1005,6 +1007,8 @@ function productRow(p){
       <div><label for="q-price-${p.id}">ราคาขาย (บาท) — เก็บเงินจริง</label><input class="input" id="q-price-${p.id}" inputmode="decimal" value="${esc(p.price)}"></div>
       <div><label for="q-full-${p.id}">ราคาเต็มที่ขีดฆ่า (บาท)</label><input class="input" id="q-full-${p.id}" inputmode="decimal" value="${esc(p.fullPrice||'')}"></div>
       <div class="full"><label for="q-link-${p.id}">ลิงก์ไฟล์สินค้า (Google Drive) — ลูกค้าได้รับหลังจ่าย</label><input class="input" id="q-link-${p.id}" value="${esc(p.link||'')}" placeholder="https://drive.google.com/..."></div>
+      <div><label for="q-bump-${p.id}">ซื้อคู่กับ (เสนอเพิ่มตอนจ่ายเงิน)</label><select class="input" id="q-bump-${p.id}"><option value="">ไม่เสนอ</option>${D.products.filter(x=>x.id!==p.id&&x.status==='published').map(x=>`<option value="${x.id}" ${p.bumpProductId===x.id?'selected':''}>${esc(x.name)} (ปกติ ${baht(x.price)})</option>`).join('')}</select></div>
+      <div><label for="q-bprice-${p.id}">ราคาพิเศษของสินค้าคู่ (บาท)${p.bumpProductId&&getProduct(p.bumpProductId)&&p.bumpPrice>0?` — ลด ${Math.round((1-p.bumpPrice/getProduct(p.bumpProductId).price)*100)}%`:''}</label><input class="input" id="q-bprice-${p.id}" inputmode="decimal" value="${esc(p.bumpPrice||'')}" placeholder="เช่น 129"></div>
       <div><label for="q-status-${p.id}">สถานะ</label><select class="input" id="q-status-${p.id}"><option value="published" ${pub?'selected':''}>เผยแพร่แล้ว</option><option value="draft" ${!pub?'selected':''}>ฉบับร่าง</option></select></div>
       <div style="display:flex;align-items:flex-end;gap:8px"><button class="btn btn-dark btn-sm" data-a="saveQuick" data-id="${p.id}">บันทึก</button><button class="btn btn-line btn-sm" data-a="quickEdit" data-id="${p.id}">ยกเลิก</button></div>
       ${S.err?`<p class="err full" style="margin:0">${esc(S.err)}</p>`:''}
@@ -1446,11 +1450,12 @@ function act(a,el){
     case 'quickEdit':S.quick=S.quick===id?null:id;S.err='';render(true);break;
     case 'saveQuick':{
       const p=getProduct(id);if(!p)break;
-      const price=Number($('#q-price-'+id).value),full=Number($('#q-full-'+id).value)||0,link=$('#q-link-'+id).value.trim(),status=$('#q-status-'+id).value;
+      const price=Number($('#q-price-'+id).value),full=Number($('#q-full-'+id).value)||0,link=$('#q-link-'+id).value.trim(),status=$('#q-status-'+id).value,bumpProductId=$('#q-bump-'+id).value,bumpPrice=Number($('#q-bprice-'+id).value)||0;
+      if(bumpProductId&&!(bumpPrice>=1)){S.err='ใส่ราคาพิเศษของสินค้าคู่ (อย่างน้อย 1 บาท)';render(true);break;}
       if(!(price>=10)){S.err='ราคาขายต้องเป็นตัวเลขตั้งแต่ 10 บาทขึ้นไป (ขั้นต่ำของ Stripe)';render(true);break;}
       if(link&&!/^https?:\/\//.test(link)){S.err='ลิงก์ไฟล์ต้องขึ้นต้นด้วย https://';render(true);break;}
       if(status==='published'&&!link){S.err='ใส่ลิงก์ไฟล์ก่อนเผยแพร่ ไม่งั้นลูกค้าจ่ายแล้วไม่ได้ไฟล์';render(true);break;}
-      Object.assign(p,{price,fullPrice:full,link,status});
+      Object.assign(p,{price,fullPrice:full,link,status,bumpProductId,bumpPrice:bumpProductId?bumpPrice:0});
       S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');break;}
     case 'newProduct':S.draft=initDraft(blankProduct());S.edit='new';S.err='';render(false);break;
     case 'editProduct':S.draft=initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
