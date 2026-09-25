@@ -1,6 +1,7 @@
 // หน้าสินค้าเรียกหลังจ่ายเงิน: ตรวจกับ Stripe ว่า session นี้จ่ายจริง แล้วคืนลิงก์ไฟล์ + บันทึกออเดอร์
 // GET /api/order?session_id=cs_...
-import { loadShop, loadLinks, stripe, upsertOrders, sessionToOrder, configured } from '../lib/shop.js';
+import { stripe, sessionToOrder, upsertOrders, configured } from '../lib/shop.js';
+import { fulfill } from '../lib/fulfill.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -11,24 +12,19 @@ export default async function handler(req, res) {
   try {
     const s = await stripe('GET', `checkout/sessions/${id}`);
     const order = sessionToOrder(s);
-    if (cfg.supabase) { try { await upsertOrders([order]); } catch (e) { console.error(e); } }
-    if (s.payment_status !== 'paid') return res.status(200).json({ ok: true, paid: false, status: s.payment_status });
-    const shop = await loadShop();
-    const p = shop.products.find((x) => x.id === order.product_id) || null;
-    let links = {};
-    if (cfg.supabase) { try { links = await loadLinks(); } catch (e) { console.error(e); } }
-    const m = s.metadata || {};
-    const items = [{ productId: order.product_id, name: p ? p.name : order.product_name, link: links[order.product_id] || '' }];
-    if (m.bumpProductId) {
-      const bp = shop.products.find((x) => x.id === m.bumpProductId);
-      items.push({ productId: m.bumpProductId, name: bp ? bp.name : m.bumpProductName, link: links[m.bumpProductId] || '' });
+    if (s.payment_status !== 'paid') {
+      if (cfg.supabase) { try { await upsertOrders([order]); } catch (e) { console.error(e); } }
+      return res.status(200).json({ ok: true, paid: false, status: s.payment_status });
     }
+    const origin = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
+    const r = await fulfill(s, { origin }); // บันทึกออเดอร์ + ส่งอีเมลครั้งเดียว + คืนรายการไฟล์
+    const items = r.items || [];
     res.status(200).json({
       ok: true, paid: true,
       orderId: s.id.slice(-8).toUpperCase(),
       productId: order.product_id, productName: items.map((it) => it.name).join(' + '),
       amount: order.amount, currency: order.currency, email: order.email,
-      link: items[0].link, items,
+      link: items[0] ? items[0].link : '', items, emailed: r.sent || r.reason === 'already sent',
     });
   } catch (e) {
     console.error(e);

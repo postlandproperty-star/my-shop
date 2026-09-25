@@ -399,7 +399,7 @@ async function loadOrders(){
   if(error){console.error(error);return;}
   const real=(data||[]).map(r=>({id:String(r.session_id).slice(-8).toUpperCase(),sid:r.session_id,src:'stripe',productId:r.product_id||'',pname:r.product_name||'',name:r.name||'(ไม่ระบุชื่อ)',email:r.email||'',method:'stripe',
     base:Number(r.amount)||0,discount:0,amount:Number(r.amount)||0,coupon:'',campaign:r.campaign||'',status:r.status==='paid'?'paid':r.status==='expired'?'expired':'pending',
-    created:Date.parse(r.created_at)||Date.now(),paidAt:r.paid_at?Date.parse(r.paid_at):null,items:[],paymentIntent:r.payment_intent||'',
+    created:Date.parse(r.created_at)||Date.now(),paidAt:r.paid_at?Date.parse(r.paid_at):null,items:[],paymentIntent:r.payment_intent||'',emailedAt:r.emailed_at?Date.parse(r.emailed_at):null,
     log:[{t:Date.parse(r.created_at)||Date.now(),text:r.status==='paid'?'ชำระเงินผ่าน Stripe สำเร็จ':'เปิดหน้าชำระเงิน ยังไม่จ่าย'}]}));
   D.orders=real.concat((D.orders||[]).filter(o=>o.src!=='stripe'));
 }
@@ -727,7 +727,7 @@ function shopView(){
       S.order.paid?`<h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
         <p class="muted" style="margin-bottom:14px">${esc(S.order.productName||'')} · ${baht(S.order.amount)} · เลขออเดอร์ ${esc(S.order.orderId)}${S.order.email?`<br>ใบเสร็จส่งไปที่ ${esc(S.order.email)}`:''}</p>
         ${(S.order.items&&S.order.items.length?S.order.items:[{name:S.order.productName,link:S.order.link}]).map(it=>it.link?`<div style="margin-bottom:8px">${linkBtn(it.link,'ดาวน์โหลด '+esc(it.name||'ไฟล์'))}</div>`:`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของ ${esc(it.name||'สินค้านี้')} กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`).join('')}
-        <p class="fine" style="margin-top:12px">เก็บหน้านี้ไว้ กดลิงก์ดาวน์โหลดซ้ำได้ตลอด${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">มีปัญหา? ทักแชท</a>`:''}</p>`:
+        <p class="fine" style="margin-top:12px">${S.order.emailed&&S.order.email?'ส่งลิงก์ไปที่อีเมล '+esc(S.order.email)+' ให้แล้วด้วย · ':''}เก็บหน้านี้ไว้ กดลิงก์ดาวน์โหลดซ้ำได้ตลอด${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">มีปัญหา? ทักแชท</a>`:''}</p>`:
       S.order.error?`<h2 style="margin-bottom:8px">ตรวจสอบไม่สำเร็จ</h2><p class="muted">${esc(S.order.error)}</p><button class="btn btn-line btn-sm" data-a="recheckOrder">ลองใหม่</button>`:
       `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
   </div></div>`:''}
@@ -915,7 +915,8 @@ function orderRow(o){
       <div class="o-info"><span>${esc(o.email)}</span><span>สร้างเมื่อ ${fdt(o.created)}</span><span>เลขออเดอร์ ${esc(o.id)}</span><span>วิธีชำระ ${methodName(o.method)}</span>${o.coupon?`<span>โค้ด ${esc(o.coupon)}</span>`:''}${o.campaign?`<span>จากแคมเปญ ${esc(o.campaign)}</span>`:''}${o.items&&o.items.length>1?`<span>รวม order bump: ${esc(o.items.slice(1).map(it=>it.name).join(', '))}</span>`:''}</div>
       <ul class="log">${o.log.map(l=>`<li><span class="muted">${fdt(l.t)}</span>${esc(l.text)}</li>`).join('')}</ul>
       <div class="acts">
-        ${o.src==='stripe'?`<a class="btn btn-line btn-sm" href="https://dashboard.stripe.com/${o.paymentIntent?'payments/'+esc(o.paymentIntent):'payments'}" target="_blank" rel="noopener noreferrer">ดู/คืนเงินใน Stripe</a>`:''}
+        ${o.src==='stripe'?`<a class="btn btn-line btn-sm" href="https://dashboard.stripe.com/${o.paymentIntent?'payments/'+esc(o.paymentIntent):'payments'}" target="_blank" rel="noopener noreferrer">ดู/คืนเงินใน Stripe</a>
+          ${o.status==='paid'?`<button class="btn btn-line btn-sm" data-a="resendEmail" data-sid="${esc(o.sid)}" ${o.email?'':'disabled'}>${o.emailedAt?'ส่งอีเมลซ้ำ':'ส่งอีเมลลิงก์ไฟล์'}</button><span class="fine">${o.emailedAt?'อีเมลส่งแล้ว '+fdt(o.emailedAt):o.email?'ยังไม่ได้ส่งอีเมล':'ไม่มีอีเมลลูกค้า'}</span>`:''}`:''}
         ${o.status==='paid'&&o.src!=='stripe'?`<button class="btn btn-line btn-sm" data-a="resend" data-id="${o.id}">ส่งลิงก์ซ้ำ</button>
           <button class="btn ${cf?'btn-danger':'btn-line'} btn-sm" data-a="refund" data-id="${o.id}">${cf?'กดอีกครั้งเพื่อยืนยันคืนเงิน':'คืนเงิน'}</button>`:''}
         ${o.status==='pending'&&o.src!=='stripe'?`<button class="btn btn-dark btn-sm" data-a="manualPaid" data-id="${o.id}">ยืนยันว่าชำระแล้ว</button>`:''}
@@ -1379,13 +1380,14 @@ function act(a,el){
     case 'toShop':go('shop');break;
     case 'recheckOrder':verifyOrder();break;
     case 'syncOrders':autoSync(true);break;
+    case 'resendEmail':{toast('กำลังส่งอีเมล...');adminApi('/api/order-email?session_id='+encodeURIComponent(el.dataset.sid)).then(async j=>{if(j.ok){await loadOrders();render(true);toast('ส่งอีเมลไปที่ '+j.to+' แล้ว');}else toast('ส่งไม่สำเร็จ: '+(j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'range':S.range=Number(el.dataset.v);S.chartDay=null;render(true);break;
     case 'pickDay':S.chartDay=S.chartDay===el.dataset.d?null:el.dataset.d;render(true);break;
     case 'checkStatus':{toast('กำลังตรวจสอบ...');adminApi('/api/status').then(j=>{
       if(!j.ok)S.status={ok:false,text:j.error||'ตรวจสอบไม่ได้'};
       else if(!j.stripeKey||!j.supabaseKey)S.status={ok:false,text:'คีย์บน Vercel ยังไม่ครบ: '+(!j.stripeKey?'STRIPE_SECRET_KEY ':'')+(!j.supabaseKey?'SUPABASE_SECRET_KEY':'')+' (ใส่แล้วต้อง Redeploy)'};
       else if(j.stripeError)S.status={ok:false,text:'Stripe ตอบกลับผิดพลาด: '+j.stripeError};
-      else S.status={ok:true,text:'พร้อมรับเงิน: บัญชี Stripe "'+(j.account&&j.account.name)+'" ('+(j.account&&j.account.country)+') · PromptPay: '+(j.promptpay==='active'?'เปิดใช้แล้ว':j.promptpay)};
+      else S.status={ok:true,text:'พร้อมรับเงิน: บัญชี Stripe "'+(j.account&&j.account.name)+'" ('+(j.account&&j.account.country)+') · PromptPay: '+(j.promptpay==='active'?'เปิดใช้แล้ว':j.promptpay)+' · อีเมลอัตโนมัติ: '+(j.mail?'พร้อม ('+j.mailUser+')':'ยังไม่ตั้งค่า GMAIL')+' · Webhook: '+(j.webhook?'ตั้งแล้ว':'ยังไม่ตั้ง (ลูกค้าที่ปิดหน้าเว็บก่อนจะไม่ได้อีเมลอัตโนมัติ)')};
       render(true);}).catch(e=>{S.status={ok:false,text:'เชื่อมต่อไม่ได้'};render(true);});break;}
     case 'viewUpsell':selectProduct(id);go('shop');break;
     case 'toAdmin':go('admin');break;
