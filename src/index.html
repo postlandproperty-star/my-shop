@@ -1008,19 +1008,38 @@ function ordersTab(){
   ${list.length?list.map(orderRow).join(''):`<div class="empty"><p>${paidAll.length?'ไม่มีออเดอร์ในหมวดนี้':'ยังไม่มีออเดอร์ที่ชำระแล้ว ออเดอร์จะขึ้นที่นี่อัตโนมัติเมื่อลูกค้าจ่ายผ่าน Stripe'}</p></div>`}`;
 }
 
+/* ตรวจลิงก์ไฟล์ของทุกสินค้าอัตโนมัติเมื่อเปิดแท็บสินค้า (ผลเก็บไว้ 5 นาที) */
+const linkStatus={};
+async function checkAllLinks(force){
+  if(!sb||!sbSession)return;
+  for(const p of D.products){
+    if(!p.link||!validLink(p.link)){linkStatus[p.id]={ok:false,text:'ยังไม่ได้ใส่ลิงก์ไฟล์',t:Date.now()};continue;}
+    const cur=linkStatus[p.id];
+    if(!force&&cur&&cur.url===p.link&&Date.now()-cur.t<300e3)continue;
+    linkStatus[p.id]={pending:true,text:'กำลังตรวจ...',url:p.link,t:Date.now()};render(true);
+    try{const j=await adminApi('/api/link-check?url='+encodeURIComponent(p.link));linkStatus[p.id]={ok:!!j.ok,text:j.text||j.error||'ตรวจไม่ได้',url:p.link,t:Date.now()};}
+    catch(e){linkStatus[p.id]={ok:false,text:'ตรวจไม่ได้',url:p.link,t:Date.now()};}
+    render(true);
+  }
+}
+function linkBadge(p){const c=linkStatus[p.id];if(!c)return '';const cls=c.pending?'gray':c.ok?'ok':'bad';return `<span class="badge ${cls}" title="${esc(c.text)}">ไฟล์: ${c.pending?'กำลังตรวจ':c.ok?'เปิดได้ ✓':'มีปัญหา ✗'}</span>`;}
+function linkCheckMsg(id){const c=S.linkCheck;if(!c||c.id!==id)return '';return `<div class="fine" style="margin-top:6px;color:${c.pending?'var(--muted)':c.ok?'var(--ok)':'var(--bad)'}">${esc(c.text)}${!c.pending&&c.url?` · <a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">เปิดดู</a>`:''}</div>`;}
 function productRow(p){
   const st=prodStats(p);
   const pub=p.status==='published';
   const cf=S.confirm==='del:'+p.id;
   return `<div class="prod" style="--c:${esc(p.color)}">
-    <div class="prod-top"><b>${esc(p.name)}</b><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span></div>
-    ${pub&&!(p.link&&validLink(p.link))?`<div class="warnline">⚠️ ยังไม่ได้ใส่ลิงก์ไฟล์ (Google Drive) ลูกค้าจ่ายแล้วจะไม่ได้ไฟล์อัตโนมัติ</div>`:''}
+    <div class="prod-top"><b>${esc(p.name)}</b><span class="row" style="gap:6px;align-items:center"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span>${linkBadge(p)}</span></div>
+    ${linkStatus[p.id]&&!linkStatus[p.id].ok&&!linkStatus[p.id].pending?`<div class="warnline">⚠️ ${esc(linkStatus[p.id].text)}</div>`:''}
+    ${pub&&!linkStatus[p.id]&&!(p.link&&validLink(p.link))?`<div class="warnline">⚠️ ยังไม่ได้ใส่ลิงก์ไฟล์ (Google Drive) ลูกค้าจ่ายแล้วจะไม่ได้ไฟล์อัตโนมัติ</div>`:''}
     <div class="prod-stats"><span>${esc(kindName(p.kind))}</span><span>ราคา ${baht(p.price)}</span><span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
     <div class="linkline"><span class="fine">ลิงก์สำหรับแอด</span><code>${DOMAIN}${esc(p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอก</button></div>
     ${S.quick===p.id?`<div class="quick">
       <div><label for="q-price-${p.id}">ราคาขาย (บาท) — เก็บเงินจริง</label><input class="input" id="q-price-${p.id}" inputmode="decimal" value="${esc(p.price)}"></div>
       <div><label for="q-full-${p.id}">ราคาเต็มที่ขีดฆ่า (บาท)</label><input class="input" id="q-full-${p.id}" inputmode="decimal" value="${esc(p.fullPrice||'')}"></div>
-      <div class="full"><label for="q-link-${p.id}">ลิงก์ไฟล์สินค้า (Google Drive) — ลูกค้าได้รับหลังจ่าย</label><input class="input" id="q-link-${p.id}" value="${esc(p.link||'')}" placeholder="https://drive.google.com/..."></div>
+      <div class="full"><label for="q-link-${p.id}">ลิงก์ไฟล์สินค้า (Google Drive) — ลูกค้าได้รับหลังจ่าย</label>
+        <div class="row"><input class="input" id="q-link-${p.id}" value="${esc(p.link||'')}" placeholder="https://drive.google.com/..."><button class="btn btn-line btn-sm" data-a="checkLink" data-for="q-link-${p.id}">ตรวจลิงก์</button></div>
+        ${linkCheckMsg('q-link-'+p.id)}</div>
       <div><label for="q-bump-${p.id}">ซื้อคู่กับ (เสนอเพิ่มตอนจ่ายเงิน)</label><select class="input" id="q-bump-${p.id}"><option value="">ไม่เสนอ</option>${D.products.filter(x=>x.id!==p.id&&x.status==='published').map(x=>`<option value="${x.id}" ${p.bumpProductId===x.id?'selected':''}>${esc(x.name)} (ปกติ ${baht(x.price)})</option>`).join('')}</select></div>
       <div><label for="q-bprice-${p.id}">ราคาพิเศษของสินค้าคู่ (บาท)${p.bumpProductId&&getProduct(p.bumpProductId)&&p.bumpPrice>0?` — ลด ${Math.round((1-p.bumpPrice/getProduct(p.bumpProductId).price)*100)}%`:''}</label><input class="input" id="q-bprice-${p.id}" inputmode="decimal" value="${esc(p.bumpPrice||'')}" placeholder="เช่น 129"></div>
       <div><label for="q-status-${p.id}">สถานะ</label><select class="input" id="q-status-${p.id}"><option value="published" ${pub?'selected':''}>เผยแพร่แล้ว</option><option value="draft" ${!pub?'selected':''}>ฉบับร่าง</option></select></div>
@@ -1064,7 +1083,8 @@ function productForm(){
       <div class="field">${lb('e-full','ราคาปกติที่ขีดฆ่า (บาท)')}<input class="input" id="e-full" data-d="fullPrice" type="number" inputmode="numeric" min="0" value="${esc(d.fullPrice)}"></div>
     </div>
     ${ta('e-features','features','สิ่งที่ลูกค้าจะได้รับ (บรรทัดละข้อ)')}
-    <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — สำคัญ')}<input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/...">
+    <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — สำคัญ')}<div class="row"><input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/..."><button class="btn btn-line btn-sm" data-a="checkLink" data-for="e-link">ตรวจลิงก์</button></div>
+      ${linkCheckMsg('e-link')}
       <span class="fine">ลูกค้าจะได้ปุ่มดาวน์โหลดลิงก์นี้อัตโนมัติหลังจ่ายเงินสำเร็จ (ระบบตรวจกับ Stripe ก่อนทุกครั้ง) ตั้งค่าแชร์ไฟล์เป็น "ทุกคนที่มีลิงก์"</span></div>
     <p class="fine" style="margin:4px 0 12px">💳 ราคาขายด้านบนคือราคาที่เก็บเงินจริงผ่าน Stripe อัตโนมัติ ไม่ต้องตั้งค่าใน Stripe อีก</p>
     <div class="field"><span class="lbl" id="lbl-color">สีหลักของเซลเพจ</span>
@@ -1363,6 +1383,7 @@ async function afterLogin(){
   if(needsMigrate){needsMigrate=false;await pushAll();}
   S.view='admin';S.err='';render(false);
   if(S.tab==='orders')autoSync(true);
+  if(S.tab==='products')checkAllLinks();
 }
 function render(keep){
   const y=window.scrollY,v=S.view;
@@ -1458,7 +1479,7 @@ function act(a,el){
     case 'closeZoom':S.zoom=null;drawLB();break;
     case 'zoomPrev':case 'zoomNext':{const n=(curProduct().images||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
     case 'filter':S.filter=el.dataset.v;render(true);break;
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;render(false);if(S.tab==='orders')autoSync();break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
@@ -1469,7 +1490,12 @@ function act(a,el){
     /* products */
     case 'viewPage':selectProduct(id);go('shop');break;
     case 'copyLink':{const p=getProduct(id);copyText(DOMAIN+p.slug);break;}
-    case 'quickEdit':S.quick=S.quick===id?null:id;S.err='';render(true);break;
+    case 'quickEdit':S.quick=S.quick===id?null:id;S.err='';S.linkCheck=null;render(true);break;
+    case 'checkLink':{
+      const fid=el.dataset.for,url=($('#'+fid).value||'').trim();
+      if(!/^https?:\/\//.test(url)){S.linkCheck={id:fid,ok:false,text:'ใส่ลิงก์ก่อน (ต้องขึ้นต้นด้วย https://)'};render(true);break;}
+      S.linkCheck={id:fid,pending:true,text:'กำลังลองเปิดลิงก์...'};render(true);
+      adminApi('/api/link-check?url='+encodeURIComponent(url)).then(j=>{S.linkCheck={id:fid,ok:!!j.ok,text:j.text||j.error||'ตรวจไม่ได้',url};render(true);}).catch(()=>{S.linkCheck={id:fid,ok:false,text:'เชื่อมต่อไม่ได้'};render(true);});break;}
     case 'saveQuick':{
       const p=getProduct(id);if(!p)break;
       const price=Number($('#q-price-'+id).value),full=Number($('#q-full-'+id).value)||0,link=$('#q-link-'+id).value.trim(),status=$('#q-status-'+id).value,bumpProductId=$('#q-bump-'+id).value,bumpPrice=Number($('#q-bprice-'+id).value)||0;
@@ -1478,7 +1504,7 @@ function act(a,el){
       if(link&&!/^https?:\/\//.test(link)){S.err='ลิงก์ไฟล์ต้องขึ้นต้นด้วย https://';render(true);break;}
       if(status==='published'&&!link){S.err='ใส่ลิงก์ไฟล์ก่อนเผยแพร่ ไม่งั้นลูกค้าจ่ายแล้วไม่ได้ไฟล์';render(true);break;}
       Object.assign(p,{price,fullPrice:full,link,status,bumpProductId,bumpPrice:bumpProductId?bumpPrice:0});
-      S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');break;}
+      S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');checkAllLinks();break;}
     case 'newProduct':S.draft=initDraft(blankProduct());S.edit='new';S.err='';render(false);break;
     case 'editProduct':S.draft=initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
     case 'cancelEdit':S.edit=null;S.draft=null;S.err='';render(false);break;
@@ -1518,7 +1544,7 @@ function act(a,el){
       else{saved=getProduct(selfId);Object.assign(saved,data);}
       S.edit=null;S.draft=null;S.err='';save();
       if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');}
-      else{render(false);toast('บันทึกสินค้าแล้ว');}
+      else{render(false);toast('บันทึกสินค้าแล้ว');checkAllLinks();}
       break;}
 
     /* coupons */
