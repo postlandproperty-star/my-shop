@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY = 'sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
-const html = readFileSync(join(process.cwd(), 'index.html'), 'utf8');
+const html = readFileSync(join(process.cwd(), 'src', 'index.html'), 'utf8');
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

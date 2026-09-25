@@ -11,7 +11,7 @@
   ],
   "functions": {
     "api/page.js": {
-      "includeFiles": "index.html"
+      "includeFiles": "src/index.html"
     }
   },
   "crons": [
