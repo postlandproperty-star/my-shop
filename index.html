@@ -297,7 +297,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const baht=n=>'฿'+Number(n).toLocaleString('th-TH');
 const fdt=t=>new Date(t).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-const methodName=m=>m==='promptpay'?'PromptPay QR':'บัตรเครดิต';
+const methodName=m=>m==='promptpay'?'PromptPay QR':m==='stripe'?'Stripe':'บัตรเครดิต';
 const TICK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
 const COLORS=[['#2440E8','น้ำเงิน'],['#0F6B4F','เขียว'],['#7A2A8C','ม่วง'],['#B4400E','ส้มอิฐ']];
 const KINDS={book:'หนังสือ',sheet:'ชีทเรียน',other:'สินค้าอื่น'};
@@ -344,6 +344,7 @@ async function flushRemote(){
   const pub=pick(D,PUBLIC_KEYS),links={};
   pub.products=D.products.map(p=>{links[p.id]=p.link||'';const q=Object.assign({},p);delete q.link;return q;});
   const priv=pick(D,PRIVATE_KEYS);priv.links=links;
+  priv.orders=(priv.orders||[]).filter(o=>o.src!=='stripe'); // ออเดอร์จริงอยู่ในตาราง orders ไม่เก็บซ้ำในก้อนนี้
   const rows=[{id:'main',data:pub,updated_at:now},{id:'private',data:priv,updated_at:now}];
   const {error}=await sb.from('shop_state').upsert(rows);
   if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);}
@@ -366,8 +367,25 @@ async function loadRemote(){
     PRIVATE_KEYS.forEach(k=>{if(merged[k]===undefined)merged[k]=cached[k]||[];});
   }
   D=normalize(merged);
+  if(sbSession)await loadOrders();
   saveCache();
   return true;
+}
+/* ออเดอร์จริงจากตาราง orders (บันทึกโดยเซิร์ฟเวอร์เมื่อลูกค้าจ่ายผ่าน Stripe) */
+async function loadOrders(){
+  if(!sb||!sbSession)return;
+  const {data,error}=await sb.from('orders').select('*').order('created_at',{ascending:false}).limit(500);
+  if(error){console.error(error);return;}
+  const real=(data||[]).map(r=>({id:String(r.session_id).slice(-8).toUpperCase(),sid:r.session_id,src:'stripe',productId:r.product_id||'',pname:r.product_name||'',name:r.name||'(ไม่ระบุชื่อ)',email:r.email||'',method:'stripe',
+    base:Number(r.amount)||0,discount:0,amount:Number(r.amount)||0,coupon:'',campaign:r.campaign||'',status:r.status==='paid'?'paid':r.status==='expired'?'expired':'pending',
+    created:Date.parse(r.created_at)||Date.now(),paidAt:r.paid_at?Date.parse(r.paid_at):null,items:[],paymentIntent:r.payment_intent||'',
+    log:[{t:Date.parse(r.created_at)||Date.now(),text:r.status==='paid'?'ชำระเงินผ่าน Stripe สำเร็จ':'เปิดหน้าชำระเงิน ยังไม่จ่าย'}]}));
+  D.orders=real.concat((D.orders||[]).filter(o=>o.src!=='stripe'));
+}
+async function adminApi(path){
+  const {data}=await sb.auth.getSession();
+  const r=await fetch(path,{headers:{Authorization:'Bearer '+(data&&data.session?data.session.access_token:'')}});
+  return r.json();
 }
 /* บันทึกข้อมูลที่แสดงอยู่ตอนนี้ขึ้นระบบทั้งก้อน (ใช้ตอนตั้งค่าครั้งแรก / นำเข้าข้อมูลเก่า) */
 async function pushAll(){
@@ -686,10 +704,14 @@ function shopView(){
     <code>${DOMAIN}${esc(p.slug)}</code>
     ${D.campaigns.length?`<span class="fine">จำลองว่าลูกค้ามาจาก</span><select id="src" aria-label="จำลองแหล่งที่มาของลูกค้า"><option value="">เข้าตรง ไม่ได้มาจากโฆษณา</option>${D.campaigns.map(c=>`<option value="${esc(c.name)}" ${S.src===c.name?'selected':''}>โฆษณา ${esc(c.name)}</option>`).join('')}</select>`:''}
   </div></div>`:''}
-  ${S.stripeReturn?`<div class="wrap section" style="padding-top:20px;padding-bottom:0"><div class="card center">
-    <h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
-    <p class="muted" style="margin-bottom:14px">ลิงก์ดาวน์โหลดอยู่ในหน้ายืนยันการชำระเงินของ Stripe และในอีเมลใบเสร็จที่ส่งให้คุณ</p>
-    ${D.settings.chatLink?`<a class="btn btn-line btn-block" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ไม่ได้รับไฟล์? ทักแชทหาร้าน</a>`:''}
+  ${S.sessionId?`<div class="wrap section" style="padding-top:20px;padding-bottom:0"><div class="card center" id="paid-card">
+    ${!S.order?`<h2 style="margin-bottom:8px">กำลังตรวจสอบการชำระเงิน...</h2><p class="muted">รอสักครู่</p>`:
+      S.order.paid?`<h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
+        <p class="muted" style="margin-bottom:14px">${esc(S.order.productName||'')} · ${baht(S.order.amount)} · เลขออเดอร์ ${esc(S.order.orderId)}${S.order.email?`<br>ใบเสร็จส่งไปที่ ${esc(S.order.email)}`:''}</p>
+        ${S.order.link?linkBtn(S.order.link,'ดาวน์โหลดไฟล์'):`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของสินค้านี้ กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`}
+        <p class="fine" style="margin-top:12px">เก็บหน้านี้ไว้ กดลิงก์ดาวน์โหลดซ้ำได้ตลอด${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">มีปัญหา? ทักแชท</a>`:''}</p>`:
+      S.order.error?`<h2 style="margin-bottom:8px">ตรวจสอบไม่สำเร็จ</h2><p class="muted">${esc(S.order.error)}</p><button class="btn btn-line btn-sm" data-a="recheckOrder">ลองใหม่</button>`:
+      `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
   </div></div>`:''}
   ${p.status==='draft'?`<div class="draftnote">ฉบับร่าง ลูกค้ายังเปิดหน้านี้ไม่ได้ จนกว่าคุณจะเผยแพร่</div>`:''}
   <section class="hero" style="--hero:${esc(p.color)}"><div class="wrap wide hero-in">
@@ -762,36 +784,10 @@ function shopView(){
   <section class="section" id="checkout"><div class="wrap">
     <h2>สั่งซื้อ ${esc(p.name)}</h2>
     <div class="card">
-      ${p.stripeLink?`
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(p.price)}</p>
-      <a class="btn btn-cta btn-block" href="${esc(p.stripeLink)}" target="_blank" rel="noopener noreferrer" data-track="InitiateCheckout">ชำระด้วยบัตร/PromptPay ผ่าน Stripe</a>
-      <p class="fine" style="text-align:center;margin-top:10px">ปลอดภัย จ่ายเงินแล้วได้ลิงก์ดาวน์โหลดทันที</p>
+      <a class="btn btn-cta btn-block" href="/api/checkout?p=${encodeURIComponent(p.slug)}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">ชำระเงิน ${baht(p.price)} (PromptPay / บัตร)</a>
+      <p class="fine" style="text-align:center;margin-top:10px">ชำระผ่าน Stripe ปลอดภัย จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
       ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
-      `:`
-      <div class="field"><label for="f-name">ชื่อ</label>
-        <input class="input" id="f-name" data-f="name" autocomplete="name" value="${esc(f.name)}" placeholder="ชื่อที่ใช้ออกใบเสร็จ"></div>
-      <div class="field"><label for="f-email">อีเมลสำหรับรับลิงก์ดาวน์โหลด</label>
-        <input class="input" id="f-email" data-f="email" type="email" inputmode="email" autocomplete="email" value="${esc(f.email)}" placeholder="you@example.com"></div>
-      <div class="field"><label for="f-coupon">โค้ดส่วนลด (ถ้ามี)</label>
-        <div class="row"><input class="input" id="f-coupon" data-f="coupon" value="${esc(f.coupon)}" placeholder="ลอง SAVE20">
-        <button class="btn btn-line btn-sm" data-a="applyCoupon">ใช้โค้ด</button></div>
-        ${S.couponErr?`<span class="err">${esc(S.couponErr)}</span>`:''}
-        ${c.coupon?`<span class="okmsg">ใช้โค้ด ${esc(c.coupon.code)} แล้ว ลด ${baht(c.discount)}</span>`:''}
-      </div>
-      <div class="methods" role="radiogroup" aria-label="วิธีชำระเงิน">
-        <label class="method"><input type="radio" name="method" value="promptpay" ${S.method==='promptpay'?'checked':''}><span>PromptPay QR</span></label>
-        ${hasAdminAccess()?`<label class="method"><input type="radio" name="method" value="card" ${S.method==='card'?'checked':''}><span>บัตรเครดิต หรือบัตรเดบิต (ยังไม่เปิดใช้จริง)</span></label>`:''}
-      </div>
-      <div class="sum">
-        <div><span>ราคา</span><span>${baht(c.base)}</span></div>
-        ${c.discount?`<div><span>ส่วนลด</span><span>-${baht(c.discount)}</span></div>`:''}
-        ${f.bump&&bp?`<div><span>${esc(bp.name)}</span><span>${baht(p.bumpPrice)}</span></div>`:''}
-        <div class="total"><span>รวมที่ต้องชำระ</span><span>${baht(grand)}</span></div>
-      </div>
-      ${bp?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${f.bump?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>เพิ่ม ${esc(bp.name)} <span class="was">${baht(bp.price)}</span> ${baht(p.bumpPrice)}</b><p>สั่งพร้อมกันวันนี้ ได้ลิงก์ดาวน์โหลดทั้งสองไฟล์ทันที</p></label></div>`:''}
-      ${S.err?`<p class="err" style="margin-bottom:10px">${esc(S.err)}</p>`:''}
-      <button class="btn btn-cta btn-block" data-a="createOrder">ชำระเงิน ${baht(c.total+(f.bump&&bp?p.bumpPrice:0))}</button>
-      `}
     </div>
     ${p.guarantee?`<div class="guar"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><p>${esc(p.guarantee)}</p></div>`:''}
     ${p.terms?`<p class="fine terms">${esc(p.terms)}</p>`:''}
@@ -888,7 +884,7 @@ function thanksView(){
 /* ---------- admin views ---------- */
 function orderRow(o){
   const open=S.open[o.id];
-  const st={pending:['รอชำระ','warn'],paid:['ชำระแล้ว','ok'],refunded:['คืนเงินแล้ว','bad']}[o.status];
+  const st={pending:['รอชำระ','warn'],paid:['ชำระแล้ว','ok'],refunded:['คืนเงินแล้ว','bad'],expired:['หมดอายุ','gray']}[o.status]||['-','gray'];
   const cf=S.confirm==='refund:'+o.id;
   return `<div class="order">
     <button class="order-head" data-a="toggle" data-id="${o.id}" aria-expanded="${!!open}">
@@ -899,9 +895,10 @@ function orderRow(o){
       <div class="o-info"><span>${esc(o.email)}</span><span>สร้างเมื่อ ${fdt(o.created)}</span><span>เลขออเดอร์ ${esc(o.id)}</span><span>วิธีชำระ ${methodName(o.method)}</span>${o.coupon?`<span>โค้ด ${esc(o.coupon)}</span>`:''}${o.campaign?`<span>จากแคมเปญ ${esc(o.campaign)}</span>`:''}${o.items&&o.items.length>1?`<span>รวม order bump: ${esc(o.items.slice(1).map(it=>it.name).join(', '))}</span>`:''}</div>
       <ul class="log">${o.log.map(l=>`<li><span class="muted">${fdt(l.t)}</span>${esc(l.text)}</li>`).join('')}</ul>
       <div class="acts">
-        ${o.status==='paid'?`<button class="btn btn-line btn-sm" data-a="resend" data-id="${o.id}">ส่งลิงก์ซ้ำ</button>
+        ${o.src==='stripe'?`<a class="btn btn-line btn-sm" href="https://dashboard.stripe.com/${o.paymentIntent?'payments/'+esc(o.paymentIntent):'payments'}" target="_blank" rel="noopener noreferrer">ดู/คืนเงินใน Stripe</a>`:''}
+        ${o.status==='paid'&&o.src!=='stripe'?`<button class="btn btn-line btn-sm" data-a="resend" data-id="${o.id}">ส่งลิงก์ซ้ำ</button>
           <button class="btn ${cf?'btn-danger':'btn-line'} btn-sm" data-a="refund" data-id="${o.id}">${cf?'กดอีกครั้งเพื่อยืนยันคืนเงิน':'คืนเงิน'}</button>`:''}
-        ${o.status==='pending'?`<button class="btn btn-dark btn-sm" data-a="manualPaid" data-id="${o.id}">ยืนยันว่าชำระแล้ว</button>`:''}
+        ${o.status==='pending'&&o.src!=='stripe'?`<button class="btn btn-dark btn-sm" data-a="manualPaid" data-id="${o.id}">ยืนยันว่าชำระแล้ว</button>`:''}
       </div></div>`:''}
   </div>`;
 }
@@ -915,6 +912,11 @@ function ordersTab(){
   const list=pool.filter(o=>S.filter==='all'||o.status===S.filter);
   const chips=[['all','ทั้งหมด'],['paid','ชำระแล้ว'],['pending','รอชำระ'],['refunded','คืนเงินแล้ว']];
   return `
+  <div class="row" style="justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:12px 0">
+    <button class="btn btn-line btn-sm" data-a="checkStatus">ตรวจสอบการเชื่อมต่อ Stripe</button>
+    <button class="btn btn-dark btn-sm" data-a="syncOrders">ดึงออเดอร์ล่าสุดจาก Stripe</button>
+  </div>
+  ${S.status?`<div class="note" style="${S.status.ok?'background:var(--okbg);color:var(--ok)':''}">${esc(S.status.text)}</div>`:''}
   <div class="kpis">
     <div class="kpi"><div class="v">${baht(revenue)}</div><div class="l">ยอดขายที่ได้รับแล้ว</div></div>
     <div class="kpi"><div class="v">${paid.length}</div><div class="l">ออเดอร์ที่ชำระแล้ว</div></div>
@@ -934,7 +936,7 @@ function productRow(p){
   const cf=S.confirm==='del:'+p.id;
   return `<div class="prod" style="--c:${esc(p.color)}">
     <div class="prod-top"><b>${esc(p.name)}</b><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span></div>
-    ${pub&&!p.stripeLink?`<div class="warnline">⚠️ ยังไม่มีลิงก์ Stripe ลูกค้าจ่ายเงินไม่ได้ กดแก้ไขเพื่อใส่</div>`:''}${pub&&/buy\.stripe\.com\/test_/.test(p.stripeLink||'')?`<div class="warnline">⚠️ ลิงก์ Stripe เป็นโหมดทดสอบ รับเงินจริงไม่ได้</div>`:''}
+    ${pub&&!(p.link&&validLink(p.link))?`<div class="warnline">⚠️ ยังไม่ได้ใส่ลิงก์ไฟล์ (Google Drive) ลูกค้าจ่ายแล้วจะไม่ได้ไฟล์อัตโนมัติ</div>`:''}
     <div class="prod-stats"><span>${KINDS[p.kind]||'สินค้าดิจิทัล'}</span><span>ราคา ${baht(p.price)}</span><span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
     <div class="linkline"><span class="fine">ลิงก์สำหรับแอด</span><code>${DOMAIN}${esc(p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอก</button></div>
     <div class="acts">
@@ -973,10 +975,9 @@ function productForm(){
       <div class="field">${lb('e-full','ราคาปกติที่ขีดฆ่า (บาท)')}<input class="input" id="e-full" data-d="fullPrice" type="number" inputmode="numeric" min="0" value="${esc(d.fullPrice)}"></div>
     </div>
     ${ta('e-features','features','สิ่งที่ลูกค้าจะได้รับ (บรรทัดละข้อ)')}
-    <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — ไม่บังคับ')}<input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/...">
-      <span class="fine">เก็บไว้ให้แอดมินดูเท่านั้น ลูกค้าไม่เห็น ตอนนี้ไฟล์ถูกส่งผ่านข้อความ After payment ของ Stripe (ช่องนี้จะใช้เมื่อทำระบบส่งไฟล์อัตโนมัติ)</span></div>
-    <div class="field hot">${lb('e-stripelink','💳 ลิงก์จ่ายเงิน Stripe Payment Link — จำเป็น ไม่งั้นลูกค้าจ่ายเงินไม่ได้')}<input class="input" id="e-stripelink" data-d="stripeLink" value="${esc(d.stripeLink)}" placeholder="https://buy.stripe.com/...">
-      <span class="fine">สร้างลิงก์ใน Stripe → Payment Links (โหมด live ต้องไม่มีคำว่า test_) แล้วมาวางที่นี่ ${/buy\.stripe\.com\/test_/.test(d.stripeLink||'')?'<b style="color:var(--bad)">ลิงก์ที่ใส่อยู่เป็นโหมดทดสอบ รับเงินจริงไม่ได้</b>':''}</span></div>
+    <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — สำคัญ')}<input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/...">
+      <span class="fine">ลูกค้าจะได้ปุ่มดาวน์โหลดลิงก์นี้อัตโนมัติหลังจ่ายเงินสำเร็จ (ระบบตรวจกับ Stripe ก่อนทุกครั้ง) ตั้งค่าแชร์ไฟล์เป็น "ทุกคนที่มีลิงก์"</span></div>
+    <p class="fine" style="margin:4px 0 12px">💳 ราคาขายด้านบนคือราคาที่เก็บเงินจริงผ่าน Stripe อัตโนมัติ ไม่ต้องตั้งค่าใน Stripe อีก</p>
     <div class="field"><span class="lbl" id="lbl-color">สีหลักของเซลเพจ</span>
       <div class="swatches" role="radiogroup" aria-labelledby="lbl-color">${COLORS.map(c=>`<label class="sw" style="--c:${c[0]}"><input type="radio" name="theme" data-d="color" value="${c[0]}" ${d.color===c[0]?'checked':''}><span class="dot"></span><span>${c[1]}</span></label>`).join('')}</div></div>
     <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
@@ -1300,6 +1301,14 @@ function act(a,el){
   const id=el.dataset.id;
   switch(a){
     case 'toShop':go('shop');break;
+    case 'recheckOrder':verifyOrder();break;
+    case 'syncOrders':{toast('กำลังดึงออเดอร์...');adminApi('/api/orders-sync').then(async j=>{if(j.ok){await loadOrders();S.status={ok:true,text:'ดึงจาก Stripe แล้ว '+j.synced+' รายการ (ชำระแล้ว '+j.paid+')'};}else S.status={ok:false,text:'ดึงไม่สำเร็จ: '+(j.error||'')};render(true);}).catch(e=>{S.status={ok:false,text:'เชื่อมต่อไม่ได้'};render(true);});break;}
+    case 'checkStatus':{toast('กำลังตรวจสอบ...');adminApi('/api/status').then(j=>{
+      if(!j.ok)S.status={ok:false,text:j.error||'ตรวจสอบไม่ได้'};
+      else if(!j.stripeKey||!j.supabaseKey)S.status={ok:false,text:'คีย์บน Vercel ยังไม่ครบ: '+(!j.stripeKey?'STRIPE_SECRET_KEY ':'')+(!j.supabaseKey?'SUPABASE_SECRET_KEY':'')+' (ใส่แล้วต้อง Redeploy)'};
+      else if(j.stripeError)S.status={ok:false,text:'Stripe ตอบกลับผิดพลาด: '+j.stripeError};
+      else S.status={ok:true,text:'พร้อมรับเงิน: บัญชี Stripe "'+(j.account&&j.account.name)+'" ('+(j.account&&j.account.country)+') · PromptPay: '+(j.promptpay==='active'?'เปิดใช้แล้ว':j.promptpay)};
+      render(true);}).catch(e=>{S.status={ok:false,text:'เชื่อมต่อไม่ได้'};render(true);});break;}
     case 'viewUpsell':selectProduct(id);go('shop');break;
     case 'toAdmin':go('admin');break;
     case 'logout':if(sb)sb.auth.signOut();break;
@@ -1459,6 +1468,25 @@ document.addEventListener('submit',e=>{
   if(e.target.id==='login-form'){e.preventDefault();doLogin($('#l-email').value.trim(),$('#l-pass').value);}
 });
 
+/* ตรวจผลการชำระเงินกับเซิร์ฟเวอร์ (ซึ่งถามต่อ Stripe) แล้วแสดงลิงก์ดาวน์โหลด */
+async function verifyOrder(){
+  S.order=null;render(true);
+  try{
+    const r=await fetch('/api/order?session_id='+encodeURIComponent(S.sessionId));
+    const j=await r.json();
+    if(!j.ok)S.order={paid:false,error:j.error||'เกิดข้อผิดพลาด'};
+    else S.order=j;
+    if(j.ok&&j.paid){
+      const k='purchased:'+S.sessionId;
+      if(!localStorage.getItem(k)){ // ยิง Purchase ครั้งเดียวต่อออเดอร์ แม้รีเฟรชหน้า
+        try{localStorage.setItem(k,'1');}catch(e){}
+        track('Purchase',Object.assign({content_name:j.productName,value:j.amount,currency:j.currency||'THB'},S.src?{campaign:S.src}:{}));
+      }
+    }
+  }catch(e){S.order={paid:false,error:'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'};}
+  render(true);
+  const c=document.getElementById('paid-card');if(c)c.scrollIntoView({block:'start'});
+}
 /* ---------- start ---------- */
 function applyUrl(){
   try{
@@ -1470,7 +1498,7 @@ function applyUrl(){
     const q=new URLSearchParams(location.search);
     const camp=q.get('utm_campaign');
     if(camp)S.src=camp;
-    if(q.get('paid')==='1')S.stripeReturn=true;
+    const sid=q.get('session_id');if(sid&&/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid))S.sessionId=sid;
     if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';
   }catch(e){}
 }
@@ -1494,6 +1522,7 @@ function applyUrl(){
   S.loading=false;
   applyUrl();
   initPixel(D.settings.pixelId);
+  if(S.sessionId)verifyOrder();
   track('PageView');
   {const p=curProduct();if(p)track('ViewContent',{content_name:p.name,value:p.price,currency:'THB'});}
   render(false);
