@@ -367,7 +367,12 @@ async function loadRemote(){
     PRIVATE_KEYS.forEach(k=>{if(merged[k]===undefined)merged[k]=cached[k]||[];});
   }
   D=normalize(merged);
-  if(sbSession)await loadOrders();
+  if(sbSession){
+    const demo=o=>o.src!=='stripe'&&(/^DP2609/.test(o.id||'')||/@example\.com$/.test(o.email||''));
+    const demoCamp=c=>['calc1-early','grammar-students'].includes(c.name)&&['c1','c2'].includes(c.id);
+    if(D.orders.some(demo)||D.campaigns.some(demoCamp)){D.orders=D.orders.filter(o=>!demo(o));D.campaigns=D.campaigns.filter(c=>!demoCamp(c));D.events=[];needsMigrate=true;}
+    await loadOrders();
+  }
   saveCache();
   return true;
 }
@@ -381,6 +386,15 @@ async function loadOrders(){
     created:Date.parse(r.created_at)||Date.now(),paidAt:r.paid_at?Date.parse(r.paid_at):null,items:[],paymentIntent:r.payment_intent||'',
     log:[{t:Date.parse(r.created_at)||Date.now(),text:r.status==='paid'?'ชำระเงินผ่าน Stripe สำเร็จ':'เปิดหน้าชำระเงิน ยังไม่จ่าย'}]}));
   D.orders=real.concat((D.orders||[]).filter(o=>o.src!=='stripe'));
+}
+let lastSync=0,syncing=false;
+async function autoSync(force){
+  if(!sb||!sbSession||syncing)return;
+  if(!force&&Date.now()-lastSync<60e3)return;
+  syncing=true;S.syncMsg='กำลังดึงออเดอร์ล่าสุดจาก Stripe...';render(true);
+  try{const j=await adminApi('/api/orders-sync');if(j.ok){await loadOrders();lastSync=Date.now();S.syncMsg='';}else S.syncMsg='ดึงจาก Stripe ไม่สำเร็จ: '+(j.error||'');}
+  catch(e){S.syncMsg='เชื่อมต่อ Stripe ไม่ได้';}
+  syncing=false;render(true);
 }
 async function adminApi(path){
   const {data}=await sb.auth.getSession();
@@ -445,24 +459,12 @@ function seed(){
        toc:'',forwho:'',notfor:'',authorName:'',authorBio:'',proof:'',promoEnd:0,
        pains:'เตรียมสอบหลายวิชาพร้อมกันจนไม่รู้จะเริ่มจากตรงไหน',bonus:'',reviews:'',guarantee:'',terms,faq:'',images:[]}
     ],
-    orders:[
-      {id:'DP260918-K3F9',campaign:'calc1-early',productId:'p1',pname:'ชีทสรุป แคลคูลัส 1',name:'ชนิสรา ใจดี',email:'chanisara@example.com',method:'promptpay',base:199,discount:0,amount:199,coupon:'',status:'paid',created:now-26*h,paidAt:now-26*h+240e3,
-       log:[{t:now-26*h,text:'สร้างออเดอร์ สถานะรอชำระ'},{t:now-26*h+240e3,text:'ได้รับเงินแล้ว (จำลอง)'},{t:now-26*h+250e3,text:'ส่งลิงก์ดาวน์โหลดไปที่ chanisara@example.com'}]},
-      {id:'DP260919-N2R4',campaign:'grammar-students',productId:'p2',pname:'หนังสือ ไวยากรณ์อังกฤษ ม.ปลาย',name:'ภาคิน วงศ์สกุล',email:'pakin@example.com',method:'card',base:259,discount:52,amount:207,coupon:'SAVE20',status:'paid',created:now-5*h,paidAt:now-5*h+90e3,
-       log:[{t:now-5*h,text:'สร้างออเดอร์ สถานะรอชำระ'},{t:now-5*h+90e3,text:'ได้รับเงินแล้ว (จำลอง)'},{t:now-5*h+100e3,text:'ส่งลิงก์ดาวน์โหลดไปที่ pakin@example.com'}]},
-      {id:'DP260919-M8Q2',campaign:'calc1-early',productId:'p1',pname:'ชีทสรุป แคลคูลัส 1',name:'สุรีย์ แสงทอง',email:'suree@example.com',method:'promptpay',base:199,discount:0,amount:199,coupon:'',status:'paid',created:now-3*h,paidAt:now-3*h+150e3,
-       log:[{t:now-3*h,text:'สร้างออเดอร์ สถานะรอชำระ'},{t:now-3*h+150e3,text:'ได้รับเงินแล้ว (จำลอง)'},{t:now-3*h+160e3,text:'ส่งลิงก์ดาวน์โหลดไปที่ suree@example.com'}]},
-      {id:'DP260919-T5X7',productId:'p2',pname:'หนังสือ ไวยากรณ์อังกฤษ ม.ปลาย',name:'มาลี รักงาน',email:'malee@example.com',method:'promptpay',base:259,discount:0,amount:259,coupon:'',status:'pending',created:now-1*h,paidAt:null,
-       log:[{t:now-1*h,text:'สร้างออเดอร์ สถานะรอชำระ'}]}
-    ],
+    orders:[],
     coupons:[
       {code:'SAVE20',type:'percent',value:20,scope:'all',active:true,uses:1},
       {code:'BOOK50',type:'fixed',value:50,scope:'p2',active:true,uses:0}
     ],
-    campaigns:[
-      {id:'c1',name:'calc1-early',productId:'p1',spend:300},
-      {id:'c2',name:'grammar-students',productId:'p2',spend:250}
-    ],
+    campaigns:[],
     events:[]
   };
 }
@@ -567,7 +569,7 @@ function drawLB(){
 }
 
 let D=normalize(load()||seed());
-const S={view:'shop',tab:'orders',filter:'all',pfilter:'all',productId:null,edit:null,draft:null,zoom:null,ad:null,src:'',
+const S={view:'shop',tab:'orders',filter:'paid',pfilter:'all',productId:null,edit:null,draft:null,zoom:null,ad:null,src:'',
   form:{name:'',email:'',coupon:'',bump:false},method:'promptpay',coupon:'',couponErr:'',err:'',currentId:null,open:{},confirm:'',toast:'',stripeReturn:false};
 
 /* ---------- logic ---------- */
@@ -889,7 +891,7 @@ function orderRow(o){
   return `<div class="order">
     <button class="order-head" data-a="toggle" data-id="${o.id}" aria-expanded="${!!open}">
       <span class="l1">${esc(o.name)}</span><span class="r1">${baht(o.amount)}</span>
-      <span class="l2">${esc(o.pname)}</span><span class="badge ${st[1]}">${st[0]}</span>
+      <span class="l2">${esc(o.pname)}${o.src==='stripe'?` · ${fdt(o.paidAt||o.created)}${o.email?' · '+esc(o.email):''}`:''}</span><span class="badge ${st[1]}">${st[0]}</span>
     </button>
     ${open?`<div class="order-body">
       <div class="o-info"><span>${esc(o.email)}</span><span>สร้างเมื่อ ${fdt(o.created)}</span><span>เลขออเดอร์ ${esc(o.id)}</span><span>วิธีชำระ ${methodName(o.method)}</span>${o.coupon?`<span>โค้ด ${esc(o.coupon)}</span>`:''}${o.campaign?`<span>จากแคมเปญ ${esc(o.campaign)}</span>`:''}${o.items&&o.items.length>1?`<span>รวม order bump: ${esc(o.items.slice(1).map(it=>it.name).join(', '))}</span>`:''}</div>
@@ -904,30 +906,39 @@ function orderRow(o){
 }
 
 function ordersTab(){
+  const paidAll=D.orders.filter(o=>o.status==='paid');
+  const now=Date.now(),day=864e5;
+  const since=ms=>paidAll.filter(o=>(o.paidAt||o.created)>=now-ms);
+  const sum=list=>list.reduce((a,o)=>a+(Number(o.amount)||0),0);
+  const startToday=new Date();startToday.setHours(0,0,0,0);
+  const today=paidAll.filter(o=>(o.paidAt||o.created)>=startToday.getTime()),d7=since(7*day),d30=since(30*day);
+  const byProduct=D.products.map(p=>{const l=paidAll.filter(o=>o.productId===p.id);return{p,n:l.length,rev:sum(l)};}).filter(x=>x.n).sort((a,b)=>b.rev-a.rev);
+  const byCamp={};paidAll.forEach(o=>{const k=o.campaign||'(ไม่ได้มาจากแอด)';byCamp[k]=byCamp[k]||{n:0,rev:0};byCamp[k].n++;byCamp[k].rev+=Number(o.amount)||0;});
   const pool=D.orders.filter(o=>S.pfilter==='all'||o.productId===S.pfilter);
-  const paid=pool.filter(o=>o.status==='paid');
-  const revenue=paid.reduce((a,o)=>a+o.amount,0);
-  const pend=pool.filter(o=>o.status==='pending').length;
-  const rate=pool.length?Math.round(paid.length/pool.length*100):0;
-  const list=pool.filter(o=>S.filter==='all'||o.status===S.filter);
-  const chips=[['all','ทั้งหมด'],['paid','ชำระแล้ว'],['pending','รอชำระ'],['refunded','คืนเงินแล้ว']];
+  const list=pool.filter(o=>S.filter==='all'?true:S.filter==='paid'?o.status==='paid':o.status!=='paid').sort((a,b)=>(b.paidAt||b.created)-(a.paidAt||a.created));
+  const chips=[['paid','ชำระแล้ว'],['unpaid','เปิดหน้าจ่ายแต่ยังไม่จ่าย'],['all','ทั้งหมด']];
+  const kpi=(v,l,sub)=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}${sub?` · <span class="muted">${sub}</span>`:''}</div></div>`;
   return `
-  <div class="row" style="justify-content:flex-end;gap:8px;flex-wrap:wrap;margin:12px 0">
-    <button class="btn btn-line btn-sm" data-a="checkStatus">ตรวจสอบการเชื่อมต่อ Stripe</button>
-    <button class="btn btn-dark btn-sm" data-a="syncOrders">ดึงออเดอร์ล่าสุดจาก Stripe</button>
+  <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
+    <span class="fine">${S.syncMsg?esc(S.syncMsg):(lastSync?'อัปเดตจาก Stripe ล่าสุด '+fdt(lastSync):'')}</span>
+    <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="checkStatus">ตรวจสอบการเชื่อมต่อ</button><button class="btn btn-dark btn-sm" data-a="syncOrders">รีเฟรชออเดอร์</button></span>
   </div>
   ${S.status?`<div class="note" style="${S.status.ok?'background:var(--okbg);color:var(--ok)':''}">${esc(S.status.text)}</div>`:''}
   <div class="kpis">
-    <div class="kpi"><div class="v">${baht(revenue)}</div><div class="l">ยอดขายที่ได้รับแล้ว</div></div>
-    <div class="kpi"><div class="v">${paid.length}</div><div class="l">ออเดอร์ที่ชำระแล้ว</div></div>
-    <div class="kpi"><div class="v">${pend}</div><div class="l">ออเดอร์ค้างรอชำระ</div></div>
-    <div class="kpi"><div class="v">${rate}%</div><div class="l">สัดส่วนที่จ่ายจริง</div></div>
+    ${kpi(baht(sum(today)),'วันนี้',today.length+' ออเดอร์')}
+    ${kpi(baht(sum(d7)),'7 วันล่าสุด',d7.length+' ออเดอร์')}
+    ${kpi(baht(sum(d30)),'30 วันล่าสุด',d30.length+' ออเดอร์')}
+    ${kpi(baht(sum(paidAll)),'ยอดขายรวมทั้งหมด',paidAll.length+' ออเดอร์')}
   </div>
+  ${byProduct.length?`<div class="card" style="margin-bottom:14px"><h3 class="h3">ยอดขายแยกตามสินค้า</h3>
+    ${byProduct.map(x=>`<div class="ticket"><span>${esc(x.p.name)} <span class="muted">· ${x.n} ออเดอร์</span></span><span class="val">${baht(x.rev)}</span></div>`).join('')}
+    ${Object.keys(byCamp).length>1?`<h3 class="h3" style="margin-top:14px">แยกตามแคมเปญโฆษณา</h3>${Object.entries(byCamp).sort((a,b)=>b[1].rev-a[1].rev).map(([k,v])=>`<div class="ticket"><span>${esc(k)} <span class="muted">· ${v.n} ออเดอร์</span></span><span class="val">${baht(v.rev)}</span></div>`).join('')}`:''}
+  </div>`:''}
   <div class="filters">
     <select id="pf" aria-label="กรองตามสินค้า"><option value="all">ทุกสินค้า</option>${D.products.map(p=>`<option value="${p.id}" ${S.pfilter===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
     <div class="chips">${chips.map(c=>`<button class="chip" data-a="filter" data-v="${c[0]}" aria-pressed="${S.filter===c[0]}">${c[1]}</button>`).join('')}</div>
   </div>
-  ${list.length?list.map(orderRow).join(''):`<div class="empty"><p>ยังไม่มีออเดอร์ในหมวดนี้ ลองสั่งซื้อจากหน้าลูกค้าเพื่อดูว่าออเดอร์ขึ้นที่นี่อย่างไร</p><button class="btn btn-dark btn-sm" data-a="toShop">ไปหน้าลูกค้า</button></div>`}`;
+  ${list.length?list.map(orderRow).join(''):`<div class="empty"><p>${paidAll.length?'ไม่มีออเดอร์ในหมวดนี้':'ยังไม่มีออเดอร์ที่ชำระแล้ว ออเดอร์จะขึ้นที่นี่อัตโนมัติเมื่อลูกค้าจ่ายผ่าน Stripe'}</p></div>`}`;
 }
 
 function productRow(p){
@@ -1266,6 +1277,7 @@ async function afterLogin(){
   }
   if(needsMigrate){needsMigrate=false;await pushAll();}
   S.view='admin';S.err='';render(false);
+  if(S.tab==='orders')autoSync(true);
 }
 function render(keep){
   const y=window.scrollY,v=S.view;
@@ -1302,7 +1314,7 @@ function act(a,el){
   switch(a){
     case 'toShop':go('shop');break;
     case 'recheckOrder':verifyOrder();break;
-    case 'syncOrders':{toast('กำลังดึงออเดอร์...');adminApi('/api/orders-sync').then(async j=>{if(j.ok){await loadOrders();S.status={ok:true,text:'ดึงจาก Stripe แล้ว '+j.synced+' รายการ (ชำระแล้ว '+j.paid+')'};}else S.status={ok:false,text:'ดึงไม่สำเร็จ: '+(j.error||'')};render(true);}).catch(e=>{S.status={ok:false,text:'เชื่อมต่อไม่ได้'};render(true);});break;}
+    case 'syncOrders':autoSync(true);break;
     case 'checkStatus':{toast('กำลังตรวจสอบ...');adminApi('/api/status').then(j=>{
       if(!j.ok)S.status={ok:false,text:j.error||'ตรวจสอบไม่ได้'};
       else if(!j.stripeKey||!j.supabaseKey)S.status={ok:false,text:'คีย์บน Vercel ยังไม่ครบ: '+(!j.stripeKey?'STRIPE_SECRET_KEY ':'')+(!j.supabaseKey?'SUPABASE_SECRET_KEY':'')+' (ใส่แล้วต้อง Redeploy)'};
@@ -1358,7 +1370,7 @@ function act(a,el){
     case 'closeZoom':S.zoom=null;drawLB();break;
     case 'zoomPrev':case 'zoomNext':{const n=(curProduct().images||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
     case 'filter':S.filter=el.dataset.v;render(true);break;
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;render(false);break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;render(false);if(S.tab==='orders')autoSync();break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
@@ -1512,6 +1524,7 @@ function applyUrl(){
       const {data}=await sb.auth.getSession();
       sbSession=data&&data.session||null;
       await loadRemote();
+      if(needsMigrate&&sbSession){needsMigrate=false;await pushAll();}
       sb.auth.onAuthStateChange((ev,session)=>{
         const was=!!sbSession;sbSession=session||null;
         if(ev==='SIGNED_IN'&&!was){afterLogin();}
