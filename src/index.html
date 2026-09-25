@@ -316,7 +316,10 @@ const fdt=t=>new Date(t).toLocaleString('th-TH',{day:'numeric',month:'short',hou
 const methodName=m=>m==='promptpay'?'PromptPay QR':m==='stripe'?'Stripe':'บัตรเครดิต';
 const TICK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
 const COLORS=[['#2440E8','น้ำเงิน'],['#0F6B4F','เขียว'],['#7A2A8C','ม่วง'],['#B4400E','ส้มอิฐ']];
-const KINDS={book:'หนังสือ',sheet:'ชีทเรียน',other:'สินค้าอื่น'};
+const BASE_KINDS={sheet:'ชีทเรียน',book:'หนังสือ / อีบุ๊ก',exam:'แนวข้อสอบ / แบบฝึกหัด',course:'คอร์สวิดีโอ',template:'เทมเพลต / ไฟล์งาน',other:'สินค้าดิจิทัลอื่นๆ'};
+function customKinds(){return lines(D.settings&&D.settings.customKinds).map(l=>l.trim()).filter(Boolean);}
+function KIND_LIST(){const r=Object.assign({},BASE_KINDS);customKinds().forEach(l=>{r['c:'+l]=l;});return r;}
+const kindName=k=>KIND_LIST()[k]||(String(k||'').startsWith('c:')?String(k).slice(2):'สินค้าดิจิทัล');
 const DOMAIN=(location.origin&&location.origin!=='null'?location.origin:'https://yourshop.com')+'/p/';
 
 /* ---------- storage (Supabase) ----------
@@ -538,7 +541,7 @@ function normalize(d){
   if(!d.campaigns)d.campaigns=[];
   d.orders.forEach(o=>{if(o.campaign===undefined)o.campaign='';});
   if(!d.settings)d.settings={};
-  ['pixelId','promptpayId','bankInfo','contactInfo','chatLink','shopName','refundPolicy','fbDomainVerify'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
+  ['pixelId','promptpayId','bankInfo','contactInfo','chatLink','shopName','refundPolicy','fbDomainVerify','customKinds'].forEach(k=>{if(d.settings[k]===undefined)d.settings[k]='';});
   return d;
 }
 function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',price:199,fullPrice:390,features:'',link:'https://',color:COLORS[0][0],status:'draft'};}
@@ -724,7 +727,7 @@ function shopView(){
   const promo=live?`<div class="promo" data-end="${p.promoEnd}"><div class="wrap promo-in"><span>โปรโมชันนี้หมดเวลาใน</span><div class="cd">${['d','h','m','s'].map(u=>`<div><b data-u="${u}">00</b><small>${units[u]}</small></div>`).join('')}</div></div></div>`:'';
   const X='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
   const tocRow=t=>`<li><span>${esc(t[0])}</span><i class="dots"></i><span class="pg">${esc(t[1])}</span></li>`;
-  const authorTitle=kind==='book'?'เกี่ยวกับผู้เขียน':kind==='sheet'?'เกี่ยวกับผู้จัดทำชีท':'เกี่ยวกับผู้สร้าง';
+  const authorTitle=kind==='book'?'เกี่ยวกับผู้เขียน':kind==='sheet'||kind==='exam'?'เกี่ยวกับผู้จัดทำ':kind==='course'?'เกี่ยวกับผู้สอน':'เกี่ยวกับผู้สร้าง';
   return `
   ${hasAdminAccess()?`<div class="urlbar"><div class="wrap wide urlbar-in">
     <span class="fine">เซลเพจ</span>
@@ -1012,7 +1015,7 @@ function productRow(p){
   return `<div class="prod" style="--c:${esc(p.color)}">
     <div class="prod-top"><b>${esc(p.name)}</b><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span></div>
     ${pub&&!(p.link&&validLink(p.link))?`<div class="warnline">⚠️ ยังไม่ได้ใส่ลิงก์ไฟล์ (Google Drive) ลูกค้าจ่ายแล้วจะไม่ได้ไฟล์อัตโนมัติ</div>`:''}
-    <div class="prod-stats"><span>${KINDS[p.kind]||'สินค้าดิจิทัล'}</span><span>ราคา ${baht(p.price)}</span><span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
+    <div class="prod-stats"><span>${esc(kindName(p.kind))}</span><span>ราคา ${baht(p.price)}</span><span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
     <div class="linkline"><span class="fine">ลิงก์สำหรับแอด</span><code>${DOMAIN}${esc(p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอก</button></div>
     ${S.quick===p.id?`<div class="quick">
       <div><label for="q-price-${p.id}">ราคาขาย (บาท) — เก็บเงินจริง</label><input class="input" id="q-price-${p.id}" inputmode="decimal" value="${esc(p.price)}"></div>
@@ -1047,7 +1050,7 @@ function productForm(){
     <div class="field">${lb('e-name','ชื่อสินค้า')}<input class="input" id="e-name" data-d="name" value="${esc(d.name)}"></div>
     <div class="grid2">
       <div class="field">${lb('e-kind','ประเภทสินค้า')}
-        <select class="input" id="e-kind" data-d="kind">${Object.keys(KINDS).map(k=>`<option value="${k}" ${d.kind===k?'selected':''}>${KINDS[k]}</option>`).join('')}</select>
+        <select class="input" id="e-kind" data-d="kind">${Object.entries(KIND_LIST()).map(([k,v])=>`<option value="${esc(k)}" ${d.kind===k?'selected':''}>${esc(v)}</option>`).join('')}${d.kind&&!KIND_LIST()[d.kind]?`<option value="${esc(d.kind)}" selected>${esc(kindName(d.kind))}</option>`:''}}</select>
         <span class="fine">หนังสือและชีทเรียนจะได้ภาพปกและรูปแบบหน้าที่เหมาะกับงานอ่าน</span></div>
       <div class="field">${lb('e-status','สถานะ')}
         <select class="input" id="e-status" data-d="status"><option value="draft" ${d.status==='draft'?'selected':''}>ฉบับร่าง (ลูกค้ายังเข้าไม่ได้)</option><option value="published" ${d.status==='published'?'selected':''}>เผยแพร่</option></select></div>
@@ -1161,6 +1164,12 @@ function payTab(){
     <div class="field"><label for="s-chat">ลิงก์ปุ่ม "ทักแชทถามก่อนซื้อ" (Messenger หรือ LINE)</label>
       <input class="input" id="s-chat" value="${esc(D.settings.chatLink||'')}" placeholder="เช่น https://m.me/ชื่อเพจ หรือ https://line.me/ti/p/@ไอดีไลน์">
       <span class="fine">ใส่แล้วปุ่มจะขึ้นใต้ปุ่มชำระเงินและในหน้าหลังจ่ายเงิน เว้นว่างถ้าไม่ต้องการ</span></div>
+    <div class="field"><label for="s-kinds">ประเภทสินค้าเพิ่มเติม (บรรทัดละ 1 ประเภท)</label>
+      <textarea class="input" id="s-kinds" rows="3" placeholder="เช่น
+สรุปคอร์สติว
+ไฟล์ Canva
+เสียงบรรยาย">${esc(D.settings.customKinds||'')}</textarea>
+      <span class="fine">มีให้เลือกอยู่แล้ว: ${esc(Object.values(BASE_KINDS).join(' · '))} — พิมพ์เพิ่มได้ตามต้องการ แล้วไปเลือกในฟอร์มสินค้า</span></div>
     <div class="field"><label for="s-refund">นโยบายการคืนเงิน/เงื่อนไข (แสดงท้ายเว็บ)</label>
       <textarea class="input" id="s-refund" rows="2" placeholder="เช่น สินค้าเป็นไฟล์ดิจิทัล ดาวน์โหลดได้ทันทีหลังชำระเงิน จึงไม่รับคืนเงิน หากไฟล์มีปัญหาติดต่อร้านเพื่อรับไฟล์ใหม่">${esc(D.settings.refundPolicy||'')}</textarea></div>
     <details style="margin:6px 0 14px"><summary class="fine">ช่องรับโอนเงินเอง (ไม่ได้ใช้ ถ้ารับเงินผ่าน Stripe)</summary>
@@ -1525,7 +1534,7 @@ function act(a,el){
     /* pixel + reset */
     case 'savePixel':{const id=$('#s-pixel').value.trim();if(id&&!/^\d{6,20}$/.test(id)){toast('Pixel ID ต้องเป็นตัวเลขล้วน');break;}D.settings.pixelId=id;save();render(true);toast('บันทึก Pixel ID แล้ว');break;}
     case 'saveFbVerify':{let v=$('#s-fbverify').value.trim();const m=v.match(/content=["']([^"']+)/);if(m)v=m[1];D.settings.fbDomainVerify=v;save();render(true);toast('บันทึกรหัสยืนยันโดเมนแล้ว');break;}
-    case 'savePay':{D.settings.shopName=$('#s-shop').value.trim();D.settings.refundPolicy=$('#s-refund').value.trim();let chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat))chat='https://'+chat;D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
+    case 'savePay':{D.settings.shopName=$('#s-shop').value.trim();D.settings.refundPolicy=$('#s-refund').value.trim();D.settings.customKinds=$('#s-kinds').value.trim();let chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat))chat='https://'+chat;D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
     case 'clearEvents':D.events=[];save();render(true);break;
     case 'clearDemo':
       if(S.confirm==='clearDemo'){D.orders=[];D.campaigns=[];D.events=[];S.confirm='';S.currentId=null;save();render(true);toast('ล้างออเดอร์และแคมเปญตัวอย่างแล้ว');}

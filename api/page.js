@@ -32,6 +32,11 @@ export default async function handler(req, res) {
     // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
     const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [] }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
+    const shopName = String(shop.settings.shopName || '').trim();
+    if (shopName) { // ชื่อร้านจากหลังบ้าน → ชื่อแท็บ/พรีวิวของหน้าแรก
+      out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(shopName)}</title>`)
+        .replace('<meta property="og:title" content="ร้านหนังสือ/ชีทเรียน">', `<meta property="og:title" content="${esc(shopName)}">`);
+    }
     const p = /^[a-z0-9-]+$/.test(slug) ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
     if (p) {
       const proto = req.headers['x-forwarded-proto'] || 'https';
