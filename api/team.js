@@ -68,10 +68,11 @@ export default async function handler(req, res) {
           m.permalink = d.permalink_url || null; m.shares = d.shares?.count || 0;
           m.reactions = d.reactions?.summary?.total_count || 0; m.comments = d.comments?.summary?.total_count || 0;
         } catch (e) { m.error = e.message; }
-        try {
-          const ins = await fbGet(`${p.fb_post_id}/insights`, { access_token: fb.token, metric: 'post_impressions_unique,post_clicks' });
-          for (const row of ins.data || []) { const v = row.values?.[0]?.value; if (row.name === 'post_impressions_unique') m.reach = v; if (row.name === 'post_clicks') m.clicks = v; }
-        } catch (e) { m.error = m.error || e.message; }
+        // Meta ปลดระวาง metric ของโพสต์เป็นระยะ จึงขอทีละตัวและข้ามตัวที่ใช้ไม่ได้ (ไม่ให้ตัวเดียวล้มทั้งชุด)
+        const metric = async (name) => { try { const ins = await fbGet(`${p.fb_post_id}/insights`, { access_token: fb.token, metric: name }); return ins.data?.[0]?.values?.[0]?.value ?? null; } catch { return null; } };
+        m.reach = await metric('post_impressions_unique');
+        if (m.reach == null) m.impressions = await metric('post_impressions');
+        m.clicks = await metric('post_clicks');
         m.engagement = m.reactions + m.comments + m.shares;
         out.push(m);
       }
