@@ -150,6 +150,29 @@ footer{padding:28px 0 110px;text-align:center}
 .ocard .on{font-weight:700;font-size:16px}
 .ocard .ot{font-size:13px;color:var(--muted)}
 .ocard ul{margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:3px}
+/* ออฟฟิศเสมือน: ผังห้อง โต๊ะทำงาน และห้องทำงานของแต่ละคน */
+.office{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:10px}
+.room{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:12px;position:relative;grid-column:span 2;background-image:radial-gradient(circle,var(--line) 1px,transparent 1px);background-size:14px 14px}
+.room.wide{grid-column:span 6}.room.mid{grid-column:span 3}
+.room .rname{position:absolute;top:-10px;left:12px;background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;color:var(--muted)}
+.room .desks{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.desk{display:flex;gap:10px;align-items:center;padding:8px 12px 8px 8px;border-radius:14px;background:var(--surface);border:1.5px solid var(--line);cursor:pointer;text-align:left;font:inherit;color:inherit;min-width:180px;flex:1 1 180px;box-shadow:0 2px 0 var(--line)}
+.desk:hover{border-color:var(--ink)}.desk.open{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.desk img{width:44px;height:44px;border-radius:50%;flex:none}
+.desk .dn{font-weight:700;font-size:14.5px}.desk .dt{font-size:12.5px;color:var(--muted);display:block;line-height:1.35;margin-top:2px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desk .st{font-size:11.5px;padding:1px 8px;margin:2px 0 0;display:inline-block}
+.desk.vacant{border-style:dashed;opacity:.7}.desk.link{min-width:140px}
+.roomv{background:var(--surface);border:1.5px solid var(--ink);border-radius:16px;padding:16px;margin-top:14px}
+.roomv .rh{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.roomv .rh img{width:64px;height:64px;border-radius:50%}
+.roomv .rh .rn{font-size:18px;font-weight:700}.roomv .rh .rt{font-size:13px;color:var(--muted)}
+.roomv .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.roomv .rbox{background:var(--bg);border-radius:12px;padding:10px 12px;font-size:13.5px}.roomv .rbox b{display:block;margin-bottom:4px}
+.roomv .work{margin-top:12px;display:grid;gap:8px}
+.roomv .btn{padding:8px 14px;font-size:14px;background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.roomv .witem{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.roomv .witem .wm{font-size:12px;color:var(--muted);margin-bottom:4px}.roomv .witem p{margin:0;white-space:pre-wrap;max-height:120px;overflow:hidden}
+.roomv .witem.exp p{max-height:none}
+@media(max-width:720px){.office{grid-template-columns:1fr 1fr}.room,.room.mid,.room.wide{grid-column:span 2}.roomv .rgrid{grid-template-columns:1fr}}
 .ocard .ow{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:6px;margin-top:auto}
 .kind{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;vertical-align:middle;margin-left:4px}
 .kind.ai{background:#E7EBFF;color:#2440E8}.kind.human{background:#FFF3C4;color:#7A5B00}
@@ -1583,9 +1606,56 @@ function teamTab(){
   </div>`;
 }
 
+// รูทีนของแต่ละคนบน claude.ai (ลิงก์ไปหน้าตั้งค่า/ดูประวัติการทำงาน)
+const ROUTINE={writer:'trig_01KWxNbAhoFYpqPDwBUymCUr',designer:'trig_01JaBKaAdLdAiBso13DVmoX5',trend:'trig_01EQNX5oNijJz1PvFA2W9c6G',manager:'trig_01CmNVkuMVWuR1uxMx5yp3ja',community:'trig_01WQ6kqhhVXvTY4j6qGjPR42',analyst:'trig_01GFg2fr85y8UXQfbftp4f2G',product:'trig_01RKFh6tc9TK7U5YRi6m62XB',finance:'trig_0142kT4STG3GPDMwbmC8wwV6'};
+const SLACK_URL='https://sheetlab.slack.com/archives/C0C4SP9025A',FACTORY_URL='https://claude.ai/artifact/1y9YnuZTkYtrCzNknJdQ53';
+const workOf=k=>POSTS.filter(p=>p.source===k).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+const firstLine=t=>String(t||'').split('\n').find(l=>l.trim())||'';
+function deskTask(k){
+  const st=teamStatus(k);const o=ORG[k]||{};
+  if(st.state==='owner')return 'ห้องเจ้าของร้าน';
+  if(st.state==='off')return 'ยังไม่เปิดรับตำแหน่งนี้';
+  if(st.state==='on')return 'กำลัง'+(o.do?o.do[0]:'ทำงาน');
+  const w=workOf(k)[0];
+  return w?'ล่าสุด: '+firstLine(w.text):'ยังไม่มีงานส่งมา';
+}
+function desk(k){const m=TEAM[k];const o=ORG[k]||{};return `<button class="desk${o.vacant?' vacant':''}${S.room===k?' open':''}" data-a="room" data-v="${k}">${ava(k)}<span><span class="dn">${esc(m.name)}</span>${statusBadge(k,false)}<span class="dt">${esc(deskTask(k))}</span></span></button>`;}
+function roomView(k){
+  const m=TEAM[k],o=ORG[k]||{},st=teamStatus(k);const works=workOf(k).slice(0,8);
+  const item=(w,i)=>{const isNote=w.status==='note'||w.status==='log';const stt=STATUS_TH[w.status]||[w.status,'gray'];
+    return `<div class="witem${S.roomExp===w.id?' exp':''}" data-a="roomExp" data-v="${w.id}"><div class="wm">${isNote?esc(KIND_TH[w.kind]||w.kind||'บันทึก'):`<span class="badge ${stt[1]}">${stt[0]}</span> ${esc(KIND_TH[w.kind]||w.kind||'')}`} · ${fdt(Date.parse(w.created_at))}${w.scheduled_at&&!isNote?' · กำหนดโพสต์ '+fdt(Date.parse(w.scheduled_at)):''}</div><p>${esc(w.text||'')}</p></div>`;};
+  return `<section class="roomv">
+    <div class="rh"><img src="${m.img}" alt="" style="background:${m.bg}"><div style="flex:1"><div class="rn">ห้องทำงานของ${esc(m.name)}</div><div class="rt">${esc(o.title||m.role)}</div><div style="margin-top:4px">${statusBadge(k,true)}</div></div><button class="btn" data-a="roomClose">ปิดห้อง</button></div>
+    <div class="rgrid">
+      <div class="rbox"><b>หน้าที่</b>${(o.do||[m.role]).map(d=>'• '+esc(d)).join('<br>')}</div>
+      <div class="rbox"><b>ตารางงาน</b>${esc(o.when||m.sched||'')}${st.next?'<br>รอบหน้า: '+esc(thDay(st.next)):''}${st.last?'<br>ส่งงานล่าสุด: '+fdt(st.last):''}
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${ROUTINE[k]?`<a class="btn" href="https://claude.ai/code/routines/${ROUTINE[k]}" target="_blank" rel="noopener noreferrer">ดูประวัติการทำงาน</a>`:''}<a class="btn" href="${SLACK_URL}" target="_blank" rel="noopener noreferrer">คุยใน Slack</a></div></div>
+    </div>
+    <h3 class="h3" style="margin-top:14px">งานที่ส่งมาล่าสุด</h3>
+    ${works.length?`<div class="work">${works.map(item).join('')}</div><p class="fine">กดที่งานเพื่ออ่านเต็ม</p>`:`<p class="muted">${k==='manual'?'งานของคุณอยู่ที่แท็บคอนเทนต์ (กดอนุมัติ) และ Slack':'ยังไม่มีงานส่งมา'}</p>`}
+  </section>`;
+}
+function officeTab(){
+  if(!postsLoaded){loadPosts().then(()=>render(true));}
+  const meeting=POSTS.filter(p=>p.status==='note'||p.status==='log').slice(0,3);
+  return `<p class="fine" style="margin:12px 0 14px">ออฟฟิศ SheetLab กดที่โต๊ะใครก็ได้เพื่อเข้าห้องทำงานของคนนั้น ดูหน้าที่ ตารางงาน และงานที่ส่งมาล่าสุด</p>
+  ${S.room?roomView(S.room):''}
+  <div class="office">
+    <div class="room"><span class="rname">ห้องเจ้าของร้าน</span><div class="desks">${desk('manual')}</div></div>
+    <div class="room"><span class="rname">ห้องผู้จัดการเพจ</span><div class="desks">${desk('manager')}</div></div>
+    <div class="room"><span class="rname">ห้องประชุม</span><div class="desks"><a class="desk link" href="${SLACK_URL}" target="_blank" rel="noopener noreferrer"><span style="font-size:28px">💬</span><span><span class="dn">Slack #sheetlab-team</span><span class="dt">${meeting.length?'ล่าสุด: '+esc(member(meeting[0].source||'manager').name)+' · '+esc(firstLine(meeting[0].text)):'ยังไม่มีข้อความ'}</span></span></a></div></div>
+    <div class="room wide"><span class="rname">ฝ่ายคอนเทนต์</span><div class="desks">${desk('writer')}${desk('designer')}${desk('trend')}${desk('community')}</div></div>
+    <div class="room mid"><span class="rname">ฝ่ายการตลาด</span><div class="desks">${desk('analyst')}</div></div>
+    <div class="room mid"><span class="rname">ฝ่ายสินค้า</span><div class="desks">${desk('product')}</div></div>
+    <div class="room mid"><span class="rname">บัญชี</span><div class="desks">${desk('finance')}</div></div>
+    <div class="room mid"><span class="rname">ดูแลลูกค้า</span><div class="desks">${desk('care')}</div></div>
+    <div class="room wide"><span class="rname">โรงงานผลิตชีท</span><div class="desks"><a class="desk link" href="${FACTORY_URL}" target="_blank" rel="noopener noreferrer"><span style="font-size:28px">🏭</span><span><span class="dn">คิวผลิตหนังสือ</span><span class="dt">เปิดแอปคิว ดูเล่มที่กำลังผลิตและเล่มที่เสร็จแล้ว</span></span></a></div></div>
+  </div>`;
+}
+
 function adminView(){
-  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม']];
-  const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab}[S.tab]();
+  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['office','ออฟฟิศ'],['team','ทีม']];
+  const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,office:officeTab,team:teamTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}</button>`).join('')}</div>
     ${body}
@@ -1749,6 +1819,9 @@ function act(a,el){
     case 'closeZoom':S.zoom=null;drawLB();break;
     case 'zoomPrev':case 'zoomNext':{const n=(curProduct().images||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
     case 'filter':S.filter=el.dataset.v;render(true);break;
+    case 'room':S.room=S.room===el.dataset.v?null:el.dataset.v;S.roomExp=null;render(true);if(S.room){const r=document.querySelector('.roomv');if(r)r.scrollIntoView({behavior:'smooth',block:'start'});}break;
+    case 'roomClose':S.room=null;render(true);break;
+    case 'roomExp':S.roomExp=S.roomExp===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
