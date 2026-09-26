@@ -32,6 +32,24 @@ async function readBody(req) {
   return new Promise((resolve) => { let d = ''; req.on('data', (c) => (d += c)); req.on('end', () => { try { resolve(JSON.parse(d || '{}')); } catch { resolve({}); } }); });
 }
 
+// รูปจากภายนอก (เช่นลิงก์ export ของ Canva ที่หมดอายุใน 1 ชม.) → ก๊อปเก็บใน Supabase Storage ให้ถาวร
+async function cacheImage(url) {
+  try {
+    if (!url || url.startsWith(`${SB_URL}/storage/`)) return url || null;
+    const r = await fetch(url, { redirect: 'follow' });
+    const type = r.headers.get('content-type') || '';
+    if (!r.ok || !/^image\/(png|jpe?g|webp)/.test(type)) return url;
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > 8 * 1024 * 1024) return url;
+    const ext = type.includes('png') ? 'png' : type.includes('webp') ? 'webp' : 'jpg';
+    const name = `posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${name}`, {
+      method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': type.split(';')[0], 'cache-control': '31536000' }, body: buf,
+    });
+    return up.ok ? `${SB_URL}/storage/v1/object/public/product-images/${name}` : url;
+  } catch { return url; }
+}
+
 export const fbConfigured = () => /^\d{5,}$/.test(FB_PAGE_ID) && FB_PAGE_TOKEN.length > 20;
 
 // โพสต์ 1 รายการขึ้นเพจ: มีรูป → /photos (caption), ไม่มีรูป → /feed (message + link)
@@ -81,6 +99,7 @@ export default async function handler(req, res) {
         week: p.week ? String(p.week).slice(0, 12) : null, notes: p.notes ? String(p.notes).slice(0, 1000) : null,
       }));
       if (!rows.length) return res.status(400).json({ ok: false, error: 'no posts' });
+      for (const r of rows) r.image_url = await cacheImage(r.image_url);
       const inserted = await sb('posts', { method: 'POST', body: rows, prefer: 'return=representation' });
       return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id) });
     }
