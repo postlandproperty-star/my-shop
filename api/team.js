@@ -3,6 +3,7 @@
 //   ?action=comments   (GET, ?days=3)  โพสต์ที่ขึ้นเพจล่าสุด + คอมเมนต์ + เฉลยควิซจาก notes   → ทีมดูแลคอมเมนต์ (ร่างคำตอบ)
 //   ?action=ads        (GET, ?days=7)  ผลแอดจาก Marketing API (ต้องมี ads_read)               → นักวิเคราะห์แอด
 //   ?action=followups  (GET)           ลูกค้าที่จ่ายแล้ว ≥3 วัน ยังไม่ได้อีเมลติดตามผล            → ฝ่ายดูแลลูกค้า (ร่างอีเมล)
+//   ?action=sync-adspend (GET) ดึงค่าแอดสะสมจริงจาก Facebook แปลงเป็นบาท บันทึกลง campaigns ของร้าน   → นักวิเคราะห์แอดทำทุกเช้า
 //   ?action=finance    (GET, ?days=7)  ยอดเงินเข้า ค่าธรรมเนียม เงินโอนออกจาก Stripe + ค่าแอด     → ฝ่ายบัญชี
 import { loadShop, stripe, configured, SB_URL } from '../lib/shop.js';
 import { loadFb, fbGet } from '../lib/fb.js';
@@ -13,8 +14,10 @@ const AD_ACCOUNT = process.env.FB_AD_ACCOUNT || 'act_1273219618240288';
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
 const isTestOrder = (o) => Number(o.amount) < 30 || /ทดสอบ|แคลคูลัส/.test(o.product_name || '');
 
-async function sb(path) {
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}` } });
+async function sb(path, { method = 'GET', body, prefer } = {}) {
+  const headers = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
+  if (prefer) headers.Prefer = prefer;
+  const r = await fetch(`${SB_URL}/rest/v1/${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
   const text = await r.text();
   if (!r.ok) throw new Error(`supabase ${path}: ${r.status} ${text.slice(0, 200)}`);
   return text ? JSON.parse(text) : null;
@@ -63,6 +66,31 @@ export default async function handler(req, res) {
       const since = new Date(Date.now() - n * 864e5).toISOString();
       const orders = await sb(`orders?status=eq.paid&paid_at=gte.${since}&select=paid_at,amount,campaign,product_name`);
       return res.status(200).json({ ok: true, account: acct, campaigns: campaigns.data || [], adsets: adsets.data || [], insights: ins.data || [], daily: daily.data || [], shopOrders: orders.filter((o) => !isTestOrder(o)) });
+    }
+    if (action === 'sync-adspend') {
+      const fb = await loadFb();
+      if (!fb?.userToken) return res.status(200).json({ ok: false, error: 'ต้องเชื่อมเพจใหม่พร้อมสิทธิ์ ads_read' });
+      // อัตราแลกเปลี่ยน AUD→THB (ถ้าดึงไม่ได้ใช้ค่าประมาณ 23)
+      let rate = 23, rateSource = 'ค่าประมาณ';
+      try { const r = await fetch('https://open.er-api.com/v6/latest/AUD'); const j = await r.json(); if (j?.rates?.THB) { rate = Number(j.rates.THB); rateSource = 'open.er-api.com'; } } catch {}
+      const camps = await fbGet(`${AD_ACCOUNT}/campaigns`, { access_token: fb.userToken, fields: 'id,name,effective_status,insights.date_preset(maximum){spend}', limit: 50 });
+      const fbList = (camps.data || []).map((c) => ({ id: c.id, name: c.name, status: c.effective_status, spendAUD: Number(c.insights?.data?.[0]?.spend || 0) }));
+      const norm = (x) => String(x || '').toLowerCase().replace(/^fb[-_ ]?/, '').replace(/[^a-z0-9ก-๙]/g, '');
+      const rows = await sb('shop_state?id=eq.private&select=data');
+      const data = rows?.[0]?.data || {};
+      const shopCamps = Array.isArray(data.campaigns) ? data.campaigns : [];
+      const mapping = [];
+      for (const sc of shopCamps) {
+        let m = fbList.find((f) => norm(f.name) && (norm(f.name) === norm(sc.name) || norm(sc.name).includes(norm(f.name)) || norm(f.name).includes(norm(sc.name))));
+        if (!m && shopCamps.length === 1 && fbList.length === 1) m = fbList[0];
+        if (m) { sc.spend = Math.round(m.spendAUD * rate); sc.spendAUD = m.spendAUD; sc.spendSyncedAt = new Date().toISOString(); sc.fbCampaign = m.name; mapping.push({ shop: sc.name, facebook: m.name, spendAUD: m.spendAUD, spendTHB: sc.spend }); }
+        else mapping.push({ shop: sc.name, facebook: null });
+      }
+      if (mapping.some((x) => x.facebook)) {
+        data.campaigns = shopCamps;
+        await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+      }
+      return res.status(200).json({ ok: true, rate, rateSource, facebookCampaigns: fbList, mapping, unmatchedFacebook: fbList.filter((f) => !mapping.some((x) => x.facebook === f.name)).map((f) => f.name) });
     }
     if (action === 'followups') {
       const cutoff = new Date(Date.now() - 3 * 864e5).toISOString();
