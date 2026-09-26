@@ -1276,7 +1276,7 @@ function payTab(){
 
 /* ---------- คอนเทนต์: คิวโพสต์ของเพจ (ตาราง posts) ---------- */
 let POSTS=[],postsLoaded=false;
-const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก'};
+const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',plan:'แผนสัปดาห์ (ประชุมทีม)'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={};
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
@@ -1555,22 +1555,22 @@ function adsTab(){
 
 const ORG={
   manual:{title:'เจ้าของร้าน (CEO)',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่ต้นส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
-  manager:{title:'ผู้จัดการเพจ · อำนาจรองจากเจ้าของ',do:['ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ','สั่งงานน้องปากกา เขียนโพสต์เองได้เมื่อจำเป็น','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ทุกจันทร์ 09:00 น.'},
+  manager:{title:'ผู้จัดการเพจ · หัวหน้าของทุกคน อำนาจรองจากเจ้าของ',do:['ประชุมทีมทุกอาทิตย์ 21:00 อ่านรายงานทุกฝ่ายแล้ววางแผนสัปดาห์ให้ทุกคน','ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ สั่งงานได้ทุกคน','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ประชุมทีมอาทิตย์ 21:00 · ตรวจโพสต์และรายงานจันทร์ 09:00'},
   writer:{title:'Content Creator · ฝ่ายคอนเทนต์',do:['ร่างโพสต์ 5 ชิ้นต่อสัปดาห์ ควิซ เฉลย ชวนคุย ควิซ ขาย','สร้างรูปทุกโพสต์ด้วย Canva ในโทนแบรนด์','ส่งงานให้พี่ต้นตรวจ ไม่โพสต์เอง'],when:'ทุกจันทร์ 08:00 น.'},
   designer:{title:'Graphic Designer · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['เปิดดูรูปทุกใบที่ Canva สร้างก่อนขึ้นเพจ','เช็คตัวอักษรไทย ข้อความตรงโพสต์ สีตรงแบรนด์','รูปไม่ผ่านสั่งสร้างใหม่และเปลี่ยนให้เอง'],when:'ทุกจันทร์ 08:40 น. หลังน้องปากกาส่งงาน'},
   trend:{title:'Trend Researcher · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['ค้นเว็บดูว่าคนเตรียมสอบ TOEIC กำลังสนใจอะไร','รอบสอบ ข่าวเกณฑ์คะแนน หัวข้อที่กำลังแชร์กัน','ส่งลิสต์ 8 หัวข้อพร้อมเหตุผลให้น้องปากกา'],when:'ทุกอาทิตย์ 20:00 น. ก่อนน้องปากกาเขียน'},
   community:{title:'Community Manager · ฝ่ายคอนเทนต์',do:['อ่านคอมเมนต์ใต้โพสต์ที่ขึ้นเพจ','ร่างคำตอบให้เจ้าของคัดลอกไปตอบ','ติดธงคอมเมนต์ที่ต้องให้พี่ต้นดู'],when:'ทุกวัน 08:00 และ 21:00 น.'},
   analyst:{title:'Performance Analyst · ฝ่ายการตลาด',do:['อ่านผลแอด Facebook ทุกวัน','คำนวณต้นทุนต่อการซื้อ เทียบยอดขายจริง','เสนอเพิ่ม ลด หรือหยุดงบ [ต้องอนุมัติ]'],when:'ทุกวัน 07:30 น.'},
   product:{title:'Product Development Lead · ฝ่ายสินค้า',do:['วิเคราะห์ยอดขาย คอมเมนต์ และคำถามทั้งเดือน','เสนอสิ่งที่ควรปรับในสินค้าและหน้าเซลเพจ','เสนอชีทเล่มถัดไปพร้อมโครงสารบท'],when:'ทุกวันที่ 1 ของเดือน 10:00 น.'},
-  finance:{title:'Accounting · ฝ่ายสนับสนุน',do:['สรุปยอดขาย ค่าธรรมเนียม Stripe เงินสุทธิ','ค่าแอดและกำไรหลังค่าแอด','เงินพร้อมโอนและเงินโอนเข้าบัญชีล่าสุด'],when:'ทุกจันทร์ 08:30 น.'},
-  care:{title:'Customer Care · ตำแหน่งว่าง',do:['ร่างอีเมลติดตามผล 3 วันหลังซื้อ','ขอรีวิว แนะนำสินค้าถัดไป'],when:'ยังไม่เปิดใช้',vacant:true},
+  finance:{title:'Accounting · ฝ่ายสนับสนุน รายงานพี่ต้น',do:['สรุปยอดขาย ค่าธรรมเนียม Stripe เงินสุทธิ','ค่าแอดและกำไรหลังค่าแอด','เงินพร้อมโอนและเงินโอนเข้าบัญชีล่าสุด'],when:'ทุกจันทร์ 08:30 น.'},
+  care:{title:'Customer Care · ฝ่ายสนับสนุน ตำแหน่งว่าง',do:['ร่างอีเมลติดตามผล 3 วันหลังซื้อ','ขอรีวิว แนะนำสินค้าถัดไป'],when:'ยังไม่เปิดใช้',vacant:true},
 };
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div></div></div>
   <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='owner'||st.state==='off'?'':`<br>ส่งงานล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'}`})()}</div></article>`;}
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
-  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งทำงานตามตารางอัตโนมัติ รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">สายบังคับบัญชา</h3>
   <div class="org">
     <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
@@ -1579,7 +1579,7 @@ function teamTab(){
   </div>
   <h3 class="h3" style="margin-top:20px">ลูกทีมของน้องปากกา</h3>
   <div class="org"><div class="tier two">${orgCard('designer')}${orgCard('trend')}</div></div>
-  <h3 class="h3" style="margin-top:20px">ฝ่ายสนับสนุน รายงานตรงถึงเจ้าของ</h3>
+  <h3 class="h3" style="margin-top:20px">ฝ่ายสนับสนุน (ขึ้นกับพี่ต้นเช่นกัน)</h3>
   <div class="org"><div class="tier two">${orgCard('finance')}${orgCard('care')}</div></div>
   <h3 class="h3" style="margin-top:24px">ใครตัดสินใจเรื่องอะไร</h3>
   <div style="overflow-x:auto"><table class="otable">
@@ -1595,6 +1595,7 @@ function teamTab(){
   <div class="ocycle">
     <div><b>จันทร์ 08:00</b>น้องปากการ่าง 5 โพสต์พร้อมรูป Canva</div>
     <div><b>อาทิตย์ 20:00</b>น้องเทรนด์ส่งลิสต์หัวข้อ</div>
+    <div><b>อาทิตย์ 21:00</b>พี่ต้นประชุมทีม อ่านรายงานทุกฝ่าย วางแผนสัปดาห์ให้ทุกคน</div>
     <div><b>จันทร์ 08:30</b>พี่บัญชีสรุปเงินสัปดาห์ก่อน</div>
     <div><b>จันทร์ 08:40</b>น้องกราฟิกตรวจและแก้รูปทุกใบ</div>
     <div><b>จันทร์ 09:00</b>พี่ต้นตรวจ แก้ อนุมัติ จัดตาราง เขียนรายงาน</div>

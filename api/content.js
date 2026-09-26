@@ -3,6 +3,7 @@
 //   ?action=drafts   (key, POST) นักเขียนส่งร่างเข้า [{text,image_url,link_url,scheduled_at,kind}] → status draft
 //   ?action=report   (key)   ตัวเลขสัปดาห์ (ยอดขาย/ออเดอร์/แคมเปญ) สำหรับ "ผู้จัดการ"
 //   ?action=note     (key, POST) ผู้จัดการ/นักวิเคราะห์ส่งรายงาน {text,kind:'report'|'ads'}
+//   ?action=board    (key)   กระดานทีม: แผนสัปดาห์ล่าสุดของผู้จัดการ + รายงานล่าสุดของแต่ละคน (14 วัน) ทุกคนอ่านก่อนเริ่มงาน
 //   ?action=images   (key)   โพสต์ที่ยังไม่ขึ้นเพจพร้อมรูป สำหรับ "นักออกแบบ" ตรวจรูป
 //   ?action=setimage (key, POST {id, image_url, note}) เปลี่ยนรูปโพสต์ (เก็บสำเนาถาวร) + บันทึกหมายเหตุ
 //   ?action=review   (key)   ร่างที่รอตรวจ (เต็ม) สำหรับ "ผู้จัดการ"
@@ -112,6 +113,17 @@ export default async function handler(req, res) {
       const row = { status: 'note', source: String(body.source || 'manager').slice(0, 20), kind: String(body.kind || 'report').slice(0, 20), text: String(body.text).slice(0, 8000), week: body.week ? String(body.week).slice(0, 12) : null };
       const inserted = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
       return res.status(200).json({ ok: true, id: inserted[0]?.id });
+    }
+    if (action === 'board') {
+      // กระดานประชุมทีม: แผนสัปดาห์ (kind plan) ล่าสุด + note ล่าสุด 1 ฉบับต่อคน + โพสต์ที่รอ/กำหนดโพสต์สัปดาห์นี้
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const since = new Date(Date.now() - 14 * 864e5).toISOString();
+      const notes = await sb(`posts?status=in.(note,log)&created_at=gte.${since}&select=source,kind,text,week,created_at&order=created_at.desc&limit=120`);
+      const plan = notes.find((n) => n.kind === 'plan') || null;
+      const latest = {};
+      for (const n of notes) { if (n.kind === 'plan' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
+      const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source&order=scheduled_at.asc&limit=30`);
+      return res.status(200).json({ ok: true, plan, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
     }
     if (action === 'images') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
