@@ -26,13 +26,13 @@ export default async function handler(req, res) {
       const body = await readBody(req);
       const token = String(body.token || '').trim();
       if (token.length < 30) return res.status(400).json({ ok: false, error: 'วางโทเค็นก่อน' });
-      const { user, pages } = await exchangeForPages(token, String(body.pageId || ''));
+      const { user, pages, userToken } = await exchangeForPages(token, String(body.pageId || ''));
       if (!pages.length) return res.status(400).json({ ok: false, error: 'ไม่พบเพจจากโทเค็นนี้ ลองใส่เลข Page ID ในช่องด้านล่างแล้วกดเชื่อมอีกครั้ง' });
       const want = String(body.pageId || '');
       const page = want ? pages.find((p) => p.id === want) : pages.length === 1 ? pages[0] : null;
       if (!page) return res.status(200).json({ ok: true, choose: pages.map((p) => ({ id: p.id, name: p.name, followers: p.followers_count || 0 })) });
       const info = await fbGet(page.id, { access_token: page.access_token, fields: 'id,name,followers_count,link' });
-      await saveFb({ pageId: page.id, pageName: info.name, token: page.access_token, userName: user.name, connectedAt: new Date().toISOString() });
+      await saveFb({ pageId: page.id, pageName: info.name, token: page.access_token, userToken, userName: user.name, connectedAt: new Date().toISOString() });
       return res.status(200).json({ ok: true, page: { id: page.id, name: info.name, followers: info.followers_count || 0, link: info.link } });
     }
     if (action === 'test') {

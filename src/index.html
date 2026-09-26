@@ -1220,7 +1220,7 @@ function payTab(){
 
 /* ---------- คอนเทนต์: คิวโพสต์ของเพจ (ตาราง posts) ---------- */
 let POSTS=[],postsLoaded=false;
-const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด'};
+const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี'};
 const STATUS_TH={draft:['รอพี่แผนตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={};
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
@@ -1238,9 +1238,13 @@ async function updatePost(id,patch){
 }
 const AV='https://api.dicebear.com/9.x/avataaars/svg?size=96&backgroundType=solid&facialHairProbability=0&';
 const TEAM={
-  writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',bg:'#ffd5dc',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00',img:AV+'accessoriesProbability=0&seed=pen&top=straight01&hairColor=4a312c&clothing=hoodie&clothesColor=3c4f5c&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=ffd5dc'},
   manager:{name:'พี่แผน',role:'ผู้จัดการเพจ · อนุมัติโพสต์แทนคุณ',bg:'#c0aede',sched:'ตรวจโพสต์ + รายงานทุกจันทร์ 09:00',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
-  analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด',bg:'#ffdfbf',sched:'ยังไม่เปิดใช้',img:AV+'accessoriesProbability=100&seed=boost&top=theCaesar&hairColor=2c1b18&accessories=round&clothing=graphicShirt&clothesColor=ff5c5c&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=ffdfbf'},
+  writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',bg:'#ffd5dc',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00',img:AV+'accessoriesProbability=0&seed=pen&top=straight01&hairColor=4a312c&clothing=hoodie&clothesColor=3c4f5c&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=ffd5dc'},
+  community:{name:'น้องคอม',role:'ดูแลคอมเมนต์ · ร่างคำตอบให้คุณส่ง',bg:'#d1fae5',sched:'เช็กคอมเมนต์ทุกวัน 08:00 และ 21:00',img:AV+'accessoriesProbability=0&seed=com&top=bob&hairColor=2c1b18&clothing=shirtCrewNeck&clothesColor=a7ffc4&eyes=happy&eyebrows=raisedExcitedNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=d1fae5'},
+  analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด · เสนอปรับงบ คุณอนุมัติ',bg:'#ffdfbf',sched:'อ่านผลแอดทุกวัน 07:30',img:AV+'accessoriesProbability=100&seed=boost&top=theCaesar&hairColor=2c1b18&accessories=round&clothing=graphicShirt&clothesColor=ff5c5c&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=ffdfbf'},
+  care:{name:'พี่แคร์',role:'ดูแลลูกค้าหลังการขาย · ร่างอีเมลติดตามผล',bg:'#fde68a',sched:'ทุกวัน 10:00',img:AV+'accessoriesProbability=0&seed=care&top=bun&hairColor=724133&clothing=blazerAndSweater&clothesColor=ffafb9&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=edb98a&backgroundColor=fde68a'},
+  product:{name:'พี่โปร',role:'พัฒนาสินค้า · เสนอชีทเล่มถัดไป',bg:'#e0e7ff',sched:'ทุกวันที่ 1 ของเดือน 10:00',img:AV+'accessoriesProbability=100&seed=pro&top=shortRound&hairColor=4a312c&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=default&mouth=default&skinColor=ffdbb4&backgroundColor=e0e7ff'},
+  finance:{name:'พี่บัญชี',role:'บัญชี · สรุปเงินเข้า ค่าธรรมเนียม กำไร',bg:'#e5e7eb',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=100&seed=acc&top=shortCurly&hairColor=2c1b18&accessories=prescription01&clothing=collarAndSweater&clothesColor=929598&eyes=default&eyebrows=defaultNatural&mouth=serious&skinColor=edb98a&backgroundColor=e5e7eb'},
   manual:{name:'คุณ',role:'เจ้าของร้าน · ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
 TEAM.ads=TEAM.analyst;
@@ -1251,7 +1255,7 @@ function contentTab(){
   if(!postsLoaded){Promise.all([loadPosts(),loadFbStatus()]).then(()=>render(true));}
   const f=S.cfilter||'queue';
   const notes=POSTS.filter(p=>p.status==='note');
-  const list=POSTS.filter(p=>p.status!=='note').filter(p=>f==='queue'?['needs_owner','draft','approved','failed','publishing'].includes(p.status):f==='all'?true:p.status===f);
+  const list=POSTS.filter(p=>p.status!=='note'&&p.status!=='log').filter(p=>f==='queue'?['needs_owner','draft','approved','failed','publishing'].includes(p.status):f==='all'?true:p.status===f);
   if(f==='queue')list.sort((a,b)=>(a.status==='needs_owner'?0:1)-(b.status==='needs_owner'?0:1));
   const chips=[['queue','คิว (รอตรวจ/รอโพสต์)'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']];
   const fb=!!FB.connected;
@@ -1289,7 +1293,7 @@ function contentTab(){
     ${FB.app===false?`<p class="err">ยังไม่ได้ใส่ FB_APP_ID / FB_APP_SECRET บน Vercel — ทำข้อ 1 ก่อน</p>`:''}
     <ol style="padding-left:20px;line-height:1.7;font-size:14px">
       <li>สร้างแอปที่ <a href="https://developers.facebook.com/apps/create/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps/create</a> (ประเภท Business/อื่นๆ) แล้วนำ <b>App ID</b> และ <b>App Secret</b> จาก App settings → Basic ไปใส่ใน Vercel เป็น <code>FB_APP_ID</code>, <code>FB_APP_SECRET</code> แล้วกด Redeploy</li>
-      <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → เลือกแอปของคุณ → Permissions เพิ่ม <code>pages_show_list</code>, <code>pages_manage_posts</code>, <code>pages_read_engagement</code> → กด <b>Generate Access Token</b> → เลือกเพจ SheetLab → อนุญาต</li>
+      <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → เลือกแอปของคุณ → Permissions เพิ่ม <code>pages_show_list</code>, <code>pages_manage_posts</code>, <code>pages_read_engagement</code>, <code>ads_read</code>, <code>read_insights</code> → กด <b>Generate Access Token</b> → เลือกเพจ SheetLab → อนุญาต</li>
       <li>คัดลอกโทเค็นในช่อง Access Token มาวางด้านล่าง</li>
     </ol>
     <textarea class="input" id="fb-token" rows="3" placeholder="วางโทเค็นที่นี่ (ระบบจะแลกเป็นโทเค็นเพจแบบไม่หมดอายุ และไม่แสดงให้ใครเห็นอีก)"></textarea>
@@ -1298,8 +1302,8 @@ function contentTab(){
     <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="fbConnect">เชื่อมเพจ</button><button class="btn btn-line btn-sm" data-a="fbOpen">ปิด</button></div>
     ${FB.msg?`<p class="fine" style="margin-top:8px">${esc(FB.msg)}</p>`:''}
   </div>`:''}
-  <div class="team">${['manager','writer','manual'].map(k=>{const m=TEAM[k];const last=k==='manual'?null:POSTS.find(x=>x.source===k);return `<div class="member">${ava(k)}<span><b>${esc(m.name)}</b><span class="fine">${esc(m.role)}${m.sched?' · '+esc(m.sched):''}${last?' · ล่าสุด '+fdt(Date.parse(last.created_at)):''}</span></span></div>`;}).join('')}</div>
-  ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${notes.slice(0,3).map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:''}
+  <div class="team">${['manager','writer','community','analyst','care','product','finance','manual'].map(k=>{const m=TEAM[k];const last=k==='manual'?null:POSTS.find(x=>x.source===k);return `<div class="member">${ava(k)}<span><b>${esc(m.name)}</b><span class="fine">${esc(m.role)}${m.sched?' · '+esc(m.sched):''}${last?' · ล่าสุด '+fdt(Date.parse(last.created_at)):''}</span></span></div>`;}).join('')}</div>
+  ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${(()=>{const seen={};return notes.filter(n=>{const k=n.source||'x';if(seen[k])return false;seen[k]=1;return true;}).slice(0,7);})().map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:''}
   <div class="filters" style="margin-top:8px"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div></div>
   ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?list.map(card).join(''):`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}`;
 }
