@@ -136,8 +136,8 @@ footer{padding:28px 0 110px;text-align:center}
 .post .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .team{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
 .member{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 14px 8px 8px;min-width:0}
-.ava{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px;flex:none;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
-.ava.sm{width:26px;height:26px;font-size:13px}
+.ava{width:44px;height:44px;border-radius:50%;flex:none;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 4px rgba(15,27,51,.15);vertical-align:middle}
+.ava.sm{width:26px;height:26px;border-width:1px}
 .member b{display:block;font-size:14px;line-height:1.2}
 .member .fine{display:block;font-size:12px}
 .by{display:inline-flex;align-items:center;gap:6px;vertical-align:middle}
@@ -1233,15 +1233,16 @@ async function updatePost(id,patch){
   if(error){toast('บันทึกไม่สำเร็จ: '+error.message);return false;}
   const p=POSTS.find(x=>x.id===id);if(p)Object.assign(p,patch);return true;
 }
+const AV='https://api.dicebear.com/9.x/avataaars/svg?size=96&backgroundType=solid&facialHairProbability=0&';
 const TEAM={
-  writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',emoji:'✍️',bg:'#2440E8',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00'},
-  manager:{name:'พี่แผน',role:'ผู้จัดการเพจ',emoji:'📊',bg:'#0F1B33',sched:'สรุปรายงานทุกจันทร์ 08:30'},
-  analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด',emoji:'📣',bg:'#B42318',sched:'ยังไม่เปิดใช้'},
-  manual:{name:'คุณ',role:'เจ้าของร้าน · อนุมัติทุกอย่าง',emoji:'👑',bg:'#FFD23F',sched:''},
+  writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',bg:'#ffd5dc',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00',img:AV+'accessoriesProbability=0&seed=pen&top=straight01&hairColor=4a312c&clothing=hoodie&clothesColor=3c4f5c&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=ffd5dc'},
+  manager:{name:'พี่แผน',role:'ผู้จัดการเพจ',bg:'#c0aede',sched:'สรุปรายงานทุกจันทร์ 08:30',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
+  analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด',bg:'#ffdfbf',sched:'ยังไม่เปิดใช้',img:AV+'accessoriesProbability=100&seed=boost&top=theCaesar&hairColor=2c1b18&accessories=round&clothing=graphicShirt&clothesColor=ff5c5c&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=ffdfbf'},
+  manual:{name:'คุณ',role:'เจ้าของร้าน · อนุมัติทุกอย่าง',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
 TEAM.ads=TEAM.analyst;
-const member=src=>TEAM[src]||{name:src||'ทีม',role:'',emoji:'🤖',bg:'#56637D'};
-const ava=(src,sm)=>{const m=member(src);return `<span class="ava${sm?' sm':''}" style="background:${m.bg}" title="${esc(m.name)} · ${esc(m.role)}">${m.emoji}</span>`;};
+const member=src=>TEAM[src]||{name:src||'ทีม',role:'',bg:'#D3DBE8',img:AV+'seed='+encodeURIComponent(src||'team')};
+const ava=(src,sm)=>{const m=member(src);return `<img class="ava${sm?' sm':''}" style="background:${m.bg}" src="${m.img}" alt="" title="${esc(m.name)} · ${esc(m.role)}" loading="lazy">`;};
 const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<span>${esc(m.name)}</span></span>`;};
 function contentTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
