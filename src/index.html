@@ -166,6 +166,12 @@ footer{padding:28px 0 110px;text-align:center}
 .member b{display:block;font-size:14px;line-height:1.2}
 .member .fine{display:block;font-size:12px}
 .by{display:inline-flex;align-items:center;gap:6px;vertical-align:middle}
+.st{display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle}
+.st.on{background:var(--okbg);color:var(--ok);animation:pulse 1.6s ease-in-out infinite}
+.st.idle{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.st.off{background:var(--bg);color:var(--muted);border:1px dashed var(--line)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.st.on{animation:none}}
 .note-card{background:var(--surface);border-left:4px solid var(--brand);border-radius:12px;padding:14px 16px;margin-bottom:10px;white-space:pre-wrap;font-size:14px}
 @media(max-width:520px){.post{grid-template-columns:1fr}.post img,.post .noimg{width:100%;height:160px}}
 .kpi .v{font-family:var(--font-head);font-size:24px;line-height:1.2}
@@ -1275,6 +1281,41 @@ const TEAM={
   manual:{name:'คุณ',role:'เจ้าของร้าน · ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
 TEAM.ads=TEAM.analyst;
+// ตารางเวลาแต่ละคน (เวลากรุงเทพ) dow: 0=อาทิตย์ ... 6=เสาร์, dom: วันที่ของเดือน, dur: นาทีที่ถือว่า "กำลังทำงาน"
+const SCHED={
+  writer:{dow:[1],times:[[8,0]],dur:15},
+  designer:{dow:[1],times:[[8,40]],dur:20},
+  finance:{dow:[1],times:[[8,30]],dur:10},
+  manager:{dow:[1],times:[[9,0]],dur:20},
+  trend:{dow:[0],times:[[20,0]],dur:15},
+  community:{dow:[0,1,2,3,4,5,6],times:[[8,0],[21,0]],dur:10},
+  analyst:{dow:[0,1,2,3,4,5,6],times:[[7,30]],dur:10},
+  product:{dom:1,times:[[10,0]],dur:20},
+};
+const BKK=7*3600e3;
+function teamStatus(k){
+  const sc=SCHED[k];const m=TEAM[k]||{};
+  const last=POSTS.filter(x=>x.source===k).map(x=>Date.parse(x.created_at)).sort((a,b)=>b-a)[0]||null;
+  if(!sc)return{state:m.sched===''?'owner':'off',last,next:null};
+  const now=Date.now();const base=new Date(now+BKK);let cur=null,next=null;
+  for(let d=-1;d<=45&&!next;d++){
+    const day=new Date(Date.UTC(base.getUTCFullYear(),base.getUTCMonth(),base.getUTCDate()+d));
+    const ok=sc.dow?sc.dow.includes(day.getUTCDay()):day.getUTCDate()===sc.dom;
+    if(!ok)continue;
+    for(const [h,mi] of sc.times){const t=Date.UTC(day.getUTCFullYear(),day.getUTCMonth(),day.getUTCDate(),h,mi)-BKK;
+      if(now>=t&&now<t+sc.dur*60e3)cur=t;else if(t>now&&!next)next=t;}
+  }
+  // ถ้ามีผลงานส่งเข้ามาใน 15 นาทีที่ผ่านมา ก็ถือว่าเพิ่งทำงานเสร็จ/กำลังทำ
+  if(!cur&&last&&now-last<15*60e3)cur=last;
+  return{state:cur?'on':'idle',last,next};
+}
+function statusBadge(k,full){
+  const st=teamStatus(k);
+  if(st.state==='owner')return '';
+  if(st.state==='off')return `<span class="st off">○ ยังไม่เปิดใช้</span>`;
+  if(st.state==='on')return `<span class="st on">● กำลังทำงาน</span>`;
+  return `<span class="st idle">○ ว่าง</span>${full?`<span class="fine"> · ล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'} · รอบถัดไป ${st.next?fdt(st.next):'-'}</span>`:''}`;
+}
 const member=src=>TEAM[src]||{name:src||'ทีม',role:'',bg:'#D3DBE8',img:AV+'seed='+encodeURIComponent(src||'team')};
 const ava=(src,sm)=>{const m=member(src);return `<img class="ava${sm?' sm':''}" style="background:${m.bg}" src="${m.img}" alt="" title="${esc(m.name)} · ${esc(m.role)}" loading="lazy">`;};
 const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<span>${esc(m.name)}</span></span>`;};
@@ -1329,7 +1370,7 @@ function contentTab(){
     <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="fbConnect">เชื่อมเพจ</button><button class="btn btn-line btn-sm" data-a="fbOpen">ปิด</button></div>
     ${FB.msg?`<p class="fine" style="margin-top:8px">${esc(FB.msg)}</p>`:''}
   </div>`:''}
-  <div class="team">${['manager','writer','designer','trend','community','analyst','care','product','finance','manual'].map(k=>{const m=TEAM[k];const last=k==='manual'?null:POSTS.find(x=>x.source===k);return `<div class="member">${ava(k)}<span><b>${esc(m.name)}</b><span class="fine">${esc(m.role)}${m.sched?' · '+esc(m.sched):''}${last?' · ล่าสุด '+fdt(Date.parse(last.created_at)):''}</span></span></div>`;}).join('')}</div>
+  <div class="team">${['manager','writer','designer','trend','community','analyst','care','product','finance','manual'].map(k=>{const m=TEAM[k];return `<div class="member">${ava(k)}<span><b>${esc(m.name)}</b>${statusBadge(k,false)}<span class="fine">${esc(m.role)}${m.sched?' · '+esc(m.sched):''}</span></span></div>`;}).join('')}</div>
   ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${(()=>{const seen={};return notes.filter(n=>{const k=n.source||'x';if(seen[k])return false;seen[k]=1;return true;}).slice(0,7);})().map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:''}
   <div class="filters" style="margin-top:8px"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div></div>
   ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?list.map(card).join(''):`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}`;
@@ -1478,9 +1519,10 @@ const ORG={
   care:{title:'Customer Care · ตำแหน่งว่าง',do:['ร่างอีเมลติดตามผล 3 วันหลังซื้อ','ขอรีวิว แนะนำสินค้าถัดไป'],when:'ยังไม่เปิดใช้',vacant:true},
 };
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
-  <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span></div><div class="ot">${esc(o.title)}</div></div></div>
-  <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}</div></article>`;}
+  <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div></div></div>
+  <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='idle'||st.state==='on'?`<br>ล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'} · รอบถัดไป ${st.next?fdt(st.next):'-'}`:''})()}</div></article>`;}
 function teamTab(){
+  if(!postsLoaded){loadPosts().then(()=>render(true));}
   return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งทำงานตามตารางอัตโนมัติ รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">สายบังคับบัญชา</h3>
   <div class="org">
