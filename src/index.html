@@ -134,6 +134,13 @@ footer{padding:28px 0 110px;text-align:center}
 .post textarea{width:100%;min-height:120px;white-space:pre-wrap}
 .post .meta{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
 .post .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.team{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
+.member{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 14px 8px 8px;min-width:0}
+.ava{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:20px;flex:none;color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
+.ava.sm{width:26px;height:26px;font-size:13px}
+.member b{display:block;font-size:14px;line-height:1.2}
+.member .fine{display:block;font-size:12px}
+.by{display:inline-flex;align-items:center;gap:6px;vertical-align:middle}
 .note-card{background:var(--surface);border-left:4px solid var(--brand);border-radius:12px;padding:14px 16px;margin-bottom:10px;white-space:pre-wrap;font-size:14px}
 @media(max-width:520px){.post{grid-template-columns:1fr}.post img,.post .noimg{width:100%;height:160px}}
 .kpi .v{font-family:var(--font-head);font-size:24px;line-height:1.2}
@@ -1226,6 +1233,16 @@ async function updatePost(id,patch){
   if(error){toast('บันทึกไม่สำเร็จ: '+error.message);return false;}
   const p=POSTS.find(x=>x.id===id);if(p)Object.assign(p,patch);return true;
 }
+const TEAM={
+  writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',emoji:'✍️',bg:'#2440E8',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00'},
+  manager:{name:'พี่แผน',role:'ผู้จัดการเพจ',emoji:'📊',bg:'#0F1B33',sched:'สรุปรายงานทุกจันทร์ 08:30'},
+  analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด',emoji:'📣',bg:'#B42318',sched:'ยังไม่เปิดใช้'},
+  manual:{name:'คุณ',role:'เจ้าของร้าน · อนุมัติทุกอย่าง',emoji:'👑',bg:'#FFD23F',sched:''},
+};
+TEAM.ads=TEAM.analyst;
+const member=src=>TEAM[src]||{name:src||'ทีม',role:'',emoji:'🤖',bg:'#56637D'};
+const ava=(src,sm)=>{const m=member(src);return `<span class="ava${sm?' sm':''}" style="background:${m.bg}" title="${esc(m.name)} · ${esc(m.role)}">${m.emoji}</span>`;};
+const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<span>${esc(m.name)}</span></span>`;};
 function contentTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   const f=S.cfilter||'queue';
@@ -1237,11 +1254,11 @@ function contentTab(){
     return `<div class="post" data-pid="${p.id}">
       ${p.image_url?`<img src="${esc(p.image_url)}" alt="">`:`<div class="noimg">ไม่มีรูป</div>`}
       <div>
-        <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}${p.source?' · โดย '+(p.source==='writer'?'นักเขียน AI':'คุณ'):''}</span></span>
+        <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
           <span class="fine">${p.published_at?'โพสต์เมื่อ '+fdt(Date.parse(p.published_at)):p.scheduled_at?'กำหนดโพสต์ '+fdt(Date.parse(p.scheduled_at)):'ยังไม่กำหนดเวลา'}</span></div>
         ${editable?`<textarea class="input" id="pt-${p.id}" style="margin-top:8px">${esc(p.text||'')}</textarea>`:`<p style="white-space:pre-wrap;margin-top:8px">${esc(p.text||'')}</p>`}
         ${p.error?`<p class="err" style="margin-top:6px">${esc(p.error)}</p>`:''}
-        ${p.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจากนักเขียน: ${esc(p.notes)}</p>`:''}
+        ${p.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจาก ${esc(member(p.source||'writer').name)}: ${esc(p.notes)}</p>`:''}
         <div class="meta">
           ${editable?`<label>เวลาโพสต์ <input class="input" type="datetime-local" id="ps-${p.id}" value="${p.scheduled_at?toLocalInput(Date.parse(p.scheduled_at)):''}" style="width:auto;display:inline-block;padding:6px 8px"></label>`:''}
           ${p.link_url?`<a href="${esc(p.link_url)}" target="_blank" rel="noopener noreferrer">ลิงก์ในโพสต์</a>`:''}
@@ -1262,7 +1279,8 @@ function contentTab(){
     <span class="fine">${fb?'✅ เชื่อมเพจ Facebook แล้ว โพสต์ที่อนุมัติจะขึ้นเพจอัตโนมัติตามเวลา':'⚠️ ยังไม่ได้เชื่อมเพจ Facebook — โพสต์ที่อนุมัติต้องกด "คัดลอกข้อความ" ไปโพสต์เองก่อน (ตั้งค่า FB_PAGE_ID / FB_PAGE_TOKEN บน Vercel)'}</span>
     <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="postRefresh">รีเฟรช</button><button class="btn btn-dark btn-sm" data-a="postNew">+ เพิ่มโพสต์เอง</button></span>
   </div>
-  ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${notes.slice(0,3).map(nt=>`<div class="note-card"><div class="fine" style="margin-bottom:6px">${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</div>${esc(nt.text)}</div>`).join('')}`:''}
+  <div class="team">${['manager','writer','manual'].map(k=>{const m=TEAM[k];const last=k==='manual'?null:POSTS.find(x=>x.source===k);return `<div class="member">${ava(k)}<span><b>${esc(m.name)}</b><span class="fine">${esc(m.role)}${m.sched?' · '+esc(m.sched):''}${last?' · ล่าสุด '+fdt(Date.parse(last.created_at)):''}</span></span></div>`;}).join('')}</div>
+  ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${notes.slice(0,3).map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:''}
   <div class="filters" style="margin-top:8px"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div></div>
   ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?list.map(card).join(''):`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}`;
 }
