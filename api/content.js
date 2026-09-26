@@ -167,6 +167,24 @@ export default async function handler(req, res) {
       const rows = await sbPatch(`posts?id=eq.${id}`, patch);
       return res.status(200).json({ ok: true, id, status: rows[0]?.status });
     }
+    if (action === 'update') {
+      // พี่ต้นเลื่อนเวลา/แก้ข้อความโพสต์ที่ยังไม่ขึ้นเพจ (draft, approved, needs_owner)
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const body = await readBody(req);
+      const id = String(body.id || '');
+      if (!/^[0-9a-f-]{36}$/.test(id)) return res.status(400).json({ ok: false, error: 'bad id' });
+      const cur = await sb(`posts?id=eq.${id}&select=id,status,notes`);
+      if (!cur.length) return res.status(404).json({ ok: false, error: 'not found' });
+      if (!['draft', 'approved', 'needs_owner'].includes(cur[0].status)) return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${cur[0].status} แก้ไม่ได้แล้ว` });
+      const patch = {};
+      if (body.text && String(body.text).trim()) patch.text = String(body.text).slice(0, 4000);
+      if (body.scheduled_at && !isNaN(Date.parse(body.scheduled_at))) patch.scheduled_at = new Date(body.scheduled_at).toISOString();
+      if (!Object.keys(patch).length) return res.status(400).json({ ok: false, error: 'ต้องส่ง text หรือ scheduled_at' });
+      const reason = String(body.reason || '').slice(0, 300);
+      patch.notes = [cur[0].notes, `✏️ พี่ต้น: ${reason || 'แก้ไข'}`].filter(Boolean).join('\n');
+      const rows = await sbPatch(`posts?id=eq.${id}`, patch);
+      return res.status(200).json({ ok: true, id, status: rows[0]?.status, scheduled_at: rows[0]?.scheduled_at });
+    }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !cronOk(req) && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
