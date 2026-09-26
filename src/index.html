@@ -135,6 +135,31 @@ footer{padding:28px 0 110px;text-align:center}
 .post .meta{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
 .post .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .team{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 14px}
+.org{display:grid;justify-items:center;gap:0;margin-top:12px}
+.org .tier{display:grid;gap:12px;width:100%}
+.org .tier.one{grid-template-columns:minmax(0,440px);justify-content:center}
+.org .tier.many{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.org .tier.two{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));max-width:620px;margin:0 auto}
+.org .conn{width:2px;height:24px;background:var(--line)}
+.org .bar{height:2px;background:var(--line);width:min(100%,880px)}
+.ocard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;text-align:left}
+.ocard::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:var(--obg)}
+.ocard.vacant{border-style:dashed;opacity:.8}
+.ocard .oh{display:flex;gap:10px;align-items:center;margin-top:4px}
+.ocard .oh img{width:56px;height:56px}
+.ocard .on{font-weight:700;font-size:16px}
+.ocard .ot{font-size:13px;color:var(--muted)}
+.ocard ul{margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:3px}
+.ocard .ow{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:6px;margin-top:auto}
+.kind{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;vertical-align:middle;margin-left:4px}
+.kind.ai{background:#E7EBFF;color:#2440E8}.kind.human{background:#FFF3C4;color:#7A5B00}
+.otable{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.otable th,.otable td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.otable th{font-size:12px;color:var(--muted);background:var(--bg)}
+.otable tr:last-child td{border-bottom:0}
+.ocycle{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.ocycle div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
+.ocycle b{display:block;color:var(--brand)}
 .member{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 14px 8px 8px;min-width:0}
 .ava{width:44px;height:44px;border-radius:50%;flex:none;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 4px rgba(15,27,51,.15);vertical-align:middle}
 .ava.sm{width:26px;height:26px;border-width:1px}
@@ -1438,9 +1463,55 @@ function adsTab(){
   ${writer}`;
 }
 
+const ORG={
+  manual:{title:'เจ้าของร้าน (CEO)',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่แผนส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
+  manager:{title:'ผู้จัดการเพจ · อำนาจรองจากเจ้าของ',do:['ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ','สั่งงานน้องปากกา เขียนโพสต์เองได้เมื่อจำเป็น','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ทุกจันทร์ 09:00 น.'},
+  writer:{title:'Content Creator · ฝ่ายคอนเทนต์',do:['ร่างโพสต์ 5 ชิ้นต่อสัปดาห์ ควิซ เฉลย ชวนคุย ควิซ ขาย','สร้างรูปทุกโพสต์ด้วย Canva ในโทนแบรนด์','ส่งงานให้พี่แผนตรวจ ไม่โพสต์เอง'],when:'ทุกจันทร์ 08:00 น.'},
+  community:{title:'Community Manager · ฝ่ายคอนเทนต์',do:['อ่านคอมเมนต์ใต้โพสต์ที่ขึ้นเพจ','ร่างคำตอบให้เจ้าของคัดลอกไปตอบ','ติดธงคอมเมนต์ที่ต้องให้พี่แผนดู'],when:'ทุกวัน 08:00 และ 21:00 น.'},
+  analyst:{title:'Performance Analyst · ฝ่ายการตลาด',do:['อ่านผลแอด Facebook ทุกวัน','คำนวณต้นทุนต่อการซื้อ เทียบยอดขายจริง','เสนอเพิ่ม ลด หรือหยุดงบ [ต้องอนุมัติ]'],when:'ทุกวัน 07:30 น.'},
+  product:{title:'Product Development Lead · ฝ่ายสินค้า',do:['วิเคราะห์ยอดขาย คอมเมนต์ และคำถามทั้งเดือน','เสนอสิ่งที่ควรปรับในสินค้าและหน้าเซลเพจ','เสนอชีทเล่มถัดไปพร้อมโครงสารบท'],when:'ทุกวันที่ 1 ของเดือน 10:00 น.'},
+  finance:{title:'Accounting · ฝ่ายสนับสนุน',do:['สรุปยอดขาย ค่าธรรมเนียม Stripe เงินสุทธิ','ค่าแอดและกำไรหลังค่าแอด','เงินพร้อมโอนและเงินโอนเข้าบัญชีล่าสุด'],when:'ทุกจันทร์ 08:30 น.'},
+  care:{title:'Customer Care · ตำแหน่งว่าง',do:['ร่างอีเมลติดตามผล 3 วันหลังซื้อ','ขอรีวิว แนะนำสินค้าถัดไป'],when:'ยังไม่เปิดใช้',vacant:true},
+};
+function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
+  <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span></div><div class="ot">${esc(o.title)}</div></div></div>
+  <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}</div></article>`;}
+function teamTab(){
+  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 7 ตำแหน่ง ทุกตำแหน่งทำงานตามตารางอัตโนมัติ รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  <h3 class="h3">สายบังคับบัญชา</h3>
+  <div class="org">
+    <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
+    <div class="tier one">${orgCard('manager')}</div><div class="conn"></div><div class="bar"></div><div class="conn"></div>
+    <div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div>
+  </div>
+  <h3 class="h3" style="margin-top:20px">ฝ่ายสนับสนุน รายงานตรงถึงเจ้าของ</h3>
+  <div class="org"><div class="tier two">${orgCard('finance')}${orgCard('care')}</div></div>
+  <h3 class="h3" style="margin-top:24px">ใครตัดสินใจเรื่องอะไร</h3>
+  <div style="overflow-x:auto"><table class="otable">
+  <tr><th>เรื่อง</th><th>ตัดสินใจ</th><th>เสนอ / เตรียม</th><th>ต้องรอเจ้าของไหม</th></tr>
+  <tr><td>โพสต์ทั่วไป ควิซ ทิป ชวนคุย</td><td>พี่แผน</td><td>น้องปากกา</td><td>ไม่ต้อง ขึ้นเพจอัตโนมัติ 19:05 น.</td></tr>
+  <tr><td>โพสต์ที่พูดถึงราคา ส่วนลด ของแถม การอ้างผลลัพธ์</td><td>เจ้าของ</td><td>พี่แผนติดป้าย "รอคุณอนุมัติ"</td><td>ต้อง</td></tr>
+  <tr><td>งบโฆษณา เปิด ปิด เพิ่ม ลดแอด</td><td>เจ้าของ</td><td>น้องบูสต์ [ต้องอนุมัติ]</td><td>ต้อง</td></tr>
+  <tr><td>ตอบคอมเมนต์ลูกค้า</td><td>เจ้าของกดส่ง</td><td>น้องคอมร่างคำตอบ</td><td>ต้อง กดส่งเอง</td></tr>
+  <tr><td>สินค้าใหม่ ราคาใหม่</td><td>เจ้าของ</td><td>พี่โปร</td><td>ต้อง</td></tr>
+  <tr><td>ตัวเลขเงิน กำไร</td><td>ไม่มีการตัดสินใจ</td><td>พี่บัญชีรายงาน</td><td>อ่านอย่างเดียว</td></tr>
+  </table></div>
+  <h3 class="h3" style="margin-top:24px">วงจรงานใน 1 สัปดาห์</h3>
+  <div class="ocycle">
+    <div><b>จันทร์ 08:00</b>น้องปากการ่าง 5 โพสต์พร้อมรูป Canva</div>
+    <div><b>จันทร์ 08:30</b>พี่บัญชีสรุปเงินสัปดาห์ก่อน</div>
+    <div><b>จันทร์ 09:00</b>พี่แผนตรวจ แก้ อนุมัติ จัดตาราง เขียนรายงาน</div>
+    <div><b>ทุกวัน 07:30</b>น้องบูสต์อ่านผลแอด</div>
+    <div><b>ทุกวัน 08:00 และ 21:00</b>น้องคอมร่างคำตอบคอมเมนต์</div>
+    <div><b>ทุกวัน 19:05</b>ระบบโพสต์ชิ้นที่อนุมัติแล้วขึ้นเพจ</div>
+    <div><b>วันที่ 1 ของเดือน</b>พี่โปรเสนอแผนสินค้า</div>
+    <div><b>เจ้าของ</b>อ่าน Slack กดอนุมัติเฉพาะเรื่องเงินและเรื่องสำคัญ</div>
+  </div>`;
+}
+
 function adminView(){
-  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์']];
-  const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab}[S.tab]();
+  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม']];
+  const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}</button>`).join('')}</div>
     ${body}
