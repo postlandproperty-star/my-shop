@@ -3,17 +3,18 @@
 //   ?action=drafts   (key, POST) นักเขียนส่งร่างเข้า [{text,image_url,link_url,scheduled_at,kind}] → status draft
 //   ?action=report   (key)   ตัวเลขสัปดาห์ (ยอดขาย/ออเดอร์/แคมเปญ) สำหรับ "ผู้จัดการ"
 //   ?action=note     (key, POST) ผู้จัดการ/นักวิเคราะห์ส่งรายงาน {text,kind:'report'|'ads'}
+//   ?action=review   (key)   ร่างที่รอตรวจ (เต็ม) สำหรับ "ผู้จัดการ"
+//   ?action=decide   (key, POST) ผู้จัดการตัดสิน {id, decision:'approve'|'reject'|'owner', reason, text?}
+//                    owner = เรื่องสำคัญ ส่งให้เจ้าของกดอนุมัติเอง (status needs_owner)
 //   ?action=publish  (cron หรือแอดมิน) โพสต์ที่อนุมัติแล้วและถึงเวลา → ขึ้นเพจ Facebook
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
 import { loadShop, verifyAdmin, sbPatch } from '../lib/shop.js';
+import { loadFb, publishToPage } from '../lib/fb.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
 const CONTENT_KEY = process.env.CONTENT_API_KEY || '';
-const FB_PAGE_ID = process.env.FB_PAGE_ID || '';
-const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN || '';
-const FB_API = 'https://graph.facebook.com/v21.0';
 
 async function sb(path, { method = 'GET', body, prefer } = {}) {
   const headers = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
@@ -48,27 +49,6 @@ async function cacheImage(url) {
     });
     return up.ok ? `${SB_URL}/storage/v1/object/public/product-images/${name}` : url;
   } catch { return url; }
-}
-
-export const fbConfigured = () => /^\d{5,}$/.test(FB_PAGE_ID) && FB_PAGE_TOKEN.length > 20;
-
-// โพสต์ 1 รายการขึ้นเพจ: มีรูป → /photos (caption), ไม่มีรูป → /feed (message + link)
-async function publishOne(p) {
-  const params = new URLSearchParams({ access_token: FB_PAGE_TOKEN });
-  let url;
-  if (p.image_url) {
-    params.set('url', p.image_url);
-    params.set('caption', p.text || '');
-    url = `${FB_API}/${FB_PAGE_ID}/photos`;
-  } else {
-    params.set('message', p.text || '');
-    if (p.link_url) params.set('link', p.link_url);
-    url = `${FB_API}/${FB_PAGE_ID}/feed`;
-  }
-  const r = await fetch(url, { method: 'POST', body: params });
-  const j = await r.json();
-  if (!r.ok || j.error) throw new Error(j.error?.message || `facebook ${r.status}`);
-  return j.post_id || j.id;
 }
 
 export default async function handler(req, res) {
@@ -130,13 +110,39 @@ export default async function handler(req, res) {
       const inserted = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
       return res.status(200).json({ ok: true, id: inserted[0]?.id });
     }
+    if (action === 'review') {
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const drafts = await sb('posts?status=eq.draft&select=*&order=scheduled_at.asc.nullslast');
+      const shop = await loadShop();
+      const fb = await loadFb();
+      return res.status(200).json({ ok: true, fbConnected: !!fb, drafts, products: shop.products.filter((p) => p.status === 'published').map((p) => ({ id: p.id, slug: p.slug, name: p.name, price: p.price, fullPrice: p.fullPrice, url: `https://my-shop-lake-ten.vercel.app/p/${p.slug}` })) });
+    }
+    if (action === 'decide') {
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const body = await readBody(req);
+      const id = String(body.id || ''), decision = String(body.decision || '');
+      const status = { approve: 'approved', reject: 'rejected', owner: 'needs_owner' }[decision];
+      if (!/^[0-9a-f-]{36}$/.test(id) || !status) return res.status(400).json({ ok: false, error: 'bad id/decision' });
+      const reason = String(body.reason || '').slice(0, 300);
+      const cur = await sb(`posts?id=eq.${id}&select=id,status,notes,scheduled_at`);
+      if (!cur.length) return res.status(404).json({ ok: false, error: 'not found' });
+      if (cur[0].status !== 'draft') return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${cur[0].status} ไม่ใช่ draft` });
+      if (status === 'approved' && !cur[0].scheduled_at && !body.scheduled_at) return res.status(400).json({ ok: false, error: 'โพสต์นี้ยังไม่มีเวลา ต้องส่ง scheduled_at มาด้วย' });
+      const stamp = `${decision === 'approve' ? '✅' : decision === 'reject' ? '⛔' : '⚠️'} พี่แผน: ${reason || decision}`;
+      const patch = { status, notes: [cur[0].notes, stamp].filter(Boolean).join('\n'), error: null };
+      if (body.text && String(body.text).trim()) patch.text = String(body.text).slice(0, 4000);
+      if (body.scheduled_at && !isNaN(Date.parse(body.scheduled_at))) patch.scheduled_at = new Date(body.scheduled_at).toISOString();
+      const rows = await sbPatch(`posts?id=eq.${id}`, patch);
+      return res.status(200).json({ ok: true, id, status: rows[0]?.status });
+    }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !cronOk(req) && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
-      if (!fbConfigured()) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้ตั้งค่า FB_PAGE_ID / FB_PAGE_TOKEN บน Vercel' });
+      const fb = await loadFb();
+      if (!fb) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)' });
       const id = String(req.query.id || '');
       const due = id
-        ? await sb(`posts?id=eq.${encodeURIComponent(id)}&status=in.(approved,draft,failed)&select=*`)
+        ? await sb(`posts?id=eq.${encodeURIComponent(id)}&status=in.(approved,draft,failed,needs_owner)&select=*`)
         : await sb(`posts?status=eq.approved&scheduled_at=lte.${new Date().toISOString()}&select=*&order=scheduled_at.asc&limit=5`);
       const results = [];
       for (const p of due) {
@@ -144,7 +150,7 @@ export default async function handler(req, res) {
         const claimed = await sbPatch(`posts?id=eq.${p.id}&status=neq.publishing&status=neq.published`, { status: 'publishing' });
         if (!claimed.length) continue;
         try {
-          const fbId = await publishOne(p);
+          const fbId = await publishToPage(fb, p);
           await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), fb_post_id: String(fbId), error: null });
           results.push({ id: p.id, ok: true, fb_post_id: fbId });
         } catch (e) {
