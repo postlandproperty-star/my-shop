@@ -1293,6 +1293,7 @@ function contentTab(){
       <li>คัดลอกโทเค็นในช่อง Access Token มาวางด้านล่าง</li>
     </ol>
     <textarea class="input" id="fb-token" rows="3" placeholder="วางโทเค็นที่นี่ (ระบบจะแลกเป็นโทเค็นเพจแบบไม่หมดอายุ และไม่แสดงให้ใครเห็นอีก)"></textarea>
+    <label class="fine" style="display:block;margin-top:8px">Page ID ของเพจ (ดูได้ที่ Business Settings → Pages) <input class="input" id="fb-pageid" value="${esc(D.settings.fbPageId||'1264839566720049')}" style="max-width:260px;display:inline-block;padding:6px 8px"></label>
     ${FB.choose?`<p class="fine" style="margin-top:8px">พบหลายเพจ เลือกเพจที่จะโพสต์:</p><div class="row" style="gap:8px;flex-wrap:wrap">${FB.choose.map(c=>`<button class="btn btn-dark btn-sm" data-a="fbConnect" data-page="${c.id}">${esc(c.name)} (${c.followers} ผู้ติดตาม)</button>`).join('')}</div>`:''}
     <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="fbConnect">เชื่อมเพจ</button><button class="btn btn-line btn-sm" data-a="fbOpen">ปิด</button></div>
     ${FB.msg?`<p class="fine" style="margin-top:8px">${esc(FB.msg)}</p>`:''}
@@ -1524,7 +1525,7 @@ function act(a,el){
     case 'postRefresh':Promise.all([loadPosts(),loadFbStatus()]).then(()=>render(true));break;
     case 'fbOpen':S.fbOpen=!S.fbOpen;FB.msg='';FB.choose=null;render(true);break;
     case 'fbConnect':{const ta=$('#fb-token');const token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}FB.msg='กำลังเชื่อม...';render(true);
-      adminPost('/api/fb?action=connect',{token,pageId:el.dataset.page||''}).then(async j=>{if(!j.ok){FB.msg='ไม่สำเร็จ: '+(j.error||'');render(true);return;}
+      adminPost('/api/fb?action=connect',{token,pageId:el.dataset.page||($('#fb-pageid')&&$('#fb-pageid').value.trim())||''}).then(async j=>{if(!j.ok){FB.msg='ไม่สำเร็จ: '+(j.error||'');render(true);return;}
         if(j.choose){FB.choose=j.choose;FB.msg='';const t=$('#fb-token');render(true);const t2=$('#fb-token');if(t2&&t)t2.value=token;return;}
         FB.msg='';S.fbOpen=false;await loadFbStatus();render(true);toast('เชื่อมเพจ "'+j.page.name+'" แล้ว ('+j.page.followers+' ผู้ติดตาม)');}).catch(()=>{FB.msg='เชื่อมต่อไม่ได้';render(true);});break;}
     case 'fbTest':adminApi('/api/fb?action=test').then(j=>toast(j.ok?'เพจ "'+j.page.name+'" ใช้งานได้ · ผู้ติดตาม '+j.page.followers:'ใช้ไม่ได้: '+(j.error||''))).catch(()=>toast('เชื่อมต่อไม่ได้'));break;
