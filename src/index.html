@@ -1245,7 +1245,7 @@ function payTab(){
 
 /* ---------- คอนเทนต์: คิวโพสต์ของเพจ (ตาราง posts) ---------- */
 let POSTS=[],postsLoaded=false;
-const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี'};
+const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป'};
 const STATUS_TH={draft:['รอพี่แผนตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={};
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
@@ -1267,6 +1267,8 @@ const TEAM={
   writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',bg:'#ffd5dc',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00',img:AV+'accessoriesProbability=0&seed=pen&top=straight01&hairColor=4a312c&clothing=hoodie&clothesColor=3c4f5c&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=ffd5dc'},
   community:{name:'น้องคอม',role:'ดูแลคอมเมนต์ · ร่างคำตอบให้คุณส่ง',bg:'#d1fae5',sched:'เช็กคอมเมนต์ทุกวัน 08:00 และ 21:00',img:AV+'accessoriesProbability=0&seed=com&top=bob&hairColor=2c1b18&clothing=shirtCrewNeck&clothesColor=a7ffc4&eyes=happy&eyebrows=raisedExcitedNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=d1fae5'},
   analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด · เสนอปรับงบ คุณอนุมัติ',bg:'#ffdfbf',sched:'อ่านผลแอดทุกวัน 07:30',img:AV+'accessoriesProbability=100&seed=boost&top=theCaesar&hairColor=2c1b18&accessories=round&clothing=graphicShirt&clothesColor=ff5c5c&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=ffdfbf'},
+  designer:{name:'น้องกราฟิก',role:'นักออกแบบ · ตรวจและแก้รูปทุกโพสต์',bg:'#fbcfe8',sched:'ทุกจันทร์ 08:40',img:AV+'accessoriesProbability=0&seed=gfx&top=frizzle&hairColor=c93305&clothing=overall&clothesColor=ff488e&eyes=happy&eyebrows=upDownNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fbcfe8'},
+  trend:{name:'น้องเทรนด์',role:'นักหาหัวข้อ · ส่งลิสต์หัวข้อให้น้องปากกา',bg:'#bae6fd',sched:'ทุกอาทิตย์ 20:00',img:AV+'accessoriesProbability=100&seed=trend&top=sides&hairColor=2c1b18&accessories=sunglasses&clothing=shirtScoopNeck&clothesColor=65c9ff&eyes=default&eyebrows=default&mouth=twinkle&skinColor=d08b5b&backgroundColor=bae6fd'},
   care:{name:'พี่แคร์',role:'ดูแลลูกค้าหลังการขาย · ร่างอีเมลติดตามผล',bg:'#fde68a',sched:'ทุกวัน 10:00',img:AV+'accessoriesProbability=0&seed=care&top=bun&hairColor=724133&clothing=blazerAndSweater&clothesColor=ffafb9&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=edb98a&backgroundColor=fde68a'},
   product:{name:'พี่โปร',role:'พัฒนาสินค้า · เสนอชีทเล่มถัดไป',bg:'#e0e7ff',sched:'ทุกวันที่ 1 ของเดือน 10:00',img:AV+'accessoriesProbability=100&seed=pro&top=shortRound&hairColor=4a312c&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=default&mouth=default&skinColor=ffdbb4&backgroundColor=e0e7ff'},
   finance:{name:'พี่บัญชี',role:'บัญชี · สรุปเงินเข้า ค่าธรรมเนียม กำไร',bg:'#e5e7eb',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=100&seed=acc&top=shortCurly&hairColor=2c1b18&accessories=prescription01&clothing=collarAndSweater&clothesColor=929598&eyes=default&eyebrows=defaultNatural&mouth=serious&skinColor=edb98a&backgroundColor=e5e7eb'},
@@ -1327,7 +1329,7 @@ function contentTab(){
     <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="fbConnect">เชื่อมเพจ</button><button class="btn btn-line btn-sm" data-a="fbOpen">ปิด</button></div>
     ${FB.msg?`<p class="fine" style="margin-top:8px">${esc(FB.msg)}</p>`:''}
   </div>`:''}
-  <div class="team">${['manager','writer','community','analyst','care','product','finance','manual'].map(k=>{const m=TEAM[k];const last=k==='manual'?null:POSTS.find(x=>x.source===k);return `<div class="member">${ava(k)}<span><b>${esc(m.name)}</b><span class="fine">${esc(m.role)}${m.sched?' · '+esc(m.sched):''}${last?' · ล่าสุด '+fdt(Date.parse(last.created_at)):''}</span></span></div>`;}).join('')}</div>
+  <div class="team">${['manager','writer','designer','trend','community','analyst','care','product','finance','manual'].map(k=>{const m=TEAM[k];const last=k==='manual'?null:POSTS.find(x=>x.source===k);return `<div class="member">${ava(k)}<span><b>${esc(m.name)}</b><span class="fine">${esc(m.role)}${m.sched?' · '+esc(m.sched):''}${last?' · ล่าสุด '+fdt(Date.parse(last.created_at)):''}</span></span></div>`;}).join('')}</div>
   ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${(()=>{const seen={};return notes.filter(n=>{const k=n.source||'x';if(seen[k])return false;seen[k]=1;return true;}).slice(0,7);})().map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:''}
   <div class="filters" style="margin-top:8px"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div></div>
   ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?list.map(card).join(''):`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}`;
@@ -1467,6 +1469,8 @@ const ORG={
   manual:{title:'เจ้าของร้าน (CEO)',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่แผนส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
   manager:{title:'ผู้จัดการเพจ · อำนาจรองจากเจ้าของ',do:['ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ','สั่งงานน้องปากกา เขียนโพสต์เองได้เมื่อจำเป็น','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ทุกจันทร์ 09:00 น.'},
   writer:{title:'Content Creator · ฝ่ายคอนเทนต์',do:['ร่างโพสต์ 5 ชิ้นต่อสัปดาห์ ควิซ เฉลย ชวนคุย ควิซ ขาย','สร้างรูปทุกโพสต์ด้วย Canva ในโทนแบรนด์','ส่งงานให้พี่แผนตรวจ ไม่โพสต์เอง'],when:'ทุกจันทร์ 08:00 น.'},
+  designer:{title:'Graphic Designer · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['เปิดดูรูปทุกใบที่ Canva สร้างก่อนขึ้นเพจ','เช็คตัวอักษรไทย ข้อความตรงโพสต์ สีตรงแบรนด์','รูปไม่ผ่านสั่งสร้างใหม่และเปลี่ยนให้เอง'],when:'ทุกจันทร์ 08:40 น. หลังน้องปากกาส่งงาน'},
+  trend:{title:'Trend Researcher · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['ค้นเว็บดูว่าคนเตรียมสอบ TOEIC กำลังสนใจอะไร','รอบสอบ ข่าวเกณฑ์คะแนน หัวข้อที่กำลังแชร์กัน','ส่งลิสต์ 8 หัวข้อพร้อมเหตุผลให้น้องปากกา'],when:'ทุกอาทิตย์ 20:00 น. ก่อนน้องปากกาเขียน'},
   community:{title:'Community Manager · ฝ่ายคอนเทนต์',do:['อ่านคอมเมนต์ใต้โพสต์ที่ขึ้นเพจ','ร่างคำตอบให้เจ้าของคัดลอกไปตอบ','ติดธงคอมเมนต์ที่ต้องให้พี่แผนดู'],when:'ทุกวัน 08:00 และ 21:00 น.'},
   analyst:{title:'Performance Analyst · ฝ่ายการตลาด',do:['อ่านผลแอด Facebook ทุกวัน','คำนวณต้นทุนต่อการซื้อ เทียบยอดขายจริง','เสนอเพิ่ม ลด หรือหยุดงบ [ต้องอนุมัติ]'],when:'ทุกวัน 07:30 น.'},
   product:{title:'Product Development Lead · ฝ่ายสินค้า',do:['วิเคราะห์ยอดขาย คอมเมนต์ และคำถามทั้งเดือน','เสนอสิ่งที่ควรปรับในสินค้าและหน้าเซลเพจ','เสนอชีทเล่มถัดไปพร้อมโครงสารบท'],when:'ทุกวันที่ 1 ของเดือน 10:00 น.'},
@@ -1477,13 +1481,15 @@ function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.va
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span></div><div class="ot">${esc(o.title)}</div></div></div>
   <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}</div></article>`;}
 function teamTab(){
-  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 7 ตำแหน่ง ทุกตำแหน่งทำงานตามตารางอัตโนมัติ รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งทำงานตามตารางอัตโนมัติ รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">สายบังคับบัญชา</h3>
   <div class="org">
     <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
     <div class="tier one">${orgCard('manager')}</div><div class="conn"></div><div class="bar"></div><div class="conn"></div>
     <div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div>
   </div>
+  <h3 class="h3" style="margin-top:20px">ลูกทีมของน้องปากกา</h3>
+  <div class="org"><div class="tier two">${orgCard('designer')}${orgCard('trend')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายสนับสนุน รายงานตรงถึงเจ้าของ</h3>
   <div class="org"><div class="tier two">${orgCard('finance')}${orgCard('care')}</div></div>
   <h3 class="h3" style="margin-top:24px">ใครตัดสินใจเรื่องอะไร</h3>
@@ -1499,7 +1505,9 @@ function teamTab(){
   <h3 class="h3" style="margin-top:24px">วงจรงานใน 1 สัปดาห์</h3>
   <div class="ocycle">
     <div><b>จันทร์ 08:00</b>น้องปากการ่าง 5 โพสต์พร้อมรูป Canva</div>
+    <div><b>อาทิตย์ 20:00</b>น้องเทรนด์ส่งลิสต์หัวข้อ</div>
     <div><b>จันทร์ 08:30</b>พี่บัญชีสรุปเงินสัปดาห์ก่อน</div>
+    <div><b>จันทร์ 08:40</b>น้องกราฟิกตรวจและแก้รูปทุกใบ</div>
     <div><b>จันทร์ 09:00</b>พี่แผนตรวจ แก้ อนุมัติ จัดตาราง เขียนรายงาน</div>
     <div><b>ทุกวัน 07:30</b>น้องบูสต์อ่านผลแอด</div>
     <div><b>ทุกวัน 08:00 และ 21:00</b>น้องคอมร่างคำตอบคอมเมนต์</div>

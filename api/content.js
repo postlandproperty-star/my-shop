@@ -3,6 +3,8 @@
 //   ?action=drafts   (key, POST) นักเขียนส่งร่างเข้า [{text,image_url,link_url,scheduled_at,kind}] → status draft
 //   ?action=report   (key)   ตัวเลขสัปดาห์ (ยอดขาย/ออเดอร์/แคมเปญ) สำหรับ "ผู้จัดการ"
 //   ?action=note     (key, POST) ผู้จัดการ/นักวิเคราะห์ส่งรายงาน {text,kind:'report'|'ads'}
+//   ?action=images   (key)   โพสต์ที่ยังไม่ขึ้นเพจพร้อมรูป สำหรับ "นักออกแบบ" ตรวจรูป
+//   ?action=setimage (key, POST {id, image_url, note}) เปลี่ยนรูปโพสต์ (เก็บสำเนาถาวร) + บันทึกหมายเหตุ
 //   ?action=review   (key)   ร่างที่รอตรวจ (เต็ม) สำหรับ "ผู้จัดการ"
 //   ?action=decide   (key, POST) ผู้จัดการตัดสิน {id, decision:'approve'|'reject'|'owner', reason, text?}
 //                    owner = เรื่องสำคัญ ส่งให้เจ้าของกดอนุมัติเอง (status needs_owner)
@@ -64,7 +66,8 @@ export default async function handler(req, res) {
         features: p.features, specs: p.specs, toc: p.toc, forwho: p.forwho, pains: p.pains, faq: p.faq, images: p.images || [],
         url: `https://my-shop-lake-ten.vercel.app/p/${p.slug}`,
       }));
-      return res.status(200).json({ ok: true, shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '', products }, recentPosts: recent });
+      const trend = await sb('posts?status=eq.note&kind=eq.trend&select=text,created_at&order=created_at.desc&limit=1');
+      return res.status(200).json({ ok: true, shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '', products }, recentPosts: recent, trendBrief: trend?.[0] || null });
     }
     if (action === 'drafts') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -109,6 +112,23 @@ export default async function handler(req, res) {
       const row = { status: 'note', source: String(body.source || 'manager').slice(0, 20), kind: String(body.kind || 'report').slice(0, 20), text: String(body.text).slice(0, 8000), week: body.week ? String(body.week).slice(0, 12) : null };
       const inserted = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
       return res.status(200).json({ ok: true, id: inserted[0]?.id });
+    }
+    if (action === 'images') {
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const rows = await sb(`posts?status=in.(draft,approved,needs_owner)&image_url=not.is.null&select=id,status,kind,text,image_url,scheduled_at,notes&order=scheduled_at.asc.nullslast&limit=20`);
+      return res.status(200).json({ ok: true, posts: rows });
+    }
+    if (action === 'setimage') {
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const body = await readBody(req);
+      const id = String(body.id || ''), url = String(body.image_url || '').trim();
+      if (!/^[0-9a-f-]{36}$/.test(id) || !/^https?:\/\//.test(url)) return res.status(400).json({ ok: false, error: 'bad id/image_url' });
+      const cur = await sb(`posts?id=eq.${id}&select=id,status,notes`);
+      if (!cur.length || cur[0].status === 'published' || cur[0].status === 'publishing') return res.status(400).json({ ok: false, error: 'เปลี่ยนรูปไม่ได้ (โพสต์ขึ้นเพจแล้ว)' });
+      const stored = await cacheImage(url);
+      const stamp = `🎨 น้องกราฟิก: ${String(body.note || 'เปลี่ยนรูปใหม่').slice(0, 200)}`;
+      const rows = await sbPatch(`posts?id=eq.${id}`, { image_url: stored, notes: [cur[0].notes, stamp].filter(Boolean).join('\n') });
+      return res.status(200).json({ ok: true, id, image_url: rows[0]?.image_url });
     }
     if (action === 'review') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
