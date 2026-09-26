@@ -170,6 +170,8 @@ footer{padding:28px 0 110px;text-align:center}
 .st.on{background:var(--okbg);color:var(--ok);animation:pulse 1.6s ease-in-out infinite}
 .st.idle{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
 .st.off{background:var(--bg);color:var(--muted);border:1px dashed var(--line)}
+.st.done{background:var(--okbg);color:var(--ok)}
+.st.late{background:var(--warnbg);color:var(--warn)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 @media (prefers-reduced-motion:reduce){.st.on{animation:none}}
 .note-card{background:var(--surface);border-left:4px solid var(--brand);border-radius:12px;padding:14px 16px;margin-bottom:10px;white-space:pre-wrap;font-size:14px}
@@ -1293,29 +1295,51 @@ const SCHED={
   product:{dom:1,times:[[10,0]],dur:20},
 };
 const BKK=7*3600e3;
+const POLITE={writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
 function teamStatus(k){
   const sc=SCHED[k];const m=TEAM[k]||{};
   const last=POSTS.filter(x=>x.source===k).map(x=>Date.parse(x.created_at)).sort((a,b)=>b-a)[0]||null;
   if(!sc)return{state:m.sched===''?'owner':'off',last,next:null};
-  const now=Date.now();const base=new Date(now+BKK);let cur=null,next=null;
-  for(let d=-1;d<=45&&!next;d++){
+  const now=Date.now();const base=new Date(now+BKK);let cur=null,next=null,prev=null;
+  for(let d=-31;d<=45&&!next;d++){
     const day=new Date(Date.UTC(base.getUTCFullYear(),base.getUTCMonth(),base.getUTCDate()+d));
     const ok=sc.dow?sc.dow.includes(day.getUTCDay()):day.getUTCDate()===sc.dom;
     if(!ok)continue;
     for(const [h,mi] of sc.times){const t=Date.UTC(day.getUTCFullYear(),day.getUTCMonth(),day.getUTCDate(),h,mi)-BKK;
-      if(now>=t&&now<t+sc.dur*60e3)cur=t;else if(t>now&&!next)next=t;}
+      if(now>=t&&now<t+sc.dur*60e3)cur=t;else if(t>now){if(!next)next=t;}else prev=t;}
   }
-  // ถ้ามีผลงานส่งเข้ามาใน 15 นาทีที่ผ่านมา ก็ถือว่าเพิ่งทำงานเสร็จ/กำลังทำ
-  if(!cur&&last&&now-last<15*60e3)cur=last;
-  return{state:cur?'on':'idle',last,next};
+  let state='idle';
+  if(cur)state='on';
+  else if(last&&now-last<15*60e3)state='done';
+  else if(prev&&(!last||last<prev)){state=now-prev<3*3600e3?'late':'missed';}
+  return{state,last,next,prev};
+}
+const thDay=t=>{const d=new Date(t+BKK);const names=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];const today=new Date(Date.now()+BKK);
+  const sameDay=d.getUTCDate()===today.getUTCDate()&&d.getUTCMonth()===today.getUTCMonth();const hm=String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0');
+  const diff=Math.round((Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-Date.UTC(today.getUTCFullYear(),today.getUTCMonth(),today.getUTCDate()))/864e5);
+  return (sameDay?'วันนี้ ':diff===1?'พรุ่งนี้ ':'วัน'+names[d.getUTCDay()]+' ')+hm;};
+function statusText(k){
+  const st=teamStatus(k),p=POLITE[k]||'ค่ะ';
+  switch(st.state){
+    case 'owner':return '';
+    case 'off':return 'ตำแหน่งว่าง รอรับสมัคร';
+    case 'on':return 'ทำงานอยู่'+p;
+    case 'done':return 'เพิ่งส่งงานเสร็จ'+p;
+    case 'late':return 'สายนิดหน่อย'+p+' 😅';
+    case 'missed':return 'รอบที่แล้วไม่ได้ส่งงาน'+p+' 🙏';
+    default:{const h=new Date(Date.now()+BKK).getUTCHours();
+      if(st.next&&st.next-Date.now()<6*3600e3)return 'ว่างอยู่'+p+' เดี๋ยว'+thDay(st.next).replace('วันนี้ ','')+' มีงาน';
+      if(h>=22||h<7)return 'นอกเวลางาน'+p+' กลับมา'+(st.next?thDay(st.next):'');
+      return 'ว่างอยู่'+p+' รอบหน้า'+(st.next?thDay(st.next):'');}
+  }
 }
 function statusBadge(k,full){
-  const st=teamStatus(k);
-  if(st.state==='owner')return '';
-  if(st.state==='off')return `<span class="st off">○ ยังไม่เปิดใช้</span>`;
-  if(st.state==='on')return `<span class="st on">● กำลังทำงาน</span>`;
-  return `<span class="st idle">○ ว่าง</span>${full?`<span class="fine"> · ล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'} · รอบถัดไป ${st.next?fdt(st.next):'-'}</span>`:''}`;
+  const st=teamStatus(k);const txt=statusText(k);if(!txt)return '';
+  const cls=st.state==='on'?'on':st.state==='done'?'done':st.state==='late'||st.state==='missed'?'late':st.state==='off'?'off':'idle';
+  const dot=st.state==='on'?'●':st.state==='done'?'✓':'○';
+  return `<span class="st ${cls}">${dot} ${esc(txt)}</span>${full&&st.last?`<span class="fine"> · ส่งงานล่าสุด ${fdt(st.last)}</span>`:''}`;
 }
+
 const member=src=>TEAM[src]||{name:src||'ทีม',role:'',bg:'#D3DBE8',img:AV+'seed='+encodeURIComponent(src||'team')};
 const ava=(src,sm)=>{const m=member(src);return `<img class="ava${sm?' sm':''}" style="background:${m.bg}" src="${m.img}" alt="" title="${esc(m.name)} · ${esc(m.role)}" loading="lazy">`;};
 const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<span>${esc(m.name)}</span></span>`;};
@@ -1520,7 +1544,7 @@ const ORG={
 };
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div></div></div>
-  <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='idle'||st.state==='on'?`<br>ล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'} · รอบถัดไป ${st.next?fdt(st.next):'-'}`:''})()}</div></article>`;}
+  <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='owner'||st.state==='off'?'':`<br>ส่งงานล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'}`})()}</div></article>`;}
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งทำงานตามตารางอัตโนมัติ รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
