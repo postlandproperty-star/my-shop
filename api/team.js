@@ -1,6 +1,7 @@
 // ข้อมูล (อ่านอย่างเดียว) สำหรับแผนกอื่นๆ ของทีมเพจ — รูทีนอัตโนมัติเรียกด้วย header x-content-key
 // ทุกแผนก "ร่าง" ให้เจ้าของกดส่งเอง ไม่มี action ที่ส่งข้อความหาลูกค้าหรือโพสต์ตอบใครโดยอัตโนมัติ
 //   ?action=comments   (GET, ?days=3)  โพสต์ที่ขึ้นเพจล่าสุด + คอมเมนต์ + เฉลยควิซจาก notes   → ทีมดูแลคอมเมนต์ (ร่างคำตอบ)
+//   ?action=postmetrics (GET, ?days=14) ตัวเลขโพสต์ที่ขึ้นเพจ (รีแอกชัน คอมเมนต์ แชร์ เข้าถึง คลิก) เทียบโพสต์ทดลองกับโพสต์ปกติ → ผู้จัดการเพจวัดผลทุกจันทร์
 //   ?action=ads        (GET, ?days=7)  ผลแอดจาก Marketing API (ต้องมี ads_read)               → นักวิเคราะห์แอด
 //   ?action=followups  (GET)           ลูกค้าที่จ่ายแล้ว ≥3 วัน ยังไม่ได้อีเมลติดตามผล            → ฝ่ายดูแลลูกค้า (ร่างอีเมล)
 //   ?action=sync-adspend (GET) ดึงค่าแอดสะสมจริงจาก Facebook แปลงเป็นบาท บันทึกลง campaigns ของร้าน   → นักวิเคราะห์แอดทำทุกเช้า
@@ -51,6 +52,32 @@ export default async function handler(req, res) {
         } catch (e) { out.push({ post: p, error: String(e.message || e) }); }
       }
       return res.status(200).json({ ok: true, pageId: fb.pageId, pageName: fb.pageName, posts: out });
+    }
+    if (action === 'postmetrics') {
+      // ตัวเลขต่อโพสต์จาก Graph API: รีแอกชัน/คอมเมนต์/แชร์ (page token) + เข้าถึง/คลิก (post insights, ต้องมี read_insights)
+      const fb = await loadFb();
+      if (!fb) return res.status(200).json({ ok: false, error: 'ยังไม่ได้เชื่อมเพจ Facebook' });
+      const since = new Date(Date.now() - days(req, 14) * 864e5).toISOString();
+      const posts = await sb(`posts?status=eq.published&fb_post_id=not.is.null&published_at=gte.${since}&select=id,kind,text,notes,fb_post_id,published_at&order=published_at.desc&limit=40`);
+      const out = [];
+      for (const p of posts) {
+        const exp = (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1];
+        const m = { id: p.id, kind: p.kind, text: String(p.text || '').split('\n')[0].slice(0, 80), published_at: p.published_at, experiment: exp ? exp.trim() : null, permalink: null, reactions: 0, comments: 0, shares: 0, reach: null, clicks: null, error: null };
+        try {
+          const d = await fbGet(p.fb_post_id, { access_token: fb.token, fields: 'permalink_url,shares,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0)' });
+          m.permalink = d.permalink_url || null; m.shares = d.shares?.count || 0;
+          m.reactions = d.reactions?.summary?.total_count || 0; m.comments = d.comments?.summary?.total_count || 0;
+        } catch (e) { m.error = e.message; }
+        try {
+          const ins = await fbGet(`${p.fb_post_id}/insights`, { access_token: fb.token, metric: 'post_impressions_unique,post_clicks' });
+          for (const row of ins.data || []) { const v = row.values?.[0]?.value; if (row.name === 'post_impressions_unique') m.reach = v; if (row.name === 'post_clicks') m.clicks = v; }
+        } catch (e) { m.error = m.error || e.message; }
+        m.engagement = m.reactions + m.comments + m.shares;
+        out.push(m);
+      }
+      const avg = (arr, k) => arr.length ? Math.round(arr.reduce((s, x) => s + (Number(x[k]) || 0), 0) / arr.length * 10) / 10 : null;
+      const grp = (arr) => ({ count: arr.length, avgEngagement: avg(arr, 'engagement'), avgReach: avg(arr, 'reach'), avgShares: avg(arr, 'shares') });
+      return res.status(200).json({ ok: true, days: days(req, 14), posts: out, summary: { experiments: grp(out.filter((x) => x.experiment)), normal: grp(out.filter((x) => !x.experiment)) } });
     }
     if (action === 'ads') {
       const fb = await loadFb();
