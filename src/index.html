@@ -1254,7 +1254,7 @@ function payTab(){
 /* ---------- คอนเทนต์: คิวโพสต์ของเพจ (ตาราง posts) ---------- */
 let POSTS=[],postsLoaded=false;
 const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป'};
-const STATUS_TH={draft:['รอพี่แผนตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
+const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={};
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
 async function adminPost(path,body){const {data}=await sb.auth.getSession();const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(data&&data.session?data.session.access_token:'')},body:JSON.stringify(body||{})});return r.json();}
@@ -1271,7 +1271,7 @@ async function updatePost(id,patch){
 }
 const AV='https://api.dicebear.com/9.x/avataaars/svg?size=96&backgroundType=solid&facialHairProbability=0&';
 const TEAM={
-  manager:{name:'พี่แผน',role:'ผู้จัดการเพจ · อนุมัติโพสต์แทนคุณ',bg:'#c0aede',sched:'ตรวจโพสต์ + รายงานทุกจันทร์ 09:00',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
+  manager:{name:'พี่ต้น',role:'ผู้จัดการเพจ · อนุมัติโพสต์แทนคุณ',bg:'#c0aede',sched:'ตรวจโพสต์ + รายงานทุกจันทร์ 09:00',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
   writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',bg:'#ffd5dc',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00',img:AV+'accessoriesProbability=0&seed=pen&top=straight01&hairColor=4a312c&clothing=hoodie&clothesColor=3c4f5c&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=ffd5dc'},
   community:{name:'น้องคอม',role:'ดูแลคอมเมนต์ · ร่างคำตอบให้คุณส่ง',bg:'#d1fae5',sched:'เช็กคอมเมนต์ทุกวัน 08:00 และ 21:00',img:AV+'accessoriesProbability=0&seed=com&top=bob&hairColor=2c1b18&clothing=shirtCrewNeck&clothesColor=a7ffc4&eyes=happy&eyebrows=raisedExcitedNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=d1fae5'},
   analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด · เสนอปรับงบ คุณอนุมัติ',bg:'#ffdfbf',sched:'อ่านผลแอดทุกวัน 07:30',img:AV+'accessoriesProbability=100&seed=boost&top=theCaesar&hairColor=2c1b18&accessories=round&clothing=graphicShirt&clothesColor=ff5c5c&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=ffdfbf'},
@@ -1531,12 +1531,12 @@ function adsTab(){
 }
 
 const ORG={
-  manual:{title:'เจ้าของร้าน (CEO)',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่แผนส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
+  manual:{title:'เจ้าของร้าน (CEO)',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่ต้นส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
   manager:{title:'ผู้จัดการเพจ · อำนาจรองจากเจ้าของ',do:['ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ','สั่งงานน้องปากกา เขียนโพสต์เองได้เมื่อจำเป็น','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ทุกจันทร์ 09:00 น.'},
-  writer:{title:'Content Creator · ฝ่ายคอนเทนต์',do:['ร่างโพสต์ 5 ชิ้นต่อสัปดาห์ ควิซ เฉลย ชวนคุย ควิซ ขาย','สร้างรูปทุกโพสต์ด้วย Canva ในโทนแบรนด์','ส่งงานให้พี่แผนตรวจ ไม่โพสต์เอง'],when:'ทุกจันทร์ 08:00 น.'},
+  writer:{title:'Content Creator · ฝ่ายคอนเทนต์',do:['ร่างโพสต์ 5 ชิ้นต่อสัปดาห์ ควิซ เฉลย ชวนคุย ควิซ ขาย','สร้างรูปทุกโพสต์ด้วย Canva ในโทนแบรนด์','ส่งงานให้พี่ต้นตรวจ ไม่โพสต์เอง'],when:'ทุกจันทร์ 08:00 น.'},
   designer:{title:'Graphic Designer · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['เปิดดูรูปทุกใบที่ Canva สร้างก่อนขึ้นเพจ','เช็คตัวอักษรไทย ข้อความตรงโพสต์ สีตรงแบรนด์','รูปไม่ผ่านสั่งสร้างใหม่และเปลี่ยนให้เอง'],when:'ทุกจันทร์ 08:40 น. หลังน้องปากกาส่งงาน'},
   trend:{title:'Trend Researcher · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['ค้นเว็บดูว่าคนเตรียมสอบ TOEIC กำลังสนใจอะไร','รอบสอบ ข่าวเกณฑ์คะแนน หัวข้อที่กำลังแชร์กัน','ส่งลิสต์ 8 หัวข้อพร้อมเหตุผลให้น้องปากกา'],when:'ทุกอาทิตย์ 20:00 น. ก่อนน้องปากกาเขียน'},
-  community:{title:'Community Manager · ฝ่ายคอนเทนต์',do:['อ่านคอมเมนต์ใต้โพสต์ที่ขึ้นเพจ','ร่างคำตอบให้เจ้าของคัดลอกไปตอบ','ติดธงคอมเมนต์ที่ต้องให้พี่แผนดู'],when:'ทุกวัน 08:00 และ 21:00 น.'},
+  community:{title:'Community Manager · ฝ่ายคอนเทนต์',do:['อ่านคอมเมนต์ใต้โพสต์ที่ขึ้นเพจ','ร่างคำตอบให้เจ้าของคัดลอกไปตอบ','ติดธงคอมเมนต์ที่ต้องให้พี่ต้นดู'],when:'ทุกวัน 08:00 และ 21:00 น.'},
   analyst:{title:'Performance Analyst · ฝ่ายการตลาด',do:['อ่านผลแอด Facebook ทุกวัน','คำนวณต้นทุนต่อการซื้อ เทียบยอดขายจริง','เสนอเพิ่ม ลด หรือหยุดงบ [ต้องอนุมัติ]'],when:'ทุกวัน 07:30 น.'},
   product:{title:'Product Development Lead · ฝ่ายสินค้า',do:['วิเคราะห์ยอดขาย คอมเมนต์ และคำถามทั้งเดือน','เสนอสิ่งที่ควรปรับในสินค้าและหน้าเซลเพจ','เสนอชีทเล่มถัดไปพร้อมโครงสารบท'],when:'ทุกวันที่ 1 ของเดือน 10:00 น.'},
   finance:{title:'Accounting · ฝ่ายสนับสนุน',do:['สรุปยอดขาย ค่าธรรมเนียม Stripe เงินสุทธิ','ค่าแอดและกำไรหลังค่าแอด','เงินพร้อมโอนและเงินโอนเข้าบัญชีล่าสุด'],when:'ทุกจันทร์ 08:30 น.'},
@@ -1561,8 +1561,8 @@ function teamTab(){
   <h3 class="h3" style="margin-top:24px">ใครตัดสินใจเรื่องอะไร</h3>
   <div style="overflow-x:auto"><table class="otable">
   <tr><th>เรื่อง</th><th>ตัดสินใจ</th><th>เสนอ / เตรียม</th><th>ต้องรอเจ้าของไหม</th></tr>
-  <tr><td>โพสต์ทั่วไป ควิซ ทิป ชวนคุย</td><td>พี่แผน</td><td>น้องปากกา</td><td>ไม่ต้อง ขึ้นเพจอัตโนมัติ 19:05 น.</td></tr>
-  <tr><td>โพสต์ที่พูดถึงราคา ส่วนลด ของแถม การอ้างผลลัพธ์</td><td>เจ้าของ</td><td>พี่แผนติดป้าย "รอคุณอนุมัติ"</td><td>ต้อง</td></tr>
+  <tr><td>โพสต์ทั่วไป ควิซ ทิป ชวนคุย</td><td>พี่ต้น</td><td>น้องปากกา</td><td>ไม่ต้อง ขึ้นเพจอัตโนมัติ 19:05 น.</td></tr>
+  <tr><td>โพสต์ที่พูดถึงราคา ส่วนลด ของแถม การอ้างผลลัพธ์</td><td>เจ้าของ</td><td>พี่ต้นติดป้าย "รอคุณอนุมัติ"</td><td>ต้อง</td></tr>
   <tr><td>งบโฆษณา เปิด ปิด เพิ่ม ลดแอด</td><td>เจ้าของ</td><td>น้องบูสต์ [ต้องอนุมัติ]</td><td>ต้อง</td></tr>
   <tr><td>ตอบคอมเมนต์ลูกค้า</td><td>เจ้าของกดส่ง</td><td>น้องคอมร่างคำตอบ</td><td>ต้อง กดส่งเอง</td></tr>
   <tr><td>สินค้าใหม่ ราคาใหม่</td><td>เจ้าของ</td><td>พี่โปร</td><td>ต้อง</td></tr>
@@ -1574,7 +1574,7 @@ function teamTab(){
     <div><b>อาทิตย์ 20:00</b>น้องเทรนด์ส่งลิสต์หัวข้อ</div>
     <div><b>จันทร์ 08:30</b>พี่บัญชีสรุปเงินสัปดาห์ก่อน</div>
     <div><b>จันทร์ 08:40</b>น้องกราฟิกตรวจและแก้รูปทุกใบ</div>
-    <div><b>จันทร์ 09:00</b>พี่แผนตรวจ แก้ อนุมัติ จัดตาราง เขียนรายงาน</div>
+    <div><b>จันทร์ 09:00</b>พี่ต้นตรวจ แก้ อนุมัติ จัดตาราง เขียนรายงาน</div>
     <div><b>ทุกวัน 07:30</b>น้องบูสต์อ่านผลแอด</div>
     <div><b>ทุกวัน 08:00 และ 21:00</b>น้องคอมร่างคำตอบคอมเมนต์</div>
     <div><b>ทุกวัน 19:05</b>ระบบโพสต์ชิ้นที่อนุมัติแล้วขึ้นเพจ</div>

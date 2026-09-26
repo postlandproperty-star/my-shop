@@ -148,7 +148,7 @@ export default async function handler(req, res) {
       if (!cur.length) return res.status(404).json({ ok: false, error: 'not found' });
       if (cur[0].status !== 'draft') return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${cur[0].status} ไม่ใช่ draft` });
       if (status === 'approved' && !cur[0].scheduled_at && !body.scheduled_at) return res.status(400).json({ ok: false, error: 'โพสต์นี้ยังไม่มีเวลา ต้องส่ง scheduled_at มาด้วย' });
-      const stamp = `${decision === 'approve' ? '✅' : decision === 'reject' ? '⛔' : '⚠️'} พี่แผน: ${reason || decision}`;
+      const stamp = `${decision === 'approve' ? '✅' : decision === 'reject' ? '⛔' : '⚠️'} พี่ต้น: ${reason || decision}`;
       const patch = { status, notes: [cur[0].notes, stamp].filter(Boolean).join('\n'), error: null };
       if (body.text && String(body.text).trim()) patch.text = String(body.text).slice(0, 4000);
       if (body.scheduled_at && !isNaN(Date.parse(body.scheduled_at))) patch.scheduled_at = new Date(body.scheduled_at).toISOString();
