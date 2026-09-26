@@ -128,6 +128,14 @@ footer{padding:28px 0 110px;text-align:center}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
 @media(min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.post{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:96px 1fr;gap:14px}
+.post img{width:96px;height:96px;object-fit:cover;border-radius:10px;background:var(--bg)}
+.post .noimg{width:96px;height:96px;border-radius:10px;background:var(--bg);display:grid;place-items:center;color:var(--muted);font-size:12px}
+.post textarea{width:100%;min-height:120px;white-space:pre-wrap}
+.post .meta{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.post .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.note-card{background:var(--surface);border-left:4px solid var(--brand);border-radius:12px;padding:14px 16px;margin-bottom:10px;white-space:pre-wrap;font-size:14px}
+@media(max-width:520px){.post{grid-template-columns:1fr}.post img,.post .noimg{width:100%;height:160px}}
 .kpi .v{font-family:var(--font-head);font-size:24px;line-height:1.2}
 .kpi .l{font-size:14px;color:var(--muted)}
 .chart{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
@@ -1203,6 +1211,61 @@ function payTab(){
   </div>`;
 }
 
+/* ---------- คอนเทนต์: คิวโพสต์ของเพจ (ตาราง posts) ---------- */
+let POSTS=[],postsLoaded=false;
+const KIND_TH={tip:'ทิปฟรี',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด'};
+const STATUS_TH={draft:['รอตรวจ','warn'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
+async function loadPosts(){
+  if(!sb||!sbSession)return;
+  const {data,error}=await sb.from('posts').select('*').order('created_at',{ascending:false}).limit(200);
+  if(error){console.error(error);toast('โหลดคิวโพสต์ไม่ได้: '+error.message+(/relation|does not exist/i.test(error.message)?' (ยังไม่ได้สร้างตาราง posts)':''));return;}
+  POSTS=data||[];postsLoaded=true;
+}
+async function updatePost(id,patch){
+  const {error}=await sb.from('posts').update(patch).eq('id',id);
+  if(error){toast('บันทึกไม่สำเร็จ: '+error.message);return false;}
+  const p=POSTS.find(x=>x.id===id);if(p)Object.assign(p,patch);return true;
+}
+function contentTab(){
+  if(!postsLoaded){loadPosts().then(()=>render(true));}
+  const f=S.cfilter||'queue';
+  const notes=POSTS.filter(p=>p.status==='note');
+  const list=POSTS.filter(p=>p.status!=='note').filter(p=>f==='queue'?['draft','approved','failed','publishing'].includes(p.status):f==='all'?true:p.status===f);
+  const chips=[['queue','คิว (รอตรวจ/รอโพสต์)'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']];
+  const fb=S.status&&S.status.fbPage;
+  const card=p=>{const st=STATUS_TH[p.status]||[p.status,'gray'];const editable=['draft','approved','failed','rejected'].includes(p.status);
+    return `<div class="post" data-pid="${p.id}">
+      ${p.image_url?`<img src="${esc(p.image_url)}" alt="">`:`<div class="noimg">ไม่มีรูป</div>`}
+      <div>
+        <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}${p.source?' · โดย '+(p.source==='writer'?'นักเขียน AI':'คุณ'):''}</span></span>
+          <span class="fine">${p.published_at?'โพสต์เมื่อ '+fdt(Date.parse(p.published_at)):p.scheduled_at?'กำหนดโพสต์ '+fdt(Date.parse(p.scheduled_at)):'ยังไม่กำหนดเวลา'}</span></div>
+        ${editable?`<textarea class="input" id="pt-${p.id}" style="margin-top:8px">${esc(p.text||'')}</textarea>`:`<p style="white-space:pre-wrap;margin-top:8px">${esc(p.text||'')}</p>`}
+        ${p.error?`<p class="err" style="margin-top:6px">${esc(p.error)}</p>`:''}
+        ${p.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจากนักเขียน: ${esc(p.notes)}</p>`:''}
+        <div class="meta">
+          ${editable?`<label>เวลาโพสต์ <input class="input" type="datetime-local" id="ps-${p.id}" value="${p.scheduled_at?toLocalInput(Date.parse(p.scheduled_at)):''}" style="width:auto;display:inline-block;padding:6px 8px"></label>`:''}
+          ${p.link_url?`<a href="${esc(p.link_url)}" target="_blank" rel="noopener noreferrer">ลิงก์ในโพสต์</a>`:''}
+          ${p.fb_post_id?`<a href="https://www.facebook.com/${esc(p.fb_post_id)}" target="_blank" rel="noopener noreferrer">ดูบนเพจ</a>`:''}
+        </div>
+        <div class="acts">
+          ${p.status==='draft'||p.status==='failed'||p.status==='rejected'?`<button class="btn btn-cta btn-sm" data-a="postApprove" data-id="${p.id}">อนุมัติ${fb?'':' (โพสต์เองเมื่อถึงเวลา)'}</button>`:''}
+          ${editable?`<button class="btn btn-line btn-sm" data-a="postSave" data-id="${p.id}">บันทึกที่แก้</button>`:''}
+          ${p.status==='approved'&&fb?`<button class="btn btn-dark btn-sm" data-a="postNow" data-id="${p.id}">โพสต์เลยตอนนี้</button>`:''}
+          <button class="btn btn-line btn-sm" data-a="postCopy" data-id="${p.id}">คัดลอกข้อความ</button>
+          ${p.image_url?`<a class="btn btn-line btn-sm" href="${esc(p.image_url)}" download target="_blank" rel="noopener noreferrer">เปิดรูป</a>`:''}
+          ${p.status==='approved'&&!fb?`<button class="btn btn-line btn-sm" data-a="postMarkDone" data-id="${p.id}">โพสต์เองแล้ว ✓</button>`:''}
+          ${p.status!=='rejected'&&p.status!=='published'?`<button class="btn btn-line btn-sm" data-a="postReject" data-id="${p.id}">ปัดตก</button>`:''}
+        </div>
+      </div></div>`;};
+  return `
+  <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
+    <span class="fine">${fb?'✅ เชื่อมเพจ Facebook แล้ว โพสต์ที่อนุมัติจะขึ้นเพจอัตโนมัติตามเวลา':'⚠️ ยังไม่ได้เชื่อมเพจ Facebook — โพสต์ที่อนุมัติต้องกด "คัดลอกข้อความ" ไปโพสต์เองก่อน (ตั้งค่า FB_PAGE_ID / FB_PAGE_TOKEN บน Vercel)'}</span>
+    <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="postRefresh">รีเฟรช</button><button class="btn btn-dark btn-sm" data-a="postNew">+ เพิ่มโพสต์เอง</button></span>
+  </div>
+  ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${notes.slice(0,3).map(nt=>`<div class="note-card"><div class="fine" style="margin-bottom:6px">${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</div>${esc(nt.text)}</div>`).join('')}`:''}
+  <div class="filters" style="margin-top:8px"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div></div>
+  ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?list.map(card).join(''):`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}`;
+}
 function pixelTab(){
   const live=/^\d{6,20}$/.test(String(D.settings.pixelId||''));
   return `
@@ -1335,8 +1398,8 @@ function adsTab(){
 }
 
 function adminView(){
-  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel']];
-  const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab}[S.tab]();
+  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์']];
+  const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}</button>`).join('')}</div>
     ${body}
@@ -1421,6 +1484,19 @@ function act(a,el){
     case 'toShop':go('shop');break;
     case 'recheckOrder':verifyOrder();break;
     case 'syncOrders':autoSync(true);break;
+    case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
+    case 'postRefresh':loadPosts().then(()=>render(true));break;
+    case 'postNew':{sb.from('posts').insert({status:'draft',source:'manual',kind:'other',text:''}).select().single().then(({data,error})=>{if(error)return toast('เพิ่มไม่ได้: '+error.message);POSTS.unshift(data);S.cfilter='queue';render(true);});break;}
+    case 'postSave':case 'postApprove':{
+      const ta=$('#pt-'+id),dt=$('#ps-'+id);const text=ta?ta.value.trim():'';const when=dt&&dt.value?new Date(dt.value).toISOString():null;
+      if(!text){toast('ใส่ข้อความก่อน');break;}
+      const patch={text,scheduled_at:when};
+      if(a==='postApprove'){if(!when){toast('ตั้งเวลาโพสต์ก่อนอนุมัติ');break;}patch.status='approved';patch.error=null;}
+      updatePost(id,patch).then(ok=>{if(ok){render(true);toast(a==='postApprove'?'อนุมัติแล้ว':'บันทึกแล้ว');}});break;}
+    case 'postReject':updatePost(id,{status:'rejected'}).then(()=>render(true));break;
+    case 'postMarkDone':updatePost(id,{status:'published',published_at:new Date().toISOString()}).then(()=>render(true));break;
+    case 'postCopy':{const p=POSTS.find(x=>x.id===id);copyText(($('#pt-'+id)?$('#pt-'+id).value:p.text)||'','คัดลอกข้อความแล้ว');break;}
+    case 'postNow':{toast('กำลังโพสต์...');adminApi('/api/content?action=publish&id='+encodeURIComponent(id)).then(async j=>{await loadPosts();render(true);const r=j.results&&j.results[0];toast(j.skipped?j.error:r&&r.ok?'โพสต์ขึ้นเพจแล้ว':'โพสต์ไม่สำเร็จ: '+(r&&r.error||j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'resendEmail':{toast('กำลังส่งอีเมล...');adminApi('/api/order-email?session_id='+encodeURIComponent(el.dataset.sid)).then(async j=>{if(j.ok){await loadOrders();render(true);toast('ส่งอีเมลไปที่ '+j.to+' แล้ว');}else toast('ส่งไม่สำเร็จ: '+(j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'range':S.range=Number(el.dataset.v);S.chartDay=null;render(true);break;
     case 'pickDay':S.chartDay=S.chartDay===el.dataset.d?null:el.dataset.d;render(true);break;
@@ -1428,7 +1504,8 @@ function act(a,el){
       if(!j.ok)S.status={ok:false,text:j.error||'ตรวจสอบไม่ได้'};
       else if(!j.stripeKey||!j.supabaseKey)S.status={ok:false,text:'คีย์บน Vercel ยังไม่ครบ: '+(!j.stripeKey?'STRIPE_SECRET_KEY ':'')+(!j.supabaseKey?'SUPABASE_SECRET_KEY':'')+' (ใส่แล้วต้อง Redeploy)'};
       else if(j.stripeError)S.status={ok:false,text:'Stripe ตอบกลับผิดพลาด: '+j.stripeError};
-      else S.status={ok:true,text:'พร้อมรับเงิน: บัญชี Stripe "'+(j.account&&j.account.name)+'" ('+(j.account&&j.account.country)+') · PromptPay: '+(j.promptpay==='active'?'เปิดใช้แล้ว':j.promptpay)+' · อีเมลอัตโนมัติ: '+(j.mail?'พร้อม ('+j.mailUser+')':'ยังไม่ตั้งค่า GMAIL')+' · Webhook: '+(j.webhook?'ตั้งแล้ว':'ยังไม่ตั้ง (ลูกค้าที่ปิดหน้าเว็บก่อนจะไม่ได้อีเมลอัตโนมัติ)')};
+      else S.status={ok:true,text:'พร้อมรับเงิน: บัญชี Stripe "'+(j.account&&j.account.name)+'" ('+(j.account&&j.account.country)+') · PromptPay: '+(j.promptpay==='active'?'เปิดใช้แล้ว':j.promptpay)+' · อีเมลอัตโนมัติ: '+(j.mail?'พร้อม ('+j.mailUser+')':'ยังไม่ตั้งค่า GMAIL')+' · Webhook: '+(j.webhook?'ตั้งแล้ว':'ยังไม่ตั้ง (ลูกค้าที่ปิดหน้าเว็บก่อนจะไม่ได้อีเมลอัตโนมัติ)')+' · เพจ Facebook: '+(j.fbPage?'เชื่อมแล้ว':'ยังไม่เชื่อม')};
+      if(j.ok)S.status.fbPage=!!j.fbPage;
       render(true);}).catch(e=>{S.status={ok:false,text:'เชื่อมต่อไม่ได้'};render(true);});break;}
     case 'viewUpsell':selectProduct(id);go('shop');break;
     case 'toAdmin':go('admin');break;
@@ -1479,7 +1556,7 @@ function act(a,el){
     case 'closeZoom':S.zoom=null;drawLB();break;
     case 'zoomPrev':case 'zoomNext':{const n=(curProduct().images||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
     case 'filter':S.filter=el.dataset.v;render(true);break;
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{

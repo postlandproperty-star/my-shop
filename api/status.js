@@ -1,6 +1,7 @@
 // แอดมินกด "ตรวจสอบการเชื่อมต่อ": บอกว่าคีย์บน Vercel ครบไหม และเชื่อม Stripe ได้ไหม
 import { stripe, verifyAdmin, configured } from '../lib/shop.js';
 import { mailConfigured } from '../lib/mail.js';
+import { fbConfigured } from './content.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -15,5 +16,5 @@ export default async function handler(req, res) {
       promptpay = a.capabilities?.promptpay_payments || 'unknown';
     } catch (e) { stripeError = String(e.message || e); }
   }
-  res.status(200).json({ ok: true, stripeKey: cfg.stripe, supabaseKey: cfg.supabase, mail: mailConfigured(), mailUser: process.env.GMAIL_USER || '', webhook: /^whsec_/.test(process.env.STRIPE_WEBHOOK_SECRET || ''), account, promptpay, stripeError });
+  res.status(200).json({ ok: true, stripeKey: cfg.stripe, supabaseKey: cfg.supabase, mail: mailConfigured(), mailUser: process.env.GMAIL_USER || '', webhook: /^whsec_/.test(process.env.STRIPE_WEBHOOK_SECRET || ''), fbPage: fbConfigured(), contentKey: (process.env.CONTENT_API_KEY || '').length >= 16, account, promptpay, stripeError });
 }
