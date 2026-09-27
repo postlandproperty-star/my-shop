@@ -1382,7 +1382,7 @@ const TEAM={
   finance:{name:'พี่บัญชี',role:'บัญชี · สรุปเงินเข้า ค่าธรรมเนียม กำไร',bg:'#e5e7eb',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=100&seed=acc&top=shortCurly&hairColor=2c1b18&accessories=prescription01&clothing=collarAndSweater&clothesColor=929598&eyes=default&eyebrows=defaultNatural&mouth=serious&skinColor=edb98a&backgroundColor=e5e7eb'},
   guard:{name:'พี่การ์ด',role:'ดูแลระบบและความปลอดภัย · สายฟิตเนส หน้าดุแต่ใจดี ตรวจสุขภาพระบบทุกเช้า แก้บั๊กทุกอาทิตย์',bg:'#ddd6fe',sched:'ตรวจอัตโนมัติทุกวัน 10:00 · ทบทวนโค้ดอาทิตย์ 20:30',img:AV+'accessoriesProbability=0&seed=guard&top=shortFlat&hairColor=2c1b18&clothing=shirtCrewNeck&clothesColor=000000&eyes=default&eyebrows=angryNatural&mouth=serious&skinColor=edb98a&backgroundColor=ddd6fe'},
   market:{name:'พี่มาร์เก็ต',role:'วิจัยตลาด · หัวหน้าฝ่ายการตลาด ดึงคำค้นจริงและกระแส ส่งข้อมูลให้ทุกฝ่ายทุกเช้า',bg:'#fde68a',sched:'ทุกวัน 07:00 · จันทร์มีสรุปสัปดาห์',img:AV+'accessoriesProbability=100&seed=market&top=bob&hairColor=4a312c&accessories=round&clothing=blazerAndSweater&clothesColor=e6e6e6&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fde68a'},
-  clip:{name:'น้องคลิป',role:'ตัดต่อคลิป Reels · ทำคลิปสั้นทายศัพท์จากไอเดียทีม ส่งเข้าคิวให้พี่ต้นตรวจ',bg:'#c7f9cc',sched:'อังคารและศุกร์ 10:00',img:AV+'accessoriesProbability=100&seed=clip&top=shortWaved&hairColor=2c1b18&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=defaultNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=c7f9cc'},
+  clip:{name:'น้องคลิป',role:'ตัดต่อคลิป Reels · ทำคลิปสั้นทายศัพท์จากไอเดียทีม ส่งเข้าคิวให้คุณแดนอนุมัติ (วิดีโอต้องคุณแดนเท่านั้น)',bg:'#c7f9cc',sched:'ทุกวัน 10:00',img:AV+'accessoriesProbability=100&seed=clip&top=shortWaved&hairColor=2c1b18&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=defaultNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=c7f9cc'},
   factory:{name:'โรงงาน',role:'โรงงานผลิตชีท · รับใบสั่งจากพี่ต้นโดยตรง',bg:'#fef3c7',sched:'ทำงานอาทิตย์และจันทร์ 10:00, 22:00 หรือเมื่อสั่ง',img:AV+'accessoriesProbability=0&seed=factory&top=shortFlat&hairColor=2c1b18&clothing=overall&clothesColor=ffb300&eyes=default&mouth=smile&skinColor=d08b5b'},
   manual:{name:'คุณ',role:'เจ้าของร้าน · ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
@@ -1400,7 +1400,7 @@ const SCHED={
   factory:{dow:[0,1],times:[[10,0],[22,0]],dur:60},
   guard:{dow:[0],times:[[20,30]],dur:15},
   market:{dow:[0,1,2,3,4,5,6],times:[[7,0]],dur:10},
-  clip:{dow:[2,5],times:[[10,0]],dur:30},
+  clip:{dow:[0,1,2,3,4,5,6],times:[[10,0]],dur:30},
 };
 const BKK=7*3600e3;
 const POLITE={clip:'ครับ',market:'ค่ะ',guard:'ครับ',factory:'ครับ',writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
