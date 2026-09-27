@@ -16,7 +16,7 @@ BG = (43, 71, 240); WHITE = (255, 255, 255); INK = (26, 26, 26); RED = (239, 91,
 UA = {'User-Agent': 'Mozilla/5.0 (SheetLab reel builder)'}
 
 def find_ff():
-    for c in [os.environ.get('FF'), os.path.join(HERE, 'node_modules/ffmpeg-static/ffmpeg'), 'ffmpeg']:
+    for c in [os.environ.get('FF'), os.path.join(HERE, 'node_modules/ffmpeg-static/ffmpeg'), os.path.join(HERE, '..', '..', 'node_modules/ffmpeg-static/ffmpeg'), 'ffmpeg']:
         if not c: continue
         try: subprocess.run([c, '-version'], capture_output=True, check=True); return c
         except Exception: pass
@@ -26,14 +26,24 @@ def font(kind, sz):
     p = {'xb': 'Kanit-ExtraBold.ttf', 'sb': 'Kanit-SemiBold.ttf', 'md': 'Kanit-Medium.ttf'}[kind]
     return ImageFont.truetype(os.path.join(HERE, 'fonts', p), sz)
 
-def http(url, data=None, headers=None, timeout=60):
-    req = urllib.request.Request(url, data=data, headers={**UA, **(headers or {})}, method='POST' if data else 'GET')
-    return urllib.request.urlopen(req, timeout=timeout).read()
+def http(url, data=None, headers=None, timeout=60, tries=3):
+    import time
+    last = None
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, data=data, headers={**UA, **(headers or {})}, method='POST' if data else 'GET')
+            return urllib.request.urlopen(req, timeout=timeout).read()
+        except Exception as e:
+            last = e; time.sleep(2 + i * 3)
+    raise last
 
 CACHE = os.path.join(HERE, '.cache'); os.makedirs(CACHE, exist_ok=True)
 def cached(url, ext):
     fn = os.path.join(CACHE, hashlib.md5(url.encode()).hexdigest() + ext)
-    if not os.path.exists(fn): open(fn, 'wb').write(http(url))
+    if not os.path.exists(fn) or os.path.getsize(fn) < 500:
+        data = http(url)
+        if len(data) < 500: raise SystemExit('download too small: ' + url)
+        open(fn, 'wb').write(data)
     return fn
 
 def mascot(expr):
@@ -47,9 +57,16 @@ def find_image(query, avoid=()):
         url = 'https://api.openverse.org/v1/images/?q=' + urllib.parse.quote(query) + '&license_type=commercial&page_size=8' + ('&source=' + src if src else '')
         try: res = json.loads(http(url, timeout=30)).get('results', [])
         except Exception: res = []
+        toks = [t for t in re.split(r'\W+', query.lower()) if len(t) > 2]
+        scored = []
         for r in res:
-            title = (r.get('title') or '').lower()
+            title = (r.get('title') or '').lower() + ' ' + ' '.join(t.get('name', '') if isinstance(t, dict) else str(t) for t in (r.get('tags') or [])[:15]).lower()
             if any(a in title for a in avoid): continue
+            hit = sum(1 for t in toks if t in title)
+            if hit: scored.append((-hit, r))
+        scored.sort(key=lambda x: x[0])
+        for _, r in scored:
+            title = (r.get('title') or '').lower()
             try:
                 data = http(r['url'], timeout=40)
                 if len(data) < 15000: continue
