@@ -1569,7 +1569,7 @@ function contentTab(){
     ${FB.app===false?`<p class="err">ยังไม่ได้ใส่ FB_APP_ID / FB_APP_SECRET บน Vercel — ทำข้อ 1 ก่อน</p>`:''}
     <ol style="padding-left:20px;line-height:1.7;font-size:14px">
       <li>สร้างแอปที่ <a href="https://developers.facebook.com/apps/create/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps/create</a> (ประเภท Business/อื่นๆ) แล้วนำ <b>App ID</b> และ <b>App Secret</b> จาก App settings → Basic ไปใส่ใน Vercel เป็น <code>FB_APP_ID</code>, <code>FB_APP_SECRET</code> แล้วกด Redeploy</li>
-      <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → เลือกแอปของคุณ → Permissions เพิ่ม <code>pages_show_list</code>, <code>pages_manage_posts</code>, <code>pages_read_engagement</code>, <code>ads_read</code>, <code>read_insights</code> → กด <b>Generate Access Token</b> → เลือกเพจ SheetLab → อนุญาต</li>
+      <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → เลือกแอปของคุณ → Permissions เพิ่ม <code>pages_show_list</code>, <code>pages_manage_posts</code>, <code>pages_read_engagement</code>, <code>publish_video</code> (จำเป็นสำหรับคลิป Reels), <code>ads_read</code>, <code>read_insights</code> → กด <b>Generate Access Token</b> → เลือกเพจ SheetLab → อนุญาต</li>
       <li>คัดลอกโทเค็นในช่อง Access Token มาวางด้านล่าง</li>
     </ol>
     <textarea class="input" id="fb-token" rows="3" placeholder="วางโทเค็นที่นี่ (ระบบจะแลกเป็นโทเค็นเพจแบบไม่หมดอายุ และไม่แสดงให้ใครเห็นอีก)"></textarea>
