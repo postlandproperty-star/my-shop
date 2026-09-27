@@ -539,10 +539,30 @@ async function autoSync(force){
   catch(e){S.syncMsg='เชื่อมต่อ Stripe ไม่ได้';}
   syncing=false;render(true);
 }
-async function adminApi(path){
+// เรียก API หลังบ้าน: ถ้าโทเค็นหมดอายุ (401) จะขอต่ออายุ 1 ครั้งแล้วยิงซ้ำ ถ้ายังไม่ผ่านให้กลับไปหน้าล็อกอินพร้อมข้อความ แทนที่จะค้าง "กำลังโหลด"
+let reloginShown=false;
+function sessionLost(){
+  if(reloginShown)return;reloginShown=true;
+  sbSession=null;S.relogin=true;S.err='เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง';S.view='login';render(false);
+  try{if(sb)sb.auth.signOut({scope:'local'}).catch(()=>{});}catch(e){}
+  toast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+}
+async function authFetch(path,opts){
+  opts=opts||{};
   const {data}=await sb.auth.getSession();
-  const r=await fetch(path,{headers:{Authorization:'Bearer '+(data&&data.session?data.session.access_token:'')}});
+  let s=data&&data.session;
+  if(!s){sessionLost();return {ok:false,error:'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'};}
+  const go=tok=>fetch(path,Object.assign({},opts,{headers:Object.assign({},opts.headers||{},{Authorization:'Bearer '+tok})}));
+  let r=await go(s.access_token);
+  if(r.status===401){
+    let fresh=null;try{const rr=await sb.auth.refreshSession();fresh=rr&&rr.data&&rr.data.session||null;}catch(e){}
+    if(fresh){sbSession=fresh;r=await go(fresh.access_token);}
+    if(r.status===401){sessionLost();return {ok:false,error:'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่'};}
+  }
   return r.json();
+}
+async function adminApi(path){
+  return authFetch(path);
 }
 /* บันทึกข้อมูลที่แสดงอยู่ตอนนี้ขึ้นระบบทั้งก้อน (ใช้ตอนตั้งค่าครั้งแรก / นำเข้าข้อมูลเก่า) */
 async function pushAll(){
@@ -1332,7 +1352,7 @@ let FB={},TH={};
 (function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
 async function loadThStatus(){try{const j=await adminApi('/api/threads?action=status');if(j.ok)TH=Object.assign(TH,{connected:j.connected,user:j.user,app:j.app,redirect:j.redirect});}catch(e){}}
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
-async function adminPost(path,body){const {data}=await sb.auth.getSession();const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(data&&data.session?data.session.access_token:'')},body:JSON.stringify(body||{})});return r.json();}
+async function adminPost(path,body){return authFetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});}
 async function loadPosts(){
   if(!sb||!sbSession)return;
   const {data,error}=await sb.from('posts').select('*').order('created_at',{ascending:false}).limit(200);
@@ -1718,7 +1738,7 @@ function todoTab(){
   const autoRows=(TODO.auto||[]).map(a=>`<div class="todo sys"><span style="font-size:20px;line-height:1;flex:none">${a.status==='failed'?'⚠️':'✋'}</span><div class="tt">${a.status==='failed'?'โพสต์ขึ้นไม่สำเร็จ ต้องกดโพสต์ใหม่หรือแก้: ':'พี่ต้นส่งโพสต์นี้ให้คุณแดนอนุมัติ: '}${esc(a.headline)}<div class="tm"><span class="badge ${a.status==='failed'?'bad':'warn'}">${a.status==='failed'?'โพสต์ล้มเหลว':'รออนุมัติ'}</span><span>${a.channel==='threads'?'Threads':'Facebook'}</span><span>${a.scheduled_at?'กำหนด '+fmt(a.scheduled_at):''}</span><button class="chip" data-a="tab" data-v="content">ไปที่แท็บคอนเทนต์</button></div></div></div>`).join('');
   return `<p class="fine" style="margin:12px 0 4px">งานที่ทีมขอให้คุณแดนทำเอง รวบรวมอัตโนมัติจากรายงานวันจันทร์และแผนประชุมวันอาทิตย์ของพี่ต้น (หัวข้อ "สิ่งที่อยากให้คุณแดนทำ" และ "ต้องขอคุณแดนตัดสิน") บวกโพสต์ที่ค้างรอคุณแดนในระบบ ติ๊กเมื่อทำเสร็จ พี่ต้นจะเห็นว่างานไหนเสร็จแล้วในรอบถัดไป <button class="chip" data-a="todoRefresh">รีเฟรช</button></p>
   ${TODO.err?`<p class="fine" style="color:var(--bad)">${esc(TODO.err)}</p>`:''}
-  ${TODO.items===null?'<p class="fine">กำลังโหลด...</p>':''}
+  ${TODO.items===null&&!TODO.err?'<p class="fine">กำลังโหลด...</p>':''}
   ${healthBox()}
   ${autoRows?`<h3 class="h3">ค้างในระบบ (${TODO.auto.length})</h3>${autoRows}`:''}
   <h3 class="h3">ต้องทำ (${open.length})</h3>
@@ -1742,7 +1762,7 @@ function chatTab(){
     return sep+`<div class="msg ${me?'me':''}">${ava(me?'manual':(TEAM[m.source]?m.source:'manager'),1)}<div><div class="who">${esc(who)}</div><div class="bub">${esc(m.text)}</div></div><span class="t">${tm} <button class="tx" data-a="chatRemove" data-id="${m.id}" title="ลบข้อความนี้" style="font-size:14px">×</button></span></div>`;}).join('');
   return `<div class="chat"><p class="fine" style="margin:12px 0 4px">ห้องพักทีม: มุมคุยเล่นนอกเรื่องงานของทุกคน (ทีมมาคุยกันวันละรอบตอนพักเที่ยง 12:30) คุณแดนแวะมาทักได้ ทีมจะตอบในรอบถัดไป <button class="chip" data-a="chatRefresh">รีเฟรช</button></p>
   ${CHAT.err?`<p class="fine" style="color:var(--bad)">${esc(CHAT.err)}</p>`:''}
-  ${CHAT.msgs===null?'<p class="fine">กำลังโหลด...</p>':msgs.length?rows:'<p class="fine">ยังเงียบอยู่ ทุกคนจะเริ่มคุยกันรอบเที่ยงนี้</p>'}
+  ${CHAT.msgs===null?(CHAT.err?'':'<p class="fine">กำลังโหลด...</p>'):msgs.length?rows:'<p class="fine">ยังเงียบอยู่ ทุกคนจะเริ่มคุยกันรอบเที่ยงนี้</p>'}
   <div id="chat-end"></div>
   <div class="chatbox"><input id="chat-new" placeholder="แวะมาทักทีม เช่น วันนี้กินอะไรกันดี" onkeydown="if(event.key==='Enter'){document.querySelector('[data-a=chatSend]').click();}"><button class="btn btn-cta btn-sm" data-a="chatSend">ส่ง</button></div></div>`;
 }
@@ -1790,7 +1810,7 @@ function docsTab(){
   ${SYS.map(([h,arr])=>`<h3 class="h3">${h}</h3><div class="docgrid">${arr.map(l=>docCard(l,false)).join('')}</div>`).join('')}
   <h3 class="h3" style="margin-top:18px">ลิงก์ที่เพิ่มเอง (${links.length})</h3>
   <div class="docform"><input id="doc-title" placeholder="ชื่อ เช่น ไดรฟ์ไฟล์ต้นฉบับ"><input id="doc-url" placeholder="https://..." inputmode="url"><input id="doc-note" placeholder="หมายเหตุ / หมวด (ไม่บังคับ)"><button class="btn btn-line btn-sm" data-a="docAdd">เพิ่มลิงก์</button></div>
-  ${DOCS.links===null?'<p class="fine">กำลังโหลด...</p>':links.length?Object.keys(cats).map(c=>`${Object.keys(cats).length>1||c!=='อื่นๆ'?`<p class="fine" style="margin:6px 0">${esc(c)}</p>`:''}<div class="docgrid">${cats[c].map(l=>docCard(l,true)).join('')}</div>`).join(''):'<p class="fine">ยังไม่มี เพิ่มลิงก์ที่ใช้บ่อยไว้ตรงนี้ เช่น ไดรฟ์ไฟล์ต้นฉบับชีท บัญชีธนาคาร หรือหน้าจัดการโดเมน</p>'}
+  ${DOCS.links===null?(DOCS.err?'':'<p class="fine">กำลังโหลด...</p>'):links.length?Object.keys(cats).map(c=>`${Object.keys(cats).length>1||c!=='อื่นๆ'?`<p class="fine" style="margin:6px 0">${esc(c)}</p>`:''}<div class="docgrid">${cats[c].map(l=>docCard(l,true)).join('')}</div>`).join(''):'<p class="fine">ยังไม่มี เพิ่มลิงก์ที่ใช้บ่อยไว้ตรงนี้ เช่น ไดรฟ์ไฟล์ต้นฉบับชีท บัญชีธนาคาร หรือหน้าจัดการโดเมน</p>'}
   <h3 class="h3" style="margin-top:18px">ไฟล์ชีทจากโรงงาน (${DOCS.files.length})</h3>
   ${DOCS.files.length?`<div class="docgrid">${DOCS.files.map(f=>docCard({title:f.title,url:f.file_url,note:`${f.pages?f.pages+' หน้า · ':''}${f.price?f.price+' บาท':'แจกฟรี'}${f.done_at?' · เสร็จ '+fmt(f.done_at):''}`},false)).join('')}</div>`:'<p class="fine">ยังไม่มีไฟล์ที่ผลิตเสร็จ ใบสั่งที่รออยู่ดูได้ในแท็บทีม</p>'}
   <h3 class="h3" style="margin-top:18px">เอกสารล่าสุดของทีม</h3>
@@ -2219,10 +2239,15 @@ function wireAuth(){
   authWired=true;
   sb.auth.onAuthStateChange((ev,session)=>{
     const was=!!sbSession;sbSession=session||null;
-    if(ev==='SIGNED_IN'&&!was){afterLogin();}
-    else if(ev==='SIGNED_OUT'){S.view='shop';S.tab='todo';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
+    if(ev==='SIGNED_IN'){reloginShown=false;S.relogin=false;if(!was)afterLogin();}
+    else if(ev==='TOKEN_REFRESHED'){reloginShown=false;}
+    else if(ev==='SIGNED_OUT'){if(S.relogin){S.relogin=false;S.view='login';render(false);return;}S.view='shop';S.tab='todo';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
   });
 }
+document.addEventListener('visibilitychange',async()=>{
+  if(document.visibilityState!=='visible'||!sb||!sbSession)return;
+  try{const {data}=await sb.auth.getSession();if(!data||!data.session)sessionLost();else sbSession=data.session;}catch(e){}
+});
 (async function boot(){
   const inline=window.__SHOP__;
   if(inline&&Array.isArray(inline.products)){ // ข้อมูลฝังมากับหน้า: แสดงได้ทันที
