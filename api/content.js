@@ -9,6 +9,7 @@
 //   ?action=review   (key)   ร่างที่รอตรวจ (เต็ม) สำหรับ "ผู้จัดการ"
 //   ?action=decide   (key, POST) ผู้จัดการตัดสิน {id, decision:'approve'|'reject'|'owner', reason, text?}
 //                    owner = เรื่องสำคัญ ส่งให้เจ้าของกดอนุมัติเอง (status needs_owner)
+//   ?action=factory / factory_order / factory_claim / factory_uploadurl / factory_done / factory_fail / factory_cancel (key) โรงงานผลิตชีท: ใบสั่งจากพี่ต้น ไฟล์เก็บใน Storage
 //   ?action=publish  (cron หรือแอดมิน) โพสต์ที่อนุมัติแล้วและถึงเวลา → ขึ้นเพจ Facebook
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
@@ -28,6 +29,12 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+
+// โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
+const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes'];
+async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
+async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
 const cronOk = (req) => !!req.headers['x-vercel-cron'] || (process.env.CRON_SECRET && req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`);
 
@@ -184,6 +191,58 @@ export default async function handler(req, res) {
       patch.notes = [cur[0].notes, `✏️ พี่ต้น: ${reason || 'แก้ไข'}`].filter(Boolean).join('\n');
       const rows = await sbPatch(`posts?id=eq.${id}`, patch);
       return res.status(200).json({ ok: true, id, status: rows[0]?.status, scheduled_at: rows[0]?.scheduled_at });
+    }
+    if (action === 'factory') {
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const st = String(req.query.status || '');
+      const jobs = (await loadJobs()).filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      return res.status(200).json({ ok: true, jobs });
+    }
+    if (action === 'factory_order') {
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const body = await readBody(req);
+      if (!String(body.title || '').trim()) return res.status(400).json({ ok: false, error: 'ต้องมี title' });
+      const { randomUUID } = await import('node:crypto');
+      const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: String(body.ordered_by || 'manager').slice(0, 40) };
+      for (const f of FACTORY_FIELDS) if (body[f] != null && body[f] !== '') job[f] = typeof body[f] === 'number' ? body[f] : String(body[f]).slice(0, 2000);
+      job.price = Number(job.price || 0);
+      const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
+      await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
+      return res.status(200).json({ ok: true, job });
+    }
+    if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel'].includes(action)) {
+      const admin = action === 'factory_cancel' && req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const body = await readBody(req);
+      const jobs = await loadJobs();
+      const job = jobs.find((j) => j.id === String(body.id || ''));
+      if (!job) return res.status(404).json({ ok: false, error: 'not found' });
+      if (action === 'factory_claim') {
+        if (job.status !== 'queued') return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${job.status}` });
+        job.status = 'producing'; job.started_at = new Date().toISOString();
+      } else if (action === 'factory_uploadurl') {
+        const safe = String(body.filename || 'sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'sheet.pdf';
+        const path = `factory/${job.id}/${safe}`;
+        const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status} ${JSON.stringify(j).slice(0, 200)}` });
+        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, headers: { 'Content-Type': 'application/pdf', 'x-upsert': 'true' } });
+      } else if (action === 'factory_done') {
+        job.status = 'done'; job.done_at = new Date().toISOString();
+        if (body.file_url) job.file_url = String(body.file_url).slice(0, 500);
+        if (body.pages) job.pages = Number(body.pages);
+        if (body.size) job.size = Number(body.size);
+        if (body.summary) job.summary = String(body.summary).slice(0, 2000);
+        await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
+      } else if (action === 'factory_fail') {
+        job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
+        await logNote('factory', `ผลิตไม่สำเร็จ: ${job.title} เหตุผล: ${job.error}`);
+      } else if (action === 'factory_cancel') {
+        job.status = 'cancelled'; job.cancelled_at = new Date().toISOString();
+      }
+      await saveJobs(jobs);
+      return res.status(200).json({ ok: true, job });
     }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
