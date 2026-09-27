@@ -214,7 +214,7 @@ footer{padding:28px 0 110px;text-align:center}
 .ocard .oh img{width:72px;height:72px}
 .ocard .on{font-weight:700;font-size:18px}
 .ocard .ot{font-size:14px;color:var(--muted)}
-.ocard ul{margin:4px 0 0;padding-left:20px;font-size:15.5px;line-height:1.5;display:grid;gap:6px;color:var(--ink)}
+.ocard .odh{font-weight:700;font-size:14px;color:var(--muted);margin-top:6px}.ocard ul{margin:2px 0 0;padding-left:20px;font-size:16px;line-height:1.5;display:grid;gap:6px;color:var(--ink)}
 .cmt{border-top:1px dashed var(--line);margin-top:8px;padding-top:8px;font-size:13px}
 .cmt .q{display:flex;gap:8px;align-items:flex-start}.cmt .q .tx{flex:1;color:var(--ink);white-space:pre-wrap;max-height:3.9em;overflow:hidden}.cmt.open .q .tx{max-height:none}
 .cmt .q button{flex:none;font-size:12px;padding:3px 9px}
@@ -1796,7 +1796,7 @@ function moodStrip(){const ks=['manager','writer','designer','trend','community'
   return `<div class="moods">${ks.map(k=>{const m=mood(k),t=TEAM[k];return `<div class="md" title="${esc(m.why)}"><span class="e"><img class="ava" src="${t.img}" alt="" style="background:${t.bg}" loading="lazy"><span>${m.e}</span></span><b>${esc(t.name)}</b><small>${esc(m.t)}</small>${m.why?`<em>${esc(m.why)}</em>`:''}</div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
-  <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='owner'||st.state==='off'?'':`<br>ส่งงานล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'}`})()}</div></article>`;}
+  <div class="odh">หน้าที่</div><ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='owner'||st.state==='off'?'':`<br>ส่งงานล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'}`})()}</div></article>`;}
 function cmtBox(k){
   if(k==='manual')return '';
   const mine=POSTS.filter(p=>p.status==='note'&&p.kind==='reply'&&String(p.text||'').startsWith('@'+k+' ')).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
