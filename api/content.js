@@ -441,6 +441,33 @@ export default async function handler(req, res) {
       const files = jobs.filter((j) => j.status === 'done' && j.file_url).map((j) => ({ id: j.id, title: j.title, file_url: j.file_url, pages: j.pages, price: j.price, done_at: j.done_at, purpose: j.purpose }));
       return res.status(200).json({ ok: true, links, files });
     }
+    if (action === 'tts') {
+      // เสียงพากย์ไทยจาก ElevenLabs (คีย์เก็บใน Vercel env ELEVEN_KEY ไม่เคยส่งออกไปให้ทีม): POST {text, voice?, speed?} -> {url} ไฟล์ mp3 เก็บใน storage product-images/reels/  GET &list=1 -> รายชื่อเสียงในบัญชี
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const EK = process.env.ELEVEN_KEY || '';
+      if (!EK) return res.status(503).json({ ok: false, error: 'ยังไม่ได้ตั้งค่า ELEVEN_KEY ใน Vercel Environment Variables' });
+      if (req.query.list === '1') {
+        const r = await fetch('https://api.elevenlabs.io/v1/voices', { headers: { 'xi-api-key': EK } });
+        const j = await r.json().catch(() => ({}));
+        return res.status(200).json({ ok: r.ok, voices: (j.voices || []).map((v) => ({ id: v.voice_id, name: v.name, labels: v.labels || {}, preview: v.preview_url || '' })), error: r.ok ? undefined : `ElevenLabs ${r.status}` });
+      }
+      if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
+      const body = await readBody(req);
+      const text = String(body.text || '').trim().slice(0, 1500);
+      if (!text) return res.status(400).json({ ok: false, error: 'no text' });
+      const voice = /^[A-Za-z0-9]{10,40}$/.test(String(body.voice || '')) ? String(body.voice) : (process.env.ELEVEN_VOICE || 'EXAVITQu4vr4xnSDxMaL');
+      const speed = Math.min(1.2, Math.max(0.7, Number(body.speed) || 1.0));
+      const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}?output_format=mp3_44100_128`, {
+        method: 'POST', headers: { 'xi-api-key': EK, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, model_id: String(body.model || 'eleven_multilingual_v2'), voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true, speed } }),
+      });
+      if (!r.ok) { const t = await r.text().catch(() => ''); return res.status(502).json({ ok: false, error: `ElevenLabs ${r.status}: ${t.slice(0, 200)}` }); }
+      const buf = Buffer.from(await r.arrayBuffer());
+      const name = `reels/tts-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.mp3`;
+      const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${name}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'audio/mpeg', 'cache-control': '31536000' }, body: buf });
+      if (!up.ok) return res.status(500).json({ ok: false, error: `เก็บไฟล์เสียงไม่ได้ (${up.status})` });
+      return res.status(200).json({ ok: true, url: `${SB_URL}/storage/v1/object/public/product-images/${name}`, bytes: buf.length, voice, chars: text.length });
+    }
     if (action === 'chat') {
       // ห้องพักทีม (kind chat): ข้อความมีเวลาปล่อย (scheduled_at) ได้ หน้าเว็บเห็นเฉพาะที่ถึงเวลาแล้ว ทีมส่งทั้งวันได้ในครั้งเดียว
       // GET ?days=7 (&all=1 กับ key = รวมข้อความที่ยังไม่ถึงเวลา)  POST แอดมิน {text} | key {text,source,at?} หรือ {messages:[{text,source,at?}]} | {id,remove:true} | {clear:'all'}
