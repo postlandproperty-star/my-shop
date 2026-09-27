@@ -442,26 +442,85 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, links, files });
     }
     if (action === 'chat') {
-      // ห้องพักทีม: แชทเล่นนอกเรื่องงาน (kind chat) GET อ่าน 80 ข้อความล่าสุด, POST {text} = คุณแดนแวะมาทัก (แอดมิน) หรือสมาชิกส่ง {text, source} (key)
+      // ห้องพักทีม (kind chat): ข้อความมีเวลาปล่อย (scheduled_at) ได้ หน้าเว็บเห็นเฉพาะที่ถึงเวลาแล้ว ทีมส่งทั้งวันได้ในครั้งเดียว
+      // GET ?days=7 (&all=1 กับ key = รวมข้อความที่ยังไม่ถึงเวลา)  POST แอดมิน {text} | key {text,source,at?} หรือ {messages:[{text,source,at?}]} | {id,remove:true} | {clear:'all'}
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       if (req.method === 'POST') {
         const body = await readBody(req);
         if (body.remove && /^[0-9a-f-]{36}$/.test(String(body.id || ''))) {
-          // ลบข้อความในห้องพัก (คุณแดนหรือระบบ) ลบได้เฉพาะ kind chat
           await sb(`posts?id=eq.${body.id}&kind=eq.chat`, { method: 'DELETE', prefer: 'return=minimal' });
         } else if (body.clear && body.clear === 'all') {
           await sb(`posts?kind=eq.chat&status=eq.note`, { method: 'DELETE', prefer: 'return=minimal' });
         } else {
-          const text = String(body.text || '').trim().slice(0, 400);
-          if (!text) return res.status(400).json({ ok: false, error: 'พิมพ์ข้อความก่อน' });
-          const source = admin ? 'manual' : (MEMBER_TH[body.source] ? body.source : 'manager');
-          await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source, text }], prefer: 'return=minimal' });
+          const list = Array.isArray(body.messages) ? body.messages : [body];
+          const now = Date.now();
+          const rows = [];
+          for (const m of list.slice(0, 40)) {
+            const text = String((m && m.text) || '').trim().slice(0, 400);
+            if (!text) continue;
+            const source = admin ? 'manual' : (MEMBER_TH[m.source] ? m.source : 'manager');
+            let at = null;
+            if (!admin && m.at) { const t = Date.parse(m.at); if (t && t > now - 36e5 && t < now + 2 * 864e5) at = new Date(t).toISOString(); }
+            rows.push({ status: 'note', kind: 'chat', source, text, scheduled_at: at });
+          }
+          if (!rows.length) return res.status(400).json({ ok: false, error: 'พิมพ์ข้อความก่อน' });
+          await sb('posts', { method: 'POST', body: rows, prefer: 'return=minimal' });
         }
       }
       const days = Math.min(30, Number(req.query.days) || 7);
-      const rows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=id,source,text,created_at&order=created_at.asc&limit=120`);
-      return res.status(200).json({ ok: true, messages: rows.slice(-80) });
+      const all = !admin && keyOk(req) && req.query.all === '1';
+      const rows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=id,source,text,created_at,scheduled_at&order=created_at.asc&limit=240`);
+      const nowIso = new Date().toISOString();
+      const withAt = rows.map((r) => ({ id: r.id, source: r.source, text: r.text, created_at: r.created_at, at: r.scheduled_at || r.created_at })).sort((a, b) => a.at.localeCompare(b.at));
+      const future = withAt.filter((r) => r.at > nowIso);
+      const shown = all ? withAt : withAt.filter((r) => r.at <= nowIso);
+      return res.status(200).json({ ok: true, messages: shown.slice(-80), pending: future.length, next_at: future[0] ? future[0].at : null, next_source: future[0] ? future[0].source : null });
+    }
+    if (action === 'lore') {
+      // สมุดเรื่องราวห้องพัก (มุกค้าง เรื่องต่อเนื่อง) shop_state id=lore data.text ≤ 2500 ตัวอักษร
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (req.method === 'POST') {
+        const body = await readBody(req);
+        const text = String(body.text || '').trim().slice(0, 2500);
+        await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'lore', data: { text }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+        return res.status(200).json({ ok: true, text });
+      }
+      const rows = await sb('shop_state?id=eq.lore&select=data,updated_at');
+      return res.status(200).json({ ok: true, text: rows?.[0]?.data?.text || '', updated_at: rows?.[0]?.updated_at || null });
+    }
+    if (action === 'digest') {
+      // สรุปข้อเท็จจริงของวันแบบย่อสำหรับห้องพัก (คำนวณฝั่งเซิร์ฟเวอร์ ไม่ใช้โมเดล): วันที่ รายงานใครส่ง สุขภาพระบบ โพสต์ โรงงาน ข้อความคุณแดน และสมุดเรื่องราว
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const now = Date.now();
+      const bkk = new Date(now + 7 * 3600e3);
+      const dowTh = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์'][bkk.getUTCDay()];
+      const monTh = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][bkk.getUTCMonth()];
+      const dom = bkk.getUTCDate();
+      const lines = [`วันนี้วัน${dowTh}ที่ ${dom} ${monTh} ${bkk.getUTCFullYear() + 543}${[0, 6].includes(bkk.getUTCDay()) ? ' (วันหยุดสุดสัปดาห์ ทีมทำงานอัตโนมัติ คนคุยน้อยลง)' : ''}${dom >= 25 ? ' ใกล้สิ้นเดือน (เงินเดือนออก คนคุยเรื่องเงินและของกิน)' : dom <= 3 ? ' ต้นเดือน' : ''}`];
+      const since = new Date(now - 864e5).toISOString();
+      const notes = await sb(`posts?status=in.(note,log)&created_at=gte.${since}&select=source,kind,text,created_at&order=created_at.desc&limit=80`);
+      const seen = {};
+      for (const n of notes) { if (['chat', 'reply', 'plan'].includes(n.kind) || n.source === 'manual' || seen[n.source]) continue; seen[n.source] = true; const first = String(n.text || '').split('\n').find((l) => l.trim()) || ''; lines.push(`${MEMBER_TH[n.source] || n.source} ส่งงานแล้ว (${n.kind}): ${first.slice(0, 90)}`); }
+      const quiet = Object.keys(MEMBER_TH).filter((k) => !seen[k] && !['care'].includes(k));
+      if (quiet.length) lines.push(`ยังไม่มีรายงานใน 24 ชม.: ${quiet.map((k) => MEMBER_TH[k]).join(' ')}`);
+      const health = notes.find((n) => n.kind === 'health');
+      if (health) lines.push(`ผลตรวจระบบล่าสุด: ${String(health.text).split('\n')[0].slice(0, 100)}`);
+      const pub = await sb(`posts?status=eq.published&published_at=gte.${since}&select=channel,kind,text`);
+      if (pub.length) lines.push(`โพสต์ที่ขึ้นเพจ 24 ชม.: Facebook ${pub.filter((p) => (p.channel || 'facebook') === 'facebook').length} Threads ${pub.filter((p) => p.channel === 'threads').length} เช่น "${String(pub[0].text || '').slice(0, 50)}"`);
+      const stuck = await sb(`posts?status=in.(needs_owner,failed)&select=status`);
+      if (stuck.length) lines.push(`โพสต์ค้าง: รอคุณแดนอนุมัติ ${stuck.filter((p) => p.status === 'needs_owner').length} ล้มเหลว ${stuck.filter((p) => p.status === 'failed').length}`);
+      const today = await sb(`posts?status=eq.approved&scheduled_at=gte.${new Date().toISOString()}&scheduled_at=lte.${new Date(now + 36e5 * 24).toISOString()}&select=channel,text,scheduled_at&order=scheduled_at.asc&limit=5`);
+      if (today.length) lines.push(`คิวโพสต์ 24 ชม.ข้างหน้า ${today.length} โพสต์ ถัดไป ${today[0].channel === 'threads' ? 'Threads' : 'Facebook'}: "${String(today[0].text || '').slice(0, 50)}"`); else lines.push('คิวโพสต์ 24 ชม.ข้างหน้าว่างเปล่า (ทีมจะเครียดเรื่องนี้ได้)');
+      const jobs = await loadJobs().catch(() => []);
+      const q = jobs.filter((j) => j.status === 'queued' || j.status === 'producing');
+      if (q.length) lines.push(`โรงงาน: กำลังผลิต ${q.length} งาน ล่าสุด "${String(q[0].title || '').slice(0, 50)}"`);
+      const owner = notes.filter((n) => n.kind === 'chat' && n.source === 'manual').map((n) => ({ at: n.created_at, text: String(n.text).slice(0, 300) }));
+      const loreRows = await sb('shop_state?id=eq.lore&select=data');
+      const chatRows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(now - 3 * 864e5).toISOString()}&select=source,text,created_at,scheduled_at&order=created_at.asc&limit=120`);
+      const nowIso = new Date().toISOString();
+      return res.status(200).json({ ok: true, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', recent_chat: chatRows.map((r) => ({ source: r.source, text: r.text, at: r.scheduled_at || r.created_at })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
     if (action === 'todo') {
       // เช็คลิสต์ของคุณแดน (แอดมินหรือ key): GET รวมรายการจากรายงาน/แผนของพี่ต้น 14 วัน + รายการที่ทีมส่งตรง, POST {id,done}|{text}|{id,remove}
