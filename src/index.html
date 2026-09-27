@@ -163,6 +163,18 @@ footer{padding:28px 0 110px;text-align:center}
 .post textarea{width:100%;min-height:120px;white-space:pre-wrap}
 .post .meta{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
 .post .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.post.compact{padding:10px 12px;grid-template-columns:64px 1fr;gap:10px;margin-bottom:8px}
+.post.compact img,.post.compact .noimg,.post video.thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;background:#000;cursor:pointer}
+.post.compact .noimg{background:var(--bg);font-size:11px}
+.post.compact .acts{margin-top:6px}
+.ptxt{margin-top:6px;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;font-size:14px;line-height:1.45}
+.cbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.cstat{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.cstat .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#9ca3af;margin-right:5px;vertical-align:middle}.cstat .dot.on{background:#16a34a}.cstat .dot.off{background:#ef4444}
+.daysep{font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 6px;display:flex;align-items:center;gap:8px}.daysep:after{content:'';flex:1;height:1px;background:var(--line)}
+.filters.sticky{position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 0;margin:0}
+.chip .n{opacity:.65;font-size:12px;margin-left:5px}.chip .n.alert{opacity:1;background:#ef4444;color:#fff;border-radius:999px;padding:0 6px;font-weight:700}
+.fold{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.fold summary{cursor:pointer;font-weight:700;padding:8px 0;list-style:none}.fold summary::-webkit-details-marker{display:none}.fold summary:before{content:'▸ ';color:var(--muted)}.fold[open] summary:before{content:'▾ '}
 .org{display:grid;justify-items:center;gap:0;margin-top:12px}
 .org .tier{display:grid;gap:12px;width:100%}
 .org .tier.one{grid-template-columns:minmax(0,440px);justify-content:center}
@@ -218,7 +230,7 @@ footer{padding:28px 0 110px;text-align:center}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 @media (prefers-reduced-motion:reduce){.st.on{animation:none}}
 .note-card{background:var(--surface);border-left:4px solid var(--brand);border-radius:12px;padding:14px 16px;margin-bottom:10px;white-space:pre-wrap;font-size:14px}
-@media(max-width:520px){.post{grid-template-columns:1fr}.post img,.post .noimg{width:100%;height:160px}}
+@media(max-width:520px){.post{grid-template-columns:1fr}.post img,.post .noimg{width:100%;height:160px}.post.compact{grid-template-columns:56px 1fr}.post.compact img,.post.compact .noimg,.post.compact video.thumb{width:56px;height:56px}.filters.sticky{position:static}}
 .kpi .v{font-family:var(--font-head);font-size:24px;line-height:1.2}
 .kpi .l{font-size:14px;color:var(--muted)}
 .chart{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
@@ -1455,39 +1467,58 @@ function contentTab(){
   if(!postsLoaded){Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));}
   const f=S.cfilter||'queue';
   const notes=POSTS.filter(p=>p.status==='note'&&p.kind!=='reply'&&p.kind!=='chat');
-  const list=POSTS.filter(p=>p.status!=='note'&&p.status!=='log').filter(p=>f==='queue'?['needs_owner','draft','approved','failed','publishing'].includes(p.status):f==='all'?true:p.status===f);
-  if(f==='queue')list.sort((a,b)=>(a.status==='needs_owner'?0:1)-(b.status==='needs_owner'?0:1));
-  const chips=[['queue','คิว (รอตรวจ/รอโพสต์)'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']];
-  const fb=!!FB.connected;
-  const card=p=>{const st=STATUS_TH[p.status]||[p.status,'gray'];const editable=['draft','needs_owner','approved','failed','rejected'].includes(p.status);
-    return `<div class="post" data-pid="${p.id}">
-      ${p.image_url?(/\.(mp4|mov|m4v)(\?|$)/i.test(p.image_url)?`<video src="${esc(p.image_url)}" controls playsinline preload="metadata" style="width:100%;max-height:420px;border-radius:12px;background:#000"></video>`:`<img src="${esc(p.image_url)}" alt="">`):`<div class="noimg">ไม่มีรูป</div>`}
+  const all=POSTS.filter(p=>p.status!=='note'&&p.status!=='log');
+  const QUEUE=['needs_owner','draft','approved','failed','publishing'];
+  const cnt={queue:all.filter(p=>QUEUE.includes(p.status)).length,published:all.filter(p=>p.status==='published').length,rejected:all.filter(p=>p.status==='rejected').length,all:all.length};
+  const urgent=all.filter(p=>p.status==='needs_owner'||p.status==='failed').length;
+  const when=p=>Date.parse(p.status==='published'&&p.published_at?p.published_at:p.scheduled_at||p.created_at)||0;
+  const list=all.filter(p=>f==='queue'?QUEUE.includes(p.status):f==='all'?true:p.status===f);
+  const rank=p=>p.status==='needs_owner'?0:p.status==='failed'?1:2;
+  if(f==='queue')list.sort((a,b)=>rank(a)-rank(b)||when(a)-when(b));else list.sort((a,b)=>when(b)-when(a));
+  const chips=[['queue','คิว'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']];
+  const fb=!!FB.connected,th=!!TH.connected;
+  const exp=S.pexp||{};
+  const dayKey=t=>{const d=new Date(t);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();};
+  const dayLabel=t=>{if(!t)return 'ยังไม่กำหนดเวลา';const k=dayKey(t),now=Date.now();if(k===dayKey(now))return 'วันนี้';if(k===dayKey(now+864e5))return 'พรุ่งนี้';if(k===dayKey(now-864e5))return 'เมื่อวาน';return new Date(t).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'});};
+  const isVid=u=>/\.(mp4|mov|m4v)(\?|$)/i.test(u||'');
+  const card=p=>{const st=STATUS_TH[p.status]||[p.status,'gray'];const editable=['draft','needs_owner','approved','failed','rejected'].includes(p.status);const open=!!exp[p.id];
+    const thumb=p.image_url?(isVid(p.image_url)?(open?`<video src="${esc(p.image_url)}" controls playsinline preload="metadata" style="width:100%;max-height:420px;border-radius:12px;background:#000"></video>`:`<video class="thumb" src="${esc(p.image_url)}#t=0.5" muted playsinline preload="metadata" data-a="pexp" data-id="${p.id}"></video>`):`<img src="${esc(p.image_url)}" alt="" data-a="pexp" data-id="${p.id}">`):`<div class="noimg" data-a="pexp" data-id="${p.id}">ไม่มีรูป</div>`;
+    const t=when(p);
+    return `<div class="post ${open?'':'compact'}" data-pid="${p.id}">
+      ${thumb}
       <div>
-        <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> ${p.channel==='threads'?'<span class="badge gray" title="โพสต์ช่อง Threads">Threads</span> ':''}<span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
-          <span class="fine">${p.published_at?'โพสต์เมื่อ '+fdt(Date.parse(p.published_at)):p.scheduled_at?'กำหนดโพสต์ '+fdt(Date.parse(p.scheduled_at)):'ยังไม่กำหนดเวลา'}</span></div>
-        ${editable?`<textarea class="input" id="pt-${p.id}" style="margin-top:8px">${esc(p.text||'')}</textarea>`:`<p style="white-space:pre-wrap;margin-top:8px">${esc(p.text||'')}</p>`}
+        <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> ${p.channel==='threads'?'<span class="badge gray" title="โพสต์ช่อง Threads">Threads</span> ':''}<span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
+          <span class="fine">${p.published_at?'โพสต์เมื่อ '+fdt(Date.parse(p.published_at)):p.scheduled_at?'กำหนด '+fdt(Date.parse(p.scheduled_at)):'ยังไม่กำหนดเวลา'}</span></div>
+        ${open&&editable?`<textarea class="input" id="pt-${p.id}" style="margin-top:8px">${esc(p.text||'')}</textarea>`:open?`<p style="white-space:pre-wrap;margin-top:8px">${esc(p.text||'')}</p>`:`<p class="ptxt" data-a="pexp" data-id="${p.id}" title="กดเพื่อดูเต็ม/แก้ไข">${esc(p.text||'(ไม่มีข้อความ)')}</p>`}
         ${p.error?`<p class="err" style="margin-top:6px">${esc(p.error)}</p>`:''}
-        ${p.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจาก ${esc(member(p.source||'writer').name)}: ${esc(p.notes)}</p>`:''}
-        <div class="meta">
+        ${open&&p.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจาก ${esc(member(p.source||'writer').name)}: ${esc(p.notes)}</p>`:''}
+        ${open?`<div class="meta">
           ${editable?`<label>เวลาโพสต์ <input class="input" type="datetime-local" id="ps-${p.id}" value="${p.scheduled_at?toLocalInput(Date.parse(p.scheduled_at)):''}" style="width:auto;display:inline-block;padding:6px 8px"></label>`:''}
           ${p.link_url?`<a href="${esc(p.link_url)}" target="_blank" rel="noopener noreferrer">ลิงก์ในโพสต์</a>`:''}
           ${p.fb_post_id?`<a href="https://www.facebook.com/${esc(p.fb_post_id)}" target="_blank" rel="noopener noreferrer">ดูบนเพจ</a>`:''}
-        </div>
+        </div>`:''}
         <div class="acts">
           ${['draft','needs_owner','failed','rejected'].includes(p.status)?`<button class="btn btn-cta btn-sm" data-a="postApprove" data-id="${p.id}">อนุมัติ${fb?'':' (โพสต์เองเมื่อถึงเวลา)'}</button>`:''}
-          ${editable?`<button class="btn btn-line btn-sm" data-a="postSave" data-id="${p.id}">บันทึกที่แก้</button>`:''}
-          ${p.status==='approved'&&fb?`<button class="btn btn-dark btn-sm" data-a="postNow" data-id="${p.id}">โพสต์เลยตอนนี้</button>`:''}
-          <button class="btn btn-line btn-sm" data-a="postCopy" data-id="${p.id}">คัดลอกข้อความ</button>
-          ${p.image_url?`<a class="btn btn-line btn-sm" href="${esc(p.image_url)}" download target="_blank" rel="noopener noreferrer">เปิดรูป</a>`:''}
-          ${p.status==='approved'&&!fb?`<button class="btn btn-line btn-sm" data-a="postMarkDone" data-id="${p.id}">โพสต์เองแล้ว ✓</button>`:''}
           ${p.status!=='rejected'&&p.status!=='published'?`<button class="btn btn-line btn-sm" data-a="postReject" data-id="${p.id}">ปัดตก</button>`:''}
+          ${open&&editable?`<button class="btn btn-line btn-sm" data-a="postSave" data-id="${p.id}">บันทึกที่แก้</button>`:''}
+          ${open&&p.status==='approved'&&fb?`<button class="btn btn-dark btn-sm" data-a="postNow" data-id="${p.id}">โพสต์เลยตอนนี้</button>`:''}
+          ${open?`<button class="btn btn-line btn-sm" data-a="postCopy" data-id="${p.id}">คัดลอกข้อความ</button>`:''}
+          ${open&&p.image_url?`<a class="btn btn-line btn-sm" href="${esc(p.image_url)}" download target="_blank" rel="noopener noreferrer">${isVid(p.image_url)?'เปิดคลิป':'เปิดรูป'}</a>`:''}
+          ${open&&p.status==='approved'&&!fb?`<button class="btn btn-line btn-sm" data-a="postMarkDone" data-id="${p.id}">โพสต์เองแล้ว ✓</button>`:''}
+          <button class="btn btn-line btn-sm" data-a="pexp" data-id="${p.id}">${open?'ย่อ':(editable?'แก้ไข / ดูเต็ม':'ดูเต็ม')}</button>
         </div>
       </div></div>`;};
+  let lastDay=null;
+  const rows=list.map(p=>{const t=p.status==='published'?when(p):(p.scheduled_at?Date.parse(p.scheduled_at):0);const k=t?dayKey(t):'none';let sep='';if(k!==lastDay){lastDay=k;sep=`<div class="daysep">${dayLabel(t)}</div>`;}return sep+card(p);}).join('');
+  const setupOpen=!!S.csetup||(!fb&&!th)||S.fbOpen||S.thOpen;
   return `
-  <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
+  <div class="cbar">
+    <span class="cstat"><span><i class="dot ${fb?'on':'off'}"></i>เพจ ${fb?'<b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${th?'on':'off'}"></i>Threads ${th?'<b>@'+esc(TH.user&&TH.user.username||'')+'</b>':'ยังไม่เชื่อม'}</span><button class="btn btn-line btn-sm" data-a="csetup" aria-expanded="${setupOpen}">${setupOpen?'ซ่อนการตั้งค่า':'ตั้งค่า / ทดสอบ'}</button></span>
+    <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="postRefresh">รีเฟรช</button><button class="btn btn-dark btn-sm" data-a="postNew">+ เพิ่มโพสต์เอง</button></span>
+  </div>
+  ${setupOpen?`<div class="card" style="padding:12px 14px;margin-bottom:10px">
     <span class="fine">${fb?'✅ เชื่อมเพจ <b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b> แล้ว โพสต์ที่อนุมัติจะขึ้นเพจอัตโนมัติวันละ 2 รอบ 10:00 และ 19:05 น. <button class="btn btn-line btn-sm" data-a="fbTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="fbDisconnect">ยกเลิกการเชื่อม</button>':'⚠️ ยังไม่ได้เชื่อมเพจ Facebook — โพสต์ที่อนุมัติต้องคัดลอกไปโพสต์เอง <button class="btn btn-cta btn-sm" data-a="fbOpen">เชื่อมเพจ Facebook</button>'}</span>
     <span class="fine" style="display:block;margin-top:6px">${TH.connected?'✅ เชื่อม Threads <b>@'+esc(TH.user&&TH.user.username||'')+'</b> แล้ว โพสต์ช่อง Threads ที่อนุมัติจะขึ้นอัตโนมัติวันละ 2 รอบ 10:00 และ 19:05 น. <button class="btn btn-line btn-sm" data-a="thTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="thDisconnect">ยกเลิก</button>':'○ ยังไม่ได้เชื่อม Threads (ทำการตลาดคู่กับเพจ) <button class="btn btn-line btn-sm" data-a="thOpen">เชื่อม Threads</button>'}</span>
-    <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="postRefresh">รีเฟรช</button><button class="btn btn-dark btn-sm" data-a="postNew">+ เพิ่มโพสต์เอง</button></span>
   </div>
   ${S.fbOpen&&!fb?`<div class="card" style="padding:16px;margin-bottom:12px">
     <h3 class="h3" style="margin-top:0">เชื่อมเพจ Facebook (ทำครั้งเดียว)</h3>
@@ -1516,10 +1547,11 @@ function contentTab(){
     <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="thConnect">บันทึกและไปหน้าอนุญาต</button><button class="btn btn-line btn-sm" data-a="thOpen">ปิด</button></div>
     ${TH.msg?`<p class="fine" style="margin-top:8px">${esc(TH.msg)}</p>`:''}
   </div>`:''}
-  ${factoryBox()}
-  ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${(()=>{const seen={};return notes.filter(n=>{const k=n.source||'x';if(seen[k])return false;seen[k]=1;return true;}).slice(0,7);})().map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:''}
-  <div class="filters" style="margin-top:8px"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}</button>`).join('')}</div></div>
-  ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?list.map(card).join(''):`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}`;
+`:''}
+  <div class="filters sticky"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}<span class="n">${cnt[c[0]]}</span>${c[0]==='queue'&&urgent?`<span class="n alert">${urgent}</span>`:''}</button>`).join('')}</div>${f==='queue'?`<span class="fine">เรียงตามความด่วน แล้วตามเวลาโพสต์ · กดข้อความเพื่อดูเต็ม/แก้ไข</span>`:''}</div>
+  ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?rows:`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}
+  ${(()=>{const fx=factoryBox();return fx?`<details class="fold"><summary>คิวโรงงานผลิตชีท</summary>${fx.replace('<h3 class="h3">คิวโรงงานผลิตชีท</h3>','')}</details>`:'';})()}
+  ${notes.length?`<details class="fold"><summary>รายงานล่าสุดจากทีม <span class="fine">(${Math.min(7,new Set(notes.map(n=>n.source||'x')).size)} คน · อ่านฉบับเต็มได้ที่แท็บทีมและห้องเอกสาร)</span></summary>${(()=>{const seen={};return notes.filter(n=>{const k=n.source||'x';if(seen[k])return false;seen[k]=1;return true;}).slice(0,7);})().map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:</details>`:''}`;
 }
 function pixelTab(){
   const live=/^\d{6,20}$/.test(String(D.settings.pixelId||''));
@@ -1991,6 +2023,8 @@ function act(a,el){
     case 'recheckOrder':verifyOrder();break;
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
+    case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
+    case 'csetup':S.csetup=!S.csetup;if(!S.csetup){S.fbOpen=false;S.thOpen=false;}render(true);break;
     case 'postRefresh':Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));break;
     case 'fbOpen':S.fbOpen=!S.fbOpen;FB.msg='';FB.choose=null;render(true);break;
     case 'thOpen':S.thOpen=!S.thOpen;TH.msg='';render(true);break;
@@ -2019,7 +2053,7 @@ function act(a,el){
     case 'fbDisconnect':if(!confirm('ยกเลิกการเชื่อมเพจ? โพสต์อัตโนมัติจะหยุดจนกว่าจะเชื่อมใหม่'))break;adminPost('/api/fb?action=disconnect').then(async()=>{await loadFbStatus();render(true);toast('ยกเลิกแล้ว');});break;
     case 'postNew':{sb.from('posts').insert({status:'draft',source:'manual',kind:'other',text:''}).select().single().then(({data,error})=>{if(error)return toast('เพิ่มไม่ได้: '+error.message);POSTS.unshift(data);S.cfilter='queue';render(true);});break;}
     case 'postSave':case 'postApprove':{
-      const ta=$('#pt-'+id),dt=$('#ps-'+id);const text=ta?ta.value.trim():'';const when=dt&&dt.value?new Date(dt.value).toISOString():null;
+      const ta=$('#pt-'+id),dt=$('#ps-'+id),cur=POSTS.find(x=>x.id===id)||{};const text=(ta?ta.value:cur.text||'').trim();const when=dt?(dt.value?new Date(dt.value).toISOString():null):(cur.scheduled_at||null);
       if(!text){toast('ใส่ข้อความก่อน');break;}
       const patch={text,scheduled_at:when};
       if(a==='postApprove'){if(!when){toast('ตั้งเวลาโพสต์ก่อนอนุมัติ');break;}patch.status='approved';patch.error=null;}
