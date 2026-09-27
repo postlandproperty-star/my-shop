@@ -454,7 +454,8 @@ export default async function handler(req, res) {
       if (req.query.library) {
         // ค้นเสียงจากคลังสาธารณะของ ElevenLabs ตามภาษา เช่น &library=th
         const lang = String(req.query.library).replace(/[^a-z]/g, '').slice(0, 5) || 'th';
-        const r = await fetch(`https://api.elevenlabs.io/v1/shared-voices?language=${lang}&page_size=30`, { headers: { 'xi-api-key': EK } });
+        const q = String(req.query.q || '').replace(/[^\w\s\u0E00-\u0E7F-]/g, '').slice(0, 40);
+        const r = await fetch(`https://api.elevenlabs.io/v1/shared-voices?page_size=50${lang !== 'any' ? `&language=${lang}` : ''}${q ? `&search=${encodeURIComponent(q)}` : ''}`, { headers: { 'xi-api-key': EK } });
         const j = await r.json().catch(() => ({}));
         return res.status(200).json({ ok: r.ok, voices: (j.voices || []).map((v) => ({ owner: v.public_owner_id, id: v.voice_id, name: v.name, gender: v.gender, age: v.age, accent: v.accent, desc: v.descriptive, use_case: v.use_case, preview: v.preview_url, uses: v.cloned_by_count })), error: r.ok ? undefined : `ElevenLabs ${r.status}` });
       }
