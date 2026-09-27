@@ -489,7 +489,7 @@ export default async function handler(req, res) {
       const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}?output_format=mp3_44100_128`, {
         method: 'POST', headers: { 'xi-api-key': EK, 'Content-Type': 'application/json' },
         // language_code บังคับภาษาได้เฉพาะ turbo/flash v2.5 (multilingual_v2 และ v3 เดาภาษาจากข้อความเอง)
-        body: JSON.stringify({ text, model_id: String(body.model || 'eleven_multilingual_v2'), ...(/v2_5/.test(String(body.model || '')) ? { language_code: String(body.language || 'th') } : {}), voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true, speed } }),
+        body: JSON.stringify({ text, model_id: String(body.model || 'eleven_v3'), ...(/v2_5/.test(String(body.model || '')) ? { language_code: String(body.language || 'th') } : {}), voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true, speed } }),
       });
       if (!r.ok) { const t = await r.text().catch(() => ''); return res.status(502).json({ ok: false, error: `ElevenLabs ${r.status}: ${t.slice(0, 200)}` }); }
       const buf = Buffer.from(await r.arrayBuffer());

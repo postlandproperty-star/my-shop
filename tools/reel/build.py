@@ -11,7 +11,7 @@ API = os.environ.get('API_BASE', 'https://my-shop-lake-ten.vercel.app/api/conten
 KEY = os.environ.get('CONTENT_KEY', '')
 VOICE = os.environ.get('VOICE', 'J5M1BLQpOJ3qx2FU6EG0')  # เสียงประจำที่คุณแดนเลือก (ElevenLabs)
 SPEED = float(os.environ.get('SPEED', '1.0'))
-MODEL = os.environ.get('MODEL', 'eleven_multilingual_v2')  # โมเดลเสียง ElevenLabs (eleven_v3 / eleven_turbo_v2_5 / eleven_flash_v2_5)
+MODEL = os.environ.get('MODEL', 'eleven_v3')  # โมเดลเสียง ElevenLabs (eleven_v3 / eleven_turbo_v2_5 / eleven_flash_v2_5)
 DRY = os.environ.get('DRY') == '1'  # DRY=1: เลือกรูป+วาดสไลด์อย่างเดียว ไม่สร้างเสียง ไม่ตัดต่อ (ไว้ตรวจรูปก่อน)
 W, H = 1080, 1920
 BG = (43, 71, 240); WHITE = (255, 255, 255); INK = (26, 26, 26); RED = (239, 91, 76); YEL = (245, 197, 24); GREEN = (22, 163, 74); BLUE = (43, 71, 240)
