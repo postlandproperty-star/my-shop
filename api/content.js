@@ -48,7 +48,7 @@ function extractTodo(text) {
   const lines = String(text || '').split('\n');
   const out = [];
   for (let i = 0; i < lines.length; i++) {
-    const head = TODO_HEADS.find((h) => h.re.test(lines[i]) && lines[i].trim().length < 140);
+    const head = TODO_HEADS.find((h) => { const idx = lines[i].search(h.re); return idx >= 0 && idx <= 4; });
     if (!head) continue;
     const items = [];
     const rest = lines[i].replace(head.re, '').replace(/^[\s:：)]+|^\([^)]*\)\s*:?/g, '').trim();
@@ -62,7 +62,8 @@ function extractTodo(text) {
     for (const raw of items) {
       const t = raw.replace(/^[-•*▪◦]\s*|^\d+[.)]\s*|^[ก-ฮ][.)]\s*/, '').trim();
       if (!t || /^ไม่มี(ครับ|ค่ะ)?[.!]?$/.test(t) || t.length < 6) continue;
-      out.push({ type: head.type, text: t.slice(0, 400) });
+      // ประโยคเดียวที่รวมหลายงาน ("ช่วย A และช่วย B") แยกเป็นคนละรายการ
+      for (const part of t.split(/\s+และ(?=ช่วย|ขอ|อยากให้)/)) { const pt = part.trim(); if (pt.length >= 6) out.push({ type: head.type, text: pt.slice(0, 400) }); }
     }
   }
   return out;
