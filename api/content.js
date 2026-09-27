@@ -35,6 +35,7 @@ const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audie
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
+const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์' };
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
 const cronOk = (req) => !!req.headers['x-vercel-cron'] || (process.env.CRON_SECRET && req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`);
 
@@ -126,9 +127,16 @@ export default async function handler(req, res) {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const since = new Date(Date.now() - 14 * 864e5).toISOString();
       const notes = await sb(`posts?status=in.(note,log)&created_at=gte.${since}&select=source,kind,text,week,created_at&order=created_at.desc&limit=120`);
-      const plan = notes.find((n) => n.kind === 'plan') || null;
+      let plan = notes.find((n) => n.kind === 'plan') || null;
+      // ข้อความจากเจ้าของถึงสมาชิก (kind reply, text ขึ้นต้น @<member>) 7 วันล่าสุด แนบท้ายแผนให้ทุกคนอ่านเจอ
+      const weekAgo = Date.now() - 7 * 864e5;
+      const msgs = notes.filter((n) => n.kind === 'reply' && Date.parse(n.created_at) >= weekAgo).map((n) => { const m = String(n.text || '').match(/^@(\w+)\s+([\s\S]*)$/); return m ? { to: m[1], name: MEMBER_TH[m[1]] || m[1], text: m[2].trim(), created_at: n.created_at } : null; }).filter(Boolean);
+      if (msgs.length) {
+        const block = '== ข้อความจากคุณแดน (เจ้าของร้าน) ถึงสมาชิก ตอบกลับสั้นๆ ในรายงาน/Slack ของคุณ และทำตามถ้าอยู่ในหน้าที่ ==\n' + msgs.map((m) => `- ถึง ${m.name} (${m.to}) ${m.created_at.slice(0, 10)}: ${m.text}`).join('\n');
+        plan = plan ? { ...plan, text: `${plan.text}\n\n${block}`, created_at: msgs[0].created_at > plan.created_at ? msgs[0].created_at : plan.created_at } : { source: 'manual', kind: 'plan', text: block, created_at: msgs[0].created_at };
+      }
       const latest = {};
-      for (const n of notes) { if (n.kind === 'plan' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
+      for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
       const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source&order=scheduled_at.asc&limit=30`);
       return res.status(200).json({ ok: true, plan, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
     }
@@ -243,6 +251,16 @@ export default async function handler(req, res) {
       }
       await saveJobs(jobs);
       return res.status(200).json({ ok: true, job });
+    }
+    if (action === 'reply') {
+      // เจ้าของตอบ/สั่งสมาชิกจากการ์ดทีม → เก็บเป็น note kind reply (ขึ้นกระดานทีมท้ายแผน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req);
+      const to = String(body.to || ''); const text = String(body.text || '').trim().slice(0, 1500);
+      if (!MEMBER_TH[to] || !text) return res.status(400).json({ ok: false, error: 'ต้องระบุผู้รับและข้อความ' });
+      await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'reply', source: 'manual', text: `@${to} ${text}` }], prefer: 'return=minimal' });
+      return res.status(200).json({ ok: true, to, name: MEMBER_TH[to] });
     }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
