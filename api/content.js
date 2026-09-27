@@ -15,6 +15,7 @@
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
 import { loadShop, verifyAdmin, sbPatch } from '../lib/shop.js';
 import { loadFb, publishToPage } from '../lib/fb.js';
+import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded } from '../lib/threads.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
@@ -36,6 +37,8 @@ async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&sele
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์' };
+// คอลัมน์ channel/th_post_id (Threads) มีหรือยัง (เพิ่มด้วย SQL ใน Supabase) ถ้ายังไม่มี ระบบทำงานแบบ Facebook อย่างเดียว
+async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
 const cronOk = (req) => !!req.headers['x-vercel-cron'] || (process.env.CRON_SECRET && req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`);
 
@@ -69,22 +72,27 @@ export default async function handler(req, res) {
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const shop = await loadShop();
-      const recent = await sb('posts?select=id,status,kind,text,scheduled_at,published_at&order=created_at.desc&limit=30');
+      const hasCh = await channelCol();
+      const recent = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,notes${hasCh ? ',channel' : ''}&order=created_at.desc&limit=40`);
+      const thConn = threadsConnected(await loadThreads());
       const products = shop.products.filter((p) => p.status === 'published').map((p) => ({
         id: p.id, slug: p.slug, name: p.name, headline: p.headline, desc: p.desc, price: p.price, fullPrice: p.fullPrice,
         features: p.features, specs: p.specs, toc: p.toc, forwho: p.forwho, pains: p.pains, faq: p.faq, images: p.images || [],
         url: `https://my-shop-lake-ten.vercel.app/p/${p.slug}`,
       }));
       const trend = await sb('posts?status=eq.note&kind=eq.trend&select=text,created_at&order=created_at.desc&limit=1');
-      return res.status(200).json({ ok: true, shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '', products }, recentPosts: recent, trendBrief: trend?.[0] || null });
+      return res.status(200).json({ ok: true, shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '', products }, recentPosts: recent, trendBrief: trend?.[0] || null, threadsReady: hasCh && thConn, threadsConnected: thConn });
     }
     if (action === 'drafts') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       const body = await readBody(req);
-      const list = Array.isArray(body.posts) ? body.posts : Array.isArray(body) ? body : [];
-      const rows = list.filter((p) => p && String(p.text || '').trim()).slice(0, 10).map((p) => ({
-        status: 'draft', source: 'writer', kind: String(p.kind || 'tip').slice(0, 20),
+      const list0 = Array.isArray(body.posts) ? body.posts : Array.isArray(body) ? body : [];
+      const hasCh = await channelCol();
+      const skippedThreads = hasCh ? 0 : list0.filter((p) => p && p.channel === 'threads').length;
+      const list = hasCh ? list0 : list0.filter((p) => !(p && p.channel === 'threads'));
+      const rows = list.filter((p) => p && String(p.text || '').trim()).slice(0, 12).map((p) => ({
+        status: 'draft', source: 'writer', kind: String(p.kind || 'tip').slice(0, 20), ...(hasCh ? { channel: p.channel === 'threads' ? 'threads' : 'facebook' } : {}),
         text: String(p.text).slice(0, 4000), image_url: p.image_url ? String(p.image_url).slice(0, 500) : null,
         link_url: p.link_url ? String(p.link_url).slice(0, 500) : null,
         scheduled_at: p.scheduled_at && !isNaN(Date.parse(p.scheduled_at)) ? new Date(p.scheduled_at).toISOString() : null,
@@ -93,14 +101,15 @@ export default async function handler(req, res) {
       if (!rows.length) return res.status(400).json({ ok: false, error: 'no posts' });
       for (const r of rows) r.image_url = await cacheImage(r.image_url);
       const inserted = await sb('posts', { method: 'POST', body: rows, prefer: 'return=representation' });
-      return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id) });
+      return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id) , skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
     }
     if (action === 'report') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const since = new Date(Date.now() - 7 * 864e5).toISOString();
       const prev = new Date(Date.now() - 14 * 864e5).toISOString();
       const orders = await sb(`orders?select=created_at,paid_at,product_name,amount,status,campaign&created_at=gte.${prev}&order=created_at.desc`);
-      const posts = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,fb_post_id&created_at=gte.${prev}&order=created_at.desc`);
+      const hasCh = await channelCol();
+      const posts = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,fb_post_id${hasCh ? ',channel,th_post_id' : ''}&created_at=gte.${prev}&order=created_at.desc`);
       const shop = await loadShop();
       const priv = await sb('shop_state?id=eq.private&select=data');
       const campaigns = priv?.[0]?.data?.campaigns || [];
@@ -137,8 +146,8 @@ export default async function handler(req, res) {
       }
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
-      const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source&order=scheduled_at.asc&limit=30`);
-      return res.status(200).json({ ok: true, plan, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
+      const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source${(await channelCol()) ? ',channel' : ''}&order=scheduled_at.asc&limit=40`);
+      return res.status(200).json({ ok: true, plan, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
     }
     if (action === 'images') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -266,20 +275,30 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !cronOk(req) && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const fb = await loadFb();
-      if (!fb) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)' });
+      let th = await loadThreads(); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
+      if (!fb && !th) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)' });
       const id = String(req.query.id || '');
       const due = id
         ? await sb(`posts?id=eq.${encodeURIComponent(id)}&status=in.(approved,draft,failed,needs_owner)&select=*`)
         : await sb(`posts?status=eq.approved&scheduled_at=lte.${new Date().toISOString()}&select=*&order=scheduled_at.asc&limit=5`);
       const results = [];
       for (const p of due) {
+        const ch = p.channel === 'threads' ? 'threads' : 'facebook';
+        if (ch === 'threads' && !th) { results.push({ id: p.id, ok: false, error: 'ยังไม่ได้เชื่อม Threads' }); continue; }
+        if (ch === 'facebook' && !fb) { results.push({ id: p.id, ok: false, error: 'ยังไม่ได้เชื่อมเพจ Facebook' }); continue; }
         // จองสิทธิ์ก่อนโพสต์ กันโพสต์ซ้ำเมื่อ cron กับแอดมินชนกัน
         const claimed = await sbPatch(`posts?id=eq.${p.id}&status=neq.publishing&status=neq.published`, { status: 'publishing' });
         if (!claimed.length) continue;
         try {
-          const fbId = await publishToPage(fb, p);
-          await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), fb_post_id: String(fbId), error: null });
-          results.push({ id: p.id, ok: true, fb_post_id: fbId });
+          if (ch === 'threads') {
+            const thId = await publishToThreads(th, p);
+            await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), th_post_id: String(thId), error: null });
+            results.push({ id: p.id, ok: true, channel: 'threads', th_post_id: thId });
+          } else {
+            const fbId = await publishToPage(fb, p);
+            await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), fb_post_id: String(fbId), error: null });
+            results.push({ id: p.id, ok: true, fb_post_id: fbId });
+          }
         } catch (e) {
           await sbPatch(`posts?id=eq.${p.id}`, { status: 'failed', error: String(e.message || e).slice(0, 500) });
           results.push({ id: p.id, ok: false, error: String(e.message || e) });

@@ -482,11 +482,6 @@ async function autoSync(force){
   catch(e){S.syncMsg='เชื่อมต่อ Stripe ไม่ได้';}
   syncing=false;render(true);
 }
-async function adminPost(path,body){
-  const {data}=await sb.auth.getSession();
-  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(data&&data.session?data.session.access_token:'')},body:JSON.stringify(body||{})});
-  return r.json();
-}
 async function adminApi(path){
   const {data}=await sb.auth.getSession();
   const r=await fetch(path,{headers:{Authorization:'Bearer '+(data&&data.session?data.session.access_token:'')}});
@@ -1276,7 +1271,9 @@ function factoryBox(){
 let POSTS=[],postsLoaded=false;
 const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
-let FB={};
+let FB={},TH={};
+(function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
+async function loadThStatus(){try{const j=await adminApi('/api/threads?action=status');if(j.ok)TH=Object.assign(TH,{connected:j.connected,user:j.user,app:j.app,redirect:j.redirect});}catch(e){}}
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
 async function adminPost(path,body){const {data}=await sb.auth.getSession();const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+(data&&data.session?data.session.access_token:'')},body:JSON.stringify(body||{})});return r.json();}
 async function loadPosts(){
@@ -1367,7 +1364,7 @@ const member=src=>TEAM[src]||{name:src||'ทีม',role:'',bg:'#D3DBE8',img:AV+
 const ava=(src,sm)=>{const m=member(src);return `<img class="ava${sm?' sm':''}" style="background:${m.bg}" src="${m.img}" alt="" title="${esc(m.name)} · ${esc(m.role)}" loading="lazy">`;};
 const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<span>${esc(m.name)}</span></span>`;};
 function contentTab(){
-  if(!postsLoaded){Promise.all([loadPosts(),loadFbStatus()]).then(()=>render(true));}
+  if(!postsLoaded){Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));}
   const f=S.cfilter||'queue';
   const notes=POSTS.filter(p=>p.status==='note'&&p.kind!=='reply');
   const list=POSTS.filter(p=>p.status!=='note'&&p.status!=='log').filter(p=>f==='queue'?['needs_owner','draft','approved','failed','publishing'].includes(p.status):f==='all'?true:p.status===f);
@@ -1378,7 +1375,7 @@ function contentTab(){
     return `<div class="post" data-pid="${p.id}">
       ${p.image_url?`<img src="${esc(p.image_url)}" alt="">`:`<div class="noimg">ไม่มีรูป</div>`}
       <div>
-        <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
+        <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> ${p.channel==='threads'?'<span class="badge gray" title="โพสต์ช่อง Threads">Threads</span> ':''}<span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
           <span class="fine">${p.published_at?'โพสต์เมื่อ '+fdt(Date.parse(p.published_at)):p.scheduled_at?'กำหนดโพสต์ '+fdt(Date.parse(p.scheduled_at)):'ยังไม่กำหนดเวลา'}</span></div>
         ${editable?`<textarea class="input" id="pt-${p.id}" style="margin-top:8px">${esc(p.text||'')}</textarea>`:`<p style="white-space:pre-wrap;margin-top:8px">${esc(p.text||'')}</p>`}
         ${p.error?`<p class="err" style="margin-top:6px">${esc(p.error)}</p>`:''}
@@ -1401,6 +1398,7 @@ function contentTab(){
   return `
   <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
     <span class="fine">${fb?'✅ เชื่อมเพจ <b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b> แล้ว โพสต์ที่อนุมัติจะขึ้นเพจอัตโนมัติเวลา 19:05 น. <button class="btn btn-line btn-sm" data-a="fbTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="fbDisconnect">ยกเลิกการเชื่อม</button>':'⚠️ ยังไม่ได้เชื่อมเพจ Facebook — โพสต์ที่อนุมัติต้องคัดลอกไปโพสต์เอง <button class="btn btn-cta btn-sm" data-a="fbOpen">เชื่อมเพจ Facebook</button>'}</span>
+    <span class="fine" style="display:block;margin-top:6px">${TH.connected?'✅ เชื่อม Threads <b>@'+esc(TH.user&&TH.user.username||'')+'</b> แล้ว โพสต์ช่อง Threads ที่อนุมัติจะขึ้นอัตโนมัติ 19:05 น. <button class="btn btn-line btn-sm" data-a="thTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="thDisconnect">ยกเลิก</button>':'○ ยังไม่ได้เชื่อม Threads (ทำการตลาดคู่กับเพจ) <button class="btn btn-line btn-sm" data-a="thOpen">เชื่อม Threads</button>'}</span>
     <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="postRefresh">รีเฟรช</button><button class="btn btn-dark btn-sm" data-a="postNew">+ เพิ่มโพสต์เอง</button></span>
   </div>
   ${S.fbOpen&&!fb?`<div class="card" style="padding:16px;margin-bottom:12px">
@@ -1416,6 +1414,19 @@ function contentTab(){
     ${FB.choose?`<p class="fine" style="margin-top:8px">พบหลายเพจ เลือกเพจที่จะโพสต์:</p><div class="row" style="gap:8px;flex-wrap:wrap">${FB.choose.map(c=>`<button class="btn btn-dark btn-sm" data-a="fbConnect" data-page="${c.id}">${esc(c.name)} (${c.followers} ผู้ติดตาม)</button>`).join('')}</div>`:''}
     <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="fbConnect">เชื่อมเพจ</button><button class="btn btn-line btn-sm" data-a="fbOpen">ปิด</button></div>
     ${FB.msg?`<p class="fine" style="margin-top:8px">${esc(FB.msg)}</p>`:''}
+  </div>`:''}
+  ${S.thOpen&&!TH.connected?`<div class="card" style="padding:16px;margin-bottom:12px">
+    <b>เชื่อมบัญชี Threads (ทำครั้งเดียว ประมาณ 15 นาที)</b>
+    <ol class="fine" style="margin:8px 0 0 18px;line-height:1.7">
+      <li>บัญชี Threads ของร้านต้องผูกกับ Instagram แบบ Professional (Business หรือ Creator)</li>
+      <li>เปิด <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">Meta for Developers</a> → แอปเดิมที่ใช้กับเพจ → Add use case → <b>Access the Threads API</b> → Customize → เปิดสิทธิ์ threads_basic, threads_content_publish, threads_manage_insights, threads_manage_replies, threads_read_replies</li>
+      <li>ในหน้าตั้งค่า Threads API ใส่ <b>Redirect Callback URL</b>: <code>${esc(TH.redirect||'https://my-shop-lake-ten.vercel.app/api/threads-callback')}</code></li>
+      <li>เพิ่มบัญชี Threads ของร้านเป็น <b>Threads Tester</b> (App roles) แล้วไปกดยอมรับในแอป Threads: Settings → Account → Website permissions → Invites</li>
+      <li>คัดลอก <b>Threads App ID</b> และ <b>Threads App Secret</b> (คนละค่ากับ Facebook App ดูในหน้า Threads API → Settings) ใส่ด้านล่าง แล้วกด "บันทึกและไปหน้าอนุญาต" ล็อกอิน Threads ด้วยบัญชีร้านแล้วกดอนุญาต</li>
+    </ol>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><input class="input" id="th-appid" placeholder="Threads App ID" style="flex:1;min-width:160px"><input class="input" id="th-secret" type="password" placeholder="Threads App Secret" style="flex:2;min-width:200px"></div>
+    <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="thConnect">บันทึกและไปหน้าอนุญาต</button><button class="btn btn-line btn-sm" data-a="thOpen">ปิด</button></div>
+    ${TH.msg?`<p class="fine" style="margin-top:8px">${esc(TH.msg)}</p>`:''}
   </div>`:''}
   ${factoryBox()}
   ${notes.length?`<h3 class="h3">รายงานจากทีม</h3>${(()=>{const seen={};return notes.filter(n=>{const k=n.source||'x';if(seen[k])return false;seen[k]=1;return true;}).slice(0,7);})().map(nt=>`<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:8px">${ava(nt.source||'manager')}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(member(nt.source||'manager').role)} · ${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span></div>${esc(nt.text)}</div>`).join('')}`:''}
@@ -1726,8 +1737,12 @@ function act(a,el){
     case 'recheckOrder':verifyOrder();break;
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
-    case 'postRefresh':Promise.all([loadPosts(),loadFbStatus()]).then(()=>render(true));break;
+    case 'postRefresh':Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));break;
     case 'fbOpen':S.fbOpen=!S.fbOpen;FB.msg='';FB.choose=null;render(true);break;
+    case 'thOpen':S.thOpen=!S.thOpen;TH.msg='';render(true);break;
+    case 'thConnect':{const a=$('#th-appid'),b=$('#th-secret');const appId=a?a.value.trim():'',appSecret=b?b.value.trim():'';if(!appId||!appSecret){toast('ใส่ Threads App ID และ App Secret ก่อน');break;}TH.msg='กำลังบันทึก...';render(true);adminPost('/api/threads?action=setup',{appId,appSecret}).then(j=>{if(!j.ok)throw new Error(j.error||'บันทึกไม่สำเร็จ');return adminApi('/api/threads?action=authurl');}).then(j=>{if(!j.ok)throw new Error(j.error||'สร้างลิงก์ไม่ได้');window.location.href=j.url;}).catch(e=>{TH.msg='ไม่สำเร็จ: '+e.message;render(true);});break;}
+    case 'thTest':adminApi('/api/threads?action=test').then(j=>toast(j.ok?'Threads @'+j.user.username+' ใช้งานได้':'ใช้ไม่ได้: '+(j.error||''))).catch(()=>toast('เชื่อมต่อไม่ได้'));break;
+    case 'thDisconnect':if(!confirm('ยกเลิกการเชื่อม Threads? โพสต์ช่อง Threads จะหยุดจนกว่าจะเชื่อมใหม่'))break;adminPost('/api/threads?action=disconnect').then(async()=>{await loadThStatus();render(true);toast('ยกเลิกแล้ว');});break;
     case 'fbConnect':{const ta=$('#fb-token');const token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}FB.msg='กำลังเชื่อม...';render(true);
       adminPost('/api/fb?action=connect',{token,pageId:el.dataset.page||($('#fb-pageid')&&$('#fb-pageid').value.trim())||''}).then(async j=>{if(!j.ok){FB.msg='ไม่สำเร็จ: '+(j.error||'');render(true);return;}
         if(j.choose){FB.choose=j.choose;FB.msg='';const t=$('#fb-token');render(true);const t2=$('#fb-token');if(t2&&t)t2.value=token;return;}
