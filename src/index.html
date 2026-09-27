@@ -1848,7 +1848,7 @@ function chatTab(){
   const msgs=CHAT.msgs||[];let lastDay='';
   const rows=msgs.map(m=>{const d=new Date(m.at||m.created_at);const day=d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'});const sep=day!==lastDay?`<div class="daysep">${day}</div>`:'';lastDay=day;const me=m.source==='manual';const who=me?'คุณแดน':(TEAM[m.source]?TEAM[m.source].name:m.source);const tm=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
     return sep+`<div class="msg ${me?'me':''}">${ava(me?'manual':(TEAM[m.source]?m.source:'manager'),1)}<div><div class="who">${esc(who)}</div><div class="bub">${esc(m.text)}</div></div><span class="t">${tm} <button class="tx" data-a="chatRemove" data-id="${m.id}" title="ลบข้อความนี้" style="font-size:14px">×</button></span></div>`;}).join('');
-  return `<div class="chat"><p class="fine" style="margin:12px 0 4px">ห้องพักทีม: มุมคุยเล่นนอกเรื่องงานของทุกคน ข้อความทยอยเข้ามาทั้งวันตามจังหวะชีวิตแต่ละคน คุณแดนแวะมาทักได้ ทีมจะตอบในรอบเช้าถัดไป <button class="chip" data-a="chatRefresh">รีเฟรช</button></p>
+  return `<div class="chat"><p class="fine" style="margin:12px 0 4px">ห้องพักทีม (One Bangkok ชั้น 27 วิวสวนลุม): มุมคุยเล่นนอกเรื่องงานของทุกคน ข้อความทยอยเข้ามาทั้งวันตามจังหวะชีวิตแต่ละคน คุณแดนแวะมาทักได้ ทีมจะตอบในรอบเช้าถัดไป <button class="chip" data-a="chatRefresh">รีเฟรช</button></p>
   ${onlineStrip()}
   ${CHAT.err?`<p class="fine" style="color:var(--bad)">${esc(CHAT.err)}</p>`:''}
   ${CHAT.msgs===null?(CHAT.err?'':'<p class="fine">กำลังโหลด...</p>'):msgs.length?rows:'<p class="fine">ยังเงียบอยู่ ทุกคนจะเริ่มคุยกันรอบเที่ยงนี้</p>'}
@@ -1915,7 +1915,7 @@ function docsTab(){
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
-  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 12 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab · ออฟฟิศ One Bangkok ชั้น 27 ถนนพระราม 4 กรุงเทพฯ: เจ้าของร้าน 1 คน และผู้ช่วย AI 12 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">อารมณ์ทีมวันนี้ <span class="fine" style="font-weight:400">(คำนวณจากผลงานจริง 7 วันล่าสุด เหตุผลอยู่ใต้ชื่อ)</span></h3>
   ${moodStrip()}
   <h3 class="h3">สายบังคับบัญชา</h3>
