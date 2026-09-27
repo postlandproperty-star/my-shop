@@ -144,6 +144,11 @@ footer{padding:28px 0 110px;text-align:center}
 .ocard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;text-align:left}
 .ocard::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:var(--obg)}
 .ocard.vacant{border-style:dashed;opacity:.8}
+.mood{font-size:13px;color:var(--muted);margin-top:2px}.mood b{font-size:15px;margin-right:4px}
+.moods{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}
+.md{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 5px;font-size:13px}
+.md .e{position:relative;display:inline-block}.md .e .ava{width:34px;height:34px}.md .e span{position:absolute;right:-6px;bottom:-4px;font-size:15px;line-height:1;background:#fff;border-radius:50%;padding:1px}
+.md small{display:block;color:var(--muted);font-size:12px}
 .ocard .oh{display:flex;gap:10px;align-items:center;margin-top:4px}
 .ocard .oh img{width:56px;height:56px}
 .ocard .on{font-weight:700;font-size:16px}
@@ -1589,8 +1594,54 @@ const ORG={
   factory:{title:'Book Factory · ฝ่ายผลิต รับใบสั่งจากพี่ต้นโดยตรง',do:['ผลิตชีท PDF ตามใบสั่ง: ชีทแจกฟรี ชีทประกอบโพสต์ และชีทที่จะขาย','เขียนเนื้อหาใหม่ทั้งหมด ตรวจเฉลยทุกข้อ จัดหน้าตามธีม Modern Blue ของ SheetLab','เก็บไฟล์บนคลาวด์ของบริษัท (Storage ของโปรเจกต์ SheetLab) แล้วแจ้งพี่ต้นใน Slack'],when:'ทำงานอาทิตย์และจันทร์ 10:00 และ 22:00 (หลังพี่ต้นสั่งงาน) หรือเมื่อคุณแดนกดสั่ง ชีทแจกฟรีใช้ Sonnet ไม่เกิน 24 หน้า'},
   care:{title:'Customer Care · ฝ่ายสนับสนุน ตำแหน่งว่าง',do:['ร่างอีเมลติดตามผล 3 วันหลังซื้อ','ขอรีวิว แนะนำสินค้าถัดไป'],when:'ยังไม่เปิดใช้',vacant:true},
 };
+/* อารมณ์ของสมาชิก: คำนวณจากผลงานจริง 7 วันล่าสุด (ไม่ใช้ AI เพิ่ม) */
+function mood(k){
+  const now=Date.now(),D=864e5;
+  const notes=POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')&&p.kind!=='reply').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  const last=notes[0],lastT=last?String(last.text||''):'',age=last?(now-Date.parse(last.created_at))/D:99;
+  const wk=POSTS.filter(p=>p.status!=='note'&&p.status!=='log'&&now-Date.parse(p.created_at)<7*D);
+  const M=(e,t,why)=>({e,t,why});
+  switch(k){
+    case 'writer':{const mine=wk.filter(p=>p.source==='writer');const R=mine.filter(p=>p.status==='rejected').length,A=mine.filter(p=>['approved','published'].includes(p.status)).length,W=mine.filter(p=>p.status==='draft').length;
+      if(R>=2)return M('😣','เซ็งนิดๆ โดนปัดตก '+R+' ชิ้น','สัปดาห์นี้มีโพสต์ถูกพี่ต้นปัดตก '+R+' ชิ้น');
+      if(R===1)return M('😅','โดนแก้ 1 ชิ้น ตั้งใจใหม่','มีโพสต์ถูกปัดตก 1 ชิ้นสัปดาห์นี้');
+      if(W>0)return M('🤞','ลุ้นผลตรวจ '+W+' ชิ้น','ส่งร่างแล้ว '+W+' ชิ้น รอพี่ต้นตรวจ');
+      if(A>=5)return M('😄','ฟิน งานผ่านรัวๆ','ผ่านการอนุมัติ '+A+' ชิ้นในสัปดาห์นี้');
+      if(A>0)return M('🙂','พอใจ งานผ่าน '+A+' ชิ้น','ผ่านการอนุมัติ '+A+' ชิ้น');
+      return M('✍️','กำลังคิดหัวข้อใหม่','ยังไม่มีงานเข้าระบบสัปดาห์นี้');}
+    case 'designer':{if(/ไม่ผ่าน|ต้องแก้|แก้ใหม่/.test(lastT)&&age<8)return M('😤','งานเข้า รูปต้องแก้','รายงานล่าสุดมีรูปไม่ผ่านเกณฑ์');
+      if(/ผ่าน/.test(lastT)&&age<8)return M('😌','สบายใจ รูปผ่านหมด','รูปล่าสุดผ่านเกณฑ์');
+      return M('🎨','รอตรวจรูปชุดใหม่','ยังไม่มีรูปให้ตรวจรอบนี้');}
+    case 'trend':{if(age<3)return M('🤩','เจอของใหม่มาเล่า','เพิ่งส่งลิสต์หัวข้อเมื่อไม่นาน');
+      if(age<8)return M('🧐','กำลังส่องเทรนด์','ส่งงานล่าสุด '+Math.round(age)+' วันก่อน');
+      return M('😶','เงียบมานาน','ไม่ได้ส่งงานเกิน 1 สัปดาห์');}
+    case 'community':{const m=lastT.match(/รอตอบ\s*(\d+)/);const n=m?Number(m[1]):0;
+      if(n>=6&&age<2)return M('😵','มือเป็นระวิง คอมเมนต์ '+n,'คอมเมนต์รอตอบ '+n+' รายการ');
+      if(n>=1&&age<2)return M('😊','มีคนมาคุยด้วย','มีคอมเมนต์รอตอบ '+n+' รายการ');
+      return M('😴','เงียบ รอคอมเมนต์','ไม่มีคอมเมนต์ใหม่รอบล่าสุด');}
+    case 'analyst':{if(/ซื้อ\s*0\b|ยังไม่มีคนซื้อ|ไม่มีการซื้อ|ซื้อ 0 /.test(lastT)&&age<3)return M('😟','กังวล แอดยังไม่คุ้ม','รายงานล่าสุด: ใช้งบแล้วยังไม่มียอดซื้อ');
+      if(/ซื้อ\s*[1-9]/.test(lastT)&&age<3)return M('🤓','ตัวเลขดูดี','รายงานล่าสุดมียอดซื้อจากแอด');
+      return M('📊','กำลังดูตัวเลข','รอรอบรายงานถัดไป');}
+    case 'manager':{const failed=POSTS.filter(p=>p.status==='failed').length,own=POSTS.filter(p=>p.status==='needs_owner').length;const plan=POSTS.find(p=>p.status==='note'&&p.kind==='plan'&&now-Date.parse(p.created_at)<7*D);
+      if(failed)return M('😠','หงุดหงิด มีโพสต์ล้ม '+failed,'มีโพสต์ขึ้นไม่สำเร็จ '+failed+' ชิ้น');
+      if(own)return M('🤔','รอคุณแดนตัดสิน '+own+' เรื่อง','ส่งเรื่องให้เจ้าของแล้ว '+own+' รายการ');
+      if(plan)return M('😎','คุมเกมอยู่ แผนพร้อม','มีแผนสัปดาห์นี้แล้ว');
+      return M('📋','เตรียมประชุมทีม','ยังไม่มีแผนสัปดาห์นี้');}
+    case 'factory':{const j=FJOBS||[];if(j.some(x=>x.status==='producing'))return M('🔥','กำลังผลิตเต็มกำลัง','มีงานอยู่ในสายพาน');
+      if(j.some(x=>x.status==='queued'))return M('🧰','มีใบสั่งรอ พร้อมลุย','มีใบสั่งรอผลิต');
+      if(j.some(x=>x.status==='done'&&now-Date.parse(x.done_at||0)<3*D))return M('😮‍💨','เพิ่งส่งงานเสร็จ','ผลิตเสร็จภายใน 3 วันนี้');
+      return M('😴','ว่าง รอใบสั่ง','ไม่มีงานในคิว');}
+    case 'product':return age<35?M('💡','มีไอเดียสินค้าใหม่','ส่งข้อเสนอเดือนนี้แล้ว'):M('🗓️','รอรอบสิ้นเดือน','ยังไม่ถึงรอบรายงาน');
+    case 'finance':return /ยอดขาย\s*0|0 ออเดอร์|ไม่มียอดขาย/.test(lastT)&&age<8?M('😐','เดือนนี้ยังเงียบ','ยอดขายสัปดาห์นี้ยังไม่มี'):M('🧮','ตัวเลขเรียบร้อย','บัญชีเป็นปัจจุบัน');
+    case 'care':return M('☕','สแตนด์บาย','ยังไม่เปิดใช้งาน');
+    case 'manual':{const n=todoOpenCount();return n>=3?M('😅','งานรอ '+n+' อย่าง','ดูที่แท็บเช็คลิสต์'):n>0?M('🙂','มีงานเล็กน้อย '+n+' อย่าง','ดูที่แท็บเช็คลิสต์'):M('😎','ว่างสบาย','ไม่มีงานค้าง');}
+  }
+  return M('🙂','ปกติ','');
+}
+function moodStrip(){const ks=['manager','writer','designer','trend','community','analyst','factory','product','finance','manual'];
+  return `<div class="moods">${ks.map(k=>{const m=mood(k);return `<div class="md" title="${esc(m.why)}"><span class="e">${ava(k,1)}<span>${m.e}</span></span><div>${esc(TEAM[k].name)}<small>${esc(m.t)}</small></div></div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
-  <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div></div></div>
+  <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
   <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='owner'||st.state==='off'?'':`<br>ส่งงานล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'}`})()}</div>${cmtBox(k)}</article>`;}
 function cmtBox(k){
   if(k==='manual')return '';
@@ -1629,7 +1680,10 @@ function todoTab(){
 function MEMBER_NAME(k){return (TEAM&&TEAM[k]&&TEAM[k].name)||k||'ทีม';}
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
+  if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
   return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  <h3 class="h3">อารมณ์ทีมวันนี้ <span class="fine" style="font-weight:400">(คำนวณจากผลงานจริง 7 วันล่าสุด วางเมาส์เพื่อดูเหตุผล)</span></h3>
+  ${moodStrip()}
   <h3 class="h3">สายบังคับบัญชา</h3>
   <div class="org">
     <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
