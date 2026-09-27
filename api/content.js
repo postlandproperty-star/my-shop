@@ -401,10 +401,17 @@ export default async function handler(req, res) {
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       if (req.method === 'POST') {
         const body = await readBody(req);
-        const text = String(body.text || '').trim().slice(0, 400);
-        if (!text) return res.status(400).json({ ok: false, error: 'พิมพ์ข้อความก่อน' });
-        const source = admin ? 'manual' : (MEMBER_TH[body.source] ? body.source : 'manager');
-        await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source, text }], prefer: 'return=minimal' });
+        if (body.remove && /^[0-9a-f-]{36}$/.test(String(body.id || ''))) {
+          // ลบข้อความในห้องพัก (คุณแดนหรือระบบ) ลบได้เฉพาะ kind chat
+          await sb(`posts?id=eq.${body.id}&kind=eq.chat`, { method: 'DELETE', prefer: 'return=minimal' });
+        } else if (body.clear && body.clear === 'all') {
+          await sb(`posts?kind=eq.chat&status=eq.note`, { method: 'DELETE', prefer: 'return=minimal' });
+        } else {
+          const text = String(body.text || '').trim().slice(0, 400);
+          if (!text) return res.status(400).json({ ok: false, error: 'พิมพ์ข้อความก่อน' });
+          const source = admin ? 'manual' : (MEMBER_TH[body.source] ? body.source : 'manager');
+          await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source, text }], prefer: 'return=minimal' });
+        }
       }
       const days = Math.min(30, Number(req.query.days) || 7);
       const rows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=id,source,text,created_at&order=created_at.asc&limit=120`);
