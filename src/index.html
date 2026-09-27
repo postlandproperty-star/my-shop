@@ -1351,7 +1351,7 @@ function factoryBox(){
   return `<h3 class="h3">คิวโรงงานผลิตชีท</h3>${FJOBS.slice(0,6).map(j=>{const st=FSTAT[j.status]||[j.status,'gray'];return `<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:6px">${ava('factory')}<span><b>${esc(j.title)}</b> <span class="badge ${st[1]}">${st[0]}</span><span class="fine">สั่งโดย ${esc(member(j.ordered_by||'manager').name)} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${j.price?j.price+' บาท':'แจกฟรี'}</span></span></div>${j.purpose?`<div class="fine">${esc(j.purpose)}</div>`:''}${j.file_url?`<a class="btn btn-line btn-sm" href="${j.file_url}" target="_blank" rel="noopener noreferrer" style="margin-top:6px">เปิดไฟล์ PDF</a>`:''}${j.error?`<div class="fine" style="color:#B42318">${esc(j.error)}</div>`:''}</div>`;}).join('')}`;
 }
 let POSTS=[],postsLoaded=false;
-const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด'};
+const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={},TH={};
 (function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
@@ -1382,6 +1382,7 @@ const TEAM={
   finance:{name:'พี่บัญชี',role:'บัญชี · สรุปเงินเข้า ค่าธรรมเนียม กำไร',bg:'#e5e7eb',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=100&seed=acc&top=shortCurly&hairColor=2c1b18&accessories=prescription01&clothing=collarAndSweater&clothesColor=929598&eyes=default&eyebrows=defaultNatural&mouth=serious&skinColor=edb98a&backgroundColor=e5e7eb'},
   guard:{name:'พี่การ์ด',role:'ดูแลระบบและความปลอดภัย · สายฟิตเนส หน้าดุแต่ใจดี ตรวจสุขภาพระบบทุกเช้า แก้บั๊กทุกอาทิตย์',bg:'#ddd6fe',sched:'ตรวจอัตโนมัติทุกวัน 10:00 · ทบทวนโค้ดอาทิตย์ 20:30',img:AV+'accessoriesProbability=0&seed=guard&top=shortFlat&hairColor=2c1b18&clothing=shirtCrewNeck&clothesColor=000000&eyes=default&eyebrows=angryNatural&mouth=serious&skinColor=edb98a&backgroundColor=ddd6fe'},
   market:{name:'พี่มาร์เก็ต',role:'วิจัยตลาด · หัวหน้าฝ่ายการตลาด ดึงคำค้นจริงและกระแส ส่งข้อมูลให้ทุกฝ่ายทุกเช้า',bg:'#fde68a',sched:'ทุกวัน 07:00 · จันทร์มีสรุปสัปดาห์',img:AV+'accessoriesProbability=100&seed=market&top=bob&hairColor=4a312c&accessories=round&clothing=blazerAndSweater&clothesColor=e6e6e6&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fde68a'},
+  clip:{name:'น้องคลิป',role:'ตัดต่อคลิป Reels · ทำคลิปสั้นทายศัพท์จากไอเดียทีม ส่งเข้าคิวให้พี่ต้นตรวจ',bg:'#c7f9cc',sched:'อังคารและศุกร์ 10:00',img:AV+'accessoriesProbability=100&seed=clip&top=shortWaved&hairColor=2c1b18&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=defaultNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=c7f9cc'},
   factory:{name:'โรงงาน',role:'โรงงานผลิตชีท · รับใบสั่งจากพี่ต้นโดยตรง',bg:'#fef3c7',sched:'ทำงานอาทิตย์และจันทร์ 10:00, 22:00 หรือเมื่อสั่ง',img:AV+'accessoriesProbability=0&seed=factory&top=shortFlat&hairColor=2c1b18&clothing=overall&clothesColor=ffb300&eyes=default&mouth=smile&skinColor=d08b5b'},
   manual:{name:'คุณ',role:'เจ้าของร้าน · ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
@@ -1399,9 +1400,10 @@ const SCHED={
   factory:{dow:[0,1],times:[[10,0],[22,0]],dur:60},
   guard:{dow:[0],times:[[20,30]],dur:15},
   market:{dow:[0,1,2,3,4,5,6],times:[[7,0]],dur:10},
+  clip:{dow:[2,5],times:[[10,0]],dur:30},
 };
 const BKK=7*3600e3;
-const POLITE={market:'ค่ะ',guard:'ครับ',factory:'ครับ',writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
+const POLITE={clip:'ครับ',market:'ค่ะ',guard:'ครับ',factory:'ครับ',writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
 function teamStatus(k){
   const sc=SCHED[k];const m=TEAM[k]||{};
   const last=POSTS.filter(x=>x.source===k).map(x=>Date.parse(x.created_at)).sort((a,b)=>b-a)[0]||null;
@@ -1459,7 +1461,7 @@ function contentTab(){
   const fb=!!FB.connected;
   const card=p=>{const st=STATUS_TH[p.status]||[p.status,'gray'];const editable=['draft','needs_owner','approved','failed','rejected'].includes(p.status);
     return `<div class="post" data-pid="${p.id}">
-      ${p.image_url?`<img src="${esc(p.image_url)}" alt="">`:`<div class="noimg">ไม่มีรูป</div>`}
+      ${p.image_url?(/\.(mp4|mov|m4v)(\?|$)/i.test(p.image_url)?`<video src="${esc(p.image_url)}" controls playsinline preload="metadata" style="width:100%;max-height:420px;border-radius:12px;background:#000"></video>`:`<img src="${esc(p.image_url)}" alt="">`):`<div class="noimg">ไม่มีรูป</div>`}
       <div>
         <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> ${p.channel==='threads'?'<span class="badge gray" title="โพสต์ช่อง Threads">Threads</span> ':''}<span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
           <span class="fine">${p.published_at?'โพสต์เมื่อ '+fdt(Date.parse(p.published_at)):p.scheduled_at?'กำหนดโพสต์ '+fdt(Date.parse(p.scheduled_at)):'ยังไม่กำหนดเวลา'}</span></div>
@@ -1663,6 +1665,7 @@ const ORG={
   factory:{title:'Book Factory · ฝ่ายผลิต รับใบสั่งจากพี่ต้นโดยตรง',do:['ผลิตชีท PDF ตามใบสั่ง: ชีทแจกฟรี ชีทประกอบโพสต์ และชีทที่จะขาย','เขียนเนื้อหาใหม่ทั้งหมด ตรวจเฉลยทุกข้อ จัดหน้าตามธีม Modern Blue ของ SheetLab','เก็บไฟล์บนคลาวด์ของบริษัท (Storage ของโปรเจกต์ SheetLab) แล้วแจ้งพี่ต้นใน Slack'],when:'ทำงานอาทิตย์และจันทร์ 10:00 และ 22:00 (หลังพี่ต้นสั่งงาน) หรือเมื่อคุณแดนกดสั่ง ชีทแจกฟรีใช้ Sonnet ไม่เกิน 24 หน้า'},
   guard:{title:'Site Reliability & Security · ฝ่ายดูแลระบบ',do:['ทุกเช้า 10:00 ระบบตรวจ 9 จุดอัตโนมัติ (โพสต์ล้ม token เพจ/Threads คิวโรงงาน คิวโพสต์ ฐานข้อมูล ช่องแอดมิน คีย์หลุด) ไม่ใช้ AI','พบปัญหาส่งเข้าเช็คลิสต์ของคุณแดนทันที พร้อมวิธีแก้','ทุกอาทิตย์ 20:30 อ่านผลตรวจทั้งสัปดาห์และโค้ด ถ้าเป็นบั๊กในโค้ด เปิดสาขาแก้ให้คุณแดนกดรวมเอง ไม่แก้เข้าระบบจริงเอง'],when:'ตรวจอัตโนมัติทุกวัน 10:00 · พี่การ์ดทบทวนโค้ดทุกอาทิตย์ 20:30 (Sonnet รอบสั้น)'},
   market:{title:'Market Research · ฝ่ายการตลาด',do:['ทุกเช้า 07:00 ดึงคำที่คนไทยค้นจริง (Google Suggest) และกระแสไทยวันนี้ (Google Trends) ก่อนทีมเริ่มงาน','อ่านตัวเลขเพจ 7 วัน โพสต์ที่ดีสุด/แย่สุด ผู้ติดตาม คำถามที่ลูกค้าถามซ้ำ','ส่งต่อให้ทุกฝ่าย: หัวข้อที่มีคนค้นอยู่แล้วและประโยคที่คนพูดจริงให้น้องเทรนด์/น้องปากกา ความต้องการสินค้าให้พี่โปร คีย์เวิร์ดแอดให้น้องบูสต์ ข้อเสนอเชิงกลยุทธ์ให้พี่ต้น','วันจันทร์สรุปสัปดาห์: คำค้นที่โต แนวที่ได้ผล สิ่งที่ควรเลิก เป้าที่แนะนำ'],when:'ทุกวัน 07:00 · จันทร์มีสรุปสัปดาห์'},
+  clip:{title:'Video Editor · ฝ่ายคลิปสั้น',do:['อังคารและศุกร์ 10:00 หยิบไอเดียจากพี่มาร์เก็ตและน้องเทรนด์ มาทำคลิปทายศัพท์ของใกล้ตัว 4 ข้อ ยาว 20-40 วินาที','รูปจากคลังภาพฟรีที่ใช้เชิงพาณิชย์ได้ มาสคอตน้องปากกา เสียงพากย์ไทยจาก ElevenLabs','ส่งคลิปเข้าคิวเป็นร่าง Facebook Reels และ Threads ให้พี่ต้นตรวจ ระบบโพสต์ให้เมื่อถึงเวลา','ไม่โพสต์เองเด็ดขาด'],when:'อังคารและศุกร์ 10:00 (Sonnet)'},
   care:{title:'Customer Care · ฝ่ายสนับสนุน ตำแหน่งว่าง',do:['ร่างอีเมลติดตามผล 3 วันหลังซื้อ','ขอรีวิว แนะนำสินค้าถัดไป'],when:'ยังไม่เปิดใช้',vacant:true},
 };
 /* อารมณ์ของสมาชิก: คำนวณจากผลงานจริง 7 วันล่าสุด (ไม่ใช้ AI เพิ่ม) */
@@ -1705,13 +1708,14 @@ function mood(k){
     case 'product':return age<35?M('💡','มีไอเดียสินค้าใหม่','ส่งข้อเสนอเดือนนี้แล้ว'):M('🗓️','รอรอบสิ้นเดือน','ยังไม่ถึงรอบรายงาน');
     case 'finance':return /ยอดขาย\s*0|0 ออเดอร์|ไม่มียอดขาย/.test(lastT)&&age<8?M('😐','เดือนนี้ยังเงียบ','ยอดขายสัปดาห์นี้ยังไม่มี'):M('🧮','ตัวเลขเรียบร้อย','บัญชีเป็นปัจจุบัน');
     case 'care':return M('☕','สแตนด์บาย','ยังไม่เปิดใช้งาน');
+    case 'clip':{const cl=POSTS.filter(p=>p.source==='clip'&&p.kind==='reel').map(p=>Date.parse(p.created_at)).sort((a,b)=>b-a)[0];const cage=cl?(now-cl)/D:99;if(!cl)return M('🎬','รอไอเดียคลิปแรก','ยังไม่มีคลิปในระบบ');if(cage<3)return M('😎','เพิ่งส่งคลิปเข้าคิว','ส่งคลิปล่าสุดไม่เกิน 3 วัน');return M('🤔','กำลังหาไอเดียคลิปใหม่','คลิปล่าสุดเกิน 3 วัน');}
     case 'market':{const mk=notes.find(n=>n.kind==='market');const mage=mk?(now-Date.parse(mk.created_at))/D:99;if(!mk)return M('📊','วันแรก กำลังตั้งแดชบอร์ด','ยังไม่มีรายงานตลาด');if(mage<1.5)return M('🔎','เจอคำค้นใหม่ ส่งต่อทีมแล้ว','ส่งรายงานตลาดวันนี้แล้ว');return M('😐','ข้อมูลเก่าไปหน่อย','รายงานตลาดล่าสุดเกิน 1 วัน');}
     case 'guard':{const h=notes.find(n=>n.kind==='health');const ht=h?String(h.text||''):'';const hage=h?(now-Date.parse(h.created_at))/D:99;if(!h)return M('🏳️‍🌈','เริ่มเวรแรก รอตรวจ 10:00','ยังไม่มีผลตรวจ');if(/\[ด่วน\]/.test(ht)&&hage<2)return M('🚨','เจอเรื่องด่วน จัดการอยู่','ผลตรวจล่าสุดมีปัญหาระดับด่วน');if(/พบ \d+ จุด/.test(ht)&&hage<2)return M('🧐','เจอจุดเตือน จับตาอยู่','ผลตรวจล่าสุดมีจุดเตือน');return M('😤','ระบบปกติ แต่ยังไม่วางใจ','ผลตรวจล่าสุดปกติ');}
     case 'manual':{const n=todoOpenCount();return n>=3?M('😅','งานรอ '+n+' อย่าง','ดูที่แท็บเช็คลิสต์'):n>0?M('🙂','มีงานเล็กน้อย '+n+' อย่าง','ดูที่แท็บเช็คลิสต์'):M('😎','ว่างสบาย','ไม่มีงานค้าง');}
   }
   return M('🙂','ปกติ','');
 }
-function moodStrip(){const ks=['manager','writer','designer','trend','community','analyst','factory','guard','market','product','finance','manual'];
+function moodStrip(){const ks=['manager','writer','designer','trend','community','analyst','factory','guard','market','clip','product','finance','manual'];
   return `<div class="moods">${ks.map(k=>{const m=mood(k);return `<div class="md" title="${esc(m.why)}"><span class="e">${ava(k,1)}<span>${m.e}</span></span><div>${esc(TEAM[k].name)}<small>${esc(m.t)}</small></div></div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
@@ -1731,7 +1735,7 @@ function cmtBox(k){
 let TODO={items:null,auto:[],loading:false,err:''};
 async function loadTodo(){TODO.loading=true;try{const j=await adminApi('/api/content?action=todo');if(j.ok){TODO.items=j.items||[];TODO.auto=j.auto||[];TODO.err='';}else TODO.err=j.error||'โหลดไม่ได้';}catch(e){TODO.err='เชื่อมต่อไม่ได้';}TODO.loading=false;}
 function todoOpenCount(){return (TODO.items||[]).filter(i=>!i.done_at).length+(TODO.auto||[]).length;}
-const TODO_FROM={manager:'พี่ต้น (รายงานวันจันทร์)',plan:'พี่ต้น (ประชุมทีมวันอาทิตย์)',owner:'คุณแดนเพิ่มเอง',community:'น้องคอม',analyst:'น้องบูสต์',factory:'โรงงาน',guard:'พี่การ์ด (ตรวจระบบ)',market:'พี่มาร์เก็ต (วิจัยตลาด)',writer:'น้องปากกา',designer:'น้องกราฟิก',trend:'น้องเทรนด์',product:'พี่โปร',finance:'พี่บัญชี'};
+const TODO_FROM={manager:'พี่ต้น (รายงานวันจันทร์)',plan:'พี่ต้น (ประชุมทีมวันอาทิตย์)',owner:'คุณแดนเพิ่มเอง',community:'น้องคอม',analyst:'น้องบูสต์',factory:'โรงงาน',guard:'พี่การ์ด (ตรวจระบบ)',market:'พี่มาร์เก็ต (วิจัยตลาด)',clip:'น้องคลิป',writer:'น้องปากกา',designer:'น้องกราฟิก',trend:'น้องเทรนด์',product:'พี่โปร',finance:'พี่บัญชี'};
 function todoTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   const items=TODO.items||[];const open=items.filter(i=>!i.done_at),done=items.filter(i=>i.done_at);
@@ -1834,7 +1838,7 @@ function docsTab(){
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
-  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 11 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 12 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">อารมณ์ทีมวันนี้ <span class="fine" style="font-weight:400">(คำนวณจากผลงานจริง 7 วันล่าสุด วางเมาส์เพื่อดูเหตุผล)</span></h3>
   ${moodStrip()}
   <h3 class="h3">สายบังคับบัญชา</h3>
@@ -1844,7 +1848,7 @@ function teamTab(){
     <div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div>
   </div>
   <h3 class="h3" style="margin-top:20px">ลูกทีมของน้องปากกา</h3>
-  <div class="org"><div class="tier two">${orgCard('designer')}${orgCard('trend')}</div></div>
+  <div class="org"><div class="tier two">${orgCard('designer')}${orgCard('trend')}${orgCard('clip')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายผลิต (พี่ต้นสั่งงานโดยตรง ไม่ต้องรอเจ้าของ)</h3>
   <div class="org"><div class="tier one">${orgCard('factory')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายดูแลระบบ (รายงานคุณแดนโดยตรงเมื่อพบปัญหา)</h3>
@@ -1868,6 +1872,7 @@ function teamTab(){
     </div>
     <div class="wkd"><h4>จันทร์-ศุกร์ <span>ทุกวัน</span></h4>
       <div class="wke">${ava('market')}<div><div class="t">07:00</div><b>พี่มาร์เก็ต</b><div>ดึงคำค้นจริง (Google Suggest) กระแสไทย (Google Trends) และตัวเลขเพจ 7 วัน ส่งรายงานตลาดให้ทุกฝ่ายก่อนเริ่มงาน</div></div></div>
+      <div class="wke">${ava('clip')}<div><div class="t">อังคาร/ศุกร์ 10:00</div><b>น้องคลิป</b><div>ทำคลิป Reels ทายศัพท์ของใกล้ตัว พร้อมเสียงไทย ส่งเข้าคิวให้พี่ต้นตรวจ</div></div></div>
       <div class="wke">${ava('analyst')}<div><div class="t">07:30</div><b>น้องบูสต์</b><div>อ่านผลแอด ต้นทุนต่อผู้ติดตามและต่อการซื้อ เสนอปรับงบ [ต้องอนุมัติ]</div></div></div>
       <div class="wke">${ava('community')}<div><div class="t">08:00 และ 21:00</div><b>น้องคอม</b><div>สรุปคอมเมนต์ใต้โพสต์ ร่างคำตอบให้คุณแดนกดส่ง ติดธงเรื่องที่พี่ต้นต้องดู</div></div></div>
       <div class="wke"><span class="ava sys">⚙</span><div><div class="t">10:00 และ 19:05</div><b>ระบบ</b><div>โพสต์ที่อนุมัติแล้วขึ้น Facebook และ Threads อัตโนมัติ วันละ 2 รอบ (โหมดเร่งผู้ติดตาม: Threads ได้ถึง 2 โพสต์ต่อวัน)</div></div></div>

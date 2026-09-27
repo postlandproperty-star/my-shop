@@ -145,7 +145,7 @@ function extractTodo(text) {
   }
   return out;
 }
-const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด', market: 'พี่มาร์เก็ต' };
+const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด', market: 'พี่มาร์เก็ต', clip: 'น้องคลิป' };
 // คอลัมน์ channel/th_post_id (Threads) มีหรือยัง (เพิ่มด้วย SQL ใน Supabase) ถ้ายังไม่มี ระบบทำงานแบบ Facebook อย่างเดียว
 async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
@@ -217,8 +217,8 @@ export default async function handler(req, res) {
       const skippedThreads = hasCh ? 0 : list0.filter((p) => p && p.channel === 'threads').length;
       const list = hasCh ? list0 : list0.filter((p) => !(p && p.channel === 'threads'));
       const rows = list.filter((p) => p && String(p.text || '').trim()).slice(0, 12).map((p) => ({
-        status: 'draft', source: 'writer', kind: String(p.kind || 'tip').slice(0, 20), ...(hasCh ? { channel: p.channel === 'threads' ? 'threads' : 'facebook' } : {}),
-        text: String(p.text).slice(0, 4000), image_url: p.image_url ? String(p.image_url).slice(0, 500) : null,
+        status: 'draft', source: MEMBER_TH[p.source] ? String(p.source) : 'writer', kind: String(p.kind || (p.video_url ? 'reel' : 'tip')).slice(0, 20), ...(hasCh ? { channel: p.channel === 'threads' ? 'threads' : 'facebook' } : {}),
+        text: String(p.text).slice(0, 4000), image_url: p.video_url ? String(p.video_url).slice(0, 500) : p.image_url ? String(p.image_url).slice(0, 500) : null,
         link_url: p.link_url ? String(p.link_url).slice(0, 500) : null,
         scheduled_at: p.scheduled_at && !isNaN(Date.parse(p.scheduled_at)) ? new Date(p.scheduled_at).toISOString() : null,
         week: p.week ? String(p.week).slice(0, 12) : null, notes: p.notes ? String(p.notes).slice(0, 1000) : null,
@@ -440,6 +440,18 @@ export default async function handler(req, res) {
       const jobs = await loadJobs().catch(() => []);
       const files = jobs.filter((j) => j.status === 'done' && j.file_url).map((j) => ({ id: j.id, title: j.title, file_url: j.file_url, pages: j.pages, price: j.price, done_at: j.done_at, purpose: j.purpose }));
       return res.status(200).json({ ok: true, links, files });
+    }
+    if (action === 'upload_sign') {
+      // ขอลิงก์อัปโหลดไฟล์ (คลิป/รูป) เข้า storage โดยตรง (key): POST {name, type} -> {upload_url, public_url} แล้ว PUT ไฟล์ไปที่ upload_url พร้อม Content-Type
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
+      const body = await readBody(req);
+      const name = String(body.name || 'file.bin').replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 80);
+      const path = `reels/${Date.now()}-${name}`;
+      const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `สร้างลิงก์อัปโหลดไม่ได้ (${r.status}) ${JSON.stringify(j).slice(0, 120)}` });
+      return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, public_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, method: 'PUT', content_type: String(body.type || 'video/mp4') });
     }
     if (action === 'tts') {
       // เสียงพากย์ไทยจาก ElevenLabs (คีย์เก็บใน Vercel env ELEVEN_KEY ไม่เคยส่งออกไปให้ทีม): POST {text, voice?, speed?} -> {url} ไฟล์ mp3 เก็บใน storage product-images/reels/  GET &list=1 -> รายชื่อเสียงในบัญชี

@@ -16,6 +16,9 @@
   "functions": {
     "api/page.js": {
       "includeFiles": "src/index.html"
+    },
+    "api/content.js": {
+      "maxDuration": 60
     }
   },
   "crons": [
