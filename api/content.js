@@ -451,8 +451,21 @@ export default async function handler(req, res) {
         const j = await r.json().catch(() => ({}));
         return res.status(200).json({ ok: r.ok, voices: (j.voices || []).map((v) => ({ id: v.voice_id, name: v.name, labels: v.labels || {}, preview: v.preview_url || '' })), error: r.ok ? undefined : `ElevenLabs ${r.status}` });
       }
+      if (req.query.library) {
+        // ค้นเสียงจากคลังสาธารณะของ ElevenLabs ตามภาษา เช่น &library=th
+        const lang = String(req.query.library).replace(/[^a-z]/g, '').slice(0, 5) || 'th';
+        const r = await fetch(`https://api.elevenlabs.io/v1/shared-voices?language=${lang}&page_size=30`, { headers: { 'xi-api-key': EK } });
+        const j = await r.json().catch(() => ({}));
+        return res.status(200).json({ ok: r.ok, voices: (j.voices || []).map((v) => ({ owner: v.public_owner_id, id: v.voice_id, name: v.name, gender: v.gender, age: v.age, accent: v.accent, desc: v.descriptive, use_case: v.use_case, preview: v.preview_url, uses: v.cloned_by_count })), error: r.ok ? undefined : `ElevenLabs ${r.status}` });
+      }
       if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
       const body = await readBody(req);
+      if (body.add && body.add.owner && body.add.voice) {
+        // เพิ่มเสียงจากคลังสาธารณะเข้าบัญชี
+        const r = await fetch(`https://api.elevenlabs.io/v1/voices/add/${encodeURIComponent(String(body.add.owner))}/${encodeURIComponent(String(body.add.voice))}`, { method: 'POST', headers: { 'xi-api-key': EK, 'Content-Type': 'application/json' }, body: JSON.stringify({ new_name: String(body.add.name || 'voice').slice(0, 60) }) });
+        const j = await r.json().catch(() => ({}));
+        return res.status(r.ok ? 200 : 502).json({ ok: r.ok, voice: j.voice_id || null, error: r.ok ? undefined : `ElevenLabs ${r.status}: ${JSON.stringify(j).slice(0, 200)}` });
+      }
       const text = String(body.text || '').trim().slice(0, 1500);
       if (!text) return res.status(400).json({ ok: false, error: 'no text' });
       const voice = /^[A-Za-z0-9]{10,40}$/.test(String(body.voice || '')) ? String(body.voice) : (process.env.ELEVEN_VOICE || 'EXAVITQu4vr4xnSDxMaL');
