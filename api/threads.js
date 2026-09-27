@@ -1,4 +1,5 @@
 // Threads: ตั้งค่า/เชื่อมบัญชีจากหลังบ้าน และข้อมูลให้ทีม
+//   /api/threads-callback (rewrite → ?action=callback) ปลายทาง OAuth
 //   ?action=status               (แอดมิน) สถานะ
 //   ?action=setup    POST {appId, appSecret} (แอดมิน) บันทึก Threads App
 //   ?action=authurl              (แอดมิน) ลิงก์ไปหน้าอนุญาตของ threads.net
@@ -7,7 +8,7 @@
 //   ?action=insights&days=14     (key/แอดมิน) ยอดต่อโพสต์ Threads + ผู้ติดตาม สำหรับน้องบูสต์/พี่ต้น
 //   ?action=replies&days=7       (key/แอดมิน) รีพลายใต้โพสต์ Threads สำหรับน้องคอม
 import { verifyAdmin } from '../lib/shop.js';
-import { loadThreads, saveThreads, thGet, threadsConnected, refreshIfNeeded, TH_REDIRECT, TH_SCOPES } from '../lib/threads.js';
+import { loadThreads, saveThreads, thGet, threadsConnected, refreshIfNeeded, TH_REDIRECT, TH_SCOPES, SITE } from '../lib/threads.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
@@ -29,6 +30,22 @@ export default async function handler(req, res) {
   const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
   const teamOk = admin || keyOk(req);
   try {
+    if (action === 'callback') {
+      // ปลายทาง OAuth ของ Threads (เข้าผ่าน rewrite /api/threads-callback) → แลกโทเค็นอายุยาว → บันทึก → กลับหลังบ้าน
+      const back = (q) => { res.statusCode = 302; res.setHeader('Location', `${SITE}/?${q}`); res.end(); };
+      const code = String(req.query.code || ''), state = String(req.query.state || '');
+      if (req.query.error) return back(`threads=error&msg=${encodeURIComponent(String(req.query.error_description || req.query.error))}`);
+      const th = await loadThreads();
+      if (!code || !th.appId || !th.appSecret) return back('threads=error&msg=' + encodeURIComponent('ยังไม่ได้ตั้งค่า Threads App'));
+      if (!state || state !== th.state) return back('threads=error&msg=' + encodeURIComponent('state ไม่ตรง ลองกดเชื่อมใหม่'));
+      const r = await fetch('https://graph.threads.net/oauth/access_token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: th.appId, client_secret: th.appSecret, grant_type: 'authorization_code', redirect_uri: TH_REDIRECT, code }).toString() });
+      const short = await r.json().catch(() => ({}));
+      if (!r.ok || !short.access_token) return back('threads=error&msg=' + encodeURIComponent(short.error_message || short.error?.message || `แลกโทเค็นไม่ได้ (${r.status})`));
+      const long = await thGet('access_token', { grant_type: 'th_exchange_token', client_secret: th.appSecret, access_token: short.access_token });
+      const me = await thGet('me', { fields: 'id,username,threads_profile_picture_url', access_token: long.access_token });
+      await saveThreads({ appId: th.appId, appSecret: th.appSecret, token: long.access_token, userId: String(me.id || short.user_id), username: me.username || '', picture: me.threads_profile_picture_url || '', expiresAt: new Date(Date.now() + (long.expires_in || 5184000) * 1000).toISOString(), connectedAt: new Date().toISOString() });
+      return back('threads=ok');
+    }
     if (['insights', 'replies'].includes(action)) {
       if (!teamOk) return res.status(401).json({ ok: false, error: 'bad key' });
       let th = await loadThreads();

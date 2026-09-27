@@ -69,6 +69,11 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const action = String(req.query.action || '');
   try {
+    if (action === 'keepalive') {
+      // Vercel Cron วันละครั้ง กัน Supabase แพ็กฟรีถูกพัก (ย้ายมาจาก api/keepalive.js เพราะ Hobby จำกัด 12 ฟังก์ชัน)
+      const r = await fetch(`${SB_URL}/rest/v1/shop_state?select=id&limit=1`, { headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}` } });
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString() });
+    }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const shop = await loadShop();

@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/threads-callback",
+      "destination": "/api/threads?action=callback"
+    },
+    {
       "source": "/",
       "destination": "/api/page"
     },
@@ -16,7 +20,7 @@
   },
   "crons": [
     {
-      "path": "/api/keepalive",
+      "path": "/api/content?action=keepalive",
       "schedule": "0 3 * * *"
     },
     {
