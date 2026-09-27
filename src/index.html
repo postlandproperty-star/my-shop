@@ -218,7 +218,8 @@ footer{padding:28px 0 110px;text-align:center}
 .cmt{border-top:1px dashed var(--line);margin-top:8px;padding-top:8px;font-size:13px}
 .cmt .q{display:flex;gap:8px;align-items:flex-start}.cmt .q .tx{flex:1;color:var(--ink);white-space:pre-wrap;max-height:3.9em;overflow:hidden}.cmt.open .q .tx{max-height:none}
 .cmt .q button{flex:none;font-size:12px;padding:3px 9px}
-.cmt .mine{margin-top:6px;padding:6px 8px;border-radius:10px;background:#FFF3C4;color:#7A5B00;white-space:pre-wrap;font-size:12.5px}
+.cmt .mine{margin-top:6px;padding:6px 8px;border-radius:10px;background:#FFF3C4;color:#7A5B00;white-space:pre-wrap;font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.cmt.open .mine{display:block;cursor:default}
+.odo summary{cursor:pointer;font-size:13px;color:var(--muted);list-style:none;padding:2px 0}.odo summary::-webkit-details-marker{display:none}.odo summary:before{content:'▸ '}.odo[open] summary:before{content:'▾ '}.odo ul{margin-top:4px}
 .cmt textarea{width:100%;margin-top:6px;min-height:56px;font:inherit;font-size:13px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
 .cmt .send{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
 .ocard .ow{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:6px;margin-top:auto}
@@ -1795,7 +1796,7 @@ function moodStrip(){const ks=['manager','writer','designer','trend','community'
   return `<div class="moods">${ks.map(k=>{const m=mood(k),t=TEAM[k];return `<div class="md" title="${esc(m.why)}"><span class="e"><img class="ava" src="${t.img}" alt="" style="background:${t.bg}" loading="lazy"><span>${m.e}</span></span><b>${esc(t.name)}</b><small>${esc(m.t)}</small>${m.why?`<em>${esc(m.why)}</em>`:''}</div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
-  <ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='owner'||st.state==='off'?'':`<br>ส่งงานล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'}`})()}</div>${cmtBox(k)}</article>`;}
+  <details class="odo"><summary>หน้าที่ ${o.do.length} ข้อ</summary><ul>${o.do.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></details><div class="ow">${esc(o.when)}${(()=>{const st=teamStatus(k);return st.state==='owner'||st.state==='off'?'':`<br>ส่งงานล่าสุด ${st.last?fdt(st.last):'ยังไม่เคย'}`})()}</div>${cmtBox(k)}</article>`;}
 function cmtBox(k){
   if(k==='manual')return '';
   const mine=POSTS.filter(p=>p.status==='note'&&p.kind==='reply'&&String(p.text||'').startsWith('@'+k+' ')).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
@@ -1805,7 +1806,7 @@ function cmtBox(k){
   const line=last?String(last.text||'').trim():'ยังไม่มีข้อความจาก'+TEAM[k].name;
   const short=open?line:line.split('\n').filter(l=>l.trim()).slice(0,2).join('\n');
   return `<div class="cmt${open?' open':''}"><div class="q">${ava(k,1)}<div class="tx" title="${last?fdt(Date.parse(last.created_at)):''}">${esc(short)}${last&&!open&&line.length>short.length?' …':''}</div><button class="btn btn-line btn-sm" data-a="cmtOpen" data-v="${k}">${open?'ปิด':'ดู / ตอบ'}</button></div>
-  ${mine?`<div class="mine">คุณ (${fdt(Date.parse(mine.created_at))}): ${esc(String(mine.text).replace('@'+k+' ',''))}</div>`:''}
+  ${mine?`<div class="mine" data-a="cmtOpen" data-v="${k}" title="${open?'':'กดเพื่ออ่านเต็ม'}"><b>คุณสั่งไว้ ${fdt(Date.parse(mine.created_at))}:</b> ${esc(String(mine.text).replace('@'+k+' ',''))}</div>`:''}
   ${open?`<textarea id="cmt-${k}" placeholder="พิมพ์ถึง${esc(TEAM[k].name)} เช่น ชอบโพสต์ควิซ ขอแบบนี้อีก / สัปดาห์หน้าเน้นคำศัพท์ (ทีมจะเห็นในกระดานก่อนเริ่มงานรอบถัดไป)"></textarea><div class="send"><button class="btn btn-cta btn-sm" data-a="cmtSend" data-v="${k}">ส่งถึง${esc(TEAM[k].name)}</button></div>`:''}</div>`;
 }
 let TODO={items:null,auto:[],loading:false,err:''};
