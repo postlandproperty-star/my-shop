@@ -331,6 +331,14 @@ export default async function handler(req, res) {
           const it = items.find((x) => x.id === String(body.id));
           if (!it) return res.status(404).json({ ok: false, error: 'ไม่พบรายการ' });
           if (body.remove) items = items.filter((x) => x.id !== it.id);
+          else if (body.answer) {
+            // คุณแดนตอบข้อเสนอ/สั่งการกลับ: ปิดรายการ และส่งคำตอบเข้ากระดานทีมถึงคนที่ส่งมา (kind reply)
+            const answer = String(body.answer).trim().slice(0, 1500);
+            if (!answer) return res.status(400).json({ ok: false, error: 'พิมพ์คำตอบก่อน' });
+            const to = MEMBER_TH[it.from] ? it.from : 'manager';
+            it.answer = answer; it.answered_at = new Date().toISOString(); it.done_at = it.done_at || it.answered_at;
+            await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'reply', source: 'manual', text: `@${to} ตอบ${it.type === 'decide' ? 'ข้อเสนอ' : 'งาน'} "${it.text.slice(0, 140)}": ${answer}` }], prefer: 'return=minimal' });
+          }
           else it.done_at = body.done === false ? null : new Date().toISOString();
         } else return res.status(400).json({ ok: false, error: 'ต้องส่ง text หรือ id' });
         await saveTodo(items);
