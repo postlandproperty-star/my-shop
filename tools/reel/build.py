@@ -11,6 +11,7 @@ API = os.environ.get('API_BASE', 'https://my-shop-lake-ten.vercel.app/api/conten
 KEY = os.environ.get('CONTENT_KEY', '')
 VOICE = os.environ.get('VOICE', 'J5M1BLQpOJ3qx2FU6EG0')  # เสียงประจำที่คุณแดนเลือก (ElevenLabs)
 SPEED = float(os.environ.get('SPEED', '1.0'))
+DRY = os.environ.get('DRY') == '1'  # DRY=1: เลือกรูป+วาดสไลด์อย่างเดียว ไม่สร้างเสียง ไม่ตัดต่อ (ไว้ตรวจรูปก่อน)
 W, H = 1080, 1920
 BG = (43, 71, 240); WHITE = (255, 255, 255); INK = (26, 26, 26); RED = (239, 91, 76); YEL = (245, 197, 24); GREEN = (22, 163, 74); BLUE = (43, 71, 240)
 UA = {'User-Agent': 'Mozilla/5.0 (SheetLab reel builder)'}
@@ -76,6 +77,28 @@ def find_image(query, avoid=()):
             except Exception: continue
     return None, None
 
+def fetch_image_id(oid):
+    """รูปที่เลือกเองจาก Openverse ด้วย id (ใช้เมื่อค้นอัตโนมัติได้รูปผิด) -> (path, credit)"""
+    r = json.loads(http('https://api.openverse.org/v1/images/' + oid + '/', timeout=30))
+    data = http(r['url'], timeout=40)
+    fn = os.path.join(CACHE, hashlib.md5(r['url'].encode()).hexdigest() + '.img'); open(fn, 'wb').write(data); Image.open(fn).verify()
+    return fn, f"{r.get('title', '')} | {r.get('creator', '')} | {r.get('license', '')} | {r.get('foreign_landing_url', '')}"
+
+def candidates(query, out):
+    """python3 build.py candidates "spoon rest" sheet.png -> แผ่นรวมรูปตัวเลือก 8 รูป (มีเลข 1-8) + JSON รายการ id ให้เลือกใส่ image_id ใน spec"""
+    url = 'https://api.openverse.org/v1/images/?q=' + urllib.parse.quote(query) + '&license_type=commercial&page_size=8'
+    res = json.loads(http(url, timeout=30)).get('results', [])
+    sheet = Image.new('RGB', (4 * 300, 2 * 330), (255, 255, 255)); d = ImageDraw.Draw(sheet); f = font('xb', 40); rows = []
+    for i, r in enumerate(res[:8]):
+        x, y = (i % 4) * 300, (i // 4) * 330
+        try:
+            im = Image.open(__import__('io').BytesIO(http(r.get('thumbnail') or r['url'], timeout=30))).convert('RGB')
+            sheet.paste(ImageOps.fit(im, (280, 280)), (x + 10, y + 40))
+        except Exception: d.text((x + 150, y + 180), 'โหลดไม่ได้', font=font('md', 30), fill=RED, anchor='mm')
+        d.text((x + 10, y + 2), str(i + 1), font=f, fill=RED)
+        rows.append({'n': i + 1, 'image_id': r['id'], 'title': (r.get('title') or '')[:80], 'source': r.get('source'), 'license': r.get('license')})
+    sheet.save(out); print(json.dumps({'ok': True, 'sheet': out, 'candidates': rows, 'how': 'ดูรูปใน sheet แล้วใส่ image_id ของรูปที่ถูกต้องในข้อนั้นของ spec.json'}, ensure_ascii=False))
+
 def placeholder(word):
     im = Image.new('RGB', (880, 880), (240, 244, 255)); d = ImageDraw.Draw(im); f = font('xb', 140)
     while d.textlength(word, font=f) > 800: f = font('xb', f.size - 8)
@@ -110,7 +133,7 @@ def main():
     if len(sys.argv) < 3: raise SystemExit(__doc__)
     spec = json.load(open(sys.argv[1], encoding='utf-8')); out = sys.argv[2]
     global OUTDIR; OUTDIR = os.path.join(os.path.dirname(os.path.abspath(out)) or '.', '.reel_work'); os.makedirs(OUTDIR, exist_ok=True)
-    FF = find_ff(); m_happy, m_think = mascot('happy'), mascot('think')
+    FF = None if DRY else find_ff(); m_happy, m_think = mascot('happy'), mascot('think')
     items = spec['items']; n = len(items); slides = []; credits = []
     hook = spec.get('hook', {})
     im, d = base(); d.rounded_rectangle((90, 520, W - 90, 1240), radius=60, fill=WHITE)
@@ -121,7 +144,10 @@ def main():
     p = os.path.join(OUTDIR, 's00.png'); im.save(p); slides.append((p, hook.get('tts', f"ของใกล้ตัว {n} อย่าง ที่คุณเรียกภาษาอังกฤษไม่ถูก ลองทายดู"), 3.0))
     qtext = spec.get('question', 'อันนี้ภาษาอังกฤษ\nเรียกว่าอะไร?')
     for i, it in enumerate(items, 1):
-        path, credit = (None, None) if it.get('image') is None and not it.get('query') else (find_image(it.get('query') or it['en']) if not it.get('image') else (it['image'], 'provided'))
+        if it.get('image'): path, credit = it['image'], 'provided'
+        elif it.get('image_id'): path, credit = fetch_image_id(it['image_id'])
+        elif it.get('query') or it.get('en'): path, credit = find_image(it.get('query') or it['en'])
+        else: path, credit = None, None
         src = path or placeholder(it['en']); credits.append(credit or 'placeholder')
         im, d = base(); counter(d, i, n); photo_card(im, src)
         d.rounded_rectangle((90, 1210, W - 90, 1440), radius=48, fill=WHITE); center_text(d, 1250, it.get('question', qtext), font('xb', 70), spacing=10)
@@ -142,11 +168,17 @@ def main():
     d.rounded_rectangle((200, 900, W - 200, 1060), radius=60, fill=RED); d.text((W // 2, 980), end.get('cta', 'กดติดตาม มีทุกวัน'), font=font('xb', 62), fill=WHITE, anchor='mm')
     im.paste(m_happy, (W // 2 - 210, 1240), m_happy); center_text(d, 1700, end.get('foot', 'SheetLab · ภาษาอังกฤษแบบคนจริงใช้'), font('md', 50), fill=WHITE)
     p = os.path.join(OUTDIR, 's99.png'); im.save(p); slides.append((p, end.get('tts', 'ทายถูกกี่ข้อ คอมเมนต์บอกหน่อย กดติดตามไว้ มีทุกวันนะ'), 3.2))
+    if DRY:
+        print(json.dumps({'ok': True, 'dry': True, 'slides': [p for p, _, _ in slides], 'image_credits': credits, 'check': 'เปิดดูสไลด์ที่ลงท้าย q.png ทุกใบว่ารูปตรงกับของจริงไหม แล้วค่อยรันเต็ม'}, ensure_ascii=False)); return
     if not KEY: raise SystemExit('CONTENT_KEY missing')
     def tts(text, k):
-        j = json.loads(http(API + '?action=tts', data=json.dumps({'text': text, 'voice': VOICE, 'speed': SPEED}).encode(), headers={'Content-Type': 'application/json', 'x-content-key': KEY}, timeout=120))
-        if not j.get('ok'): raise SystemExit('tts failed: ' + str(j))
-        fn = os.path.join(OUTDIR, f't{k:02d}.mp3'); open(fn, 'wb').write(http(j['url'])); return fn
+        # เสียงเก็บแคชตามข้อความ+เสียง ถ้าสร้างซ้ำด้วยข้อความเดิมจะไม่เสียเครดิตอีก
+        cfn = os.path.join(CACHE, 'tts-' + hashlib.md5(f'{VOICE}|{SPEED}|{text}'.encode()).hexdigest() + '.mp3')
+        if not os.path.exists(cfn) or os.path.getsize(cfn) < 1000:
+            j = json.loads(http(API + '?action=tts', data=json.dumps({'text': text, 'voice': VOICE, 'speed': SPEED}).encode(), headers={'Content-Type': 'application/json', 'x-content-key': KEY}, timeout=120))
+            if not j.get('ok'): raise SystemExit('tts failed: ' + str(j))
+            open(cfn, 'wb').write(http(j['url']))
+        fn = os.path.join(OUTDIR, f't{k:02d}.mp3'); open(fn, 'wb').write(open(cfn, 'rb').read()); return fn
     def dur(path):
         r = subprocess.run([FF, '-i', path], capture_output=True, text=True); m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', r.stderr); return int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3])
     segs = []; chars = 0
@@ -160,4 +192,7 @@ def main():
     subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', '-movflags', '+faststart', out], check=True)
     print(json.dumps({'ok': True, 'out': out, 'duration': round(dur(out), 1), 'bytes': os.path.getsize(out), 'items': n, 'tts_chars': chars, 'image_credits': credits}, ensure_ascii=False))
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == 'candidates':
+        os.makedirs(CACHE, exist_ok=True); candidates(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else 'candidates.png'); sys.exit(0)
+    main()

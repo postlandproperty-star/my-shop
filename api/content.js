@@ -448,8 +448,10 @@ export default async function handler(req, res) {
       if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
       const body = await readBody(req);
       const name = String(body.name || 'file.bin').replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 80);
-      const path = `reels/${Date.now()}-${name}`;
-      const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
+      // overwrite: ระบุ path เดิม (reels/....mp4) เพื่อเขียนทับไฟล์เดิมโดยลิงก์ไม่เปลี่ยน (ใช้ตอนแก้คลิปที่ส่งเข้าคิวแล้ว)
+      const ow = String(body.overwrite || '').replace(/[^A-Za-z0-9._\/-]/g, '');
+      const path = ow && ow.startsWith('reels/') ? ow : `reels/${Date.now()}-${name}`;
+      const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', ...(ow ? { 'x-upsert': 'true' } : {}) }, body: JSON.stringify(ow ? { upsert: true } : {}) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `สร้างลิงก์อัปโหลดไม่ได้ (${r.status}) ${JSON.stringify(j).slice(0, 120)}` });
       return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, public_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, method: 'PUT', content_type: String(body.type || 'video/mp4') });
