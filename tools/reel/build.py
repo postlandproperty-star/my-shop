@@ -49,7 +49,7 @@ def cached(url, ext):
     return fn
 
 def mascot(expr):
-    base = 'https://api.dicebear.com/9.x/avataaars/png?size=700&facialHairProbability=0&accessoriesProbability=0&seed=clip&top=shortWaved&hairColor=2c1b18&clothing=shirtVNeck&clothesColor=25557c&skinColor=edb98a&backgroundColor=transparent&'  # มาสคอต = น้องคลิป (ผู้ชาย ให้ตรงกับเสียงพากย์)
+    base = 'https://api.dicebear.com/9.x/avataaars/png?size=700&facialHairProbability=0&accessoriesProbability=100&accessories=wayfarers&seed=clip&top=shortWaved&hairColor=2c1b18&clothing=shirtVNeck&clothesColor=25557c&skinColor=edb98a&backgroundColor=transparent&'  # มาสคอต = น้องคลิป (ผู้ชาย ให้ตรงกับเสียงพากย์)
     q = 'eyes=happy&eyebrows=defaultNatural&mouth=smile' if expr == 'happy' else 'eyes=default&eyebrows=raisedExcited&mouth=serious'
     return Image.open(cached(base + q, '.png')).convert('RGBA').resize((420, 420))
 
