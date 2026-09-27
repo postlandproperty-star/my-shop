@@ -39,6 +39,16 @@ async function logNote(source, text, kind = 'log') { try { await sb('posts', { m
 // เช็คลิสต์ของคุณแดน: งานที่ทีมขอให้เจ้าของทำเอง เก็บใน shop_state id=todo (data.items)
 async function loadTodo() { const rows = await sb('shop_state?id=eq.todo&select=data'); return rows?.[0]?.data?.items || []; }
 async function saveTodo(items) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'todo', data: { items: items.slice(0, 300) }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+async function addTodo({ text, type = 'do', from = 'manager', link = null }) {
+  const items = await loadTodo();
+  const norm = (t) => String(t).replace(/\s+/g, ' ').trim().toLowerCase();
+  const dup = items.find((x) => norm(x.text) === norm(text) && Date.now() - Date.parse(x.created_at) < 7 * 864e5);
+  if (dup) return { items, item: dup, duplicate: true };
+  const { randomUUID } = await import('node:crypto');
+  const item = { id: randomUUID(), type: type === 'decide' ? 'decide' : 'do', text: String(text).trim().slice(0, 400), from: String(from).slice(0, 20), link: link ? String(link).slice(0, 300) : null, created_at: new Date().toISOString(), done_at: null };
+  items.unshift(item); await saveTodo(items);
+  return { items, item, duplicate: false };
+}
 const TODO_HEADS = [
   { re: /สิ่งที่อยากให้คุณแดน(?:ช่วย)?ทำ(?:เอง)?/, type: 'do' },
   { re: /(?:เรื่องที่)?ต้องขอคุณแดนตัดสิน/, type: 'decide' },
@@ -297,6 +307,7 @@ export default async function handler(req, res) {
         if (body.size) job.size = Number(body.size);
         if (body.summary) job.summary = String(body.summary).slice(0, 2000);
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
+        try { await addTodo({ text: `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`, type: 'do', from: 'factory', link: job.file_url || null }); } catch (e) { console.error('todo', e.message); }
       } else if (action === 'factory_fail') {
         job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
         await logNote('factory', `ผลิตไม่สำเร็จ: ${job.title} เหตุผล: ${job.error}`);
@@ -314,9 +325,8 @@ export default async function handler(req, res) {
       if (req.method === 'POST') {
         const body = await readBody(req);
         if (body.text && !body.id) {
-          const { randomUUID } = await import('node:crypto');
-          const from = admin ? 'owner' : String(body.from || 'manager').slice(0, 20);
-          items.unshift({ id: randomUUID(), type: body.type === 'decide' ? 'decide' : 'do', text: String(body.text).trim().slice(0, 400), from, link: body.link ? String(body.link).slice(0, 300) : null, created_at: new Date().toISOString(), done_at: null });
+          const r = await addTodo({ text: body.text, type: body.type, from: admin ? 'owner' : (body.from || 'manager'), link: body.link });
+          return res.status(200).json({ ok: true, items: r.items, id: r.item.id, duplicate: r.duplicate });
         } else if (body.id) {
           const it = items.find((x) => x.id === String(body.id));
           if (!it) return res.status(404).json({ ok: false, error: 'ไม่พบรายการ' });
