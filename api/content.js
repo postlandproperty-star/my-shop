@@ -36,6 +36,10 @@ const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audie
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
+// ห้องเอกสาร: ลิงก์สำคัญที่คุณแดนหรือทีมเก็บไว้ shop_state id=docs (data.links)
+async function loadDocs() { const rows = await sb('shop_state?id=eq.docs&select=data'); return rows?.[0]?.data?.links || []; }
+async function saveDocs(links) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'docs', data: { links: links.slice(0, 200) }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+
 // เช็คลิสต์ของคุณแดน: งานที่ทีมขอให้เจ้าของทำเอง เก็บใน shop_state id=todo (data.items)
 async function loadTodo() { const rows = await sb('shop_state?id=eq.todo&select=data'); return rows?.[0]?.data?.items || []; }
 async function saveTodo(items) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'todo', data: { items: items.slice(0, 300) }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
@@ -394,6 +398,39 @@ export default async function handler(req, res) {
       const h = await runHealth(req.headers.host);
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
+    }
+    if (action === 'docs') {
+      // ห้องเอกสาร (แอดมินหรือ key): GET {links, files} POST {title,url,note?,cat?} เพิ่ม | {id,remove:true} ลบ | {id,title?,url?,note?,cat?} แก้
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      let links = await loadDocs();
+      if (req.method === 'POST') {
+        const body = await readBody(req);
+        const clean = (v, n) => String(v || '').trim().slice(0, n);
+        if (body.remove && body.id) {
+          links = links.filter((l) => l.id !== String(body.id));
+        } else if (body.id && links.some((l) => l.id === String(body.id))) {
+          const l = links.find((x) => x.id === String(body.id));
+          if (body.title != null) l.title = clean(body.title, 120) || l.title;
+          if (body.url != null && /^https?:\/\//i.test(String(body.url))) l.url = clean(body.url, 500);
+          if (body.note != null) l.note = clean(body.note, 300);
+          if (body.cat != null) l.cat = clean(body.cat, 40);
+        } else {
+          const url = clean(body.url, 500);
+          if (!/^https?:\/\//i.test(url)) return res.status(400).json({ ok: false, error: 'ลิงก์ต้องขึ้นต้นด้วย http:// หรือ https://' });
+          const title = clean(body.title, 120) || url.replace(/^https?:\/\//, '').split('/')[0];
+          const dup = links.find((l) => l.url === url);
+          if (!dup) {
+            const from = admin ? 'manual' : (MEMBER_TH[body.from] ? body.from : 'manager');
+            const { randomUUID } = await import('node:crypto');
+            links.unshift({ id: randomUUID(), title, url, note: clean(body.note, 300), cat: clean(body.cat, 40) || 'อื่นๆ', from, created_at: new Date().toISOString() });
+          }
+        }
+        await saveDocs(links);
+      }
+      const jobs = await loadJobs().catch(() => []);
+      const files = jobs.filter((j) => j.status === 'done' && j.file_url).map((j) => ({ id: j.id, title: j.title, file_url: j.file_url, pages: j.pages, price: j.price, done_at: j.done_at, purpose: j.purpose }));
+      return res.status(200).json({ ok: true, links, files });
     }
     if (action === 'chat') {
       // ห้องพักทีม: แชทเล่นนอกเรื่องงาน (kind chat) GET อ่าน 80 ข้อความล่าสุด, POST {text} = คุณแดนแวะมาทัก (แอดมิน) หรือสมาชิกส่ง {text, source} (key)

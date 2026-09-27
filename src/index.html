@@ -128,7 +128,9 @@ footer{padding:28px 0 110px;text-align:center}
 @media(max-width:640px){
   .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;overflow:visible;padding:10px 0 6px;position:sticky;top:0;z-index:5;background:var(--bg)}
   .tabs button{padding:9px 4px;font-size:13px;white-space:normal;line-height:1.2;border-radius:12px;min-height:40px}
-  .tabs button .chat{max-width:720px}
+  .tabs button .tcount{margin-left:4px;min-width:18px;line-height:18px;font-size:11px}
+}
+.chat{max-width:720px}
 .msg{display:flex;gap:10px;align-items:flex-end;margin:10px 0}
 .chat .msg .ava,.chat .msg .ava.sm{width:52px;height:52px;border-width:2px}
 .msg .bub{background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:8px 12px;max-width:78%;font-size:15px;line-height:1.45}
@@ -149,7 +151,6 @@ footer{padding:28px 0 110px;text-align:center}
   .daysep{font-size:13px}
   .chatbox input{font-size:16px;padding:12px 16px}
 }
-.tcount{margin-left:4px;min-width:18px;line-height:18px;font-size:11px}
 }
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
 @media(min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
@@ -264,6 +265,19 @@ footer{padding:28px 0 110px;text-align:center}
 .todo .ansmark{width:22px;flex:none;text-align:center;font-size:18px;line-height:1.3}
 .todo .ans{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--okbg);font-size:14px}
 .todo .ansbox{margin-top:8px}.todo .ansbox textarea{width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:14px}
+.docgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:6px}
+.doc{position:relative;display:block;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 40px 12px 14px;text-decoration:none;color:inherit;min-width:0}
+.doc:hover{border-color:var(--ink)}
+.doc b{display:block;font-size:15px;line-height:1.35}
+.doc .fine{display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc .tx{position:absolute;right:8px;top:8px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:2px 6px}
+.doc .ava{position:absolute;right:10px;bottom:10px;width:26px;height:26px}
+.docform{display:grid;grid-template-columns:1fr 1.4fr 1fr auto;gap:8px;margin:10px 0 18px}
+.docform input{border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;font:inherit;min-width:0}
+@media(max-width:640px){.docform{grid-template-columns:1fr 1fr}.docform button{grid-column:1/-1}}
+.docnote{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:8px}
+.docnote summary{cursor:pointer;font-weight:600;font-size:15px;display:flex;gap:8px;align-items:center}
+.docnote pre{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:8px 0 0;color:var(--ink)}
 .tcount{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:#EF5B4C;color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center;margin-left:6px;vertical-align:middle}
 .list-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:8px}
 .prod{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:grid;gap:8px;border-left:6px solid var(--c,#2440E8)}
@@ -1332,7 +1346,7 @@ async function updatePost(id,patch){
 }
 const AV='https://api.dicebear.com/9.x/avataaars/svg?size=96&backgroundType=solid&facialHairProbability=0&';
 const TEAM={
-  manager:{name:'พี่ต้น',role:'ผู้จัดการเพจ · อนุมัติโพสต์แทนคุณ',bg:'#c0aede',sched:'ตรวจโพสต์ + รายงานทุกจันทร์ 09:00',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
+  manager:{name:'พี่ต้น',role:'ผู้จัดการเพจ · อนุมัติโพสต์แทนคุณ',bg:'#c0aede',sched:'ตรวจโพสต์ + รายงานทุกจันทร์ 09:00',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=1a2340&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
   writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',bg:'#ffd5dc',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00',img:AV+'accessoriesProbability=0&seed=pen&top=straight01&hairColor=4a312c&clothing=hoodie&clothesColor=3c4f5c&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=ffd5dc'},
   community:{name:'น้องคอม',role:'ดูแลคอมเมนต์ · ร่างคำตอบให้คุณส่ง',bg:'#d1fae5',sched:'เช็กคอมเมนต์ทุกวัน 08:00 และ 21:00',img:AV+'accessoriesProbability=0&seed=com&top=bob&hairColor=2c1b18&clothing=shirtCrewNeck&clothesColor=a7ffc4&eyes=happy&eyebrows=raisedExcitedNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=d1fae5'},
   analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด · เสนอปรับงบ คุณอนุมัติ',bg:'#ffdfbf',sched:'อ่านผลแอดทุกวัน 07:30',img:AV+'accessoriesProbability=100&seed=boost&top=theCaesar&hairColor=2c1b18&accessories=round&clothing=graphicShirt&clothesColor=ff5c5c&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=ffdfbf'},
@@ -1728,6 +1742,62 @@ function chatTab(){
   <div id="chat-end"></div>
   <div class="chatbox"><input id="chat-new" placeholder="แวะมาทักทีม เช่น วันนี้กินอะไรกันดี" onkeydown="if(event.key==='Enter'){document.querySelector('[data-a=chatSend]').click();}"><button class="btn btn-cta btn-sm" data-a="chatSend">ส่ง</button></div></div>`;
 }
+let DOCS={links:null,files:[],loading:false,err:''};
+async function loadDocs(){DOCS.loading=true;try{const j=await adminApi('/api/content?action=docs');if(j.ok){DOCS.links=j.links||[];DOCS.files=j.files||[];DOCS.err='';}else DOCS.err=j.error||'โหลดไม่ได้';}catch(e){DOCS.err='เชื่อมต่อไม่ได้';}DOCS.loading=false;}
+function docCard(l,own){const host=(()=>{try{return new URL(l.url).host.replace(/^www\./,'');}catch(e){return l.url;}})();
+  return `<a class="doc" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(l.title)}</b><span class="fine">${esc(l.note||host)}</span>${own?`<button class="tx" data-a="docRemove" data-id="${l.id}" title="ลบลิงก์นี้" onclick="event.preventDefault()">×</button>${l.from&&l.from!=='manual'&&TEAM[l.from]?ava(l.from,1):''}`:''}</a>`;}
+function docsTab(){
+  if(DOCS.links===null&&!DOCS.loading){loadDocs().then(()=>render(true));}
+  if(!postsLoaded){loadPosts().then(()=>render(true));}
+  if(!FB.page&&!FB._asked){FB._asked=true;loadFbStatus().then(()=>render(true));}
+  if(!TH.user&&!TH._asked){TH._asked=true;loadThStatus().then(()=>render(true));}
+  const pid=FB.page&&FB.page.id,thu=TH.user&&(TH.user.username||TH.user.name);
+  const SYS=[
+    ['ร้านและระบบหลังบ้าน',[
+      {title:'หน้าร้าน SheetLab',url:location.origin+'/',note:'เว็บที่ลูกค้าเห็น'},
+      {title:'หน้าแอดมิน (หน้านี้)',url:location.origin+'/#admin',note:'เปิดจากมือถือได้ ล็อกอินด้วยอีเมลเจ้าของ'},
+      {title:'Vercel (โฮสต์เว็บ + cron)',url:'https://vercel.com/dashboard',note:'ดู deploy, log, ตัวแปรลับ (Environment Variables)'},
+      {title:'Supabase (ฐานข้อมูล)',url:'https://supabase.com/dashboard/project/lpeqaorswhwzlplsaqpe',note:'ตาราง posts, orders, shop_state และ SQL editor'},
+      {title:'Supabase Storage (ไฟล์รูป/ชีท)',url:'https://supabase.com/dashboard/project/lpeqaorswhwzlplsaqpe/storage/buckets/product-images',note:'bucket product-images รวมโฟลเดอร์ factory/'},
+      {title:'GitHub (โค้ดเว็บ)',url:'https://github.com/postlandproperty-star/my-shop',note:'ทุกการแก้เว็บอยู่ที่นี่'},
+      {title:'Stripe (รับเงิน)',url:'https://dashboard.stripe.com/',note:'ยอดชำระ คืนเงิน webhook'},
+    ]],
+    ['เพจและโซเชียล',[
+      pid?{title:'เพจ Facebook'+(FB.page.name?' · '+FB.page.name:''),url:'https://www.facebook.com/'+pid,note:'หน้าเพจที่ลูกค้าเห็น'}:{title:'เพจ Facebook',url:'https://www.facebook.com/',note:'ยังไม่ได้เชื่อมเพจ ไปที่แท็บคอนเทนต์'},
+      {title:'Meta Business Suite',url:pid?'https://business.facebook.com/latest/home?asset_id='+pid:'https://business.facebook.com/latest/',note:'กล่องข้อความ คอมเมนต์ สถิติเพจ'},
+      {title:'Ads Manager',url:'https://adsmanager.facebook.com/adsmanager/manage/campaigns',note:'แคมเปญโฆษณา (น้องบูสต์เสนอ คุณแดนกด)'},
+      {title:'Threads'+(thu?' · @'+thu:''),url:thu?'https://www.threads.com/@'+thu:'https://www.threads.com/',note:thu?'โปรไฟล์ Threads ของร้าน':'ยังไม่ได้เชื่อม Threads'},
+      {title:'Meta for Developers (แอป)',url:'https://developers.facebook.com/apps/',note:'แอป SheetLab Threads และ Publisher · ต่ออายุสิทธิ์/redirect'},
+      {title:'Meta Pixel / Events Manager',url:'https://business.facebook.com/events_manager2/',note:'ตรวจว่า Pixel ยิงถูกไหม'},
+    ]],
+    ['ทีม AI และเครื่องมือ',[
+      {title:'ตารางงานทีม (Claude routines)',url:'https://claude.ai/code/routines',note:'เปิด/ปิด/แก้เวลาแต่ละคน ดู log การทำงาน'},
+      {title:'Slack #sheetlab-team',url:'https://app.slack.com/',note:'รายงานประจำวันของทุกคน'},
+      {title:'Canva',url:'https://www.canva.com/',note:'รูปโพสต์ธีม Modern Blue ที่น้องปากกาสร้าง'},
+      {title:'Meta Graph API Explorer',url:'https://developers.facebook.com/tools/explorer/',note:'ใช้ตอนต้องเชื่อมเพจใหม่หรือดีบักโทเค็น'},
+    ]],
+  ];
+  const links=DOCS.links||[];const cats={};links.forEach(l=>{(cats[l.cat||'อื่นๆ']=cats[l.cat||'อื่นๆ']||[]).push(l);});
+  const notes=POSTS.filter(p=>p.status==='note'&&!['chat','reply','log'].includes(p.kind)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  const pick=(f,label)=>{const n=notes.find(f);return n?`<details class="docnote"><summary>${ava(n.source||'manager',1)}<span>${label}</span><span class="fine" style="font-weight:400">${fdt(Date.parse(n.created_at))}</span></summary><pre>${esc(n.text)}</pre></details>`:'';};
+  const teamDocs=pick(p=>p.kind==='plan','แผนสัปดาห์ล่าสุด (พี่ต้น)')+pick(p=>p.kind==='report'&&p.source==='manager','รายงานประจำสัปดาห์ล่าสุด (พี่ต้น)')+pick(p=>p.kind==='finance','สรุปบัญชีล่าสุด (พี่บัญชี)')+pick(p=>p.kind==='trend','หัวข้อแนะนำล่าสุด (น้องเทรนด์)')+pick(p=>p.kind==='health','ตรวจสุขภาพระบบล่าสุด (พี่การ์ด)')+pick(p=>p.kind==='product','ข้อเสนอสินค้าล่าสุด (พี่โปร)');
+  return `<p class="fine" style="margin:12px 0 4px">ห้องเอกสาร: ลิงก์ที่ต้องใช้บ่อย ไฟล์ชีทจากโรงงาน และเอกสารล่าสุดของทีม รวมไว้ที่เดียว คุณแดนเพิ่มลิงก์ของตัวเองได้ และทีมฝากลิงก์เข้ามาได้ (จะมีรูปคนฝากกำกับ) <button class="chip" data-a="docsRefresh">รีเฟรช</button></p>
+  ${DOCS.err?`<p class="fine" style="color:var(--bad)">${esc(DOCS.err)}</p>`:''}
+  ${SYS.map(([h,arr])=>`<h3 class="h3">${h}</h3><div class="docgrid">${arr.map(l=>docCard(l,false)).join('')}</div>`).join('')}
+  <h3 class="h3" style="margin-top:18px">ลิงก์ที่เพิ่มเอง (${links.length})</h3>
+  <div class="docform"><input id="doc-title" placeholder="ชื่อ เช่น ไดรฟ์ไฟล์ต้นฉบับ"><input id="doc-url" placeholder="https://..." inputmode="url"><input id="doc-note" placeholder="หมายเหตุ / หมวด (ไม่บังคับ)"><button class="btn btn-line btn-sm" data-a="docAdd">เพิ่มลิงก์</button></div>
+  ${DOCS.links===null?'<p class="fine">กำลังโหลด...</p>':links.length?Object.keys(cats).map(c=>`${Object.keys(cats).length>1||c!=='อื่นๆ'?`<p class="fine" style="margin:6px 0">${esc(c)}</p>`:''}<div class="docgrid">${cats[c].map(l=>docCard(l,true)).join('')}</div>`).join(''):'<p class="fine">ยังไม่มี เพิ่มลิงก์ที่ใช้บ่อยไว้ตรงนี้ เช่น ไดรฟ์ไฟล์ต้นฉบับชีท บัญชีธนาคาร หรือหน้าจัดการโดเมน</p>'}
+  <h3 class="h3" style="margin-top:18px">ไฟล์ชีทจากโรงงาน (${DOCS.files.length})</h3>
+  ${DOCS.files.length?`<div class="docgrid">${DOCS.files.map(f=>docCard({title:f.title,url:f.file_url,note:`${f.pages?f.pages+' หน้า · ':''}${f.price?f.price+' บาท':'แจกฟรี'}${f.done_at?' · เสร็จ '+fmt(f.done_at):''}`},false)).join('')}</div>`:'<p class="fine">ยังไม่มีไฟล์ที่ผลิตเสร็จ ใบสั่งที่รออยู่ดูได้ในแท็บทีม</p>'}
+  <h3 class="h3" style="margin-top:18px">เอกสารล่าสุดของทีม</h3>
+  ${teamDocs||'<p class="fine">ยังไม่มีเอกสาร จะมีหลังทีมส่งรายงานรอบแรก</p>'}
+  <h3 class="h3" style="margin-top:18px">ข้อมูลระบบที่ควรรู้</h3>
+  <div class="docnote"><pre style="margin:0">รอบโพสต์อัตโนมัติ: 10:00 (cron + ตรวจสุขภาพระบบ) · 19:05 (cron) · 21:00 (น้องคอมกดให้ เฉพาะ Threads)
+โทเค็น Threads ต่ออายุเองทุก 60 วัน · โทเค็นเพจ Facebook ไม่หมดอายุ (ยกเว้นเปลี่ยนรหัสผ่านหรือถอนสิทธิ์)
+กุญแจลับทั้งหมด (Supabase, Stripe, กุญแจทีม) อยู่ใน Vercel → Settings → Environment Variables ไม่เก็บในหน้านี้
+แผนฟรีของ Vercel: ฟังก์ชันได้ 12 ตัว (ใช้ครบแล้ว) และ cron ได้ 2 ตัว (ใช้ครบแล้ว)
+ถ้าเว็บล่ม: ดู Vercel → Deployments → log ล่าสุด แล้วแจ้งในห้องพักหรือกด "ตรวจตอนนี้" ที่แท็บเช็คลิสต์</pre></div>`;
+}
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
@@ -1791,9 +1861,9 @@ function teamTab(){
 }
 
 function adminView(){
-  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม'],['chat','ห้องพัก']];
+  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม'],['chat','ห้องพัก'],['docs','ห้องเอกสาร']];
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,chat:chatTab}[S.tab]();
+  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}${t[0]==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:''}</button>`).join('')}</div>
     ${body}
@@ -1887,6 +1957,9 @@ function act(a,el){
     case 'todoRemove':{if(!confirm('ลบรายการนี้ออกจากเช็คลิสต์?'))break;adminPost('/api/content?action=todo',{id,remove:true}).then(j=>{if(j.ok){TODO.items=j.items;render(true);}else toast(j.error||'ลบไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'todoAdd':{const inp=$('#todo-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์งานก่อน');break;}adminPost('/api/content?action=todo',{text}).then(j=>{if(j.ok){TODO.items=j.items;render(true);toast('เพิ่มแล้ว');}else toast(j.error||'เพิ่มไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'todoRefresh':{TODO.items=null;render(true);break;}
+    case 'docsRefresh':{DOCS.links=null;render(true);break;}
+    case 'docRemove':{if(!confirm('ลบลิงก์นี้ออกจากห้องเอกสาร?'))break;adminPost('/api/content?action=docs',{id,remove:true}).then(j=>{if(!j.ok)throw new Error(j.error||'ลบไม่ได้');DOCS.links=j.links;DOCS.files=j.files||DOCS.files;render(true);}).catch(e=>toast(e.message));break;}
+    case 'docAdd':{const t=$('#doc-title'),u=$('#doc-url'),n=$('#doc-note');const url=u?u.value.trim():'';if(!/^https?:\/\//i.test(url)){toast('ใส่ลิงก์ที่ขึ้นต้นด้วย https://');break;}el.disabled=true;adminPost('/api/content?action=docs',{title:t?t.value.trim():'',url,note:n?n.value.trim():''}).then(j=>{if(!j.ok)throw new Error(j.error||'เพิ่มไม่ได้');DOCS.links=j.links;DOCS.files=j.files||DOCS.files;render(true);toast('เพิ่มแล้ว');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'chatRefresh':{CHAT.msgs=null;render(true);break;}
     case 'chatRemove':{if(!confirm('ลบข้อความนี้ออกจากห้องพัก?'))break;adminPost('/api/content?action=chat',{id,remove:true}).then(j=>{if(!j.ok)throw new Error(j.error||'ลบไม่ได้');CHAT.msgs=j.messages;render(true);}).catch(e=>toast(e.message));break;}
     case 'chatSend':{const inp=$('#chat-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=chat',{text}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');CHAT.msgs=j.messages;render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);toast('ส่งแล้ว ทีมจะตอบในรอบถัดไป');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
@@ -1974,7 +2047,7 @@ function act(a,el){
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว ทีมจะเห็นในกระดานรอบถัดไป');S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='docs')DOCS.links=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
