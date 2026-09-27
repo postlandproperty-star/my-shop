@@ -217,7 +217,8 @@ export default async function handler(req, res) {
       const skippedThreads = hasCh ? 0 : list0.filter((p) => p && p.channel === 'threads').length;
       const list = hasCh ? list0 : list0.filter((p) => !(p && p.channel === 'threads'));
       const rows = list.filter((p) => p && String(p.text || '').trim()).slice(0, 12).map((p) => ({
-        status: 'draft', source: MEMBER_TH[p.source] ? String(p.source) : 'writer', kind: String(p.kind || (p.video_url ? 'reel' : 'tip')).slice(0, 20), ...(hasCh ? { channel: p.channel === 'threads' ? 'threads' : 'facebook' } : {}),
+        // คลิปวิดีโอ (kind reel) ให้คุณแดนอนุมัติเองเท่านั้น จึงเข้าคิว needs_owner ไม่ผ่านพี่ต้น
+        status: (p.kind === 'reel' || p.video_url) ? 'needs_owner' : 'draft', source: MEMBER_TH[p.source] ? String(p.source) : 'writer', kind: String(p.kind || (p.video_url ? 'reel' : 'tip')).slice(0, 20), ...(hasCh ? { channel: p.channel === 'threads' ? 'threads' : 'facebook' } : {}),
         text: String(p.text).slice(0, 4000), image_url: p.video_url ? String(p.video_url).slice(0, 500) : p.image_url ? String(p.image_url).slice(0, 500) : null,
         link_url: p.link_url ? String(p.link_url).slice(0, 500) : null,
         scheduled_at: p.scheduled_at && !isNaN(Date.parse(p.scheduled_at)) ? new Date(p.scheduled_at).toISOString() : null,

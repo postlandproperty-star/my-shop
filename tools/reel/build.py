@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 HERE = os.path.dirname(os.path.abspath(__file__))
 API = os.environ.get('API_BASE', 'https://my-shop-lake-ten.vercel.app/api/content')
 KEY = os.environ.get('CONTENT_KEY', '')
-VOICE = os.environ.get('VOICE', 'wMBr6SfqQVuOqplK01NE')  # Air - Thai teacher (ElevenLabs)
+VOICE = os.environ.get('VOICE', 'J5M1BLQpOJ3qx2FU6EG0')  # เสียงประจำที่คุณแดนเลือก (ElevenLabs)
 SPEED = float(os.environ.get('SPEED', '1.0'))
 W, H = 1080, 1920
 BG = (43, 71, 240); WHITE = (255, 255, 255); INK = (26, 26, 26); RED = (239, 91, 76); YEL = (245, 197, 24); GREEN = (22, 163, 74); BLUE = (43, 71, 240)
