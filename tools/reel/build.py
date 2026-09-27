@@ -11,6 +11,7 @@ API = os.environ.get('API_BASE', 'https://my-shop-lake-ten.vercel.app/api/conten
 KEY = os.environ.get('CONTENT_KEY', '')
 VOICE = os.environ.get('VOICE', 'J5M1BLQpOJ3qx2FU6EG0')  # เสียงประจำที่คุณแดนเลือก (ElevenLabs)
 SPEED = float(os.environ.get('SPEED', '1.0'))
+MODEL = os.environ.get('MODEL', 'eleven_multilingual_v2')  # โมเดลเสียง ElevenLabs (eleven_v3 / eleven_turbo_v2_5 / eleven_flash_v2_5)
 DRY = os.environ.get('DRY') == '1'  # DRY=1: เลือกรูป+วาดสไลด์อย่างเดียว ไม่สร้างเสียง ไม่ตัดต่อ (ไว้ตรวจรูปก่อน)
 W, H = 1080, 1920
 BG = (43, 71, 240); WHITE = (255, 255, 255); INK = (26, 26, 26); RED = (239, 91, 76); YEL = (245, 197, 24); GREEN = (22, 163, 74); BLUE = (43, 71, 240)
@@ -173,9 +174,9 @@ def main():
     if not KEY: raise SystemExit('CONTENT_KEY missing')
     def tts(text, k):
         # เสียงเก็บแคชตามข้อความ+เสียง ถ้าสร้างซ้ำด้วยข้อความเดิมจะไม่เสียเครดิตอีก
-        cfn = os.path.join(CACHE, 'tts-' + hashlib.md5(f'{VOICE}|{SPEED}|{text}'.encode()).hexdigest() + '.mp3')
+        cfn = os.path.join(CACHE, 'tts-' + hashlib.md5(f'{VOICE}|{SPEED}|{MODEL}|{text}'.encode()).hexdigest() + '.mp3')
         if not os.path.exists(cfn) or os.path.getsize(cfn) < 1000:
-            j = json.loads(http(API + '?action=tts', data=json.dumps({'text': text, 'voice': VOICE, 'speed': SPEED}).encode(), headers={'Content-Type': 'application/json', 'x-content-key': KEY}, timeout=120))
+            j = json.loads(http(API + '?action=tts', data=json.dumps({'text': text, 'voice': VOICE, 'speed': SPEED, 'model': MODEL}).encode(), headers={'Content-Type': 'application/json', 'x-content-key': KEY}, timeout=120))
             if not j.get('ok'): raise SystemExit('tts failed: ' + str(j))
             open(cfn, 'wb').write(http(j['url']))
         fn = os.path.join(OUTDIR, f't{k:02d}.mp3'); open(fn, 'wb').write(open(cfn, 'rb').read()); return fn
