@@ -1572,7 +1572,8 @@ function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.va
 function cmtBox(k){
   if(k==='manual')return '';
   const mine=POSTS.filter(p=>p.status==='note'&&p.kind==='reply'&&String(p.text||'').startsWith('@'+k+' ')).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
-  const last=POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
+  const mineOf=POSTS.filter(p=>p.source===k).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  const last=mineOf.find(p=>p.status==='note'||p.status==='log')||(mineOf[0]?{...mineOf[0],text:'ส่งโพสต์ล่าสุด: '+String(mineOf[0].text||'').split('\n')[0]}:null);
   const open=S.cmt===k;
   const line=last?String(last.text||'').trim():'ยังไม่มีข้อความจาก'+TEAM[k].name;
   const short=open?line:line.split('\n').filter(l=>l.trim()).slice(0,2).join('\n');
