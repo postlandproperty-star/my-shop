@@ -502,7 +502,7 @@ async function loadRemote(){
   remoteReady=true;
   if(!main||!main.data||!Array.isArray(main.data.products))return false; // ยังไม่เคยตั้งค่าข้อมูลบนระบบ
   const merged=Object.assign({},main.data,priv&&priv.data?priv.data:{});
-  const links=(priv&&priv.data&&priv.data.links)||{};delete merged.links;
+  privLoaded=!!(priv&&priv.data);const links=(priv&&priv.data&&priv.data.links)||{};delete merged.links;
   needsMigrate=!!sbSession&&(main.data.products||[]).some(p=>p.link);
   merged.products=(merged.products||[]).map(p=>Object.assign({},p,{link:p.link||links[p.id]||''}));
   if(!sbSession){ // ลูกค้าเห็นแค่ข้อมูลสาธารณะ ส่วนออเดอร์ทดลองของเขาอยู่ในแคชเครื่องเขาเอง
@@ -540,7 +540,7 @@ async function autoSync(force){
   syncing=false;render(true);
 }
 // เรียก API หลังบ้าน: ถ้าโทเค็นหมดอายุ (401) จะขอต่ออายุ 1 ครั้งแล้วยิงซ้ำ ถ้ายังไม่ผ่านให้กลับไปหน้าล็อกอินพร้อมข้อความ แทนที่จะค้าง "กำลังโหลด"
-let reloginShown=false;
+let reloginShown=false,privLoaded=false;
 function sessionLost(){
   if(reloginShown)return;reloginShown=true;
   sbSession=null;S.relogin=true;S.err='เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง';S.view='login';render(false);
@@ -1147,7 +1147,7 @@ const linkStatus={};
 async function checkAllLinks(force){
   if(!sb||!sbSession)return;
   for(const p of D.products){
-    if(!p.link||!validLink(p.link)){linkStatus[p.id]={ok:false,text:'ยังไม่ได้ใส่ลิงก์ไฟล์',t:Date.now()};continue;}
+    if(!p.link||!validLink(p.link)){linkStatus[p.id]=privLoaded?{ok:false,text:'ยังไม่ได้ใส่ลิงก์ไฟล์',t:Date.now()}:{unknown:true,text:'ยังโหลดข้อมูลลิงก์ไฟล์ไม่ได้ (เซสชันอาจหมดอายุ) รีเฟรชหน้าหรือล็อกอินใหม่',t:0};continue;}
     const cur=linkStatus[p.id];
     if(!force&&cur&&cur.url===p.link&&Date.now()-cur.t<300e3)continue;
     linkStatus[p.id]={pending:true,text:'กำลังตรวจ...',url:p.link,t:Date.now()};render(true);
