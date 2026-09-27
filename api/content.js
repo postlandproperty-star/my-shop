@@ -639,9 +639,9 @@ export default async function handler(req, res) {
       if (q.length) lines.push(`โรงงาน: กำลังผลิต ${q.length} งาน ล่าสุด "${String(q[0].title || '').slice(0, 50)}"`);
       const owner = notes.filter((n) => n.kind === 'chat' && n.source === 'manual').map((n) => ({ at: n.created_at, text: String(n.text).slice(0, 300) }));
       const loreRows = await sb('shop_state?id=eq.lore&select=data');
-      const chatRows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(now - 3 * 864e5).toISOString()}&select=source,text,created_at,scheduled_at&order=created_at.asc&limit=120`);
+      const chatRows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(now - 3 * 864e5).toISOString()}&select=id,source,text,created_at,scheduled_at,notes&order=created_at.asc&limit=120`);
       const nowIso = new Date().toISOString();
-      return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', recent_chat: chatRows.map((r) => ({ source: r.source, text: r.text, at: r.scheduled_at || r.created_at })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
+      return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
     if (action === 'todo') {
       // เช็คลิสต์ของคุณแดน (แอดมินหรือ key): GET รวมรายการจากรายงาน/แผนของพี่ต้น 14 วัน + รายการที่ทีมส่งตรง, POST {id,done}|{text}|{id,remove}

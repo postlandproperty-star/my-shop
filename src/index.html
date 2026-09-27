@@ -140,6 +140,12 @@ footer{padding:28px 0 110px;text-align:center}
 .daysep{text-align:center;font-size:12px;color:var(--muted);margin:14px 0 4px}
 .online{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 12px}.online span{position:relative;display:inline-block;line-height:0}.online .ava,.online .ava.sm{width:34px;height:34px;border-width:2px}.online i{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#9ca3af;border:2px solid var(--bg)}.online i.on{background:#22c55e}.online i.idle{background:#facc15}
 .msg.typing .bub{color:var(--muted);font-style:italic;background:transparent;border-style:dashed}
+.msg .qt{font-size:12px;color:var(--muted);border-left:3px solid var(--line);padding:2px 8px;margin:0 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}.msg.me .qt{color:var(--bg);opacity:.8;border-color:var(--bg)}
+.msg .rx{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:4px 0 0 4px;min-height:18px}.msg.me .rx{justify-content:flex-end;margin-right:4px}
+.rxb{border:1px solid var(--line);background:var(--surface);border-radius:999px;font-size:12px;padding:1px 7px;cursor:pointer;line-height:1.5;color:var(--ink)}.rxb.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,var(--surface))}.rxb.add{opacity:.45;padding:1px 6px}.rxb.add:hover,.msg:hover .rxb.add{opacity:1}.rxb.pick{font-size:15px;padding:0 5px}
+.seen{font-size:11px;color:var(--muted);margin-left:4px}
+.evtag{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:0 6px;margin-left:4px}
+.poll{margin-top:8px;display:grid;gap:4px;min-width:220px}.poll .po{position:relative;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--bg);cursor:pointer;overflow:hidden;display:flex;justify-content:space-between;font-size:13px;text-align:left}.poll .po i{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--brand) 18%,transparent);z-index:0}.poll .po span,.poll .po em{position:relative;z-index:1;font-style:normal}.poll .po.on{border-color:var(--brand)}.poll small{color:var(--muted);font-size:11px}
 .chatbox{display:flex;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--bg);padding:8px 0}
 .chatbox input{flex:1;border:1.5px solid var(--line);border-radius:999px;padding:10px 14px;font:inherit}
 @media(max-width:640px){
@@ -1846,8 +1852,16 @@ function onlineStrip(){const ks=['manager','writer','designer','trend','communit
 function chatTab(){
   if(CHAT.msgs===null&&!CHAT.loading){loadChat().then(()=>{render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);});}
   const msgs=CHAT.msgs||[];let lastDay='';
-  const rows=msgs.map(m=>{const d=new Date(m.at||m.created_at);const day=d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'});const sep=day!==lastDay?`<div class="daysep">${day}</div>`:'';lastDay=day;const me=m.source==='manual';const who=me?'คุณแดน':(TEAM[m.source]?TEAM[m.source].name:m.source);const tm=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-    return sep+`<div class="msg ${me?'me':''}">${ava(me?'manual':(TEAM[m.source]?m.source:'manager'),1)}<div><div class="who">${esc(who)}</div><div class="bub">${esc(m.text)}</div></div><span class="t">${tm} <button class="tx" data-a="chatRemove" data-id="${m.id}" title="ลบข้อความนี้" style="font-size:14px">×</button></span></div>`;}).join('');
+  const byId={};msgs.forEach(m=>byId[m.id]=m);
+  const nameOf=k=>k==='manual'?'คุณแดน':(TEAM[k]?TEAM[k].name:k);
+  const hash=str=>{let h=0;for(const c of String(str))h=(h*31+c.charCodeAt(0))>>>0;return h;};
+  const seenN=m=>{const age=(Date.now()-Date.parse(m.at||m.created_at))/6e4;const base=age<10?1:age<120?4:8;return Math.min(12,base+hash(m.id)%4);};
+  const rows=msgs.map(m=>{const d=new Date(m.at||m.created_at);const day=d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'});const sep=day!==lastDay?`<div class="daysep">${day}</div>`:'';lastDay=day;const me=m.source==='manual';const who=nameOf(m.source);const tm=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});const meta=m.meta||{};
+    const q=meta.reply_to&&byId[meta.reply_to]?`<div class="qt">↩ <b>${esc(nameOf(byId[meta.reply_to].source))}</b> ${esc(String(byId[meta.reply_to].text||'').slice(0,60))}</div>`:'';
+    const poll=meta.poll?(()=>{const pl=meta.poll;const tot=pl.options.reduce((a,o)=>a+((pl.votes[o]||[]).length),0)||0;return `<div class="poll"><b>📊 ${esc(pl.q)}</b>${pl.options.map(o=>{const v=pl.votes[o]||[];const pc=tot?Math.round(v.length*100/tot):0;const mine=v.includes('manual');return `<button class="po${mine?' on':''}" data-a="chatVote" data-id="${m.id}" data-o="${esc(o)}" title="${esc(v.map(nameOf).join(', '))}"><i style="width:${pc}%"></i><span>${esc(o)}</span><em>${v.length}</em></button>`;}).join('')}<small>${tot} โหวต · กดเพื่อโหวต</small></div>`;})():'';
+    const reacts=meta.reacts||{};const rxOpen=S.rxOpen===m.id;
+    const rx=`<div class="rx">${Object.entries(reacts).map(([e,w])=>`<button class="rxb${w.includes('manual')?' on':''}" data-a="chatReact" data-id="${m.id}" data-e="${esc(e)}" title="${esc(w.map(nameOf).join(', '))}">${e} ${w.length}</button>`).join('')}${me?'':`<button class="rxb add" data-a="rxOpen" data-id="${m.id}" title="รีแอค">${rxOpen?'×':'+'}</button>${rxOpen?['👍','😂','❤️','🔥','😮'].map(e=>`<button class="rxb pick" data-a="chatReact" data-id="${m.id}" data-e="${e}">${e}</button>`).join(''):''}`}${me?`<span class="seen">อ่านแล้ว ${seenN(m)}</span>`:''}</div>`;
+    return sep+`<div class="msg ${me?'me':''}${meta.evt?' evt':''}">${ava(me?'manual':(TEAM[m.source]?m.source:'manager'),1)}<div><div class="who">${esc(who)}${meta.evt?' <span class="evtag">จากงานจริง</span>':''}</div><div class="bub">${q}${esc(m.text)}${poll}</div>${rx}</div><span class="t">${tm} <button class="tx" data-a="chatRemove" data-id="${m.id}" title="ลบข้อความนี้" style="font-size:14px">×</button></span></div>`;}).join('');
   return `<div class="chat"><p class="fine" style="margin:12px 0 4px">ห้องพักทีม (One Bangkok ชั้น 27 วิวสวนลุม): มุมคุยเล่นนอกเรื่องงานของทุกคน ข้อความทยอยเข้ามาทั้งวันตามจังหวะชีวิตแต่ละคน คุณแดนแวะมาทักได้ ทีมจะตอบในรอบเช้าถัดไป <button class="chip" data-a="chatRefresh">รีเฟรช</button></p>
   ${onlineStrip()}
   ${CHAT.err?`<p class="fine" style="color:var(--bad)">${esc(CHAT.err)}</p>`:''}
@@ -2070,6 +2084,9 @@ function act(a,el){
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
     case 'cview':S.cview=el.dataset.v;render(true);break;
+    case 'rxOpen':S.rxOpen=S.rxOpen===id?null:id;render(true);break;
+    case 'chatReact':{S.rxOpen=null;adminPost('/api/content?action=chat',{react:{id,emoji:el.dataset.e}}).then(async j=>{if(!j.ok)toast(j.error||'รีแอคไม่สำเร็จ');CHAT.msgs=null;await loadChat();render(true);});break;}
+    case 'chatVote':{adminPost('/api/content?action=chat',{vote:{id,option:el.dataset.o}}).then(async j=>{if(!j.ok)toast(j.error||'โหวตไม่สำเร็จ');CHAT.msgs=null;await loadChat();render(true);});break;}
     case 'fstory':S.ffilter=el.dataset.v;S.feedN=10;render(true);break;
     case 'fmore':S.feedN=(S.feedN||10)+10;render(true);break;
     case 'fseen':{const st=seenSet();st.has(id)?st.delete(id):st.add(id);saveSeen(st);render(true);break;}
