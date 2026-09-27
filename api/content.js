@@ -217,8 +217,8 @@ export default async function handler(req, res) {
       const skippedThreads = hasCh ? 0 : list0.filter((p) => p && p.channel === 'threads').length;
       const list = hasCh ? list0 : list0.filter((p) => !(p && p.channel === 'threads'));
       const rows = list.filter((p) => p && String(p.text || '').trim()).slice(0, 12).map((p) => ({
-        // คลิปวิดีโอ (kind reel) ให้คุณแดนอนุมัติเองเท่านั้น จึงเข้าคิว needs_owner ไม่ผ่านพี่ต้น
-        status: (p.kind === 'reel' || p.video_url) ? 'needs_owner' : 'draft', source: MEMBER_TH[p.source] ? String(p.source) : 'writer', kind: String(p.kind || (p.video_url ? 'reel' : 'tip')).slice(0, 20), ...(hasCh ? { channel: p.channel === 'threads' ? 'threads' : 'facebook' } : {}),
+        // คลิปวิดีโอ (kind reel) น้องคลิปอนุมัติเองและระบบโพสต์ตามเวลา ไม่ผ่านพี่ต้น ไม่ต้องรอคุณแดน (คุณแดนสั่ง 28 ก.ย. 69 เพื่อประหยัดโทเค็น)
+        status: (p.kind === 'reel' || p.video_url) ? 'approved' : 'draft', source: MEMBER_TH[p.source] ? String(p.source) : 'writer', kind: String(p.kind || (p.video_url ? 'reel' : 'tip')).slice(0, 20), ...(hasCh ? { channel: p.channel === 'threads' ? 'threads' : 'facebook' } : {}),
         text: String(p.text).slice(0, 4000), image_url: p.video_url ? String(p.video_url).slice(0, 500) : p.image_url ? String(p.image_url).slice(0, 500) : null,
         link_url: p.link_url ? String(p.link_url).slice(0, 500) : null,
         scheduled_at: p.scheduled_at && !isNaN(Date.parse(p.scheduled_at)) ? new Date(p.scheduled_at).toISOString() : null,
@@ -317,7 +317,7 @@ export default async function handler(req, res) {
       const reason = String(body.reason || '').slice(0, 300);
       const cur = await sb(`posts?id=eq.${id}&select=id,status,notes,scheduled_at`);
       if (!cur.length) return res.status(404).json({ ok: false, error: 'not found' });
-      if (cur[0].status !== 'draft') return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${cur[0].status} ไม่ใช่ draft` });
+      if (!['draft', 'needs_owner'].includes(cur[0].status)) return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${cur[0].status} ไม่ใช่ draft` });
       if (status === 'approved' && !cur[0].scheduled_at && !body.scheduled_at) return res.status(400).json({ ok: false, error: 'โพสต์นี้ยังไม่มีเวลา ต้องส่ง scheduled_at มาด้วย' });
       const stamp = `${decision === 'approve' ? '✅' : decision === 'reject' ? '⛔' : '⚠️'} พี่ต้น: ${reason || decision}`;
       const patch = { status, notes: [cur[0].notes, stamp].filter(Boolean).join('\n'), error: null };
