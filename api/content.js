@@ -36,6 +36,39 @@ const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audie
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
+// ห้องพักทีม: เหตุการณ์จริงในร้านสะท้อนเข้าห้องทันที (ไม่ใช้โมเดล ใช้แม่แบบสุ่ม)
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+async function chatEvent(source, text, evt) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source, text: String(text).slice(0, 200), notes: JSON.stringify({ evt: evt || true }) }], prefer: 'return=minimal' }); } catch (e) {} }
+// โลกภายนอกจริงของกรุงเทพ (ฟรี ไม่ใช้คีย์): อากาศ ฝุ่น วันหยุด เงินเดือน ช่วงรถติด สำหรับ digest ของห้องพัก
+const TH_HOL = { '2026-01-01': 'วันขึ้นปีใหม่', '2026-03-03': 'วันมาฆบูชา', '2026-04-06': 'วันจักรี', '2026-04-13': 'วันสงกรานต์', '2026-04-14': 'วันสงกรานต์', '2026-04-15': 'วันสงกรานต์', '2026-05-01': 'วันแรงงาน', '2026-05-04': 'วันฉัตรมงคล', '2026-06-01': 'ชดเชยวันวิสาขบูชา', '2026-06-03': 'วันเฉลิมพระชนมพรรษาพระราชินี', '2026-07-28': 'วันเฉลิมพระชนมพรรษา ร.10', '2026-07-29': 'วันอาสาฬหบูชา', '2026-07-30': 'วันเข้าพรรษา', '2026-08-12': 'วันแม่', '2026-10-13': 'วันนวมินทรมหาราช', '2026-10-23': 'วันปิยมหาราช', '2026-12-05': 'วันพ่อ', '2026-12-07': 'ชดเชยวันพ่อ', '2026-12-10': 'วันรัฐธรรมนูญ', '2026-12-31': 'วันสิ้นปี', '2027-01-01': 'วันขึ้นปีใหม่' };
+async function worldNow() {
+  const out = { lines: [] };
+  const sig = (ms) => (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(ms) : undefined);
+  try {
+    const w = await (await fetch('https://api.open-meteo.com/v1/forecast?latitude=13.7263&longitude=100.5424&current=temperature_2m,precipitation,weather_code,relative_humidity_2m&daily=precipitation_probability_max,temperature_2m_max&timezone=Asia%2FBangkok&forecast_days=1', { signal: sig(4000) })).json();
+    const c = w.current || {}, d = w.daily || {}; const code = Number(c.weather_code || 0);
+    const desc = code >= 95 ? 'ฝนฟ้าคะนอง' : code >= 80 ? 'ฝนตกเป็นช่วงๆ' : code >= 61 ? 'ฝนตก' : code >= 51 ? 'ฝนปรอยๆ' : code >= 45 ? 'หมอกลง' : code >= 3 ? 'เมฆมาก' : code >= 1 ? 'มีเมฆบางส่วน' : 'แดดจัด';
+    const rainNow = (Number(c.precipitation) || 0) > 0, chance = d.precipitation_probability_max?.[0];
+    out.weather = { temp: c.temperature_2m, desc, rain_now: rainNow, rain_chance: chance, tmax: d.temperature_2m_max?.[0], humidity: c.relative_humidity_2m };
+    out.lines.push(`อากาศกรุงเทพตอนนี้ ${Math.round(c.temperature_2m)}° ${desc}${rainNow ? ' ฝนกำลังตก (พระราม 4 น่าจะรถติด)' : ''} โอกาสฝนวันนี้ ${chance ?? '?'}% สูงสุด ${Math.round(d.temperature_2m_max?.[0] || 0)}° ความชื้น ${c.relative_humidity_2m ?? '?'}%${Number(c.temperature_2m) >= 35 ? ' (ร้อนมาก)' : ''}`);
+  } catch (e) {}
+  try {
+    const a = await (await fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=13.7263&longitude=100.5424&current=pm2_5&timezone=Asia%2FBangkok', { signal: sig(4000) })).json();
+    const pm = Math.round(Number(a.current?.pm2_5) || 0);
+    if (pm) { out.pm25 = pm; out.lines.push(`ฝุ่น PM2.5 ${pm} µg/m³ (${pm > 75 ? 'แย่มาก ต้องใส่หน้ากาก' : pm > 37.5 ? 'เริ่มมีผลต่อสุขภาพ บ่นได้' : pm > 25 ? 'ปานกลาง' : 'อากาศดี ไม่ต้องพูดถึงฝุ่น'})`); }
+  } catch (e) {}
+  const bkk = new Date(Date.now() + 7 * 3600e3); const ymd = (dt) => dt.toISOString().slice(0, 10);
+  const today = ymd(bkk), dom = bkk.getUTCDate(), dow = bkk.getUTCDay(), hh = bkk.getUTCHours() + bkk.getUTCMinutes() / 60;
+  const hol = TH_HOL[today]; const next = [1, 2, 3].map((n) => { const dt = new Date(bkk.getTime() + n * 864e5); return TH_HOL[ymd(dt)] ? `${TH_HOL[ymd(dt)]} (อีก ${n} วัน)` : null; }).filter(Boolean);
+  if (hol) { out.holiday = hol; out.lines.push(`วันนี้เป็นวันหยุดราชการ: ${hol} (ออฟฟิศปิด คุยกันจากบ้าน ไม่พูดเรื่องรถติดหรือแคนทีน)`); }
+  if (next.length) out.lines.push(`วันหยุดที่กำลังจะถึง: ${next.join(', ')} (ชวนวางแผนได้)`);
+  if (dom >= 25) out.lines.push(dom >= 28 ? 'ใกล้สิ้นเดือน เงินเดือนออกแล้วหรือกำลังจะออก (พี่บัญชีเตือนเรื่องเก็บเงินได้)' : 'ปลายเดือน ทุกคนรอเงินเดือน (มุกกินมาม่าปลายเดือน)');
+  if (dom === 1 || dom === 2) out.lines.push('ต้นเดือน เพิ่งได้เงินเดือน (ของลดราคา ช้อปปิ้ง)');
+  if (dom === 1 || dom === 16) out.lines.push('วันหวยออก (1 หรือ 16 ของเดือน) มุกหวยเล่นได้วันนี้');
+  if (dow >= 1 && dow <= 5 && !hol && ((hh >= 7.5 && hh <= 9.5) || (hh >= 16.5 && hh <= 19.5))) out.lines.push('ตอนนี้เป็นชั่วโมงเร่งด่วน พระราม 4 กับ MRT ลุมพินีคนแน่น');
+  if (dow === 5 && !hol) out.lines.push('วันศุกร์ บรรยากาศชิลล์ ชวนกันไปกินข้าวเย็นได้'); if (dow === 1 && !hol) out.lines.push('วันจันทร์ ทุกคนขี้เกียจนิดหน่อย');
+  return out;
+}
 // ห้องเอกสาร: ลิงก์สำคัญที่คุณแดนหรือทีมเก็บไว้ shop_state id=docs (data.links)
 async function loadDocs() { const rows = await sb('shop_state?id=eq.docs&select=data'); return rows?.[0]?.data?.links || []; }
 async function saveDocs(links) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'docs', data: { links: links.slice(0, 200) }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
@@ -227,6 +260,7 @@ export default async function handler(req, res) {
       if (!rows.length) return res.status(400).json({ ok: false, error: 'no posts' });
       for (const r of rows) r.image_url = await cacheImage(r.image_url);
       const inserted = await sb('posts', { method: 'POST', body: rows, prefer: 'return=representation' });
+      if (rows.some((r) => r.kind === 'reel' && r.source === 'clip')) await chatEvent('clip', pick(['ส่งคลิปใหม่เข้าคิวแล้วครับ ตั้งเวลาโพสต์ไว้แล้ว 🎬', 'คลิปวันนี้เสร็จแล้วครับ รอเวลาปล่อย ใครอยากดูก่อนไปที่แท็บคอนเทนต์', 'ตัดเสร็จแล้วครับ วันนี้ธีมเด็ด ขอเสียงหน่อย']), 'reel');
       return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id) , skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
     }
     if (action === 'report') {
@@ -387,6 +421,7 @@ export default async function handler(req, res) {
         if (body.size) job.size = Number(body.size);
         if (body.summary) job.summary = String(body.summary).slice(0, 2000);
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
+        await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
         try { await addTodo({ text: `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`, type: 'do', from: 'factory', link: job.file_url || null }); } catch (e) { console.error('todo', e.message); }
       } else if (action === 'factory_fail') {
         job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
@@ -505,31 +540,59 @@ export default async function handler(req, res) {
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       if (req.method === 'POST') {
         const body = await readBody(req);
-        if (body.remove && /^[0-9a-f-]{36}$/.test(String(body.id || ''))) {
+        const EMO = /^\p{Extended_Pictographic}[\uFE0F\u200D\p{Extended_Pictographic}]{0,6}$/u;
+        const cleanReacts = (r) => { const o = {}; if (r && typeof r === 'object') for (const [e, who] of Object.entries(r).slice(0, 6)) { if (!EMO.test(String(e))) continue; const w = [...new Set((Array.isArray(who) ? who : []).map(String).filter((k) => k === 'manual' || MEMBER_TH[k]))].slice(0, 12); if (w.length) o[e] = w; } return o; };
+        const cleanPoll = (pl) => { if (!pl || typeof pl !== 'object' || !pl.q) return null; const options = [...new Set((Array.isArray(pl.options) ? pl.options : []).map((x) => String(x).trim().slice(0, 40)).filter(Boolean))].slice(0, 4); if (options.length < 2) return null; const votes = {}; for (const op of options) { const v = pl.votes && Array.isArray(pl.votes[op]) ? pl.votes[op] : []; votes[op] = [...new Set(v.map(String).filter((k) => k === 'manual' || MEMBER_TH[k]))]; } return { q: String(pl.q).trim().slice(0, 120), options, votes }; };
+        const readMeta = (row) => { try { return row && row.notes ? JSON.parse(row.notes) : {}; } catch (e) { return {}; } };
+        if (body.react && /^[0-9a-f-]{36}$/.test(String(body.react.id || ''))) {
+          // กดรีแอคชัน: แอดมิน = manual, key = ระบุ source ได้ (สลับเปิด/ปิด)
+          const who = admin ? 'manual' : (MEMBER_TH[body.react.source] ? String(body.react.source) : 'manager');
+          const e = String(body.react.emoji || '👍'); if (!EMO.test(e)) return res.status(400).json({ ok: false, error: 'emoji' });
+          const cur = await sb(`posts?id=eq.${body.react.id}&kind=eq.chat&select=id,notes`); if (!cur.length) return res.status(404).json({ ok: false, error: 'not found' });
+          const meta = readMeta(cur[0]); const reacts = cleanReacts(meta.reacts); const list = reacts[e] || [];
+          reacts[e] = list.includes(who) ? list.filter((x) => x !== who) : [...list, who]; if (!reacts[e].length) delete reacts[e]; meta.reacts = reacts;
+          await sbPatch(`posts?id=eq.${body.react.id}`, { notes: JSON.stringify(meta) });
+        } else if (body.vote && /^[0-9a-f-]{36}$/.test(String(body.vote.id || ''))) {
+          const who = admin ? 'manual' : (MEMBER_TH[body.vote.source] ? String(body.vote.source) : 'manager');
+          const cur = await sb(`posts?id=eq.${body.vote.id}&kind=eq.chat&select=id,notes`); if (!cur.length) return res.status(404).json({ ok: false, error: 'not found' });
+          const meta = readMeta(cur[0]); const poll = cleanPoll(meta.poll); const op = String(body.vote.option || '');
+          if (!poll || !poll.options.includes(op)) return res.status(400).json({ ok: false, error: 'no such option' });
+          for (const o of poll.options) poll.votes[o] = poll.votes[o].filter((x) => x !== who); poll.votes[op].push(who); meta.poll = poll;
+          await sbPatch(`posts?id=eq.${body.vote.id}`, { notes: JSON.stringify(meta) });
+        } else if (body.remove && /^[0-9a-f-]{36}$/.test(String(body.id || ''))) {
           await sb(`posts?id=eq.${body.id}&kind=eq.chat`, { method: 'DELETE', prefer: 'return=minimal' });
         } else if (body.clear && body.clear === 'all') {
           await sb(`posts?kind=eq.chat&status=eq.note`, { method: 'DELETE', prefer: 'return=minimal' });
         } else {
           const list = Array.isArray(body.messages) ? body.messages : [body];
           const now = Date.now();
+          const { randomUUID } = await import('node:crypto');
           const rows = [];
-          for (const m of list.slice(0, 40)) {
+          const ids = list.slice(0, 40).map(() => randomUUID());
+          list.slice(0, 40).forEach((m, i) => {
             const text = String((m && m.text) || '').trim().slice(0, 400);
-            if (!text) continue;
+            if (!text) return;
             const source = admin ? 'manual' : (MEMBER_TH[m.source] ? m.source : 'manager');
             let at = null;
             if (!admin && m.at) { const t = Date.parse(m.at); if (t && t > now - 36e5 && t < now + 2 * 864e5) at = new Date(t).toISOString(); }
-            rows.push({ status: 'note', kind: 'chat', source, text, scheduled_at: at });
-          }
+            // meta: reply_to = เลขลำดับในชุดนี้ (0..) หรือ id ข้อความเก่า, reacts = {emoji:[source]}, poll = {q,options,votes}
+            const meta = {};
+            if (!admin && m.reply_to !== undefined && m.reply_to !== null) { const r = m.reply_to; if (Number.isInteger(r) && r >= 0 && r < i) meta.reply_to = ids[r]; else if (/^[0-9a-f-]{36}$/.test(String(r))) meta.reply_to = String(r); }
+            if (admin && /^[0-9a-f-]{36}$/.test(String(m.reply_to || ''))) meta.reply_to = String(m.reply_to);
+            if (!admin && m.reacts) { const rc = cleanReacts(m.reacts); if (Object.keys(rc).length) meta.reacts = rc; }
+            if (!admin && m.poll) { const pl = cleanPoll(m.poll); if (pl) meta.poll = pl; }
+            rows.push({ id: ids[i], status: 'note', kind: 'chat', source, text, scheduled_at: at, notes: Object.keys(meta).length ? JSON.stringify(meta) : null });
+          });
           if (!rows.length) return res.status(400).json({ ok: false, error: 'พิมพ์ข้อความก่อน' });
           await sb('posts', { method: 'POST', body: rows, prefer: 'return=minimal' });
         }
       }
       const days = Math.min(30, Number(req.query.days) || 7);
       const all = !admin && keyOk(req) && req.query.all === '1';
-      const rows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=id,source,text,created_at,scheduled_at&order=created_at.asc&limit=240`);
+      const rows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=id,source,text,created_at,scheduled_at,notes&order=created_at.asc&limit=240`);
       const nowIso = new Date().toISOString();
-      const withAt = rows.map((r) => ({ id: r.id, source: r.source, text: r.text, created_at: r.created_at, at: r.scheduled_at || r.created_at })).sort((a, b) => a.at.localeCompare(b.at));
+      const parseMeta = (n) => { try { return n ? JSON.parse(n) : {}; } catch (e) { return {}; } };
+      const withAt = rows.map((r) => ({ id: r.id, source: r.source, text: r.text, created_at: r.created_at, at: r.scheduled_at || r.created_at, meta: parseMeta(r.notes) })).sort((a, b) => a.at.localeCompare(b.at));
       const future = withAt.filter((r) => r.at > nowIso);
       const shown = all ? withAt : withAt.filter((r) => r.at <= nowIso);
       return res.status(200).json({ ok: true, messages: shown.slice(-80), pending: future.length, next_at: future[0] ? future[0].at : null, next_source: future[0] ? future[0].source : null });
@@ -556,6 +619,7 @@ export default async function handler(req, res) {
       const monTh = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'][bkk.getUTCMonth()];
       const dom = bkk.getUTCDate();
       const lines = [`วันนี้วัน${dowTh}ที่ ${dom} ${monTh} ${bkk.getUTCFullYear() + 543}${[0, 6].includes(bkk.getUTCDay()) ? ' (วันหยุดสุดสัปดาห์ ทีมทำงานอัตโนมัติ คนคุยน้อยลง)' : ''}${dom >= 25 ? ' ใกล้สิ้นเดือน (เงินเดือนออก คนคุยเรื่องเงินและของกิน)' : dom <= 3 ? ' ต้นเดือน' : ''}`];
+      const world = await worldNow(); world.lines.forEach((l) => lines.push(l));
       const since = new Date(now - 864e5).toISOString();
       const notes = await sb(`posts?status=in.(note,log)&created_at=gte.${since}&select=source,kind,text,created_at&order=created_at.desc&limit=80`);
       const seen = {};
@@ -577,7 +641,7 @@ export default async function handler(req, res) {
       const loreRows = await sb('shop_state?id=eq.lore&select=data');
       const chatRows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(now - 3 * 864e5).toISOString()}&select=source,text,created_at,scheduled_at&order=created_at.asc&limit=120`);
       const nowIso = new Date().toISOString();
-      return res.status(200).json({ ok: true, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', recent_chat: chatRows.map((r) => ({ source: r.source, text: r.text, at: r.scheduled_at || r.created_at })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
+      return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', recent_chat: chatRows.map((r) => ({ source: r.source, text: r.text, at: r.scheduled_at || r.created_at })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
     if (action === 'todo') {
       // เช็คลิสต์ของคุณแดน (แอดมินหรือ key): GET รวมรายการจากรายงาน/แผนของพี่ต้น 14 วัน + รายการที่ทีมส่งตรง, POST {id,done}|{text}|{id,remove}
@@ -659,14 +723,17 @@ export default async function handler(req, res) {
           if (ch === 'threads') {
             const thId = await publishToThreads(th, p);
             await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), th_post_id: String(thId), error: null });
+            await chatEvent(p.kind === 'reel' ? 'clip' : 'writer', p.kind === 'reel' ? pick(['คลิปขึ้น Threads แล้วครับ ไปกดหัวใจให้หน่อย 🎬', 'Reels ลง Threads แล้วครับ ลุ้นยอดวิว 👀']) : pick(['โพสต์ขึ้น Threads แล้วค่ะ ✨', 'ลง Threads แล้วน้า ใครว่างไปกดไลก์ให้กำลังใจหน่อยค่ะ']), 'published');
             results.push({ id: p.id, ok: true, channel: 'threads', th_post_id: thId });
           } else {
             const fbId = await publishToPage(fb, p);
             await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), fb_post_id: String(fbId), error: null });
+            await chatEvent(p.kind === 'reel' ? 'clip' : 'writer', p.kind === 'reel' ? pick(['Reels ขึ้นเพจแล้วครับ ใครว่างไปกดหัวใจให้หน่อย 🎬', 'คลิปขึ้นเพจแล้วครับ ลุ้นยอดวิวกัน 👀', 'ปล่อยคลิปแล้วครับ ถ้าคอมเมนต์เยอะเลี้ยงชานม']) : pick(['โพสต์ขึ้นเพจแล้วค่ะ ✨', 'โพสต์ขึ้นแล้วน้า ไปกดไลก์ให้กำลังใจกันหน่อยค่ะ 🙏', 'ส่งขึ้นเพจแล้วค่ะ วันนี้ขอยอดแชร์เยอะๆ']), 'published');
             results.push({ id: p.id, ok: true, fb_post_id: fbId });
           }
         } catch (e) {
           await sbPatch(`posts?id=eq.${p.id}`, { status: 'failed', error: String(e.message || e).slice(0, 500) });
+          await chatEvent('guard', pick(['โพสต์ขึ้นไม่ผ่านครับ 1 รายการ ผมบันทึกสาเหตุไว้ในแท็บคอนเทนต์แล้ว', 'มีโพสต์ล้มเหลวครับ เดี๋ยวเช็กให้ ระบบเก็บ error ไว้แล้ว', 'แจ้งครับ โพสต์ตัวหนึ่งขึ้นไม่สำเร็จ ดูรายละเอียดที่คอนเทนต์']), 'failed');
           results.push({ id: p.id, ok: false, error: String(e.message || e) });
         }
       }
