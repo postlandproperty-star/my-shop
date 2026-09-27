@@ -122,7 +122,7 @@ footer{padding:28px 0 110px;text-align:center}
 .big-ok{width:64px;height:64px;border-radius:50%;background:var(--okbg);color:var(--ok);display:grid;place-items:center;margin:0 auto 14px}
 
 /* admin */
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:14px 0 4px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;padding:14px 0 4px}
 .tabs button{border:1.5px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500;white-space:nowrap;font-size:15px}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 @media(max-width:640px){
@@ -1151,12 +1151,15 @@ async function checkAllLinks(force){
     const cur=linkStatus[p.id];
     if(!force&&cur&&cur.url===p.link&&Date.now()-cur.t<300e3)continue;
     linkStatus[p.id]={pending:true,text:'กำลังตรวจ...',url:p.link,t:Date.now()};render(true);
-    try{const j=await adminApi('/api/link-check?url='+encodeURIComponent(p.link));linkStatus[p.id]={ok:!!j.ok,text:j.text||j.error||'ตรวจไม่ได้',url:p.link,t:Date.now()};}
-    catch(e){linkStatus[p.id]={ok:false,text:'ตรวจไม่ได้',url:p.link,t:Date.now()};}
+    try{const j=await adminApi('/api/link-check?url='+encodeURIComponent(p.link));
+      if(j.ok||j.status)linkStatus[p.id]={ok:!!j.ok,text:j.text||j.error||'ตรวจไม่ได้',url:p.link,t:Date.now()};
+      else linkStatus[p.id]={unknown:true,text:'ยังตรวจไม่ได้ ('+(j.error||'เชื่อมต่อไม่ได้')+') กด "ตรวจลิงก์" อีกครั้ง',url:p.link,t:0};}
+    catch(e){linkStatus[p.id]={unknown:true,text:'ยังตรวจไม่ได้ (เชื่อมต่อไม่ได้) กด "ตรวจลิงก์" อีกครั้ง',url:p.link,t:0};}
+    if(!sbSession)break;
     render(true);
   }
 }
-function linkBadge(p){const c=linkStatus[p.id];if(!c)return '';const cls=c.pending?'gray':c.ok?'ok':'bad';return `<span class="badge ${cls}" title="${esc(c.text)}">ไฟล์: ${c.pending?'กำลังตรวจ':c.ok?'เปิดได้ ✓':'มีปัญหา ✗'}</span>`;}
+function linkBadge(p){const c=linkStatus[p.id];if(!c)return '';const cls=c.pending||c.unknown?'gray':c.ok?'ok':'bad';return `<span class="badge ${cls}" title="${esc(c.text)}">ไฟล์: ${c.pending?'กำลังตรวจ':c.unknown?'ยังไม่ได้ตรวจ':c.ok?'เปิดได้ ✓':'มีปัญหา ✗'}</span>`;}
 function linkCheckMsg(id){const c=S.linkCheck;if(!c||c.id!==id)return '';return `<div class="fine" style="margin-top:6px;color:${c.pending?'var(--muted)':c.ok?'var(--ok)':'var(--bad)'}">${esc(c.text)}${!c.pending&&c.url?` · <a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">เปิดดู</a>`:''}</div>`;}
 function productRow(p){
   const st=prodStats(p);
