@@ -1481,8 +1481,9 @@ const member=src=>TEAM[src]||{name:src||'ทีม',role:'',bg:'#D3DBE8',img:AV+
 const ava=(src,sm)=>{const m=member(src);return `<img class="ava${sm?' sm':''}" style="background:${m.bg}" src="${m.img}" alt="" title="${esc(m.name)} · ${esc(m.role)}" loading="lazy">`;};
 const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<span>${esc(m.name)}</span></span>`;};
 const SEEN_KEY='sl_seen_notes';
-const seenSet=()=>{try{return new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]'));}catch(e){return new Set();}};
-const saveSeen=st=>{try{localStorage.setItem(SEEN_KEY,JSON.stringify([...st].slice(-400)));}catch(e){}};
+let SEEN_MEM=null;
+const seenSet=()=>{if(SEEN_MEM)return SEEN_MEM;try{SEEN_MEM=new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]'));}catch(e){SEEN_MEM=new Set();}return SEEN_MEM;};
+const saveSeen=st=>{SEEN_MEM=st;try{localStorage.setItem(SEEN_KEY,JSON.stringify([...st].slice(-400)));}catch(e){}};
 const ago=t=>{const m=Math.max(0,Math.round((Date.now()-t)/6e4));if(m<1)return 'เมื่อสักครู่';if(m<60)return m+' นาทีที่แล้ว';const h=Math.round(m/60);if(h<24)return h+' ชม.ที่แล้ว';const d=Math.round(h/24);if(d<7)return d+' วันที่แล้ว';return fdt(t);};
 function teamFeed(notes){
   const seen=seenSet(),exp=S.pexp||{},N=S.feedN||10,ff=S.ffilter||'';
