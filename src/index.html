@@ -128,7 +128,17 @@ footer{padding:28px 0 110px;text-align:center}
 @media(max-width:640px){
   .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;overflow:visible;padding:10px 0 6px;position:sticky;top:0;z-index:5;background:var(--bg)}
   .tabs button{padding:9px 4px;font-size:13px;white-space:normal;line-height:1.2;border-radius:12px;min-height:40px}
-  .tabs button .tcount{margin-left:4px;min-width:18px;line-height:18px;font-size:11px}
+  .tabs button .chat{max-width:720px}
+.msg{display:flex;gap:10px;align-items:flex-end;margin:10px 0}
+.msg .ava{width:36px;height:36px}
+.msg .bub{background:var(--surface);border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:8px 12px;max-width:78%;font-size:15px;line-height:1.45}
+.msg .who{font-size:12px;color:var(--muted);margin-bottom:2px}
+.msg.me{flex-direction:row-reverse}.msg.me .bub{background:var(--ink);color:var(--bg);border-color:var(--ink);border-radius:16px 16px 4px 16px}.msg.me .who{text-align:right}
+.msg .t{font-size:11px;color:var(--muted);margin:0 4px 2px}
+.daysep{text-align:center;font-size:12px;color:var(--muted);margin:14px 0 4px}
+.chatbox{display:flex;gap:8px;margin-top:14px;position:sticky;bottom:0;background:var(--bg);padding:8px 0}
+.chatbox input{flex:1;border:1.5px solid var(--line);border-radius:999px;padding:10px 14px;font:inherit}
+.tcount{margin-left:4px;min-width:18px;line-height:18px;font-size:11px}
 }
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
 @media(min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
@@ -1291,7 +1301,7 @@ function factoryBox(){
   return `<h3 class="h3">คิวโรงงานผลิตชีท</h3>${FJOBS.slice(0,6).map(j=>{const st=FSTAT[j.status]||[j.status,'gray'];return `<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:6px">${ava('factory')}<span><b>${esc(j.title)}</b> <span class="badge ${st[1]}">${st[0]}</span><span class="fine">สั่งโดย ${esc(member(j.ordered_by||'manager').name)} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${j.price?j.price+' บาท':'แจกฟรี'}</span></span></div>${j.purpose?`<div class="fine">${esc(j.purpose)}</div>`:''}${j.file_url?`<a class="btn btn-line btn-sm" href="${j.file_url}" target="_blank" rel="noopener noreferrer" style="margin-top:6px">เปิดไฟล์ PDF</a>`:''}${j.error?`<div class="fine" style="color:#B42318">${esc(j.error)}</div>`:''}</div>`;}).join('')}`;
 }
 let POSTS=[],postsLoaded=false;
-const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ'};
+const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={},TH={};
 (function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
@@ -1390,7 +1400,7 @@ const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<sp
 function contentTab(){
   if(!postsLoaded){Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));}
   const f=S.cfilter||'queue';
-  const notes=POSTS.filter(p=>p.status==='note'&&p.kind!=='reply');
+  const notes=POSTS.filter(p=>p.status==='note'&&p.kind!=='reply'&&p.kind!=='chat');
   const list=POSTS.filter(p=>p.status!=='note'&&p.status!=='log').filter(p=>f==='queue'?['needs_owner','draft','approved','failed','publishing'].includes(p.status):f==='all'?true:p.status===f);
   if(f==='queue')list.sort((a,b)=>(a.status==='needs_owner'?0:1)-(b.status==='needs_owner'?0:1));
   const chips=[['queue','คิว (รอตรวจ/รอโพสต์)'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']];
@@ -1605,7 +1615,7 @@ const ORG={
 /* อารมณ์ของสมาชิก: คำนวณจากผลงานจริง 7 วันล่าสุด (ไม่ใช้ AI เพิ่ม) */
 function mood(k){
   const now=Date.now(),D=864e5;
-  const notes=POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')&&p.kind!=='reply').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  const notes=POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')&&p.kind!=='reply'&&p.kind!=='chat').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
   const last=notes[0],lastT=last?String(last.text||''):'',age=last?(now-Date.parse(last.created_at))/D:99;
   const wk=POSTS.filter(p=>p.status!=='note'&&p.status!=='log'&&now-Date.parse(p.created_at)<7*D);
   const M=(e,t,why)=>({e,t,why});
@@ -1656,7 +1666,7 @@ function cmtBox(k){
   if(k==='manual')return '';
   const mine=POSTS.filter(p=>p.status==='note'&&p.kind==='reply'&&String(p.text||'').startsWith('@'+k+' ')).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
   const mineOf=POSTS.filter(p=>p.source===k).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
-  const last=mineOf.find(p=>p.status==='note'||p.status==='log')||(mineOf[0]?{...mineOf[0],text:'ส่งโพสต์ล่าสุด: '+String(mineOf[0].text||'').split('\n')[0]}:null);
+  const last=mineOf.find(p=>(p.status==='note'||p.status==='log')&&p.kind!=='chat')||(mineOf[0]?{...mineOf[0],text:'ส่งโพสต์ล่าสุด: '+String(mineOf[0].text||'').split('\n')[0]}:null);
   const open=S.cmt===k;
   const line=last?String(last.text||'').trim():'ยังไม่มีข้อความจาก'+TEAM[k].name;
   const short=open?line:line.split('\n').filter(l=>l.trim()).slice(0,2).join('\n');
@@ -1694,6 +1704,19 @@ function healthBox(){
   return `<div class="todo sys" style="align-items:center">${ava('guard',1)}<div class="tt"><b>สุขภาพระบบ</b> <span class="badge ${!h?'gray':bad?'bad':warn?'warn':'ok'}">${!h?'ยังไม่เคยตรวจ':bad?'มีเรื่องด่วน':warn?'มีจุดเตือน':'ปกติ'}</span><div class="tm"><span>${h?'ตรวจล่าสุด '+fdt(Date.parse(h.created_at)):'ระบบตรวจอัตโนมัติทุกวัน 10:00'}</span>${h?`<span>${esc(String(h.text).split('\n')[0])}</span>`:''}<button class="chip" data-a="healthNow">ตรวจตอนนี้</button></div>${h&&(bad||warn)?`<div class="ans" style="background:var(--warnbg)">${esc(String(h.text).split('\n').slice(1).join('\n'))}</div>`:''}</div></div>`;
 }
 function MEMBER_NAME(k){return (TEAM&&TEAM[k]&&TEAM[k].name)||k||'ทีม';}
+let CHAT={msgs:null,loading:false,err:''};
+async function loadChat(){CHAT.loading=true;try{const j=await adminApi('/api/content?action=chat&days=7');if(j.ok){CHAT.msgs=j.messages||[];CHAT.err='';}else CHAT.err=j.error||'โหลดไม่ได้';}catch(e){CHAT.err='เชื่อมต่อไม่ได้';}CHAT.loading=false;}
+function chatTab(){
+  if(CHAT.msgs===null&&!CHAT.loading){loadChat().then(()=>{render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);});}
+  const msgs=CHAT.msgs||[];let lastDay='';
+  const rows=msgs.map(m=>{const d=new Date(m.created_at);const day=d.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'short'});const sep=day!==lastDay?`<div class="daysep">${day}</div>`:'';lastDay=day;const me=m.source==='manual';const who=me?'คุณแดน':(TEAM[m.source]?TEAM[m.source].name:m.source);const tm=d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    return sep+`<div class="msg ${me?'me':''}">${ava(me?'manual':(TEAM[m.source]?m.source:'manager'),1)}<div><div class="who">${esc(who)}</div><div class="bub">${esc(m.text)}</div></div><span class="t">${tm}</span></div>`;}).join('');
+  return `<div class="chat"><p class="fine" style="margin:12px 0 4px">ห้องพักทีม: มุมคุยเล่นนอกเรื่องงานของทุกคน (ทีมมาคุยกันวันละรอบตอนพักเที่ยง 12:30) คุณแดนแวะมาทักได้ ทีมจะตอบในรอบถัดไป <button class="chip" data-a="chatRefresh">รีเฟรช</button></p>
+  ${CHAT.err?`<p class="fine" style="color:var(--bad)">${esc(CHAT.err)}</p>`:''}
+  ${CHAT.msgs===null?'<p class="fine">กำลังโหลด...</p>':msgs.length?rows:'<p class="fine">ยังเงียบอยู่ ทุกคนจะเริ่มคุยกันรอบเที่ยงนี้</p>'}
+  <div id="chat-end"></div>
+  <div class="chatbox"><input id="chat-new" placeholder="แวะมาทักทีม เช่น วันนี้กินอะไรกันดี" onkeydown="if(event.key==='Enter'){document.querySelector('[data-a=chatSend]').click();}"><button class="btn btn-cta btn-sm" data-a="chatSend">ส่ง</button></div></div>`;
+}
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
@@ -1757,9 +1780,9 @@ function teamTab(){
 }
 
 function adminView(){
-  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม']];
+  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม'],['chat','ห้องพัก']];
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab}[S.tab]();
+  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,chat:chatTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}${t[0]==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:''}</button>`).join('')}</div>
     ${body}
@@ -1853,6 +1876,8 @@ function act(a,el){
     case 'todoRemove':{if(!confirm('ลบรายการนี้ออกจากเช็คลิสต์?'))break;adminPost('/api/content?action=todo',{id,remove:true}).then(j=>{if(j.ok){TODO.items=j.items;render(true);}else toast(j.error||'ลบไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'todoAdd':{const inp=$('#todo-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์งานก่อน');break;}adminPost('/api/content?action=todo',{text}).then(j=>{if(j.ok){TODO.items=j.items;render(true);toast('เพิ่มแล้ว');}else toast(j.error||'เพิ่มไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'todoRefresh':{TODO.items=null;render(true);break;}
+    case 'chatRefresh':{CHAT.msgs=null;render(true);break;}
+    case 'chatSend':{const inp=$('#chat-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=chat',{text}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');CHAT.msgs=j.messages;render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);toast('ส่งแล้ว ทีมจะตอบในรอบถัดไป');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'healthNow':{el.disabled=true;toast('กำลังตรวจระบบ...');adminApi('/api/content?action=health&record=1').then(h=>{if(!h.checks)throw new Error(h.error||'ตรวจไม่ได้');postsLoaded=false;TODO.items=null;return loadPosts().then(()=>{render(true);toast(h.problems.length?'พบ '+h.problems.length+' จุดที่ต้องดู เพิ่มเข้าเช็คลิสต์แล้ว':'ระบบปกติทั้ง '+h.checks.length+' จุด');});}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'todoAnsOpen':{S.todoAns=id;render(true);setTimeout(()=>{const t=document.getElementById('todo-ans-'+id);if(t)t.focus();},0);break;}
     case 'todoAnsCancel':{S.todoAns=null;render(true);break;}
@@ -1937,7 +1962,7 @@ function act(a,el){
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว ทีมจะเห็นในกระดานรอบถัดไป');S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{

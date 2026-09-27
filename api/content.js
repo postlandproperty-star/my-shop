@@ -266,7 +266,7 @@ export default async function handler(req, res) {
         plan = plan ? { ...plan, text: `${plan.text}\n\n${block}`, created_at: msgs[0].created_at > plan.created_at ? msgs[0].created_at : plan.created_at } : { source: 'manual', kind: 'plan', text: block, created_at: msgs[0].created_at };
       }
       const latest = {};
-      for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
+      for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
       const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source${(await channelCol()) ? ',channel' : ''}&order=scheduled_at.asc&limit=40`);
       return res.status(200).json({ ok: true, plan, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
     }
@@ -394,6 +394,21 @@ export default async function handler(req, res) {
       const h = await runHealth(req.headers.host);
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
+    }
+    if (action === 'chat') {
+      // ห้องพักทีม: แชทเล่นนอกเรื่องงาน (kind chat) GET อ่าน 80 ข้อความล่าสุด, POST {text} = คุณแดนแวะมาทัก (แอดมิน) หรือสมาชิกส่ง {text, source} (key)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (req.method === 'POST') {
+        const body = await readBody(req);
+        const text = String(body.text || '').trim().slice(0, 400);
+        if (!text) return res.status(400).json({ ok: false, error: 'พิมพ์ข้อความก่อน' });
+        const source = admin ? 'manual' : (MEMBER_TH[body.source] ? body.source : 'manager');
+        await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source, text }], prefer: 'return=minimal' });
+      }
+      const days = Math.min(30, Number(req.query.days) || 7);
+      const rows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=id,source,text,created_at&order=created_at.asc&limit=120`);
+      return res.status(200).json({ ok: true, messages: rows.slice(-80) });
     }
     if (action === 'todo') {
       // เช็คลิสต์ของคุณแดน (แอดมินหรือ key): GET รวมรายการจากรายงาน/แผนของพี่ต้น 14 วัน + รายการที่ทีมส่งตรง, POST {id,done}|{text}|{id,remove}
