@@ -145,7 +145,7 @@ function extractTodo(text) {
   }
   return out;
 }
-const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด' };
+const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด', market: 'พี่มาร์เก็ต' };
 // คอลัมน์ channel/th_post_id (Threads) มีหรือยัง (เพิ่มด้วย SQL ใน Supabase) ถ้ายังไม่มี ระบบทำงานแบบ Facebook อย่างเดียว
 async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
@@ -255,6 +255,15 @@ export default async function handler(req, res) {
       const row = { status: 'note', source: String(body.source || 'manager').slice(0, 20), kind: String(body.kind || 'report').slice(0, 20), text: String(body.text).slice(0, 8000), week: body.week ? String(body.week).slice(0, 12) : null };
       const inserted = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
       return res.status(200).json({ ok: true, id: inserted[0]?.id });
+    }
+    if (action === 'notes') {
+      // อ่าน note ย้อนหลังตามชนิด/คน (key): ?kind=market&source=market&days=30 (สูงสุด 90 วัน 60 ฉบับ) ไม่รวมห้องพัก
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const days = Math.min(90, Number(req.query.days) || 14);
+      const kind = String(req.query.kind || '').replace(/[^a-z_]/g, '');
+      const source = String(req.query.source || '').replace(/[^a-z_]/g, '');
+      const rows = await sb(`posts?status=eq.note&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}${kind ? `&kind=eq.${kind}` : ''}${source ? `&source=eq.${source}` : ''}&select=id,source,kind,text,week,created_at&order=created_at.desc&limit=60`);
+      return res.status(200).json({ ok: true, notes: rows.filter((n) => n.kind !== 'chat') });
     }
     if (action === 'board') {
       // กระดานประชุมทีม: แผนสัปดาห์ (kind plan) ล่าสุด + note ล่าสุด 1 ฉบับต่อคน + โพสต์ที่รอ/กำหนดโพสต์สัปดาห์นี้
