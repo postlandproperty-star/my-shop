@@ -49,6 +49,69 @@ async function addTodo({ text, type = 'do', from = 'manager', link = null }) {
   items.unshift(item); await saveTodo(items);
   return { items, item, duplicate: false };
 }
+// ฝ่ายดูแลระบบ "พี่การ์ด": ตรวจสุขภาพระบบด้วยกฎตายตัว (ไม่ใช้ AI) รันทุกเช้าจาก cron keepalive และเรียกเองได้
+async function runHealth(host) {
+  const checks = [];
+  const add = (id, ok, level, msg, fix) => checks.push({ id, ok, level: ok ? 'ok' : level, msg, fix: ok ? null : fix });
+  const t0 = Date.now();
+  let hasCh = false;
+  try { hasCh = await channelCol(); const ms = Date.now() - t0; add('db', ms < 4000, 'bad', `ฐานข้อมูลตอบใน ${ms} ms`, 'Supabase ตอบช้าหรือไม่ตอบ เปิด supabase.com ดูว่าโปรเจกต์ถูกพักไหม'); }
+  catch (e) { add('db', false, 'bad', 'ฐานข้อมูลไม่ตอบ: ' + String(e.message).slice(0, 80), 'เปิด Supabase ดูสถานะโปรเจกต์'); }
+  try {
+    const failed = await sb(`posts?status=eq.failed&select=id,error,text${hasCh ? ',channel' : ''}&order=created_at.desc&limit=5`);
+    add('failed_posts', failed.length === 0, 'bad', failed.length ? `โพสต์ขึ้นไม่สำเร็จ ${failed.length} ชิ้น: ${failed.map((p) => String(p.error || '').slice(0, 60)).join(' | ')}` : 'ไม่มีโพสต์ล้มเหลว', 'เปิดแท็บคอนเทนต์ ดูข้อผิดพลาดแล้วกดโพสต์ใหม่หรือให้พี่ต้นแก้');
+  } catch (e) { add('failed_posts', false, 'warn', 'อ่านคิวโพสต์ไม่ได้', ''); }
+  try {
+    const fb = await loadFb();
+    add('fb', !!fb, 'bad', fb ? `เชื่อมเพจ Facebook แล้ว (${fb.pageName || fb.pageId})` : 'ยังไม่ได้เชื่อมเพจ Facebook', 'แท็บคอนเทนต์ → เชื่อมเพจ Facebook');
+    if (fb && fb.token) {
+      const r = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${encodeURIComponent(fb.token)}`);
+      const j = await r.json().catch(() => ({}));
+      add('fb_token', r.ok && !j.error, 'bad', r.ok && !j.error ? 'token เพจ Facebook ใช้งานได้' : 'token เพจ Facebook ใช้ไม่ได้: ' + String(j.error?.message || r.status).slice(0, 80), 'แท็บคอนเทนต์ → ยกเลิกการเชื่อมเพจ แล้วเชื่อมใหม่');
+    }
+  } catch (e) { add('fb_token', false, 'warn', 'ตรวจ Facebook ไม่ได้: ' + String(e.message).slice(0, 60), ''); }
+  try {
+    const th = await loadThreads();
+    const conn = threadsConnected(th);
+    add('threads', conn, 'warn', conn ? `เชื่อม Threads แล้ว (@${th.username || ''})` : 'ยังไม่ได้เชื่อม Threads', 'แท็บคอนเทนต์ → เชื่อม Threads');
+    if (conn && th.expiresAt) {
+      const days = Math.floor((Date.parse(th.expiresAt) - Date.now()) / 864e5);
+      add('threads_token', days > 7, 'warn', `token Threads เหลือ ${days} วัน (ระบบต่ออายุเองเมื่อใกล้หมด)`, 'ถ้าต่ออายุไม่สำเร็จ ให้กดยกเลิกและเชื่อม Threads ใหม่ที่แท็บคอนเทนต์');
+    }
+  } catch (e) { add('threads', false, 'warn', 'ตรวจ Threads ไม่ได้: ' + String(e.message).slice(0, 60), ''); }
+  try {
+    const jobs = await loadJobs();
+    const stuck = jobs.filter((j) => j.status === 'producing' && Date.now() - Date.parse(j.started_at || j.created_at) > 6 * 3600e3);
+    const oldQ = jobs.filter((j) => j.status === 'queued' && Date.now() - Date.parse(j.created_at) > 3 * 864e5);
+    add('factory', !stuck.length && !oldQ.length, 'warn', stuck.length ? `โรงงานค้างสถานะผลิตเกิน 6 ชม. ${stuck.length} งาน (${stuck.map((j) => j.title).join(', ')})` : oldQ.length ? `ใบสั่งรอผลิตเกิน 3 วัน ${oldQ.length} งาน` : 'คิวโรงงานปกติ', stuck.length ? 'เปิดแท็บคอนเทนต์ → โรงงาน กดยกเลิกงานที่ค้างแล้วสั่งใหม่' : 'โรงงานทำงานอาทิตย์/จันทร์ ถ้าเลยรอบแล้วยังไม่ทำ ให้กดสั่งโรงงานทำงานที่ claude.ai/code/routines');
+  } catch (e) { add('factory', false, 'warn', 'อ่านคิวโรงงานไม่ได้', ''); }
+  try {
+    const until = new Date(Date.now() + 36 * 3600e3).toISOString();
+    const up = await sb(`posts?status=in.(approved,draft,needs_owner)&scheduled_at=gte.${new Date().toISOString()}&scheduled_at=lte.${until}&select=status${hasCh ? ',channel' : ''}`);
+    const appr = up.filter((p) => p.status === 'approved').length, pend = up.length - appr;
+    add('queue', appr > 0 || pend > 0, 'warn', appr ? `36 ชม.ข้างหน้ามีโพสต์พร้อมขึ้น ${appr} ชิ้น${pend ? ` (รอตรวจอีก ${pend})` : ''}` : pend ? `36 ชม.ข้างหน้ามีโพสต์รอตรวจ ${pend} ชิ้น แต่ยังไม่มีที่อนุมัติ` : '36 ชม.ข้างหน้าไม่มีโพสต์ในคิวเลย', 'ให้พี่ต้นตรวจร่าง หรือกดสั่งน้องปากกา/พี่ต้นทำงานที่ claude.ai/code/routines');
+  } catch (e) { add('queue', false, 'warn', 'อ่านคิวไม่ได้', ''); }
+  if (host) {
+    try {
+      const a = await fetch(`https://${host}/api/content?action=todo`); const b = await fetch(`https://${host}/api/threads?action=status`); const c = await fetch(`https://${host}/api/content?action=review`);
+      const okAuth = a.status === 401 && b.status === 401 && c.status === 401;
+      add('auth', okAuth, 'bad', okAuth ? 'ช่องทางแอดมินปฏิเสธคนไม่ล็อกอินถูกต้อง' : `ช่องทางแอดมินตอบ ${a.status}/${b.status}/${c.status} แทนที่จะเป็น 401`, 'แจ้งพี่การ์ดตรวจโค้ด verifyAdmin/keyOk ทันที');
+      const html = await (await fetch(`https://${host}/api/page`)).text();
+      const leak = (CONTENT_KEY && html.includes(CONTENT_KEY)) || (SECRET && html.includes(SECRET)) || /sk_live_[A-Za-z0-9]{10,}/.test(html);
+      add('secrets', !leak, 'bad', leak ? 'พบคีย์ลับในหน้าเว็บสาธารณะ' : 'หน้าเว็บสาธารณะไม่มีคีย์ลับหลุด', 'หมุนคีย์ทันที (Vercel env + Supabase) และแจ้งพี่การ์ดตรวจโค้ด');
+    } catch (e) { add('auth', false, 'warn', 'ทดสอบช่องทางแอดมินไม่ได้: ' + String(e.message).slice(0, 60), ''); }
+  }
+  const problems = checks.filter((c) => !c.ok);
+  return { ok: problems.filter((c) => c.level === 'bad').length === 0, at: new Date().toISOString(), checks, problems };
+}
+async function recordHealth(h) {
+  const line = h.problems.length ? `ตรวจระบบ ${h.at.slice(0, 10)}: พบ ${h.problems.length} จุด\n` + h.problems.map((c) => `- [${c.level === 'bad' ? 'ด่วน' : 'เตือน'}] ${c.msg} → ${c.fix || ''}`).join('\n') : `ตรวจระบบ ${h.at.slice(0, 10)}: ปกติทั้ง ${h.checks.length} จุด`;
+  await logNote('guard', line, 'health');
+  for (const c of h.problems) {
+    if (!c.fix) continue;
+    try { await addTodo({ text: `[ระบบ] ${c.msg} → ${c.fix}`, type: 'do', from: 'guard' }); } catch (e) { console.error('health todo', e.message); }
+  }
+}
 const TODO_HEADS = [
   { re: /สิ่งที่อยากให้คุณแดน(?:ช่วย)?ทำ(?:เอง)?/, type: 'do' },
   { re: /(?:เรื่องที่)?ต้องขอคุณแดนตัดสิน/, type: 'decide' },
@@ -78,7 +141,7 @@ function extractTodo(text) {
   }
   return out;
 }
-const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์' };
+const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด' };
 // คอลัมน์ channel/th_post_id (Threads) มีหรือยัง (เพิ่มด้วย SQL ใน Supabase) ถ้ายังไม่มี ระบบทำงานแบบ Facebook อย่างเดียว
 async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
@@ -122,7 +185,10 @@ export default async function handler(req, res) {
           morning = await pr.json();
         } catch (e) { morning = { ok: false, error: String(e.message || e) }; }
       }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning });
+      // พี่การ์ด: ตรวจสุขภาพระบบทุกเช้า บันทึกผลลง log และส่งงานเข้าเช็คลิสต์เมื่อพบปัญหา
+      let health = null;
+      if (r.ok && cronOk(req)) { try { health = await runHealth(req.headers.host); await recordHealth(health); } catch (e) { health = { ok: false, error: String(e.message || e) }; } }
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -316,6 +382,18 @@ export default async function handler(req, res) {
       }
       await saveJobs(jobs);
       return res.status(200).json({ ok: true, job });
+    }
+    if (action === 'health') {
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (req.query.log) {
+        const days = Math.min(30, Number(req.query.days) || 7);
+        const rows = await sb(`posts?status=in.(note,log)&source=eq.guard&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=kind,text,created_at&order=created_at.desc&limit=60`);
+        return res.status(200).json({ ok: true, logs: rows });
+      }
+      const h = await runHealth(req.headers.host);
+      if (req.query.record) await recordHealth(h);
+      return res.status(200).json(h);
     }
     if (action === 'todo') {
       // เช็คลิสต์ของคุณแดน (แอดมินหรือ key): GET รวมรายการจากรายงาน/แผนของพี่ต้น 14 วัน + รายการที่ทีมส่งตรง, POST {id,done}|{text}|{id,remove}

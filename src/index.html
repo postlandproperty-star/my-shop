@@ -1291,7 +1291,7 @@ function factoryBox(){
   return `<h3 class="h3">คิวโรงงานผลิตชีท</h3>${FJOBS.slice(0,6).map(j=>{const st=FSTAT[j.status]||[j.status,'gray'];return `<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:6px">${ava('factory')}<span><b>${esc(j.title)}</b> <span class="badge ${st[1]}">${st[0]}</span><span class="fine">สั่งโดย ${esc(member(j.ordered_by||'manager').name)} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${j.price?j.price+' บาท':'แจกฟรี'}</span></span></div>${j.purpose?`<div class="fine">${esc(j.purpose)}</div>`:''}${j.file_url?`<a class="btn btn-line btn-sm" href="${j.file_url}" target="_blank" rel="noopener noreferrer" style="margin-top:6px">เปิดไฟล์ PDF</a>`:''}${j.error?`<div class="fine" style="color:#B42318">${esc(j.error)}</div>`:''}</div>`;}).join('')}`;
 }
 let POSTS=[],postsLoaded=false;
-const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)'};
+const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={},TH={};
 (function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
@@ -1320,6 +1320,7 @@ const TEAM={
   care:{name:'พี่แคร์',role:'ดูแลลูกค้าหลังการขาย · ร่างอีเมลติดตามผล',bg:'#fde68a',sched:'ทุกวัน 10:00',img:AV+'accessoriesProbability=0&seed=care&top=bun&hairColor=724133&clothing=blazerAndSweater&clothesColor=ffafb9&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=edb98a&backgroundColor=fde68a'},
   product:{name:'พี่โปร',role:'พัฒนาสินค้า · เสนอชีทเล่มถัดไป',bg:'#e0e7ff',sched:'ทุกวันที่ 1 ของเดือน 10:00',img:AV+'accessoriesProbability=100&seed=pro&top=shortRound&hairColor=4a312c&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=default&mouth=default&skinColor=ffdbb4&backgroundColor=e0e7ff'},
   finance:{name:'พี่บัญชี',role:'บัญชี · สรุปเงินเข้า ค่าธรรมเนียม กำไร',bg:'#e5e7eb',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=100&seed=acc&top=shortCurly&hairColor=2c1b18&accessories=prescription01&clothing=collarAndSweater&clothesColor=929598&eyes=default&eyebrows=defaultNatural&mouth=serious&skinColor=edb98a&backgroundColor=e5e7eb'},
+  guard:{name:'พี่การ์ด',role:'ดูแลระบบและความปลอดภัย · ตรวจสุขภาพระบบทุกเช้า แก้บั๊กทุกอาทิตย์',bg:'#e2e8f0',sched:'ตรวจอัตโนมัติทุกวัน 10:00 · ทบทวนโค้ดอาทิตย์ 20:30',img:AV+'accessoriesProbability=100&seed=guard&top=shortCurly&hairColor=2c1b18&accessories=prescription02&clothing=hoodie&clothesColor=3c4f5c&eyes=default&eyebrows=defaultNatural&mouth=serious&skinColor=ae5d29&backgroundColor=e2e8f0'},
   factory:{name:'โรงงาน',role:'โรงงานผลิตชีท · รับใบสั่งจากพี่ต้นโดยตรง',bg:'#fef3c7',sched:'ทำงานอาทิตย์และจันทร์ 10:00, 22:00 หรือเมื่อสั่ง',img:AV+'accessoriesProbability=0&seed=factory&top=shortFlat&hairColor=2c1b18&clothing=overall&clothesColor=ffb300&eyes=default&mouth=smile&skinColor=d08b5b'},
   manual:{name:'คุณ',role:'เจ้าของร้าน · ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
@@ -1335,9 +1336,10 @@ const SCHED={
   analyst:{dow:[0,1,2,3,4,5,6],times:[[7,30]],dur:10},
   product:{dom:1,times:[[10,0]],dur:20},
   factory:{dow:[0,1],times:[[10,0],[22,0]],dur:60},
+  guard:{dow:[0],times:[[20,30]],dur:15},
 };
 const BKK=7*3600e3;
-const POLITE={factory:'ครับ',writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
+const POLITE={guard:'ครับ',factory:'ครับ',writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
 function teamStatus(k){
   const sc=SCHED[k];const m=TEAM[k]||{};
   const last=POSTS.filter(x=>x.source===k).map(x=>Date.parse(x.created_at)).sort((a,b)=>b-a)[0]||null;
@@ -1597,6 +1599,7 @@ const ORG={
   product:{title:'Product Development Lead · ฝ่ายสินค้า',do:['วิเคราะห์ยอดขาย คอมเมนต์ และคำถามทั้งเดือน','เสนอสิ่งที่ควรปรับในสินค้าและหน้าเซลเพจ','เสนอชีทเล่มถัดไปพร้อมโครงสารบท'],when:'ทุกวันที่ 1 ของเดือน 10:00 น.'},
   finance:{title:'Accounting · ฝ่ายสนับสนุน รายงานพี่ต้น',do:['สรุปยอดขาย ค่าธรรมเนียม Stripe เงินสุทธิ','ค่าแอดและกำไรหลังค่าแอด','เงินพร้อมโอนและเงินโอนเข้าบัญชีล่าสุด'],when:'ทุกจันทร์ 08:30 น.'},
   factory:{title:'Book Factory · ฝ่ายผลิต รับใบสั่งจากพี่ต้นโดยตรง',do:['ผลิตชีท PDF ตามใบสั่ง: ชีทแจกฟรี ชีทประกอบโพสต์ และชีทที่จะขาย','เขียนเนื้อหาใหม่ทั้งหมด ตรวจเฉลยทุกข้อ จัดหน้าตามธีม Modern Blue ของ SheetLab','เก็บไฟล์บนคลาวด์ของบริษัท (Storage ของโปรเจกต์ SheetLab) แล้วแจ้งพี่ต้นใน Slack'],when:'ทำงานอาทิตย์และจันทร์ 10:00 และ 22:00 (หลังพี่ต้นสั่งงาน) หรือเมื่อคุณแดนกดสั่ง ชีทแจกฟรีใช้ Sonnet ไม่เกิน 24 หน้า'},
+  guard:{title:'Site Reliability & Security · ฝ่ายดูแลระบบ',do:['ทุกเช้า 10:00 ระบบตรวจ 9 จุดอัตโนมัติ (โพสต์ล้ม token เพจ/Threads คิวโรงงาน คิวโพสต์ ฐานข้อมูล ช่องแอดมิน คีย์หลุด) ไม่ใช้ AI','พบปัญหาส่งเข้าเช็คลิสต์ของคุณแดนทันที พร้อมวิธีแก้','ทุกอาทิตย์ 20:30 อ่านผลตรวจทั้งสัปดาห์และโค้ด ถ้าเป็นบั๊กในโค้ด เปิดสาขาแก้ให้คุณแดนกดรวมเอง ไม่แก้เข้าระบบจริงเอง'],when:'ตรวจอัตโนมัติทุกวัน 10:00 · พี่การ์ดทบทวนโค้ดทุกอาทิตย์ 20:30 (Sonnet รอบสั้น)'},
   care:{title:'Customer Care · ฝ่ายสนับสนุน ตำแหน่งว่าง',do:['ร่างอีเมลติดตามผล 3 วันหลังซื้อ','ขอรีวิว แนะนำสินค้าถัดไป'],when:'ยังไม่เปิดใช้',vacant:true},
 };
 /* อารมณ์ของสมาชิก: คำนวณจากผลงานจริง 7 วันล่าสุด (ไม่ใช้ AI เพิ่ม) */
@@ -1639,11 +1642,12 @@ function mood(k){
     case 'product':return age<35?M('💡','มีไอเดียสินค้าใหม่','ส่งข้อเสนอเดือนนี้แล้ว'):M('🗓️','รอรอบสิ้นเดือน','ยังไม่ถึงรอบรายงาน');
     case 'finance':return /ยอดขาย\s*0|0 ออเดอร์|ไม่มียอดขาย/.test(lastT)&&age<8?M('😐','เดือนนี้ยังเงียบ','ยอดขายสัปดาห์นี้ยังไม่มี'):M('🧮','ตัวเลขเรียบร้อย','บัญชีเป็นปัจจุบัน');
     case 'care':return M('☕','สแตนด์บาย','ยังไม่เปิดใช้งาน');
+    case 'guard':{const h=notes.find(n=>n.kind==='health');const ht=h?String(h.text||''):'';const hage=h?(now-Date.parse(h.created_at))/D:99;if(!h)return M('🛡️','เริ่มเวรแรก รอตรวจ 10:00','ยังไม่มีผลตรวจ');if(/\[ด่วน\]/.test(ht)&&hage<2)return M('🚨','เจอเรื่องด่วน ต้องแก้','ผลตรวจล่าสุดมีปัญหาระดับด่วน');if(/พบ \d+ จุด/.test(ht)&&hage<2)return M('🧐','เจอจุดเตือน กำลังจับตา','ผลตรวจล่าสุดมีจุดเตือน');return M('🛡️','ระบบปกติ เฝ้าอยู่','ผลตรวจล่าสุดปกติ');}
     case 'manual':{const n=todoOpenCount();return n>=3?M('😅','งานรอ '+n+' อย่าง','ดูที่แท็บเช็คลิสต์'):n>0?M('🙂','มีงานเล็กน้อย '+n+' อย่าง','ดูที่แท็บเช็คลิสต์'):M('😎','ว่างสบาย','ไม่มีงานค้าง');}
   }
   return M('🙂','ปกติ','');
 }
-function moodStrip(){const ks=['manager','writer','designer','trend','community','analyst','factory','product','finance','manual'];
+function moodStrip(){const ks=['manager','writer','designer','trend','community','analyst','factory','guard','product','finance','manual'];
   return `<div class="moods">${ks.map(k=>{const m=mood(k);return `<div class="md" title="${esc(m.why)}"><span class="e">${ava(k,1)}<span>${m.e}</span></span><div>${esc(TEAM[k].name)}<small>${esc(m.t)}</small></div></div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];return `<article class="ocard${o.vacant?' vacant':''}" style="--obg:${m.bg}">
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
@@ -1663,7 +1667,7 @@ function cmtBox(k){
 let TODO={items:null,auto:[],loading:false,err:''};
 async function loadTodo(){TODO.loading=true;try{const j=await adminApi('/api/content?action=todo');if(j.ok){TODO.items=j.items||[];TODO.auto=j.auto||[];TODO.err='';}else TODO.err=j.error||'โหลดไม่ได้';}catch(e){TODO.err='เชื่อมต่อไม่ได้';}TODO.loading=false;}
 function todoOpenCount(){return (TODO.items||[]).filter(i=>!i.done_at).length+(TODO.auto||[]).length;}
-const TODO_FROM={manager:'พี่ต้น (รายงานวันจันทร์)',plan:'พี่ต้น (ประชุมทีมวันอาทิตย์)',owner:'คุณแดนเพิ่มเอง',community:'น้องคอม',analyst:'น้องบูสต์',factory:'โรงงาน',writer:'น้องปากกา',designer:'น้องกราฟิก',trend:'น้องเทรนด์',product:'พี่โปร',finance:'พี่บัญชี'};
+const TODO_FROM={manager:'พี่ต้น (รายงานวันจันทร์)',plan:'พี่ต้น (ประชุมทีมวันอาทิตย์)',owner:'คุณแดนเพิ่มเอง',community:'น้องคอม',analyst:'น้องบูสต์',factory:'โรงงาน',guard:'พี่การ์ด (ตรวจระบบ)',writer:'น้องปากกา',designer:'น้องกราฟิก',trend:'น้องเทรนด์',product:'พี่โปร',finance:'พี่บัญชี'};
 function todoTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   const items=TODO.items||[];const open=items.filter(i=>!i.done_at),done=items.filter(i=>i.done_at);
@@ -1676,17 +1680,24 @@ function todoTab(){
   return `<p class="fine" style="margin:12px 0 4px">งานที่ทีมขอให้คุณแดนทำเอง รวบรวมอัตโนมัติจากรายงานวันจันทร์และแผนประชุมวันอาทิตย์ของพี่ต้น (หัวข้อ "สิ่งที่อยากให้คุณแดนทำ" และ "ต้องขอคุณแดนตัดสิน") บวกโพสต์ที่ค้างรอคุณแดนในระบบ ติ๊กเมื่อทำเสร็จ พี่ต้นจะเห็นว่างานไหนเสร็จแล้วในรอบถัดไป <button class="chip" data-a="todoRefresh">รีเฟรช</button></p>
   ${TODO.err?`<p class="fine" style="color:var(--bad)">${esc(TODO.err)}</p>`:''}
   ${TODO.items===null?'<p class="fine">กำลังโหลด...</p>':''}
+  ${healthBox()}
   ${autoRows?`<h3 class="h3">ค้างในระบบ (${TODO.auto.length})</h3>${autoRows}`:''}
   <h3 class="h3">ต้องทำ (${open.length})</h3>
   ${open.length?open.map(row).join(''):(TODO.items!==null?'<p class="fine">ยังไม่มีงานค้าง รายการใหม่จะเข้ามาหลังพี่ต้นส่งรายงานหรือแผน</p>':'')}
   <div class="row" style="margin:12px 0 20px"><input id="todo-new" placeholder="เพิ่มงานของตัวเอง เช่น ส่งไฟล์ชีทให้คุณ A" style="flex:1" onkeydown="if(event.key==='Enter'){document.querySelector('[data-a=todoAdd]').click();}"><button class="btn btn-line btn-sm" data-a="todoAdd">เพิ่ม</button></div>
   ${done.length?`<details><summary class="fine" style="cursor:pointer">เสร็จแล้ว (${done.length})</summary><div style="margin-top:8px">${done.slice(0,30).map(row).join('')}</div></details>`:''}`;
 }
+function healthBox(){
+  if(!postsLoaded){loadPosts().then(()=>render(true));}
+  const h=POSTS.filter(p=>p.source==='guard'&&p.kind==='health').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
+  const bad=h&&/\[ด่วน\]/.test(h.text),warn=h&&/พบ \d+ จุด/.test(h.text);
+  return `<div class="todo sys" style="align-items:center">${ava('guard',1)}<div class="tt"><b>สุขภาพระบบ</b> <span class="badge ${!h?'gray':bad?'bad':warn?'warn':'ok'}">${!h?'ยังไม่เคยตรวจ':bad?'มีเรื่องด่วน':warn?'มีจุดเตือน':'ปกติ'}</span><div class="tm"><span>${h?'ตรวจล่าสุด '+fdt(Date.parse(h.created_at)):'ระบบตรวจอัตโนมัติทุกวัน 10:00'}</span>${h?`<span>${esc(String(h.text).split('\n')[0])}</span>`:''}<button class="chip" data-a="healthNow">ตรวจตอนนี้</button></div>${h&&(bad||warn)?`<div class="ans" style="background:var(--warnbg)">${esc(String(h.text).split('\n').slice(1).join('\n'))}</div>`:''}</div></div>`;
+}
 function MEMBER_NAME(k){return (TEAM&&TEAM[k]&&TEAM[k].name)||k||'ทีม';}
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
-  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 10 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">อารมณ์ทีมวันนี้ <span class="fine" style="font-weight:400">(คำนวณจากผลงานจริง 7 วันล่าสุด วางเมาส์เพื่อดูเหตุผล)</span></h3>
   ${moodStrip()}
   <h3 class="h3">สายบังคับบัญชา</h3>
@@ -1699,6 +1710,8 @@ function teamTab(){
   <div class="org"><div class="tier two">${orgCard('designer')}${orgCard('trend')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายผลิต (พี่ต้นสั่งงานโดยตรง ไม่ต้องรอเจ้าของ)</h3>
   <div class="org"><div class="tier one">${orgCard('factory')}</div></div>
+  <h3 class="h3" style="margin-top:20px">ฝ่ายดูแลระบบ (รายงานคุณแดนโดยตรงเมื่อพบปัญหา)</h3>
+  <div class="org"><div class="tier one">${orgCard('guard')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายสนับสนุน (ขึ้นกับพี่ต้นเช่นกัน)</h3>
   <div class="org"><div class="tier two">${orgCard('finance')}${orgCard('care')}</div></div>
   <h3 class="h3" style="margin-top:24px">วงจรงานใน 1 สัปดาห์</h3>
@@ -1840,6 +1853,7 @@ function act(a,el){
     case 'todoRemove':{if(!confirm('ลบรายการนี้ออกจากเช็คลิสต์?'))break;adminPost('/api/content?action=todo',{id,remove:true}).then(j=>{if(j.ok){TODO.items=j.items;render(true);}else toast(j.error||'ลบไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'todoAdd':{const inp=$('#todo-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์งานก่อน');break;}adminPost('/api/content?action=todo',{text}).then(j=>{if(j.ok){TODO.items=j.items;render(true);toast('เพิ่มแล้ว');}else toast(j.error||'เพิ่มไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'todoRefresh':{TODO.items=null;render(true);break;}
+    case 'healthNow':{el.disabled=true;toast('กำลังตรวจระบบ...');adminApi('/api/content?action=health&record=1').then(h=>{if(!h.checks)throw new Error(h.error||'ตรวจไม่ได้');postsLoaded=false;TODO.items=null;return loadPosts().then(()=>{render(true);toast(h.problems.length?'พบ '+h.problems.length+' จุดที่ต้องดู เพิ่มเข้าเช็คลิสต์แล้ว':'ระบบปกติทั้ง '+h.checks.length+' จุด');});}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'todoAnsOpen':{S.todoAns=id;render(true);setTimeout(()=>{const t=document.getElementById('todo-ans-'+id);if(t)t.focus();},0);break;}
     case 'todoAnsCancel':{S.todoAns=null;render(true);break;}
     case 'todoAnsSend':{const t=document.getElementById('todo-ans-'+id);const answer=t?t.value.trim():'';if(!answer){toast('พิมพ์คำตอบก่อน');break;}el.disabled=true;adminPost('/api/content?action=todo',{id,answer}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');TODO.items=j.items;S.todoAns=null;render(true);toast('ส่งคำตอบให้ทีมแล้ว');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
