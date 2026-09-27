@@ -156,9 +156,16 @@ footer{padding:28px 0 110px;text-align:center}
 .otable th,.otable td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 .otable th{font-size:12px;color:var(--muted);background:var(--bg)}
 .otable tr:last-child td{border-bottom:0}
-.ocycle{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.ocycle div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px}
-.ocycle b{display:block;color:var(--brand)}
+.wk{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.wkd{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.wkd h4{margin:0 0 6px;font-size:14px;color:var(--brand)}.wkd h4 span{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+.wke{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line);font-size:13.5px}.wke:first-of-type{border-top:0}
+.wke .ava{width:40px;height:40px}.wke .t{font-size:12px;color:var(--muted)}.wke b{display:block;font-size:14px}
+.ava.sys{display:inline-grid;place-items:center;background:var(--ink);color:#F5C518;font-weight:700;font-size:16px}
+.wp{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.wkr{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;font-size:12.5px;text-align:center}
+.wkr div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 4px}.wkr b{display:block;font-size:12px;color:var(--muted)}
+@media(max-width:560px){.wkr{font-size:11px}}
 .ava{width:44px;height:44px;border-radius:50%;flex:none;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 4px rgba(15,27,51,.15);vertical-align:middle}
 .ava.sm{width:26px;height:26px;border-width:1px}
 .by{display:inline-flex;align-items:center;gap:6px;vertical-align:middle}
@@ -1553,30 +1560,43 @@ function teamTab(){
   <div class="org"><div class="tier two">${orgCard('designer')}${orgCard('trend')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายสนับสนุน (ขึ้นกับพี่ต้นเช่นกัน)</h3>
   <div class="org"><div class="tier two">${orgCard('finance')}${orgCard('care')}</div></div>
+  <h3 class="h3" style="margin-top:24px">วงจรงานใน 1 สัปดาห์</h3>
+  <p class="fine" style="margin:0 0 10px">เริ่มที่คืนวันอาทิตย์ พี่ต้นเป็นหัวหน้าของทุกคน ทุกคนอ่านกระดานทีมก่อนเริ่มงาน และรายงานกลับเข้า Slack #sheetlab-team</p>
+  <div class="wk">
+    <div class="wkd"><h4>อาทิตย์ <span>วางแผน</span></h4>
+      <div class="wke">${ava('trend')}<div><div class="t">20:00</div><b>น้องเทรนด์</b><div>ส่งลิสต์หัวข้อ 8 ข้อ + ไอเดียรูปแบบใหม่ 2 แบบ ให้น้องปากกา</div></div></div>
+      <div class="wke">${ava('manager')}<div><div class="t">21:00</div><b>พี่ต้น</b><div>ประชุมทีม อ่านรายงานทุกคน แล้วเขียนแผนสัปดาห์ลงกระดานทีม: ทิศทาง 5 โพสต์ หัวข้อ รูปแบบทดลอง งานที่สั่งแต่ละคน</div></div></div>
+    </div>
+    <div class="wkd"><h4>จันทร์ <span>ผลิตและตรวจ</span></h4>
+      <div class="wke">${ava('writer')}<div><div class="t">08:00</div><b>น้องปากกา</b><div>อ่านแผน ร่าง 5 โพสต์พร้อมรูป Canva ธีม Modern Blue ส่งเข้าคิว</div></div></div>
+      <div class="wke">${ava('finance')}<div><div class="t">08:30</div><b>พี่บัญชี</b><div>สรุปเงินสัปดาห์ก่อน ยอดขาย ค่าธรรมเนียม ค่าแอด กำไร</div></div></div>
+      <div class="wke">${ava('designer')}<div><div class="t">08:40</div><b>น้องกราฟิก</b><div>ตรวจรูปทุกใบ ตัวสะกดไทย สีแบรนด์ รูปไม่ผ่านสร้างใหม่แทน</div></div></div>
+      <div class="wke">${ava('manager')}<div><div class="t">09:00</div><b>พี่ต้น</b><div>ตรวจ แก้ อนุมัติหรือปัดตก จัดตารางวันละ 1 โพสต์ วัดผลโพสต์ทดลองสัปดาห์ก่อน เช็คว่าใครทำตามแผน แล้วรายงานคุณแดน</div></div></div>
+    </div>
+    <div class="wkd"><h4>จันทร์-ศุกร์ <span>ทุกวัน</span></h4>
+      <div class="wke">${ava('analyst')}<div><div class="t">07:30</div><b>น้องบูสต์</b><div>อ่านผลแอด ต้นทุนต่อผู้ติดตามและต่อการซื้อ เสนอปรับงบ [ต้องอนุมัติ]</div></div></div>
+      <div class="wke">${ava('community')}<div><div class="t">08:00 และ 21:00</div><b>น้องคอม</b><div>สรุปคอมเมนต์ใต้โพสต์ ร่างคำตอบให้คุณแดนกดส่ง ติดธงเรื่องที่พี่ต้นต้องดู</div></div></div>
+      <div class="wke"><span class="ava sys">⚙</span><div><div class="t">19:05</div><b>ระบบ</b><div>โพสต์ที่อนุมัติแล้วขึ้นเพจอัตโนมัติ วันละ 1 ชิ้น</div></div></div>
+      <div class="wke">${ava('manual')}<div><div class="t">วันละ 10 นาที</div><b>คุณแดน</b><div>อ่าน Slack กดอนุมัติเฉพาะเรื่องเงิน กดส่งคำตอบคอมเมนต์ ส่งไฟล์ให้คนที่ทักแชท</div></div></div>
+    </div>
+    <div class="wkd"><h4>รายเดือน <span>วันที่ 1</span></h4>
+      <div class="wke">${ava('product')}<div><div class="t">10:00</div><b>พี่โปร</b><div>วิเคราะห์ยอดขายและคอมเมนต์ทั้งเดือน เสนอปรับสินค้าเดิม และเสนอชีทเล่มถัดไป [ต้องอนุมัติ]</div></div></div>
+    </div>
+  </div>
+  <div class="wkr"><div><b>จันทร์</b>ควิซ</div><div><b>อังคาร</b>เฉลย + บทเรียน</div><div><b>พุธ</b>โพสต์ทดลองรูปแบบใหม่</div><div><b>พฤหัส</b>ควิซข้อ 2</div><div><b>ศุกร์</b>โพสต์ขาย</div></div>
   <h3 class="h3" style="margin-top:24px">ใครตัดสินใจเรื่องอะไร</h3>
   <div style="overflow-x:auto"><table class="otable">
-  <tr><th>เรื่อง</th><th>ตัดสินใจ</th><th>เสนอ / เตรียม</th><th>ต้องรอเจ้าของไหม</th></tr>
-  <tr><td>โพสต์ทั่วไป ควิซ ทิป ชวนคุย</td><td>พี่ต้น</td><td>น้องปากกา</td><td>ไม่ต้อง ขึ้นเพจอัตโนมัติ 19:05 น.</td></tr>
-  <tr><td>โพสต์ที่พูดถึงราคา ส่วนลด ของแถม การอ้างผลลัพธ์</td><td>เจ้าของ</td><td>พี่ต้นติดป้าย "รอคุณอนุมัติ"</td><td>ต้อง</td></tr>
-  <tr><td>งบโฆษณา เปิด ปิด เพิ่ม ลดแอด</td><td>เจ้าของ</td><td>น้องบูสต์ [ต้องอนุมัติ]</td><td>ต้อง</td></tr>
-  <tr><td>ตอบคอมเมนต์ลูกค้า</td><td>เจ้าของกดส่ง</td><td>น้องคอมร่างคำตอบ</td><td>ต้อง กดส่งเอง</td></tr>
-  <tr><td>สินค้าใหม่ ราคาใหม่</td><td>เจ้าของ</td><td>พี่โปร</td><td>ต้อง</td></tr>
-  <tr><td>ตัวเลขเงิน กำไร</td><td>ไม่มีการตัดสินใจ</td><td>พี่บัญชีรายงาน</td><td>อ่านอย่างเดียว</td></tr>
-  </table></div>
-  <h3 class="h3" style="margin-top:24px">วงจรงานใน 1 สัปดาห์</h3>
-  <div class="ocycle">
-    <div><b>จันทร์ 08:00</b>น้องปากการ่าง 5 โพสต์พร้อมรูป Canva</div>
-    <div><b>อาทิตย์ 20:00</b>น้องเทรนด์ส่งลิสต์หัวข้อ</div>
-    <div><b>อาทิตย์ 21:00</b>พี่ต้นประชุมทีม อ่านรายงานทุกฝ่าย วางแผนสัปดาห์ให้ทุกคน</div>
-    <div><b>จันทร์ 08:30</b>พี่บัญชีสรุปเงินสัปดาห์ก่อน</div>
-    <div><b>จันทร์ 08:40</b>น้องกราฟิกตรวจและแก้รูปทุกใบ</div>
-    <div><b>จันทร์ 09:00</b>พี่ต้นตรวจ แก้ อนุมัติ จัดตาราง เขียนรายงาน</div>
-    <div><b>ทุกวัน 07:30</b>น้องบูสต์อ่านผลแอด</div>
-    <div><b>ทุกวัน 08:00 และ 21:00</b>น้องคอมร่างคำตอบคอมเมนต์</div>
-    <div><b>ทุกวัน 19:05</b>ระบบโพสต์ชิ้นที่อนุมัติแล้วขึ้นเพจ</div>
-    <div><b>วันที่ 1 ของเดือน</b>พี่โปรเสนอแผนสินค้า</div>
-    <div><b>เจ้าของ</b>อ่าน Slack กดอนุมัติเฉพาะเรื่องเงินและเรื่องสำคัญ</div>
-  </div>`;
+  <tr><th>เรื่อง</th><th>ตัดสินใจ</th><th>เสนอ / เตรียม</th><th>ต้องรอคุณแดนไหม</th></tr>
+  <tr><td>แผนงานประจำสัปดาห์ของทุกคน</td><td><span class="wp">${ava('manager',1)}พี่ต้น</span></td><td>ทุกคนส่งรายงาน</td><td>ไม่ต้อง</td></tr>
+  <tr><td>โพสต์ทั่วไป ควิซ ทิป ชวนคุย โพสต์ทดลอง</td><td><span class="wp">${ava('manager',1)}พี่ต้น</span></td><td><span class="wp">${ava('writer',1)}น้องปากกา</span> <span class="wp">${ava('designer',1)}น้องกราฟิก</span></td><td>ไม่ต้อง ขึ้นเพจอัตโนมัติ 19:05</td></tr>
+  <tr><td>จัดตาราง เลื่อนโพสต์ แก้ข้อความ</td><td><span class="wp">${ava('manager',1)}พี่ต้น</span></td><td><span class="wp">${ava('writer',1)}น้องปากกา</span></td><td>ไม่ต้อง</td></tr>
+  <tr><td>รูปแบบทดลองไหน "ทำซ้ำ" หรือ "เลิก"</td><td><span class="wp">${ava('manager',1)}พี่ต้น</span></td><td><span class="wp">${ava('trend',1)}น้องเทรนด์</span> <span class="wp">${ava('analyst',1)}น้องบูสต์</span></td><td>ไม่ต้อง วัดจากตัวเลข Facebook</td></tr>
+  <tr><td>ราคา ส่วนลด ของแจก โปรโมชั่น การอ้างผลลัพธ์</td><td><span class="wp">${ava('manual',1)}คุณแดน</span></td><td><span class="wp">${ava('manager',1)}พี่ต้น</span> ติดป้าย "รอคุณอนุมัติ"</td><td>ต้อง</td></tr>
+  <tr><td>งบโฆษณา เปิด ปิด เพิ่ม ลด</td><td><span class="wp">${ava('manual',1)}คุณแดน</span></td><td><span class="wp">${ava('analyst',1)}น้องบูสต์</span> [ต้องอนุมัติ]</td><td>ต้อง</td></tr>
+  <tr><td>ตอบคอมเมนต์และแชทลูกค้า</td><td><span class="wp">${ava('manual',1)}คุณแดน</span> กดส่งเอง</td><td><span class="wp">${ava('community',1)}น้องคอม</span> ร่างคำตอบ</td><td>ต้อง</td></tr>
+  <tr><td>สินค้าใหม่ ราคาใหม่ สั่งโรงงานผลิตชีท</td><td><span class="wp">${ava('manual',1)}คุณแดน</span></td><td><span class="wp">${ava('product',1)}พี่โปร</span></td><td>ต้อง</td></tr>
+  <tr><td>ตัวเลขเงิน กำไร</td><td>ไม่มีการตัดสินใจ</td><td><span class="wp">${ava('finance',1)}พี่บัญชี</span> รายงาน</td><td>อ่านอย่างเดียว</td></tr>
+  </table></div>`;
 }
 
 function adminView(){
