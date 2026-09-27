@@ -125,6 +125,11 @@ footer{padding:28px 0 110px;text-align:center}
 .tabs{display:flex;gap:6px;overflow-x:auto;padding:14px 0 4px}
 .tabs button{border:1.5px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500;white-space:nowrap;font-size:15px}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+@media(max-width:640px){
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;overflow:visible;padding:10px 0 6px;position:sticky;top:0;z-index:5;background:var(--bg)}
+  .tabs button{padding:9px 4px;font-size:13px;white-space:normal;line-height:1.2;border-radius:12px;min-height:40px}
+  .tabs button .tcount{margin-left:4px;min-width:18px;line-height:18px;font-size:11px}
+}
 .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
 @media(min-width:640px){.kpis{grid-template-columns:repeat(4,1fr)}}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
