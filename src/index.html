@@ -176,6 +176,21 @@ footer{padding:28px 0 110px;text-align:center}
 .daysep{font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 6px;display:flex;align-items:center;gap:8px}.daysep:after{content:'';flex:1;height:1px;background:var(--line)}.daysep.urgent{color:#b91c1c}
 .filters.sticky{position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 0;margin:0}
 .chip .n{opacity:.65;font-size:12px;margin-left:5px}.chip .n.alert{opacity:1;background:#ef4444;color:#fff;border-radius:999px;padding:0 6px;font-weight:700}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
+.seg button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--surface)}.seg button[aria-pressed=true] .n{color:inherit;opacity:.8}.seg .n{font-size:12px;margin-left:4px}.seg .n.alert{background:#ef4444;color:#fff;border-radius:999px;padding:0 6px;opacity:1}
+.stories{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 12px;scrollbar-width:none}.stories::-webkit-scrollbar{display:none}
+.story{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;cursor:pointer;background:none;border:0;flex:none;color:var(--muted);padding:0;max-width:64px}
+.story .ava{width:54px;height:54px;border:3px solid var(--line);box-shadow:none}.story[aria-pressed=true]{color:var(--ink);font-weight:700}.story[aria-pressed=true] .ava{border-color:var(--brand)}.story.unseen .ava{border-color:#f59e0b}
+.story .ava.all{display:grid;place-items:center;background:var(--bg);border-radius:50%;font-size:11px;font-weight:700;color:var(--ink)}
+.fpost{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden}.fpost.new{border-color:#f59e0b}
+.fpost header{display:flex;gap:10px;align-items:center;padding:12px 14px 8px}
+.fpost .fbody{padding:0 14px 10px;white-space:pre-wrap;font-size:15px;line-height:1.55}
+.fpost .fbody.clamp{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;padding-bottom:4px}
+.fpost .more{background:none;border:0;color:var(--muted);font-weight:700;cursor:pointer;padding:0 14px 10px;font-size:14px}
+.fpost footer{display:flex;gap:4px;border-top:1px solid var(--line);padding:4px 8px}
+.fpost footer button{flex:1;border:0;background:none;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap}
+.fpost footer button:hover{background:var(--bg)}.fpost footer button[aria-pressed=true]{color:var(--ok)}
 .fold{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.fold summary{cursor:pointer;font-weight:700;padding:8px 0;list-style:none}.fold summary::-webkit-details-marker{display:none}.fold summary:before{content:'▸ ';color:var(--muted)}.fold[open] summary:before{content:'▾ '}
 .org{display:grid;justify-items:center;gap:0;margin-top:12px}
 .org .tier{display:grid;gap:12px;width:100%}
@@ -1465,10 +1480,33 @@ function statusBadge(k,full){
 const member=src=>TEAM[src]||{name:src||'ทีม',role:'',bg:'#D3DBE8',img:AV+'seed='+encodeURIComponent(src||'team')};
 const ava=(src,sm)=>{const m=member(src);return `<img class="ava${sm?' sm':''}" style="background:${m.bg}" src="${m.img}" alt="" title="${esc(m.name)} · ${esc(m.role)}" loading="lazy">`;};
 const byLine=src=>{const m=member(src);return `<span class="by">${ava(src,1)}<span>${esc(m.name)}</span></span>`;};
+const SEEN_KEY='sl_seen_notes';
+const seenSet=()=>{try{return new Set(JSON.parse(localStorage.getItem(SEEN_KEY)||'[]'));}catch(e){return new Set();}};
+const saveSeen=st=>{try{localStorage.setItem(SEEN_KEY,JSON.stringify([...st].slice(-400)));}catch(e){}};
+const ago=t=>{const m=Math.max(0,Math.round((Date.now()-t)/6e4));if(m<1)return 'เมื่อสักครู่';if(m<60)return m+' นาทีที่แล้ว';const h=Math.round(m/60);if(h<24)return h+' ชม.ที่แล้ว';const d=Math.round(h/24);if(d<7)return d+' วันที่แล้ว';return fdt(t);};
+function teamFeed(notes){
+  const seen=seenSet(),exp=S.pexp||{},N=S.feedN||10,ff=S.ffilter||'';
+  const members=[];notes.forEach(n=>{const k=n.source||'manager';if(!members.includes(k))members.push(k);});
+  const unseenBy=k=>notes.filter(n=>(n.source||'manager')===k&&!seen.has(n.id)).length;
+  const list=notes.filter(n=>!ff||(n.source||'manager')===ff);
+  const card=n=>{const m=member(n.source||'manager');const t=Date.parse(n.created_at)||0;const txt=String(n.text||'').trim();const open=!!exp[n.id];const long=txt.length>260||txt.split('\n').length>5;const isNew=!seen.has(n.id);
+    return `<article class="fpost${isNew?' new':''}" data-nid="${n.id}">
+      <header>${ava(n.source||'manager')}<div style="min-width:0"><b>${esc(m.name)}</b> <span class="fine">· ${esc(KIND_TH[n.kind]||n.kind||'')}</span>${isNew?' <span class="badge warn" style="font-size:11px;padding:0 7px">ใหม่</span>':''}<div class="fine" style="font-size:12px">${esc(m.role.split(' · ')[0])} · ${ago(t)}</div></div></header>
+      <div class="fbody${long&&!open?' clamp':''}" ${long?`data-a="pexp" data-id="${n.id}"`:''}>${esc(txt)}</div>
+      ${long?`<button class="more" data-a="pexp" data-id="${n.id}">${open?'ย่อ':'ดูเพิ่มเติม'}</button>`:''}
+      <footer><button data-a="fseen" data-id="${n.id}" aria-pressed="${!isNew}">${isNew?'✓ รับทราบ':'✓ รับทราบแล้ว'}</button><button data-a="noteCopy" data-id="${n.id}">คัดลอก</button><button data-a="fReply" data-id="${n.id}">ตอบในห้องพัก</button></footer>
+    </article>`;};
+  return `
+  <div class="stories"><button class="story" data-a="fstory" data-v="" aria-pressed="${!ff}"><span class="ava all">ทั้งหมด</span><span>ทุกคน</span></button>${members.map(k=>`<button class="story${unseenBy(k)?' unseen':''}" data-a="fstory" data-v="${k}" aria-pressed="${ff===k}" title="${esc(member(k).role)}">${ava(k)}<span>${esc(member(k).name)}</span></button>`).join('')}</div>
+  ${list.length?list.slice(0,N).map(card).join(''):`<div class="empty"><p>ยังไม่มีรายงาน</p></div>`}
+  ${list.length>N?`<button class="btn btn-line" style="width:100%" data-a="fmore">โหลดเพิ่ม (${list.length-N})</button>`:''}
+  ${list.some(n=>!seen.has(n.id))?`<p style="text-align:center;margin-top:10px"><button class="btn btn-line btn-sm" data-a="fseenAll">รับทราบทั้งหมด</button></p>`:''}`;
+}
 function contentTab(){
   if(!postsLoaded){Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));}
   const f=S.cfilter||'queue';
-  const notes=POSTS.filter(p=>p.status==='note'&&p.kind!=='reply'&&p.kind!=='chat');
+  const notes=POSTS.filter(p=>p.status==='note'&&p.kind!=='reply'&&p.kind!=='chat').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,60);
+  const cview=S.cview||'queue';const unseenN=(()=>{const st=seenSet();return notes.filter(n=>!st.has(n.id)&&Date.now()-Date.parse(n.created_at)<7*864e5).length;})();
   const all=POSTS.filter(p=>p.status!=='note'&&p.status!=='log');
   const QUEUE=['needs_owner','draft','approved','failed','publishing'];
   const cnt={queue:all.filter(p=>QUEUE.includes(p.status)).length,published:all.filter(p=>p.status==='published').length,rejected:all.filter(p=>p.status==='rejected').length,all:all.length};
@@ -1550,10 +1588,10 @@ function contentTab(){
     ${TH.msg?`<p class="fine" style="margin-top:8px">${esc(TH.msg)}</p>`:''}
   </div>`:''}
 `:''}
-  <div class="filters sticky"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}<span class="n">${cnt[c[0]]}</span>${c[0]==='queue'&&urgent?`<span class="n alert">${urgent}</span>`:''}</button>`).join('')}</div>${f==='queue'?`<span class="fine">เรียงตามความด่วน แล้วตามเวลาโพสต์ · กดข้อความเพื่อดูเต็ม/แก้ไข</span>`:''}</div>
+  <div class="seg" style="margin:4px 0 10px"><button data-a="cview" data-v="queue" aria-pressed="${cview==='queue'}">คิวโพสต์ <span class="n">${cnt.queue}</span>${urgent?`<span class="n alert">${urgent}</span>`:''}</button><button data-a="cview" data-v="feed" aria-pressed="${cview==='feed'}">ฟีดทีม ${unseenN?`<span class="n alert">${unseenN} ใหม่</span>`:`<span class="n">${notes.length}</span>`}</button></div>
+  ${cview==='feed'?teamFeed(notes):`  <div class="filters sticky"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}<span class="n">${cnt[c[0]]}</span>${c[0]==='queue'&&urgent?`<span class="n alert">${urgent}</span>`:''}</button>`).join('')}</div>${f==='queue'?`<span class="fine">เรียงตามความด่วน แล้วตามเวลาโพสต์ · กดข้อความเพื่อดูเต็ม/แก้ไข</span>`:''}</div>
   ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?rows:`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}
-  ${(()=>{const fx=factoryBox();return fx?`<details class="fold"><summary>คิวโรงงานผลิตชีท</summary>${fx.replace('<h3 class="h3">คิวโรงงานผลิตชีท</h3>','')}</details>`:'';})()}
-  ${notes.length?`<details class="fold"><summary>รายงานล่าสุดจากทีม <span class="fine">(${Math.min(7,new Set(notes.map(n=>n.source||'x')).size)} คน · อ่านฉบับเต็มได้ที่แท็บทีมและห้องเอกสาร)</span></summary>${(()=>{const seen={};return notes.filter(n=>{const k=n.source||'x';if(seen[k])return false;seen[k]=1;return true;}).slice(0,7);})().map(nt=>{const o=!!exp[nt.id];const txt=String(nt.text||'').trim();return `<div class="note-card slim"><div class="row" style="gap:8px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${ava(nt.source||'manager',1)}<span><b>${esc(member(nt.source||'manager').name)}</b> <span class="fine">${esc(KIND_TH[nt.kind]||nt.kind)} · ${fdt(Date.parse(nt.created_at))}</span></span>${txt.length>160?`<button class="btn btn-line btn-sm" style="margin-left:auto" data-a="pexp" data-id="${nt.id}">${o?'ย่อ':'อ่านเต็ม'}</button>`:''}</div>${o?`<div style="white-space:pre-wrap">${esc(txt)}</div>`:`<p class="ptxt n2" data-a="pexp" data-id="${nt.id}" style="margin-top:0">${esc(txt)}</p>`}</div>`;}).join('')}</details>`:''}`;
+  ${(()=>{const fx=factoryBox();return fx?`<details class="fold"><summary>คิวโรงงานผลิตชีท</summary>${fx.replace('<h3 class="h3">คิวโรงงานผลิตชีท</h3>','')}</details>`:'';})()}`}`;
 }
 function pixelTab(){
   const live=/^\d{6,20}$/.test(String(D.settings.pixelId||''));
@@ -2026,6 +2064,13 @@ function act(a,el){
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
+    case 'cview':S.cview=el.dataset.v;render(true);break;
+    case 'fstory':S.ffilter=el.dataset.v;S.feedN=10;render(true);break;
+    case 'fmore':S.feedN=(S.feedN||10)+10;render(true);break;
+    case 'fseen':{const st=seenSet();st.has(id)?st.delete(id):st.add(id);saveSeen(st);render(true);break;}
+    case 'fseenAll':{const st=seenSet();POSTS.filter(p=>p.status==='note').forEach(p=>st.add(p.id));saveSeen(st);render(true);break;}
+    case 'noteCopy':{const p=POSTS.find(x=>x.id===id);copyText(p&&p.text||'','คัดลอกแล้ว');break;}
+    case 'fReply':{const p=POSTS.find(x=>x.id===id);const m=member(p&&p.source||'manager');S.chatDraft='@'+m.name+' ';S.tab='chat';render(true);setTimeout(()=>{const i=$('#chat-new');if(i){i.value=S.chatDraft;i.focus();}},50);break;}
     case 'csetup':S.csetup=!S.csetup;if(!S.csetup){S.fbOpen=false;S.thOpen=false;}render(true);break;
     case 'postRefresh':Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));break;
     case 'fbOpen':S.fbOpen=!S.fbOpen;FB.msg='';FB.choose=null;render(true);break;
