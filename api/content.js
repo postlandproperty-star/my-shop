@@ -36,6 +36,37 @@ const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audie
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
+// เช็คลิสต์ของคุณแดน: งานที่ทีมขอให้เจ้าของทำเอง เก็บใน shop_state id=todo (data.items)
+async function loadTodo() { const rows = await sb('shop_state?id=eq.todo&select=data'); return rows?.[0]?.data?.items || []; }
+async function saveTodo(items) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'todo', data: { items: items.slice(0, 300) }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+const TODO_HEADS = [
+  { re: /สิ่งที่อยากให้คุณแดน(?:ช่วย)?ทำ(?:เอง)?/, type: 'do' },
+  { re: /(?:เรื่องที่)?ต้องขอคุณแดนตัดสิน/, type: 'decide' },
+];
+// ดึงรายการใต้หัวข้อ "สิ่งที่อยากให้คุณแดนทำ" และ "ต้องขอคุณแดนตัดสิน" จากรายงาน/แผนของพี่ต้น
+function extractTodo(text) {
+  const lines = String(text || '').split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const head = TODO_HEADS.find((h) => h.re.test(lines[i]) && lines[i].trim().length < 140);
+    if (!head) continue;
+    const items = [];
+    const rest = lines[i].replace(head.re, '').replace(/^[\s:：)]+|^\([^)]*\)\s*:?/g, '').trim();
+    if (rest && !/^\(/.test(rest)) items.push(rest);
+    for (let j = i + 1; j < lines.length; j++) {
+      const l = lines[j].trim();
+      if (!l) { if (items.length) break; else continue; }
+      if (/^[—-]\s*พี่ต้น/.test(l) || /^(สรุปสัปดาห์|แผนสัปดาห์หน้า|ทีมทำตามแผน|ผลโพสต์ทดลอง|Threads:|โรงงาน:|สิ่งที่ผมตัดสินใจ|ต้องขอคุณแดนตัดสิน|เรื่องที่ต้องขอคุณแดนตัดสิน|สิ่งที่อยากให้คุณแดน|ตอบข้อความคุณแดน|งานของแต่ละคน|เป้าหมายสัปดาห์นี้|กฎ:|- น้อง|- พี่|- โรงงาน)/.test(l)) break;
+      items.push(l);
+    }
+    for (const raw of items) {
+      const t = raw.replace(/^[-•*▪◦]\s*|^\d+[.)]\s*|^[ก-ฮ][.)]\s*/, '').trim();
+      if (!t || /^ไม่มี(ครับ|ค่ะ)?[.!]?$/.test(t) || t.length < 6) continue;
+      out.push({ type: head.type, text: t.slice(0, 400) });
+    }
+  }
+  return out;
+}
 const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์' };
 // คอลัมน์ channel/th_post_id (Threads) มีหรือยัง (เพิ่มด้วย SQL ใน Supabase) ถ้ายังไม่มี ระบบทำงานแบบ Facebook อย่างเดียว
 async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
@@ -273,6 +304,47 @@ export default async function handler(req, res) {
       }
       await saveJobs(jobs);
       return res.status(200).json({ ok: true, job });
+    }
+    if (action === 'todo') {
+      // เช็คลิสต์ของคุณแดน (แอดมินหรือ key): GET รวมรายการจากรายงาน/แผนของพี่ต้น 14 วัน + รายการที่ทีมส่งตรง, POST {id,done}|{text}|{id,remove}
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      let items = await loadTodo();
+      if (req.method === 'POST') {
+        const body = await readBody(req);
+        if (body.text && !body.id) {
+          const { randomUUID } = await import('node:crypto');
+          const from = admin ? 'owner' : String(body.from || 'manager').slice(0, 20);
+          items.unshift({ id: randomUUID(), type: body.type === 'decide' ? 'decide' : 'do', text: String(body.text).trim().slice(0, 400), from, link: body.link ? String(body.link).slice(0, 300) : null, created_at: new Date().toISOString(), done_at: null });
+        } else if (body.id) {
+          const it = items.find((x) => x.id === String(body.id));
+          if (!it) return res.status(404).json({ ok: false, error: 'ไม่พบรายการ' });
+          if (body.remove) items = items.filter((x) => x.id !== it.id);
+          else it.done_at = body.done === false ? null : new Date().toISOString();
+        } else return res.status(400).json({ ok: false, error: 'ต้องส่ง text หรือ id' });
+        await saveTodo(items);
+        return res.status(200).json({ ok: true, items });
+      }
+      // ดึงรายการใหม่จากรายงาน (kind report) และแผน (kind plan) ของพี่ต้น 14 วันล่าสุด กันซ้ำด้วยข้อความเดียวกันภายใน 7 วัน
+      const since = new Date(Date.now() - 14 * 864e5).toISOString();
+      const notes = await sb(`posts?status=eq.note&source=eq.manager&kind=in.(report,plan)&created_at=gte.${since}&select=id,kind,text,created_at&order=created_at.desc&limit=12`);
+      const { randomUUID } = await import('node:crypto');
+      const norm = (t) => String(t).replace(/\s+/g, ' ').trim().toLowerCase();
+      let added = 0;
+      for (const n of notes.reverse()) {
+        for (const it of extractTodo(n.text)) {
+          const dup = items.find((x) => norm(x.text) === norm(it.text) && Math.abs(Date.parse(x.created_at) - Date.parse(n.created_at)) < 7 * 864e5);
+          if (dup) continue;
+          items.unshift({ id: randomUUID(), type: it.type, text: it.text, from: n.kind === 'plan' ? 'plan' : 'manager', note_id: n.id, created_at: n.created_at, done_at: null });
+          added++;
+        }
+      }
+      if (added) await saveTodo(items);
+      const hasCh = await channelCol();
+      const pend = await sb(`posts?status=in.(needs_owner,failed)&select=id,status,kind,text,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`);
+      const auto = pend.map((p) => ({ id: p.id, status: p.status, kind: p.kind, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, headline: String(p.text || '').split('\n')[0].slice(0, 80) }));
+      items.sort((a, b) => (a.done_at ? 1 : 0) - (b.done_at ? 1 : 0) || Date.parse(b.created_at) - Date.parse(a.created_at));
+      return res.status(200).json({ ok: true, items, auto, added });
     }
     if (action === 'reply') {
       // เจ้าของตอบ/สั่งสมาชิกจากการ์ดทีม → เก็บเป็น note kind reply (ขึ้นกระดานทีมท้ายแผน)

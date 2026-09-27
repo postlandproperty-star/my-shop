@@ -222,6 +222,14 @@ footer{padding:28px 0 110px;text-align:center}
 .acts{display:flex;gap:8px;flex-wrap:wrap}
 .empty{text-align:center;padding:36px 16px;background:var(--surface);border:1px dashed var(--line);border-radius:14px}
 .empty p{margin-bottom:14px}
+.todo{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.todo input[type=checkbox]{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--ink);cursor:pointer}
+.todo .tt{flex:1;min-width:0;font-size:15px;line-height:1.45}
+.todo.done .tt{color:var(--muted);text-decoration:line-through}
+.todo .tm{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.todo .tx{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;flex:none}
+.todo.sys{border-style:dashed}
+.tcount{display:inline-block;min-width:20px;padding:0 6px;border-radius:999px;background:#EF5B4C;color:#fff;font-size:12px;font-weight:700;line-height:20px;text-align:center;margin-left:6px;vertical-align:middle}
 .list-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:8px}
 .prod{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:grid;gap:8px;border-left:6px solid var(--c,#2440E8)}
 .prod-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
@@ -655,7 +663,7 @@ function drawLB(){
 }
 
 let D=normalize(load()||seed());
-const S={view:'shop',tab:'orders',filter:'paid',pfilter:'all',productId:null,edit:null,draft:null,zoom:null,ad:null,src:'',
+const S={view:'shop',tab:'todo',filter:'paid',pfilter:'all',productId:null,edit:null,draft:null,zoom:null,ad:null,src:'',
   form:{name:'',email:'',coupon:'',bump:false},method:'promptpay',coupon:'',couponErr:'',err:'',currentId:null,open:{},confirm:'',toast:'',stripeReturn:false};
 
 /* ---------- logic ---------- */
@@ -1592,6 +1600,26 @@ function cmtBox(k){
   ${mine?`<div class="mine">คุณ (${fdt(Date.parse(mine.created_at))}): ${esc(String(mine.text).replace('@'+k+' ',''))}</div>`:''}
   ${open?`<textarea id="cmt-${k}" placeholder="พิมพ์ถึง${esc(TEAM[k].name)} เช่น ชอบโพสต์ควิซ ขอแบบนี้อีก / สัปดาห์หน้าเน้นคำศัพท์ (ทีมจะเห็นในกระดานก่อนเริ่มงานรอบถัดไป)"></textarea><div class="send"><button class="btn btn-cta btn-sm" data-a="cmtSend" data-v="${k}">ส่งถึง${esc(TEAM[k].name)}</button></div>`:''}</div>`;
 }
+let TODO={items:null,auto:[],loading:false,err:''};
+async function loadTodo(){TODO.loading=true;try{const j=await adminApi('/api/content?action=todo');if(j.ok){TODO.items=j.items||[];TODO.auto=j.auto||[];TODO.err='';}else TODO.err=j.error||'โหลดไม่ได้';}catch(e){TODO.err='เชื่อมต่อไม่ได้';}TODO.loading=false;}
+function todoOpenCount(){return (TODO.items||[]).filter(i=>!i.done_at).length+(TODO.auto||[]).length;}
+const TODO_FROM={manager:'พี่ต้น (รายงานวันจันทร์)',plan:'พี่ต้น (ประชุมทีมวันอาทิตย์)',owner:'คุณแดนเพิ่มเอง'};
+function todoTab(){
+  if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
+  const items=TODO.items||[];const open=items.filter(i=>!i.done_at),done=items.filter(i=>i.done_at);
+  const fmt=d=>d?new Date(d).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
+  const row=i=>`<label class="todo ${i.done_at?'done':''}"><input type="checkbox" data-a="todoToggle" data-id="${i.id}" ${i.done_at?'checked':''}><div class="tt">${esc(i.text)}<div class="tm"><span class="badge ${i.type==='decide'?'warn':'ok'}">${i.type==='decide'?'ต้องตัดสินใจ':'ต้องลงมือทำ'}</span><span>จาก ${TODO_FROM[i.from]||esc(MEMBER_NAME(i.from))}</span><span>${fmt(i.created_at)}</span>${i.done_at?`<span>เสร็จ ${fmt(i.done_at)}</span>`:''}</div></div><button class="tx" data-a="todoRemove" data-id="${i.id}" title="ลบรายการ">×</button></label>`;
+  const autoRows=(TODO.auto||[]).map(a=>`<div class="todo sys"><span style="font-size:20px;line-height:1;flex:none">${a.status==='failed'?'⚠️':'✋'}</span><div class="tt">${a.status==='failed'?'โพสต์ขึ้นไม่สำเร็จ ต้องกดโพสต์ใหม่หรือแก้: ':'พี่ต้นส่งโพสต์นี้ให้คุณแดนอนุมัติ: '}${esc(a.headline)}<div class="tm"><span class="badge ${a.status==='failed'?'bad':'warn'}">${a.status==='failed'?'โพสต์ล้มเหลว':'รออนุมัติ'}</span><span>${a.channel==='threads'?'Threads':'Facebook'}</span><span>${a.scheduled_at?'กำหนด '+fmt(a.scheduled_at):''}</span><button class="chip" data-a="tab" data-v="content">ไปที่แท็บคอนเทนต์</button></div></div></div>`).join('');
+  return `<p class="fine" style="margin:12px 0 4px">งานที่ทีมขอให้คุณแดนทำเอง รวบรวมอัตโนมัติจากรายงานวันจันทร์และแผนประชุมวันอาทิตย์ของพี่ต้น (หัวข้อ "สิ่งที่อยากให้คุณแดนทำ" และ "ต้องขอคุณแดนตัดสิน") บวกโพสต์ที่ค้างรอคุณแดนในระบบ ติ๊กเมื่อทำเสร็จ พี่ต้นจะเห็นว่างานไหนเสร็จแล้วในรอบถัดไป <button class="chip" data-a="todoRefresh">รีเฟรช</button></p>
+  ${TODO.err?`<p class="fine" style="color:var(--bad)">${esc(TODO.err)}</p>`:''}
+  ${TODO.items===null?'<p class="fine">กำลังโหลด...</p>':''}
+  ${autoRows?`<h3 class="h3">ค้างในระบบ (${TODO.auto.length})</h3>${autoRows}`:''}
+  <h3 class="h3">ต้องทำ (${open.length})</h3>
+  ${open.length?open.map(row).join(''):(TODO.items!==null?'<p class="fine">ยังไม่มีงานค้าง รายการใหม่จะเข้ามาหลังพี่ต้นส่งรายงานหรือแผน</p>':'')}
+  <div class="row" style="margin:12px 0 20px"><input id="todo-new" placeholder="เพิ่มงานของตัวเอง เช่น ส่งไฟล์ชีทให้คุณ A" style="flex:1" onkeydown="if(event.key==='Enter'){document.querySelector('[data-a=todoAdd]').click();}"><button class="btn btn-line btn-sm" data-a="todoAdd">เพิ่ม</button></div>
+  ${done.length?`<details><summary class="fine" style="cursor:pointer">เสร็จแล้ว (${done.length})</summary><div style="margin-top:8px">${done.slice(0,30).map(row).join('')}</div></details>`:''}`;
+}
+function MEMBER_NAME(k){return (TEAM&&TEAM[k]&&TEAM[k].name)||k||'ทีม';}
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab: เจ้าของร้าน 1 คน และผู้ช่วย AI 9 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
@@ -1650,10 +1678,11 @@ function teamTab(){
 }
 
 function adminView(){
-  const tabs=[['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม']];
-  const body={orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab}[S.tab]();
+  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม']];
+  if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
+  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
-    <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}</button>`).join('')}</div>
+    <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}${t[0]==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:''}</button>`).join('')}</div>
     ${body}
   </div>`;
 }
@@ -1741,6 +1770,10 @@ function act(a,el){
     case 'fbOpen':S.fbOpen=!S.fbOpen;FB.msg='';FB.choose=null;render(true);break;
     case 'thOpen':S.thOpen=!S.thOpen;TH.msg='';render(true);break;
     case 'thConnect':{const a=$('#th-appid'),b=$('#th-secret');const appId=a?a.value.trim():'',appSecret=b?b.value.trim():'';if(!appId||!appSecret){toast('ใส่ Threads App ID และ App Secret ก่อน');break;}TH.msg='กำลังบันทึก...';render(true);adminPost('/api/threads?action=setup',{appId,appSecret}).then(j=>{if(!j.ok)throw new Error(j.error||'บันทึกไม่สำเร็จ');return adminApi('/api/threads?action=authurl');}).then(j=>{if(!j.ok)throw new Error(j.error||'สร้างลิงก์ไม่ได้');window.location.href=j.url;}).catch(e=>{TH.msg='ไม่สำเร็จ: '+e.message;render(true);});break;}
+    case 'todoToggle':{const done=el.checked;adminPost('/api/content?action=todo',{id,done}).then(j=>{if(j.ok){TODO.items=j.items;render(true);toast(done?'ติ๊กเสร็จแล้ว':'ยกเลิกการติ๊ก');}else toast(j.error||'บันทึกไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'todoRemove':{if(!confirm('ลบรายการนี้ออกจากเช็คลิสต์?'))break;adminPost('/api/content?action=todo',{id,remove:true}).then(j=>{if(j.ok){TODO.items=j.items;render(true);}else toast(j.error||'ลบไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'todoAdd':{const inp=$('#todo-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์งานก่อน');break;}adminPost('/api/content?action=todo',{text}).then(j=>{if(j.ok){TODO.items=j.items;render(true);toast('เพิ่มแล้ว');}else toast(j.error||'เพิ่มไม่ได้');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'todoRefresh':{TODO.items=null;render(true);break;}
     case 'thTest':adminApi('/api/threads?action=test').then(j=>toast(j.ok?'Threads @'+j.user.username+' ใช้งานได้':'ใช้ไม่ได้: '+(j.error||''))).catch(()=>toast('เชื่อมต่อไม่ได้'));break;
     case 'thDisconnect':if(!confirm('ยกเลิกการเชื่อม Threads? โพสต์ช่อง Threads จะหยุดจนกว่าจะเชื่อมใหม่'))break;adminPost('/api/threads?action=disconnect').then(async()=>{await loadThStatus();render(true);toast('ยกเลิกแล้ว');});break;
     case 'fbConnect':{const ta=$('#fb-token');const token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}FB.msg='กำลังเชื่อม...';render(true);
@@ -1821,7 +1854,7 @@ function act(a,el){
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว ทีมจะเห็นในกระดานรอบถัดไป');S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
@@ -1986,7 +2019,7 @@ function wireAuth(){
   sb.auth.onAuthStateChange((ev,session)=>{
     const was=!!sbSession;sbSession=session||null;
     if(ev==='SIGNED_IN'&&!was){afterLogin();}
-    else if(ev==='SIGNED_OUT'){S.view='shop';S.tab='orders';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
+    else if(ev==='SIGNED_OUT'){S.view='shop';S.tab='todo';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
   });
 }
 (async function boot(){
