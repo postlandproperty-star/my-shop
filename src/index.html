@@ -1161,6 +1161,7 @@ function ordersTab(){
   const chips=[['paid','ชำระแล้ว'],['unpaid','เปิดหน้าจ่ายแต่ยังไม่จ่าย'],['all','ทั้งหมด']];
   const kpi=(v,l,sub)=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}${sub?` · <span class="muted">${sub}</span>`:''}</div></div>`;
   return `
+  ${memberDesk('finance')}
   <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
     <span class="fine">${S.syncMsg?esc(S.syncMsg):(lastSync?'อัปเดตจาก Stripe ล่าสุด '+fdt(lastSync):'')}</span>
     <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="checkStatus">ตรวจสอบการเชื่อมต่อ</button><button class="btn btn-dark btn-sm" data-a="syncOrders">รีเฟรชออเดอร์</button></span>
@@ -1314,6 +1315,7 @@ function productForm(){
 function productsTab(){
   if(S.edit)return productForm();
   return `
+  ${memberDesk('product')}
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 10px;flex-wrap:wrap">
     <h3 class="h3" style="margin:0">สินค้าและเซลเพจ ${D.products.length} รายการ</h3>
     <button class="btn btn-dark btn-sm" data-a="newProduct">เพิ่มสินค้าใหม่</button>
@@ -1333,6 +1335,7 @@ function productsTab(){
 function couponsTab(){
   const scopeName=s=>s==='all'?'ทุกสินค้า':(getProduct(s)?getProduct(s).name:'สินค้าที่ถูกลบ');
   return `
+  ${memberDesk('market')}
   <h3 class="h3">สร้างโค้ดส่วนลด</h3>
   <div class="card" style="margin-bottom:16px">
     <div class="grid2">
@@ -1608,6 +1611,7 @@ function contentTab(){
 function pixelTab(){
   const live=/^\d{6,20}$/.test(String(D.settings.pixelId||''));
   return `
+  ${memberDesk('guard')}
   <div class="card">
     <div class="field"><label for="s-pixel">Facebook Pixel ID (Meta Pixel / Dataset ID)</label>
       <div class="row"><input class="input" id="s-pixel" inputmode="numeric" value="${esc(D.settings.pixelId)}" placeholder="ตัวเลข 15-16 หลัก">
@@ -1666,10 +1670,20 @@ function campStats(c){
   const rev=paid.reduce((a,o)=>a+o.amount,0);
   return{orders:os.length,paid:paid.length,rev,roas:c.spend>0?rev/c.spend:null,cpa:paid.length?c.spend/paid.length:null};
 }
-function boostDesk(){
-  // โต๊ะน้องบูสต์ในแท็บโฆษณา: รายงานแอดล่าสุด ข้อเสนอที่รอคุณแดนตัดสิน และช่องสั่งงาน
+const DESKS={
+  analyst:{sub:'นักวิเคราะห์โฆษณา · อ่านผลแอดทุกวัน 07:30 · เสนอปรับงบ คุณเป็นคนอนุมัติ',ph:'สั่งน้องบูสต์ เช่น เดือนนี้งบไม่เกิน 1,500 / เน้นกลุ่มคนเตรียมสอบ TOEIC / ยังไม่เปิดแอดจนกว่าจะบอก (น้องบูสต์อ่านก่อนรอบ 07:30)',link:['เปิด Ads Manager','https://adsmanager.facebook.com/adsmanager/manage/campaigns'],empty:'ยังไม่มีรายงานแอด น้องบูสต์จะส่งหลังอ่านผลรอบ 07:30'},
+  finance:{sub:'ฝ่ายบัญชี · สรุปรายรับและปิดยอดสิ้นเดือน · เตือนเรื่องเงินให้คุณ',ph:'สั่งพี่บัญชี เช่น สรุปยอดเดือนนี้แยกตามสินค้า / เตือนถ้ายอดวันไหนเป็นศูนย์ / คำนวณกำไรหลังหักค่าแอด',link:['เปิด Stripe','https://dashboard.stripe.com/payments'],empty:'ยังไม่มีรายงานการเงิน พี่บัญชีจะส่งตามรอบสิ้นเดือน'},
+  product:{sub:'ฝ่ายสินค้า · ตรวจไฟล์ ราคา และหน้าขายทุกชิ้น · เสนอสินค้าใหม่',ph:'สั่งพี่โปร เช่น ตรวจว่าไฟล์ทุกเล่มเปิดได้ / เสนอชีทเล่มต่อไปสำหรับคนสอบ TOEIC ครั้งแรก / ปรับคำอธิบายเล่มที่ขายไม่ออก',link:['เปิดคลังไฟล์','https://supabase.com/dashboard/project/lpeqaorswhwzlplsaqpe/storage/buckets/product-images'],empty:'ยังไม่มีรายงานสินค้า พี่โปรจะส่งตามรอบ'},
+  market:{sub:'ฝ่ายการตลาด · ดูคำค้นและกระแสจริง · เสนอโปรโมชันและโค้ดส่วนลดตามจังหวะตลาด',ph:'สั่งพี่มาร์เก็ต เช่น หาช่วงที่คนค้น TOEIC เยอะสุดเพื่อออกโค้ด / เสนอโปรสิ้นเดือน / ดูว่าคู่แข่งลดราคาไหม',link:['เปิด Google Trends','https://trends.google.com/trending?geo=TH'],empty:'ยังไม่มีรายงานตลาด พี่มาร์เก็ตส่งทุกเช้า 07:00'},
+  guard:{sub:'ฝ่ายดูแลระบบ · ตรวจเว็บ ลิงก์ไฟล์ และการติดตามผล (Pixel) ทุกวัน',ph:'สั่งพี่การ์ด เช่น เช็กว่า Pixel ยิงเหตุการณ์ซื้อครบไหม / ตรวจลิงก์ไฟล์ทุกเล่มอีกรอบ / แจ้งทันทีถ้าเว็บล่ม',link:['เปิด Events Manager','https://business.facebook.com/events_manager2'],empty:'ยังไม่มีรายงานระบบ พี่การ์ดตรวจทุกวัน'}
+};
+function boostDesk(){return memberDesk('analyst');}
+function memberDesk(k){
+  // โต๊ะทำงานของสมาชิกในแท็บที่เกี่ยวข้อง: รายงานล่าสุด ข้อเสนอที่รอคุณแดนตัดสิน และช่องสั่งงาน
   if(!postsLoaded){loadPosts().then(()=>render(true));}
-  const k='analyst',t=TEAM[k],m=mood(k),st=teamStatus(k);
+  if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
+  const cfg=DESKS[k]||{sub:'',ph:'สั่งงาน',link:null,empty:'ยังไม่มีรายงาน'};
+  const t=TEAM[k],m=mood(k),st=teamStatus(k);
   const reps=POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')&&p.kind!=='chat'&&p.kind!=='reply').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
   const last=reps[0];const open=S.cmt===k;const txt=last?String(last.text||'').trim():'';
   const pend=(TODO.items||[]).filter(i=>i.from===k&&!i.done_at);
@@ -1677,19 +1691,18 @@ function boostDesk(){
   return `<div class="card desk" style="--obg:${t.bg}">
     <div class="oh" style="align-items:flex-start"><img class="ava" src="${t.img}" alt="" style="background:${t.bg};width:72px;height:72px"><div style="min-width:0;flex:1">
       <div class="on" style="font-size:18px">${esc(t.name)} <span class="kind ai">AI</span>${statusBadge(k,false)}</div>
-      <div class="ot">นักวิเคราะห์โฆษณา · อ่านผลแอดทุกวัน 07:30 · เสนอปรับงบ คุณเป็นคนอนุมัติ</div>
+      <div class="ot">${esc(cfg.sub)}</div>
       ${m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:''}
       <div class="fine" style="margin-top:4px">${st.last?'ส่งรายงานล่าสุด '+fdt(st.last):'ยังไม่เคยส่งรายงาน'}${pend.length?` · <b style="color:var(--bad)">รอคุณตัดสิน ${pend.length} เรื่อง</b>`:''}</div>
     </div></div>
-    ${last?`<div class="deskrep"><div class="fine" style="margin-bottom:4px">รายงานล่าสุด · ${esc(KIND_TH[last.kind]||last.kind)} · ${fdt(Date.parse(last.created_at))}</div><div class="${open?'':'ptxt n2'}" style="white-space:pre-wrap;font-size:14px;line-height:1.5;margin:0" ${open?'':`data-a="cmtOpen" data-v="${k}"`}>${esc(txt)}</div></div>`:`<p class="fine" style="margin:10px 0 0">ยังไม่มีรายงานแอด น้องบูสต์จะส่งหลังอ่านผลรอบ 07:30</p>`}
+    ${last?`<div class="deskrep"><div class="fine" style="margin-bottom:4px">รายงานล่าสุด · ${esc(KIND_TH[last.kind]||last.kind)} · ${fdt(Date.parse(last.created_at))}</div><div class="${open?'':'ptxt n2'}" style="white-space:pre-wrap;font-size:14px;line-height:1.5;margin:0" ${open?'':`data-a="cmtOpen" data-v="${k}"`}>${esc(txt)}</div></div>`:`<p class="fine" style="margin:10px 0 0">${esc(cfg.empty)}</p>`}
     ${pend.length?`<div class="deskrep"><div class="fine" style="margin-bottom:4px">ข้อเสนอที่รอคุณ</div>${pend.slice(0,3).map(i=>`<div class="todo" style="margin:0 0 6px"><span class="ansmark">${i.type==='decide'?'❓':'☐'}</span><div class="tt">${esc(i.text)}</div></div>`).join('')}<button class="btn btn-line btn-sm" data-a="tab" data-v="todo">ไปตอบในเช็คลิสต์</button></div>`:''}
     ${mine?`<div class="fine" style="margin-top:8px">คุณสั่งไว้ล่าสุด ${fdt(Date.parse(mine.created_at))}: ${esc(String(mine.text).replace('@'+k+' ','').slice(0,140))}</div>`:''}
-    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-line btn-sm" data-a="cmtOpen" data-v="${k}">${open?'ปิด':'ดูเต็ม / สั่งงานน้องบูสต์'}</button><a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns" target="_blank" rel="noopener noreferrer">เปิด Ads Manager</a></div>
-    ${open?`<div class="cmt open" style="border:0;margin:0;padding:0"><textarea id="cmt-${k}" placeholder="สั่งน้องบูสต์ เช่น เดือนนี้งบไม่เกิน 1,500 / เน้นกลุ่มคนเตรียมสอบ TOEIC / ยังไม่เปิดแอดจนกว่าจะบอก (น้องบูสต์อ่านก่อนรอบ 07:30)"></textarea><div class="send"><button class="btn btn-cta btn-sm" data-a="cmtSend" data-v="${k}">ส่งถึงน้องบูสต์</button></div></div>`:''}
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-line btn-sm" data-a="cmtOpen" data-v="${k}">${open?'ปิด':'ดูเต็ม / สั่งงาน'+esc(t.name)}</button>${cfg.link?`<a class="btn btn-line btn-sm" href="${cfg.link[1]}" target="_blank" rel="noopener noreferrer">${esc(cfg.link[0])}</a>`:''}</div>
+    ${open?`<div class="cmt open" style="border:0;margin:0;padding:0"><textarea id="cmt-${k}" placeholder="${esc(cfg.ph)}"></textarea><div class="send"><button class="btn btn-cta btn-sm" data-a="cmtSend" data-v="${k}">ส่งถึง${esc(t.name)}</button></div></div>`:''}
   </div>`;
 }
 function adsTab(){
-  if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   const tot=D.campaigns.reduce((a,c)=>{const st=campStats(c);a.spend+=Number(c.spend)||0;a.rev+=st.rev;a.paid+=st.paid;return a;},{spend:0,rev:0,paid:0});
   const roasAll=tot.spend>0?(tot.rev/tot.spend).toFixed(2):'-';
   const a=ensureAd();
