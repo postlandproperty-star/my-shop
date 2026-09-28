@@ -198,7 +198,7 @@ footer{padding:28px 0 110px;text-align:center}
 .fpost footer button{flex:1;border:0;background:none;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap}
 .fpost footer button:hover{background:var(--bg)}.fpost footer button[aria-pressed=true]{color:var(--ok)}
 .desk{margin:12px 0 4px;padding:14px;position:relative;overflow:hidden}.desk::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;background:var(--obg)}.desk .oh{display:flex;gap:12px;margin-top:4px}.deskrep{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--bg)}
-.brief-box{padding:12px 14px;margin:0 0 14px;border:2px solid var(--accent)}.brief-box .ava{width:44px;height:44px}
+.brief-box{padding:12px 14px;margin:0 0 14px;border:2px solid var(--accent)}.brief-box .attach{min-height:44px;padding:10px 16px;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}@media(max-width:520px){.brief-box .attach{flex:1 1 45%;justify-content:center}.brief-box .row .fine{flex-basis:100%}}.brief-box .ava{width:44px;height:44px}
 .att{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 10px}.att img{width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}.att .file{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--bg);color:var(--ink);text-decoration:none}.att.small{padding:6px 0 0}
 .fpost.own{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}.fpost.minutes{border-left:4px solid var(--brand)}
 .fold{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.fold summary{cursor:pointer;font-weight:700;padding:8px 0;list-style:none}.fold summary::-webkit-details-marker{display:none}.fold summary:before{content:'▸ ';color:var(--muted)}.fold[open] summary:before{content:'▾ '}
@@ -1535,8 +1535,8 @@ function meetingTab(){
       <textarea class="input" id="brief-text" rows="3" placeholder="โยนโจทย์ให้ทีม เช่น เจอเพจคู่แข่งทำคลิปแบบนี้ ลองทำบ้าง / อยากได้ชีทเรื่องนี้ / เปลี่ยนโทนโพสต์เป็นแบบนี้ (แนบรูปหรือไฟล์ประกอบได้)">${esc(S.briefDraft||'')}</textarea>
       ${bf.length?`<div class="att small">${bf.map((f,i)=>`<span class="file">📎 ${esc(f.name)} <button class="tx" data-a="briefUnpick" data-i="${i}" title="เอาออก">×</button></span>`).join('')}</div>`:''}
       <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
-        <label class="btn btn-line btn-sm" style="cursor:pointer">📎 แนบไฟล์<input type="file" id="brief-files" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" style="display:none" data-a="briefPick"></label>
-        <button class="btn btn-cta btn-sm" data-a="briefSend" ${S.briefBusy?'disabled':''}>${S.briefBusy?'กำลังส่ง...':'ส่งเข้าห้องประชุม'}</button>
+        <label class="btn btn-line attach" for="brief-files">📎 แนบรูป / ไฟล์<input type="file" id="brief-files" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" class="vh"></label>
+        <button class="btn btn-cta attach" data-a="briefSend" ${S.briefBusy?'disabled':''}>${S.briefBusy?'กำลังส่ง...':'ส่งเข้าห้องประชุม'}</button>
         <span class="fine">ทีมจะเห็นในกระดานงานทันที พี่ต้นสรุปแบ่งงานรอบเช้า และห้องพักจะพูดถึง</span>
       </div>
     </div></div>
