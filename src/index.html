@@ -197,6 +197,7 @@ footer{padding:28px 0 110px;text-align:center}
 .fpost footer{display:flex;gap:4px;border-top:1px solid var(--line);padding:4px 8px}
 .fpost footer button{flex:1;border:0;background:none;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap}
 .fpost footer button:hover{background:var(--bg)}.fpost footer button[aria-pressed=true]{color:var(--ok)}
+.desk{margin:12px 0 4px;padding:14px;position:relative;overflow:hidden}.desk::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;background:var(--obg)}.desk .oh{display:flex;gap:12px;margin-top:4px}.deskrep{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--bg)}
 .fold{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.fold summary{cursor:pointer;font-weight:700;padding:8px 0;list-style:none}.fold summary::-webkit-details-marker{display:none}.fold summary:before{content:'▸ ';color:var(--muted)}.fold[open] summary:before{content:'▾ '}
 .org{display:grid;justify-items:center;gap:0;margin-top:12px}
 .org .tier{display:grid;gap:12px;width:100%}
@@ -1665,7 +1666,30 @@ function campStats(c){
   const rev=paid.reduce((a,o)=>a+o.amount,0);
   return{orders:os.length,paid:paid.length,rev,roas:c.spend>0?rev/c.spend:null,cpa:paid.length?c.spend/paid.length:null};
 }
+function boostDesk(){
+  // โต๊ะน้องบูสต์ในแท็บโฆษณา: รายงานแอดล่าสุด ข้อเสนอที่รอคุณแดนตัดสิน และช่องสั่งงาน
+  if(!postsLoaded){loadPosts().then(()=>render(true));}
+  const k='analyst',t=TEAM[k],m=mood(k),st=teamStatus(k);
+  const reps=POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')&&p.kind!=='chat'&&p.kind!=='reply').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  const last=reps[0];const open=S.cmt===k;const txt=last?String(last.text||'').trim():'';
+  const pend=(TODO.items||[]).filter(i=>i.from===k&&!i.done_at);
+  const mine=POSTS.filter(p=>p.status==='note'&&p.kind==='reply'&&String(p.text||'').startsWith('@'+k+' ')).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
+  return `<div class="card desk" style="--obg:${t.bg}">
+    <div class="oh" style="align-items:flex-start"><img class="ava" src="${t.img}" alt="" style="background:${t.bg};width:72px;height:72px"><div style="min-width:0;flex:1">
+      <div class="on" style="font-size:18px">${esc(t.name)} <span class="kind ai">AI</span>${statusBadge(k,false)}</div>
+      <div class="ot">นักวิเคราะห์โฆษณา · อ่านผลแอดทุกวัน 07:30 · เสนอปรับงบ คุณเป็นคนอนุมัติ</div>
+      ${m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:''}
+      <div class="fine" style="margin-top:4px">${st.last?'ส่งรายงานล่าสุด '+fdt(st.last):'ยังไม่เคยส่งรายงาน'}${pend.length?` · <b style="color:var(--bad)">รอคุณตัดสิน ${pend.length} เรื่อง</b>`:''}</div>
+    </div></div>
+    ${last?`<div class="deskrep"><div class="fine" style="margin-bottom:4px">รายงานล่าสุด · ${esc(KIND_TH[last.kind]||last.kind)} · ${fdt(Date.parse(last.created_at))}</div><div class="${open?'':'ptxt n2'}" style="white-space:pre-wrap;font-size:14px;line-height:1.5;margin:0" ${open?'':`data-a="cmtOpen" data-v="${k}"`}>${esc(txt)}</div></div>`:`<p class="fine" style="margin:10px 0 0">ยังไม่มีรายงานแอด น้องบูสต์จะส่งหลังอ่านผลรอบ 07:30</p>`}
+    ${pend.length?`<div class="deskrep"><div class="fine" style="margin-bottom:4px">ข้อเสนอที่รอคุณ</div>${pend.slice(0,3).map(i=>`<div class="todo" style="margin:0 0 6px"><span class="ansmark">${i.type==='decide'?'❓':'☐'}</span><div class="tt">${esc(i.text)}</div></div>`).join('')}<button class="btn btn-line btn-sm" data-a="tab" data-v="todo">ไปตอบในเช็คลิสต์</button></div>`:''}
+    ${mine?`<div class="fine" style="margin-top:8px">คุณสั่งไว้ล่าสุด ${fdt(Date.parse(mine.created_at))}: ${esc(String(mine.text).replace('@'+k+' ','').slice(0,140))}</div>`:''}
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-line btn-sm" data-a="cmtOpen" data-v="${k}">${open?'ปิด':'ดูเต็ม / สั่งงานน้องบูสต์'}</button><a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns" target="_blank" rel="noopener noreferrer">เปิด Ads Manager</a></div>
+    ${open?`<div class="cmt open" style="border:0;margin:0;padding:0"><textarea id="cmt-${k}" placeholder="สั่งน้องบูสต์ เช่น เดือนนี้งบไม่เกิน 1,500 / เน้นกลุ่มคนเตรียมสอบ TOEIC / ยังไม่เปิดแอดจนกว่าจะบอก (น้องบูสต์อ่านก่อนรอบ 07:30)"></textarea><div class="send"><button class="btn btn-cta btn-sm" data-a="cmtSend" data-v="${k}">ส่งถึงน้องบูสต์</button></div></div>`:''}
+  </div>`;
+}
 function adsTab(){
+  if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   const tot=D.campaigns.reduce((a,c)=>{const st=campStats(c);a.spend+=Number(c.spend)||0;a.rev+=st.rev;a.paid+=st.paid;return a;},{spend:0,rev:0,paid:0});
   const roasAll=tot.spend>0?(tot.rev/tot.spend).toFixed(2):'-';
   const a=ensureAd();
@@ -1708,6 +1732,7 @@ function adsTab(){
     </div>`;
   } else writer=`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าก่อนแล้วกลับมาเขียนโฆษณา</p></div>`;
   return `
+  ${boostDesk()}
   <h3 class="h3" style="margin-top:14px">ผลลัพธ์แต่ละแคมเปญ</h3>
   <div class="kpis">
     <div class="kpi"><div class="v">${baht(tot.spend)}</div><div class="l">ค่าโฆษณาที่ใช้ไป</div></div>
