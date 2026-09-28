@@ -364,11 +364,15 @@ export default async function handler(req, res) {
       // โจทย์จากคุณแดน (kind brief จากห้องประชุม) + บันทึกประชุมล่าสุดของพี่ต้น (kind meeting) วางไว้บนสุดของแผน ทุกคนต้องเห็นก่อน
       const briefs = notes.filter((n) => n.kind === 'brief').map((n) => { let files = []; try { files = n.notes ? (JSON.parse(n.notes).files || []) : []; } catch (e) {} return { id: n.id, text: String(n.text || ''), files, created_at: n.created_at }; });
       const minutes = notes.find((n) => n.kind === 'meeting') || null;
-      if (briefs.length || minutes) {
+      const byId = {}; notes.forEach((n) => { byId[n.id] = n; });
+      const weekAgo2 = Date.now() - 7 * 864e5;
+      const ownerComments = notes.filter((n) => n.kind === 'comment' && n.source === 'manual' && Date.parse(n.created_at) >= weekAgo2).map((n) => { let on = null; try { on = n.notes ? JSON.parse(n.notes).on : null; } catch (e) {} const tgt = on ? byId[on] : null; const where = !tgt ? 'โพสต์ในห้องประชุม' : tgt.kind === 'brief' ? 'โจทย์ของคุณแดนเอง' : tgt.kind === 'meeting' ? 'บันทึกประชุมของพี่ต้น' : `รายงานของ${MEMBER_TH[tgt.source] || tgt.source} (${tgt.kind})`; return { id: n.id, on, where, on_text: tgt ? String(tgt.text || '').split('\n')[0].slice(0, 80) : '', text: String(n.text || ''), created_at: n.created_at }; });
+      if (briefs.length || minutes || ownerComments.length) {
         const bl = briefs.length ? '== โจทย์จากคุณแดน (เจ้าของร้าน) ส่งเข้าห้องประชุม สำคัญที่สุด ทำตามก่อนแผนอื่น ==\n' + briefs.map((b) => `- [${b.created_at.slice(0, 10)}] ${b.text.slice(0, 600)}${b.files.length ? ' (ไฟล์แนบ: ' + b.files.map((f) => `${f.name} ${f.url}`).join(' , ') + ')' : ''}`).join('\n') : '';
         const ml = minutes ? `== บันทึกประชุมล่าสุดของพี่ต้น (${minutes.created_at.slice(0, 10)}) แบ่งงานตามนี้ ==\n${String(minutes.text || '').slice(0, 2500)}` : '';
-        const head = [bl, ml].filter(Boolean).join('\n\n');
-        plan = plan ? { ...plan, text: `${head}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: head, created_at: (briefs[0] || minutes).created_at };
+        const oc = ownerComments.length ? '== คุณแดนตอบ/สั่งเพิ่มในคอมเมนต์ห้องประชุม (7 วันล่าสุด) ถือเป็นการตัดสินใจของเจ้าของ ทำตามได้เลย ==\n' + ownerComments.map((c) => `- [${c.created_at.slice(0, 16).replace('T', ' ')}Z] ใต้${c.where}${c.on_text ? ` "${c.on_text}"` : ''}: "${c.text.slice(0, 400)}"`).join('\n') : '';
+        const head = [bl, ml, oc].filter(Boolean).join('\n\n');
+        plan = plan ? { ...plan, text: `${head}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: head, created_at: (briefs[0] || minutes || ownerComments[0]).created_at };
       }
       // ข้อความจากเจ้าของถึงสมาชิก (kind reply, text ขึ้นต้น @<member>) 7 วันล่าสุด แนบท้ายแผนให้ทุกคนอ่านเจอ
       const weekAgo = Date.now() - 7 * 864e5;
@@ -380,7 +384,7 @@ export default async function handler(req, res) {
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
       const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source${(await channelCol()) ? ',channel' : ''}&order=scheduled_at.asc&limit=40`);
-      return res.status(200).json({ ok: true, plan, owner_briefs: briefs, minutes: minutes ? { text: minutes.text, created_at: minutes.created_at } : null, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
+      return res.status(200).json({ ok: true, plan, owner_briefs: briefs, owner_comments: ownerComments, minutes: minutes ? { text: minutes.text, created_at: minutes.created_at } : null, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
     }
     if (action === 'images') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -692,6 +696,7 @@ export default async function handler(req, res) {
       for (const n of notes) { if (['chat', 'reply', 'plan'].includes(n.kind) || n.source === 'manual' || seen[n.source]) continue; seen[n.source] = true; const first = String(n.text || '').split('\n').find((l) => l.trim()) || ''; lines.push(`${MEMBER_TH[n.source] || n.source} ส่งงานแล้ว (${n.kind}): ${first.slice(0, 90)}`); }
       const quiet = Object.keys(MEMBER_TH).filter((k) => !seen[k] && !['care'].includes(k));
       if (quiet.length) lines.push(`ยังไม่มีรายงานใน 24 ชม.: ${quiet.map((k) => MEMBER_TH[k]).join(' ')}`);
+      notes.filter((n) => n.kind === 'comment' && n.source === 'manual').slice(0, 2).forEach((c) => lines.push(`คุณแดนตอบในห้องประชุม: "${String(c.text || '').slice(0, 100)}" (ทีมรับทราบสั้นๆ ได้ ไม่ต้องคุยรายละเอียด)`));
       const brief3 = notes.filter((n) => n.kind === 'brief').slice(0, 2);
       brief3.forEach((b) => lines.push(`คุณแดนส่งโจทย์ใหม่ในห้องประชุม (${String(b.created_at).slice(0, 10)}): "${String(b.text || '').split('\n')[0].slice(0, 120)}" (ทีมพูดถึงได้ว่าใครจะรับไปทำ แต่ห้ามคุยรายละเอียดงานยาว)`));
       const health = notes.find((n) => n.kind === 'health');
