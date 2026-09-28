@@ -19,3 +19,9 @@ python3 tools/reel/build.py candidates "spoon rest ceramic" sheet.png   # แผ
 ## แก้คลิปที่อัปโหลดไปแล้ว (ลิงก์เดิม)
 
 `POST ?action=upload_sign` ใส่ `{"name":"x.mp4","type":"video/mp4","overwrite":"reels/<path เดิม>.mp4"}` จะได้ upload_url ที่เขียนทับไฟล์เดิม ร่างที่ส่งเข้าคิวแล้วจึงไม่ต้องสร้างใหม่
+
+
+## สองรูปแบบคลิป (สลับกันไม่ให้ซ้ำ)
+
+- `"style": "photo"` (ค่าเริ่มต้น) รูปนิ่งซูมช้า + เสียงพากย์ เบา เร็ว
+- `"style": "motion"` การ์ดคำถาม/เฉลยเลื่อนเข้ามาจากล่างพร้อมเสียงวูช เฉลยมีเสียงติ๊ง ซูมแรงขึ้น และมีเพลงประกอบเบาๆ จากคลังเพลงฟรี (CC BY / CC0 เท่านั้น เครดิตอยู่ท้าย image_credits) ตั้ง `"music_query"` เปลี่ยนแนวเพลงได้ (เช่น "lofi chill", "upbeat pop") หรือ `"music": false` ปิดเพลง

@@ -130,19 +130,53 @@ def fit_font(d, text, kind, start, maxw):
     while d.textlength(text, font=f) > maxw and f.size > 40: f = font(kind, f.size - 6)
     return f
 
+def find_music(query):
+    """เพลงประกอบจาก Openverse audio (Jamendo/Freesound) เฉพาะ CC BY / CC0 ยาว 30-300 วิ -> (path, credit) หรือ (None, None)"""
+    try:
+        res = json.loads(http('https://api.openverse.org/v1/audio/?q=' + urllib.parse.quote(query) + '&license_type=commercial&page_size=20', timeout=30)).get('results', [])
+    except Exception: res = []
+    for r in res:
+        if str(r.get('license', '')).lower() not in ('by', 'cc0', 'pdm'): continue
+        dms = r.get('duration') or 0
+        if dms and not (30000 <= dms <= 300000): continue
+        try:
+            fn = os.path.join(CACHE, 'music-' + hashlib.md5(r['url'].encode()).hexdigest() + '.mp3')
+            if not os.path.exists(fn) or os.path.getsize(fn) < 100000:
+                data = http(r['url'], timeout=60)
+                if len(data) < 100000: continue
+                open(fn, 'wb').write(data)
+            return fn, f"เพลง: {r.get('title', '')} | {r.get('creator', '')} | {r.get('license', '')} | {r.get('foreign_landing_url', '')}"
+        except Exception: continue
+    return None, None
+
 def main():
     if len(sys.argv) < 3: raise SystemExit(__doc__)
     spec = json.load(open(sys.argv[1], encoding='utf-8')); out = sys.argv[2]
     global OUTDIR; OUTDIR = os.path.join(os.path.dirname(os.path.abspath(out)) or '.', '.reel_work'); os.makedirs(OUTDIR, exist_ok=True)
+    STYLE = spec.get('style', 'photo')  # photo = สไลด์รูปนิ่งซูมช้า | motion = การ์ดเลื่อนเข้า + เสียงเอฟเฟกต์ + เพลงประกอบ
+    MOTION = STYLE == 'motion'
     FF = None if DRY else find_ff(); m_happy, m_think = mascot('happy'), mascot('think')
     items = spec['items']; n = len(items); slides = []; credits = []
+    def layers():
+        # photo: วาดทุกอย่างบนภาพเดียว | motion: bg (พื้น+รูป) แยกจาก fg (การ์ด+มาสคอต โปร่งใส) เพื่อให้ ffmpeg เลื่อน fg เข้ามาได้
+        im, d = base()
+        if not MOTION: return im, d, im, d
+        fg = Image.new('RGBA', (W, H), (0, 0, 0, 0)); return im, d, fg, ImageDraw.Draw(fg)
+    def save(tag, im, fg, text, mind, kind):
+        p = os.path.join(OUTDIR, f'{tag}.png')
+        if MOTION:
+            comp = im.copy(); comp.paste(fg, (0, 0), fg); comp.save(p)
+            pb, pf = os.path.join(OUTDIR, f'{tag}_bg.png'), os.path.join(OUTDIR, f'{tag}_fg.png'); im.save(pb); fg.save(pf)
+            slides.append((p, text, mind, kind, pb, pf))
+        else:
+            im.save(p); slides.append((p, text, mind, kind, p, None))
     hook = spec.get('hook', {})
-    im, d = base(); d.rounded_rectangle((90, 520, W - 90, 1240), radius=60, fill=WHITE)
-    center_text(d, 590, hook.get('top', 'ของใกล้ตัว'), fit_font(d, hook.get('top', ''), 'xb', 120, 860))
-    center_text(d, 760, hook.get('big', f'{n} อย่าง'), font('xb', 150), fill=RED)
-    center_text(d, 960, hook.get('sub', 'ที่คุณเรียก\nภาษาอังกฤษไม่ถูก'), font('sb', 84), spacing=20)
-    im.paste(m_think, (W // 2 - 210, 1300), m_think); center_text(d, 1740, hook.get('foot', 'ลองทายดู'), font('md', 64), fill=WHITE)
-    p = os.path.join(OUTDIR, 's00.png'); im.save(p); slides.append((p, hook.get('tts', f"ของใกล้ตัว {n} อย่าง ที่คุณเรียกภาษาอังกฤษไม่ถูก ลองทายดู"), 3.0))
+    im, d, fg, fd = layers(); fd.rounded_rectangle((90, 520, W - 90, 1240), radius=60, fill=WHITE)
+    center_text(fd, 590, hook.get('top', 'ของใกล้ตัว'), fit_font(fd, hook.get('top', ''), 'xb', 120, 860))
+    center_text(fd, 760, hook.get('big', f'{n} อย่าง'), font('xb', 150), fill=RED)
+    center_text(fd, 960, hook.get('sub', 'ที่คุณเรียก\nภาษาอังกฤษไม่ถูก'), font('sb', 84), spacing=20)
+    fg.paste(m_think, (W // 2 - 210, 1300), m_think); center_text(d, 1740, hook.get('foot', 'ลองทายดู'), font('md', 64), fill=WHITE)
+    save('s00', im, fg, hook.get('tts', f"ของใกล้ตัว {n} อย่าง ที่คุณเรียกภาษาอังกฤษไม่ถูก ลองทายดู"), 3.0, 'hook')
     qtext = spec.get('question', 'อันนี้ภาษาอังกฤษ\nเรียกว่าอะไร?')
     for i, it in enumerate(items, 1):
         if it.get('image'): path, credit = it['image'], 'provided'
@@ -150,27 +184,27 @@ def main():
         elif it.get('query') or it.get('en'): path, credit = find_image(it.get('query') or it['en'])
         else: path, credit = None, None
         src = path or placeholder(it['en']); credits.append(credit or 'placeholder')
-        im, d = base(); counter(d, i, n); photo_card(im, src)
-        d.rounded_rectangle((90, 1210, W - 90, 1440), radius=48, fill=WHITE); center_text(d, 1250, it.get('question', qtext), font('xb', 70), spacing=10)
-        im.paste(m_think, (W - 460, 1470), m_think)
-        d.rounded_rectangle((90, 1560, 600, 1680), radius=40, fill=YEL); d.text((345, 1620), it.get('nudge', 'คิดออกไหม?'), font=font('xb', 52), fill=INK, anchor='mm')
-        p = os.path.join(OUTDIR, f's{i:02d}q.png'); im.save(p); slides.append((p, it.get('q_tts', 'อันนี้ภาษาอังกฤษเรียกว่าอะไร' if i == 1 else 'แล้วอันนี้ล่ะ'), 2.6))
-        im, d = base(); counter(d, i, n); photo_card(im, src)
-        d.rounded_rectangle((90, 1210, W - 90, 1480), radius=48, fill=WHITE)
-        d.rounded_rectangle((W // 2 - 110, 1180, W // 2 + 110, 1250), radius=35, fill=RED); d.text((W // 2, 1215), 'เฉลย', font=font('xb', 40), fill=WHITE, anchor='mm')
-        d.text((W // 2, 1268), it['en'], font=fit_font(d, it['en'], 'xb', 110, W - 220), fill=BLUE, anchor='ma')
-        center_text(d, 1412, it['th'], fit_font(d, it['th'], 'sb', 54, W - 220))
-        im.paste(m_happy, (W - 460, 1500), m_happy)
-        d.rounded_rectangle((90, 1600, 640, 1720), radius=40, fill=GREEN); d.text((365, 1660), it.get('after', 'จำไว้นะ'), font=font('xb', 52), fill=WHITE, anchor='mm')
-        p = os.path.join(OUTDIR, f's{i:02d}a.png'); im.save(p); slides.append((p, it.get('a_tts', f"{it['en']} {it['th']}"), 3.0))
+        im, d, fg, fd = layers(); counter(d, i, n); photo_card(im, src)
+        fd.rounded_rectangle((90, 1210, W - 90, 1440), radius=48, fill=WHITE); center_text(fd, 1250, it.get('question', qtext), font('xb', 70), spacing=10)
+        fg.paste(m_think, (W - 460, 1470), m_think)
+        fd.rounded_rectangle((90, 1560, 600, 1680), radius=40, fill=YEL); fd.text((345, 1620), it.get('nudge', 'คิดออกไหม?'), font=font('xb', 52), fill=INK, anchor='mm')
+        save(f's{i:02d}q', im, fg, it.get('q_tts', 'อันนี้ภาษาอังกฤษเรียกว่าอะไร' if i == 1 else 'แล้วอันนี้ล่ะ'), 2.6, 'q')
+        im, d, fg, fd = layers(); counter(d, i, n); photo_card(im, src)
+        fd.rounded_rectangle((90, 1210, W - 90, 1480), radius=48, fill=WHITE)
+        fd.rounded_rectangle((W // 2 - 110, 1180, W // 2 + 110, 1250), radius=35, fill=RED); fd.text((W // 2, 1215), 'เฉลย', font=font('xb', 40), fill=WHITE, anchor='mm')
+        fd.text((W // 2, 1268), it['en'], font=fit_font(fd, it['en'], 'xb', 110, W - 220), fill=BLUE, anchor='ma')
+        center_text(fd, 1412, it['th'], fit_font(fd, it['th'], 'sb', 54, W - 220))
+        fg.paste(m_happy, (W - 460, 1500), m_happy)
+        fd.rounded_rectangle((90, 1600, 640, 1720), radius=40, fill=GREEN); fd.text((365, 1660), it.get('after', 'จำไว้นะ'), font=font('xb', 52), fill=WHITE, anchor='mm')
+        save(f's{i:02d}a', im, fg, it.get('a_tts', f"{it['en']} {it['th']}"), 3.0, 'a')
     end = spec.get('end', {})
-    im, d = base(); d.rounded_rectangle((90, 480, W - 90, 1180), radius=60, fill=WHITE)
-    center_text(d, 560, end.get('line1', 'ทายถูกกี่ข้อ?'), font('xb', 110)); center_text(d, 720, end.get('line2', 'คอมเมนต์บอกหน่อย'), font('sb', 70))
-    d.rounded_rectangle((200, 900, W - 200, 1060), radius=60, fill=RED); d.text((W // 2, 980), end.get('cta', 'กดติดตาม มีทุกวัน'), font=font('xb', 62), fill=WHITE, anchor='mm')
-    im.paste(m_happy, (W // 2 - 210, 1240), m_happy); center_text(d, 1700, end.get('foot', 'SheetLab · ภาษาอังกฤษแบบคนจริงใช้'), font('md', 50), fill=WHITE)
-    p = os.path.join(OUTDIR, 's99.png'); im.save(p); slides.append((p, end.get('tts', 'ทายถูกกี่ข้อ คอมเมนต์บอกหน่อย กดติดตามไว้ มีทุกวันนะ'), 3.2))
+    im, d, fg, fd = layers(); fd.rounded_rectangle((90, 480, W - 90, 1180), radius=60, fill=WHITE)
+    center_text(fd, 560, end.get('line1', 'ทายถูกกี่ข้อ?'), font('xb', 110)); center_text(fd, 720, end.get('line2', 'คอมเมนต์บอกหน่อย'), font('sb', 70))
+    fd.rounded_rectangle((200, 900, W - 200, 1060), radius=60, fill=RED); fd.text((W // 2, 980), end.get('cta', 'กดติดตาม มีทุกวัน'), font=font('xb', 62), fill=WHITE, anchor='mm')
+    fg.paste(m_happy, (W // 2 - 210, 1240), m_happy); center_text(d, 1700, end.get('foot', 'SheetLab · ภาษาอังกฤษแบบคนจริงใช้'), font('md', 50), fill=WHITE)
+    save('s99', im, fg, end.get('tts', 'ทายถูกกี่ข้อ คอมเมนต์บอกหน่อย กดติดตามไว้ มีทุกวันนะ'), 3.2, 'end')
     if DRY:
-        print(json.dumps({'ok': True, 'dry': True, 'slides': [p for p, _, _ in slides], 'image_credits': credits, 'check': 'เปิดดูสไลด์ที่ลงท้าย q.png ทุกใบว่ารูปตรงกับของจริงไหม แล้วค่อยรันเต็ม'}, ensure_ascii=False)); return
+        print(json.dumps({'ok': True, 'dry': True, 'style': STYLE, 'slides': [sl[0] for sl in slides], 'image_credits': credits, 'check': 'เปิดดูสไลด์ที่ลงท้าย q.png ทุกใบว่ารูปตรงกับของจริงไหม แล้วค่อยรันเต็ม'}, ensure_ascii=False)); return
     if not KEY: raise SystemExit('CONTENT_KEY missing')
     def tts(text, k):
         # เสียงเก็บแคชตามข้อความ+เสียง ถ้าสร้างซ้ำด้วยข้อความเดิมจะไม่เสียเครดิตอีก
@@ -182,16 +216,45 @@ def main():
         fn = os.path.join(OUTDIR, f't{k:02d}.mp3'); open(fn, 'wb').write(open(cfn, 'rb').read()); return fn
     def dur(path):
         r = subprocess.run([FF, '-i', path], capture_output=True, text=True); m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', r.stderr); return int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3])
+    sfx = {}
+    if MOTION:
+        # เสียงเอฟเฟกต์สังเคราะห์เอง (ไม่ต้องดาวน์โหลด): วูช ตอนการ์ดเลื่อนเข้า / ติ๊ง ตอนเฉลย
+        sfx['whoosh'] = os.path.join(OUTDIR, 'whoosh.wav'); sfx['ding'] = os.path.join(OUTDIR, 'ding.wav')
+        subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anoisesrc=d=0.4:c=pink:r=44100', '-af', 'lowpass=f=1800,afade=t=in:st=0:d=0.12,afade=t=out:st=0.18:d=0.22,volume=0.5', sfx['whoosh']], check=True)
+        subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'sine=frequency=1318:duration=0.5:sample_rate=44100', '-f', 'lavfi', '-i', 'sine=frequency=1975:duration=0.5:sample_rate=44100', '-filter_complex', '[0:a][1:a]amix=inputs=2:normalize=0,afade=t=out:st=0.05:d=0.45,volume=0.6[a]', '-map', '[a]', sfx['ding']], check=True)
     segs = []; chars = 0
-    for k, (png, text, mind) in enumerate(slides):
-        a = tts(text, k); chars += len(text); D = max(mind, dur(a) + 0.7); seg = os.path.join(OUTDIR, f'seg{k:02d}.mp4')
-        subprocess.run([FF, '-y', '-loglevel', 'error', '-loop', '1', '-framerate', '30', '-i', png, '-i', a, '-filter_complex',
-                        "[1:a]apad[a];[0:v]scale=1296:2304,zoompan=z='min(zoom+0.0004,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30,fade=t=in:st=0:d=0.25,format=yuv420p[v]",
-                        '-map', '[v]', '-map', '[a]', '-t', f'{D:.2f}', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-r', '30', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2', seg], check=True)
+    for k, (png, text, mind, kind, pb, pf) in enumerate(slides):
+        a = tts(text, k); chars += len(text); D = max(mind, dur(a) + (1.0 if MOTION else 0.7)); seg = os.path.join(OUTDIR, f'seg{k:02d}.mp4')
+        if not MOTION:
+            subprocess.run([FF, '-y', '-loglevel', 'error', '-loop', '1', '-framerate', '30', '-i', png, '-i', a, '-filter_complex',
+                            "[1:a]apad[a];[0:v]scale=1296:2304,zoompan=z='min(zoom+0.0004,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30,fade=t=in:st=0:d=0.25,format=yuv420p[v]",
+                            '-map', '[v]', '-map', '[a]', '-t', f'{D:.2f}', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-r', '30', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2', seg], check=True)
+        else:
+            fx = sfx['ding'] if kind == 'a' else sfx['whoosh']
+            # bg ซูมช้า, fg เลื่อนขึ้นจากล่าง 260px ด้วย ease-out ใน 0.45 วิ + จางเข้า, มาสคอตอยู่ใน fg เดียวกัน, เสียงพากย์เริ่มหลังเอฟเฟกต์ 0.35 วิ
+            filt = ("[0:v]scale=1296:2304,zoompan=z='min(zoom+0.0007,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30[bg];"
+                    "[1:v]format=rgba,fade=t=in:st=0:d=0.3:alpha=1[fg];"
+                    "[bg][fg]overlay=x=0:y='pow(1-min(1,t/0.45),2)*260':format=auto,fade=t=in:st=0:d=0.2,format=yuv420p[v];"
+                    "[2:a]adelay=350|350[vo];[3:a]volume=0.8[fx];[vo][fx]amix=inputs=2:duration=longest:normalize=0,apad[a]")
+            subprocess.run([FF, '-y', '-loglevel', 'error', '-loop', '1', '-framerate', '30', '-i', pb, '-loop', '1', '-framerate', '30', '-i', pf, '-i', a, '-i', fx, '-filter_complex', filt,
+                            '-map', '[v]', '-map', '[a]', '-t', f'{D:.2f}', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-r', '30', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2', seg], check=True)
         segs.append(seg)
     lst = os.path.join(OUTDIR, 'list.txt'); open(lst, 'w').write(''.join(f"file '{os.path.abspath(s)}'\n" for s in segs))
-    subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', '-movflags', '+faststart', out], check=True)
-    print(json.dumps({'ok': True, 'out': out, 'duration': round(dur(out), 1), 'bytes': os.path.getsize(out), 'items': n, 'tts_chars': chars, 'image_credits': credits}, ensure_ascii=False))
+    music_credit = None
+    want_music = spec.get('music', MOTION)
+    if want_music:
+        mpath, music_credit = find_music(spec.get('music_query', 'upbeat ukulele happy'))
+        if mpath:
+            tmp = os.path.join(OUTDIR, 'novideo_music.mp4')
+            subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', tmp], check=True)
+            D = dur(tmp)
+            subprocess.run([FF, '-y', '-loglevel', 'error', '-i', tmp, '-stream_loop', '-1', '-i', mpath, '-filter_complex',
+                            f"[1:a]volume=0.13,afade=t=in:st=0:d=1.2,atrim=0:{D:.2f},afade=t=out:st={max(0, D - 2.5):.2f}:d=2.5[m];[0:a][m]amix=inputs=2:duration=first:normalize=0[a]",
+                            '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out], check=True)
+        else: want_music = False
+    if not want_music:
+        subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', '-movflags', '+faststart', out], check=True)
+    print(json.dumps({'ok': True, 'out': out, 'style': STYLE, 'duration': round(dur(out), 1), 'bytes': os.path.getsize(out), 'items': n, 'tts_chars': chars, 'image_credits': credits + ([music_credit] if music_credit else [])}, ensure_ascii=False))
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'candidates':
