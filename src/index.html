@@ -198,6 +198,9 @@ footer{padding:28px 0 110px;text-align:center}
 .fpost footer button{flex:1;border:0;background:none;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap}
 .fpost footer button:hover{background:var(--bg)}.fpost footer button[aria-pressed=true]{color:var(--ok)}
 .desk{margin:12px 0 4px;padding:14px;position:relative;overflow:hidden}.desk::before{content:'';position:absolute;left:0;right:0;top:0;height:6px;background:var(--obg)}.desk .oh{display:flex;gap:12px;margin-top:4px}.deskrep{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--bg)}
+.brief-box{padding:12px 14px;margin:0 0 14px;border:2px solid var(--accent)}.brief-box .ava{width:44px;height:44px}
+.att{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 10px}.att img{width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}.att .file{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;background:var(--bg);color:var(--ink);text-decoration:none}.att.small{padding:6px 0 0}
+.fpost.own{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}.fpost.minutes{border-left:4px solid var(--brand)}
 .fold{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.fold summary{cursor:pointer;font-weight:700;padding:8px 0;list-style:none}.fold summary::-webkit-details-marker{display:none}.fold summary:before{content:'▸ ';color:var(--muted)}.fold[open] summary:before{content:'▾ '}
 .org{display:grid;justify-items:center;gap:0;margin-top:12px}
 .org .tier{display:grid;gap:12px;width:100%}
@@ -1394,7 +1397,7 @@ function factoryBox(){
   return `<h3 class="h3">คิวโรงงานผลิตชีท</h3>${FJOBS.slice(0,6).map(j=>{const st=FSTAT[j.status]||[j.status,'gray'];return `<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:6px">${ava('factory')}<span><b>${esc(j.title)}</b> <span class="badge ${st[1]}">${st[0]}</span><span class="fine">สั่งโดย ${esc(member(j.ordered_by||'manager').name)} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${j.price?j.price+' บาท':'แจกฟรี'}</span></span></div>${j.purpose?`<div class="fine">${esc(j.purpose)}</div>`:''}${j.file_url?`<a class="btn btn-line btn-sm" href="${j.file_url}" target="_blank" rel="noopener noreferrer" style="margin-top:6px">เปิดไฟล์ PDF</a>`:''}${j.error?`<div class="fine" style="color:#B42318">${esc(j.error)}</div>`:''}</div>`;}).join('')}`;
 }
 let POSTS=[],postsLoaded=false;
-const KIND_TH={tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
+const KIND_TH={brief:'โจทย์ให้ทีม',meeting:'บันทึกประชุม',tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={},TH={};
 (function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
@@ -1504,15 +1507,18 @@ function teamFeed(notes){
   const members=[];notes.forEach(n=>{const k=n.source||'manager';if(!members.includes(k))members.push(k);});
   const unseenBy=k=>notes.filter(n=>(n.source||'manager')===k&&!seen.has(n.id)).length;
   const list=notes.filter(n=>!ff||(n.source||'manager')===ff);
-  const card=n=>{const m=member(n.source||'manager');const t=Date.parse(n.created_at)||0;const txt=String(n.text||'').trim();const open=!!exp[n.id];const long=txt.length>260||txt.split('\n').length>5;const isNew=!seen.has(n.id);
-    return `<article class="fpost${isNew?' new':''}" data-nid="${n.id}">
-      <header>${ava(n.source||'manager')}<div style="min-width:0"><b>${esc(m.name)}</b> <span class="fine">· ${esc(KIND_TH[n.kind]||n.kind||'')}</span>${isNew?' <span class="badge warn" style="font-size:11px;padding:0 7px">ใหม่</span>':''}<div class="fine" style="font-size:12px">${esc(m.role.split(' · ')[0])} · ${ago(t)}</div></div></header>
+  const card=n=>{const own=n.source==='manual';const m=own?{name:'คุณแดน',role:'เจ้าของร้าน'}:member(n.source||'manager');const t=Date.parse(n.created_at)||0;const txt=String(n.text||'').trim();const open=!!exp[n.id];const long=txt.length>260||txt.split('\n').length>5;const isNew=!own&&!seen.has(n.id);
+    let files=[];try{files=n.notes?(JSON.parse(n.notes).files||[]):[];}catch(e){}
+    const att=files.length?`<div class="att">${files.map(f=>/^image\//.test(f.type)?`<a href="${esc(f.url)}" target="_blank" rel="noopener noreferrer"><img src="${esc(f.url)}" alt="${esc(f.name)}" loading="lazy"></a>`:`<a class="file" href="${esc(f.url)}" target="_blank" rel="noopener noreferrer">📎 ${esc(f.name)}</a>`).join('')}</div>`:'';
+    return `<article class="fpost${isNew?' new':''}${own?' own':''}${n.kind==='meeting'?' minutes':''}" data-nid="${n.id}">
+      <header>${ava(own?'manual':(n.source||'manager'))}<div style="min-width:0"><b>${esc(m.name)}</b> <span class="fine">· ${esc(KIND_TH[n.kind]||n.kind||'')}</span>${isNew?' <span class="badge warn" style="font-size:11px;padding:0 7px">ใหม่</span>':''}${own?' <span class="badge" style="font-size:11px;padding:0 7px;background:var(--accent);color:var(--accent-ink)">📌 ทีมต้องทำตาม</span>':''}<div class="fine" style="font-size:12px">${esc(m.role.split(' · ')[0])} · ${ago(t)}</div></div></header>
       <div class="fbody${long&&!open?' clamp':''}" ${long?`data-a="pexp" data-id="${n.id}"`:''}>${esc(txt)}</div>
+      ${att}
       ${long?`<button class="more" data-a="pexp" data-id="${n.id}">${open?'ย่อ':'ดูเพิ่มเติม'}</button>`:''}
-      <footer><button data-a="fseen" data-id="${n.id}" aria-pressed="${!isNew}">${isNew?'✓ รับทราบ':'✓ รับทราบแล้ว'}</button><button data-a="noteCopy" data-id="${n.id}">คัดลอก</button><button data-a="fReply" data-id="${n.id}">ตอบในห้องพัก</button></footer>
+      <footer>${own?`<button data-a="briefRemove" data-id="${n.id}">ลบโจทย์</button>`:`<button data-a="fseen" data-id="${n.id}" aria-pressed="${!isNew}">${isNew?'✓ รับทราบ':'✓ รับทราบแล้ว'}</button>`}<button data-a="noteCopy" data-id="${n.id}">คัดลอก</button>${own?'':`<button data-a="fReply" data-id="${n.id}">ตอบในห้องพัก</button>`}</footer>
     </article>`;};
   return `
-  <div class="stories"><button class="story" data-a="fstory" data-v="" aria-pressed="${!ff}"><span class="ava all">ทั้งหมด</span><span>ทุกคน</span></button>${members.map(k=>`<button class="story${unseenBy(k)?' unseen':''}" data-a="fstory" data-v="${k}" aria-pressed="${ff===k}" title="${esc(member(k).role)}">${ava(k)}<span>${esc(member(k).name)}</span></button>`).join('')}</div>
+  <div class="stories"><button class="story" data-a="fstory" data-v="" aria-pressed="${!ff}"><span class="ava all">ทั้งหมด</span><span>ทุกคน</span></button>${members.map(k=>`<button class="story${unseenBy(k)?' unseen':''}" data-a="fstory" data-v="${k}" aria-pressed="${ff===k}" title="${esc(k==='manual'?'เจ้าของร้าน':member(k).role)}">${ava(k)}<span>${k==='manual'?'คุณแดน':esc(member(k).name)}</span></button>`).join('')}</div>
   ${list.length?list.slice(0,N).map(card).join(''):`<div class="empty"><p>ยังไม่มีรายงาน</p></div>`}
   ${list.length>N?`<button class="btn btn-line" style="width:100%" data-a="fmore">โหลดเพิ่ม (${list.length-N})</button>`:''}
   ${list.some(n=>!seen.has(n.id))?`<p style="text-align:center;margin-top:10px"><button class="btn btn-line btn-sm" data-a="fseenAll">รับทราบทั้งหมด</button></p>`:''}`;
@@ -1522,7 +1528,19 @@ function unseenNotes(){if(!postsLoaded)return 0;const st=seenSet();return teamNo
 function meetingTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   const notes=teamNotes();
-  return `<p class="fine" style="margin:12px 0 4px">ห้องประชุม (ห้อง "ลุมพินี" ชั้น 27): รายงานและข้อเสนอที่ทีมส่งเข้ามาทุกวัน เรียงใหม่สุดก่อน กดรูปเพื่อดูเฉพาะคน กด "รับทราบ" เมื่ออ่านแล้ว ถ้าจะสั่งงานใครกลับ ใช้ "ตอบในห้องพัก" หรือโต๊ะของคนนั้นในแท็บงาน <button class="chip" data-a="postRefresh">รีเฟรช</button></p>
+  const bf=S.briefFiles||[];
+  return `<p class="fine" style="margin:12px 0 4px">ห้องประชุม (ห้อง "ลุมพินี" ชั้น 27): คุณแดนโยนโจทย์ ทีมมาประชุมแล้วรับไปทำ พี่ต้นสรุปแบ่งงานทุกเช้า 10:30 น. ถ้ามีโจทย์ใหม่ ด้านล่างคือรายงานจากทุกคน เรียงใหม่สุดก่อน <button class="chip" data-a="postRefresh">รีเฟรช</button></p>
+  <div class="card brief-box">
+    <div class="row" style="gap:10px;align-items:flex-start">${ava('manual')}<div style="flex:1;min-width:0">
+      <textarea class="input" id="brief-text" rows="3" placeholder="โยนโจทย์ให้ทีม เช่น เจอเพจคู่แข่งทำคลิปแบบนี้ ลองทำบ้าง / อยากได้ชีทเรื่องนี้ / เปลี่ยนโทนโพสต์เป็นแบบนี้ (แนบรูปหรือไฟล์ประกอบได้)">${esc(S.briefDraft||'')}</textarea>
+      ${bf.length?`<div class="att small">${bf.map((f,i)=>`<span class="file">📎 ${esc(f.name)} <button class="tx" data-a="briefUnpick" data-i="${i}" title="เอาออก">×</button></span>`).join('')}</div>`:''}
+      <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+        <label class="btn btn-line btn-sm" style="cursor:pointer">📎 แนบไฟล์<input type="file" id="brief-files" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" style="display:none" data-a="briefPick"></label>
+        <button class="btn btn-cta btn-sm" data-a="briefSend" ${S.briefBusy?'disabled':''}>${S.briefBusy?'กำลังส่ง...':'ส่งเข้าห้องประชุม'}</button>
+        <span class="fine">ทีมจะเห็นในกระดานงานทันที พี่ต้นสรุปแบ่งงานรอบเช้า และห้องพักจะพูดถึง</span>
+      </div>
+    </div></div>
+  </div>
   ${!postsLoaded?'<p class="fine">กำลังโหลด...</p>':teamFeed(notes)}`;
 }
 function contentTab(){
@@ -2127,6 +2145,14 @@ function act(a,el){
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
     case 'rxOpen':S.rxOpen=S.rxOpen===id?null:id;render(true);break;
+    case 'briefUnpick':{S.briefDraft=($('#brief-text')||{}).value||'';S.briefFiles=(S.briefFiles||[]).filter((_,i)=>i!==Number(el.dataset.i));render(true);break;}
+    case 'briefRemove':if(!confirm('ลบโจทย์นี้ออกจากห้องประชุม?'))break;adminPost('/api/content?action=brief',{id,remove:true}).then(async()=>{postsLoaded=false;await loadPosts();render(true);});break;
+    case 'briefSend':{const ta=$('#brief-text');const text=ta?ta.value.trim():'';const files=S.briefFiles||[];if(!text&&!files.length){toast('พิมพ์โจทย์หรือแนบไฟล์ก่อน');break;}
+      S.briefBusy=true;S.briefDraft=text;render(true);
+      (async()=>{try{const up=[];for(const f of files){if(f.size>50*1024*1024)throw new Error(f.name+' ใหญ่เกิน 50MB');const sg=await adminPost('/api/content?action=upload_sign',{name:f.name,type:f.type||'application/octet-stream',folder:'briefs'});if(!sg.ok)throw new Error(sg.error||'ขอลิงก์อัปโหลดไม่ได้');const r=await fetch(sg.upload_url,{method:'PUT',headers:{'Content-Type':f.type||'application/octet-stream'},body:f});if(!r.ok)throw new Error('อัปโหลด '+f.name+' ไม่สำเร็จ ('+r.status+')');up.push({url:sg.public_url,name:f.name,type:f.type||''});}
+        const j=await adminPost('/api/content?action=brief',{text,files:up});if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');
+        S.briefFiles=[];S.briefDraft='';toast('ส่งโจทย์เข้าห้องประชุมแล้ว ทีมจะรับไปทำในรอบถัดไป');postsLoaded=false;await loadPosts();}catch(e){toast(String(e.message||e));}
+        S.briefBusy=false;render(true);})();break;}
     case 'chatReact':{S.rxOpen=null;adminPost('/api/content?action=chat',{react:{id,emoji:el.dataset.e}}).then(async j=>{if(!j.ok)toast(j.error||'รีแอคไม่สำเร็จ');CHAT.msgs=null;await loadChat();render(true);});break;}
     case 'chatVote':{adminPost('/api/content?action=chat',{vote:{id,option:el.dataset.o}}).then(async j=>{if(!j.ok)toast(j.error||'โหวตไม่สำเร็จ');CHAT.msgs=null;await loadChat();render(true);});break;}
     case 'fstory':S.ffilter=el.dataset.v;S.feedN=10;render(true);break;
@@ -2345,6 +2371,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.name==='method'){S.method=t.value;render(true);}
+  else if(t.id==='brief-files'){const ta=document.getElementById('brief-text');S.briefDraft=ta?ta.value:'';S.briefFiles=[...(S.briefFiles||[]),...Array.from(t.files||[])].slice(0,8);render(true);}
   else if(t.id==='pick'){selectProduct(t.value);const p=curProduct();if(p)track('ViewContent',{content_name:p.name,value:p.price,currency:'THB'});render(false);}
   else if(t.id==='src'){S.src=t.value;}
   else if(t.id==='ad-p'){const p=getProduct(t.value);S.ad.pid=p.id;S.ad.camp='';Object.assign(S.ad,adDraft(p,S.ad.var));render(true);}

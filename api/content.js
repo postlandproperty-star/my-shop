@@ -291,6 +291,25 @@ export default async function handler(req, res) {
       const inserted = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
       return res.status(200).json({ ok: true, id: inserted[0]?.id });
     }
+    if (action === 'brief') {
+      // โจทย์จากคุณแดนในห้องประชุม: แอดมิน POST {text, files:[{url,name,type}]} | {id, remove:true} ; GET (แอดมิน/key) 30 วันล่าสุด
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (req.method === 'POST') {
+        if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน' });
+        const body = await readBody(req);
+        if (body.remove && /^[0-9a-f-]{36}$/.test(String(body.id || ''))) { await sb(`posts?id=eq.${body.id}&kind=eq.brief`, { method: 'DELETE', prefer: 'return=minimal' }); return res.status(200).json({ ok: true }); }
+        const text = String(body.text || '').trim().slice(0, 4000);
+        const files = (Array.isArray(body.files) ? body.files : []).slice(0, 8).map((f) => ({ url: String(f.url || '').slice(0, 500), name: String(f.name || 'ไฟล์').slice(0, 120), type: String(f.type || '').slice(0, 80) })).filter((f) => /^https:\/\//.test(f.url));
+        if (!text && !files.length) return res.status(400).json({ ok: false, error: 'พิมพ์ข้อความหรือแนบไฟล์ก่อน' });
+        const img = files.find((f) => /^image\//.test(f.type));
+        const ins = await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'brief', source: 'manual', text: text || `(แนบไฟล์ ${files.length} ไฟล์)`, image_url: img ? img.url : null, notes: files.length ? JSON.stringify({ files }) : null }], prefer: 'return=representation' });
+        await chatEvent('manager', pick(['คุณแดนส่งโจทย์ใหม่เข้าห้องประชุมครับ ทุกคนแวะไปอ่านก่อนเริ่มงานรอบถัดไป', 'มีโจทย์ใหม่จากคุณแดนในห้องประชุมครับ เดี๋ยวผมสรุปแบ่งงานให้', 'คุณแดนฝากเรื่องใหม่ไว้ที่ห้องประชุมครับ ใครเกี่ยวเตรียมตัว']), 'brief');
+        return res.status(200).json({ ok: true, id: ins?.[0]?.id });
+      }
+      const rows = await sb(`posts?status=eq.note&kind=eq.brief&created_at=gte.${new Date(Date.now() - 30 * 864e5).toISOString()}&select=id,text,image_url,notes,created_at&order=created_at.desc&limit=40`);
+      return res.status(200).json({ ok: true, briefs: rows.map((r) => { let files = []; try { files = r.notes ? (JSON.parse(r.notes).files || []) : []; } catch (e) {} return { id: r.id, text: r.text, files, created_at: r.created_at }; }) });
+    }
     if (action === 'notes') {
       // อ่าน note ย้อนหลังตามชนิด/คน (key): ?kind=market&source=market&days=30 (สูงสุด 90 วัน 60 ฉบับ) ไม่รวมห้องพัก
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -304,8 +323,17 @@ export default async function handler(req, res) {
       // กระดานประชุมทีม: แผนสัปดาห์ (kind plan) ล่าสุด + note ล่าสุด 1 ฉบับต่อคน + โพสต์ที่รอ/กำหนดโพสต์สัปดาห์นี้
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const since = new Date(Date.now() - 14 * 864e5).toISOString();
-      const notes = await sb(`posts?status=in.(note,log)&created_at=gte.${since}&select=source,kind,text,week,created_at&order=created_at.desc&limit=120`);
+      const notes = await sb(`posts?status=in.(note,log)&created_at=gte.${since}&select=id,source,kind,text,week,notes,created_at&order=created_at.desc&limit=120`);
       let plan = notes.find((n) => n.kind === 'plan') || null;
+      // โจทย์จากคุณแดน (kind brief จากห้องประชุม) + บันทึกประชุมล่าสุดของพี่ต้น (kind meeting) วางไว้บนสุดของแผน ทุกคนต้องเห็นก่อน
+      const briefs = notes.filter((n) => n.kind === 'brief').map((n) => { let files = []; try { files = n.notes ? (JSON.parse(n.notes).files || []) : []; } catch (e) {} return { id: n.id, text: String(n.text || ''), files, created_at: n.created_at }; });
+      const minutes = notes.find((n) => n.kind === 'meeting') || null;
+      if (briefs.length || minutes) {
+        const bl = briefs.length ? '== โจทย์จากคุณแดน (เจ้าของร้าน) ส่งเข้าห้องประชุม สำคัญที่สุด ทำตามก่อนแผนอื่น ==\n' + briefs.map((b) => `- [${b.created_at.slice(0, 10)}] ${b.text.slice(0, 600)}${b.files.length ? ' (ไฟล์แนบ: ' + b.files.map((f) => `${f.name} ${f.url}`).join(' , ') + ')' : ''}`).join('\n') : '';
+        const ml = minutes ? `== บันทึกประชุมล่าสุดของพี่ต้น (${minutes.created_at.slice(0, 10)}) แบ่งงานตามนี้ ==\n${String(minutes.text || '').slice(0, 2500)}` : '';
+        const head = [bl, ml].filter(Boolean).join('\n\n');
+        plan = plan ? { ...plan, text: `${head}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: head, created_at: (briefs[0] || minutes).created_at };
+      }
       // ข้อความจากเจ้าของถึงสมาชิก (kind reply, text ขึ้นต้น @<member>) 7 วันล่าสุด แนบท้ายแผนให้ทุกคนอ่านเจอ
       const weekAgo = Date.now() - 7 * 864e5;
       const msgs = notes.filter((n) => n.kind === 'reply' && Date.parse(n.created_at) >= weekAgo).map((n) => { const m = String(n.text || '').match(/^@(\w+)\s+([\s\S]*)$/); return m ? { to: m[1], name: MEMBER_TH[m[1]] || m[1], text: m[2].trim(), created_at: n.created_at } : null; }).filter(Boolean);
@@ -316,7 +344,7 @@ export default async function handler(req, res) {
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
       const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source${(await channelCol()) ? ',channel' : ''}&order=scheduled_at.asc&limit=40`);
-      return res.status(200).json({ ok: true, plan, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
+      return res.status(200).json({ ok: true, plan, owner_briefs: briefs, minutes: minutes ? { text: minutes.text, created_at: minutes.created_at } : null, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
     }
     if (action === 'images') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -478,14 +506,16 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, links, files });
     }
     if (action === 'upload_sign') {
-      // ขอลิงก์อัปโหลดไฟล์ (คลิป/รูป) เข้า storage โดยตรง (key): POST {name, type} -> {upload_url, public_url} แล้ว PUT ไฟล์ไปที่ upload_url พร้อม Content-Type
-      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      // ขอลิงก์อัปโหลดไฟล์เข้า storage โดยตรง (key หรือแอดมิน): POST {name, type, folder?} -> {upload_url, public_url} แล้ว PUT ไฟล์ไปที่ upload_url พร้อม Content-Type
+      const adminUp = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!adminUp && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
       const body = await readBody(req);
       const name = String(body.name || 'file.bin').replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 80);
+      const folder = ['reels', 'briefs', 'images'].includes(String(body.folder || '')) ? String(body.folder) : 'reels';
       // overwrite: ระบุ path เดิม (reels/....mp4) เพื่อเขียนทับไฟล์เดิมโดยลิงก์ไม่เปลี่ยน (ใช้ตอนแก้คลิปที่ส่งเข้าคิวแล้ว)
       const ow = String(body.overwrite || '').replace(/[^A-Za-z0-9._\/-]/g, '');
-      const path = ow && ow.startsWith('reels/') ? ow : `reels/${Date.now()}-${name}`;
+      const path = ow && ow.startsWith('reels/') && !adminUp ? ow : `${folder}/${Date.now()}-${name}`;
       const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', ...(ow ? { 'x-upsert': 'true' } : {}) }, body: JSON.stringify(ow ? { upsert: true } : {}) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `สร้างลิงก์อัปโหลดไม่ได้ (${r.status}) ${JSON.stringify(j).slice(0, 120)}` });
@@ -626,6 +656,8 @@ export default async function handler(req, res) {
       for (const n of notes) { if (['chat', 'reply', 'plan'].includes(n.kind) || n.source === 'manual' || seen[n.source]) continue; seen[n.source] = true; const first = String(n.text || '').split('\n').find((l) => l.trim()) || ''; lines.push(`${MEMBER_TH[n.source] || n.source} ส่งงานแล้ว (${n.kind}): ${first.slice(0, 90)}`); }
       const quiet = Object.keys(MEMBER_TH).filter((k) => !seen[k] && !['care'].includes(k));
       if (quiet.length) lines.push(`ยังไม่มีรายงานใน 24 ชม.: ${quiet.map((k) => MEMBER_TH[k]).join(' ')}`);
+      const brief3 = notes.filter((n) => n.kind === 'brief').slice(0, 2);
+      brief3.forEach((b) => lines.push(`คุณแดนส่งโจทย์ใหม่ในห้องประชุม (${String(b.created_at).slice(0, 10)}): "${String(b.text || '').split('\n')[0].slice(0, 120)}" (ทีมพูดถึงได้ว่าใครจะรับไปทำ แต่ห้ามคุยรายละเอียดงานยาว)`));
       const health = notes.find((n) => n.kind === 'health');
       if (health) lines.push(`ผลตรวจระบบล่าสุด: ${String(health.text).split('\n')[0].slice(0, 100)}`);
       const pub = await sb(`posts?status=eq.published&published_at=gte.${since}&select=channel,kind,text`);
