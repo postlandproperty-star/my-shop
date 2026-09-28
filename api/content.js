@@ -298,6 +298,11 @@ export default async function handler(req, res) {
       if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
       const body = await readBody(req);
       if (admin && body.remove && /^[0-9a-f-]{36}$/.test(String(body.id || ''))) { await sb(`posts?id=eq.${body.id}&kind=eq.comment`, { method: 'DELETE', prefer: 'return=minimal' }); return res.status(200).json({ ok: true }); }
+      if (body.release_all) {
+        // ปล่อยคอมเมนต์ที่ตั้งเวลาไว้ให้เห็นทันที (คุณแดนอยากดูตอนนี้)
+        const rel = await sbPatch(`posts?kind=eq.comment&status=eq.note&scheduled_at=gt.${new Date().toISOString()}`, { scheduled_at: null });
+        return res.status(200).json({ ok: true, released: Array.isArray(rel) ? rel.length : 0 });
+      }
       const list = Array.isArray(body.comments) ? body.comments : [body];
       const now = Date.now(); const rows = [];
       for (const c of list.slice(0, 30)) {
