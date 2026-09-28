@@ -1517,11 +1517,17 @@ function teamFeed(notes){
   ${list.length>N?`<button class="btn btn-line" style="width:100%" data-a="fmore">โหลดเพิ่ม (${list.length-N})</button>`:''}
   ${list.some(n=>!seen.has(n.id))?`<p style="text-align:center;margin-top:10px"><button class="btn btn-line btn-sm" data-a="fseenAll">รับทราบทั้งหมด</button></p>`:''}`;
 }
+const teamNotes=()=>POSTS.filter(p=>p.status==='note'&&p.kind!=='reply'&&p.kind!=='chat').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,60);
+function unseenNotes(){if(!postsLoaded)return 0;const st=seenSet();return teamNotes().filter(n=>!st.has(n.id)&&Date.now()-Date.parse(n.created_at)<7*864e5).length;}
+function meetingTab(){
+  if(!postsLoaded){loadPosts().then(()=>render(true));}
+  const notes=teamNotes();
+  return `<p class="fine" style="margin:12px 0 4px">ห้องประชุม (ห้อง "ลุมพินี" ชั้น 27): รายงานและข้อเสนอที่ทีมส่งเข้ามาทุกวัน เรียงใหม่สุดก่อน กดรูปเพื่อดูเฉพาะคน กด "รับทราบ" เมื่ออ่านแล้ว ถ้าจะสั่งงานใครกลับ ใช้ "ตอบในห้องพัก" หรือโต๊ะของคนนั้นในแท็บงาน <button class="chip" data-a="postRefresh">รีเฟรช</button></p>
+  ${!postsLoaded?'<p class="fine">กำลังโหลด...</p>':teamFeed(notes)}`;
+}
 function contentTab(){
   if(!postsLoaded){Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));}
   const f=S.cfilter||'queue';
-  const notes=POSTS.filter(p=>p.status==='note'&&p.kind!=='reply'&&p.kind!=='chat').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,60);
-  const cview=S.cview||'queue';const unseenN=(()=>{const st=seenSet();return notes.filter(n=>!st.has(n.id)&&Date.now()-Date.parse(n.created_at)<7*864e5).length;})();
   const all=POSTS.filter(p=>p.status!=='note'&&p.status!=='log');
   const QUEUE=['needs_owner','draft','approved','failed','publishing'];
   const cnt={queue:all.filter(p=>QUEUE.includes(p.status)).length,published:all.filter(p=>p.status==='published').length,rejected:all.filter(p=>p.status==='rejected').length,all:all.length};
@@ -1603,10 +1609,9 @@ function contentTab(){
     ${TH.msg?`<p class="fine" style="margin-top:8px">${esc(TH.msg)}</p>`:''}
   </div>`:''}
 `:''}
-  <div class="seg" style="margin:4px 0 10px"><button data-a="cview" data-v="queue" aria-pressed="${cview==='queue'}">คิวโพสต์ <span class="n">${cnt.queue}</span>${urgent?`<span class="n alert">${urgent}</span>`:''}</button><button data-a="cview" data-v="feed" aria-pressed="${cview==='feed'}">ฟีดทีม ${unseenN?`<span class="n alert">${unseenN} ใหม่</span>`:`<span class="n">${notes.length}</span>`}</button></div>
-  ${cview==='feed'?teamFeed(notes):`  <div class="filters sticky"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}<span class="n">${cnt[c[0]]}</span>${c[0]==='queue'&&urgent?`<span class="n alert">${urgent}</span>`:''}</button>`).join('')}</div>${f==='queue'?`<span class="fine">เรียงตามความด่วน แล้วตามเวลาโพสต์ · กดข้อความเพื่อดูเต็ม/แก้ไข</span>`:''}</div>
+  <div class="filters sticky"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}<span class="n">${cnt[c[0]]}</span>${c[0]==='queue'&&urgent?`<span class="n alert">${urgent}</span>`:''}</button>`).join('')}</div>${f==='queue'?`<span class="fine">เรียงตามความด่วน แล้วตามเวลาโพสต์ · กดข้อความเพื่อดูเต็ม/แก้ไข</span>`:''}</div>
   ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?rows:`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}
-  ${(()=>{const fx=factoryBox();return fx?`<details class="fold"><summary>คิวโรงงานผลิตชีท</summary>${fx.replace('<h3 class="h3">คิวโรงงานผลิตชีท</h3>','')}</details>`:'';})()}`}`;
+  ${(()=>{const fx=factoryBox();return fx?`<details class="fold"><summary>คิวโรงงานผลิตชีท</summary>${fx.replace('<h3 class="h3">คิวโรงงานผลิตชีท</h3>','')}</details>`:'';})()}`;
 }
 function pixelTab(){
   const live=/^\d{6,20}$/.test(String(D.settings.pixelId||''));
@@ -1967,7 +1972,7 @@ function docsTab(){
 function teamTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
-  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab · ออฟฟิศ One Bangkok ชั้น 27 ถนนพระราม 4 กรุงเทพฯ: เจ้าของร้าน 1 คน และผู้ช่วย AI 12 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และแท็บคอนเทนต์ ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  return `<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab · ออฟฟิศ One Bangkok ชั้น 27 ถนนพระราม 4 กรุงเทพฯ: เจ้าของร้าน 1 คน และผู้ช่วย AI 12 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และห้องประชุม ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">อารมณ์ทีมวันนี้ <span class="fine" style="font-weight:400">(คำนวณจากผลงานจริง 7 วันล่าสุด เหตุผลอยู่ใต้ชื่อ)</span></h3>
   ${moodStrip()}
   <h3 class="h3">สายบังคับบัญชา</h3>
@@ -2032,11 +2037,11 @@ function teamTab(){
 }
 
 function adminView(){
-  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม'],['chat','ห้องพัก'],['docs','ห้องเอกสาร']];
+  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม'],['meeting','ห้องประชุม'],['chat','ห้องพัก'],['docs','ห้องเอกสาร']];
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,chat:chatTab,docs:docsTab}[S.tab]();
+  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
-    <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}${t[0]==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:''}</button>`).join('')}</div>
+    <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}${t[0]==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:''}${t[0]==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:''}</button>`).join('')}</div>
     ${body}
   </div>`;
 }
@@ -2121,7 +2126,6 @@ function act(a,el){
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
-    case 'cview':S.cview=el.dataset.v;render(true);break;
     case 'rxOpen':S.rxOpen=S.rxOpen===id?null:id;render(true);break;
     case 'chatReact':{S.rxOpen=null;adminPost('/api/content?action=chat',{react:{id,emoji:el.dataset.e}}).then(async j=>{if(!j.ok)toast(j.error||'รีแอคไม่สำเร็จ');CHAT.msgs=null;await loadChat();render(true);});break;}
     case 'chatVote':{adminPost('/api/content?action=chat',{vote:{id,option:el.dataset.o}}).then(async j=>{if(!j.ok)toast(j.error||'โหวตไม่สำเร็จ');CHAT.msgs=null;await loadChat();render(true);});break;}
@@ -2230,7 +2234,7 @@ function act(a,el){
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว ทีมจะเห็นในกระดานรอบถัดไป');S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='docs')DOCS.links=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
+    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='meeting')postsLoaded=false;if(S.tab==='docs')DOCS.links=null;render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
