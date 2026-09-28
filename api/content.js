@@ -178,7 +178,7 @@ function extractTodo(text) {
   }
   return out;
 }
-const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด', market: 'พี่มาร์เก็ต', clip: 'น้องคลิป' };
+const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด', market: 'พี่มาร์เก็ต', clip: 'น้องคลิป', hr: 'พี่เอชอาร์' };
 // คอลัมน์ channel/th_post_id (Threads) มีหรือยัง (เพิ่มด้วย SQL ใน Supabase) ถ้ายังไม่มี ระบบทำงานแบบ Facebook อย่างเดียว
 async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
