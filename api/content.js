@@ -291,6 +291,36 @@ export default async function handler(req, res) {
       const inserted = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
       return res.status(200).json({ ok: true, id: inserted[0]?.id });
     }
+    if (action === 'comment') {
+      // คอมเมนต์ใต้โพสต์ในห้องประชุม (kind comment, notes {on:<post id>}): key POST {comments:[{on,source,text,at?}]} | แอดมิน POST {on,text} (=คุณแดน) | แอดมิน {id,remove:true}
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
+      const body = await readBody(req);
+      if (admin && body.remove && /^[0-9a-f-]{36}$/.test(String(body.id || ''))) { await sb(`posts?id=eq.${body.id}&kind=eq.comment`, { method: 'DELETE', prefer: 'return=minimal' }); return res.status(200).json({ ok: true }); }
+      const list = Array.isArray(body.comments) ? body.comments : [body];
+      const now = Date.now(); const rows = [];
+      for (const c of list.slice(0, 30)) {
+        const on = String((c && c.on) || ''); const text = String((c && c.text) || '').trim().slice(0, 500);
+        if (!/^[0-9a-f-]{36}$/.test(on) || !text) continue;
+        const source = admin ? 'manual' : (MEMBER_TH[c.source] ? String(c.source) : 'manager');
+        let at = null; if (!admin && c.at) { const t = Date.parse(c.at); if (t && t > now - 36e5 && t < now + 2 * 864e5) at = new Date(t).toISOString(); }
+        rows.push({ status: 'note', kind: 'comment', source, text, scheduled_at: at, notes: JSON.stringify({ on }) });
+      }
+      if (!rows.length) return res.status(400).json({ ok: false, error: 'ต้องมี on (id โพสต์) และ text' });
+      await sb('posts', { method: 'POST', body: rows, prefer: 'return=minimal' });
+      return res.status(200).json({ ok: true, inserted: rows.length });
+    }
+    if (action === 'feed') {
+      // ฟีดห้องประชุมสำหรับทีมคอมเมนต์ (key): โพสต์ 2 วันล่าสุด (รายงาน โจทย์ บันทึกประชุม) พร้อมคอมเมนต์ที่มีอยู่
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const since = new Date(Date.now() - 2 * 864e5).toISOString();
+      const rows = await sb(`posts?status=eq.note&created_at=gte.${since}&kind=not.in.(chat,reply,log)&select=id,source,kind,text,notes,created_at,scheduled_at&order=created_at.desc&limit=120`);
+      const pm = (n) => { try { return n ? JSON.parse(n) : {}; } catch (e) { return {}; } };
+      const comments = rows.filter((r) => r.kind === 'comment');
+      const posts = rows.filter((r) => r.kind !== 'comment').map((r) => ({ id: r.id, source: r.source, who: r.source === 'manual' ? 'คุณแดน' : (MEMBER_TH[r.source] || r.source), kind: r.kind, text: String(r.text || '').slice(0, 400), files: (pm(r.notes).files || []).map((f) => f.name), created_at: r.created_at, comments: comments.filter((c) => pm(c.notes).on === r.id).map((c) => ({ source: c.source, text: c.text, at: c.scheduled_at || c.created_at })) }));
+      return res.status(200).json({ ok: true, now_utc: new Date().toISOString(), posts });
+    }
     if (action === 'brief') {
       // โจทย์จากคุณแดนในห้องประชุม: แอดมิน POST {text, files:[{url,name,type}]} | {id, remove:true} ; GET (แอดมิน/key) 30 วันล่าสุด
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -305,6 +335,7 @@ export default async function handler(req, res) {
         const img = files.find((f) => /^image\//.test(f.type));
         const ins = await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'brief', source: 'manual', text: text || `(แนบไฟล์ ${files.length} ไฟล์)`, image_url: img ? img.url : null, notes: files.length ? JSON.stringify({ files }) : null }], prefer: 'return=representation' });
         await chatEvent('manager', pick(['คุณแดนส่งโจทย์ใหม่เข้าห้องประชุมครับ ทุกคนแวะไปอ่านก่อนเริ่มงานรอบถัดไป', 'มีโจทย์ใหม่จากคุณแดนในห้องประชุมครับ เดี๋ยวผมสรุปแบ่งงานให้', 'คุณแดนฝากเรื่องใหม่ไว้ที่ห้องประชุมครับ ใครเกี่ยวเตรียมตัว']), 'brief');
+        if (ins?.[0]?.id) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'comment', source: 'manager', text: pick(['รับทราบครับ เดี๋ยวผมเรียกประชุมแบ่งงานรอบเช้า 10:30 แล้วสรุปให้ครับ', 'ได้เลยครับคุณแดน ผมอ่านแล้ว จะเอาเข้าประชุมรอบเช้าแล้วมอบหมายคนทำครับ', 'รับเรื่องครับ รอบประชุมเช้านี้จะแบ่งงานให้ทีม แล้วรายงานกลับครับ']), scheduled_at: new Date(Date.now() + (60 + Math.floor(Math.random() * 120)) * 1000).toISOString(), notes: JSON.stringify({ on: ins[0].id }) }], prefer: 'return=minimal' }); } catch (e) {} }
         return res.status(200).json({ ok: true, id: ins?.[0]?.id });
       }
       const rows = await sb(`posts?status=eq.note&kind=eq.brief&created_at=gte.${new Date(Date.now() - 30 * 864e5).toISOString()}&select=id,text,image_url,notes,created_at&order=created_at.desc&limit=40`);
