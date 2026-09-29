@@ -24,6 +24,12 @@ const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
 const CONTENT_KEY = process.env.CONTENT_API_KEY || '';
 
+// ออเดอร์ทดสอบ (สินค้าร่าง "ทดสอบ"/แคลคูลัส ราคา 11 ที่ใช้ลองจ่ายเงิน) ไม่นับในรายงานยอดขาย
+// ถ้าส่งรายการสินค้ามา นับเฉพาะออเดอร์ของสินค้าที่เปิดขายจริง (published)
+function testOrder(products) {
+  const live = products ? new Set(products.filter((p) => p.status === 'published').map((p) => p.id)) : null;
+  return (o) => /ทดสอบ|แคลคูลัส/.test(o.product_name || '') || Number(o.amount) < 30 || !!(live && o.product_id && !live.has(o.product_id));
+}
 async function sb(path, { method = 'GET', body, prefer } = {}) {
   const headers = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
   if (prefer) headers.Prefer = prefer;
@@ -458,10 +464,12 @@ export default async function handler(req, res) {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const since = new Date(Date.now() - 7 * 864e5).toISOString();
       const prev = new Date(Date.now() - 14 * 864e5).toISOString();
-      const orders = await sb(`orders?select=created_at,paid_at,product_name,amount,status,campaign&created_at=gte.${prev}&order=created_at.desc`);
+      const all = await sb(`orders?select=created_at,paid_at,product_id,product_name,amount,status,campaign&created_at=gte.${prev}&order=created_at.desc`);
       const hasCh = await channelCol();
       const posts = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,fb_post_id${hasCh ? ',channel,th_post_id' : ''}&created_at=gte.${prev}&order=created_at.desc`);
       const shop = await loadShop();
+      const isTest = testOrder(shop.products || []);
+      const orders = all.filter((o) => !isTest(o));
       const priv = await sb('shop_state?id=eq.private&select=data');
       const campaigns = priv?.[0]?.data?.campaigns || [];
       const sum = (list) => list.reduce((a, o) => a + (Number(o.amount) || 0), 0);
@@ -471,7 +479,7 @@ export default async function handler(req, res) {
         thisWeek: { orders: thisWeek.length, revenue: sum(thisWeek) }, lastWeek: { orders: lastWeek.length, revenue: sum(lastWeek) },
         byProduct: Object.entries(thisWeek.reduce((m, o) => { m[o.product_name] = (m[o.product_name] || 0) + Number(o.amount); return m; }, {})),
         byCampaign: Object.entries(thisWeek.reduce((m, o) => { const k = o.campaign || '(ไม่ได้มาจากแอด)'; m[k] = m[k] || { orders: 0, revenue: 0 }; m[k].orders++; m[k].revenue += Number(o.amount); return m; }, {})),
-        campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length,
+        campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length, testOrdersExcluded: all.length - orders.length,
         posts, products: shop.products.map((p) => ({ name: p.name, status: p.status, price: p.price })) });
     }
     if (action === 'note') {
@@ -971,7 +979,7 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const now = Date.now(), since = new Date(now - 7 * 864e5).toISOString(), prev = new Date(now - 14 * 864e5).toISOString(), ahead = new Date(now + 7 * 864e5).toISOString(), nowIso = new Date(now).toISOString();
-      const isTest = (o) => /ทดสอบ|แคลคูลัส/.test(o.product_name || '') || Number(o.amount) < 30;
+      const isTest = testOrder(null);
       const sum = (l) => l.reduce((a, o) => a + (Number(o.amount) || 0), 0);
       const hasCh = await channelCol();
       const [orders, posts, priv, notes, jobs] = await Promise.all([

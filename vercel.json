@@ -5,6 +5,14 @@
       "destination": "/api/threads?action=callback"
     },
     {
+      "source": "/privacy",
+      "destination": "/api/page?doc=privacy"
+    },
+    {
+      "source": "/refund",
+      "destination": "/api/page?doc=refund"
+    },
+    {
       "source": "/",
       "destination": "/api/page"
     },

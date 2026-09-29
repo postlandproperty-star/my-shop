@@ -1144,7 +1144,7 @@ function shopView(){
     <h2>คำถามที่พบบ่อย</h2>
     ${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}
   </div></section>
-  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}</footer>
+  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}<br><a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
 
   <div class="sticky" id="sticky"><div class="sticky-in">
     ${D.settings.chatLink?`<a class="sp-chat" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer" aria-label="แชทกับร้าน"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><small>แชท</small></a>`:''}
@@ -1833,7 +1833,7 @@ function pixelTab(){
   </div>
   <div class="card" style="margin-top:14px">
     <h3 class="h3">เหตุการณ์ที่เว็บส่งไป Facebook</h3>
-    <p class="fine" style="margin:0"><b>PageView</b> ทุกหน้า · <b>ViewContent</b> เมื่อดูสินค้า (ส่งชื่อ+ราคา) · <b>InitiateCheckout</b> เมื่อกดปุ่มจ่ายเงิน (ส่งชื่อ+ราคา) · <b>Purchase</b> ยังไม่มี ต้องต่อระบบตรวจการจ่ายเงินกับ Stripe ก่อน · การเข้าดูของแอดมินเองจะไม่ถูกนับ</p>
+    <p class="fine" style="margin:0"><b>PageView</b> ทุกหน้า · <b>ViewContent</b> เมื่อดูสินค้า (ส่งชื่อ+ราคา) · <b>InitiateCheckout</b> เมื่อกดปุ่มจ่ายเงิน (ส่งชื่อ+ราคา) · <b>Purchase</b> เมื่อลูกค้ากลับมาหน้าร้านหลังจ่ายสำเร็จ (ยืนยันกับ Stripe ก่อนยิง 1 ครั้งต่อออเดอร์ ส่งชื่อ+ยอด) · การเข้าดูของแอดมินเองจะไม่ถูกนับ</p>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px">
     <h3 class="h3" style="margin:0">เหตุการณ์ล่าสุด</h3>

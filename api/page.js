@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { newSiteLive, NEW_SITE } from '../lib/site.js';
+import { policyPage, POLICY_DOCS } from '../lib/policies.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY = 'sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
@@ -24,9 +25,17 @@ export default async function handler(req, res) {
   const slug = String(req.query.slug || '');
   // ย้ายไปโดเมนใหม่: เปิดจากที่อยู่เดิม (.vercel.app) หลังโดเมนใหม่พร้อม → ส่งไปหน้าเดียวกันบน sheetlabth.com
   if (String(req.headers.host || '').endsWith('.vercel.app') && await newSiteLive()) {
-    const q = new URLSearchParams(); for (const [k, v] of Object.entries(req.query || {})) if (k !== 'slug') q.append(k, String(v));
-    const path = /^[a-z0-9-]+$/.test(slug) ? `/p/${slug}` : '/';
+    const q = new URLSearchParams(); for (const [k, v] of Object.entries(req.query || {})) if (k !== 'slug' && k !== 'doc') q.append(k, String(v));
+    const doc = String(req.query.doc || '');
+    const path = POLICY_DOCS.includes(doc) ? `/${doc}` : /^[a-z0-9-]+$/.test(slug) ? `/p/${slug}` : '/';
     res.statusCode = 301; res.setHeader('Location', `${NEW_SITE}${path}${q.toString() ? '?' + q : ''}`); res.setHeader('Cache-Control', 'no-store'); return res.end();
+  }
+  const doc = String(req.query.doc || '');
+  if (POLICY_DOCS.includes(doc)) { // หน้านโยบาย /privacy และ /refund
+    const shop = await loadShop().catch(() => ({ settings: {} }));
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    return res.status(200).send(policyPage(doc, shop.settings));
   }
   let out = html;
   try {
