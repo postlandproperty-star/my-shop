@@ -13,7 +13,7 @@
 //   ?action=publish  (cron หรือแอดมิน) โพสต์ที่อนุมัติแล้วและถึงเวลา → ขึ้นเพจ Facebook
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
-import { loadShop, verifyAdmin, sbPatch } from '../lib/shop.js';
+import { loadShop, verifyAdmin, sbPatch, stripe } from '../lib/shop.js';
 import { loadFb, publishToPage, fbGet } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
@@ -459,6 +459,34 @@ export default async function handler(req, res) {
       if (risky) await chatEvent('guard', pick([`ระบบตรวจนโยบายเจอโพสต์เสี่ยง ${risky} ชิ้นครับ แจ้งคุณแดนในเช็คลิสต์แล้ว`, `เตือนครับ มีโพสต์เข้าข่ายผิดนโยบายแพลตฟอร์ม ${risky} ชิ้น ใครเขียนมาช่วยแก้ด้วย`]), 'policy');
       if (rows.some((r) => r.kind === 'reel' && r.source === 'clip')) await chatEvent('clip', pick(['ส่งคลิปใหม่เข้าคิวแล้วครับ ตั้งเวลาโพสต์ไว้แล้ว 🎬', 'คลิปวันนี้เสร็จแล้วครับ รอเวลาปล่อย ใครอยากดูก่อนไปที่แท็บคอนเทนต์', 'ตัดเสร็จแล้วครับ วันนี้ธีมเด็ด ขอเสียงหน่อย']), 'reel');
       return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id), policy: policy.map((x, i) => ({ index: i, level: x.level, issues: x.issues.map((y) => y.msg) })), skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
+    }
+    if (action === 'funnel') { // ลูกค้าที่เปิดหน้าจ่ายเงินแต่ไม่จ่าย หยุดตรงขั้นไหน (อ่านอย่างเดียวจาก Stripe)
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const days = Math.min(30, Math.max(1, Number(req.query.days) || 14));
+      const since = Math.floor(Date.now() / 1000) - days * 86400;
+      const shop = await loadShop();
+      const live = new Set((shop.products || []).filter((p) => p.status === 'published').map((p) => p.id));
+      const rows = []; let after;
+      for (let i = 0; i < 5; i++) {
+        const r = await stripe('GET', `checkout/sessions?limit=100&created[gte]=${since}&expand[]=data.payment_intent${after ? `&starting_after=${after}` : ''}`);
+        rows.push(...r.data); if (!r.has_more) break; after = r.data[r.data.length - 1].id;
+      }
+      const stage = (s) => {
+        if (s.payment_status === 'paid') return 'paid';
+        const pi = s.payment_intent && typeof s.payment_intent === 'object' ? s.payment_intent : null;
+        if (!pi) return 'left_without_trying'; // เปิดหน้า Stripe แล้วออก ไม่ได้กดจ่ายเลย
+        const t = pi.last_payment_error?.payment_method?.type || pi.payment_method_types?.[0] || '';
+        if (pi.next_action?.type === 'promptpay_display_qr_code' || (pi.status === 'requires_action' && /promptpay/.test(String(pi.payment_method_types)))) return 'promptpay_qr_not_scanned';
+        if (pi.last_payment_error) return `failed_${t || 'unknown'}:${pi.last_payment_error.code || pi.last_payment_error.decline_code || ''}`;
+        return `pi_${pi.status}`;
+      };
+      const list = rows.filter((s) => live.has(s.metadata?.productId) && (s.amount_total || 0) >= 3000).map((s) => ({
+        created: new Date(s.created * 1000).toISOString(), status: s.status, stage: stage(s), amount: (s.amount_total || 0) / 100,
+        campaign: s.metadata?.campaign || '', email_given: !!(s.customer_details?.email || s.customer_email),
+        pm_types: (s.payment_method_types || []).join(','), locale: s.locale || '',
+      }));
+      const count = list.reduce((m, x) => { m[x.stage] = (m[x.stage] || 0) + 1; return m; }, {});
+      return res.status(200).json({ ok: true, days, total: list.length, count, sessions: list.slice(0, 80) });
     }
     if (action === 'report') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
