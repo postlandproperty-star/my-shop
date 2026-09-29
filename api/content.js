@@ -526,7 +526,7 @@ export default async function handler(req, res) {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const since = new Date(Date.now() - 7 * 864e5).toISOString();
       const prev = new Date(Date.now() - 14 * 864e5).toISOString();
-      const all = await sb(`orders?select=created_at,paid_at,product_id,product_name,amount,status,campaign&created_at=gte.${prev}&order=created_at.desc`);
+      const all = await sb(`orders?select=created_at,paid_at,product_id,product_name,amount,status,campaign,emailed_at,session_id&created_at=gte.${prev}&order=created_at.desc`);
       const hasCh = await channelCol();
       const posts = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,fb_post_id${hasCh ? ',channel,th_post_id' : ''}&created_at=gte.${prev}&order=created_at.desc`);
       const shop = await loadShop();
@@ -541,7 +541,7 @@ export default async function handler(req, res) {
         thisWeek: { orders: thisWeek.length, revenue: sum(thisWeek) }, lastWeek: { orders: lastWeek.length, revenue: sum(lastWeek) },
         byProduct: Object.entries(thisWeek.reduce((m, o) => { m[o.product_name] = (m[o.product_name] || 0) + Number(o.amount); return m; }, {})),
         byCampaign: Object.entries(thisWeek.reduce((m, o) => { const k = o.campaign || '(ไม่ได้มาจากแอด)'; m[k] = m[k] || { orders: 0, revenue: 0 }; m[k].orders++; m[k].revenue += Number(o.amount); return m; }, {})),
-        campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length, testOrdersExcluded: all.length - orders.length,
+        campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length, testOrdersExcluded: all.length - orders.length, paidDelivery: thisWeek.map((o) => ({ at: o.paid_at, via: String(o.session_id || '').startsWith('pi_') ? 'qr' : 'stripe_page', emailed: !!o.emailed_at })),
         posts, products: shop.products.map((p) => ({ name: p.name, status: p.status, price: p.price })) });
     }
     if (action === 'note') {
