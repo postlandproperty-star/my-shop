@@ -680,8 +680,8 @@ export default async function handler(req, res) {
     if (action === 'sold') {
       // จำนวนที่ขายแล้วต่อสินค้า (สาธารณะ ไม่มีข้อมูลลูกค้า) นับจากออเดอร์ที่ชำระแล้ว แคช 5 นาที
       // นับเฉพาะยอดขายจริง: ตัดออเดอร์ทดสอบ (สินค้าร่าง ราคาทดสอบ อีเมลที่เจ้าของใช้ทดลองซื้อ)
-      const [rows, test] = await Promise.all([sb('orders?status=eq.paid&select=product_id,product_name,amount,email'), loadTestEmails().catch(() => new Set())]);
-      const isTest = testOrder(null, [...test]);
+      const [rows, pr] = await Promise.all([sb('orders?status=eq.paid&select=product_id,product_name,amount,email'), sb('shop_state?id=eq.private&select=data').catch(() => [])]);
+      const isTest = testOrder(null, pr?.[0]?.data?.testEmails || []);
       const counts = {}; for (const r of rows) if (r.product_id && !isTest(r)) counts[r.product_id] = (counts[r.product_id] || 0) + 1;
       res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
       return res.status(200).json({ ok: true, counts });
