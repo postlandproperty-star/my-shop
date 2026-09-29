@@ -1093,7 +1093,7 @@ function shopView(){
   ${prev.length?`<section class="section" id="preview"><div class="wrap">
     <h2>ดูตัวอย่างเนื้อหา</h2>
     <p class="fine" style="margin:-8px 0 12px">หน้าจริงจากไฟล์ ${prev.length} หน้า กดที่หน้าเพื่อขยาย</p>
-    <div class="pv">${prev.map((src,i)=>{const lock=prev.length>1&&i===prev.length-1;return lock?`<div class="pvp locked"><img width="1100" src="${esc(src)}" alt="" loading="lazy"><div class="pv-lock"><b>อยากอ่านต่อ?</b><span>ในไฟล์เต็มยังมีอีกหลายหน้า</span><button class="btn btn-buy" data-a="toCheckout">ซื้อเพื่ออ่านต่อ ${baht(p.price)}</button></div></div>`:`<button class="zoom pvp" data-a="zoomPv" data-i="${i}" aria-label="ขยายหน้าตัวอย่างที่ ${i+1}"><img width="1100" src="${esc(src)}" alt="หน้าตัวอย่างที่ ${i+1} ของ ${esc(p.name)}" loading="lazy"></button>`;}).join('')}</div>
+    <div class="pv">${prev.map((src,i)=>{const lock=prev.length>1&&i===prev.length-1;return lock?`<div class="pvp locked"><img width="1100" height="1556" src="${esc(src)}" alt="" loading="lazy"><div class="pv-lock"><b>อยากอ่านต่อ?</b><span>ในไฟล์เต็มยังมีอีกหลายหน้า</span><button class="btn btn-buy" data-a="toCheckout">ซื้อเพื่ออ่านต่อ ${baht(p.price)}</button></div></div>`:`<button class="zoom pvp" data-a="zoomPv" data-i="${i}" aria-label="ขยายหน้าตัวอย่างที่ ${i+1}"><img width="1100" height="1556" src="${esc(src)}" alt="หน้าตัวอย่างที่ ${i+1} ของ ${esc(p.name)}" loading="lazy"></button>`;}).join('')}</div>
   </div></section>`:''}
 
   ${toc.length?`<section class="section"><div class="wrap">
@@ -2425,9 +2425,9 @@ function act(a,el){
   switch(a){
     case 'toShop':go('shop');break;
     case 'recheckOrder':verifyOrder();break;
-    case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};render(true);const i=document.getElementById('qr-email');if(i)i.focus();break;}
+    case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
-    case 'qrCancel':{qrStop();const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;render(true);break;}
+    case 'qrCancel':{qrStop();const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;qrPaint();break;}
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
@@ -2524,7 +2524,7 @@ function act(a,el){
     case 'importLegacy':{
       if(S.confirm==='import'){const l=loadLegacy();if(l){D=normalize(l);S.confirm='';S.productId=null;pushAll().then(()=>{render(true);toast('นำเข้าข้อมูลเก่าแล้ว');});}}
       else{S.confirm='import';render(true);}break;}
-    case 'toCheckout':{const c=document.getElementById('checkout');if(c)c.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});break;}
+    case 'toCheckout':{const at=()=>{const c=document.getElementById('checkout');if(c)c.scrollIntoView({block:'start'});};at();setTimeout(at,350);setTimeout(at,900);break;} // เลื่อนทันที + จัดซ้ำ กันรูปที่โหลดทีหลังดันตำแหน่ง
     case 'applyCoupon':{
       const p=curProduct(),code=(S.form.coupon||'').trim().toUpperCase();S.form.coupon=code;
       if(!code){S.coupon='';S.couponErr='';}
@@ -2708,8 +2708,16 @@ document.addEventListener('submit',e=>{
 });
 
 /* จ่ายด้วย QR PromptPay บนหน้าร้าน: ลูกค้าไม่ต้องออกไปหน้า Stripe (ข้อมูลรอบแรก: ทุกคนที่ถูกพาไปหน้า Stripe ออกโดยไม่กดจ่ายเลย) */
-function qrBox(p,on,total){
-  const q=S.qr&&S.qr.slug===p.slug&&S.qr.total===total?S.qr:null;
+function qrBox(p,on,total){return `<div id="qrslot" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">${qrInner(p.slug,on,total)}</div>`;}
+function qrPaint(focus){ // วาดใหม่เฉพาะกล่อง QR ไม่แตะส่วนอื่นของหน้า
+  const el=document.getElementById('qrslot');if(!el)return render(true);
+  el.innerHTML=qrInner(el.dataset.slug,el.dataset.bump==='1',Number(el.dataset.total));
+  const b=document.getElementById('qrbox');if(b){const r=b.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight)b.scrollIntoView({block:r.height>innerHeight-80?'start':'center'});}
+  if(focus){const i=document.getElementById(focus);if(i)i.focus({preventScroll:true});}
+}
+function qrInner(slug,on,total){
+  const p={slug};
+  const q=S.qr&&S.qr.slug===slug&&S.qr.total===total?S.qr:null;
   if(!q||q.step==='email'||q.step==='err'){
     const open=!!q;
     return open?`<div class="qrbox" id="qrbox">
@@ -2717,8 +2725,8 @@ function qrBox(p,on,total){
       <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(S.form.qrEmail||q.email||'')}" data-f="qrEmail">
       <p class="fine" style="margin:6px 0 10px">ธนาคารต้องใช้อีเมลนี้ยืนยันการจ่ายผ่าน PromptPay ระบบจะส่งลิงก์ดาวน์โหลดไปที่อีเมลนี้ และแสดงบนหน้านี้ทันทีหลังจ่าย</p>
       ${q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:0 0 8px">${esc(q.err)}</p>`:''}
-      <button class="btn btn-buy btn-block" data-a="qrMake" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">แสดง QR ชำระเงิน ${baht(total)}</button>
-    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(p.slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${baht(total)}</button>`;
+      <button class="btn btn-buy btn-block" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}">แสดง QR ชำระเงิน ${baht(total)}</button>
+    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${baht(total)}</button>`;
   }
   if(q.step==='loading')return `<div class="qrbox center"><p class="muted">กำลังสร้าง QR…</p></div>`;
   return `<div class="qrbox center" id="qrbox">
@@ -2746,17 +2754,17 @@ async function qrPoll(){
 }
 async function qrMake(el){
   const email=String(S.form.qrEmail||'').trim();
-  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)){S.qr.err='กรอกอีเมลให้ถูกต้อง เช่น name@gmail.com';render(true);const i=document.getElementById('qr-email');if(i)i.focus();return;}
+  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)){S.qr.err='กรอกอีเมลให้ถูกต้อง เช่น name@gmail.com';qrPaint('qr-email');return;}
   try{localStorage.setItem('sl_email',email);}catch(e){}
   const slug=el.dataset.slug,total=Number(el.dataset.total);
-  S.qr={slug,total,email,step:'loading'};render(true);
+  const ae=document.activeElement;if(ae&&ae.blur)ae.blur(); // ปิดคีย์บอร์ดก่อน หน้าจะได้ไม่กระโดด
+  S.qr={slug,total,email,step:'loading'};qrPaint();
   try{
     const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email})}).then(r=>r.json());
     if(!j.ok)throw new Error(j.error||'สร้าง QR ไม่สำเร็จ');
     S.qr={slug,total,email,step:'show',pi:j.pi,k:j.k,png:j.png,hosted:j.hosted};
-    render(true);qrStop();qrTimer=setInterval(qrPoll,3000);
-    const b=document.getElementById('qrbox');if(b)b.scrollIntoView({block:'center',behavior:'smooth'});
-  }catch(e){S.qr={slug,total,email,step:'err',err:String(e.message||e)+' หรือกดจ่ายด้วยบัตรด้านล่าง'};render(true);}
+    qrPaint();qrStop();qrTimer=setInterval(qrPoll,3000);
+  }catch(e){S.qr={slug,total,email,step:'err',err:String(e.message||e)+' หรือกดจ่ายด้วยบัตรด้านล่าง'};qrPaint();}
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.qr&&S.qr.step==='show')qrPoll();}); // กลับจากแอปธนาคาร → ตรวจทันที
 
