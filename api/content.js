@@ -62,6 +62,38 @@ async function listLeads() {
   }
   return Object.values(by).sort((a, b) => b.at - a.at).map((r) => ({ ...r, at: new Date(r.at * 1000).toISOString() }));
 }
+// ส่งอีเมลเตือนตามเทมเพลต ให้รายชื่อที่ส่งมา (เฉพาะคนที่อยู่ใน listLeads จริง) บันทึกลง private.leadMail / leadLog
+async function sendLeadMails(targets, subject, body, by) {
+  const row = await sb('shop_state?id=eq.private&select=data'); const data = row?.[0]?.data || {};
+  const sent = data.leadMail || {}; const site = await siteUrl(); const shop = await loadShop();
+  const transport = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: String(process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '') } });
+  const out = [];
+  for (const l of targets) {
+    if (sent[l.email] && Date.now() - Date.parse(sent[l.email]) < 7 * 864e5) { out.push({ email: l.email, ok: false, reason: 'ส่งไปแล้วใน 7 วัน' }); continue; }
+    const text = fillTpl(body, l, site) + '\n\n— อีเมลนี้ส่งครั้งเดียวเพราะคุณกรอกอีเมลไว้ตอนสั่งซื้อ ถ้าไม่ต้องการแล้วไม่ต้องทำอะไร';
+    try { await transport.sendMail({ from: `"${(shop.settings.shopName || 'SheetLab').replace(/"/g, '')}" <${process.env.GMAIL_USER}>`, to: l.email, subject: fillTpl(subject, l, site), text }); sent[l.email] = new Date().toISOString(); out.push({ email: l.email, ok: true }); }
+    catch (e) { out.push({ email: l.email, ok: false, reason: String(e.message || e).slice(0, 120) }); }
+  }
+  const okN = out.filter((x) => x.ok).length;
+  data.leadMail = sent; data.leadBy = { ...(data.leadBy || {}) }; for (const x of out) if (x.ok) data.leadBy[x.email] = by;
+  if (okN) data.leadLog = [{ at: new Date().toISOString(), sent: okN, by }, ...(data.leadLog || [])].slice(0, 30);
+  await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+  return out;
+}
+// น้องคอมส่งเตือนเองทุกรอบ cron/publish: ค้างจ่ายมาแล้ว ≥1 ชม. ไม่เกิน 3 วัน คนละครั้ง (คุณแดนปิดได้ที่ห้องเอกสาร)
+async function autoLeadMails() {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return { ok: false, reason: 'gmail not set' };
+  const row = await sb('shop_state?id=eq.private&select=data'); const data = row?.[0]?.data || {};
+  if (data.leadAuto === false) return { ok: true, off: true };
+  const tpl = data.mailTemplate || LEAD_TPL; const sent = data.leadMail || {};
+  const now = Date.now();
+  const due = (await listLeads()).filter((l) => !sent[l.email] && now - Date.parse(l.at) >= 3600e3 && now - Date.parse(l.at) <= 3 * 864e5);
+  if (!due.length) return { ok: true, sent: 0 };
+  const out = await sendLeadMails(due, tpl.subject, tpl.body, 'community');
+  const n = out.filter((x) => x.ok).length;
+  if (n) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source: 'community', text: `ส่งอีเมลเตือนลูกค้าที่ค้างจ่ายไปแล้ว ${n} คนค่ะ ใช้ข้อความที่ร่างไว้ คนละครั้ง ถ้าใครจ่ายเข้ามาจะแจ้งอีกทีนะคะ`, notes: '{"evt":"leadmail"}' }], prefer: 'return=minimal' }); } catch (e) {} }
+  return { ok: true, sent: n };
+}
 const fillTpl = (t, l, site) => String(t).replace(/\{สินค้า\}/g, l.product || 'ชีทของเรา').replace(/\{ราคา\}/g, '฿' + Number(l.amount || 0).toLocaleString('th-TH')).replace(/\{ลิงก์\}/g, `${site}/p/${l.slug}`);
 
 // ลูกค้าจ่าย QR บนหน้าร้านแล้วปิดหน้าก่อนระบบเห็น: เก็บตกทุกรอบ cron/publish (fulfill ส่งอีเมลครั้งเดียวต่อออเดอร์)
@@ -458,9 +490,10 @@ export default async function handler(req, res) {
       if (r.ok && cronOk(req)) { try { health = await runHealth(req.headers.host); await recordHealth(health); } catch (e) { health = { ok: false, error: String(e.message || e) }; } }
       let recover = null;
       if (r.ok && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
-      let qr = null;
+      let qr = null, leadmail = null;
       if (cronOk(req)) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr });
+      if (cronOk(req)) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -536,6 +569,11 @@ export default async function handler(req, res) {
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const row = await sb('shop_state?id=eq.private&select=data'); const data = row?.[0]?.data || {};
       const sent = data.leadMail || {};
+      if (req.method === 'PATCH') { // เปิด/ปิดให้น้องคอมส่งเตือนอัตโนมัติ
+        const b = await readBody(req); data.leadAuto = !!b.auto;
+        await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+        return res.status(200).json({ ok: true, auto: data.leadAuto });
+      }
       const leads = await listLeads();
       if (req.method === 'POST') {
         const b = await readBody(req);
@@ -543,20 +581,10 @@ export default async function handler(req, res) {
         const subject = String(b.subject || '').trim(), body = String(b.body || '').trim();
         if (!subject || !body.includes('{ลิงก์}')) return res.status(400).json({ ok: false, error: 'ต้องมีหัวเรื่อง และในเนื้อหาต้องมี {ลิงก์}' });
         if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return res.status(500).json({ ok: false, error: 'ยังไม่ได้ตั้งค่า Gmail' });
-        const site = await siteUrl(); const shop = await loadShop();
-        const transport = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '') } });
-        const out = [];
-        for (const l of leads.filter((x) => want.has(x.email))) { // ส่งได้เฉพาะคนที่อยู่ในรายชื่อจริง
-          if (sent[l.email] && Date.now() - Date.parse(sent[l.email]) < 7 * 864e5) { out.push({ email: l.email, ok: false, reason: 'ส่งไปแล้วใน 7 วัน' }); continue; }
-          const text = fillTpl(body, l, site) + '\n\n— อีเมลนี้ส่งครั้งเดียวเพราะคุณกรอกอีเมลไว้ตอนสั่งซื้อ ถ้าไม่ต้องการแล้วไม่ต้องทำอะไร';
-          try { await transport.sendMail({ from: `"${(shop.settings.shopName || 'SheetLab').replace(/"/g, '')}" <${process.env.GMAIL_USER}>`, to: l.email, subject: fillTpl(subject, l, site), text }); sent[l.email] = new Date().toISOString(); out.push({ email: l.email, ok: true }); }
-          catch (e) { out.push({ email: l.email, ok: false, reason: String(e.message || e).slice(0, 120) }); }
-        }
-        data.leadMail = sent;
-        await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+        const out = await sendLeadMails(leads.filter((x) => want.has(x.email)), subject, body, 'manual'); // ส่งได้เฉพาะคนที่อยู่ในรายชื่อจริง
         return res.status(200).json({ ok: true, sent: out.filter((x) => x.ok).length, results: out });
       }
-      return res.status(200).json({ ok: true, leads: leads.map((l) => ({ ...l, sent_at: sent[l.email] || null })), template: data.mailTemplate || { ...LEAD_TPL, by: null } });
+      return res.status(200).json({ ok: true, auto: data.leadAuto !== false, log: data.leadLog || [], leads: leads.map((l) => ({ ...l, sent_at: sent[l.email] || null, sent_by: data.leadBy?.[l.email] || null })), template: data.mailTemplate || { ...LEAD_TPL, by: null } });
     }
     if (action === 'test_emails') { // อีเมลที่เจ้าของใช้ทดลองซื้อ: ไม่นับในรายงาน/ห้องประชุม/ติดตามลูกค้า  GET ดู · POST {emails:[...]} ตั้งใหม่
       // เจ้าของเท่านั้น: ทีม (รูทีน) ถือ content key อยู่ ห้ามเห็นหรือแก้รายชื่อนี้
@@ -651,8 +679,10 @@ export default async function handler(req, res) {
     }
     if (action === 'sold') {
       // จำนวนที่ขายแล้วต่อสินค้า (สาธารณะ ไม่มีข้อมูลลูกค้า) นับจากออเดอร์ที่ชำระแล้ว แคช 5 นาที
-      const rows = await sb('orders?status=eq.paid&select=product_id');
-      const counts = {}; for (const r of rows) if (r.product_id) counts[r.product_id] = (counts[r.product_id] || 0) + 1;
+      // นับเฉพาะยอดขายจริง: ตัดออเดอร์ทดสอบ (สินค้าร่าง ราคาทดสอบ อีเมลที่เจ้าของใช้ทดลองซื้อ)
+      const [rows, test] = await Promise.all([sb('orders?status=eq.paid&select=product_id,product_name,amount,email'), loadTestEmails().catch(() => new Set())]);
+      const isTest = testOrder(null, [...test]);
+      const counts = {}; for (const r of rows) if (r.product_id && !isTest(r)) counts[r.product_id] = (counts[r.product_id] || 0) + 1;
       res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
       return res.status(200).json({ ok: true, counts });
     }
@@ -753,7 +783,7 @@ export default async function handler(req, res) {
       const { items: tItems, cfg } = await todoWithDue();
       const ho = handoffBlock(tItems, cfg);
       let mailTask = '';
-      try { const pr = await sb('shop_state?id=eq.private&select=data'); if (!pr?.[0]?.data?.mailTemplate?.by) mailTask = '== งานใหม่จากคุณแดน (29 ก.ย.) ถึงน้องคอม ==\nร่างเทมเพลตอีเมลเตือนลูกค้าที่กรอกอีเมลแล้วยังไม่จ่าย (ส่งครั้งเดียว สุภาพ สั้น ไม่เกิน 6 บรรทัด ไม่ใส่ส่วนลดหรือของแถม ไม่เร่งเร้า) แล้ว POST https://my-shop-lake-ten.vercel.app/api/content?action=mail_template JSON {subject, body, source:"community"} ใช้ตัวแทน {สินค้า} {ราคา} {ลิงก์} (body ต้องมี {ลิงก์}) ทีมไม่เห็นอีเมลลูกค้าและไม่ต้องขอ คุณแดนเป็นคนตรวจและกดส่งเองที่ห้องเอกสาร GET action=mail_template ดูร่างปัจจุบันและจำนวนคนที่รอได้'; } catch (e) {}
+      try { const pr = await sb('shop_state?id=eq.private&select=data'); if (!pr?.[0]?.data?.mailTemplate?.by) mailTask = '== งานใหม่จากคุณแดน (29 ก.ย.) ถึงน้องคอม ==\nร่างเทมเพลตอีเมลเตือนลูกค้าที่กรอกอีเมลแล้วยังไม่จ่าย (ส่งครั้งเดียว สุภาพ สั้น ไม่เกิน 6 บรรทัด ไม่ใส่ส่วนลดหรือของแถม ไม่เร่งเร้า) แล้ว POST https://my-shop-lake-ten.vercel.app/api/content?action=mail_template JSON {subject, body, source:"community"} ใช้ตัวแทน {สินค้า} {ราคา} {ลิงก์} (body ต้องมี {ลิงก์}) ระบบใช้ข้อความนี้ส่งให้อัตโนมัติในนามน้องคอมทุกรอบ publish (คนละครั้ง หลังค้างจ่าย 1 ชม.) ทีมไม่เห็นอีเมลลูกค้าและไม่ต้องขอ คุณแดนดูผลที่ห้องเอกสาร GET action=mail_template ดูร่างปัจจุบันและจำนวนคนที่รอได้'; } catch (e) {}
       const topBlock = [cfgBlock(cfg), POLICY_BOARD, mailTask, ho.text].filter(Boolean).join('\n\n');
       plan = plan ? { ...plan, text: `${topBlock}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: topBlock, created_at: cfg.updated_at || new Date().toISOString() };
       const latest = {};
@@ -1381,7 +1411,9 @@ export default async function handler(req, res) {
       if (!id && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
       let qr = null; // รอบ publish ของ cron และของน้องคอม (08:00/21:00) เก็บตกออเดอร์ QR ด้วย
       if (!id) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
-      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover, qr });
+      let leadmail = null; // รอบเดียวกัน: น้องคอมส่งอีเมลเตือนคนค้างจ่าย
+      if (!id) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
+      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover, qr, leadmail });
     }
     res.status(400).json({ ok: false, error: 'unknown action' });
   } catch (e) {
