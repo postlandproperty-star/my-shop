@@ -327,11 +327,13 @@ export default async function handler(req, res) {
       // ฟีดห้องประชุมสำหรับทีมคอมเมนต์ (key): โพสต์ 2 วันล่าสุด (รายงาน โจทย์ บันทึกประชุม) พร้อมคอมเมนต์ที่มีอยู่
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const since = new Date(Date.now() - 2 * 864e5).toISOString();
-      const rows = await sb(`posts?status=eq.note&created_at=gte.${since}&kind=not.in.(chat,reply,log)&select=id,source,kind,text,notes,created_at,scheduled_at&order=created_at.desc&limit=120`);
+      const rows = await sb(`posts?status=eq.note&created_at=gte.${since}&kind=not.in.(chat,log)&select=id,source,kind,text,notes,created_at,scheduled_at&order=created_at.desc&limit=160`);
       const pm = (n) => { try { return n ? JSON.parse(n) : {}; } catch (e) { return {}; } };
       const comments = rows.filter((r) => r.kind === 'comment');
-      const posts = rows.filter((r) => r.kind !== 'comment').map((r) => ({ id: r.id, source: r.source, who: r.source === 'manual' ? 'คุณแดน' : (MEMBER_TH[r.source] || r.source), kind: r.kind, text: String(r.text || '').slice(0, 400), files: (pm(r.notes).files || []).map((f) => f.name), created_at: r.created_at, comments: comments.filter((c) => pm(c.notes).on === r.id).map((c) => ({ source: c.source, text: c.text, at: c.scheduled_at || c.created_at })) }));
-      return res.status(200).json({ ok: true, now_utc: new Date().toISOString(), posts });
+      const posts = rows.filter((r) => r.kind !== 'comment').map((r) => ({ id: r.id, source: r.source, who: r.source === 'manual' ? 'คุณแดน' : (MEMBER_TH[r.source] || r.source), kind: r.kind, text: String(r.text || '').slice(0, 400), files: (pm(r.notes).files || []).map((f) => f.name), created_at: r.created_at, to: r.kind === 'reply' ? (String(r.text || '').match(/^@(\w+)/) || [])[1] || null : null, comments: comments.filter((c) => pm(c.notes).on === r.id).map((c) => ({ source: c.source, text: c.text, at: c.scheduled_at || c.created_at, auto_ack: !!pm(c.notes).ack })) }));
+      const chats = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${since}&select=id,source,text,created_at,scheduled_at&order=created_at.asc&limit=200`);
+      const owner_chat = chats.filter((c) => c.source === 'manual').map((c) => ({ id: c.id, text: c.text, at: c.created_at, answered: chats.some((x) => x.source !== 'manual' && (x.scheduled_at || x.created_at) > c.created_at) }));
+      return res.status(200).json({ ok: true, now_utc: new Date().toISOString(), posts, owner_chat });
     }
     if (action === 'brief') {
       // โจทย์จากคุณแดนในห้องประชุม: แอดมิน POST {text, files:[{url,name,type}]} | {id, remove:true} ; GET (แอดมิน/key) 30 วันล่าสุด
@@ -383,10 +385,10 @@ export default async function handler(req, res) {
       }
       // ข้อความจากเจ้าของถึงสมาชิก (kind reply, text ขึ้นต้น @<member>) 7 วันล่าสุด แนบท้ายแผนให้ทุกคนอ่านเจอ
       const weekAgo = Date.now() - 7 * 864e5;
-      const msgs = notes.filter((n) => n.kind === 'reply' && Date.parse(n.created_at) >= weekAgo).map((n) => { const m = String(n.text || '').match(/^@(\w+)\s+([\s\S]*)$/); return m ? { to: m[1], name: MEMBER_TH[m[1]] || m[1], text: m[2].trim(), created_at: n.created_at } : null; }).filter(Boolean);
+      const msgs = notes.filter((n) => n.kind === 'reply' && Date.parse(n.created_at) >= weekAgo).map((n) => { const m = String(n.text || '').match(/^@(\w+)\s+([\s\S]*)$/); return m ? { id: n.id, to: m[1], name: MEMBER_TH[m[1]] || m[1], text: m[2].trim(), created_at: n.created_at } : null; }).filter(Boolean);
       if (msgs.length) {
-        const block = '== ข้อความจากคุณแดน (เจ้าของร้าน) ถึงสมาชิก ตอบกลับสั้นๆ ในรายงาน/Slack ของคุณ และทำตามถ้าอยู่ในหน้าที่ ==\n' + msgs.map((m) => `- ถึง ${m.name} (${m.to}) ${m.created_at.slice(0, 10)}: ${m.text}`).join('\n');
-        plan = plan ? { ...plan, text: `${plan.text}\n\n${block}`, created_at: msgs[0].created_at > plan.created_at ? msgs[0].created_at : plan.created_at } : { source: 'manual', kind: 'plan', text: block, created_at: msgs[0].created_at };
+        const block = '== คุณแดน (เจ้าของร้าน) สั่งงานถึงสมาชิกโดยตรง ถ้าถึงคุณ: ต้องทำตามในรอบนี้เป็นอันดับแรก แล้วรายงานผลกลับใต้ข้อความนั้นด้วย POST action=comment {"comments":[{"on":"<id>","source":"<source ของคุณ>","text":"ทำแล้ว: <สรุปสั้น>"}]} ถ้าทำไม่ได้ให้ตอบว่าติดอะไร ==\n' + msgs.map((m) => `- [id ${m.id}] ถึง ${m.name} (${m.to}) ${m.created_at.slice(0, 10)}: ${m.text}`).join('\n');
+        plan = plan ? { ...plan, text: `${block}\n\n${plan.text}`, created_at: msgs[0].created_at > plan.created_at ? msgs[0].created_at : plan.created_at } : { source: 'manual', kind: 'plan', text: block, created_at: msgs[0].created_at };
       }
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
@@ -778,8 +780,11 @@ export default async function handler(req, res) {
       const body = await readBody(req);
       const to = String(body.to || ''); const text = String(body.text || '').trim().slice(0, 1500);
       if (!MEMBER_TH[to] || !text) return res.status(400).json({ ok: false, error: 'ต้องระบุผู้รับและข้อความ' });
-      await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'reply', source: 'manual', text: `@${to} ${text}` }], prefer: 'return=minimal' });
-      return res.status(200).json({ ok: true, to, name: MEMBER_TH[to] });
+      const ins = await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'reply', source: 'manual', text: `@${to} ${text}` }], prefer: 'return=representation' });
+      // ตอบรับทันทีแบบสั้นในนามคนที่ถูกสั่ง (1-3 นาที) คำตอบเต็มมาจากรอบคอมเมนต์ และผลงานมาจากรอบงานของคนนั้น
+      const pol = ['writer', 'designer', 'community', 'market', 'finance', 'hr', 'care'].includes(to) ? 'ค่ะ' : 'ครับ';
+      if (ins?.[0]?.id) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'comment', source: to, text: pick([`รับทราบ${pol}คุณแดน เดี๋ยวดูรายละเอียดแล้วตอบกลับตรงนี้${pol}`, `ได้เลย${pol} ขอเวลาเช็กก่อนนิดนึง เดี๋ยวแจ้งว่าจะทำยังไงและเสร็จเมื่อไหร่${pol}`, `รับเรื่องแล้ว${pol} จะทำในรอบงานถัดไปแล้วรายงานผลใต้ข้อความนี้${pol}`]), scheduled_at: new Date(Date.now() + (60 + Math.floor(Math.random() * 120)) * 1000).toISOString(), notes: JSON.stringify({ on: ins[0].id, ack: true }) }], prefer: 'return=minimal' }); } catch (e) {} }
+      return res.status(200).json({ ok: true, to, name: MEMBER_TH[to], id: ins?.[0]?.id });
     }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
