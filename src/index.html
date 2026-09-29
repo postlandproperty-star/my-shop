@@ -136,6 +136,14 @@ footer{padding:28px 0 110px;text-align:center}
 .sp-info{padding-top:16px;padding-bottom:22px}.sp-info h1{font-size:clamp(21px,5.2vw,30px);line-height:1.3;color:var(--ink)}
 .sp-meta{display:flex;gap:14px;color:var(--muted);font-size:14px;margin-top:6px}
 .sp-info .lead{margin-top:10px;color:var(--ink)}
+.paylogos{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 6px}
+.paylogos.sm{justify-content:flex-start;margin:12px 0 0;gap:6px}
+.paylogos .pl{background:#fff;border:1px solid #D3DBE8;border-radius:8px;height:36px;min-width:58px;padding:6px 10px;display:inline-flex;align-items:center;justify-content:center}
+.paylogos .pl svg{height:100%;width:auto;display:block}
+.paylogos.sm .pl{height:30px;min-width:48px;padding:5px 8px}
+.paysafe{display:flex;gap:6px;align-items:flex-start;justify-content:center;font-size:14px;color:var(--muted);margin:6px 0 0;text-align:left}
+.paysafe svg{flex:none;margin-top:3px;color:#16a34a}
+.stripe-w{color:#635BFF;font-family:Arial,Helvetica,sans-serif;font-weight:800;letter-spacing:-.3px}
 .sp-perks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0;font-size:14px;color:var(--muted)}
 .sp-info .hero-cta{margin-top:6px}.sp-info .proof{color:var(--muted)}
 /* preview pages */
@@ -261,6 +269,7 @@ footer{padding:28px 0 110px;text-align:center}
 .ocard.cfgable{cursor:pointer}.ocard.cfgable:hover{border-color:var(--brand)}
 .ocfg{position:absolute;top:10px;right:10px;font-size:14px;font-weight:600;color:var(--brand);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;min-height:36px}
 .md.cfgable{cursor:pointer}
+.chat .bub .cph{display:block;width:200px;max-width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:2px 0 6px;cursor:zoom-in;background:var(--line)}
 .cfgsheet{position:fixed;inset:0;z-index:55;display:flex;justify-content:flex-end}
 .cfgsheet .cs-bg{position:absolute;inset:0;background:rgba(5,10,20,.55)}
 .cfgsheet .cs-in{position:relative;background:var(--bg);width:min(560px,100%);height:100%;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,.25);display:flex;flex-direction:column}
@@ -1027,12 +1036,13 @@ function shopView(){
       <h1>${esc(p.headline)}</h1>
       ${sold>0||reviews.length?`<div class="sp-meta">${sold>0?`<span>ขายแล้ว ${sold.toLocaleString('th-TH')} ชิ้น</span>`:''}${reviews.length?`<span>รีวิว ${reviews.length}</span>`:''}</div>`:''}
       ${p.desc?`<p class="lead">${esc(p.desc)}</p>`:''}
-      <div class="sp-perks"><span>⚡ รับไฟล์ทันทีหลังชำระเงิน</span><span>💳 PromptPay หรือบัตรเครดิต</span>${prev.length?`<span>👀 ดูตัวอย่างได้ ${prev.length} หน้า</span>`:''}</div>
+      <div class="sp-perks"><span>⚡ รับไฟล์ทันทีหลังชำระเงิน</span><span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${prev.length?`<span>👀 ดูตัวอย่างได้ ${prev.length} หน้า</span>`:''}</div>
       <div class="hero-cta">
         <button class="btn btn-buy" data-a="toCheckout">สั่งซื้อและรับไฟล์ทันที</button>
         ${prev.length?`<a class="btn btn-line" href="#preview">ดูตัวอย่างเนื้อหา</a>`:''}
         ${p.sampleLink?`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">ดาวน์โหลดตัวอย่างฟรี</a>`:''}
       </div>
+      ${payLogos(0)}
       ${p.proof?`<p class="proof">${esc(p.proof)}</p>`:''}
     </div>
   </section>
@@ -1095,7 +1105,8 @@ function shopView(){
       ${bp2?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${on?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>ซื้อคู่กับ ${esc(bp2.name)} <span class="was">${baht(bp2.price)}</span> ${baht(p.bumpPrice)}${pct>0?` <span class="badge ok">ลด ${pct}%</span>`:''}</b><p>ติ๊กเพิ่มแล้วจ่ายรวมครั้งเดียว ได้ไฟล์ทั้งสองทันทีหลังชำระเงิน</p></label></div>`:''}
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(total)}${on?` <span class="fine">(${baht(p.price)} + ${baht(p.bumpPrice)})</span>`:''}</p>
       <a class="btn btn-cta btn-block" href="/api/checkout?p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">ชำระเงิน ${baht(total)} (PromptPay / บัตร)</a>`;})()}
-      <p class="fine" style="text-align:center;margin-top:10px">ชำระผ่าน Stripe ปลอดภัย จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
+      ${payLogos(1)}${paySafe()}
+      <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
       ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
     </div>
     ${p.guarantee?`<div class="guar"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><p>${esc(p.guarantee)}</p></div>`:''}
@@ -1115,6 +1126,13 @@ function shopView(){
   </div></div>`;
 }
 
+function payLogos(big){return `<div class="paylogos${big?'':' sm'}" role="img" aria-label="รับชำระด้วยพร้อมเพย์ Visa Mastercard และ JCB">
+  <span class="pl" title="พร้อมเพย์ (PromptPay)"><svg viewBox="0 0 70 20" aria-hidden="true"><rect x="1" y="3" width="14" height="14" rx="3" fill="#1B3E6F"/><path d="M4.5 6.5h3v3h-3zM8.5 6.5h3v3h-3zM4.5 10.5h3v3h-3zM9 11h2v2H9z" fill="#fff"/><text x="18" y="15" font-family="Arial,Helvetica,sans-serif" font-size="12.5" font-weight="800" fill="#1B3E6F">Prompt<tspan fill="#1E88C8">Pay</tspan></text></svg></span>
+  <span class="pl" title="Visa"><svg viewBox="0 5 24 14" aria-hidden="true"><path fill="#1A1F71" d="M9.112 8.262L5.97 15.758H3.92L2.374 9.775c-.094-.368-.175-.503-.461-.658C1.447 8.864.677 8.627 0 8.479l.046-.217h3.3a.904.904 0 01.894.764l.817 4.338 2.018-5.102zm8.033 5.049c.008-1.979-2.736-2.088-2.717-2.972.006-.269.262-.555.822-.628a3.66 3.66 0 011.913.336l.34-1.59a5.207 5.207 0 00-1.814-.333c-1.917 0-3.266 1.02-3.278 2.479-.012 1.079.963 1.68 1.698 2.04.756.367 1.01.603 1.006.931-.005.504-.602.725-1.16.734-.975.015-1.54-.263-1.992-.473l-.351 1.642c.453.208 1.289.39 2.156.398 2.037 0 3.37-1.006 3.377-2.564m5.061 2.447H24l-1.565-7.496h-1.656a.883.883 0 00-.826.55l-2.909 6.946h2.036l.405-1.12h2.488zm-2.163-2.656l1.02-2.815.588 2.815zm-8.16-4.84l-1.603 7.496H8.34l1.605-7.496z"/></svg></span>
+  <span class="pl" title="Mastercard"><svg viewBox="4 2 28 20" aria-hidden="true"><circle cx="14" cy="12" r="8" fill="#EB001B"/><circle cx="22" cy="12" r="8" fill="#F79E1B"/><path d="M18 5.07A8 8 0 0 1 18 18.93A8 8 0 0 1 18 5.07Z" fill="#FF5F00"/></svg></span>
+  <span class="pl" title="JCB"><svg viewBox="0 6 24 12" aria-hidden="true"><path fill="#0E4C96" d="M13.05 9.8643c.9723.0736 1.7257.3671 2.3545.6843v-1.31s-1.2577-.3162-2.4408-.368c-4.1256-.1849-5.295 1.4344-5.295 3.1292 0 1.6947 1.1694 3.3145 5.295 3.1296 1.1831-.0536 2.4408-.3694 2.4408-.3694v-1.3086c-.6193.3081-1.3826.6107-2.3545.683-1.6793.1272-2.6898-.6907-2.6898-2.1342 0-1.4448 1.0105-2.2613 2.6898-2.1354m7.685 4.1223c-.0513.0105-.1581.02-.215.02h-1.8005V12.376H20.52c.0568 0 .1636.01.2149.02a.8056.8056 0 01.6325.7951c0 .4162-.2872.721-.6325.796zm-2.0155-4.0374h1.6325c.059 0 .1454.0077.1772.0137.3376.0572.6256.3307.6256.7392 0 .409-.288.6815-.626.7392a1.571 1.571 0 01-.1773.0137h-1.6311V9.9506zm3.4994 1.9856v-.0364c.9133-.1331 1.4149-.726 1.4149-1.4199 0-.8828-.7343-1.3916-1.7293-1.4416-.0772-.0032-.203-.011-.3044-.011h-5.3323v5.9467h5.7548c1.13 0 1.9774-.6043 1.9774-1.5466 0-.8701-.7724-1.4222-1.781-1.4917zm-17.8644.6788c0 .8787-.5906 1.5311-1.6656 1.5311-.917 0-1.8174-.2726-2.6889-.6938V14.76s1.4021.383 3.191.383c2.9714 0 3.8374-1.125 3.8374-2.529V9.0266H4.3541v3.5876Z"/></svg></span>
+</div>`;}
+function paySafe(){return `<p class="paysafe"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>ชำระผ่าน <b class="stripe-w">stripe</b> เข้ารหัสมาตรฐานเดียวกับธนาคาร ร้านไม่เห็นและไม่เก็บเลขบัตรของคุณ</span></p>`;}
 function fakeQR(seedStr){
   let h=2166136261;for(const ch of seedStr){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}
   const rnd=()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};
@@ -2075,7 +2093,7 @@ function cfgSheet(){
   </div></div>`;
 }
 let CHAT={msgs:null,loading:false,err:'',next_at:null,next_source:null,pending:0};
-async function loadChat(){CHAT.loading=true;try{const j=await adminApi('/api/content?action=chat&days=7');if(j.ok){CHAT.msgs=j.messages||[];CHAT.next_at=j.next_at||null;CHAT.next_source=j.next_source||null;CHAT.pending=j.pending||0;CHAT.err='';}else CHAT.err=j.error||'โหลดไม่ได้';}catch(e){CHAT.err='เชื่อมต่อไม่ได้';}CHAT.loading=false;}
+async function loadChat(){CHAT.loading=true;try{const j=await adminApi('/api/content?action=chat&days=7');if(j.ok){CHAT.msgs=j.messages||[];CHAT.next_at=j.next_at||null;CHAT.next_source=j.next_source||null;CHAT.pending=j.pending||0;CHAT.engine=j.engine||'Claude';CHAT.err='';}else CHAT.err=j.error||'โหลดไม่ได้';}catch(e){CHAT.err='เชื่อมต่อไม่ได้';}CHAT.loading=false;}
 function onDutyNow(k){const sc=SCHED[k];if(!sc)return false;const b=new Date(Date.now()+BKK);const ok=sc.dow?sc.dow.includes(b.getUTCDay()):b.getUTCDate()===sc.dom;if(!ok)return false;const mins=b.getUTCHours()*60+b.getUTCMinutes();return sc.times.some(([h,mi])=>mins>=h*60+mi&&mins<h*60+mi+(sc.dur||15));}
 function onlineStrip(){const ks=['manager','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
 function chatTab(){
@@ -2090,11 +2108,13 @@ function chatTab(){
     const poll=meta.poll?(()=>{const pl=meta.poll;const tot=pl.options.reduce((a,o)=>a+((pl.votes[o]||[]).length),0)||0;return `<div class="poll"><b>📊 ${esc(pl.q)}</b>${pl.options.map(o=>{const v=pl.votes[o]||[];const pc=tot?Math.round(v.length*100/tot):0;const mine=v.includes('manual');return `<button class="po${mine?' on':''}" data-a="chatVote" data-id="${m.id}" data-o="${esc(o)}" title="${esc(v.map(nameOf).join(', '))}"><i style="width:${pc}%"></i><span>${esc(o)}</span><em>${v.length}</em></button>`;}).join('')}<small>${tot} โหวต · กดเพื่อโหวต</small></div>`;})():'';
     const reacts=meta.reacts||{};const rxOpen=S.rxOpen===m.id;
     const rx=`<div class="rx">${Object.entries(reacts).map(([e,w])=>`<button class="rxb${w.includes('manual')?' on':''}" data-a="chatReact" data-id="${m.id}" data-e="${esc(e)}" title="${esc(w.map(nameOf).join(', '))}">${e} ${w.length}</button>`).join('')}${me?'':`<button class="rxb rxadd" data-a="rxOpen" data-id="${m.id}" title="รีแอค">${rxOpen?'×':'+'}</button>${rxOpen?['👍','😂','❤️','🔥','😮'].map(e=>`<button class="rxb pick" data-a="chatReact" data-id="${m.id}" data-e="${e}">${e}</button>`).join(''):''}`}${me?`<span class="seen">อ่านแล้ว ${seenN(m)}</span>`:''}</div>`;
-    return sep+`<div class="msg ${me?'me':''}${meta.evt?' evt':''}">${ava(me?'manual':(TEAM[m.source]?m.source:'manager'),1)}<div><div class="who">${esc(who)}${meta.evt?' <span class="evtag">จากงานจริง</span>':''}</div><div class="bub">${q}${esc(m.text)}${poll}</div>${rx}</div><span class="t">${tm} <button class="tx" data-a="chatRemove" data-id="${m.id}" title="ลบข้อความนี้" style="font-size:14px">×</button></span></div>`;}).join('');
-  return `<div class="chat"><p class="fine" style="margin:12px 0 4px">ห้องพักทีม (One Bangkok ชั้น 27 วิวสวนลุม): มุมคุยเล่นนอกเรื่องงานของทุกคน ข้อความทยอยเข้ามาทั้งวันตามจังหวะชีวิตแต่ละคน คุณแดนแวะมาทักได้ ทีมจะตอบในรอบเช้าถัดไป <button class="chip" data-a="chatRefresh">รีเฟรช</button></p>
+    return sep+`<div class="msg ${me?'me':''}${meta.evt?' evt':''}">${ava(me?'manual':(TEAM[m.source]?m.source:'manager'),1)}<div><div class="who">${esc(who)}${meta.evt?' <span class="evtag">จากงานจริง</span>':''}</div><div class="bub">${q}${m.photo?`<img class="cph" src="${esc(m.photo)}" alt="รูปที่${esc(who)}ส่งมา" loading="lazy" data-a="chatPhoto" data-u="${esc(m.photo)}">`:''}${esc(m.text)}${poll}</div>${rx}</div><span class="t">${tm} <button class="tx" data-a="chatRemove" data-id="${m.id}" title="ลบข้อความนี้" style="font-size:14px">×</button></span></div>`;}).join('');
+  return `<div class="chat"><p class="fine" style="margin:12px 0 4px">ห้องพักทีม (One Bangkok ชั้น 27 วิวสวนลุม): มุมคุยเล่นนอกเรื่องงานของทุกคน ข้อความทยอยเข้ามาทั้งวันตามจังหวะชีวิตแต่ละคน${CHAT.engine&&CHAT.engine!=='Claude'?' · ขับด้วย '+esc(CHAT.engine)+' ทักแล้วทีมตอบในไม่กี่นาที':''} คุณแดนแวะมาทักได้ ทีมจะตอบในรอบเช้าถัดไป <button class="chip" data-a="chatRefresh">รีเฟรช</button></p>
   ${onlineStrip()}
   ${CHAT.err?`<p class="fine" style="color:var(--bad)">${esc(CHAT.err)}</p>`:''}
   ${CHAT.msgs===null?(CHAT.err?'':'<p class="fine">กำลังโหลด...</p>'):msgs.length?rows:'<p class="fine">ยังเงียบอยู่ ทุกคนจะเริ่มคุยกันรอบเที่ยงนี้</p>'}
+  ${CHAT.fastUntil>Date.now()&&!(CHAT.next_at&&Date.parse(CHAT.next_at)-Date.now()<15*60e3)?`<div class="msg typing">${ava('writer',1)}<div><div class="who">ทีม</div><div class="bub">กำลังพิมพ์…</div></div></div>`:''}
+  ${S.chatPhoto?`<div class="lb" data-a="chatPhotoClose" role="dialog" aria-modal="true" aria-label="ดูรูปขยาย"><img src="${esc(S.chatPhoto)}" alt="รูปขยาย"><button class="lb-x" data-a="chatPhotoClose" aria-label="ปิด">×</button></div>`:''}
   ${CHAT.next_at&&Date.parse(CHAT.next_at)-Date.now()<15*60e3?`<div class="msg typing">${ava(TEAM[CHAT.next_source]?CHAT.next_source:'manager',1)}<div><div class="who">${esc(TEAM[CHAT.next_source]?TEAM[CHAT.next_source].name:'ทีม')}</div><div class="bub">กำลังพิมพ์…</div></div></div>`:''}
   <div id="chat-end"></div>
   <div class="chatbox"><input id="chat-new" placeholder="แวะมาทักทีม เช่น วันนี้กินอะไรกันดี" onkeydown="if(event.key==='Enter'){document.querySelector('[data-a=chatSend]').click();}"><button class="btn btn-cta btn-sm" data-a="chatSend">ส่ง</button></div></div>`;
@@ -2282,8 +2302,10 @@ function render(keep){
   $('#seg').innerHTML=isAdmin?`<button data-a="toShop" aria-pressed="${v!=='admin'}">หน้าลูกค้า</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button>`:'';
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
+  const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
   $('#app').innerHTML=({shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
+  if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
   document.body.style.overflow=(v==='admin'&&S.cfgOpen)?'hidden':'';
   window.scrollTo(0,keep?y:0);
   tick();
@@ -2360,7 +2382,9 @@ function act(a,el){
     case 'docAdd':{const t=$('#doc-title'),u=$('#doc-url'),n=$('#doc-note');const url=u?u.value.trim():'';if(!/^https?:\/\//i.test(url)){toast('ใส่ลิงก์ที่ขึ้นต้นด้วย https://');break;}el.disabled=true;adminPost('/api/content?action=docs',{title:t?t.value.trim():'',url,note:n?n.value.trim():''}).then(j=>{if(!j.ok)throw new Error(j.error||'เพิ่มไม่ได้');DOCS.links=j.links;DOCS.files=j.files||DOCS.files;render(true);toast('เพิ่มแล้ว');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'chatRefresh':{CHAT.msgs=null;render(true);break;}
     case 'chatRemove':{if(!confirm('ลบข้อความนี้ออกจากห้องพัก?'))break;adminPost('/api/content?action=chat',{id,remove:true}).then(j=>{if(!j.ok)throw new Error(j.error||'ลบไม่ได้');CHAT.msgs=j.messages;render(true);}).catch(e=>toast(e.message));break;}
-    case 'chatSend':{const inp=$('#chat-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=chat',{text}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');CHAT.msgs=j.messages;render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);toast('ส่งแล้ว ทีมจะตอบในรอบถัดไป');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
+    case 'chatSend':{const inp=$('#chat-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=chat',{text}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');if(inp)inp.value='';CHAT.msgs=j.messages;render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);if(CHAT.engine&&CHAT.engine!=='Claude'){CHAT.fastUntil=Date.now()+4*60e3;render(true);toast('ส่งแล้ว ทีมกำลังพิมพ์ตอบ');}else toast('ส่งแล้ว ทีมจะตอบในรอบถัดไป');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
+    case 'chatPhoto':S.chatPhoto=el.dataset.u;render(true);break;
+    case 'chatPhotoClose':S.chatPhoto=null;render(true);break;
     case 'healthNow':{el.disabled=true;toast('กำลังตรวจระบบ...');adminApi('/api/content?action=health&record=1').then(h=>{if(!h.checks)throw new Error(h.error||'ตรวจไม่ได้');postsLoaded=false;TODO.items=null;return loadPosts().then(()=>{render(true);toast(h.problems.length?'พบ '+h.problems.length+' จุดที่ต้องดู เพิ่มเข้าเช็คลิสต์แล้ว':'ระบบปกติทั้ง '+h.checks.length+' จุด');});}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'todoAnsOpen':{S.todoAns=id;render(true);setTimeout(()=>{const t=document.getElementById('todo-ans-'+id);if(t)t.focus();},0);break;}
     case 'todoAnsCancel':{S.todoAns=null;render(true);break;}
@@ -2625,6 +2649,7 @@ function wireAuth(){
   });
 }
 setInterval(()=>{if(S.view==='admin'&&S.tab==='chat'&&sbSession&&document.visibilityState==='visible'&&!CHAT.loading){loadChat().then(()=>render(true));}},60e3);
+setInterval(()=>{if(CHAT.fastUntil>Date.now()&&S.view==='admin'&&S.tab==='chat'&&sbSession&&!CHAT.loading){const n=(CHAT.msgs||[]).length;loadChat().then(()=>{render(true);if((CHAT.msgs||[]).length>n){const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end',behavior:'smooth'});}});}},8e3);
 document.addEventListener('visibilitychange',async()=>{
   if(document.visibilityState!=='visible'||!sb||!sbSession)return;
   try{const {data}=await sb.auth.getSession();if(!data||!data.session)sessionLost();else sbSession=data.session;}catch(e){}
