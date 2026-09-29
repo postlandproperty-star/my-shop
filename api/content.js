@@ -1054,6 +1054,10 @@ export default async function handler(req, res) {
       try {
         const unchecked = (await sb(`posts?status=in.(draft,approved,needs_owner)&scheduled_at=gte.${new Date().toISOString()}&select=id,status,text,notes${hasCh ? ',channel' : ''}&limit=60`)).filter((x) => !policyState(x.notes)).slice(0, 40);
         const shopC = unchecked.length ? await loadShop().catch(() => ({ products: [] })) : null;
+        // โพสต์ที่ระบบกักไว้เองแล้วกฎปรับจนไม่เสี่ยงแล้ว: คืนสถานะเดิม (ไม่แตะเรื่องที่พี่ต้นส่งให้คุณแดนเอง)
+        const held = (await sb(`posts?status=eq.needs_owner&select=id,text,notes,source${hasCh ? ',channel' : ''}&limit=40`)).filter((x) => policyState(x.notes)?.level === 'block' && !/⚠️ พี่ต้น:/.test(x.notes || ''));
+        const shopH = held.length ? await loadShop().catch(() => ({ products: [] })) : null;
+        for (const x of held) { const r = checkPolicy(x, shopH); if (r.level !== 'block') await sbPatch(`posts?id=eq.${x.id}`, { status: /✅/.test(x.notes || '') || x.source === 'clip' ? 'approved' : 'draft', notes: [x.notes, policyMark(r)].join('\n').slice(0, 1500) }); }
         for (const x of unchecked) { const r = checkPolicy(x, shopC); const patch = { notes: [x.notes, policyMark(r)].filter(Boolean).join('\n').slice(0, 1500) }; if (r.level === 'block' && x.status !== 'needs_owner') patch.status = 'needs_owner'; await sbPatch(`posts?id=eq.${x.id}`, patch); }
       } catch (e) { console.error('policy sweep', e.message); }
       const pend = await sb(`posts?status=in.(needs_owner,failed)&select=id,status,kind,source,error,text,notes,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`);
