@@ -98,6 +98,23 @@ export default async function handler(req, res) {
       const orders = await sb(`orders?status=eq.paid&paid_at=gte.${since}&select=paid_at,amount,campaign,product_name,email`);
       return res.status(200).json({ ok: true, account: acct, campaigns: campaigns.data || [], adsets: adsets.data || [], insights: ins.data || [], daily: daily.data || [], shopOrders: orders.filter((o) => !isTestOrder(o)).map(({ email, ...o }) => o) });
     }
+    if (action === 'pixel') { // Meta เห็นเหตุการณ์จากเว็บไหม: นับ PageView/ViewContent/InitiateCheckout/Purchase ต่อชั่วโมงจาก Pixel (?days=3)
+      const fb = await loadFb();
+      if (!fb?.userToken) return res.status(200).json({ ok: false, error: 'ต้องเชื่อมเพจใหม่พร้อมสิทธิ์ ads_read' });
+      const shop = await loadShop();
+      const pid = String(shop.settings?.pixelId || '');
+      if (!/^\d{6,20}$/.test(pid)) return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ Pixel ID' });
+      const n = days(req, 3);
+      const out = { ok: true, pixel: pid };
+      try { out.info = await fbGet(pid, { access_token: fb.userToken, fields: 'name,last_fired_time,is_unavailable' }); } catch (e) { out.infoError = String(e.message || e); }
+      try {
+        const st = await fbGet(`${pid}/stats`, { access_token: fb.userToken, aggregation: 'event', start_time: Math.floor(Date.now() / 1000 - n * 86400) });
+        const tot = {}; const purchases = [];
+        for (const row of st.data || []) for (const x of row.data || []) { tot[x.value] = (tot[x.value] || 0) + Number(x.count || 0); if (x.value === 'Purchase') purchases.push({ hour: row.start_time, count: x.count }); }
+        out.totals = tot; out.purchases = purchases;
+      } catch (e) { out.statsError = String(e.message || e); }
+      return res.status(200).json(out);
+    }
     if (action === 'sync-adspend') {
       const fb = await loadFb();
       if (!fb?.userToken) return res.status(200).json({ ok: false, error: 'ต้องเชื่อมเพจใหม่พร้อมสิทธิ์ ads_read' });
