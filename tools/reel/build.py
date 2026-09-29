@@ -130,24 +130,58 @@ def fit_font(d, text, kind, start, maxw):
     while d.textlength(text, font=f) > maxw and f.size > 40: f = font(kind, f.size - 6)
     return f
 
-def find_music(query):
-    """เพลงประกอบจาก Openverse audio (Jamendo/Freesound) เฉพาะ CC BY / CC0 ยาว 30-300 วิ -> (path, credit) หรือ (None, None)"""
-    try:
-        res = json.loads(http('https://api.openverse.org/v1/audio/?q=' + urllib.parse.quote(query) + '&license_type=commercial&page_size=20', timeout=30)).get('results', [])
-    except Exception: res = []
-    for r in res:
-        if str(r.get('license', '')).lower() not in ('by', 'cc0', 'pdm'): continue
-        dms = r.get('duration') or 0
-        if dms and not (30000 <= dms <= 300000): continue
-        try:
-            fn = os.path.join(CACHE, 'music-' + hashlib.md5(r['url'].encode()).hexdigest() + '.mp3')
-            if not os.path.exists(fn) or os.path.getsize(fn) < 100000:
-                data = http(r['url'], timeout=60)
-                if len(data) < 100000: continue
-                open(fn, 'wb').write(data)
-            return fn, f"เพลง: {r.get('title', '')} | {r.get('creator', '')} | {r.get('license', '')} | {r.get('foreign_landing_url', '')}"
-        except Exception: continue
-    return None, None
+def make_music(path, mood='upbeat', seed=0):
+    """เพลงประกอบที่แต่งขึ้นเองด้วยโค้ด (คีย์/ทำนองสุ่มตาม seed) ไม่มีลิขสิทธิ์คนอื่น ไม่ต้องให้เครดิต ไม่ต้องโหลดจากเน็ต
+    ยาว 8 ห้อง แล้วให้ ffmpeg วนเล่น: คีย์บอร์ด + เบส + กลอง + ทำนองกระดิ่งห้อง 5-8  mood: upbeat | chill"""
+    import math, random, wave, array
+    rnd = random.Random(seed); sr = 22050
+    chill = mood == 'chill'
+    bpm = rnd.choice([80, 84, 88]) if chill else rnd.choice([100, 104, 108])
+    beat = 60.0 / bpm; bars = 8; total = int(sr * beat * 4 * bars) + sr
+    buf = array.array('f', bytes(4 * total))
+    root = rnd.choice([261.63, 293.66, 329.63, 349.23, 392.00])  # C D E F G
+    hz = lambda semi, octv=0: root * (2 ** (semi / 12.0 + octv))
+    prog = [(9, 'm'), (5, ''), (0, ''), (7, '')] if chill else rnd.choice([[(0, ''), (7, ''), (9, 'm'), (5, '')], [(0, ''), (5, ''), (9, 'm'), (7, '')]])
+    def add(t0, dur, fn, amp):
+        i0 = int(t0 * sr); n = min(int(dur * sr), total - i0)
+        for i in range(max(0, n)):
+            buf[i0 + i] += amp * fn(i / sr)
+    def keys(f):
+        return lambda t: (math.sin(2 * math.pi * f * t) + 0.3 * math.sin(4 * math.pi * f * t)) * math.exp(-2.4 * t) * min(1, t * 200)
+    def bass(f):
+        return lambda t: (math.sin(2 * math.pi * f * t) + 0.25 * math.sin(4 * math.pi * f * t)) * math.exp(-3.0 * t) * min(1, t * 300)
+    def kick(t):
+        return math.sin(2 * math.pi * (45 * t + 2.2 * (1 - math.exp(-28 * t)))) * math.exp(-9 * t)
+    def noise(decay):
+        last = [0.0]
+        def f(t):
+            x = rnd.uniform(-1, 1); y = x - last[0]; last[0] = x  # high-pass อย่างง่าย ให้เสียงแหลมแบบฉาบ
+            return y * math.exp(-decay * t)
+        return f
+    def bell(f):
+        return lambda t: (math.sin(2 * math.pi * f * t) + 0.2 * math.sin(6 * math.pi * f * t)) * math.exp(-4.5 * t) * min(1, t * 400)
+    penta = [0, 2, 4, 7, 9]
+    for b in range(bars):
+        t = b * 4 * beat; semi, q = prog[b % 4]; tri = [0, 3, 7] if q == 'm' else [0, 4, 7]
+        for hit in ([0, 2.5] if not chill else [0]):
+            for x in tri: add(t + hit * beat, 1.6, keys(hz(semi + x)), 0.10 if not chill else 0.12)
+        for hit in ([0, 2, 3.5] if not chill else [0, 2]): add(t + hit * beat, 0.9, bass(hz(semi, -2)), 0.32)
+        for hit in ([0, 2] if chill else [0, 1.5, 2]): add(t + hit * beat, 0.45, kick, 0.55 if not chill else 0.4)
+        for hit in (1, 3): add(t + hit * beat, 0.25, noise(16), 0.10 if not chill else 0.06)
+        for e in range(8):
+            if chill and e % 2 == 0: continue
+            add(t + e * beat / 2, 0.08, noise(70), 0.05)
+        if b >= 4:  # ทำนองช่วงหลัง
+            pos = 0.0
+            while pos < 4:
+                step = rnd.choice([0.5, 1, 1, 1.5]) if not chill else rnd.choice([1, 1.5, 2])
+                if rnd.random() < 0.8: add(t + pos * beat, 1.2, bell(hz(rnd.choice(penta) + 12)), 0.09)
+                pos += step
+    peak = max(1e-6, max(abs(v) for v in buf)); g = 0.9 / peak
+    pcm = array.array('h', (int(max(-1, min(1, v * g)) * 32767) for v in buf))
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
+    return path
 
 def main():
     if len(sys.argv) < 3: raise SystemExit(__doc__)
@@ -241,17 +275,19 @@ def main():
         segs.append(seg)
     lst = os.path.join(OUTDIR, 'list.txt'); open(lst, 'w').write(''.join(f"file '{os.path.abspath(s)}'\n" for s in segs))
     music_credit = None
-    want_music = spec.get('music', MOTION)
+    want_music = spec.get('music', True)  # ทุกคลิปมีเพลงประกอบ (ปิดได้ด้วย "music": false)
     if want_music:
-        mpath, music_credit = find_music(spec.get('music_query', 'upbeat ukulele happy'))
-        if mpath:
-            tmp = os.path.join(OUTDIR, 'novideo_music.mp4')
-            subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', tmp], check=True)
-            D = dur(tmp)
-            subprocess.run([FF, '-y', '-loglevel', 'error', '-i', tmp, '-stream_loop', '-1', '-i', mpath, '-filter_complex',
-                            f"[1:a]volume=0.13,afade=t=in:st=0:d=1.2,atrim=0:{D:.2f},afade=t=out:st={max(0, D - 2.5):.2f}:d=2.5[m];[0:a][m]amix=inputs=2:duration=first:normalize=0[a]",
-                            '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out], check=True)
-        else: want_music = False
+        mood = spec.get('music_mood', 'upbeat')
+        mpath = make_music(os.path.join(OUTDIR, 'music.wav'), mood, int(hashlib.md5(json.dumps(items, ensure_ascii=False).encode()).hexdigest()[:8], 16))
+        music_credit = f'เพลง: แต่งขึ้นเองอัตโนมัติ ({mood}) ไม่มีลิขสิทธิ์ผู้อื่น'
+        tmp = os.path.join(OUTDIR, 'novideo_music.mp4')
+        subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', tmp], check=True)
+        D = dur(tmp)
+        # เพลงเบาลงเองตอนมีเสียงพากย์ (sidechain) แล้วดังขึ้นช่วงเงียบ จางเข้า/ออกหัวท้าย
+        subprocess.run([FF, '-y', '-loglevel', 'error', '-i', tmp, '-stream_loop', '-1', '-i', mpath, '-filter_complex',
+                        f"[0:a]asplit=2[vo][key];[1:a]aresample=44100,aformat=channel_layouts=stereo,volume=0.6,atrim=0:{D:.2f},afade=t=in:st=0:d=1.0,afade=t=out:st={max(0, D - 2.0):.2f}:d=2.0[m];"
+                        "[m][key]sidechaincompress=threshold=0.05:ratio=4:attack=20:release=400[md];[vo][md]amix=inputs=2:duration=first:normalize=0[a]",
+                        '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out], check=True)
     if not want_music:
         subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', '-movflags', '+faststart', out], check=True)
     print(json.dumps({'ok': True, 'out': out, 'style': STYLE, 'duration': round(dur(out), 1), 'bytes': os.path.getsize(out), 'items': n, 'tts_chars': chars, 'image_credits': credits + ([music_credit] if music_credit else [])}, ensure_ascii=False))
