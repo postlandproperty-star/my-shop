@@ -242,8 +242,8 @@ footer{padding:28px 0 110px;text-align:center}
 .org{display:grid;justify-items:center;gap:0;margin-top:12px}
 .org .tier{display:grid;gap:12px;width:100%}
 .org .tier.one{grid-template-columns:minmax(0,440px);justify-content:center}
-.org .tier.many{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.org .tier.two{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));max-width:620px;margin:0 auto}
+.org .tier.many{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))}
+.org .tier.two{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));max-width:620px;margin:0 auto}
 .org .conn{width:2px;height:24px;background:var(--line)}
 .org .bar{height:2px;background:var(--line);width:min(100%,880px)}
 .ocard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;text-align:left}
