@@ -112,6 +112,35 @@ footer{padding:28px 0 110px;text-align:center}
 .sticky-in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:14px}
 .sticky-in .p{font-family:var(--font-head);font-size:20px;white-space:nowrap}
 .sticky-in .btn{flex:1}
+.sp-chat{display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--brand);text-decoration:none;padding:0 6px;flex:none}.sp-chat small{font-size:11px}
+.sp-sp{display:flex;flex-direction:column;line-height:1.1}.sp-sp s{font-size:12px;color:var(--muted)}
+/* shopee-style top */
+.spx{background:var(--surface)}
+.sp-car-wrap{position:relative;max-width:560px;margin:0 auto;background:#fff}
+.sp-car{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}.sp-car::-webkit-scrollbar{display:none}
+.sp-car>*{flex:0 0 100%;scroll-snap-align:center;border:0;padding:0;background:#fff;cursor:zoom-in}
+.sp-car img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:contain}
+.sp-art{display:grid;place-items:center;aspect-ratio:1/1;cursor:default;padding:40px}
+.sp-count{position:absolute;right:12px;bottom:12px;background:rgba(15,27,51,.62);color:#fff;border-radius:999px;padding:3px 11px;font-size:13px}
+.sp-off{position:absolute;left:0;top:14px;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:5px 12px 5px 10px;border-radius:0 999px 999px 0;font-size:14px}
+.sp-band{background:linear-gradient(100deg,var(--hero,#2440E8),color-mix(in srgb,var(--hero,#2440E8) 55%,#ff5a36));color:#fff}
+.sp-band-in{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-top:12px;padding-bottom:12px}
+.sp-price{display:flex;align-items:baseline;gap:10px}.sp-price .now{font-family:var(--font-head);font-size:32px;line-height:1}.sp-price .old{text-decoration:line-through;opacity:.75;font-size:16px}
+.sp-cd{display:flex;align-items:center;gap:4px;font-size:13px}.sp-cd span{margin-right:4px;opacity:.9}.sp-cd b{background:#0F1B33;color:#fff;border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums;font-size:15px}.sp-cd i{font-style:normal;font-weight:700}
+.sp-info{padding-top:16px;padding-bottom:22px}.sp-info h1{font-size:clamp(21px,5.2vw,30px);line-height:1.3;color:var(--ink)}
+.sp-meta{display:flex;gap:14px;color:var(--muted);font-size:14px;margin-top:6px}
+.sp-info .lead{margin-top:10px;color:var(--ink)}
+.sp-perks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0;font-size:14px;color:var(--muted)}
+.sp-info .hero-cta{margin-top:6px}.sp-info .proof{color:var(--muted)}
+/* preview pages */
+.pv{display:grid;gap:14px;max-width:560px;margin:0 auto}
+.pvp{display:block;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;padding:0;box-shadow:0 4px 14px rgba(15,27,51,.08);position:relative}
+.pvp img{display:block;width:100%;height:auto}
+.pvp.locked{max-height:520px}.pvp.locked img{filter:blur(3px)}
+.pv-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;padding:24px 16px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.85) 45%,#fff 70%)}
+.pv-lock b{font-size:20px;color:var(--ink)}.pv-lock span{color:var(--muted);font-size:14px;margin-bottom:6px}
+.pvthumb img{object-fit:cover;object-position:top}
+@media(min-width:900px){.spx{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);max-width:1180px;margin:0 auto;gap:0 28px;background:transparent;padding:24px 16px 0}.spx .sp-car-wrap{grid-row:1/3;border-radius:14px;overflow:hidden;margin:0}.spx .sp-band{border-radius:12px;align-self:start}.spx .sp-band .wrap,.spx .sp-info.wrap{max-width:none;padding-left:16px;padding-right:16px}}
 
 /* pay + thanks */
 .center{text-align:center}
@@ -733,6 +762,7 @@ function initDraft(p){
   if(!d.kind)d.kind='other';
   d.promoEndStr=toLocalInput(p.promoEnd);
   d.images=(p.images||[]).slice();
+  d.previews=(p.previews||[]).slice();
   return d;
 }
 function tick(){
@@ -743,6 +773,32 @@ function tick(){
   for(const u in v){const b=el.querySelector('[data-u="'+u+'"]');if(b)b.textContent=String(v[u]).padStart(2,'0');}
 }
 setInterval(tick,1000);
+let SOLD=null;
+function loadSold(){if(SOLD!==null)return;SOLD={};fetch('/api/content?action=sold').then(r=>r.json()).then(j=>{if(j&&j.ok){SOLD=j.counts||{};if(S.view==='shop'||!S.view)render(true);}}).catch(()=>{});}
+function loadScript(src){return new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('โหลดตัวแปลง PDF ไม่ได้'));document.head.appendChild(e);});}
+function parsePages(spec,max){const out=[];String(spec||'1-4').split(',').forEach(part=>{const m=part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)return;const a=+m[1],b=m[2]?+m[2]:a;for(let i=Math.min(a,b);i<=Math.max(a,b);i++)if(i>=1&&i<=max&&!out.includes(i))out.push(i);});return out.slice(0,6);}
+async function makePreviews(file){
+  if(!S.draft)return;const inp=document.getElementById('e-pvpages');if(inp)S.pvPages=inp.value;
+  S.pvBusy=true;render(true);toast('กำลังเปิดไฟล์ PDF ในเครื่อง...');
+  try{
+    if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+    const doc=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+    const pages=parsePages(S.pvPages,doc.numPages);if(!pages.length)throw new Error('เลขหน้าไม่ถูกต้อง ไฟล์นี้มี '+doc.numPages+' หน้า');
+    const urls=[];
+    for(const n of pages){
+      toast('กำลังแปลงหน้า '+n+' ('+(urls.length+1)+'/'+pages.length+')');
+      const pg=await doc.getPage(n);const v0=pg.getViewport({scale:1});const vp=pg.getViewport({scale:1100/v0.width});
+      const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');
+      x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:vp}).promise;
+      x.save();x.globalAlpha=.10;x.fillStyle='#2440E8';x.font='700 54px sans-serif';x.translate(c.width/2,c.height/2);x.rotate(-Math.PI/6);
+      for(let yy=-c.height;yy<c.height;yy+=220)for(let xx=-c.width;xx<c.width;xx+=620)x.fillText('SheetLab · ตัวอย่าง',xx,yy);x.restore();
+      x.fillStyle='rgba(15,27,51,.78)';x.fillRect(0,c.height-56,c.width,56);x.fillStyle='#fff';x.font='600 26px sans-serif';x.textAlign='center';x.fillText('ตัวอย่างหน้า '+n+' จาก '+doc.numPages+' หน้า · SheetLab',c.width/2,c.height-19);
+      urls.push(await uploadImage(c.toDataURL('image/jpeg',.82)));
+    }
+    S.draft.previews=urls;toast('สร้างหน้าตัวอย่าง '+urls.length+' หน้าแล้ว อย่าลืมกดบันทึกสินค้า');
+  }catch(e){console.error(e);toast('สร้างหน้าตัวอย่างไม่สำเร็จ: '+(e.message||e));}
+  S.pvBusy=false;render(true);
+}
 async function addImages(files){
   const room=5-S.draft.images.length,list=Array.from(files).slice(0,Math.max(0,room));
   if(files.length>room)toast('ใส่ภาพได้สูงสุด 5 ภาพ');
@@ -769,7 +825,7 @@ async function uploadImage(dataUrl){
   return sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;
 }
 function drawLB(){
-  const p=curProduct(),imgs=p&&p.images||[],src=S.zoom!=null?imgs[S.zoom]:null;
+  const p=curProduct(),imgs=p&&(S.zoomSet==='pv'?p.previews:p.images)||[],src=S.zoom!=null?imgs[S.zoom]:null;
   $('#lb-root').innerHTML=src?`<div class="lb" data-a="closeZoom" role="dialog" aria-modal="true" aria-label="ดูภาพขยาย">
     <img src="${esc(src)}" alt="ภาพขยาย">
     <button class="lb-x" data-a="closeZoom" aria-label="ปิด">×</button>
@@ -896,7 +952,8 @@ function shopView(){
   let faqs=lines(p.faq).map(pair);
   if(!faqs.length)faqs=[['ได้รับไฟล์เมื่อไหร่','ทันทีที่ชำระเงินสำเร็จ ลิงก์จะขึ้นในหน้าถัดไปและส่งไปที่อีเมลของคุณ'],['ถ้าไม่ได้รับอีเมลต้องทำอย่างไร','ตรวจสอบโฟลเดอร์สแปมก่อน หากยังไม่พบ ติดต่อทีมงานพร้อมเลขออเดอร์ เราส่งลิงก์ให้ใหม่ได้ทันที']];
   const imgs=p.images||[];
-  const gal=doc?imgs.slice(1):(imgs.length>1?imgs:[]);
+  const prev=p.previews||[];
+  loadSold();const sold=(SOLD&&SOLD[p.id])||0;
   const off=p.fullPrice>p.price?Math.round((1-p.price/p.fullPrice)*100):0;
   const live=p.promoEnd&&p.promoEnd>Date.now();
   const bonusSum=bonus.reduce((a,b)=>a+(Number(b[1])||0),0);
@@ -926,21 +983,26 @@ function shopView(){
       `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
   </div></div>`:''}
   ${p.status==='draft'?`<div class="draftnote">ฉบับร่าง ลูกค้ายังเปิดหน้านี้ไม่ได้ จนกว่าคุณจะเผยแพร่</div>`:''}
-  <section class="hero" style="--hero:${esc(p.color)}"><div class="wrap wide hero-in">
-    <div>
+  <section class="spx">
+    <div class="sp-car-wrap"><div class="sp-car" id="sp-car">${(imgs.length?imgs:[null]).map((src,i)=>src?`<button class="zoom" data-a="zoom" data-i="${i}" aria-label="ขยายภาพที่ ${i+1}"><img width="1200" height="1200" src="${esc(src)}" alt="${i===0?(doc?'ปก ':'ภาพ ')+esc(p.name):'ภาพที่ '+(i+1)+' ของ '+esc(p.name)}" ${i?'loading="lazy"':''}></button>`:`<div class="sp-art">${cover(p.color,kind)}</div>`).join('')}</div>
+      ${imgs.length>1?`<span class="sp-count" id="sp-count">1/${imgs.length}</span>`:''}${off>0?`<span class="sp-off">ลด ${off}%</span>`:''}</div>
+    <div class="sp-band" style="--hero:${esc(p.color)}"><div class="wrap sp-band-in">
+      <div class="sp-price"><span class="now">${baht(p.price)}</span>${p.fullPrice>p.price?`<span class="old">${baht(p.fullPrice)}</span>`:''}</div>
+      ${live?`<div class="sp-cd" data-end="${p.promoEnd}"><span>จบใน</span>${p.promoEnd-Date.now()>864e5?'<b data-u="d">00</b><i>วัน</i>':''}<b data-u="h">00</b><i>:</i><b data-u="m">00</b><i>:</i><b data-u="s">00</b></div>`:''}
+    </div></div>
+    <div class="wrap sp-info">
       <h1>${esc(p.headline)}</h1>
-      <p class="lead">${esc(p.desc)}</p>
-      <div class="price-row">${p.fullPrice>p.price?`<span class="old">${baht(p.fullPrice)}</span>`:''}<span class="now">${baht(p.price)}</span></div>
+      ${sold>0||reviews.length?`<div class="sp-meta">${sold>0?`<span>ขายแล้ว ${sold.toLocaleString('th-TH')} ชิ้น</span>`:''}${reviews.length?`<span>รีวิว ${reviews.length}</span>`:''}</div>`:''}
+      ${p.desc?`<p class="lead">${esc(p.desc)}</p>`:''}
+      <div class="sp-perks"><span>⚡ รับไฟล์ทันทีหลังชำระเงิน</span><span>💳 PromptPay หรือบัตรเครดิต</span>${prev.length?`<span>👀 ดูตัวอย่างได้ ${prev.length} หน้า</span>`:''}</div>
       <div class="hero-cta">
         <button class="btn btn-cta" data-a="toCheckout">สั่งซื้อและรับไฟล์ทันที</button>
-        ${p.sampleLink?`<a class="btn btn-ghost" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">ดาวน์โหลดตัวอย่างฟรี</a>`:''}
+        ${prev.length?`<a class="btn btn-line" href="#preview">ดูตัวอย่างเนื้อหา</a>`:''}
+        ${p.sampleLink?`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">ดาวน์โหลดตัวอย่างฟรี</a>`:''}
       </div>
-      <p class="fine">ชำระด้วย PromptPay หรือบัตรเครดิต ได้ลิงก์ดาวน์โหลดทันทีหลังชำระเงิน</p>
       ${p.proof?`<p class="proof">${esc(p.proof)}</p>`:''}
     </div>
-    ${visual}
-  </div></section>
-  ${promo}
+  </section>
 
   ${specs.length?`<section class="section" style="padding-bottom:0"><div class="wrap">
     <div class="specs">${specs.map(sp=>`<div><span class="k">${esc(sp[1]?sp[0]:'')}</span><b>${esc(sp[1]||sp[0])}</b></div>`).join('')}</div>
@@ -957,10 +1019,10 @@ function shopView(){
     <div class="midcta"><button class="btn btn-cta" data-a="toCheckout">สั่งซื้อเลย ${baht(p.price)}</button></div>
   </div></section>
 
-  ${gal.length?`<section class="section"><div class="wrap">
-    <h2>${doc?'ดูตัวอย่างหน้าในไฟล์':'ตัวอย่างภายในชุด'}</h2>
-    <p class="fine" style="margin:-8px 0 12px">กดที่ภาพเพื่อดูขยายเต็มจอ</p>
-    <div class="gal">${gal.map((src,i)=>`<button class="zoom" data-a="zoom" data-i="${i+(doc?1:0)}" aria-label="ขยายภาพที่ ${i+1}"><img width="1200" height="1200" src="${esc(src)}" alt="ตัวอย่างหน้าที่ ${i+1} ของ ${esc(p.name)}" loading="lazy"></button>`).join('')}</div>
+  ${prev.length?`<section class="section" id="preview"><div class="wrap">
+    <h2>ดูตัวอย่างเนื้อหา</h2>
+    <p class="fine" style="margin:-8px 0 12px">หน้าจริงจากไฟล์ ${prev.length} หน้า กดที่หน้าเพื่อขยาย</p>
+    <div class="pv">${prev.map((src,i)=>{const lock=prev.length>1&&i===prev.length-1;return lock?`<div class="pvp locked"><img width="1100" src="${esc(src)}" alt="" loading="lazy"><div class="pv-lock"><b>อยากอ่านต่อ?</b><span>ในไฟล์เต็มยังมีอีกหลายหน้า</span><button class="btn btn-cta" data-a="toCheckout">ซื้อเพื่ออ่านต่อ ${baht(p.price)}</button></div></div>`:`<button class="zoom pvp" data-a="zoomPv" data-i="${i}" aria-label="ขยายหน้าตัวอย่างที่ ${i+1}"><img width="1100" src="${esc(src)}" alt="หน้าตัวอย่างที่ ${i+1} ของ ${esc(p.name)}" loading="lazy"></button>`;}).join('')}</div>
   </div></section>`:''}
 
   ${toc.length?`<section class="section"><div class="wrap">
@@ -1014,8 +1076,9 @@ function shopView(){
   <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}</footer>
 
   <div class="sticky" id="sticky"><div class="sticky-in">
-    <span class="p">${baht(p.price)}</span>
-    <button class="btn btn-cta" data-a="toCheckout">สั่งซื้อเลย</button>
+    ${D.settings.chatLink?`<a class="sp-chat" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer" aria-label="แชทกับร้าน"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><small>แชท</small></a>`:''}
+    <div class="sp-sp"><span class="p">${baht(p.price)}</span>${p.fullPrice>p.price?`<s>${baht(p.fullPrice)}</s>`:''}</div>
+    <button class="btn btn-cta" data-a="toCheckout">ซื้อเลย</button>
   </div></div>`;
 }
 
@@ -1278,6 +1341,13 @@ function productForm(){
       <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button></div>`).join('')}
       ${d.images.length<5?`<label class="add"><input type="file" id="e-img" accept="image/*" multiple>+ เพิ่มภาพ</label>`:''}</div>
       <span class="fine">ระบบจัดภาพเป็นสี่เหลี่ยมจัตุรัส 1200×1200 พิกเซล และแสดงภาพเต็มไม่ตัดขอบ ถ้าภาพไม่เป็นจัตุรัส จะเติมพื้นขาวรอบภาพ ภาพแรกเป็นภาพปกหลัก ภาพถัดไปเป็นตัวอย่างหน้าในไฟล์ ควรเลือกเฉพาะบางหน้า ไม่ใส่เนื้อหาทั้งเล่ม ผู้ซื้อกดที่ภาพเพื่อดูขยายเต็มจอได้ ถ้าไม่ใส่ภาพ จะใช้ภาพวาดตัวอย่างแทน</span></div>
+    <div class="field"><span class="lbl">หน้าตัวอย่างเนื้อหา (ลูกค้าเห็นใต้คำบรรยาย มีลายน้ำ หน้าสุดท้ายจะเบลอชวนซื้อ)</span>
+      <div class="thumbs">${(d.previews||[]).map((src,i)=>`<div class="thumb pvthumb"><img src="${esc(src)}" alt="หน้าตัวอย่าง ${i+1}"><button class="x" data-a="rmPv" data-i="${i}" aria-label="ลบหน้าตัวอย่าง ${i+1}">×</button></div>`).join('')}</div>
+      <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+        <label class="btn btn-line btn-sm" for="e-pdf" style="cursor:pointer">${S.pvBusy?'กำลังสร้าง...':'เลือกไฟล์ PDF แล้วสร้างหน้าตัวอย่าง'}<input type="file" id="e-pdf" accept="application/pdf" class="vh" ${S.pvBusy?'disabled':''}></label>
+        <label class="fine">หน้าที่ต้องการ <input class="input" id="e-pvpages" value="${esc(S.pvPages||'1-4')}" style="width:110px;display:inline-block;padding:6px 8px" placeholder="1-4 หรือ 1,3,5"></label>
+      </div>
+      <span class="fine">ไฟล์ PDF ไม่ถูกอัปโหลด เครื่องของคุณแปลงเฉพาะหน้าที่เลือกเป็นรูปพร้อมลายน้ำ แล้วอัปโหลดแค่รูป สูงสุด 6 หน้า ถ้าสร้างใหม่ ของเดิมจะถูกแทนที่</span></div>
 
     <hr class="sep">
     <h3 class="h3">รายละเอียดหนังสือและชีทเรียน</h3>
@@ -2268,9 +2338,11 @@ function act(a,el){
     case 'delCamp':{
       if(S.confirm==='camp:'+id){D.campaigns=D.campaigns.filter(x=>x.id!==id);S.confirm='';if(S.ad&&S.ad.camp&&!D.campaigns.some(c=>c.name===S.ad.camp))S.ad.camp='';save();render(true);toast('ลบแคมเปญแล้ว');}
       else{S.confirm='camp:'+id;render(true);}break;}
-    case 'zoom':S.zoom=Number(el.dataset.i);drawLB();break;
+    case 'zoom':S.zoomSet=null;S.zoom=Number(el.dataset.i);drawLB();break;
+    case 'zoomPv':S.zoomSet='pv';S.zoom=Number(el.dataset.i);drawLB();break;
+    case 'rmPv':S.draft.previews.splice(Number(el.dataset.i),1);render(true);break;
     case 'closeZoom':S.zoom=null;drawLB();break;
-    case 'zoomPrev':case 'zoomNext':{const n=(curProduct().images||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
+    case 'zoomPrev':case 'zoomNext':{const n=((S.zoomSet==='pv'?curProduct().previews:curProduct().images)||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว ทีมจะเห็นในกระดานรอบถัดไป');S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
@@ -2331,7 +2403,7 @@ function act(a,el){
       const t=k=>String(d[k]==null?'':d[k]).trim();
       const data={slug,name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price,fullPrice:full,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
         specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
-        proof:t('proof'),promoEnd,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:d.images.slice(),
+        proof:t('proof'),promoEnd,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:d.images.slice(),previews:(d.previews||[]).slice(),
         bumpProductId:d.bumpProductId||'',bumpPrice,stripeLink:t('stripeLink')};
       if(data.stripeLink&&!/^https:\/\/buy\.stripe\.com\//.test(data.stripeLink)){S.err='ลิงก์ Stripe ต้องขึ้นต้นด้วย https://buy.stripe.com/';render(true);break;}
       let saved;
@@ -2382,6 +2454,7 @@ document.addEventListener('input',e=>{
   if(ds.d&&S.draft)S.draft[ds.d]=t.value;
   if(ds.ad&&S.ad){S.ad[ds.ad]=t.value;adLive(ds.ad);}
 });
+document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.id==='sp-car'){const c=document.getElementById('sp-count');if(c){const n=t.children.length;const i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));c.textContent=(Math.min(n,i+1))+'/'+n;}}},true);
 document.addEventListener('change',e=>{
   const t=e.target;
   if(t.name==='method'){S.method=t.value;render(true);}
@@ -2392,6 +2465,8 @@ document.addEventListener('change',e=>{
   else if(t.id==='ad-cta'){S.ad.cta=t.value;render(true);}
   else if(t.id==='ad-camp'){S.ad.camp=t.value;render(true);}
   else if(t.id==='e-img'){addImages(t.files);t.value='';}
+  else if(t.id==='e-pdf'){const f=t.files&&t.files[0];t.value='';if(f)makePreviews(f);}
+  else if(t.id==='e-pvpages'){S.pvPages=t.value;}
   else if(t.id==='pf'){S.pfilter=t.value;render(true);}
   else if(t.id==='f-bump'){S.form.bump=t.checked;render(true);}
 });

@@ -291,6 +291,13 @@ export default async function handler(req, res) {
       const inserted = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
       return res.status(200).json({ ok: true, id: inserted[0]?.id });
     }
+    if (action === 'sold') {
+      // จำนวนที่ขายแล้วต่อสินค้า (สาธารณะ ไม่มีข้อมูลลูกค้า) นับจากออเดอร์ที่ชำระแล้ว แคช 5 นาที
+      const rows = await sb('orders?status=eq.paid&select=product_id');
+      const counts = {}; for (const r of rows) if (r.product_id) counts[r.product_id] = (counts[r.product_id] || 0) + 1;
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      return res.status(200).json({ ok: true, counts });
+    }
     if (action === 'comment') {
       // คอมเมนต์ใต้โพสต์ในห้องประชุม (kind comment, notes {on:<post id>}): key POST {comments:[{on,source,text,at?}]} | แอดมิน POST {on,text} (=คุณแดน) | แอดมิน {id,remove:true}
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
