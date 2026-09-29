@@ -6,6 +6,8 @@ needs: pip install pillow ; npm i ffmpeg-static (inside tools/reel) or ffmpeg on
 """
 import sys, os, json, re, subprocess, urllib.request, urllib.parse, hashlib
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sound  # เพลงประกอบ + เสียงเอฟเฟกต์ที่แต่งเองด้วยโค้ด
 HERE = os.path.dirname(os.path.abspath(__file__))
 API = os.environ.get('API_BASE', 'https://my-shop-lake-ten.vercel.app/api/content')
 KEY = os.environ.get('CONTENT_KEY', '')
@@ -130,59 +132,6 @@ def fit_font(d, text, kind, start, maxw):
     while d.textlength(text, font=f) > maxw and f.size > 40: f = font(kind, f.size - 6)
     return f
 
-def make_music(path, mood='upbeat', seed=0):
-    """เพลงประกอบที่แต่งขึ้นเองด้วยโค้ด (คีย์/ทำนองสุ่มตาม seed) ไม่มีลิขสิทธิ์คนอื่น ไม่ต้องให้เครดิต ไม่ต้องโหลดจากเน็ต
-    ยาว 8 ห้อง แล้วให้ ffmpeg วนเล่น: คีย์บอร์ด + เบส + กลอง + ทำนองกระดิ่งห้อง 5-8  mood: upbeat | chill"""
-    import math, random, wave, array
-    rnd = random.Random(seed); sr = 22050
-    chill = mood == 'chill'
-    bpm = rnd.choice([80, 84, 88]) if chill else rnd.choice([100, 104, 108])
-    beat = 60.0 / bpm; bars = 8; total = int(sr * beat * 4 * bars) + sr
-    buf = array.array('f', bytes(4 * total))
-    root = rnd.choice([261.63, 293.66, 329.63, 349.23, 392.00])  # C D E F G
-    hz = lambda semi, octv=0: root * (2 ** (semi / 12.0 + octv))
-    prog = [(9, 'm'), (5, ''), (0, ''), (7, '')] if chill else rnd.choice([[(0, ''), (7, ''), (9, 'm'), (5, '')], [(0, ''), (5, ''), (9, 'm'), (7, '')]])
-    def add(t0, dur, fn, amp):
-        i0 = int(t0 * sr); n = min(int(dur * sr), total - i0)
-        for i in range(max(0, n)):
-            buf[i0 + i] += amp * fn(i / sr)
-    def keys(f):
-        return lambda t: (math.sin(2 * math.pi * f * t) + 0.3 * math.sin(4 * math.pi * f * t)) * math.exp(-2.4 * t) * min(1, t * 200)
-    def bass(f):
-        return lambda t: (math.sin(2 * math.pi * f * t) + 0.25 * math.sin(4 * math.pi * f * t)) * math.exp(-3.0 * t) * min(1, t * 300)
-    def kick(t):
-        return math.sin(2 * math.pi * (45 * t + 2.2 * (1 - math.exp(-28 * t)))) * math.exp(-9 * t)
-    def noise(decay):
-        last = [0.0]
-        def f(t):
-            x = rnd.uniform(-1, 1); y = x - last[0]; last[0] = x  # high-pass อย่างง่าย ให้เสียงแหลมแบบฉาบ
-            return y * math.exp(-decay * t)
-        return f
-    def bell(f):
-        return lambda t: (math.sin(2 * math.pi * f * t) + 0.2 * math.sin(6 * math.pi * f * t)) * math.exp(-4.5 * t) * min(1, t * 400)
-    penta = [0, 2, 4, 7, 9]
-    for b in range(bars):
-        t = b * 4 * beat; semi, q = prog[b % 4]; tri = [0, 3, 7] if q == 'm' else [0, 4, 7]
-        for hit in ([0, 2.5] if not chill else [0]):
-            for x in tri: add(t + hit * beat, 1.6, keys(hz(semi + x)), 0.10 if not chill else 0.12)
-        for hit in ([0, 2, 3.5] if not chill else [0, 2]): add(t + hit * beat, 0.9, bass(hz(semi, -2)), 0.32)
-        for hit in ([0, 2] if chill else [0, 1.5, 2]): add(t + hit * beat, 0.45, kick, 0.55 if not chill else 0.4)
-        for hit in (1, 3): add(t + hit * beat, 0.25, noise(16), 0.10 if not chill else 0.06)
-        for e in range(8):
-            if chill and e % 2 == 0: continue
-            add(t + e * beat / 2, 0.08, noise(70), 0.05)
-        if b >= 4:  # ทำนองช่วงหลัง
-            pos = 0.0
-            while pos < 4:
-                step = rnd.choice([0.5, 1, 1, 1.5]) if not chill else rnd.choice([1, 1.5, 2])
-                if rnd.random() < 0.8: add(t + pos * beat, 1.2, bell(hz(rnd.choice(penta) + 12)), 0.09)
-                pos += step
-    peak = max(1e-6, max(abs(v) for v in buf)); g = 0.9 / peak
-    pcm = array.array('h', (int(max(-1, min(1, v * g)) * 32767) for v in buf))
-    with wave.open(path, 'wb') as w:
-        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(pcm.tobytes())
-    return path
-
 def main():
     if len(sys.argv) < 3: raise SystemExit(__doc__)
     spec = json.load(open(sys.argv[1], encoding='utf-8')); out = sys.argv[2]
@@ -250,36 +199,50 @@ def main():
         fn = os.path.join(OUTDIR, f't{k:02d}.mp3'); open(fn, 'wb').write(open(cfn, 'rb').read()); return fn
     def dur(path):
         r = subprocess.run([FF, '-i', path], capture_output=True, text=True); m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', r.stderr); return int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3])
+    # เสียงเอฟเฟกต์ (ทั้งสองแบบ ปิดได้ด้วย "sfx": false): เปิดคลิป boing / คำถามเข้า whoosh (motion) หรือ pop (photo)
+    # ช่วงให้คิดหลังถามจบ ติ๊กต็อก / เฉลย chime / ปิดท้าย tada — เสียงพากย์เริ่มหลังเอฟเฟกต์ 0.35 วิ
+    want_sfx = spec.get('sfx', True)
     sfx = {}
-    if MOTION:
-        # เสียงเอฟเฟกต์สังเคราะห์เอง (ไม่ต้องดาวน์โหลด): วูช ตอนการ์ดเลื่อนเข้า / ติ๊ง ตอนเฉลย
-        sfx['whoosh'] = os.path.join(OUTDIR, 'whoosh.wav'); sfx['ding'] = os.path.join(OUTDIR, 'ding.wav')
-        subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anoisesrc=d=0.4:c=pink:r=44100', '-af', 'lowpass=f=1800,afade=t=in:st=0:d=0.12,afade=t=out:st=0.18:d=0.22,volume=0.5', sfx['whoosh']], check=True)
-        subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'sine=frequency=1318:duration=0.5:sample_rate=44100', '-f', 'lavfi', '-i', 'sine=frequency=1975:duration=0.5:sample_rate=44100', '-filter_complex', '[0:a][1:a]amix=inputs=2:normalize=0,afade=t=out:st=0.05:d=0.45,volume=0.6[a]', '-map', '[a]', sfx['ding']], check=True)
+    if want_sfx:
+        for nm in ('boing', 'whoosh', 'pop', 'chime', 'tada'): sfx[nm] = sound.make_sfx(nm, os.path.join(OUTDIR, f'sfx_{nm}.wav'))
+    THINK = 1.3 if want_sfx else 0.0  # วินาทีที่เว้นให้คนดูทาย (มีเสียงนาฬิกา)
+    VD = 0.35  # หน่วงเสียงพากย์
     segs = []; chars = 0
     for k, (png, text, mind, kind, pb, pf) in enumerate(slides):
-        a = tts(text, k); chars += len(text); D = max(mind, dur(a) + (1.0 if MOTION else 0.7)); seg = os.path.join(OUTDIR, f'seg{k:02d}.mp4')
+        a = tts(text, k); chars += len(text); vlen = dur(a)
+        D = max(mind, VD + vlen + (THINK if kind == 'q' else 0) + (0.7 if MOTION else 0.45)); seg = os.path.join(OUTDIR, f'seg{k:02d}.mp4')
+        fx = []  # (ไฟล์, หน่วงกี่วินาที, ความดัง)
+        if want_sfx:
+            fx.append({'hook': (sfx['boing'], 0, 0.7), 'q': (sfx['whoosh'] if MOTION else sfx['pop'], 0, 0.8), 'a': (sfx['chime'], 0, 0.7), 'end': (sfx['tada'], 0, 0.7)}[kind])
+            if kind == 'q':
+                tl = max(0.5, D - (VD + vlen + 0.15) - 0.1)
+                fx.append((sound.make_sfx('tick', os.path.join(OUTDIR, f'tick{k:02d}.wav'), tl), VD + vlen + 0.15, 0.5))
         if not MOTION:
-            subprocess.run([FF, '-y', '-loglevel', 'error', '-loop', '1', '-framerate', '30', '-i', png, '-i', a, '-filter_complex',
-                            "[1:a]apad[a];[0:v]scale=1296:2304,zoompan=z='min(zoom+0.0004,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30,fade=t=in:st=0:d=0.25,format=yuv420p[v]",
-                            '-map', '[v]', '-map', '[a]', '-t', f'{D:.2f}', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-r', '30', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2', seg], check=True)
+            vin = ['-loop', '1', '-framerate', '30', '-i', png]
+            vf = "[0:v]scale=1296:2304,zoompan=z='min(zoom+0.0004,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30,fade=t=in:st=0:d=0.25,format=yuv420p[v];"
+            ai = 1
         else:
-            fx = sfx['ding'] if kind == 'a' else sfx['whoosh']
-            # bg ซูมช้า, fg เลื่อนขึ้นจากล่าง 260px ด้วย ease-out ใน 0.45 วิ + จางเข้า, มาสคอตอยู่ใน fg เดียวกัน, เสียงพากย์เริ่มหลังเอฟเฟกต์ 0.35 วิ
-            filt = ("[0:v]scale=1296:2304,zoompan=z='min(zoom+0.0007,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30[bg];"
-                    "[1:v]format=rgba,fade=t=in:st=0:d=0.3:alpha=1[fg];"
-                    "[bg][fg]overlay=x=0:y='pow(1-min(1,t/0.45),2)*260':format=auto,fade=t=in:st=0:d=0.2,format=yuv420p[v];"
-                    "[2:a]adelay=350|350[vo];[3:a]volume=0.8[fx];[vo][fx]amix=inputs=2:duration=longest:normalize=0,apad[a]")
-            subprocess.run([FF, '-y', '-loglevel', 'error', '-loop', '1', '-framerate', '30', '-i', pb, '-loop', '1', '-framerate', '30', '-i', pf, '-i', a, '-i', fx, '-filter_complex', filt,
-                            '-map', '[v]', '-map', '[a]', '-t', f'{D:.2f}', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-r', '30', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2', seg], check=True)
+            # bg ซูมช้า, fg เลื่อนขึ้นจากล่าง 260px ด้วย ease-out ใน 0.45 วิ + จางเข้า, มาสคอตอยู่ใน fg เดียวกัน
+            vin = ['-loop', '1', '-framerate', '30', '-i', pb, '-loop', '1', '-framerate', '30', '-i', pf]
+            vf = ("[0:v]scale=1296:2304,zoompan=z='min(zoom+0.0007,1.10)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=1080x1920:fps=30[bg];"
+                  "[1:v]format=rgba,fade=t=in:st=0:d=0.3:alpha=1[fg];"
+                  "[bg][fg]overlay=x=0:y='pow(1-min(1,t/0.45),2)*260':format=auto,fade=t=in:st=0:d=0.2,format=yuv420p[v];")
+            ai = 2
+        ains = ['-i', a]; af = f"[{ai}:a]adelay={int(VD * 1000)}|{int(VD * 1000)}[vo];"; labels = '[vo]'
+        for j, (fpath, delay, vol) in enumerate(fx):
+            ains += ['-i', fpath]; ms = int(delay * 1000)
+            af += f"[{ai + 1 + j}:a]aresample=44100,aformat=channel_layouts=stereo,adelay={ms}|{ms},volume={vol}[f{j}];"; labels += f'[f{j}]'
+        af += f"{labels}amix=inputs={1 + len(fx)}:duration=longest:normalize=0,apad[a]"
+        subprocess.run([FF, '-y', '-loglevel', 'error'] + vin + ains + ['-filter_complex', vf + af,
+                        '-map', '[v]', '-map', '[a]', '-t', f'{D:.2f}', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-r', '30', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2', seg], check=True)
         segs.append(seg)
     lst = os.path.join(OUTDIR, 'list.txt'); open(lst, 'w').write(''.join(f"file '{os.path.abspath(s)}'\n" for s in segs))
     music_credit = None
     want_music = spec.get('music', True)  # ทุกคลิปมีเพลงประกอบ (ปิดได้ด้วย "music": false)
     if want_music:
-        mood = spec.get('music_mood', 'upbeat')
-        mpath = make_music(os.path.join(OUTDIR, 'music.wav'), mood, int(hashlib.md5(json.dumps(items, ensure_ascii=False).encode()).hexdigest()[:8], 16))
-        music_credit = f'เพลง: แต่งขึ้นเองอัตโนมัติ ({mood}) ไม่มีลิขสิทธิ์ผู้อื่น'
+        mpath = os.path.join(OUTDIR, 'music.wav')
+        mood = sound.make_music(mpath, spec.get('music_mood', 'auto'), int(hashlib.md5(json.dumps(items, ensure_ascii=False).encode()).hexdigest()[:8], 16))
+        music_credit = f'เพลง: แต่งขึ้นเองอัตโนมัติ แนว {mood} ({sound.TH_MOOD.get(mood, mood)}) ไม่มีลิขสิทธิ์ผู้อื่น'
         tmp = os.path.join(OUTDIR, 'novideo_music.mp4')
         subprocess.run([FF, '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', lst, '-c', 'copy', tmp], check=True)
         D = dur(tmp)
