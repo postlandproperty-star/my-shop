@@ -2230,9 +2230,10 @@ async function loadDocs0(){try{const j=await adminApi('/api/content?action=docs'
 function docCard(l,own){const host=(()=>{try{return new URL(l.url).host.replace(/^www\./,'');}catch(e){return l.url;}})();
   return `<a class="doc" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(l.title)}</b><span class="fine">${esc(l.note||host)}</span>${own?`<button class="tx" data-a="docRemove" data-id="${l.id}" title="ลบลิงก์นี้" onclick="event.preventDefault()">×</button>${l.from&&l.from!=='manual'&&TEAM[l.from]?ava(l.from,1):''}`:''}</a>`;}
 /* ห้องเอกสาร > ข้อมูลลูกค้า: คนที่กรอกอีเมลแล้วยังไม่จ่าย (เห็นเฉพาะคุณแดน) + อีเมลเตือนที่ทีมร่างไว้ ให้คุณแดนตรวจแล้วกดส่ง */
-const LEADS={list:null,loading:false,err:'',sel:{},tpl:null,subj:null,body:null,sending:false,msg:'',auto:true,log:[]};
+const LEADS={tests:null,list:null,loading:false,err:'',sel:{},tpl:null,subj:null,body:null,sending:false,msg:'',auto:true,log:[]};
 async function loadLeads(){
   LEADS.loading=true;LEADS.err='';
+  authFetch('/api/content?action=test_emails').then(j=>{if(j&&j.ok){LEADS.tests=j.testEmails.join('\n');render(true);}}).catch(()=>{});
   try{const r=await authFetch('/api/content?action=leads');const j=r.json?await r.json():r;
     if(!j.ok)throw new Error(j.error||'โหลดไม่สำเร็จ');
     LEADS.list=j.leads;LEADS.tpl=j.template;LEADS.auto=j.auto!==false;LEADS.log=j.log||[];if(LEADS.subj===null){LEADS.subj=j.template.subject;LEADS.body=j.template.body;}
@@ -2266,6 +2267,9 @@ function leadsBlock(){
         <button class="btn btn-cta btn-sm" data-a="leadSend" ${n&&!LEADS.sending?'':'disabled'}>${LEADS.sending?'กำลังส่ง…':`ส่งเองตอนนี้ ${n} คนที่เลือก`}</button></div>
         ${LEADS.msg?`<p class="fine" role="status" style="margin:8px 0 0">${esc(LEADS.msg)}</p>`:''}
       </div></details>
+    <details class="docnote" style="margin-top:8px"><summary><span>อีเมลที่คุณแดนใช้ทดลองซื้อ</span><span class="fine" style="font-weight:400">ไม่นับยอดขาย ไม่ส่งเตือน ทีมไม่เห็น</span></summary>
+      <div style="padding:8px 2px 2px"><textarea class="input" id="ld-tests" rows="3" data-ld="tests" placeholder="บรรทัดละ 1 อีเมล">${esc(LEADS.tests||'')}</textarea>
+      <button class="btn btn-line btn-sm" style="margin-top:6px" data-a="leadTestsSave">บันทึกรายชื่อ</button></div></details>
   </div>`;
 }
 function docsTab(){
@@ -2483,6 +2487,7 @@ function act(a,el){
     case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
     case 'leadAuto':{const v=!LEADS.auto;authFetch('/api/content?action=leads',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:v})}).then(j=>{if(j&&j.ok){LEADS.auto=j.auto;toast(j.auto?'เปิดให้น้องคอมส่งเตือนอัตโนมัติแล้ว':'ปิดการส่งอัตโนมัติแล้ว');render(true);}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
+    case 'leadTestsSave':{const em=String(LEADS.tests||'').split(/[\s,]+/).filter(Boolean);authFetch('/api/content?action=test_emails',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails:em})}).then(j=>{if(j&&j.ok){LEADS.tests=j.testEmails.join('\n');toast('บันทึกแล้ว '+j.testEmails.length+' อีเมล');LEADS.list=null;render(true);}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
     case 'leadsRefresh':LEADS.list=null;LEADS.msg='';render(true);break;
     case 'leadSel':LEADS.sel[el.dataset.e]=el.checked;{const b=document.querySelector('[data-a=leadSend]');const n=Object.values(LEADS.sel).filter(Boolean).length;if(b){b.disabled=!n;b.textContent='ส่งเองตอนนี้ '+n+' คนที่เลือก';}}break;
     case 'leadTplSave':(async()=>{const r=await authFetch('/api/content?action=mail_template',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject:LEADS.subj,body:LEADS.body})});const j=r.json?await r.json():r;if(j.ok){LEADS.tpl=j.template;toast('บันทึกข้อความแล้ว');render(true);}else toast(j.error||'บันทึกไม่สำเร็จ');})();break;
