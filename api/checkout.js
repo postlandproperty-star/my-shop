@@ -5,6 +5,8 @@ import { loadShop, stripe, configured, htmlError } from '../lib/shop.js';
 export default async function handler(req, res) {
   const slug = String(req.query.p || '');
   const campaign = String(req.query.c || '').slice(0, 60);
+  // อีเมลที่ลูกค้ากรอกในหน้าร้าน: ใช้ส่งไฟล์ และเตือน 1 ครั้งถ้าจ่ายไม่เสร็จ
+  const email = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
   if (!configured().stripe) return htmlError(res, 'ร้านยังไม่พร้อมรับชำระเงิน', 'ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY บน Vercel');
   try {
     const shop = await loadShop();
@@ -31,7 +33,7 @@ export default async function handler(req, res) {
         product_data: Object.assign({ name: `${bp.name} (ราคาพิเศษซื้อคู่)` }, (bp.images || [])[0] ? { images: [bp.images[0]] } : {}),
       },
     });
-    const session = await stripe('POST', 'checkout/sessions', {
+    const base = {
       mode: 'payment',
       locale: 'th',
       line_items: items,
@@ -41,7 +43,15 @@ export default async function handler(req, res) {
       cancel_url: `${origin}/p/${p.slug}`,
       metadata: { productId: p.id, productName: p.name, slug: p.slug, campaign, bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '' },
       payment_intent_data: { description: `${p.name}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})` },
-    });
+    };
+    if (email) {
+      base.customer_email = email;
+      base.metadata.remind = '1';
+      base.expires_at = Math.floor(Date.now() / 1000) + 2 * 3600; // หมดอายุใน 2 ชม. ระบบจะเตือนรอบถัดไป
+    }
+    let session;
+    try { session = await stripe('POST', 'checkout/sessions', email ? { ...base, after_expiration: { recovery: { enabled: true } } } : base); }
+    catch (e) { if (!email) throw e; session = await stripe('POST', 'checkout/sessions', base); } // บางบัญชีเปิดลิงก์กู้ตะกร้าไม่ได้ ใช้ลิงก์หน้าสินค้าแทน
     res.setHeader('Cache-Control', 'no-store');
     res.redirect(303, session.url);
   } catch (e) {

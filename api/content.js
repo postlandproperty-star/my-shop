@@ -17,6 +17,7 @@ import { loadShop, verifyAdmin, sbPatch } from '../lib/shop.js';
 import { loadFb, publishToPage, fbGet } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
+import { sendRecoveries } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
@@ -395,7 +396,9 @@ export default async function handler(req, res) {
       // พี่การ์ด: ตรวจสุขภาพระบบทุกเช้า บันทึกผลลง log และส่งงานเข้าเช็คลิสต์เมื่อพบปัญหา
       let health = null;
       if (r.ok && cronOk(req)) { try { health = await runHealth(req.headers.host); await recordHealth(health); } catch (e) { health = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health });
+      let recover = null;
+      if (r.ok && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -943,6 +946,12 @@ export default async function handler(req, res) {
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
+    if (action === 'recover') {
+      // ดูว่าจะเตือนใครบ้าง (dry=1) หรือสั่งส่งตอนนี้ (แอดมินหรือ key)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      return res.status(200).json(await sendRecoveries({ dry: req.query.dry === '1' }));
+    }
     if (action === 'reply_state') {
       // คุณแดนกด "เรียบร้อย" / "ยกเลิก" / "เปิดใหม่" ที่คำสั่งถึงสมาชิก
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -1198,7 +1207,10 @@ export default async function handler(req, res) {
           results.push({ id: p.id, ok: false, error: String(e.message || e) });
         }
       }
-      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results });
+      // รอบ cron เย็น: เตือนคนที่จ่ายไม่เสร็จด้วย
+      let recover = null;
+      if (!id && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
+      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover });
     }
     res.status(400).json({ ok: false, error: 'unknown action' });
   } catch (e) {
