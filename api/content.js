@@ -15,6 +15,7 @@
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
 import { loadShop, verifyAdmin, sbPatch } from '../lib/shop.js';
 import { loadFb, publishToPage } from '../lib/fb.js';
+import { siteUrl } from '../lib/site.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded } from '../lib/threads.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
@@ -391,10 +392,11 @@ export default async function handler(req, res) {
       const hasCh = await channelCol();
       const recent = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,notes${hasCh ? ',channel' : ''}&order=created_at.desc&limit=40`);
       const thConn = threadsConnected(await loadThreads());
+      const SITE = await siteUrl();
       const products = shop.products.filter((p) => p.status === 'published').map((p) => ({
         id: p.id, slug: p.slug, name: p.name, headline: p.headline, desc: p.desc, price: p.price, fullPrice: p.fullPrice,
         features: p.features, specs: p.specs, toc: p.toc, forwho: p.forwho, pains: p.pains, faq: p.faq, images: p.images || [],
-        url: `https://my-shop-lake-ten.vercel.app/p/${p.slug}`,
+        url: `${SITE}/p/${p.slug}`,
       }));
       const trend = await sb('posts?status=eq.note&kind=eq.trend&select=text,created_at&order=created_at.desc&limit=1');
       return res.status(200).json({ ok: true, shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '', products }, recentPosts: recent, trendBrief: trend?.[0] || null, threadsReady: hasCh && thConn, threadsConnected: thConn });
@@ -592,7 +594,8 @@ export default async function handler(req, res) {
       const drafts = await sb('posts?status=eq.draft&select=*&order=scheduled_at.asc.nullslast');
       const shop = await loadShop();
       const fb = await loadFb();
-      return res.status(200).json({ ok: true, fbConnected: !!fb, drafts, products: shop.products.filter((p) => p.status === 'published').map((p) => ({ id: p.id, slug: p.slug, name: p.name, price: p.price, fullPrice: p.fullPrice, url: `https://my-shop-lake-ten.vercel.app/p/${p.slug}` })) });
+      const SITE_U = await siteUrl();
+      return res.status(200).json({ ok: true, fbConnected: !!fb, drafts, products: shop.products.filter((p) => p.status === 'published').map((p) => ({ id: p.id, slug: p.slug, name: p.name, price: p.price, fullPrice: p.fullPrice, url: `${SITE_U}/p/${p.slug}` })) });
     }
     if (action === 'decide') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });

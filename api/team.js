@@ -8,6 +8,7 @@
 //   ?action=finance    (GET, ?days=7)  ยอดเงินเข้า ค่าธรรมเนียม เงินโอนออกจาก Stripe + ค่าแอด     → ฝ่ายบัญชี
 import { loadShop, stripe, configured, SB_URL } from '../lib/shop.js';
 import { loadFb, fbGet } from '../lib/fb.js';
+import { siteUrl } from '../lib/site.js';
 
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
 const CONTENT_KEY = process.env.CONTENT_API_KEY || '';
@@ -126,7 +127,8 @@ export default async function handler(req, res) {
       const orders = await sb(`orders?status=eq.paid&paid_at=lte.${cutoff}&paid_at=gte.${floor}&email=not.is.null&select=session_id,email,customer_name,product_name,amount,paid_at,campaign&order=paid_at.desc&limit=100`);
       const shop = await loadShop();
       const list = orders.filter((o) => !isTestOrder(o)).map((o) => ({ ...o, email: o.email.replace(/^(.).*(@.*)$/, '$1***$2') }));
-      return res.status(200).json({ ok: true, pending: list, products: shop.products.filter((p) => p.status === 'published').map((p) => ({ name: p.name, price: p.price, url: `https://my-shop-lake-ten.vercel.app/p/${p.slug}` })), shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '' } });
+      const SITE_U = await siteUrl();
+      return res.status(200).json({ ok: true, pending: list, products: shop.products.filter((p) => p.status === 'published').map((p) => ({ name: p.name, price: p.price, url: `${SITE_U}/p/${p.slug}` })), shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '' } });
     }
     if (action === 'finance') {
       if (!configured().stripe) return res.status(200).json({ ok: false, error: 'ยังไม่ได้ตั้งค่า Stripe' });
