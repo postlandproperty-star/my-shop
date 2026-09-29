@@ -28,7 +28,24 @@ async function qr(req, res) {
   }
 }
 
+// GET /api/checkout?m=qrimg&pi=&k=  → รูป QR ของออเดอร์นี้จากโดเมนร้าน (ให้ปุ่ม "บันทึกรูป QR" เซฟลงเครื่องได้)
+async function qrImage(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  const id = String(req.query.pi || '');
+  if (!/^pi_[A-Za-z0-9]+$/.test(id)) return res.status(400).end();
+  const pi = await stripe('GET', `payment_intents/${id}`);
+  if (!pi.client_secret || pi.client_secret !== String(req.query.k || '')) return res.status(403).end();
+  const url = pi.next_action?.promptpay_display_qr_code?.image_url_png;
+  if (!url) return res.status(404).end();
+  const r = await fetch(url);
+  if (!r.ok) return res.status(502).end();
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Content-Disposition', `inline; filename="SheetLab-QR-${Math.round(pi.amount / 100)}.png"`);
+  return res.status(200).send(Buffer.from(await r.arrayBuffer()));
+}
+
 export default async function handler(req, res) {
+  if (req.query.m === 'qrimg') { try { return await qrImage(req, res); } catch (e) { console.error(e); return res.status(500).end(); } }
   if (req.query.m === 'qr') {
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!configured().stripe) return res.status(500).json({ ok: false, error: 'ร้านยังไม่พร้อมรับชำระเงิน' });

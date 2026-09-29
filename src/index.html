@@ -2427,6 +2427,7 @@ function act(a,el){
     case 'recheckOrder':verifyOrder();break;
     case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
+    case 'qrSave':qrSave();break;
     case 'qrCancel':{qrStop();const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;qrPaint();break;}
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
@@ -2732,8 +2733,9 @@ function qrInner(slug,on,total){
   return `<div class="qpay center" id="qrbox">
     <p style="margin:0 0 6px"><b>สแกนจ่าย ${baht(q.total)}</b> ด้วยแอปธนาคารไหนก็ได้</p>
     <img class="qrimg" src="${esc(q.png)}" width="240" height="240" alt="QR PromptPay สำหรับจ่าย ${baht(q.total)}">
+    <button class="btn btn-dark btn-block" data-a="qrSave" style="margin:4px 0 2px">⬇ บันทึกรูป QR ลงเครื่อง</button>
     <p class="fine" style="margin:8px 0">ชื่อผู้รับเงินในแอปธนาคารจะขึ้นเป็น STRIPE PAYMENTS (THAILAND) ซึ่งเป็นระบบรับชำระเงินของร้าน</p>
-    <div class="qrsteps"><b>จ่ายจากมือถือเครื่องนี้</b><ol><li>กดค้างที่รูป QR แล้วเลือกบันทึกรูป (หรือแคปหน้าจอ)</li><li>เปิดแอปธนาคาร เลือกสแกน แล้วเลือกรูปจากอัลบั้ม</li><li>จ่ายเสร็จกลับมาหน้านี้ ลิงก์ดาวน์โหลดจะขึ้นเอง</li></ol></div>
+    <div class="qrsteps"><b>จ่ายจากมือถือเครื่องนี้</b><ol><li>กดปุ่ม "บันทึกรูป QR ลงเครื่อง" (หรือแคปหน้าจอ)</li><li>เปิดแอปธนาคาร เลือกสแกน แล้วเลือกรูปจากอัลบั้ม</li><li>จ่ายเสร็จกลับมาหน้านี้ ลิงก์ดาวน์โหลดจะขึ้นเอง</li></ol></div>
     ${q.hosted?`<a class="btn btn-line btn-sm" href="${esc(q.hosted)}" target="_blank" rel="noopener noreferrer">เปิด QR เต็มจอ</a>`:''}
     <p class="fine" aria-live="polite" style="margin:10px 0 0">⏳ กำลังรอการชำระเงิน ระบบตรวจให้อัตโนมัติ</p>
     <button class="tx fine" data-a="qrCancel" style="margin-top:6px">เปลี่ยนอีเมล / ยกเลิก</button>
@@ -2757,6 +2759,24 @@ function glideTo(id){
   })(t0);
 }
 let qrTimer=null;
+/* ปุ่มบันทึกรูป QR: โหลดรูปจากโดเมนร้านไว้ก่อน พอกดจะเปิดเมนูแชร์ (iPhone/Android มี "บันทึกรูปภาพ") ทันที ไม่หลุดจังหวะการกด */
+async function qrPrefetch(){
+  const q=S.qr;if(!q||!q.pi)return;
+  try{const b=await fetch('/api/checkout?m=qrimg&pi='+encodeURIComponent(q.pi)+'&k='+encodeURIComponent(q.k)).then(r=>{if(!r.ok)throw 0;return r.blob();});
+    if(S.qr===q)q.file=new File([b],'SheetLab-QR-'+q.total+'.png',{type:'image/png'});}catch(e){}
+}
+function qrSave(){
+  const q=S.qr;if(!q)return;
+  const f=q.file;
+  if(f&&navigator.canShare&&navigator.canShare({files:[f]})){
+    navigator.share({files:[f],title:'QR ชำระเงิน SheetLab'}).then(()=>toast('บันทึกแล้ว เปิดแอปธนาคาร > สแกน > เลือกรูป QR จากอัลบั้ม')).catch(()=>{});
+    return;
+  }
+  const a=document.createElement('a');
+  a.href=f?URL.createObjectURL(f):'/api/checkout?m=qrimg&pi='+encodeURIComponent(q.pi)+'&k='+encodeURIComponent(q.k);
+  a.download='SheetLab-QR-'+q.total+'.png';document.body.appendChild(a);a.click();a.remove();
+  toast('บันทึกรูป QR แล้ว เปิดแอปธนาคาร > สแกน > เลือกรูปจากอัลบั้ม');
+}
 function qrStop(){if(qrTimer){clearInterval(qrTimer);qrTimer=null;}}
 async function qrPoll(){
   const q=S.qr;if(!q||q.step!=='show')return qrStop();
@@ -2780,7 +2800,7 @@ async function qrMake(el){
     const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email})}).then(r=>r.json());
     if(!j.ok)throw new Error(j.error||'สร้าง QR ไม่สำเร็จ');
     S.qr={slug,total,email,step:'show',pi:j.pi,k:j.k,png:j.png,hosted:j.hosted};
-    qrPaint();qrStop();qrTimer=setInterval(qrPoll,3000);
+    qrPaint();qrStop();qrTimer=setInterval(qrPoll,3000);qrPrefetch();
   }catch(e){S.qr={slug,total,email,step:'err',err:String(e.message||e)+' หรือกดจ่ายด้วยบัตรด้านล่าง'};qrPaint();}
 }
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.qr&&S.qr.step==='show')qrPoll();}); // กลับจากแอปธนาคาร → ตรวจทันที
