@@ -239,6 +239,16 @@ ${chatLog(d, 25)}
   if (messages.length) await postChat(host, messages);
   return { ok: true, engine: ai.name, sent: messages.length };
 }
+// สถานะคำสั่งของคุณแดน: notes {state:'done'|'cancel'} หรือสมาชิกรายงานใต้ข้อความว่าทำแล้ว/เรียบร้อย
+const DONE_RE = /^\s*(ทำแล้ว|เรียบร้อย|เสร็จแล้ว|ทำเสร็จ|ดำเนินการแล้ว|done)/i;
+function orderState(reply, comments) {
+  let meta = {}; try { meta = reply.notes ? JSON.parse(reply.notes) : {}; } catch (e) {}
+  if (meta.state === 'cancel' || meta.state === 'done') return { state: meta.state, at: meta.state_at || reply.created_at };
+  if (meta.state === 'open') return { state: 'open' };
+  const to = (String(reply.text || '').match(/^@(\w+)/) || [])[1];
+  const d = (comments || []).find((c) => c.source === to && DONE_RE.test(String(c.text || '')) && (() => { try { return JSON.parse(c.notes || '{}').on === reply.id; } catch (e) { return false; } })());
+  return d ? { state: 'done', at: d.scheduled_at || d.created_at, auto: true } : { state: 'open' };
+}
 // คุณแดนสั่งสมาชิก (kind reply @<source>) + คนนั้นตอบรับทันทีใน 1-3 นาที คำตอบเต็มมาจากรอบคอมเมนต์
 async function ownerReply(to, text) {
   const ins = await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'reply', source: 'manual', text: `@${to} ${text}` }], prefer: 'return=representation' });
@@ -563,7 +573,8 @@ export default async function handler(req, res) {
       }
       // ข้อความจากเจ้าของถึงสมาชิก (kind reply, text ขึ้นต้น @<member>) 7 วันล่าสุด แนบท้ายแผนให้ทุกคนอ่านเจอ
       const weekAgo = Date.now() - 7 * 864e5;
-      const msgs = notes.filter((n) => n.kind === 'reply' && Date.parse(n.created_at) >= weekAgo).map((n) => { const m = String(n.text || '').match(/^@(\w+)\s+([\s\S]*)$/); return m ? { id: n.id, to: m[1], name: MEMBER_TH[m[1]] || m[1], text: m[2].trim(), created_at: n.created_at } : null; }).filter(Boolean);
+      const cmts = notes.filter((n) => n.kind === 'comment');
+      const msgs = notes.filter((n) => n.kind === 'reply' && Date.parse(n.created_at) >= weekAgo && orderState(n, cmts).state === 'open').map((n) => { const m = String(n.text || '').match(/^@(\w+)\s+([\s\S]*)$/); return m ? { id: n.id, to: m[1], name: MEMBER_TH[m[1]] || m[1], text: m[2].trim(), created_at: n.created_at } : null; }).filter(Boolean);
       if (msgs.length) {
         const block = '== คุณแดน (เจ้าของร้าน) สั่งงานถึงสมาชิกโดยตรง ถ้าถึงคุณ: ต้องทำตามในรอบนี้เป็นอันดับแรก แล้วรายงานผลกลับใต้ข้อความนั้นด้วย POST action=comment {"comments":[{"on":"<id>","source":"<source ของคุณ>","text":"ทำแล้ว: <สรุปสั้น>"}]} ถ้าทำไม่ได้ให้ตอบว่าติดอะไร ==\n' + msgs.map((m) => `- [id ${m.id}] ถึง ${m.name} (${m.to}) ${m.created_at.slice(0, 10)}: ${m.text}`).join('\n');
         plan = plan ? { ...plan, text: `${block}\n\n${plan.text}`, created_at: msgs[0].created_at > plan.created_at ? msgs[0].created_at : plan.created_at } : { source: 'manual', kind: 'plan', text: block, created_at: msgs[0].created_at };
@@ -931,6 +942,20 @@ export default async function handler(req, res) {
       const chatRows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(now - 3 * 864e5).toISOString()}&select=id,source,text,created_at,scheduled_at,notes,image_url&order=created_at.asc&limit=120`);
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
+    }
+    if (action === 'reply_state') {
+      // คุณแดนกด "เรียบร้อย" / "ยกเลิก" / "เปิดใหม่" ที่คำสั่งถึงสมาชิก
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req);
+      const id = String(body.id || ''), state = String(body.state || '');
+      if (!/^[0-9a-f-]{36}$/.test(id) || !['done', 'cancel', 'open'].includes(state)) return res.status(400).json({ ok: false, error: 'bad id/state' });
+      const cur = await sb(`posts?id=eq.${id}&kind=eq.reply&select=id,notes`);
+      if (!cur.length) return res.status(404).json({ ok: false, error: 'ไม่พบคำสั่ง' });
+      let meta = {}; try { meta = cur[0].notes ? JSON.parse(cur[0].notes) : {}; } catch (e) {}
+      meta.state = state; meta.state_at = new Date().toISOString();
+      await sbPatch(`posts?id=eq.${id}`, { notes: JSON.stringify(meta) });
+      return res.status(200).json({ ok: true, id, state });
     }
     if (action === 'dash') {
       // แดชบอร์ดห้องประชุม: ตัวเลขจริงของ 7 วัน + ประเด็นจากรายงานล่าสุดของพี่ต้น (ไม่ใช้ AI)
