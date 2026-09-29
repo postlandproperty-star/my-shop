@@ -474,6 +474,21 @@ export default async function handler(req, res) {
       if (rows.some((r) => r.kind === 'reel' && r.source === 'clip')) await chatEvent('clip', pick(['ส่งคลิปใหม่เข้าคิวแล้วครับ ตั้งเวลาโพสต์ไว้แล้ว 🎬', 'คลิปวันนี้เสร็จแล้วครับ รอเวลาปล่อย ใครอยากดูก่อนไปที่แท็บคอนเทนต์', 'ตัดเสร็จแล้วครับ วันนี้ธีมเด็ด ขอเสียงหน่อย']), 'reel');
       return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id), policy: policy.map((x, i) => ({ index: i, level: x.level, issues: x.issues.map((y) => y.msg) })), skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
     }
+    if (action === 'stripe_hook') { // ดูว่า webhook ของร้านฟังเหตุการณ์อะไร / POST เพิ่ม payment_intent.succeeded (จ่าย QR บนหน้าร้าน) อย่างเดียว
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const list = (await stripe('GET', 'webhook_endpoints?limit=20')).data || [];
+      const ours = list.filter((w) => /\/api\/stripe-webhook/.test(w.url));
+      if (req.method === 'POST') {
+        const out = [];
+        for (const w of ours) {
+          if (w.enabled_events.includes('*') || w.enabled_events.includes('payment_intent.succeeded')) { out.push({ id: w.id, changed: false }); continue; }
+          const u = await stripe('POST', `webhook_endpoints/${w.id}`, { enabled_events: [...w.enabled_events, 'payment_intent.succeeded'] });
+          out.push({ id: w.id, changed: true, enabled_events: u.enabled_events });
+        }
+        return res.status(200).json({ ok: true, updated: out });
+      }
+      return res.status(200).json({ ok: true, endpoints: list.map((w) => ({ id: w.id, url: w.url, status: w.status, enabled_events: w.enabled_events })) });
+    }
     if (action === 'funnel') { // ลูกค้าที่เปิดหน้าจ่ายเงินแต่ไม่จ่าย หยุดตรงขั้นไหน (อ่านอย่างเดียวจาก Stripe)
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const days = Math.min(30, Math.max(1, Number(req.query.days) || 14));
