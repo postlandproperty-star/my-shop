@@ -478,6 +478,11 @@ export default async function handler(req, res) {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const list = (await stripe('GET', 'webhook_endpoints?limit=20')).data || [];
       const ours = list.filter((w) => /\/api\/stripe-webhook/.test(w.url));
+      if (req.method === 'POST' && !ours.length) { // ร้านยังไม่มี webhook เลย: สร้างใหม่ (ไม่ส่ง signing secret กลับ ตัวรับตรวจเหตุการณ์กับ Stripe เอง)
+        const w = await stripe('POST', 'webhook_endpoints', { url: `${await siteUrl()}/api/stripe-webhook`, description: 'SheetLab: ส่งไฟล์หลังจ่ายเงิน (Checkout + QR บนหน้าร้าน)',
+          enabled_events: ['checkout.session.completed', 'checkout.session.async_payment_succeeded', 'payment_intent.succeeded'] });
+        return res.status(200).json({ ok: true, created: { id: w.id, url: w.url, status: w.status, enabled_events: w.enabled_events } });
+      }
       if (req.method === 'POST') {
         const out = [];
         for (const w of ours) {
