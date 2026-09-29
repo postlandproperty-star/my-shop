@@ -759,8 +759,8 @@ export default async function handler(req, res) {
       }
       if (added) await saveTodo(items);
       const hasCh = await channelCol();
-      const pend = await sb(`posts?status=in.(needs_owner,failed)&select=id,status,kind,text,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`);
-      const auto = pend.map((p) => ({ id: p.id, status: p.status, kind: p.kind, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, headline: String(p.text || '').split('\n')[0].slice(0, 80) }));
+      const pend = await sb(`posts?status=in.(needs_owner,failed)&select=id,status,kind,source,error,text,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`);
+      const auto = pend.map((p) => ({ id: p.id, status: p.status, kind: p.kind, source: p.source || null, error: p.error ? String(p.error).slice(0, 160) : null, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, headline: String(p.text || '').split('\n')[0].slice(0, 80) }));
       items.sort((a, b) => (a.done_at ? 1 : 0) - (b.done_at ? 1 : 0) || Date.parse(b.created_at) - Date.parse(a.created_at));
       return res.status(200).json({ ok: true, items, auto, added });
     }
