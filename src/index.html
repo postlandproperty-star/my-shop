@@ -1634,7 +1634,7 @@ function teamFeed(notes){
   const members=[];notes.forEach(n=>{const k=n.source||'manager';if(!members.includes(k))members.push(k);});
   const unseenBy=k=>notes.filter(n=>(n.source||'manager')===k&&!seen.has(n.id)).length;
   const list=notes.filter(n=>!ff||(n.source||'manager')===ff);
-  const card=n=>{const own=n.source==='manual';const m=own?{name:'คุณแดน',role:'เจ้าของร้าน'}:member(n.source||'manager');const t=Date.parse(n.created_at)||0;const toK=n.kind==='reply'?(String(n.text||'').match(/^@(\w+)/)||[])[1]:null;const txt=String(n.text||'').trim().replace(/^@\w+\s+/,'');const open=!!exp[n.id];const long=txt.length>260||txt.split('\n').length>5;const isNew=!own&&!seen.has(n.id);
+  const card=n=>{const own=n.source==='manual';const m=own?{name:'คุณแดน',role:'เจ้าของร้าน'}:member(n.source||'manager');const t=Date.parse(n.created_at)||0;const toK=n.kind==='reply'?(String(n.text||'').match(/^@(\w+)/)||[])[1]:null;const txt=String(n.text||'').trim().replace(/^@\w+\s+/,'').replace(/\n?เปิดสไลด์:\s*https?:\/\/\S+/g,'').replace(/https?:\/\/(www\.)?canva\.(com|link)\/\S+/g,'').trim();const open=!!exp[n.id];const long=txt.length>260||txt.split('\n').length>5;const isNew=!own&&!seen.has(n.id);
     let files=[];try{files=n.notes?(JSON.parse(n.notes).files||[]):[];}catch(e){}
     const nowT=Date.now();const cms=POSTS.filter(p=>p.kind==='comment'&&p.status==='note'&&(()=>{try{return JSON.parse(p.notes||'{}').on===n.id;}catch(e){return false;}})()&&Date.parse(p.scheduled_at||p.created_at)<=nowT).sort((a,b)=>Date.parse(a.scheduled_at||a.created_at)-Date.parse(b.scheduled_at||b.created_at));
     const cmOpen=S.cmOpen===n.id;const show=cmOpen?cms:cms.slice(-2);
