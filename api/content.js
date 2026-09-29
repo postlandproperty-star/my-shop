@@ -13,7 +13,8 @@
 //   ?action=publish  (cron หรือแอดมิน) โพสต์ที่อนุมัติแล้วและถึงเวลา → ขึ้นเพจ Facebook
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
-import { loadShop, verifyAdmin, sbPatch, stripe, piToSession } from '../lib/shop.js';
+import { loadShop, verifyAdmin, sbPatch, stripe, piToSession, loadTestEmails } from '../lib/shop.js';
+import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
@@ -24,6 +25,44 @@ import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
 const CONTENT_KEY = process.env.CONTENT_API_KEY || '';
+
+// ลูกค้าที่กรอกอีเมลแล้วแต่ยังไม่จ่าย (ขอ QR แล้วไม่สแกน / กรอกอีเมลในหน้า Stripe แล้วออก) — เห็นเฉพาะคุณแดน ทีมไม่เห็นอีเมล
+const LEAD_TPL = {
+  subject: 'ออเดอร์ {สินค้า} ของคุณยังรอชำระอยู่',
+  body: 'สวัสดีครับ\n\nเห็นว่าคุณสนใจ {สินค้า} ({ราคา}) แต่ยังชำระเงินไม่เสร็จ ถ้ายังสนใจอยู่ กดลิงก์นี้เพื่อสแกนจ่ายได้เลย ได้ไฟล์ทันทีหลังจ่าย\n{ลิงก์}\n\nถ้าติดปัญหาตอนจ่าย ตอบกลับอีเมลนี้ได้เลยครับ\nSheetLab',
+};
+async function listLeads() {
+  const since = Math.floor(Date.now() / 1000) - 30 * 86400;
+  const [test, paidRows, shop] = await Promise.all([loadTestEmails().catch(() => new Set()), sb(`orders?status=eq.paid&email=not.is.null&select=email&limit=2000`), loadShop()]);
+  const paid = new Set(paidRows.map((o) => String(o.email).toLowerCase()));
+  const rows = [];
+  let after;
+  for (let i = 0; i < 3; i++) { // QR บนหน้าร้าน
+    const r = await stripe('GET', `payment_intents?limit=100&created[gte]=${since}${after ? `&starting_after=${after}` : ''}`);
+    for (const pi of r.data || []) {
+      if (pi.metadata?.flow !== 'qr') continue;
+      if (pi.status === 'succeeded') { paid.add(String(pi.metadata.email || '').toLowerCase()); continue; }
+      rows.push({ email: pi.metadata.email, slug: pi.metadata.slug, product: pi.metadata.productName, amount: pi.amount / 100, at: pi.created, via: 'qr' });
+    }
+    if (!r.has_more) break; after = r.data[r.data.length - 1].id;
+  }
+  const cs = await stripe('GET', `checkout/sessions?limit=100&created[gte]=${since}`); // หน้า Stripe: เฉพาะคนที่กรอกอีเมลไว้
+  for (const x of cs.data || []) {
+    const em = x.customer_details?.email || x.customer_email;
+    if (!em) continue;
+    if (x.payment_status === 'paid') { paid.add(em.toLowerCase()); continue; }
+    rows.push({ email: em, slug: x.metadata?.slug, product: x.metadata?.productName, amount: (x.amount_total || 0) / 100, at: x.created, via: 'stripe' });
+  }
+  const live = new Set((shop.products || []).filter((p) => p.status === 'published').map((p) => p.slug));
+  const by = {};
+  for (const r of rows) {
+    const e = String(r.email || '').trim().toLowerCase();
+    if (!e || test.has(e) || paid.has(e) || /@example\.(com|org|net)$/.test(e) || !live.has(r.slug)) continue;
+    if (!by[e] || by[e].at < r.at) by[e] = { ...r, email: e, attempts: (by[e]?.attempts || 0) + 1 }; else by[e].attempts++;
+  }
+  return Object.values(by).sort((a, b) => b.at - a.at).map((r) => ({ ...r, at: new Date(r.at * 1000).toISOString() }));
+}
+const fillTpl = (t, l, site) => String(t).replace(/\{สินค้า\}/g, l.product || 'ชีทของเรา').replace(/\{ราคา\}/g, '฿' + Number(l.amount || 0).toLocaleString('th-TH')).replace(/\{ลิงก์\}/g, `${site}/p/${l.slug}`);
 
 // ลูกค้าจ่าย QR บนหน้าร้านแล้วปิดหน้าก่อนระบบเห็น: เก็บตกทุกรอบ cron/publish (fulfill ส่งอีเมลครั้งเดียวต่อออเดอร์)
 async function sweepQrPayments() {
@@ -477,6 +516,48 @@ export default async function handler(req, res) {
       if (rows.some((r) => r.kind === 'reel' && r.source === 'clip')) await chatEvent('clip', pick(['ส่งคลิปใหม่เข้าคิวแล้วครับ ตั้งเวลาโพสต์ไว้แล้ว 🎬', 'คลิปวันนี้เสร็จแล้วครับ รอเวลาปล่อย ใครอยากดูก่อนไปที่แท็บคอนเทนต์', 'ตัดเสร็จแล้วครับ วันนี้ธีมเด็ด ขอเสียงหน่อย']), 'reel');
       return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id), policy: policy.map((x, i) => ({ index: i, level: x.level, issues: x.issues.map((y) => y.msg) })), skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
     }
+    if (action === 'mail_template') { // เทมเพลตอีเมลเตือนลูกค้าที่ยังไม่จ่าย: ทีมร่าง (key) คุณแดนแก้/กดส่งที่ห้องเอกสาร — ทีมเห็นแค่จำนวนคน ไม่เห็นอีเมล
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const row = await sb('shop_state?id=eq.private&select=data'); const data = row?.[0]?.data || {};
+      if (req.method === 'POST') {
+        const b = await readBody(req);
+        const subject = String(b.subject || '').trim().slice(0, 150), body = String(b.body || '').trim().slice(0, 3000);
+        if (!subject || !body) return res.status(400).json({ ok: false, error: 'ต้องมี subject และ body' });
+        if (!body.includes('{ลิงก์}')) return res.status(400).json({ ok: false, error: 'body ต้องมี {ลิงก์} เพื่อพาลูกค้ากลับไปจ่าย' });
+        data.mailTemplate = { subject, body, by: admin ? 'manual' : String(b.source || 'community').replace(/[^a-z_]/g, '').slice(0, 20), at: new Date().toISOString() };
+        await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+      }
+      let waiting = null; try { waiting = (await listLeads()).filter((l) => !data.leadMail?.[l.email]).length; } catch (e) {}
+      return res.status(200).json({ ok: true, template: data.mailTemplate || { ...LEAD_TPL, by: null }, waiting });
+    }
+    if (action === 'leads') { // คุณแดนเท่านั้น: รายชื่อคนที่กรอกอีเมลแล้วยังไม่จ่าย + ส่งอีเมลเตือน (คนละ 1 ครั้งต่อ 7 วัน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const row = await sb('shop_state?id=eq.private&select=data'); const data = row?.[0]?.data || {};
+      const sent = data.leadMail || {};
+      const leads = await listLeads();
+      if (req.method === 'POST') {
+        const b = await readBody(req);
+        const want = new Set((b.emails || []).map((e) => String(e).toLowerCase()));
+        const subject = String(b.subject || '').trim(), body = String(b.body || '').trim();
+        if (!subject || !body.includes('{ลิงก์}')) return res.status(400).json({ ok: false, error: 'ต้องมีหัวเรื่อง และในเนื้อหาต้องมี {ลิงก์}' });
+        if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return res.status(500).json({ ok: false, error: 'ยังไม่ได้ตั้งค่า Gmail' });
+        const site = await siteUrl(); const shop = await loadShop();
+        const transport = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD.replace(/\s+/g, '') } });
+        const out = [];
+        for (const l of leads.filter((x) => want.has(x.email))) { // ส่งได้เฉพาะคนที่อยู่ในรายชื่อจริง
+          if (sent[l.email] && Date.now() - Date.parse(sent[l.email]) < 7 * 864e5) { out.push({ email: l.email, ok: false, reason: 'ส่งไปแล้วใน 7 วัน' }); continue; }
+          const text = fillTpl(body, l, site) + '\n\n— อีเมลนี้ส่งครั้งเดียวเพราะคุณกรอกอีเมลไว้ตอนสั่งซื้อ ถ้าไม่ต้องการแล้วไม่ต้องทำอะไร';
+          try { await transport.sendMail({ from: `"${(shop.settings.shopName || 'SheetLab').replace(/"/g, '')}" <${process.env.GMAIL_USER}>`, to: l.email, subject: fillTpl(subject, l, site), text }); sent[l.email] = new Date().toISOString(); out.push({ email: l.email, ok: true }); }
+          catch (e) { out.push({ email: l.email, ok: false, reason: String(e.message || e).slice(0, 120) }); }
+        }
+        data.leadMail = sent;
+        await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+        return res.status(200).json({ ok: true, sent: out.filter((x) => x.ok).length, results: out });
+      }
+      return res.status(200).json({ ok: true, leads: leads.map((l) => ({ ...l, sent_at: sent[l.email] || null })), template: data.mailTemplate || { ...LEAD_TPL, by: null } });
+    }
     if (action === 'test_emails') { // อีเมลที่เจ้าของใช้ทดลองซื้อ: ไม่นับในรายงาน/ห้องประชุม/ติดตามลูกค้า  GET ดู · POST {emails:[...]} ตั้งใหม่
       // เจ้าของเท่านั้น: ทีม (รูทีน) ถือ content key อยู่ ห้ามเห็นหรือแก้รายชื่อนี้
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -671,7 +752,9 @@ export default async function handler(req, res) {
       // ตั้งค่าจากคุณแดน + เช็คลิสต์ที่เลยเวลา (พี่ต้นรับแทน) วางบนสุดของแผน
       const { items: tItems, cfg } = await todoWithDue();
       const ho = handoffBlock(tItems, cfg);
-      const topBlock = [cfgBlock(cfg), POLICY_BOARD, ho.text].filter(Boolean).join('\n\n');
+      let mailTask = '';
+      try { const pr = await sb('shop_state?id=eq.private&select=data'); if (!pr?.[0]?.data?.mailTemplate?.by) mailTask = '== งานใหม่จากคุณแดน (29 ก.ย.) ถึงน้องคอม ==\nร่างเทมเพลตอีเมลเตือนลูกค้าที่กรอกอีเมลแล้วยังไม่จ่าย (ส่งครั้งเดียว สุภาพ สั้น ไม่เกิน 6 บรรทัด ไม่ใส่ส่วนลดหรือของแถม ไม่เร่งเร้า) แล้ว POST https://my-shop-lake-ten.vercel.app/api/content?action=mail_template JSON {subject, body, source:"community"} ใช้ตัวแทน {สินค้า} {ราคา} {ลิงก์} (body ต้องมี {ลิงก์}) ทีมไม่เห็นอีเมลลูกค้าและไม่ต้องขอ คุณแดนเป็นคนตรวจและกดส่งเองที่ห้องเอกสาร GET action=mail_template ดูร่างปัจจุบันและจำนวนคนที่รอได้'; } catch (e) {}
+      const topBlock = [cfgBlock(cfg), POLICY_BOARD, mailTask, ho.text].filter(Boolean).join('\n\n');
       plan = plan ? { ...plan, text: `${topBlock}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: topBlock, created_at: cfg.updated_at || new Date().toISOString() };
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.kind === 'handoff' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }

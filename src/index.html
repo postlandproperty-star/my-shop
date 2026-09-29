@@ -127,6 +127,7 @@ footer{padding:28px 0 110px;text-align:center}
 .sp-thumbs{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 4px;max-width:560px;margin:0 auto;align-items:center;scrollbar-width:none}.sp-thumbs::-webkit-scrollbar{display:none}
 .sp-th{flex:0 0 58px;height:58px;border:2px solid var(--line);border-radius:8px;overflow:hidden;padding:0;background:#fff;cursor:pointer}.sp-th img{width:100%;height:100%;object-fit:cover}.sp-th.on{border-color:#EE4D2D}
 .sp-hint{flex:none;font-size:12px;color:var(--muted);white-space:nowrap;padding-left:4px}
+.leadlist{display:flex;flex-direction:column;gap:6px}.lead{display:flex;gap:10px;align-items:flex-start;padding:8px;border:1px solid var(--line);border-radius:10px}.lead input{margin-top:4px}.lead-m{display:flex;flex-direction:column;gap:2px;min-width:0}.lead-m b{overflow-wrap:anywhere}
 .qpay{margin:4px 0 0}.qpay.center{text-align:center}.qpay label{display:block;margin-bottom:6px}.qpay .input{width:100%;font-size:16px}.qrimg{display:block;margin:8px auto;width:min(260px,100%);height:auto;background:#fff;border-radius:10px;padding:8px;border:1px solid var(--line)}.qrsteps{text-align:left;font-size:14px;background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0}.qrsteps ol{margin:4px 0 0;padding-left:20px}
 .btn-buy{background:#EE4D2D;color:#fff;border:0;font-weight:700}.btn-buy:hover{background:#d73f22}.btn-buy:focus-visible{outline:3px solid #ffb199;outline-offset:2px}
 .sp-off{position:absolute;left:0;top:14px;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:5px 12px 5px 10px;border-radius:0 999px 999px 0;font-size:14px}
@@ -2214,6 +2215,40 @@ let DOCS={links:null,files:[],loading:false,err:''};
 async function loadDocs(){DOCS.loading=true;try{const j=await adminApi('/api/content?action=docs');if(j.ok){DOCS.links=j.links||[];DOCS.files=j.files||[];DOCS.err='';}else DOCS.err=j.error||'โหลดไม่ได้';}catch(e){DOCS.err='เชื่อมต่อไม่ได้';}DOCS.loading=false;}
 function docCard(l,own){const host=(()=>{try{return new URL(l.url).host.replace(/^www\./,'');}catch(e){return l.url;}})();
   return `<a class="doc" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(l.title)}</b><span class="fine">${esc(l.note||host)}</span>${own?`<button class="tx" data-a="docRemove" data-id="${l.id}" title="ลบลิงก์นี้" onclick="event.preventDefault()">×</button>${l.from&&l.from!=='manual'&&TEAM[l.from]?ava(l.from,1):''}`:''}</a>`;}
+/* ห้องเอกสาร > ข้อมูลลูกค้า: คนที่กรอกอีเมลแล้วยังไม่จ่าย (เห็นเฉพาะคุณแดน) + อีเมลเตือนที่ทีมร่างไว้ ให้คุณแดนตรวจแล้วกดส่ง */
+const LEADS={list:null,loading:false,err:'',sel:{},tpl:null,subj:null,body:null,sending:false,msg:''};
+async function loadLeads(){
+  LEADS.loading=true;LEADS.err='';
+  try{const r=await authFetch('/api/content?action=leads');const j=r.json?await r.json():r;
+    if(!j.ok)throw new Error(j.error||'โหลดไม่สำเร็จ');
+    LEADS.list=j.leads;LEADS.tpl=j.template;if(LEADS.subj===null){LEADS.subj=j.template.subject;LEADS.body=j.template.body;}
+    LEADS.sel={};j.leads.forEach(l=>{if(!l.sent_at)LEADS.sel[l.email]=true;});
+  }catch(e){LEADS.err=String(e.message||e);LEADS.list=LEADS.list||[];}
+  LEADS.loading=false;
+}
+function leadsBlock(){
+  if(LEADS.list===null&&!LEADS.loading){loadLeads().then(()=>render(true));}
+  const L=LEADS.list||[],n=L.filter(l=>LEADS.sel[l.email]).length,t=LEADS.tpl;
+  const by=t&&t.by?(t.by==='manual'?'คุณแดนแก้ล่าสุด':'ร่างโดย '+esc((TEAM[t.by]||{}).name||t.by)):'ร่างตั้งต้นจากระบบ (รอน้องคอมร่างใหม่)';
+  return `<h3 class="h3">ข้อมูลลูกค้า <span class="fine" style="font-weight:400">· เห็นเฉพาะคุณแดน ทีมไม่เห็นอีเมล</span></h3>
+  <div class="card" style="padding:14px">
+    <p style="margin:0 0 8px"><b>กรอกอีเมลแล้วยังไม่จ่าย (30 วัน)</b> <button class="chip" data-a="leadsRefresh">รีเฟรช</button></p>
+    ${LEADS.loading&&!LEADS.list?'<p class="fine">กำลังโหลด…</p>':LEADS.err?`<p class="fine" style="color:var(--bad)">${esc(LEADS.err)}</p>`:!L.length?'<p class="fine">ยังไม่มีคนที่กรอกอีเมลแล้วค้างจ่าย</p>':
+    `<div class="leadlist">${L.map(l=>`<label class="lead"><input type="checkbox" data-a="leadSel" data-e="${esc(l.email)}" ${LEADS.sel[l.email]?'checked':''} ${l.sent_at?'':''}>
+      <span class="lead-m"><b>${esc(l.email)}</b><span class="fine">${esc(l.product||'')} · ${baht(l.amount)} · ${l.via==='qr'?'ขอ QR แล้วไม่สแกน':'หน้า Stripe'} · ${fdt(Date.parse(l.at))}${l.attempts>1?` · ลอง ${l.attempts} ครั้ง`:''}</span>
+      ${l.sent_at?`<span class="badge ok">ส่งเตือนแล้ว ${fdt(Date.parse(l.sent_at))}</span>`:''}</span></label>`).join('')}</div>`}
+    <details class="docnote" style="margin-top:10px" ${L.length?'open':''}><summary><span>ช่องเตรียมส่งอีเมล</span><span class="fine" style="font-weight:400">${by}</span></summary>
+      <div style="padding:8px 2px 2px">
+        <label class="fine" for="ld-subj">หัวเรื่อง</label><input class="input" id="ld-subj" data-ld="subj" value="${esc(LEADS.subj||'')}">
+        <label class="fine" for="ld-body" style="display:block;margin-top:8px">ข้อความ (ใช้ {สินค้า} {ราคา} {ลิงก์} ระบบเติมให้แต่ละคน)</label>
+        <textarea class="input" id="ld-body" rows="7" data-ld="body">${esc(LEADS.body||'')}</textarea>
+        <p class="fine" style="margin:6px 0">ส่งคนละ 1 ครั้งต่อ 7 วัน ท้ายอีเมลระบบเติมว่า "อีเมลนี้ส่งครั้งเดียว" ให้เอง</p>
+        <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-line btn-sm" data-a="leadTplSave">บันทึกข้อความ</button>
+        <button class="btn btn-cta btn-sm" data-a="leadSend" ${n&&!LEADS.sending?'':'disabled'}>${LEADS.sending?'กำลังส่ง…':`ส่งอีเมลเตือน ${n} คนที่เลือก`}</button></div>
+        ${LEADS.msg?`<p class="fine" role="status" style="margin:8px 0 0">${esc(LEADS.msg)}</p>`:''}
+      </div></details>
+  </div>`;
+}
 function docsTab(){
   if(DOCS.links===null&&!DOCS.loading){loadDocs().then(()=>render(true));}
   if(!postsLoaded){loadPosts().then(()=>render(true));}
@@ -2251,6 +2286,7 @@ function docsTab(){
   const teamDocs=pick(p=>p.kind==='plan','แผนสัปดาห์ล่าสุด (พี่ต้น)')+pick(p=>p.kind==='report'&&p.source==='manager','รายงานประจำสัปดาห์ล่าสุด (พี่ต้น)')+pick(p=>p.kind==='finance','สรุปบัญชีล่าสุด (พี่บัญชี)')+pick(p=>p.kind==='trend','หัวข้อแนะนำล่าสุด (น้องเทรนด์)')+pick(p=>p.kind==='health','ตรวจสุขภาพระบบล่าสุด (พี่การ์ด)')+pick(p=>p.kind==='product','ข้อเสนอสินค้าล่าสุด (พี่โปร)')+pick(p=>p.kind==='market','รายงานตลาดล่าสุด (พี่มาร์เก็ต)')+pick(p=>p.kind==='people','รายงานทีมล่าสุด (พี่เอชอาร์)')+pick(p=>p.kind==='handbook','คู่มือพนักงาน (พี่เอชอาร์)');
   return `<p class="fine" style="margin:12px 0 4px">ห้องเอกสาร: ลิงก์ที่ต้องใช้บ่อย ไฟล์ชีทจากโรงงาน และเอกสารล่าสุดของทีม รวมไว้ที่เดียว คุณแดนเพิ่มลิงก์ของตัวเองได้ และทีมฝากลิงก์เข้ามาได้ (จะมีรูปคนฝากกำกับ) <button class="chip" data-a="docsRefresh">รีเฟรช</button></p>
   ${DOCS.err?`<p class="fine" style="color:var(--bad)">${esc(DOCS.err)}</p>`:''}
+  ${leadsBlock()}
   ${SYS.map(([h,arr])=>`<h3 class="h3">${h}</h3><div class="docgrid">${arr.map(l=>docCard(l,false)).join('')}</div>`).join('')}
   <h3 class="h3" style="margin-top:18px">ลิงก์ที่เพิ่มเอง (${links.length})</h3>
   <div class="docform"><input id="doc-title" placeholder="ชื่อ เช่น ไดรฟ์ไฟล์ต้นฉบับ"><input id="doc-url" placeholder="https://..." inputmode="url"><input id="doc-note" placeholder="หมายเหตุ / หมวด (ไม่บังคับ)"><button class="btn btn-line btn-sm" data-a="docAdd">เพิ่มลิงก์</button></div>
@@ -2427,6 +2463,13 @@ function act(a,el){
     case 'recheckOrder':verifyOrder();break;
     case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
+    case 'leadsRefresh':LEADS.list=null;LEADS.msg='';render(true);break;
+    case 'leadSel':LEADS.sel[el.dataset.e]=el.checked;{const b=document.querySelector('[data-a=leadSend]');const n=Object.values(LEADS.sel).filter(Boolean).length;if(b){b.disabled=!n;b.textContent='ส่งอีเมลเตือน '+n+' คนที่เลือก';}}break;
+    case 'leadTplSave':(async()=>{const r=await authFetch('/api/content?action=mail_template',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject:LEADS.subj,body:LEADS.body})});const j=r.json?await r.json():r;if(j.ok){LEADS.tpl=j.template;toast('บันทึกข้อความแล้ว');render(true);}else toast(j.error||'บันทึกไม่สำเร็จ');})();break;
+    case 'leadSend':{const em=Object.keys(LEADS.sel).filter(k=>LEADS.sel[k]);if(!em.length)break;if(!confirm('ส่งอีเมลเตือนถึง '+em.length+' คน?'))break;LEADS.sending=true;render(true);
+      (async()=>{try{const r=await authFetch('/api/content?action=leads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails:em,subject:LEADS.subj,body:LEADS.body})});const j=r.json?await r.json():r;
+        LEADS.msg=j.ok?('ส่งแล้ว '+j.sent+' คน'+(j.results.some(x=>!x.ok)?' · ไม่ได้ส่ง: '+j.results.filter(x=>!x.ok).map(x=>x.email+' ('+x.reason+')').join(', '):'')):(j.error||'ส่งไม่สำเร็จ');}
+      catch(e){LEADS.msg='ส่งไม่สำเร็จ';}LEADS.sending=false;LEADS.list=null;render(true);})();break;}
     case 'qrSave':qrSave();break;
     case 'qrCancel':{qrStop();const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;qrPaint();break;}
     case 'syncOrders':autoSync(true);break;
@@ -2682,6 +2725,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
   if(ds.f)S.form[ds.f]=t.value;
+  if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.d&&S.draft)S.draft[ds.d]=t.value;
   if(ds.ad&&S.ad){S.ad[ds.ad]=t.value;adLive(ds.ad);}
   if(ds.cf&&S.cfgDraft){const [mk,fk]=ds.cf.split('|');const m=S.cfgDraft.members[mk];if(m){if(fk==='__note')m.note=t.value;else m.fields[fk]=t.value;}}
