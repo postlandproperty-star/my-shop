@@ -14,10 +14,10 @@
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
 import { loadShop, verifyAdmin, sbPatch } from '../lib/shop.js';
-import { loadFb, publishToPage } from '../lib/fb.js';
+import { loadFb, publishToPage, fbGet } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
-import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded } from '../lib/threads.js';
+import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
@@ -571,12 +571,7 @@ export default async function handler(req, res) {
       // ตั้งค่าจากคุณแดน + เช็คลิสต์ที่เลยเวลา (พี่ต้นรับแทน) วางบนสุดของแผน
       const { items: tItems, cfg } = await todoWithDue();
       const ho = handoffBlock(tItems, cfg);
-      // วันจันทร์ (เวลาไทย): พี่ต้นทำสไลด์รายงานสำคัญใน Canva ส่งลิงก์ให้คุณแดน (แสดงเฉพาะวันจันทร์ ประหยัดโทเค็นวันอื่น)
-      const isMon = new Date(Date.now() + 7 * 3600e3).getUTCDay() === 1;
-      const deckBlock = isMon ? `== สไลด์รายงานถึงคุณแดน (คุณแดนสั่ง 29 ก.ย. เฉพาะพี่ต้นรอบตรวจงานวันจันทร์) ==
-หลังส่งรายงานประจำสัปดาห์แล้ว ทำสไลด์ Canva 1 ชุด ด้วย create-design ครั้งเดียว: format "Presentation", brief สั้นๆ "สไลด์รายงานประจำสัปดาห์ SheetLab สำหรับคุณแดนอ่านบนมือถือ ภาษาไทยตัวใหญ่ 1 ประเด็นต่อสไลด์ ธีม Modern Blue พื้น #2B47F0 การ์ดขาว แต้ม #EF5B4C และ #F5C518" และ outline 6-8 สไลด์ (ตัวเลขหลัก / แอดและเงิน รวมสรุปพี่บัญชี / ทีม รวมสรุปพี่เอชอาร์ / ตลาดและโพสต์ทดลอง / ต้องขอคุณแดนตัดสิน / สิ่งที่อยากให้คุณแดนช่วย / แผนสัปดาห์หน้า) สไลด์ละไม่เกิน 4 บรรทัด ตัวเลขเอาจากรายงานเท่านั้น
-แล้วเรียก get-create-design-async-job ตาม wait_seconds จนเสร็จ ห้ามเรียกเครื่องมือ Canva อื่นเพิ่ม (ประหยัดโทเค็น) จากนั้น POST BASE?action=deck {"title":"รายงานทีมสัปดาห์ <ช่วงวันที่>","url":"<design.url>","summary":"สรุป 2 บรรทัด","source":"manager"} ระบบส่งลิงก์ขึ้นห้องประชุมและเช็คลิสต์ของคุณแดนเอง ถ้า Canva ใช้ไม่ได้ให้ข้ามและเขียนในรายงาน` : '';
-      const topBlock = [cfgBlock(cfg), POLICY_BOARD, deckBlock, ho.text].filter(Boolean).join('\n\n');
+      const topBlock = [cfgBlock(cfg), POLICY_BOARD, ho.text].filter(Boolean).join('\n\n');
       plan = plan ? { ...plan, text: `${topBlock}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: topBlock, created_at: cfg.updated_at || new Date().toISOString() };
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.kind === 'handoff' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
@@ -936,6 +931,55 @@ export default async function handler(req, res) {
       const chatRows = await sb(`posts?status=eq.note&kind=eq.chat&created_at=gte.${new Date(now - 3 * 864e5).toISOString()}&select=id,source,text,created_at,scheduled_at,notes,image_url&order=created_at.asc&limit=120`);
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
+    }
+    if (action === 'dash') {
+      // แดชบอร์ดห้องประชุม: ตัวเลขจริงของ 7 วัน + ประเด็นจากรายงานล่าสุดของพี่ต้น (ไม่ใช้ AI)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const now = Date.now(), since = new Date(now - 7 * 864e5).toISOString(), prev = new Date(now - 14 * 864e5).toISOString(), ahead = new Date(now + 7 * 864e5).toISOString(), nowIso = new Date(now).toISOString();
+      const isTest = (o) => /ทดสอบ|แคลคูลัส/.test(o.product_name || '') || Number(o.amount) < 30;
+      const sum = (l) => l.reduce((a, o) => a + (Number(o.amount) || 0), 0);
+      const hasCh = await channelCol();
+      const [orders, posts, priv, notes, jobs] = await Promise.all([
+        sb(`orders?select=created_at,paid_at,product_name,amount,status&created_at=gte.${prev}`),
+        sb(`posts?status=in.(approved,published,needs_owner,failed,draft)&or=(published_at.gte.${since},scheduled_at.gte.${since})&select=status,kind,published_at,scheduled_at,notes${hasCh ? ',channel' : ''}&limit=400`),
+        sb('shop_state?id=eq.private&select=data'),
+        sb(`posts?status=in.(note,log)&created_at=gte.${new Date(now - 14 * 864e5).toISOString()}&select=source,kind,text,created_at&order=created_at.desc&limit=200`),
+        loadJobs().catch(() => []),
+      ]);
+      const real = orders.filter((o) => !isTest(o));
+      const paid = real.filter((o) => o.status === 'paid');
+      const wk = paid.filter((o) => (o.paid_at || o.created_at) >= since), lw = paid.filter((o) => (o.paid_at || o.created_at) < since);
+      const ch = (p) => p.channel === 'threads' ? 'threads' : 'facebook';
+      const pub = posts.filter((p) => p.status === 'published' && p.published_at >= since);
+      const queued = posts.filter((p) => p.status === 'approved' && p.scheduled_at >= nowIso && p.scheduled_at <= ahead);
+      const campaigns = (priv?.[0]?.data?.campaigns || []).map((c) => ({ name: c.name, spend: Number(c.spend) || 0 }));
+      // ผู้ติดตาม + เก็บประวัติรายวันไว้คำนวณเพิ่มขึ้นเทียบ 7 วันก่อน
+      let thF = null, fbF = null;
+      try { let th = await loadThreads(); if (threadsConnected(th)) { th = await refreshIfNeeded(th); const u = await thGet(`${th.userId}/threads_insights`, { metric: 'followers_count', access_token: th.token }); thF = u.data?.[0]?.total_value?.value ?? u.data?.[0]?.values?.[0]?.value ?? null; } } catch (e) {}
+      try { const fb = await loadFb(); if (fb) { const pg = await fbGet(fb.pageId, { fields: 'followers_count,fan_count', access_token: fb.token }); fbF = pg.followers_count ?? pg.fan_count ?? null; } } catch (e) {}
+      const today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);
+      const histRow = await sb('shop_state?id=eq.dash_hist&select=data'); const hist = histRow?.[0]?.data?.days || {};
+      if (thF != null || fbF != null) { hist[today] = { th: thF, fb: fbF }; const keep = Object.keys(hist).sort().slice(-40); const h2 = {}; keep.forEach((k) => { h2[k] = hist[k]; }); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'dash_hist', data: { days: h2 }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {}); }
+      const weekAgo = Object.keys(hist).sort().filter((k) => k <= new Date(now + 7 * 3600e3 - 7 * 864e5).toISOString().slice(0, 10)).pop();
+      const base = weekAgo ? hist[weekAgo] : null;
+      // ประเด็นจากรายงานล่าสุดของพี่ต้น (โครงรายงานตายตัว)
+      const rep = notes.find((n) => n.source === 'manager' && n.kind === 'report');
+      const HEADS = ['ผู้ติดตาม', 'สรุปสัปดาห์', 'ทีมทำตามแผนประชุม', 'ตลาด', 'ผลโพสต์ทดลอง', 'Threads', 'โรงงาน', 'สิ่งที่ผมตัดสินใจไปแล้ว', 'ต้องขอคุณแดนตัดสิน', 'แผนสัปดาห์หน้า', 'สิ่งที่อยากให้คุณแดนทำ', '—'];
+      const sec = (head) => { if (!rep) return ''; const L = String(rep.text).split('\n'); const i = L.findIndex((l) => l.trim().startsWith(head)); if (i < 0) return ''; const out = [L[i].trim().slice(head.length).replace(/^[\s:：(（][^)）:：]*[)）]?\s*:?\s*/, '').replace(/^[:：]\s*/, '')]; for (let j = i + 1; j < L.length; j++) { const t = L[j].trim(); if (HEADS.some((h) => t.startsWith(h))) break; if (t) out.push(t); } return out.join(' ').trim(); };
+      const items = (t) => t ? t.split(/\s*(?:\d+[).]\s+)/).map((x) => x.trim()).filter((x) => x.length > 3 && !/^ไม่มี(ครับ|ค่ะ)?$/.test(x)).slice(0, 5) : [];
+      const reported = {}; notes.filter((n) => n.created_at >= since && !['chat', 'reply', 'comment', 'brief', 'handoff', 'deck'].includes(n.kind)).forEach((n) => { reported[n.source] = true; });
+      const todo = await loadTodo();
+      const openTodo = todo.filter((i) => !i.done_at);
+      return res.status(200).json({ ok: true, at: nowIso,
+        sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => o.status !== 'paid' && o.created_at >= since).length },
+        ads: { spend: campaigns.reduce((a, c) => a + c.spend, 0), campaigns },
+        followers: { threads: thF, facebook: fbF, threadsDelta: base && thF != null && base.th != null ? thF - base.th : null, facebookDelta: base && fbF != null && base.fb != null ? fbF - base.fb : null, since: weekAgo || null },
+        posts: { published: { facebook: pub.filter((p) => ch(p) === 'facebook').length, threads: pub.filter((p) => ch(p) === 'threads').length }, queued: { facebook: queued.filter((p) => ch(p) === 'facebook').length, threads: queued.filter((p) => ch(p) === 'threads').length }, held: posts.filter((p) => p.status === 'needs_owner').length, failed: posts.filter((p) => p.status === 'failed').length, policy: posts.filter((p) => p.status !== 'published' && (policyState(p.notes)?.level || 'ok') !== 'ok').length },
+        todo: { open: openTodo.length, delegated: openTodo.filter((i) => i.delegated_at).length },
+        factory: { active: jobs.filter((j) => ['queued', 'producing'].includes(j.status)).length, doneWeek: jobs.filter((j) => j.status === 'done' && (j.done_at || '') >= since).length },
+        team: { quiet: Object.keys(MEMBER_TH).filter((k) => !['care', 'factory'].includes(k) && !reported[k]) },
+        report: rep ? { at: rep.created_at, decide: items(sec('ต้องขอคุณแดนตัดสิน')), ask: sec('สิ่งที่อยากให้คุณแดนทำ'), plan: sec('แผนสัปดาห์หน้า'), summary: sec('สรุปสัปดาห์') } : null });
     }
     if (action === 'deck') {
       // สไลด์รายงาน (Canva) ส่งถึงคุณแดน: ขึ้นห้องประชุม + เช็คลิสต์พร้อมลิงก์

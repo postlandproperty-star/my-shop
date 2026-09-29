@@ -272,6 +272,17 @@ footer{padding:28px 0 110px;text-align:center}
 .md.cfgable{cursor:pointer}
 .chat .bub .cph{display:block;width:200px;max-width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:2px 0 6px;cursor:zoom-in;background:var(--line)}
 .todo.polblock{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 7%,var(--surface))}
+.dash{margin:12px 0 14px}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+@media(min-width:720px){.dgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.dtile{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.dtile span{font-size:13px;color:var(--muted)}
+.dtile b{font-size:24px;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums}
+.dtile small{font-size:12.5px;color:var(--muted);line-height:1.35}
+.dtile small.up{color:var(--ok,#16a34a)}.dtile small.down{color:var(--bad)}
+.dtile.warn{border-color:#f59e0b}
+.dnotes{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.dn{margin-bottom:10px}.dn b{font-size:15px}.dn p,.dn ol{margin:4px 0 6px;font-size:14.5px;line-height:1.55}.dn ol{padding-left:20px}
 .cfgsheet{position:fixed;inset:0;z-index:55;display:flex;justify-content:flex-end}
 .cfgsheet .cs-bg{position:absolute;inset:0;background:rgba(5,10,20,.55)}
 .cfgsheet .cs-in{position:relative;background:var(--bg);width:min(560px,100%);height:100%;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,.25);display:flex;flex-direction:column}
@@ -1657,11 +1668,40 @@ function teamFeed(notes){
 }
 const teamNotes=()=>POSTS.filter(p=>p.status==='note'&&p.kind!=='chat'&&p.kind!=='comment').sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)).slice(0,60);
 function unseenNotes(){if(!postsLoaded)return 0;const st=seenSet();return teamNotes().filter(n=>!st.has(n.id)&&Date.now()-Date.parse(n.created_at)<7*864e5).length;}
+let DASH={d:null,loading:false,err:''};
+async function loadDash(){DASH.loading=true;try{const j=await adminApi('/api/content?action=dash');if(j.ok){DASH.d=j;DASH.err='';}else DASH.err=j.error||'โหลดไม่ได้';}catch(e){DASH.err='เชื่อมต่อไม่ได้';}DASH.loading=false;}
+function dashBox(){
+  if(!DASH.d&&!DASH.loading&&!DASH.err){loadDash().then(()=>render(true));}
+  const d=DASH.d;const baht2=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');const num=n=>n==null?'–':Number(n).toLocaleString('th-TH');
+  const delta=(v,unit)=>v==null?'':`<small class="${v>0?'up':v<0?'down':''}">${v>0?'+':''}${num(v)} ${unit}</small>`;
+  const tile=(label,value,sub,warn)=>`<div class="dtile${warn?' warn':''}"><span>${label}</span><b>${value}</b>${sub?`<small>${sub}</small>`:''}</div>`;
+  if(!d)return `<section class="dash card"><h3 class="h3" style="margin:0">📊 ภาพรวมสัปดาห์นี้</h3><p class="fine">${DASH.err?esc(DASH.err):'กำลังโหลดตัวเลข...'}</p></section>`;
+  const r=d.report;const fmtD=t=>t?new Date(t).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
+  const salesSub=d.sales.lastRevenue||d.sales.lastOrders?`สัปดาห์ก่อน ${baht2(d.sales.lastRevenue)}`:'สัปดาห์ก่อน ฿0';
+  return `<section class="dash card">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h3 class="h3" style="margin:0">📊 ภาพรวม 7 วันล่าสุด</h3><span class="fine">อัปเดต ${new Date(d.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} <button class="chip" data-a="dashRefresh">รีเฟรช</button></span></div>
+    <div class="dgrid">
+      ${tile('ยอดขายจริง',baht2(d.sales.revenue),`${d.sales.orders} ออเดอร์ · ${salesSub}`)}
+      ${tile('ค่าแอดรวม',baht2(d.ads.spend),d.ads.campaigns.length?`${d.ads.campaigns.length} แคมเปญ`:'ยังไม่มีแคมเปญ')}
+      ${tile('ผู้ติดตาม Threads',num(d.followers.threads),d.followers.threadsDelta!=null?delta(d.followers.threadsDelta,'ใน 7 วัน'):'เริ่มเก็บสถิติวันนี้')}
+      ${tile('ผู้ติดตาม Facebook',num(d.followers.facebook),d.followers.facebookDelta!=null?delta(d.followers.facebookDelta,'ใน 7 วัน'):(d.followers.facebook==null?'ยังดึงตัวเลขไม่ได้':'เริ่มเก็บสถิติวันนี้'))}
+      ${tile('โพสต์ขึ้นแล้ว',`${d.posts.published.facebook+d.posts.published.threads}`,`Facebook ${d.posts.published.facebook} · Threads ${d.posts.published.threads}`)}
+      ${tile('คิวโพสต์ 7 วันข้างหน้า',`${d.posts.queued.facebook+d.posts.queued.threads}`,`Facebook ${d.posts.queued.facebook} · Threads ${d.posts.queued.threads}`,d.posts.queued.facebook+d.posts.queued.threads===0)}
+      ${tile('checkout ค้างไม่จ่าย',num(d.sales.unpaid),'คนที่กดซื้อแต่ยังไม่จ่าย',d.sales.unpaid>0)}
+      ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0)}
+    </div>
+    ${r?`<div class="dnotes"><p class="fine" style="margin:0 0 6px">${ava('manager',1)} จากรายงานพี่ต้น ${fmtD(r.at)}</p>
+      ${r.decide.length?`<div class="dn"><b>ต้องขอคุณแดนตัดสิน</b><ol>${r.decide.map(x=>`<li>${esc(x)}</li>`).join('')}</ol><button class="chip" data-a="tab" data-v="todo">ไปตอบในเช็คลิสต์</button></div>`:''}
+      ${r.ask?`<div class="dn"><b>อยากให้คุณแดนช่วย</b><p>${esc(r.ask)}</p></div>`:''}
+      ${r.plan?`<div class="dn"><b>แผนสัปดาห์หน้า</b><p>${esc(r.plan)}</p></div>`:''}</div>`:''}
+    ${d.team.quiet.length?`<p class="fine" style="margin:10px 0 0">ยังไม่ส่งงานใน 7 วัน: ${d.team.quiet.map(k=>`<span class="wp">${ava(k,1)}${esc(MEMBER_NAME(k))}</span>`).join(' ')}</p>`:''}
+  </section>`;
+}
 function meetingTab(){
   if(!postsLoaded){loadPosts().then(()=>render(true));}
   const notes=teamNotes();
   const bf=S.briefFiles||[];
-  return `<p class="fine" style="margin:12px 0 4px">ห้องประชุม (ห้อง "ลุมพินี" ชั้น 27): คุณแดนโยนโจทย์ ทีมมาประชุมแล้วรับไปทำ พี่ต้นสรุปแบ่งงานทุกเช้า 10:30 น. ถ้ามีโจทย์ใหม่ ด้านล่างคือรายงานจากทุกคน เรียงใหม่สุดก่อน <button class="chip" data-a="postRefresh">รีเฟรช</button></p>
+  return `${dashBox()}<p class="fine" style="margin:12px 0 4px">ห้องประชุม (ห้อง "ลุมพินี" ชั้น 27): คุณแดนโยนโจทย์ ทีมมาประชุมแล้วรับไปทำ พี่ต้นสรุปแบ่งงานทุกเช้า 10:30 น. ถ้ามีโจทย์ใหม่ ด้านล่างคือรายงานจากทุกคน เรียงใหม่สุดก่อน <button class="chip" data-a="postRefresh">รีเฟรช</button></p>
   <div class="card brief-box">
     <div class="row" style="gap:10px;align-items:flex-start">${ava('manual')}<div style="flex:1;min-width:0">
       <textarea class="input" id="brief-text" rows="3" placeholder="โยนโจทย์ให้ทีม เช่น เจอเพจคู่แข่งทำคลิปแบบนี้ ลองทำบ้าง / อยากได้ชีทเรื่องนี้ / เปลี่ยนโทนโพสต์เป็นแบบนี้ (แนบรูปหรือไฟล์ประกอบได้)">${esc(S.briefDraft||'')}</textarea>
@@ -2387,6 +2427,7 @@ function act(a,el){
     case 'chatRefresh':{CHAT.msgs=null;render(true);break;}
     case 'chatRemove':{if(!confirm('ลบข้อความนี้ออกจากห้องพัก?'))break;adminPost('/api/content?action=chat',{id,remove:true}).then(j=>{if(!j.ok)throw new Error(j.error||'ลบไม่ได้');CHAT.msgs=j.messages;render(true);}).catch(e=>toast(e.message));break;}
     case 'chatSend':{const inp=$('#chat-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=chat',{text}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');if(inp)inp.value='';CHAT.msgs=j.messages;render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);if(CHAT.engine&&CHAT.engine!=='Claude'){CHAT.fastUntil=Date.now()+4*60e3;render(true);toast('ส่งแล้ว ทีมกำลังพิมพ์ตอบ');}else toast('ส่งแล้ว ทีมจะตอบในรอบถัดไป');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
+    case 'dashRefresh':DASH.d=null;DASH.err='';render(true);break;
     case 'chatPhoto':S.chatPhoto=el.dataset.u;render(true);break;
     case 'chatPhotoClose':S.chatPhoto=null;render(true);break;
     case 'healthNow':{el.disabled=true;toast('กำลังตรวจระบบ...');adminApi('/api/content?action=health&record=1').then(h=>{if(!h.checks)throw new Error(h.error||'ตรวจไม่ได้');postsLoaded=false;TODO.items=null;return loadPosts().then(()=>{render(true);toast(h.problems.length?'พบ '+h.problems.length+' จุดที่ต้องดู เพิ่มเข้าเช็คลิสต์แล้ว':'ระบบปกติทั้ง '+h.checks.length+' จุด');});}).catch(e=>{toast(e.message);el.disabled=false;});break;}
