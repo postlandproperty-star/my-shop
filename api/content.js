@@ -138,16 +138,19 @@ function breakAI() {
   return null;
 }
 const aiHeaders = (ai) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${ai.key}`, 'CH-API-KEY': ai.key });
-async function aiModel(ai) {
-  if (ai.model) return ai.model;
-  try { const r = await fetch(`${ai.base}/models`, { headers: aiHeaders(ai), signal: AbortSignal.timeout(8000) }); const j = await r.json(); return j.data?.[0]?.id || ''; } catch { return ''; }
-}
+// รุ่นที่ใช้: CHUB_MODEL ถ้าตั้งไว้ ไม่งั้นลองจากรุ่นใหญ่ (ภาษาไทยดีกว่า) ไปรุ่นเล็ก จำรุ่นที่ใช้ได้ไว้
+let AI_OK_MODEL = '';
 async function aiComplete(ai, system, user, max = 1800) {
-  const model = await aiModel(ai);
-  const r = await fetch(`${ai.base}/chat/completions`, { method: 'POST', headers: aiHeaders(ai), body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }], max_tokens: max, temperature: 0.9 }), signal: AbortSignal.timeout(50000) });
-  const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {}
-  if (!r.ok || !j || j.error) throw new Error(`${ai.name} ${r.status}: ${String((j && (j.error?.message || JSON.stringify(j.error))) || t).slice(0, 200)}`);
-  return String(j.choices?.[0]?.message?.content || '');
+  const cands = ai.model ? [ai.model] : AI_OK_MODEL ? [AI_OK_MODEL] : ai.id === 'chub' ? ['soji', 'asha', 'mixtral', 'mythomax', 'mistral'] : ['grok-4'];
+  let lastErr = '';
+  for (const model of cands) {
+    const r = await fetch(`${ai.base}/chat/completions`, { method: 'POST', headers: aiHeaders(ai), body: JSON.stringify({ model, messages: [{ role: 'system', content: system }, { role: 'user', content: user }], max_tokens: max, temperature: 0.9 }), signal: AbortSignal.timeout(50000) });
+    const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {}
+    if (r.ok && j && !j.error && j.choices) { AI_OK_MODEL = model; return String(j.choices[0]?.message?.content || ''); }
+    lastErr = `${ai.name} ${model} ${r.status}: ${String((j && (j.error?.message || JSON.stringify(j.error))) || t).slice(0, 160)}`;
+    if (r.status === 401) break;
+  }
+  throw new Error(lastErr);
 }
 function parseJsonLoose(t) { const a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0 || b <= a) return null; try { return JSON.parse(t.slice(a, b + 1)); } catch { return null; } }
 // มุกสองแง่สองง่ามได้ แต่ห้ามเนื้อหาทางเพศตรงๆ (คุณแดนกำหนด): ข้อความที่มีคำเหล่านี้ถูกทิ้งทั้งข้อความ

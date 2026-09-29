@@ -2045,7 +2045,7 @@ function MEMBER_NAME(k){return (TEAM&&TEAM[k]&&TEAM[k].name)||k||'ทีม';}
 const TEAM_KEYS=['manager','writer','designer','trend','clip','community','analyst','market','product','factory','finance','guard','hr'];
 const CFG_F={
   manager:[{k:'review',label:'ความเข้มในการตรวจโพสต์',type:'sel',opts:['ปกติ','เข้มงวด ตีกลับง่าย','ปล่อยผ่านง่าย เน้นจำนวน']}],
-  writer:[{k:'fb_week',label:'โพสต์ Facebook ต่อสัปดาห์',type:'num',min:0,max:21,ph:'ปกติ 5'},{k:'th_day',label:'โพสต์ Threads ต่อวัน',type:'num',min:0,max:5,ph:'ปกติ 2'},{k:'focus',label:'เน้นเนื้อหาแนวไหน',type:'text',ph:'เช่น ควิซคำศัพท์ ไวยากรณ์ Part 5'}],
+  writer:[{k:'fb_week',label:'โพสต์ Facebook ต่อสัปดาห์',type:'num',min:0,max:21,ph:'ปกติ 7'},{k:'th_day',label:'โพสต์ Threads ต่อวัน',type:'num',min:0,max:3,ph:'ปกติ 3'},{k:'focus',label:'เน้นเนื้อหาแนวไหน',type:'text',ph:'เช่น ควิซคำศัพท์ ไวยากรณ์ Part 5'}],
   designer:[{k:'img_style',label:'สไตล์รูปที่อยากได้',type:'text',ph:'เช่น สีสดขึ้น ตัวหนังสือใหญ่'}],
   trend:[{k:'topics',label:'จำนวนหัวข้อต่อสัปดาห์',type:'num',min:1,max:20,ph:'ปกติ 8'}],
   clip:[{k:'reels_day',label:'คลิป Reels ต่อวัน',type:'num',min:0,max:3,ph:'ปกติ 1'},{k:'style',label:'แนวคลิป',type:'sel',opts:['ภาพนิ่ง (photo)','เคลื่อนไหว (motion)','สลับกันทุกวัน']}],
