@@ -93,7 +93,7 @@ export default async function handler(req, res) {
       const daily = await fbGet(`${AD_ACCOUNT}/insights`, { access_token: fb.userToken, level: 'account', fields: 'spend,impressions,clicks,actions', time_range: range, time_increment: 1, limit: 60 });
       const acct = await fbGet(AD_ACCOUNT, { access_token: fb.userToken, fields: 'name,currency,account_status,balance,amount_spent' });
       const campaigns = await fbGet(`${AD_ACCOUNT}/campaigns`, { access_token: fb.userToken, fields: 'id,name,status,effective_status,daily_budget,lifetime_budget,objective', limit: 50 });
-      const adsets = await fbGet(`${AD_ACCOUNT}/adsets`, { access_token: fb.userToken, fields: 'id,name,status,effective_status,daily_budget,campaign_id,end_time', limit: 50 });
+      const adsets = await fbGet(`${AD_ACCOUNT}/adsets`, { access_token: fb.userToken, fields: 'id,name,status,effective_status,daily_budget,campaign_id,end_time,optimization_goal,promoted_object,billing_event,attribution_spec', limit: 50 });
       const since = new Date(Date.now() - n * 864e5).toISOString();
       const orders = await sb(`orders?status=eq.paid&paid_at=gte.${since}&select=paid_at,amount,campaign,product_name,email`);
       return res.status(200).json({ ok: true, account: acct, campaigns: campaigns.data || [], adsets: adsets.data || [], insights: ins.data || [], daily: daily.data || [], shopOrders: orders.filter((o) => !isTestOrder(o)).map(({ email, ...o }) => o) });
