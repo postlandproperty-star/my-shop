@@ -2667,7 +2667,10 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('click',e=>{
   const tr=e.target.closest('[data-track]');
-  if(tr){const p=curProduct();if(p)track(tr.dataset.track,Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));}
+  if(tr){const p=curProduct();if(p)track(tr.dataset.track,Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));
+    // ลิงก์ไปหน้าจ่ายเงิน: รอให้ Pixel ส่งเหตุการณ์ออกไปก่อนเปลี่ยนหน้า ไม่งั้นเบราว์เซอร์ตัดคำขอทิ้ง (Meta ไม่เห็น InitiateCheckout)
+    const href=tr.tagName==='A'&&tr.getAttribute('href');
+    if(href&&pixelReady&&!tr.target&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey){e.preventDefault();setTimeout(()=>{location.href=href;},350);}}
   const el=e.target.closest('[data-a]');if(el){if(el.dataset.a==='payGo')e.preventDefault();act(el.dataset.a,el);}
 });
 document.addEventListener('input',e=>{
