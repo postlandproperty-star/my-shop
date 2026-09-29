@@ -478,7 +478,9 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id), policy: policy.map((x, i) => ({ index: i, level: x.level, issues: x.issues.map((y) => y.msg) })), skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
     }
     if (action === 'test_emails') { // อีเมลที่เจ้าของใช้ทดลองซื้อ: ไม่นับในรายงาน/ห้องประชุม/ติดตามลูกค้า  GET ดู · POST {emails:[...]} ตั้งใหม่
-      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      // เจ้าของเท่านั้น: ทีม (รูทีน) ถือ content key อยู่ ห้ามเห็นหรือแก้รายชื่อนี้
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const row = await sb('shop_state?id=eq.private&select=data');
       const data = row?.[0]?.data || {};
       if (req.method === 'POST') {
