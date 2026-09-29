@@ -942,7 +942,7 @@ export default async function handler(req, res) {
       const hasCh = await channelCol();
       const [orders, posts, priv, notes, jobs] = await Promise.all([
         sb(`orders?select=created_at,paid_at,product_name,amount,status&created_at=gte.${prev}`),
-        sb(`posts?status=in.(approved,published,needs_owner,failed,draft)&or=(published_at.gte.${since},scheduled_at.gte.${since})&select=status,kind,published_at,scheduled_at,notes${hasCh ? ',channel' : ''}&limit=400`),
+        sb(`posts?status=in.(approved,published,needs_owner,failed,draft)&or=(published_at.gte.${since},scheduled_at.gte.${since})&select=status,kind,source,created_at,published_at,scheduled_at,notes${hasCh ? ',channel' : ''}&limit=400`),
         sb('shop_state?id=eq.private&select=data'),
         sb(`posts?status=in.(note,log)&created_at=gte.${new Date(now - 14 * 864e5).toISOString()}&select=source,kind,text,created_at&order=created_at.desc&limit=200`),
         loadJobs().catch(() => []),
@@ -966,9 +966,10 @@ export default async function handler(req, res) {
       // ประเด็นจากรายงานล่าสุดของพี่ต้น (โครงรายงานตายตัว)
       const rep = notes.find((n) => n.source === 'manager' && n.kind === 'report');
       const HEADS = ['ผู้ติดตาม', 'สรุปสัปดาห์', 'ทีมทำตามแผนประชุม', 'ตลาด', 'ผลโพสต์ทดลอง', 'Threads', 'โรงงาน', 'สิ่งที่ผมตัดสินใจไปแล้ว', 'ต้องขอคุณแดนตัดสิน', 'แผนสัปดาห์หน้า', 'สิ่งที่อยากให้คุณแดนทำ', '—'];
-      const sec = (head) => { if (!rep) return ''; const L = String(rep.text).split('\n'); const i = L.findIndex((l) => l.trim().startsWith(head)); if (i < 0) return ''; const out = [L[i].trim().slice(head.length).replace(/^[\s:：(（][^)）:：]*[)）]?\s*:?\s*/, '').replace(/^[:：]\s*/, '')]; for (let j = i + 1; j < L.length; j++) { const t = L[j].trim(); if (HEADS.some((h) => t.startsWith(h))) break; if (t) out.push(t); } return out.join(' ').trim(); };
+      const sec = (head) => { if (!rep) return ''; const L = String(rep.text).split('\n'); const i = L.findIndex((l) => l.trim().startsWith(head)); if (i < 0) return ''; const out = [L[i].trim().slice(head.length).replace(/^\s*([(（][^)）]*[)）])?\s*[:：]?\s*/, '')]; for (let j = i + 1; j < L.length; j++) { const t = L[j].trim(); if (HEADS.some((h) => t.startsWith(h))) break; if (t) out.push(t); } return out.join(' ').trim(); };
       const items = (t) => t ? t.split(/\s*(?:\d+[).]\s+)/).map((x) => x.trim()).filter((x) => x.length > 3 && !/^ไม่มี(ครับ|ค่ะ)?$/.test(x)).slice(0, 5) : [];
       const reported = {}; notes.filter((n) => n.created_at >= since && !['chat', 'reply', 'comment', 'brief', 'handoff', 'deck'].includes(n.kind)).forEach((n) => { reported[n.source] = true; });
+      posts.filter((p) => p.source && p.created_at >= since).forEach((p) => { reported[p.source] = true; });
       const todo = await loadTodo();
       const openTodo = todo.filter((i) => !i.done_at);
       return res.status(200).json({ ok: true, at: nowIso,
