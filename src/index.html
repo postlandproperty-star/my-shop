@@ -2463,8 +2463,8 @@ function act(a,el){
     case 'chatSend':{const inp=$('#chat-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=chat',{text}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');if(inp)inp.value='';CHAT.msgs=j.messages;render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);if(CHAT.engine&&CHAT.engine!=='Claude'){CHAT.fastUntil=Date.now()+4*60e3;render(true);toast('ส่งแล้ว ทีมกำลังพิมพ์ตอบ');}else toast('ส่งแล้ว ทีมจะตอบในรอบถัดไป');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'orderState':{el.disabled=true;adminPost('/api/content?action=reply_state',{id,state:el.dataset.v}).then(j=>{if(!j.ok)throw new Error(j.error||'ไม่สำเร็จ');const p=POSTS.find(x=>x.id===id);if(p){let m={};try{m=p.notes?JSON.parse(p.notes):{};}catch(e){}m.state=el.dataset.v;m.state_at=new Date().toISOString();p.notes=JSON.stringify(m);}render(true);toast(el.dataset.v==='done'?'ปิดเรื่องแล้ว ข้อความจะหายไปใน 24 ชม.':el.dataset.v==='cancel'?'ยกเลิกแล้ว ทีมจะไม่ทำเรื่องนี้ต่อ ข้อความจะหายไปใน 24 ชม.':'เปิดเรื่องนี้ใหม่แล้ว');}).catch(e=>{el.disabled=false;toast(e.message);});break;}
     case 'payGo':{const inp=document.getElementById('co-email');const v=inp?inp.value.trim():'';
-      if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)){window.__payBlock=true;toast('กรอกอีเมลก่อน เพื่อรับไฟล์หลังชำระเงิน');if(inp)inp.focus();break;}
-      window.__payBlock=true;try{localStorage.setItem('sl_email',v);}catch(e){}location.href=el.getAttribute('href')+'&e='+encodeURIComponent(v);break;}
+      if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)){toast('กรอกอีเมลก่อน เพื่อรับไฟล์หลังชำระเงิน');if(inp)inp.focus();break;}
+      try{localStorage.setItem('sl_email',v);}catch(e){}location.href=el.getAttribute('href')+'&e='+encodeURIComponent(v);break;}
     case 'dashRefresh':DASH.d=null;DASH.err='';render(true);break;
     case 'chatPhoto':S.chatPhoto=el.dataset.u;render(true);break;
     case 'chatPhotoClose':S.chatPhoto=null;render(true);break;
