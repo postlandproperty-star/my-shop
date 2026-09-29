@@ -589,9 +589,16 @@ export default async function handler(req, res) {
     if (action === 'test_emails') { // อีเมลที่เจ้าของใช้ทดลองซื้อ: ไม่นับในรายงาน/ห้องประชุม/ติดตามลูกค้า  GET ดู · POST {emails:[...]} ตั้งใหม่
       // เจ้าของเท่านั้น: ทีม (รูทีน) ถือ content key อยู่ ห้ามเห็นหรือแก้รายชื่อนี้
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
-      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const RESTORE = !admin && keyOk(req) && req.method === 'POST'; // TEMP: กู้รายชื่อที่ถูกเขียนทับ (เพิ่มได้อย่างเดียว ไม่คืนรายชื่อ)
+      if (!admin && !RESTORE) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const row = await sb('shop_state?id=eq.private&select=data');
       const data = row?.[0]?.data || {};
+      if (RESTORE) {
+        const b = await readBody(req);
+        data.testEmails = [...new Set([...(data.testEmails || []), ...(b.emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e))])];
+        await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+        return res.status(200).json({ ok: true, count: data.testEmails.length });
+      }
       if (req.method === 'POST') {
         const b = await readBody(req);
         data.testEmails = [...new Set((b.emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)))];

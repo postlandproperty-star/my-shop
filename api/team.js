@@ -126,7 +126,7 @@ export default async function handler(req, res) {
     if (action === 'followups') {
       const cutoff = new Date(Date.now() - 3 * 864e5).toISOString();
       const floor = new Date(Date.now() - 30 * 864e5).toISOString();
-      const orders = await sb(`orders?status=eq.paid&paid_at=lte.${cutoff}&paid_at=gte.${floor}&email=not.is.null&select=session_id,email,customer_name,product_name,amount,paid_at,campaign&order=paid_at.desc&limit=100`);
+      const orders = await sb(`orders?status=eq.paid&paid_at=lte.${cutoff}&paid_at=gte.${floor}&email=not.is.null&select=session_id,email,customer_name:name,product_name,amount,paid_at,campaign&order=paid_at.desc&limit=100`);
       const shop = await loadShop();
       const list = orders.filter((o) => !isTestOrder(o)).map((o) => ({ ...o, email: o.email.replace(/^(.).*(@.*)$/, '$1***$2') }));
       const SITE_U = await siteUrl();

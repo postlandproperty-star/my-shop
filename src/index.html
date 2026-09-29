@@ -635,6 +635,10 @@ async function flushRemote(){
   pub.products=D.products.map(p=>{links[p.id]=p.link||'';const q=Object.assign({},p);delete q.link;return q;});
   const priv=pick(D,PRIVATE_KEYS);priv.links=links;
   priv.orders=(priv.orders||[]).filter(o=>o.src!=='stripe'); // ออเดอร์จริงอยู่ในตาราง orders ไม่เก็บซ้ำในก้อนนี้
+  // ค่าที่เซิร์ฟเวอร์เก็บในแถว private เอง (อีเมลทดสอบ เทมเพลต/ประวัติอีเมลเตือน ฯลฯ) หน้านี้ไม่รู้จัก: อ่านค่าล่าสุดแล้วเก็บไว้ ห้ามเขียนทับหาย
+  {const cur=await sb.from('shop_state').select('data').eq('id','private').maybeSingle();
+   if(cur.error){toast('บันทึกไม่สำเร็จ: อ่านข้อมูลเดิมไม่ได้ ลองใหม่อีกครั้ง');return;}
+   const old=(cur.data&&cur.data.data)||{};for(const k of Object.keys(old)){if(!(k in priv)&&!PRIVATE_KEYS.includes(k))priv[k]=old[k];}}
   const rows=[{id:'main',data:pub,updated_at:now},{id:'private',data:priv,updated_at:now}];
   const {error}=await sb.from('shop_state').upsert(rows);
   if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);}
