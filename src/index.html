@@ -272,6 +272,12 @@ footer{padding:28px 0 110px;text-align:center}
 .md.cfgable{cursor:pointer}
 .chat .bub .cph{display:block;width:200px;max-width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;margin:2px 0 6px;cursor:zoom-in;background:var(--line)}
 .todo.polblock{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 7%,var(--surface))}
+.orders .ohead{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:2px 0;font:inherit;font-size:14px;color:var(--ink);text-align:left;min-height:36px;cursor:pointer}
+.orders .ohead span{flex:1;min-width:0}.orders .ohead i{font-style:normal;font-size:13px;color:var(--brand);white-space:nowrap}
+.orders .olist{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.orders .oline{display:flex;align-items:center;gap:8px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit;font-size:13.5px;color:var(--ink);text-align:left;min-height:40px;cursor:pointer}
+.orders .oline span:not(.ost){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}.orders .oline i{font-style:normal;color:var(--muted)}
+.orders .order{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}
 .order .orow{display:flex;align-items:center;gap:8px}.order .orow .fine{margin-left:auto;font-size:12px;white-space:nowrap}
 .order .pl-n{display:flex;flex-direction:column;line-height:1.2;min-width:0}.order .pl-n b{font-size:14px}.order .pl-n span{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
 .order .otext{font-size:14.5px;line-height:1.55;margin:6px 0 10px 40px;white-space:pre-wrap}
@@ -1893,18 +1899,26 @@ function orderInfo(o,k){let meta={};try{meta=o.notes?JSON.parse(o.notes):{};}cat
 function ordersBlock(k){
   const t=TEAM[k];const cutoff=Date.now()-14*864e5;
   const list=POSTS.filter(p=>p.status==='note'&&p.kind==='reply'&&String(p.text||'').startsWith('@'+k+' ')&&Date.parse(p.created_at)>=cutoff).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))
-    .map(o=>({o,...orderInfo(o,k)})).filter(x=>x.state==='open'||!x.at||Date.now()-x.at<864e5).slice(0,4);
+    .map(o=>({o,...orderInfo(o,k)})).filter(x=>x.state==='open'||!x.at||Date.now()-x.at<864e5).slice(0,6);
   if(!list.length)return '';
-  return list.map(({o,state,at,cms})=>{const left=at?Math.max(0,Math.ceil((864e5-(Date.now()-at))/36e5)):0;
-    const badge=state==='done'?`<span class="ost done">✅ เรียบร้อย</span>`:state==='cancel'?`<span class="ost cancel">ยกเลิกแล้ว</span>`:cms.some(c=>c.source===k)?`<span class="ost wip">💬 ${esc(t.name)}ตอบแล้ว กำลังทำ</span>`:`<span class="ost wait">⏳ รอ${esc(t.name)}ตอบ</span>`;
-    return `<div class="deskrep order ${state}">
+  const openN=list.filter(x=>x.state==='open').length;
+  S.ordOpen=S.ordOpen||{};const boxOpen=S.ordOpen['box:'+k]!==undefined?S.ordOpen['box:'+k]:openN>0;
+  const head=`<button class="ohead" data-a="ordToggle" data-id="box:${k}" data-v="${boxOpen?0:1}" aria-expanded="${boxOpen}">${ava('manual',1)}<span>คำสั่งถึง${esc(t.name)} ${list.length} เรื่อง${openN?` · <b>รอทำ ${openN}</b>`:' · ปิดแล้วทั้งหมด'}</span><i>${boxOpen?'ย่อ ▴':'ดู ▾'}</i></button>`;
+  if(!boxOpen)return `<div class="deskrep orders">${head}</div>`;
+  const rows=list.map(({o,state,at,cms})=>{const left=at?Math.max(0,Math.ceil((864e5-(Date.now()-at))/36e5)):0;
+    const badge=state==='done'?`<span class="ost done">✅ เรียบร้อย</span>`:state==='cancel'?`<span class="ost cancel">ยกเลิกแล้ว</span>`:cms.some(c=>c.source===k)?`<span class="ost wip">💬 ตอบแล้ว กำลังทำ</span>`:`<span class="ost wait">⏳ รอตอบ</span>`;
+    const ex=S.ordOpen[o.id]!==undefined?S.ordOpen[o.id]:state==='open';
+    const txt=String(o.text).replace('@'+k+' ','');
+    if(!ex)return `<button class="oline" data-a="ordToggle" data-id="${o.id}" data-v="1">${badge}<span>${esc(txt.slice(0,70))}${txt.length>70?'…':''}</span><i>▾</i></button>`;
+    return `<div class="order ${state}">
       <div class="orow">${personLine('manual')}<span class="fine">${fdt(Date.parse(o.created_at))}</span></div>
-      <div class="otext">${esc(String(o.text).replace('@'+k+' ','').slice(0,400))}</div>
+      <div class="otext">${esc(txt.slice(0,400))}</div>
       ${cms.map(c=>`<div class="orow reply">${personLine(c.source)}<span class="fine">${ago(Date.parse(c.scheduled_at||c.created_at))}</span></div><div class="otext reply">${esc(c.text)}</div>`).join('')}
-      <div class="ofoot">${badge}${state!=='open'?`<span class="fine">ข้อความนี้จะหายไปใน ${left} ชม.</span>`:''}
-        ${state==='open'?`<button class="chip" data-a="orderState" data-id="${o.id}" data-v="done">✓ เรียบร้อย</button><button class="chip" data-a="orderState" data-id="${o.id}" data-v="cancel">ยกเลิกคำสั่ง</button>`:`<button class="chip" data-a="orderState" data-id="${o.id}" data-v="open">เปิดใหม่</button>`}
-        <button class="chip" data-a="tab" data-v="meeting">ดูในห้องประชุม</button></div>
+      <div class="ofoot">${badge}${state!=='open'?`<span class="fine">หายไปใน ${left} ชม.</span>`:''}
+        ${state==='open'?`<button class="chip" data-a="orderState" data-id="${o.id}" data-v="done">✓ เรียบร้อย</button><button class="chip" data-a="orderState" data-id="${o.id}" data-v="cancel">ยกเลิก</button>`:`<button class="chip" data-a="orderState" data-id="${o.id}" data-v="open">เปิดใหม่</button>`}
+        <button class="chip" data-a="ordToggle" data-id="${o.id}" data-v="0">ย่อ ▴</button></div>
     </div>`;}).join('');
+  return `<div class="deskrep orders">${head}<div class="olist">${rows}</div></div>`;
 }
 function memberDesk(k){
   // โต๊ะทำงานของสมาชิกในแท็บที่เกี่ยวข้อง: รายงานล่าสุด ข้อเสนอที่รอคุณแดนตัดสิน และช่องสั่งงาน
@@ -2458,6 +2472,7 @@ function act(a,el){
     case 'chatRefresh':{CHAT.msgs=null;render(true);break;}
     case 'chatRemove':{if(!confirm('ลบข้อความนี้ออกจากห้องพัก?'))break;adminPost('/api/content?action=chat',{id,remove:true}).then(j=>{if(!j.ok)throw new Error(j.error||'ลบไม่ได้');CHAT.msgs=j.messages;render(true);}).catch(e=>toast(e.message));break;}
     case 'chatSend':{const inp=$('#chat-new');const text=inp?inp.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=chat',{text}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');if(inp)inp.value='';CHAT.msgs=j.messages;render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);if(CHAT.engine&&CHAT.engine!=='Claude'){CHAT.fastUntil=Date.now()+4*60e3;render(true);toast('ส่งแล้ว ทีมกำลังพิมพ์ตอบ');}else toast('ส่งแล้ว ทีมจะตอบในรอบถัดไป');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
+    case 'ordToggle':S.ordOpen=S.ordOpen||{};S.ordOpen[id]=el.dataset.v==='1';render(true);break;
     case 'orderState':{el.disabled=true;adminPost('/api/content?action=reply_state',{id,state:el.dataset.v}).then(j=>{if(!j.ok)throw new Error(j.error||'ไม่สำเร็จ');const p=POSTS.find(x=>x.id===id);if(p){let m={};try{m=p.notes?JSON.parse(p.notes):{};}catch(e){}m.state=el.dataset.v;m.state_at=new Date().toISOString();p.notes=JSON.stringify(m);}render(true);toast(el.dataset.v==='done'?'ปิดเรื่องแล้ว ข้อความจะหายไปใน 24 ชม.':el.dataset.v==='cancel'?'ยกเลิกแล้ว ทีมจะไม่ทำเรื่องนี้ต่อ ข้อความจะหายไปใน 24 ชม.':'เปิดเรื่องนี้ใหม่แล้ว');}).catch(e=>{el.disabled=false;toast(e.message);});break;}
     case 'payGo':{const inp=document.getElementById('co-email');const v=inp?inp.value.trim():'';
       if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)){toast('กรอกอีเมลก่อน เพื่อรับไฟล์หลังชำระเงิน');if(inp)inp.focus();break;}
