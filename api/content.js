@@ -16,6 +16,7 @@
 import { loadShop, verifyAdmin, sbPatch } from '../lib/shop.js';
 import { loadFb, publishToPage } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
+import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded } from '../lib/threads.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
@@ -431,9 +432,14 @@ export default async function handler(req, res) {
         if (!rows.length) return res.status(429).json({ ok: false, error: `คลิปวันนี้ครบ ${rd} คลิปตามตั้งค่าของคุณแดนแล้ว` });
       }
       for (const r of rows) r.image_url = await cacheImage(r.image_url);
+      // ตรวจนโยบายแพลตฟอร์มทุกโพสต์: เสี่ยงสูง = กักให้คุณแดนตัดสิน, เตือน = แจ้งในเช็คลิสต์
+      const shopP = await loadShop().catch(() => ({ products: [] }));
+      const policy = rows.map((r) => { const res = checkPolicy(r, shopP); if (res.level !== 'ok') { r.notes = [r.notes, policyMark(res)].filter(Boolean).join('\n').slice(0, 1500); if (res.level === 'block') r.status = 'needs_owner'; } return res; });
       const inserted = await sb('posts', { method: 'POST', body: rows, prefer: 'return=representation' });
+      const risky = policy.filter((x) => x.level !== 'ok').length;
+      if (risky) await chatEvent('guard', pick([`ระบบตรวจนโยบายเจอโพสต์เสี่ยง ${risky} ชิ้นครับ แจ้งคุณแดนในเช็คลิสต์แล้ว`, `เตือนครับ มีโพสต์เข้าข่ายผิดนโยบายแพลตฟอร์ม ${risky} ชิ้น ใครเขียนมาช่วยแก้ด้วย`]), 'policy');
       if (rows.some((r) => r.kind === 'reel' && r.source === 'clip')) await chatEvent('clip', pick(['ส่งคลิปใหม่เข้าคิวแล้วครับ ตั้งเวลาโพสต์ไว้แล้ว 🎬', 'คลิปวันนี้เสร็จแล้วครับ รอเวลาปล่อย ใครอยากดูก่อนไปที่แท็บคอนเทนต์', 'ตัดเสร็จแล้วครับ วันนี้ธีมเด็ด ขอเสียงหน่อย']), 'reel');
-      return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id) , skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
+      return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id), policy: policy.map((x, i) => ({ index: i, level: x.level, issues: x.issues.map((y) => y.msg) })), skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
     }
     if (action === 'report') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -565,7 +571,12 @@ export default async function handler(req, res) {
       // ตั้งค่าจากคุณแดน + เช็คลิสต์ที่เลยเวลา (พี่ต้นรับแทน) วางบนสุดของแผน
       const { items: tItems, cfg } = await todoWithDue();
       const ho = handoffBlock(tItems, cfg);
-      const topBlock = [cfgBlock(cfg), ho.text].filter(Boolean).join('\n\n');
+      // วันจันทร์ (เวลาไทย): พี่ต้นทำสไลด์รายงานสำคัญใน Canva ส่งลิงก์ให้คุณแดน (แสดงเฉพาะวันจันทร์ ประหยัดโทเค็นวันอื่น)
+      const isMon = new Date(Date.now() + 7 * 3600e3).getUTCDay() === 1;
+      const deckBlock = isMon ? `== สไลด์รายงานถึงคุณแดน (คุณแดนสั่ง 29 ก.ย. เฉพาะพี่ต้นรอบตรวจงานวันจันทร์) ==
+หลังส่งรายงานประจำสัปดาห์แล้ว ทำสไลด์ Canva 1 ชุด ด้วย create-design ครั้งเดียว: format "Presentation", brief สั้นๆ "สไลด์รายงานประจำสัปดาห์ SheetLab สำหรับคุณแดนอ่านบนมือถือ ภาษาไทยตัวใหญ่ 1 ประเด็นต่อสไลด์ ธีม Modern Blue พื้น #2B47F0 การ์ดขาว แต้ม #EF5B4C และ #F5C518" และ outline 6-8 สไลด์ (ตัวเลขหลัก / แอดและเงิน รวมสรุปพี่บัญชี / ทีม รวมสรุปพี่เอชอาร์ / ตลาดและโพสต์ทดลอง / ต้องขอคุณแดนตัดสิน / สิ่งที่อยากให้คุณแดนช่วย / แผนสัปดาห์หน้า) สไลด์ละไม่เกิน 4 บรรทัด ตัวเลขเอาจากรายงานเท่านั้น
+แล้วเรียก get-create-design-async-job ตาม wait_seconds จนเสร็จ ห้ามเรียกเครื่องมือ Canva อื่นเพิ่ม (ประหยัดโทเค็น) จากนั้น POST BASE?action=deck {"title":"รายงานทีมสัปดาห์ <ช่วงวันที่>","url":"<design.url>","summary":"สรุป 2 บรรทัด","source":"manager"} ระบบส่งลิงก์ขึ้นห้องประชุมและเช็คลิสต์ของคุณแดนเอง ถ้า Canva ใช้ไม่ได้ให้ข้ามและเขียนในรายงาน` : '';
+      const topBlock = [cfgBlock(cfg), POLICY_BOARD, deckBlock, ho.text].filter(Boolean).join('\n\n');
       plan = plan ? { ...plan, text: `${topBlock}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: topBlock, created_at: cfg.updated_at || new Date().toISOString() };
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.kind === 'handoff' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
@@ -611,6 +622,14 @@ export default async function handler(req, res) {
       const stamp = `${decision === 'approve' ? '✅' : decision === 'reject' ? '⛔' : '⚠️'} พี่ต้น: ${reason || decision}`;
       const patch = { status, notes: [cur[0].notes, stamp].filter(Boolean).join('\n'), error: null };
       if (body.text && String(body.text).trim()) patch.text = String(body.text).slice(0, 4000);
+      if (status === 'approved') {
+        // ตรวจนโยบายข้อความสุดท้ายก่อนอนุมัติ: ยังเสี่ยงสูง = ส่งให้คุณแดน
+        const full = await sb(`posts?id=eq.${id}&select=text,channel`);
+        const res2 = checkPolicy({ text: patch.text || full[0]?.text, channel: full[0]?.channel }, await loadShop().catch(() => ({ products: [] })));
+        const was = policyState(cur[0].notes);
+        if (res2.level === 'block') { patch.status = 'needs_owner'; patch.notes = [patch.notes, policyMark(res2)].join('\n'); await sbPatch(`posts?id=eq.${id}`, patch); return res.status(200).json({ ok: false, id, status: 'needs_owner', error: `เสี่ยงผิดนโยบาย ส่งให้คุณแดนตัดสินแล้ว: ${res2.issues.map((x) => x.msg).join(' / ')}` }); }
+        if (was && was.level !== 'ok' && res2.level !== was.level) patch.notes = [patch.notes, policyMark(res2)].join('\n');
+      }
       if (body.scheduled_at && !isNaN(Date.parse(body.scheduled_at))) patch.scheduled_at = new Date(body.scheduled_at).toISOString();
       const rows = await sbPatch(`posts?id=eq.${id}`, patch);
       return res.status(200).json({ ok: true, id, status: rows[0]?.status });
@@ -630,6 +649,13 @@ export default async function handler(req, res) {
       if (!Object.keys(patch).length) return res.status(400).json({ ok: false, error: 'ต้องส่ง text หรือ scheduled_at' });
       const reason = String(body.reason || '').slice(0, 300);
       patch.notes = [cur[0].notes, `✏️ พี่ต้น: ${reason || 'แก้ไข'}`].filter(Boolean).join('\n');
+      if (patch.text) {
+        const ch = await sb(`posts?id=eq.${id}&select=channel`);
+        const res2 = checkPolicy({ text: patch.text, channel: ch[0]?.channel }, await loadShop().catch(() => ({ products: [] })));
+        const was = policyState(cur[0].notes);
+        if (res2.level !== 'ok' || was) patch.notes = [patch.notes, policyMark(res2)].join('\n');
+        if (res2.level === 'block') patch.status = 'needs_owner';
+      }
       const rows = await sbPatch(`posts?id=eq.${id}`, patch);
       return res.status(200).json({ ok: true, id, status: rows[0]?.status, scheduled_at: rows[0]?.scheduled_at });
     }
@@ -911,6 +937,18 @@ export default async function handler(req, res) {
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
+    if (action === 'deck') {
+      // สไลด์รายงาน (Canva) ส่งถึงคุณแดน: ขึ้นห้องประชุม + เช็คลิสต์พร้อมลิงก์
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const body = await readBody(req);
+      const url = String(body.url || '').trim(), title = String(body.title || 'สไลด์รายงาน').trim().slice(0, 120);
+      if (!/^https:\/\/([a-z0-9-]+\.)*(canva\.com|canva\.link)\//i.test(url)) return res.status(400).json({ ok: false, error: 'ต้องเป็นลิงก์ Canva' });
+      const src = MEMBER_TH[body.source] ? String(body.source) : 'manager';
+      const summary = String(body.summary || '').trim().slice(0, 600);
+      await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'deck', source: src, text: `${title}\n${summary ? summary + '\n' : ''}เปิดสไลด์: ${url}`, link_url: url }], prefer: 'return=minimal' });
+      const r = await addTodo({ text: `อ่านสไลด์: ${title}`, type: 'do', from: src, link: url });
+      return res.status(200).json({ ok: true, todo: r.item?.id });
+    }
     if (action === 'ai_status') {
       // สถานะ AI ห้องพัก: ใส่คีย์หรือยัง และเซิร์ฟเวอร์ (สิงคโปร์) ต่อถึงไหม (Chub บล็อกบางประเทศ)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -1012,8 +1050,16 @@ export default async function handler(req, res) {
       if (added) await saveTodo(items);
       const { hours } = await todoWithDue(items);
       const hasCh = await channelCol();
-      const pend = await sb(`posts?status=in.(needs_owner,failed)&select=id,status,kind,source,error,text,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`);
-      const auto = pend.map((p) => ({ id: p.id, status: p.status, kind: p.kind, source: p.source || null, error: p.error ? String(p.error).slice(0, 160) : null, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, headline: String(p.text || '').split('\n')[0].slice(0, 80) }));
+      // ตรวจนโยบายโพสต์ในคิวที่ยังไม่เคยตรวจ (ครั้งละไม่เกิน 40)
+      try {
+        const unchecked = (await sb(`posts?status=in.(draft,approved,needs_owner)&scheduled_at=gte.${new Date().toISOString()}&select=id,status,text,notes${hasCh ? ',channel' : ''}&limit=60`)).filter((x) => !policyState(x.notes)).slice(0, 40);
+        const shopC = unchecked.length ? await loadShop().catch(() => ({ products: [] })) : null;
+        for (const x of unchecked) { const r = checkPolicy(x, shopC); const patch = { notes: [x.notes, policyMark(r)].filter(Boolean).join('\n').slice(0, 1500) }; if (r.level === 'block' && x.status !== 'needs_owner') patch.status = 'needs_owner'; await sbPatch(`posts?id=eq.${x.id}`, patch); }
+      } catch (e) { console.error('policy sweep', e.message); }
+      const pend = await sb(`posts?status=in.(needs_owner,failed)&select=id,status,kind,source,error,text,notes,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`);
+      // โพสต์ที่ระบบเตือนเรื่องนโยบายและยังไม่ขึ้นเพจ (ขึ้นเช็คลิสต์ให้คุณแดนเห็น)
+      const flagged = await sb(`posts?status=in.(draft,approved)&notes=ilike.*${encodeURIComponent('[นโยบาย-')}*&select=id,status,kind,source,error,text,notes,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`).catch(() => []);
+      const auto = [...pend, ...flagged.filter((p) => { const st = policyState(p.notes); return st && st.level !== 'ok'; })].map((p) => ({ id: p.id, status: p.status, kind: p.kind, source: p.source || null, error: p.error ? String(p.error).slice(0, 160) : null, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, headline: String(p.text || '').split('\n')[0].slice(0, 80), policy: policyState(p.notes) }));
       items.sort((a, b) => (a.done_at ? 1 : 0) - (b.done_at ? 1 : 0) || Date.parse(b.created_at) - Date.parse(a.created_at));
       return res.status(200).json({ ok: true, items, auto, added, hours });
     }
@@ -1048,6 +1094,15 @@ export default async function handler(req, res) {
         const ch = p.channel === 'threads' ? 'threads' : 'facebook';
         if (ch === 'threads' && !th) { results.push({ id: p.id, ok: false, error: 'ยังไม่ได้เชื่อม Threads' }); continue; }
         if (ch === 'facebook' && !fb) { results.push({ id: p.id, ok: false, error: 'ยังไม่ได้เชื่อมเพจ Facebook' }); continue; }
+        // ตรวจนโยบายโพสต์ที่ยังไม่เคยผ่านการตรวจ (ร่างก่อนมีระบบ) เสี่ยงสูง = กักไว้ให้คุณแดน ไม่โพสต์
+        if (!policyState(p.notes)) {
+          const pr = checkPolicy(p, await loadShop().catch(() => ({ products: [] })));
+          if (pr.level !== 'ok') {
+            const patchP = { notes: [p.notes, policyMark(pr)].filter(Boolean).join('\n').slice(0, 1500) };
+            if (pr.level === 'block' && !id) { patchP.status = 'needs_owner'; await sbPatch(`posts?id=eq.${p.id}`, patchP); await chatEvent('guard', 'กักโพสต์ไว้ 1 ชิ้นครับ ระบบตรวจว่าเสี่ยงผิดนโยบายแพลตฟอร์ม รอคุณแดนตัดสิน', 'policy'); results.push({ id: p.id, ok: false, error: 'กักไว้: เสี่ยงผิดนโยบาย' }); continue; }
+            await sbPatch(`posts?id=eq.${p.id}`, patchP); p.notes = patchP.notes;
+          }
+        }
         // จองสิทธิ์ก่อนโพสต์ กันโพสต์ซ้ำเมื่อ cron กับแอดมินชนกัน
         const claimed = await sbPatch(`posts?id=eq.${p.id}&status=neq.publishing&status=neq.published`, { status: 'publishing' });
         if (!claimed.length) continue;
