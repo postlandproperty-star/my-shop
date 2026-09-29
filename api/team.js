@@ -14,7 +14,8 @@ const SECRET = process.env.SUPABASE_SECRET_KEY || '';
 const CONTENT_KEY = process.env.CONTENT_API_KEY || '';
 const AD_ACCOUNT = process.env.FB_AD_ACCOUNT || 'act_1273219618240288';
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
-const isTestOrder = (o) => Number(o.amount) < 30 || /ทดสอบ|แคลคูลัส/.test(o.product_name || '');
+let TEST_EMAILS = new Set(); // อีเมลที่เจ้าของใช้ทดลองซื้อ (shop_state private.testEmails) โหลดทุกคำขอ
+const isTestOrder = (o) => Number(o.amount) < 30 || /ทดสอบ|แคลคูลัส/.test(o.product_name || '') || TEST_EMAILS.has(String(o.email || '').trim().toLowerCase());
 
 async function sb(path, { method = 'GET', body, prefer } = {}) {
   const headers = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
@@ -31,6 +32,7 @@ export default async function handler(req, res) {
   if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
   const action = String(req.query.action || '');
   try {
+    try { const pr = await sb('shop_state?id=eq.private&select=data'); TEST_EMAILS = new Set((pr?.[0]?.data?.testEmails || []).map((e) => String(e).toLowerCase())); } catch { TEST_EMAILS = new Set(); }
     if (action === 'comments') {
       const fb = await loadFb();
       if (!fb) return res.status(200).json({ ok: false, error: 'ยังไม่ได้เชื่อมเพจ Facebook' });
@@ -93,8 +95,8 @@ export default async function handler(req, res) {
       const campaigns = await fbGet(`${AD_ACCOUNT}/campaigns`, { access_token: fb.userToken, fields: 'id,name,status,effective_status,daily_budget,lifetime_budget,objective', limit: 50 });
       const adsets = await fbGet(`${AD_ACCOUNT}/adsets`, { access_token: fb.userToken, fields: 'id,name,status,effective_status,daily_budget,campaign_id,end_time', limit: 50 });
       const since = new Date(Date.now() - n * 864e5).toISOString();
-      const orders = await sb(`orders?status=eq.paid&paid_at=gte.${since}&select=paid_at,amount,campaign,product_name`);
-      return res.status(200).json({ ok: true, account: acct, campaigns: campaigns.data || [], adsets: adsets.data || [], insights: ins.data || [], daily: daily.data || [], shopOrders: orders.filter((o) => !isTestOrder(o)) });
+      const orders = await sb(`orders?status=eq.paid&paid_at=gte.${since}&select=paid_at,amount,campaign,product_name,email`);
+      return res.status(200).json({ ok: true, account: acct, campaigns: campaigns.data || [], adsets: adsets.data || [], insights: ins.data || [], daily: daily.data || [], shopOrders: orders.filter((o) => !isTestOrder(o)).map(({ email, ...o }) => o) });
     }
     if (action === 'sync-adspend') {
       const fb = await loadFb();

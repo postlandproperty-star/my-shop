@@ -38,9 +38,12 @@ async function sweepQrPayments() {
 
 // ออเดอร์ทดสอบ (สินค้าร่าง "ทดสอบ"/แคลคูลัส ราคา 11 ที่ใช้ลองจ่ายเงิน) ไม่นับในรายงานยอดขาย
 // ถ้าส่งรายการสินค้ามา นับเฉพาะออเดอร์ของสินค้าที่เปิดขายจริง (published)
-function testOrder(products) {
+// emails = อีเมลที่เจ้าของใช้ทดลองซื้อ (เก็บใน shop_state private.testEmails ไม่อยู่บนหน้าเว็บ)
+function testOrder(products, emails = []) {
   const live = products ? new Set(products.filter((p) => p.status === 'published').map((p) => p.id)) : null;
-  return (o) => /ทดสอบ|แคลคูลัส/.test(o.product_name || '') || Number(o.amount) < 30 || !!(live && o.product_id && !live.has(o.product_id));
+  const mine = new Set((emails || []).map((e) => String(e).trim().toLowerCase()));
+  return (o) => /ทดสอบ|แคลคูลัส/.test(o.product_name || '') || Number(o.amount) < 30 || !!(live && o.product_id && !live.has(o.product_id))
+    || mine.has(String(o.email || '').trim().toLowerCase());
 }
 async function sb(path, { method = 'GET', body, prefer } = {}) {
   const headers = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
@@ -474,6 +477,17 @@ export default async function handler(req, res) {
       if (rows.some((r) => r.kind === 'reel' && r.source === 'clip')) await chatEvent('clip', pick(['ส่งคลิปใหม่เข้าคิวแล้วครับ ตั้งเวลาโพสต์ไว้แล้ว 🎬', 'คลิปวันนี้เสร็จแล้วครับ รอเวลาปล่อย ใครอยากดูก่อนไปที่แท็บคอนเทนต์', 'ตัดเสร็จแล้วครับ วันนี้ธีมเด็ด ขอเสียงหน่อย']), 'reel');
       return res.status(200).json({ ok: true, inserted: inserted.length, ids: inserted.map((r) => r.id), policy: policy.map((x, i) => ({ index: i, level: x.level, issues: x.issues.map((y) => y.msg) })), skipped_threads: skippedThreads, warning: skippedThreads ? 'Threads ยังไม่พร้อม (ยังไม่ได้เพิ่มคอลัมน์ channel) ข้ามโพสต์ช่อง Threads' : undefined });
     }
+    if (action === 'test_emails') { // อีเมลที่เจ้าของใช้ทดลองซื้อ: ไม่นับในรายงาน/ห้องประชุม/ติดตามลูกค้า  GET ดู · POST {emails:[...]} ตั้งใหม่
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const row = await sb('shop_state?id=eq.private&select=data');
+      const data = row?.[0]?.data || {};
+      if (req.method === 'POST') {
+        const b = await readBody(req);
+        data.testEmails = [...new Set((b.emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)))];
+        await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
+      }
+      return res.status(200).json({ ok: true, testEmails: data.testEmails || [] });
+    }
     if (action === 'stripe_hook') { // ดูว่า webhook ของร้านฟังเหตุการณ์อะไร / POST เพิ่ม payment_intent.succeeded (จ่าย QR บนหน้าร้าน) อย่างเดียว
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const list = (await stripe('GET', 'webhook_endpoints?limit=20')).data || [];
@@ -526,13 +540,13 @@ export default async function handler(req, res) {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const since = new Date(Date.now() - 7 * 864e5).toISOString();
       const prev = new Date(Date.now() - 14 * 864e5).toISOString();
-      const all = await sb(`orders?select=created_at,paid_at,product_id,product_name,amount,status,campaign,emailed_at,session_id&created_at=gte.${prev}&order=created_at.desc`);
+      const all = await sb(`orders?select=created_at,paid_at,product_id,product_name,amount,status,campaign,emailed_at,session_id,email&created_at=gte.${prev}&order=created_at.desc`);
       const hasCh = await channelCol();
       const posts = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,fb_post_id${hasCh ? ',channel,th_post_id' : ''}&created_at=gte.${prev}&order=created_at.desc`);
       const shop = await loadShop();
-      const isTest = testOrder(shop.products || []);
-      const orders = all.filter((o) => !isTest(o));
       const priv = await sb('shop_state?id=eq.private&select=data');
+      const isTest = testOrder(shop.products || [], priv?.[0]?.data?.testEmails);
+      const orders = all.filter((o) => !isTest(o));
       const campaigns = priv?.[0]?.data?.campaigns || [];
       const sum = (list) => list.reduce((a, o) => a + (Number(o.amount) || 0), 0);
       const paid = orders.filter((o) => o.status === 'paid');
@@ -1041,16 +1055,16 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const now = Date.now(), since = new Date(now - 7 * 864e5).toISOString(), prev = new Date(now - 14 * 864e5).toISOString(), ahead = new Date(now + 7 * 864e5).toISOString(), nowIso = new Date(now).toISOString();
-      const isTest = testOrder(null);
       const sum = (l) => l.reduce((a, o) => a + (Number(o.amount) || 0), 0);
       const hasCh = await channelCol();
       const [orders, posts, priv, notes, jobs] = await Promise.all([
-        sb(`orders?select=created_at,paid_at,product_name,amount,status&created_at=gte.${prev}`),
+        sb(`orders?select=created_at,paid_at,product_name,amount,status,email&created_at=gte.${prev}`),
         sb(`posts?status=in.(approved,published,needs_owner,failed,draft)&or=(published_at.gte.${since},scheduled_at.gte.${since})&select=status,kind,source,created_at,published_at,scheduled_at,notes${hasCh ? ',channel' : ''}&limit=400`),
         sb('shop_state?id=eq.private&select=data'),
         sb(`posts?status=in.(note,log)&created_at=gte.${new Date(now - 14 * 864e5).toISOString()}&select=source,kind,text,created_at&order=created_at.desc&limit=200`),
         loadJobs().catch(() => []),
       ]);
+      const isTest = testOrder(null, priv?.[0]?.data?.testEmails);
       const real = orders.filter((o) => !isTest(o));
       const paid = real.filter((o) => o.status === 'paid');
       const wk = paid.filter((o) => (o.paid_at || o.created_at) >= since), lw = paid.filter((o) => (o.paid_at || o.created_at) < since);
