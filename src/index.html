@@ -1125,10 +1125,7 @@ function shopView(){
       ${(()=>{const bp2=bp&&bp.status==='published'&&Number(p.bumpPrice)>0?bp:null,on=!!(f.bump&&bp2),total=p.price+(on?Number(p.bumpPrice):0),pct=bp2?Math.round((1-Number(p.bumpPrice)/bp2.price)*100):0;return `
       ${bp2?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${on?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>ซื้อคู่กับ ${esc(bp2.name)} <span class="was">${baht(bp2.price)}</span> ${baht(p.bumpPrice)}${pct>0?` <span class="badge ok">ลด ${pct}%</span>`:''}</b><p>ติ๊กเพิ่มแล้วจ่ายรวมครั้งเดียว ได้ไฟล์ทั้งสองทันทีหลังชำระเงิน</p></label></div>`:''}
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(total)}${on?` <span class="fine">(${baht(p.price)} + ${baht(p.bumpPrice)})</span>`:''}</p>
-      <div class="field" style="margin:0 0 10px"><label for="co-email">อีเมลสำหรับรับไฟล์</label>
-        <input class="input" id="co-email" type="email" inputmode="email" autocomplete="email" placeholder="you@email.com" value="${esc((()=>{try{return localStorage.getItem('sl_email')||'';}catch(e){return '';}})())}">
-        <span class="fine">ใช้ส่งลิงก์ดาวน์โหลด และเตือนคุณ 1 ครั้งถ้าชำระเงินไม่เสร็จ ไม่ส่งโฆษณา</span></div>
-      <a class="btn btn-buy btn-block" data-a="payGo" href="/api/checkout?p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">ชำระเงิน ${baht(total)} (PromptPay / บัตร)</a>`;})()}
+      <a class="btn btn-buy btn-block" href="/api/checkout?p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">ชำระเงิน ${baht(total)} (PromptPay / บัตร)</a>`;})()}
       ${payLogos(1)}${paySafe()}
       <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
       ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
