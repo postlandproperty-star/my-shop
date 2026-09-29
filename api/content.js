@@ -82,9 +82,60 @@ async function addTodo({ text, type = 'do', from = 'manager', link = null }) {
   const dup = items.find((x) => norm(x.text) === norm(text) && Date.now() - Date.parse(x.created_at) < 7 * 864e5);
   if (dup) return { items, item: dup, duplicate: true };
   const { randomUUID } = await import('node:crypto');
-  const item = { id: randomUUID(), type: type === 'decide' ? 'decide' : 'do', text: String(text).trim().slice(0, 400), from: String(from).slice(0, 20), link: link ? String(link).slice(0, 300) : null, created_at: new Date().toISOString(), done_at: null };
+  const h = from === 'owner' ? 0 : todoHours(await loadCfg());
+  const item = { id: randomUUID(), type: type === 'decide' ? 'decide' : 'do', text: String(text).trim().slice(0, 400), from: String(from).slice(0, 20), link: link ? String(link).slice(0, 300) : null, created_at: new Date().toISOString(), done_at: null, due_at: h ? new Date(Date.now() + h * 36e5).toISOString() : null };
   items.unshift(item); await saveTodo(items);
   return { items, item, duplicate: false };
+}
+// ตั้งค่าทีมจากคุณแดน (shop_state id=team_cfg): global {todo_hours, manager_money, team_note}, members {<source>: {paused, note, fields:[{k,label,value}]}}
+async function loadCfg() { const rows = await sb('shop_state?id=eq.team_cfg&select=data'); const d = rows?.[0]?.data || {}; return { global: { todo_hours: 24, manager_money: false, team_note: '', ...(d.global || {}) }, members: d.members || {}, updated_at: d.updated_at || null }; }
+async function saveCfg(cfg) { cfg.updated_at = new Date().toISOString(); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'team_cfg', data: cfg, updated_at: cfg.updated_at }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+const todoHours = (cfg) => Math.min(168, Math.max(1, Number(cfg?.global?.todo_hours) || 24));
+const cfgField = (cfg, k, f) => { const x = (cfg.members?.[k]?.fields || []).find((y) => y.k === f); return x && String(x.value ?? '').trim() !== '' ? String(x.value).trim() : null; };
+// เช็คลิสต์มีเวลาตอบ: เลยเวลาแล้วคุณแดนยังไม่ตอบ ถือว่าพี่ต้นรับไปตัดสิน/ทำแทน (รายการที่คุณแดนเพิ่มเองไม่มีเวลา)
+async function todoWithDue(items0) {
+  const items = items0 || await loadTodo();
+  const cfg = await loadCfg(); const h = todoHours(cfg); const now = Date.now(); const nowIso = new Date(now).toISOString();
+  let changed = false; const newly = [];
+  for (const it of items) {
+    if (it.done_at || it.answer || it.delegated_at || it.from === 'owner') continue;
+    if (!it.due_at) { it.due_at = new Date(now + h * 36e5).toISOString(); changed = true; continue; }
+    if (Date.parse(it.due_at) <= now) { it.delegated_at = nowIso; it.delegated_to = 'manager'; changed = true; newly.push(it); }
+  }
+  if (changed) await saveTodo(items);
+  if (newly.length) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'handoff', source: 'manager', text: `รับเรื่องแทนคุณแดน ${newly.length} เรื่อง (เลยเวลาตอบ ${h} ชม.) จะตัดสินหรือทำให้ในรอบงานถัดไป แล้วรายงานผลในเช็คลิสต์ครับ\n${newly.map((i) => `- ${String(i.text).slice(0, 120)}`).join('\n')}` }], prefer: 'return=minimal' }); } catch (e) {} }
+  return { items, cfg, hours: h };
+}
+function cfgBlock(cfg) {
+  const L = [];
+  if (cfg.global.team_note) L.push(`- ทั้งทีม: ${cfg.global.team_note}`);
+  for (const [k, m] of Object.entries(cfg.members || {})) {
+    if (!MEMBER_TH[k] || !m) continue;
+    const parts = [];
+    if (m.paused) parts.push('พักงาน: รอบนี้ไม่ต้องทำงานประจำและไม่ต้องส่งงาน จบรอบทันที (ยกเว้นคุณแดนสั่งงานถึงคุณโดยตรง)');
+    for (const f of (m.fields || [])) if (f && String(f.value ?? '').trim() !== '') parts.push(`${f.label} = ${f.value}`);
+    if (m.note) parts.push(`คำสั่งประจำเพิ่มเติม: ${m.note}`);
+    if (parts.length) L.push(`- ${MEMBER_TH[k]} (${k}): ${parts.join('; ')}`);
+  }
+  L.push(`- เช็คลิสต์ของคุณแดนมีเวลาตอบ ${todoHours(cfg)} ชม. เลยเวลาแล้วพี่ต้นตัดสินหรือทำแทน`);
+  return '== ตั้งค่าจากคุณแดน (มีผลทันที ใช้แทนคำสั่งประจำตัวในส่วนที่ขัดกัน ทำตามทุกรอบจนกว่าคุณแดนจะเปลี่ยน) ==\n' + L.join('\n');
+}
+function handoffBlock(items, cfg) {
+  const d = items.filter((i) => i.delegated_at && !i.done_at && !i.answer);
+  if (!d.length) return { text: '', list: [] };
+  const money = cfg.global.manager_money
+    ? 'คุณแดนอนุญาตให้พี่ต้นตัดสินเรื่องเงินแทนได้ (งบแอด ราคา ส่วนลด) เลือกทางที่คุ้มที่สุดและเขียนเหตุผล'
+    : 'เรื่องที่ต้องใช้เงินเพิ่ม เพิ่มงบแอด ปรับราคา หรือให้ส่วนลด ให้เลือกทางที่ไม่เพิ่มค่าใช้จ่าย (คงเดิม หยุด หรือลด) แล้วเขียนเหตุผล';
+  const list = d.map((i) => ({ id: i.id, type: i.type, from: i.from, text: i.text, delegated_at: i.delegated_at }));
+  const text = `== เช็คลิสต์ที่คุณแดนตอบไม่ทันเวลา: พี่ต้นตัดสินหรือทำแทน (ถ้าคุณคือพี่ต้น ทำเรื่องนี้ก่อน) ==\n${d.map((i) => `- [${i.id}] (${i.type === 'decide' ? 'ต้องตัดสินใจ' : 'ต้องลงมือ'} จาก ${MEMBER_TH[i.from] || (i.from === 'plan' ? 'พี่ต้น' : i.from)}) ${String(i.text).slice(0, 300)}`).join('\n')}\nปิดเรื่อง: POST action=todo {"id":"<id>","resolve":"ตัดสินว่า/ทำแล้ว ... เพราะ ...","from":"manager"} งานที่ต้องใช้มือคุณแดนจริง (เช่น กดใน Ads Manager แชร์เข้ากลุ่ม) ให้ resolve ว่าทีมทำแทนได้แค่ไหน หรือตัดสินให้ข้ามไป\nกติกาเงิน: ${money}`;
+  return { text, list };
+}
+// คุณแดนสั่งสมาชิก (kind reply @<source>) + คนนั้นตอบรับทันทีใน 1-3 นาที คำตอบเต็มมาจากรอบคอมเมนต์
+async function ownerReply(to, text) {
+  const ins = await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'reply', source: 'manual', text: `@${to} ${text}` }], prefer: 'return=representation' });
+  const pol = ['writer', 'designer', 'community', 'market', 'finance', 'hr', 'care'].includes(to) ? 'ค่ะ' : 'ครับ';
+  if (ins?.[0]?.id) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'comment', source: to, text: pick([`รับทราบ${pol}คุณแดน เดี๋ยวดูรายละเอียดแล้วตอบกลับตรงนี้${pol}`, `ได้เลย${pol} ขอเวลาเช็กก่อนนิดนึง เดี๋ยวแจ้งว่าจะทำยังไงและเสร็จเมื่อไหร่${pol}`, `รับเรื่องแล้ว${pol} จะทำในรอบงานถัดไปแล้วรายงานผลใต้ข้อความนี้${pol}`]), scheduled_at: new Date(Date.now() + (60 + Math.floor(Math.random() * 120)) * 1000).toISOString(), notes: JSON.stringify({ on: ins[0].id, ack: true }) }], prefer: 'return=minimal' }); } catch (e) {} }
+  return ins?.[0]?.id;
 }
 // ฝ่ายดูแลระบบ "พี่การ์ด": ตรวจสุขภาพระบบด้วยกฎตายตัว (ไม่ใช้ AI) รันทุกเช้าจาก cron keepalive และเรียกเองได้
 async function runHealth(host) {
@@ -258,6 +309,18 @@ export default async function handler(req, res) {
         week: p.week ? String(p.week).slice(0, 12) : null, notes: p.notes ? String(p.notes).slice(0, 1000) : null,
       }));
       if (!rows.length) return res.status(400).json({ ok: false, error: 'no posts' });
+      const cfgD = await loadCfg();
+      const paused = rows.filter((r) => cfgD.members[r.source]?.paused);
+      if (paused.length === rows.length) return res.status(403).json({ ok: false, error: `${MEMBER_TH[paused[0].source]} ถูกพักงานตามตั้งค่าของคุณแดน ไม่รับงานใหม่` });
+      for (const r of paused) rows.splice(rows.indexOf(r), 1);
+      const rd = cfgField(cfgD, 'clip', 'reels_day');
+      if (rd != null && rows.some((r) => r.kind === 'reel')) {
+        const b = new Date(Date.now() + 7 * 3600e3); const dayStart = new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - 7 * 3600e3).toISOString();
+        const today = await sb(`posts?kind=eq.reel&created_at=gte.${dayStart}&select=id`);
+        const room = Math.max(0, Math.round(Number(rd) || 0) - today.length); let keep = 0;
+        for (let i = 0; i < rows.length; i++) if (rows[i].kind === 'reel') { if (keep >= room) { rows.splice(i, 1); i--; } else keep++; }
+        if (!rows.length) return res.status(429).json({ ok: false, error: `คลิปวันนี้ครบ ${rd} คลิปตามตั้งค่าของคุณแดนแล้ว` });
+      }
       for (const r of rows) r.image_url = await cacheImage(r.image_url);
       const inserted = await sb('posts', { method: 'POST', body: rows, prefer: 'return=representation' });
       if (rows.some((r) => r.kind === 'reel' && r.source === 'clip')) await chatEvent('clip', pick(['ส่งคลิปใหม่เข้าคิวแล้วครับ ตั้งเวลาโพสต์ไว้แล้ว 🎬', 'คลิปวันนี้เสร็จแล้วครับ รอเวลาปล่อย ใครอยากดูก่อนไปที่แท็บคอนเทนต์', 'ตัดเสร็จแล้วครับ วันนี้ธีมเด็ด ขอเสียงหน่อย']), 'reel');
@@ -390,10 +453,15 @@ export default async function handler(req, res) {
         const block = '== คุณแดน (เจ้าของร้าน) สั่งงานถึงสมาชิกโดยตรง ถ้าถึงคุณ: ต้องทำตามในรอบนี้เป็นอันดับแรก แล้วรายงานผลกลับใต้ข้อความนั้นด้วย POST action=comment {"comments":[{"on":"<id>","source":"<source ของคุณ>","text":"ทำแล้ว: <สรุปสั้น>"}]} ถ้าทำไม่ได้ให้ตอบว่าติดอะไร ==\n' + msgs.map((m) => `- [id ${m.id}] ถึง ${m.name} (${m.to}) ${m.created_at.slice(0, 10)}: ${m.text}`).join('\n');
         plan = plan ? { ...plan, text: `${block}\n\n${plan.text}`, created_at: msgs[0].created_at > plan.created_at ? msgs[0].created_at : plan.created_at } : { source: 'manual', kind: 'plan', text: block, created_at: msgs[0].created_at };
       }
+      // ตั้งค่าจากคุณแดน + เช็คลิสต์ที่เลยเวลา (พี่ต้นรับแทน) วางบนสุดของแผน
+      const { items: tItems, cfg } = await todoWithDue();
+      const ho = handoffBlock(tItems, cfg);
+      const topBlock = [cfgBlock(cfg), ho.text].filter(Boolean).join('\n\n');
+      plan = plan ? { ...plan, text: `${topBlock}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: topBlock, created_at: cfg.updated_at || new Date().toISOString() };
       const latest = {};
-      for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
+      for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.kind === 'handoff' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
       const upcoming = await sb(`posts?status=in.(draft,needs_owner,approved,published)&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=status,kind,text,scheduled_at,published_at,notes,source${(await channelCol()) ? ',channel' : ''}&order=scheduled_at.asc&limit=40`);
-      return res.status(200).json({ ok: true, plan, owner_briefs: briefs, owner_comments: ownerComments, minutes: minutes ? { text: minutes.text, created_at: minutes.created_at } : null, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
+      return res.status(200).json({ ok: true, plan, settings: cfg, delegated_todo: ho.list, owner_briefs: briefs, owner_comments: ownerComments, minutes: minutes ? { text: minutes.text, created_at: minutes.created_at } : null, reports: latest, schedule: upcoming.map((p) => ({ status: p.status, kind: p.kind, source: p.source, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, published_at: p.published_at, headline: String(p.text || '').split('\n')[0].slice(0, 90), experiment: (String(p.notes || '').match(/ทดลอง:\s*([^\n|]+)/) || [])[1] || null })) });
     }
     if (action === 'images') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -725,6 +793,38 @@ export default async function handler(req, res) {
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
+    if (action === 'team_cfg') {
+      // ตั้งค่าสมาชิก/ทั้งทีม: GET (แอดมินหรือ key) POST เฉพาะคุณแดน {global:{todo_hours,manager_money,team_note}, members:{<source>:{paused,note,fields:[{k,label,value}]}}}
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const cfg = await loadCfg();
+      if (req.method !== 'POST') return res.status(200).json({ ok: true, cfg });
+      if (!admin) return res.status(403).json({ ok: false, error: 'ตั้งค่าได้เฉพาะคุณแดน' });
+      const body = await readBody(req);
+      const notify = {};
+      const say = (k, t) => { (notify[k] = notify[k] || []).push(t); };
+      if (body.global && typeof body.global === 'object') {
+        const g = body.global, o = cfg.global;
+        if (g.todo_hours != null) { const h = Math.min(168, Math.max(1, Math.round(Number(g.todo_hours) || 24))); if (h !== o.todo_hours) say('manager', `เวลาตอบเช็คลิสต์ของคุณแดนเปลี่ยนจาก ${o.todo_hours} เป็น ${h} ชม. เลยเวลาแล้วพี่ต้นตัดสินแทน`); o.todo_hours = h; }
+        if (g.manager_money != null) { const v = !!g.manager_money; if (v !== !!o.manager_money) say('manager', v ? 'อนุญาตให้พี่ต้นตัดสินเรื่องเงินแทนได้เมื่อคุณแดนตอบไม่ทัน' : 'เรื่องเงินที่คุณแดนตอบไม่ทัน ให้เลือกทางที่ไม่เพิ่มค่าใช้จ่าย'); o.manager_money = v; }
+        if (g.team_note != null) { const t = String(g.team_note).trim().slice(0, 800); if (t !== (o.team_note || '')) say('manager', t ? `คำสั่งถึงทั้งทีม (ช่วยกระจายให้ทุกคน): ${t}` : 'ยกเลิกคำสั่งถึงทั้งทีมเดิม'); o.team_note = t; }
+      }
+      if (body.members && typeof body.members === 'object') {
+        for (const [k, m] of Object.entries(body.members)) {
+          if (!MEMBER_TH[k] || !m || typeof m !== 'object') continue;
+          const old = cfg.members[k] || { paused: false, note: '', fields: [] };
+          const next = { paused: !!m.paused, note: String(m.note || '').trim().slice(0, 800), fields: (Array.isArray(m.fields) ? m.fields : []).slice(0, 10).map((f) => ({ k: String(f.k || '').slice(0, 24), label: String(f.label || '').slice(0, 60), value: String(f.value ?? '').trim().slice(0, 80) })).filter((f) => f.k) };
+          if (next.paused !== !!old.paused) say(k, next.paused ? 'พักงานก่อน ไม่ต้องทำงานประจำจนกว่าคุณแดนจะเปิดอีกครั้ง' : 'กลับมาทำงานตามปกติได้แล้ว');
+          for (const f of next.fields) { const of = (old.fields || []).find((x) => x.k === f.k); const ov = of ? of.value : ''; if (f.value !== ov) say(k, f.value ? `${f.label}: ${f.value}` : `${f.label}: กลับไปใช้ค่าปกติ`); }
+          if (next.note !== (old.note || '')) say(k, next.note ? `คำสั่งประจำเพิ่มเติม: ${next.note}` : 'ยกเลิกคำสั่งประจำเพิ่มเติมเดิม');
+          cfg.members[k] = next;
+        }
+      }
+      await saveCfg(cfg);
+      const sent = [];
+      for (const [k, lines] of Object.entries(notify)) { try { await ownerReply(k, `ตั้งค่าใหม่ มีผลตั้งแต่รอบงานถัดไป ทำตามทุกรอบจนกว่าจะเปลี่ยน: ${lines.join(' / ')}`); sent.push(k); } catch (e) {} }
+      return res.status(200).json({ ok: true, cfg, notified: sent });
+    }
     if (action === 'todo') {
       // เช็คลิสต์ของคุณแดน (แอดมินหรือ key): GET รวมรายการจากรายงาน/แผนของพี่ต้น 14 วัน + รายการที่ทีมส่งตรง, POST {id,done}|{text}|{id,remove}
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -739,6 +839,14 @@ export default async function handler(req, res) {
           const it = items.find((x) => x.id === String(body.id));
           if (!it) return res.status(404).json({ ok: false, error: 'ไม่พบรายการ' });
           if (body.remove) items = items.filter((x) => x.id !== it.id);
+          else if (body.resolve) {
+            // พี่ต้นปิดเรื่องที่รับแทนคุณแดน (เลยเวลาตอบ)
+            const txt = String(body.resolve).trim().slice(0, 1500);
+            it.answer = txt; it.resolved_by = MEMBER_TH[body.from] ? String(body.from) : 'manager'; it.answered_at = new Date().toISOString(); it.done_at = it.done_at || it.answered_at;
+          } else if (body.extend && admin) {
+            const h = todoHours(await loadCfg());
+            it.due_at = new Date(Date.now() + h * 36e5).toISOString(); delete it.delegated_at; delete it.delegated_to;
+          }
           else if (body.answer) {
             // คุณแดนตอบข้อเสนอ/สั่งการกลับ: ปิดรายการ และส่งคำตอบเข้ากระดานทีมถึงคนที่ส่งมา (kind reply)
             const answer = String(body.answer).trim().slice(0, 1500);
@@ -762,16 +870,17 @@ export default async function handler(req, res) {
         for (const it of extractTodo(n.text)) {
           const dup = items.find((x) => norm(x.text) === norm(it.text) && Math.abs(Date.parse(x.created_at) - Date.parse(n.created_at)) < 7 * 864e5);
           if (dup) continue;
-          items.unshift({ id: randomUUID(), type: it.type, text: it.text, from: n.kind === 'plan' ? 'plan' : 'manager', note_id: n.id, created_at: n.created_at, done_at: null });
+          items.unshift({ id: randomUUID(), type: it.type, text: it.text, from: n.kind === 'plan' ? 'plan' : 'manager', note_id: n.id, created_at: n.created_at, done_at: null, due_at: null });
           added++;
         }
       }
       if (added) await saveTodo(items);
+      const { hours } = await todoWithDue(items);
       const hasCh = await channelCol();
       const pend = await sb(`posts?status=in.(needs_owner,failed)&select=id,status,kind,source,error,text,scheduled_at${hasCh ? ',channel' : ''}&order=scheduled_at.asc.nullslast&limit=20`);
       const auto = pend.map((p) => ({ id: p.id, status: p.status, kind: p.kind, source: p.source || null, error: p.error ? String(p.error).slice(0, 160) : null, channel: p.channel || 'facebook', scheduled_at: p.scheduled_at, headline: String(p.text || '').split('\n')[0].slice(0, 80) }));
       items.sort((a, b) => (a.done_at ? 1 : 0) - (b.done_at ? 1 : 0) || Date.parse(b.created_at) - Date.parse(a.created_at));
-      return res.status(200).json({ ok: true, items, auto, added });
+      return res.status(200).json({ ok: true, items, auto, added, hours });
     }
     if (action === 'reply') {
       // เจ้าของตอบ/สั่งสมาชิกจากการ์ดทีม → เก็บเป็น note kind reply (ขึ้นกระดานทีมท้ายแผน)
@@ -780,11 +889,8 @@ export default async function handler(req, res) {
       const body = await readBody(req);
       const to = String(body.to || ''); const text = String(body.text || '').trim().slice(0, 1500);
       if (!MEMBER_TH[to] || !text) return res.status(400).json({ ok: false, error: 'ต้องระบุผู้รับและข้อความ' });
-      const ins = await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'reply', source: 'manual', text: `@${to} ${text}` }], prefer: 'return=representation' });
-      // ตอบรับทันทีแบบสั้นในนามคนที่ถูกสั่ง (1-3 นาที) คำตอบเต็มมาจากรอบคอมเมนต์ และผลงานมาจากรอบงานของคนนั้น
-      const pol = ['writer', 'designer', 'community', 'market', 'finance', 'hr', 'care'].includes(to) ? 'ค่ะ' : 'ครับ';
-      if (ins?.[0]?.id) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'comment', source: to, text: pick([`รับทราบ${pol}คุณแดน เดี๋ยวดูรายละเอียดแล้วตอบกลับตรงนี้${pol}`, `ได้เลย${pol} ขอเวลาเช็กก่อนนิดนึง เดี๋ยวแจ้งว่าจะทำยังไงและเสร็จเมื่อไหร่${pol}`, `รับเรื่องแล้ว${pol} จะทำในรอบงานถัดไปแล้วรายงานผลใต้ข้อความนี้${pol}`]), scheduled_at: new Date(Date.now() + (60 + Math.floor(Math.random() * 120)) * 1000).toISOString(), notes: JSON.stringify({ on: ins[0].id, ack: true }) }], prefer: 'return=minimal' }); } catch (e) {} }
-      return res.status(200).json({ ok: true, to, name: MEMBER_TH[to], id: ins?.[0]?.id });
+      const rid = await ownerReply(to, text);
+      return res.status(200).json({ ok: true, to, name: MEMBER_TH[to], id: rid });
     }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -796,6 +902,12 @@ export default async function handler(req, res) {
       const due = id
         ? await sb(`posts?id=eq.${encodeURIComponent(id)}&status=in.(approved,draft,failed,needs_owner)&select=*`)
         : await sb(`posts?status=eq.approved&scheduled_at=lte.${new Date().toISOString()}&select=*&order=scheduled_at.asc&limit=12`);
+      // รอบอัตโนมัติ: โพสต์ที่ล้มเหลวเพราะเซิร์ฟเวอร์ปลายทางล่มชั่วคราว (5xx/timeout) ลองซ้ำให้ 1 ครั้ง ภายใน 2 วัน
+      if (!id) {
+        const TRANS = /\b5\d\d\b|timeout|timed out|temporar|unavailable|ECONN|fetch failed|try again/i;
+        const retry = await sb(`posts?status=eq.failed&scheduled_at=gte.${new Date(Date.now() - 2 * 864e5).toISOString()}&select=*&order=scheduled_at.asc&limit=5`);
+        for (const r of retry) if (TRANS.test(r.error || '') && !String(r.error).startsWith('[ลองซ้ำแล้ว]')) { r._retry = true; due.push(r); }
+      }
       const results = [];
       for (const p of due) {
         const ch = p.channel === 'threads' ? 'threads' : 'facebook';
@@ -817,7 +929,7 @@ export default async function handler(req, res) {
             results.push({ id: p.id, ok: true, fb_post_id: fbId });
           }
         } catch (e) {
-          await sbPatch(`posts?id=eq.${p.id}`, { status: 'failed', error: String(e.message || e).slice(0, 500) });
+          await sbPatch(`posts?id=eq.${p.id}`, { status: 'failed', error: ((p._retry ? '[ลองซ้ำแล้ว] ' : '') + String(e.message || e)).slice(0, 500) });
           await chatEvent('guard', pick(['โพสต์ขึ้นไม่ผ่านครับ 1 รายการ ผมบันทึกสาเหตุไว้ในแท็บคอนเทนต์แล้ว', 'มีโพสต์ล้มเหลวครับ เดี๋ยวเช็กให้ ระบบเก็บ error ไว้แล้ว', 'แจ้งครับ โพสต์ตัวหนึ่งขึ้นไม่สำเร็จ ดูรายละเอียดที่คอนเทนต์']), 'failed');
           results.push({ id: p.id, ok: false, error: String(e.message || e) });
         }
