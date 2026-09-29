@@ -13,7 +13,8 @@
 //   ?action=publish  (cron หรือแอดมิน) โพสต์ที่อนุมัติแล้วและถึงเวลา → ขึ้นเพจ Facebook
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
-import { loadShop, verifyAdmin, sbPatch, stripe } from '../lib/shop.js';
+import { loadShop, verifyAdmin, sbPatch, stripe, piToSession } from '../lib/shop.js';
+import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
@@ -23,6 +24,17 @@ import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
 const CONTENT_KEY = process.env.CONTENT_API_KEY || '';
+
+// ลูกค้าจ่าย QR บนหน้าร้านแล้วปิดหน้าก่อนระบบเห็น: เก็บตกทุกรอบ cron/publish (fulfill ส่งอีเมลครั้งเดียวต่อออเดอร์)
+async function sweepQrPayments() {
+  const since = Math.floor(Date.now() / 1000) - 3 * 86400;
+  const r = await stripe('GET', `payment_intents?limit=100&created[gte]=${since}`);
+  const paid = (r.data || []).filter((pi) => pi.status === 'succeeded' && pi.metadata?.flow === 'qr');
+  const origin = await siteUrl();
+  const out = [];
+  for (const pi of paid) { const f = await fulfill(piToSession(pi), { origin }); out.push({ id: pi.id.slice(-8), sent: f.sent, reason: f.reason || null }); }
+  return { ok: true, paid: paid.length, sent: out.filter((x) => x.sent).length, items: out };
+}
 
 // ออเดอร์ทดสอบ (สินค้าร่าง "ทดสอบ"/แคลคูลัส ราคา 11 ที่ใช้ลองจ่ายเงิน) ไม่นับในรายงานยอดขาย
 // ถ้าส่งรายการสินค้ามา นับเฉพาะออเดอร์ของสินค้าที่เปิดขายจริง (published)
@@ -404,7 +416,9 @@ export default async function handler(req, res) {
       if (r.ok && cronOk(req)) { try { health = await runHealth(req.headers.host); await recordHealth(health); } catch (e) { health = { ok: false, error: String(e.message || e) }; } }
       let recover = null;
       if (r.ok && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover });
+      let qr = null;
+      if (cronOk(req)) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -1246,7 +1260,9 @@ export default async function handler(req, res) {
       // รอบ cron เย็น: เตือนคนที่จ่ายไม่เสร็จด้วย
       let recover = null;
       if (!id && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
-      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover });
+      let qr = null; // รอบ publish ของ cron และของน้องคอม (08:00/21:00) เก็บตกออเดอร์ QR ด้วย
+      if (!id) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
+      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover, qr });
     }
     res.status(400).json({ ok: false, error: 'unknown action' });
   } catch (e) {

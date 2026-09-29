@@ -1,16 +1,23 @@
 // หน้าสินค้าเรียกหลังจ่ายเงิน: ตรวจกับ Stripe ว่า session นี้จ่ายจริง แล้วคืนลิงก์ไฟล์ + บันทึกออเดอร์
-// GET /api/order?session_id=cs_...
-import { stripe, sessionToOrder, upsertOrders, configured } from '../lib/shop.js';
+// GET /api/order?session_id=cs_...  หรือ  ?pi=pi_...&k=<client_secret> (จ่ายด้วย QR บนหน้าร้าน)
+import { stripe, sessionToOrder, upsertOrders, configured, piToSession } from '../lib/shop.js';
 import { fulfill } from '../lib/fulfill.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const id = String(req.query.session_id || '');
-  if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ ok: false, error: 'bad session id' });
+  const piId = String(req.query.pi || '');
+  const isPi = /^pi_[A-Za-z0-9]+$/.test(piId);
+  if (!isPi && !/^cs_(live|test)_[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ ok: false, error: 'bad session id' });
   const cfg = configured();
   if (!cfg.stripe) return res.status(500).json({ ok: false, error: 'stripe not configured' });
   try {
-    const s = await stripe('GET', `checkout/sessions/${id}`);
+    let s;
+    if (isPi) {
+      const pi = await stripe('GET', `payment_intents/${piId}`);
+      if (!pi.client_secret || pi.client_secret !== String(req.query.k || '')) return res.status(403).json({ ok: false, error: 'bad key' });
+      s = piToSession(pi);
+    } else s = await stripe('GET', `checkout/sessions/${id}`);
     const order = sessionToOrder(s);
     if (s.payment_status !== 'paid') {
       if (cfg.supabase) { try { await upsertOrders([order]); } catch (e) { console.error(e); } }

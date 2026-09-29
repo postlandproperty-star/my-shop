@@ -1,7 +1,7 @@
 // Stripe เรียกมาที่นี่ทันทีที่มีการจ่ายสำเร็จ (แม้ลูกค้าปิดหน้าเว็บไปแล้ว) → บันทึกออเดอร์ + ส่งอีเมลลิงก์ไฟล์
 // ตั้งค่าใน Stripe: Developers → Webhooks → endpoint https://<โดเมน>/api/stripe-webhook, event checkout.session.completed
 // แล้ววาง Signing secret (whsec_...) ใน Vercel เป็น STRIPE_WEBHOOK_SECRET
-import { verifyStripeSignature } from '../lib/shop.js';
+import { verifyStripeSignature, piToSession } from '../lib/shop.js';
 import { fulfill } from '../lib/fulfill.js';
 
 export const config = { api: { bodyParser: false } }; // ต้องใช้ body ดิบเพื่อตรวจลายเซ็น
@@ -29,6 +29,10 @@ export default async function handler(req, res) {
       const session = event.data.object;
       const origin = `https://${req.headers.host}`;
       const r = await fulfill(session, { origin });
+      return res.status(200).json({ ok: true, sent: r.sent, reason: r.reason || null });
+    }
+    if (event.type === 'payment_intent.succeeded' && event.data.object?.metadata?.flow === 'qr') { // จ่ายด้วย QR บนหน้าร้าน
+      const r = await fulfill(piToSession(event.data.object), { origin: `https://${req.headers.host}` });
       return res.status(200).json({ ok: true, sent: r.sent, reason: r.reason || null });
     }
     res.status(200).json({ ok: true, ignored: event.type });

@@ -127,6 +127,7 @@ footer{padding:28px 0 110px;text-align:center}
 .sp-thumbs{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 4px;max-width:560px;margin:0 auto;align-items:center;scrollbar-width:none}.sp-thumbs::-webkit-scrollbar{display:none}
 .sp-th{flex:0 0 58px;height:58px;border:2px solid var(--line);border-radius:8px;overflow:hidden;padding:0;background:#fff;cursor:pointer}.sp-th img{width:100%;height:100%;object-fit:cover}.sp-th.on{border-color:#EE4D2D}
 .sp-hint{flex:none;font-size:12px;color:var(--muted);white-space:nowrap;padding-left:4px}
+.qrbox{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--surface)}.qrbox.center{text-align:center}.qrimg{display:block;margin:6px auto;width:min(240px,70vw);height:auto;background:#fff;border-radius:10px;padding:6px}.qrsteps{text-align:left;font-size:14px;background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0}.qrsteps ol{margin:4px 0 0;padding-left:20px}
 .btn-buy{background:#EE4D2D;color:#fff;border:0;font-weight:700}.btn-buy:hover{background:#d73f22}.btn-buy:focus-visible{outline:3px solid #ffb199;outline-offset:2px}
 .sp-off{position:absolute;left:0;top:14px;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:5px 12px 5px 10px;border-radius:0 999px 999px 0;font-size:14px}
 .sp-band{background:linear-gradient(100deg,var(--hero,#2440E8),color-mix(in srgb,var(--hero,#2440E8) 55%,#ff5a36));color:#fff}
@@ -1131,7 +1132,8 @@ function shopView(){
       ${(()=>{const bp2=bp&&bp.status==='published'&&Number(p.bumpPrice)>0?bp:null,on=!!(f.bump&&bp2),total=p.price+(on?Number(p.bumpPrice):0),pct=bp2?Math.round((1-Number(p.bumpPrice)/bp2.price)*100):0;return `
       ${bp2?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${on?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>ซื้อคู่กับ ${esc(bp2.name)} <span class="was">${baht(bp2.price)}</span> ${baht(p.bumpPrice)}${pct>0?` <span class="badge ok">ลด ${pct}%</span>`:''}</b><p>ติ๊กเพิ่มแล้วจ่ายรวมครั้งเดียว ได้ไฟล์ทั้งสองทันทีหลังชำระเงิน</p></label></div>`:''}
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(total)}${on?` <span class="fine">(${baht(p.price)} + ${baht(p.bumpPrice)})</span>`:''}</p>
-      <a class="btn btn-buy btn-block" href="/api/checkout?p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">ชำระเงิน ${baht(total)} (PromptPay / บัตร)</a>`;})()}
+      ${qrBox(p,on,total)}
+      <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>`;})()}
       ${payLogos(1)}${paySafe()}
       <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
       ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
@@ -2423,6 +2425,9 @@ function act(a,el){
   switch(a){
     case 'toShop':go('shop');break;
     case 'recheckOrder':verifyOrder();break;
+    case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};render(true);const i=document.getElementById('qr-email');if(i)i.focus();break;}
+    case 'qrMake':qrMake(el);break;
+    case 'qrCancel':{qrStop();const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;render(true);break;}
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
@@ -2702,11 +2707,64 @@ document.addEventListener('submit',e=>{
   if(e.target.id==='login-form'){e.preventDefault();doLogin($('#l-email').value.trim(),$('#l-pass').value);}
 });
 
+/* จ่ายด้วย QR PromptPay บนหน้าร้าน: ลูกค้าไม่ต้องออกไปหน้า Stripe (ข้อมูลรอบแรก: ทุกคนที่ถูกพาไปหน้า Stripe ออกโดยไม่กดจ่ายเลย) */
+function qrBox(p,on,total){
+  const q=S.qr&&S.qr.slug===p.slug&&S.qr.total===total?S.qr:null;
+  if(!q||q.step==='email'||q.step==='err'){
+    const open=!!q;
+    return open?`<div class="qrbox" id="qrbox">
+      <label for="qr-email"><b>อีเมลสำหรับรับไฟล์ PDF</b></label>
+      <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(S.form.qrEmail||q.email||'')}" data-f="qrEmail">
+      <p class="fine" style="margin:6px 0 10px">ธนาคารต้องใช้อีเมลนี้ยืนยันการจ่ายผ่าน PromptPay ระบบจะส่งลิงก์ดาวน์โหลดไปที่อีเมลนี้ และแสดงบนหน้านี้ทันทีหลังจ่าย</p>
+      ${q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:0 0 8px">${esc(q.err)}</p>`:''}
+      <button class="btn btn-buy btn-block" data-a="qrMake" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">แสดง QR ชำระเงิน ${baht(total)}</button>
+    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(p.slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${baht(total)}</button>`;
+  }
+  if(q.step==='loading')return `<div class="qrbox center"><p class="muted">กำลังสร้าง QR…</p></div>`;
+  return `<div class="qrbox center" id="qrbox">
+    <p style="margin:0 0 6px"><b>สแกนจ่าย ${baht(q.total)}</b> ด้วยแอปธนาคารไหนก็ได้</p>
+    <img class="qrimg" src="${esc(q.png)}" width="240" height="240" alt="QR PromptPay สำหรับจ่าย ${baht(q.total)}">
+    <p class="fine" style="margin:8px 0">ชื่อผู้รับเงินในแอปธนาคารจะขึ้นเป็น STRIPE PAYMENTS (THAILAND) ซึ่งเป็นระบบรับชำระเงินของร้าน</p>
+    <div class="qrsteps"><b>จ่ายจากมือถือเครื่องนี้</b><ol><li>กดค้างที่รูป QR แล้วเลือกบันทึกรูป (หรือแคปหน้าจอ)</li><li>เปิดแอปธนาคาร เลือกสแกน แล้วเลือกรูปจากอัลบั้ม</li><li>จ่ายเสร็จกลับมาหน้านี้ ลิงก์ดาวน์โหลดจะขึ้นเอง</li></ol></div>
+    ${q.hosted?`<a class="btn btn-line btn-sm" href="${esc(q.hosted)}" target="_blank" rel="noopener noreferrer">เปิด QR เต็มจอ</a>`:''}
+    <p class="fine" aria-live="polite" style="margin:10px 0 0">⏳ กำลังรอการชำระเงิน ระบบตรวจให้อัตโนมัติ</p>
+    <button class="tx fine" data-a="qrCancel" style="margin-top:6px">เปลี่ยนอีเมล / ยกเลิก</button>
+  </div>`;
+}
+let qrTimer=null;
+function qrStop(){if(qrTimer){clearInterval(qrTimer);qrTimer=null;}}
+async function qrPoll(){
+  const q=S.qr;if(!q||q.step!=='show')return qrStop();
+  try{
+    const j=await fetch('/api/order?pi='+encodeURIComponent(q.pi)+'&k='+encodeURIComponent(q.k)).then(r=>r.json());
+    if(j.ok&&j.paid){
+      qrStop();S.sessionId=q.pi;S.piKey=q.k;S.qr=null;
+      try{history.replaceState(null,'',location.pathname+'?pi='+encodeURIComponent(q.pi)+'&k='+encodeURIComponent(q.k));}catch(e){}
+      verifyOrder();
+    }
+  }catch(e){}
+}
+async function qrMake(el){
+  const email=String(S.form.qrEmail||'').trim();
+  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)){S.qr.err='กรอกอีเมลให้ถูกต้อง เช่น name@gmail.com';render(true);const i=document.getElementById('qr-email');if(i)i.focus();return;}
+  try{localStorage.setItem('sl_email',email);}catch(e){}
+  const slug=el.dataset.slug,total=Number(el.dataset.total);
+  S.qr={slug,total,email,step:'loading'};render(true);
+  try{
+    const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email})}).then(r=>r.json());
+    if(!j.ok)throw new Error(j.error||'สร้าง QR ไม่สำเร็จ');
+    S.qr={slug,total,email,step:'show',pi:j.pi,k:j.k,png:j.png,hosted:j.hosted};
+    render(true);qrStop();qrTimer=setInterval(qrPoll,3000);
+    const b=document.getElementById('qrbox');if(b)b.scrollIntoView({block:'center',behavior:'smooth'});
+  }catch(e){S.qr={slug,total,email,step:'err',err:String(e.message||e)+' หรือกดจ่ายด้วยบัตรด้านล่าง'};render(true);}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.qr&&S.qr.step==='show')qrPoll();}); // กลับจากแอปธนาคาร → ตรวจทันที
+
 /* ตรวจผลการชำระเงินกับเซิร์ฟเวอร์ (ซึ่งถามต่อ Stripe) แล้วแสดงลิงก์ดาวน์โหลด */
 async function verifyOrder(){
   S.order=null;render(true);
   try{
-    const r=await fetch('/api/order?session_id='+encodeURIComponent(S.sessionId));
+    const r=await fetch(String(S.sessionId).startsWith('pi_')?'/api/order?pi='+encodeURIComponent(S.sessionId)+'&k='+encodeURIComponent(S.piKey||''):'/api/order?session_id='+encodeURIComponent(S.sessionId));
     const j=await r.json();
     if(!j.ok)S.order={paid:false,error:j.error||'เกิดข้อผิดพลาด'};
     else S.order=j;
@@ -2733,6 +2791,7 @@ function applyUrl(){
     const camp=q.get('utm_campaign');
     if(camp)S.src=camp;
     const sid=q.get('session_id');if(sid&&/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid))S.sessionId=sid;
+    const pi=q.get('pi'),pk=q.get('k');if(pi&&/^pi_[A-Za-z0-9]+$/.test(pi)&&pk){S.sessionId=pi;S.piKey=pk;}
     if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';
   }catch(e){}
 }
