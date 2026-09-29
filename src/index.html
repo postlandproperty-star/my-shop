@@ -2524,7 +2524,7 @@ function act(a,el){
     case 'importLegacy':{
       if(S.confirm==='import'){const l=loadLegacy();if(l){D=normalize(l);S.confirm='';S.productId=null;pushAll().then(()=>{render(true);toast('นำเข้าข้อมูลเก่าแล้ว');});}}
       else{S.confirm='import';render(true);}break;}
-    case 'toCheckout':{const at=()=>{const c=document.getElementById('checkout');if(c)c.scrollIntoView({block:'start'});};at();setTimeout(at,350);setTimeout(at,900);break;} // เลื่อนทันที + จัดซ้ำ กันรูปที่โหลดทีหลังดันตำแหน่ง
+    case 'toCheckout':glideTo('checkout');break;
     case 'applyCoupon':{
       const p=curProduct(),code=(S.form.coupon||'').trim().toUpperCase();S.form.coupon=code;
       if(!code){S.coupon='';S.couponErr='';}
@@ -2738,6 +2738,23 @@ function qrInner(slug,on,total){
     <p class="fine" aria-live="polite" style="margin:10px 0 0">⏳ กำลังรอการชำระเงิน ระบบตรวจให้อัตโนมัติ</p>
     <button class="tx fine" data-a="qrCancel" style="margin-top:6px">เปลี่ยนอีเมล / ยกเลิก</button>
   </div>`;
+}
+/* เลื่อนหน้าลงไปหาช่องชำระเงินแบบนุ่มๆ: คำนวณปลายทางใหม่ทุกเฟรม รูปที่โหลดทีหลังดันตำแหน่งก็ยังไปหยุดถูกที่ */
+function glideTo(id){
+  const el=document.getElementById(id);if(!el)return;
+  const target=()=>Math.max(0,Math.min(el.getBoundingClientRect().top+scrollY-8,document.documentElement.scrollHeight-innerHeight));
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches){scrollTo(0,target());return;}
+  const y0=scrollY,dist=Math.abs(target()-y0),dur=Math.min(1100,Math.max(500,dist*0.35)),t0=performance.now();
+  const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  let stop=false;const cancel=()=>{stop=true;};
+  addEventListener('wheel',cancel,{once:true,passive:true});addEventListener('touchstart',cancel,{once:true,passive:true});
+  (function step(now){
+    if(stop)return;
+    const k=Math.min(1,(now-t0)/dur);
+    scrollTo(0,y0+(target()-y0)*ease(k));
+    if(k<1)requestAnimationFrame(step);
+    else setTimeout(()=>{if(!stop&&Math.abs(target()-scrollY)>4)scrollTo({top:target(),behavior:'smooth'});},250); // รูปเพิ่งโหลดเสร็จ จัดให้ตรงอีกนิด
+  })(t0);
 }
 let qrTimer=null;
 function qrStop(){if(qrTimer){clearInterval(qrTimer);qrTimer=null;}}
