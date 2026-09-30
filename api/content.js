@@ -128,6 +128,9 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 
 // โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
 const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes'];
+// ประเภทงานโรงงาน: pdf (ชีท PDF ค่าเริ่มต้น) | notion (Notion template สร้างใน Notion ของคุณแดน คุณแดนกด Publish เอง)
+const jobKind = (b) => (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
+const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|app\.notion\.com)\//i.test(String(u || ''));
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 // ชุดหนังสือและผลิตอัตโนมัติของโรงงาน (คุณแดนตั้งจากแท็บโรงงาน) · shop_state id=factory_cfg
 async function loadFacCfg() { const r = await sb('shop_state?id=eq.factory_cfg&select=data'); const d = r?.[0]?.data || {}; return { sets: Array.isArray(d.sets) ? d.sets : null, auto: { on: false, per_week: 1, sets: [], ...(d.auto || {}) }, updated_at: d.updated_at || null }; }
@@ -146,7 +149,7 @@ async function autoFillFactory(jobs) {
       const key = String(b.match || String(b.t).slice(0, 18)).toLowerCase();
       if (!b.t || names.some((n) => n.includes(key)) || used(b.t)) continue;
       const { randomUUID } = await import('node:crypto');
-      const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', title: String(b.t).slice(0, 200), category: String(b.cat || '').slice(0, 80), pages: Number(b.pages) || undefined, price: Number(b.price) || 0, notes: String(b.notes || '').slice(0, 1000), purpose: `ผลิตอัตโนมัติ: เล่มในชุด ${set.name} (ชีทขาย ผลิตเสร็จแล้วรอคุณแดนอนุมัติลงขาย)` };
+      const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', kind: jobKind(b), title: String(b.t).slice(0, 200), category: String(b.cat || '').slice(0, 80), pages: Number(b.pages) || undefined, price: Number(b.price) || 0, notes: String(b.notes || '').slice(0, 1000), purpose: `ผลิตอัตโนมัติ: เล่มในชุด ${set.name} (ชีทขาย ผลิตเสร็จแล้วรอคุณแดนอนุมัติลงขาย)` };
       jobs.push(job); await saveJobs(jobs);
       await logNote('factory', `ผลิตอัตโนมัติหยิบเล่มถัดไปเข้าคิว: ${job.title} (ชุด ${set.name})`);
       return job;
@@ -1270,7 +1273,7 @@ export default async function handler(req, res) {
       const { randomUUID } = await import('node:crypto');
       const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: String(body.ordered_by || 'manager').slice(0, 40) };
       for (const f of FACTORY_FIELDS) if (body[f] != null && body[f] !== '') job[f] = typeof body[f] === 'number' ? body[f] : String(body[f]).slice(0, 2000);
-      job.price = Number(job.price || 0);
+      job.price = Number(job.price || 0); job.kind = jobKind(body);
       const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
@@ -1300,11 +1303,12 @@ export default async function handler(req, res) {
         job.status = 'producing'; job.started_at = new Date().toISOString();
       } else if (action === 'factory_uploadurl') {
         const safe = String(body.filename || 'sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'sheet.pdf';
+        const ctype = /\.png$/i.test(safe) ? 'image/png' : /\.jpe?g$/i.test(safe) ? 'image/jpeg' : 'application/pdf';
         const path = `factory/${job.id}/${safe}`;
         const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
         const j = await r.json().catch(() => ({}));
         if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status} ${JSON.stringify(j).slice(0, 200)}` });
-        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, headers: { 'Content-Type': 'application/pdf', 'x-upsert': 'true' } });
+        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, headers: { 'Content-Type': ctype, 'x-upsert': 'true' } });
       } else if (action === 'factory_done') {
         job.status = 'done'; job.done_at = new Date().toISOString();
         if (body.file_url) job.file_url = String(body.file_url).slice(0, 500);
@@ -1312,13 +1316,19 @@ export default async function handler(req, res) {
         if (body.size) job.size = Number(body.size);
         if (body.summary) job.summary = String(body.summary).slice(0, 2000);
         if (body.listing && typeof body.listing === 'object') job.listing_copy = cleanListing(body.listing);
+        // Notion template: ลิงก์หน้าใน Notion ของคุณแดน (ยังไม่ Publish) + รูปปก/ตัวอย่างที่อัปโหลดผ่าน factory_uploadurl
+        if (isNotionUrl(body.notion_url)) { job.notion_url = String(body.notion_url).slice(0, 400); job.kind = 'notion'; }
+        const own = `${SB_URL}/storage/v1/object/public/product-images/factory/${job.id}/`;
+        if (Array.isArray(body.images)) job.images = body.images.map(String).filter((u) => u.startsWith(own)).slice(0, 6);
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
         await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
-        if (Number(job.price) >= 1 && job.file_url) job.listing = 'pending'; // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
-        const todoText = job.listing === 'pending'
+        if (Number(job.price) >= 1 && (job.file_url || job.notion_url)) job.listing = 'pending'; // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
+        const todoText = job.listing === 'pending' && job.kind === 'notion'
+          ? `อนุมัติ Notion template "${job.title}" (ราคาที่เสนอ ${job.price} บาท) เปิดหน้าใน Notion กด Share → Publish → เปิด Allow duplicate คัดลอกลิงก์ แล้ววางในการ์ด "จากโรงงาน รออนุมัติ" แล้วกดอนุมัติ`
+          : job.listing === 'pending'
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
-        try { await addTodo({ text: todoText, type: job.listing === 'pending' ? 'decide' : 'do', from: 'factory', link: job.file_url || null }); } catch (e) { console.error('todo', e.message); }
+        try { await addTodo({ text: todoText, type: job.listing === 'pending' ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);

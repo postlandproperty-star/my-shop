@@ -178,6 +178,8 @@ footer{padding:28px 0 110px;text-align:center}
 .aic-box{margin-top:10px;border:1.5px dashed var(--line);border-radius:12px;padding:12px}
 .aic-out{margin-top:10px;display:flex;flex-direction:column;gap:8px}.aic-out img{width:100%;max-width:360px;border-radius:12px;border:1px solid var(--line)}
 .fac{padding-top:16px}
+.kind-seg{display:inline-flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 0 10px}.kind-seg button{font:inherit;font-weight:600;border:0;background:transparent;border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--ink)}.kind-seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.facnotion{background:var(--bg);border-radius:10px;padding:8px 10px;margin:6px 0}
 .idea-bar{display:flex;gap:8px;margin:0 0 10px}.idea-bar input{flex:1;min-width:0}.idea-note{margin:-2px 0 10px;background:var(--bg);border-radius:10px;padding:8px 12px}
 .visits{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}.vis-total{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:15px}.vis-total b{font-size:20px}
 .vis-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.vis-cell{background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-width:0}.vis-cell span{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vis-cell b{font-size:18px}.vis-cell small{font-size:12px;color:var(--muted)}
@@ -2114,13 +2116,26 @@ function facBox(inFactory){
   if(!FAC.jobs.length){if(inFactory)return '';const q=FAC.queue||[];return `<div class="topbar"><span>🏭 จากโรงงาน: <b>ไม่มีชีทรออนุมัติ</b>${q.length?` · กำลังผลิต/รอผลิต ${q.length} เล่ม`:' · คิวว่าง'}</span><button class="chip" data-a="toFactory">ไปโรงงาน</button></div>`;}
   return `<section class="card facbox"><h3 class="h3" style="margin-top:0">🏭 จากโรงงาน รออนุมัติ (${FAC.jobs.length})</h3>
     <p class="fine" style="margin:0 0 10px">"อนุมัติเลย" = ระบบทำปกจากหน้าแรกของ PDF หน้าตัวอย่าง 4 หน้า ใส่ราคาตามใบสั่ง แล้วลงหน้าร้านทันที · "ตรวจก่อนอนุมัติ" = เปิดตัวแก้ไขพร้อมตัวอย่างสดให้ดูและแก้ก่อน</p>
-    ${FAC.jobs.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.pages?j.pages+' หน้า · ':''}ราคาที่เสนอ ${baht(j.price)}${j.done_at?' · เสร็จ '+fdt(Date.parse(j.done_at)):''}</span></div>
-      <div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a><button class="btn btn-cta btn-sm" data-a="facQuick" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${FAC.busy===j.id&&FAC.quick?'กำลังเตรียมและลงขาย...':S.confirm==='fq:'+j.id?'กดอีกครั้ง: ลงขาย '+baht(j.price):'อนุมัติเลย'}</button><button class="btn btn-line btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจก่อนอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
+    ${FAC.jobs.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.kind==='notion'?'Notion Template · ':j.pages?j.pages+' หน้า · ':''}ราคาที่เสนอ ${baht(j.price)}${j.done_at?' · เสร็จ '+fdt(Date.parse(j.done_at)):''}</span></div>
+      ${j.kind==='notion'?`<div class="facnotion"><span class="fine">📒 Notion Template · <b>ขั้นตอนเดียวที่ต้องกดเอง:</b> เปิดหน้าใน Notion → Share → Publish → เปิด Allow duplicate → คัดลอกลิงก์มาวางด้านล่าง</span>
+        <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><a class="btn btn-dark btn-sm" href="${esc(j.notion_url||'#')}" target="_blank" rel="noopener noreferrer">เปิดใน Notion</a><input class="input" id="fpub-${esc(j.id)}" data-fpub="${esc(j.id)}" inputmode="url" placeholder="วางลิงก์ที่ Publish แล้ว เช่น https://xxx.notion.site/..." value="${esc((FAC.pub||{})[j.id]||'')}" style="flex:1;min-width:220px"></div></div>`:''}
+      <div class="row" style="gap:6px;flex-wrap:wrap">${j.kind==='notion'?'':`<a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a>`}<button class="btn btn-cta btn-sm" data-a="facQuick" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${FAC.busy===j.id&&FAC.quick?'กำลังเตรียมและลงขาย...':S.confirm==='fq:'+j.id?'กดอีกครั้ง: ลงขาย '+baht(j.price):'อนุมัติเลย'}</button><button class="btn btn-line btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจก่อนอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
   </section>`;
 }
 function guessCat(t){t=String(t||'').toLowerCase();return /notion|โนชั่น/.test(t)?'notion':/ielts/.test(t)?'ielts':/tgat|a-level|มหาลัย/.test(t)?'tgat':/ก\.พ|ราชการ/.test(t)?'kp':/สนทนา|พูด|speaking|conversation/.test(t)?'speak':/ทำงาน|เที่ยว|business|travel|office/.test(t)&&!/toeic/.test(t)?'work':/grammar|ไวยากรณ์|tense/.test(t)?'grammar':/vocab|คำศัพท์|ศัพท์/.test(t)?'vocab':/listening|ฟัง/.test(t)?'listening':/reading|อ่าน/.test(t)?'reading':/mock|ข้อสอบเสมือน|full test/.test(t)?'mock':'';}
 async function facApprove(id,quick){
   const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;
+  if(j.kind==='notion'){ // Notion template: ต้องมีลิงก์ที่คุณแดน Publish แล้ว (notion.site) รูปปก/ตัวอย่างโรงงานทำมาให้แล้ว
+    const inp=document.getElementById('fpub-'+id);const pub=String(inp?inp.value:(FAC.pub||{})[id]||'').trim();FAC.pub=Object.assign(FAC.pub||{},{[id]:pub});
+    if(!/^https:\/\/([a-z0-9-]+\.)?notion\.(site|so)\//i.test(pub)||/app\.notion\.com/i.test(pub)){FAC.quick=false;toast('วางลิงก์ที่ Publish แล้วก่อน (ขึ้นต้น https://…notion.site/…) ในการ์ดนี้');render(true);return;}
+    const p0=Object.assign(blankProduct(),{name:j.title,headline:j.title,desc:String(j.summary||'').split('\n')[0].slice(0,300),price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:pub,status:'published',sell:'store',cat:'notion',
+      slug:'notion-'+String(j.id).replace(/[^a-z0-9]/gi,'').slice(0,8).toLowerCase(),images:(j.images||[]).slice(0,6),
+      features:['เทมเพลต Notion กด Duplicate ใช้ได้ทันที','ใช้กับ Notion ฟรีได้ ทั้งมือถือและคอม',j.audience?`เหมาะกับ ${j.audience}`:''].filter(Boolean).join('\n'),specs:'รูปแบบ | Notion Template\nใช้ได้กับ | Notion ฟรี / มือถือ / คอม'});
+    const lc=j.listing_copy||{};['name','headline','desc','features','forwho','notfor','faq','specs','toc'].forEach(k=>{if(String(lc[k]||'').trim())p0[k]=lc[k];});
+    S.draft=initDraft(p0);S.draft.fromJob=j.id;S.edit='new';S.err='';render(false);
+    if(quick){FAC.quick=false;const btn={dataset:{}};act('saveProduct',btn);if(S.err){toast('ลงขายไม่สำเร็จ: '+S.err+' เปิดตัวแก้ไขให้แล้ว');render(true);}else toast('ลงขายแล้ว ขึ้นหน้าร้านเรียบร้อย');return;}
+    toast('ตรวจข้อความและรูป แล้วกด "อนุมัติ ลงขาย"');pvPost(0);return;
+  }
   const pages=Number(j.pages)||0;
   const p0=Object.assign(blankProduct(),{name:j.title,headline:j.title,desc:String(j.summary||'').split('\n')[0].slice(0,300),price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url,status:'published',sell:'store',
     cat:guessCat(j.title+' '+(j.category||'')),slug:'sheet-'+String(j.id).replace(/[^a-z0-9]/gi,'').slice(0,8).toLowerCase(),
@@ -2246,10 +2261,10 @@ async function factoryOrder(){
   if(pages&&(pages<4||pages>400)){S.ferr='จำนวนหน้าอยู่ระหว่าง 4 ถึง 400';render(true);return;}
   if(f.price!==''&&!(price>=0)){S.ferr='ราคาเป็นตัวเลข ใส่ 0 ถ้าแจกฟรี';render(true);return;}
   S.fbusy=true;render(true);
-  const body={title,category:f.cat,price,audience:String(f.audience||'').trim(),notes:String(f.notes||'').trim(),purpose:price>=1?'ชีทขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'ชีทแจกฟรี'};
+  const body={title,kind:f.kind==='notion'?'notion':'pdf',category:f.cat,price,audience:String(f.audience||'').trim(),notes:String(f.notes||'').trim(),purpose:(f.kind==='notion'?'Notion template ':'')+(price>=1?'ขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'แจกฟรี')};
   if(pages)body.pages=pages;
   try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(j&&j.ok){S.fnew={title:'',cat:f.cat,pages:'',price:'',audience:'',notes:'',hint:f.hint||''};S.fidea=null;FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
+    if(j&&j.ok){S.fnew={title:'',cat:f.cat,kind:f.kind,pages:'',price:'',audience:'',notes:'',hint:f.hint||''};S.fidea=null;FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
   catch(e){S.ferr='เชื่อมต่อไม่ได้';}
   S.fbusy=false;render(true);
 }
@@ -2273,6 +2288,8 @@ function factoryView(){
     <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
       <div class="idea-bar"><input class="input" id="fn-hint" data-fn="hint" value="${esc(f.hint||'')}" placeholder="อยากได้แนวไหน (ไม่ใส่ก็ได้) เช่น IELTS, ทำงาน"><button class="btn btn-cta btn-sm" data-a="fIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 สุ่มหัวข้อให้'}</button></div>
       ${S.fidea?`<p class="fine idea-note">${S.fidea.source==='claude'?`🤖 ไอเดียจาก${esc(S.fidea.by)} (Claude) · เหลือในคลัง ${S.fidea.left} ไอเดีย`:'🎲 สุ่มจากคลังหัวข้อสำเร็จรูป (คลังไอเดียของทีมว่าง พี่โปรเติมทุกจันทร์ พี่โอ๊คทุกพุธ)'}${S.fidea.why?' · '+esc(S.fidea.why):''} · ตรวจ แก้ แล้วกดส่งเข้าคิว หรือกดสุ่มใหม่</p>`:''}
+      <div class="kind-seg" role="group" aria-label="ประเภทงาน"><button data-a="fkind" data-v="pdf" aria-pressed="${f.kind!=='notion'}">📄 ชีท PDF</button><button data-a="fkind" data-v="notion" aria-pressed="${f.kind==='notion'}">📒 Notion Template</button></div>
+      ${f.kind==='notion'?'<p class="fine" style="margin:-4px 0 10px">พี่เหล็กสร้างเทมเพลตใน Notion ของคุณแดน + ทำรูปปกและรูปตัวอย่าง + เขียนหน้าขาย เสร็จแล้วคุณแดนกด Publish ใน Notion แล้ววางลิงก์ในการ์ดรออนุมัติ</p>':''}
       <div class="field">${lb('fn-title','ชื่อเรื่อง')}<input class="input" id="fn-title" data-fn="title" value="${esc(f.title)}" placeholder="เช่น TOEIC Part 5 Tense ที่ออกบ่อย 100 ข้อ พร้อมเฉลย"></div>
       <div class="grid2">
         <div class="field">${lb('fn-cat','หมวด (พิมพ์อะไรก็ได้)')}<input class="input" id="fn-cat" data-fn="cat" list="fn-cats" value="${esc(f.cat)}" placeholder="เช่น TOEIC คำศัพท์, IELTS, สอบ ก.พ."><datalist id="fn-cats">${['TOEIC Grammar','TOEIC คำศัพท์','TOEIC Listening','TOEIC Reading','TOEIC ข้อสอบเสมือนจริง','เตรียมสอบ IELTS','TGAT / A-Level','สอบ ก.พ. / ราชการ','คลังคำศัพท์','ไวยากรณ์','ฝึกพูด / สนทนา','อังกฤษใช้งาน (ทำงาน / เที่ยว)','ฝึกอ่าน / เรื่องสั้น','แพลนเนอร์ / สมุดจดศัพท์'].map(c=>`<option value="${c}">`).join('')}</datalist></div>
@@ -3481,6 +3498,7 @@ function act(a,el){
     case 'tplPick':{const sel=S.tplSel||(S.tplSel={});sel[el.dataset.v]=el.checked;S.confirm='';render(true);break;}
     case 'tplOrder':if(S.confirm!=='tpl:'+el.dataset.v){S.confirm='tpl:'+el.dataset.v;render(true);break;}S.confirm='';tplOrder(el.dataset.v);break;
     case 'facApprove':facApprove(id);break;
+    case 'fkind':S.fnew=S.fnew||{};S.fnew.kind=el.dataset.v;if(el.dataset.v==='notion'&&!/notion/i.test(S.fnew.cat||''))S.fnew.cat='Notion Template';render(true);break;
     case 'propShow':S.propShow=!S.propShow;render(true);break;
     case 'propX':S.propX=S.propX===id?null:id;render(true);break;
     case 'facQuick':if(S.confirm!=='fq:'+id){S.confirm='fq:'+id;render(true);break;}S.confirm='';FAC.quick=true;facApprove(id,true);break;
@@ -3787,6 +3805,7 @@ document.addEventListener('input',e=>{
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
+  if(ds.fpub){FAC.pub=Object.assign(FAC.pub||{},{[ds.fpub]:t.value});}
   if(ds.cp){S.coverPrompt=t.value;}
   if(ds.fs&&S.fdraft){S.fdraft[ds.fs]=t.value;}
   if(ds.bp&&S.draft&&S.draft.plans){const [k,f]=ds.bp.split('|');const pl=S.draft.plans.find(x=>x.key===k);if(pl){pl[f]=t.type==='checkbox'?t.checked:t.value;if(f==='on')render(true);}}
