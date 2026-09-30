@@ -11,6 +11,16 @@ const html = readFileSync(join(process.cwd(), 'src', 'index.html'), 'utf8');
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// ข้อมูลสินค้าแบบที่ Google อ่านได้ (ผลค้นหาแสดงราคา/มีของ) ชุดหนังสือใช้ช่วงราคาของแพ็กเกจ
+function productLd(p, url, desc, img) {
+  const plans = p.type === 'bundle' ? (p.plans || []).filter((x) => x.on !== false && Number(x.price) >= 1).map((x) => Number(x.price)) : [];
+  const offers = plans.length > 1
+    ? { '@type': 'AggregateOffer', priceCurrency: 'THB', lowPrice: Math.min(...plans), highPrice: Math.max(...plans), offerCount: plans.length, availability: 'https://schema.org/InStock', url }
+    : { '@type': 'Offer', priceCurrency: 'THB', price: plans[0] || Number(p.price) || 0, availability: 'https://schema.org/InStock', url };
+  const ld = { '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: desc, brand: { '@type': 'Brand', name: 'SheetLab' }, url, ...(img ? { image: [img] } : {}), offers };
+  return `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
+}
+
 async function loadShop() {
   const r = await fetch(`${SB_URL}/rest/v1/shop_state?id=eq.main&select=data`, {
     headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
@@ -31,6 +41,18 @@ export default async function handler(req, res) {
     res.statusCode = 301; res.setHeader('Location', `${NEW_SITE}${path}${q.toString() ? '?' + q : ''}`); res.setHeader('Cache-Control', 'no-store'); return res.end();
   }
   const doc = String(req.query.doc || '');
+  const seo = String(req.query.seo || '');
+  if (seo === 'robots') { // ให้ Google เก็บหน้าร้าน ไม่เก็บ API และหน้าร่าง
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
+    return res.status(200).send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /draft/\n\nSitemap: ${NEW_SITE}/sitemap.xml\n`);
+  }
+  if (seo === 'sitemap') { // รายการหน้าที่ลูกค้าเปิดได้ (เฉพาะสินค้าที่เผยแพร่แล้ว)
+    const shop = await loadShop().catch(() => ({ products: [] }));
+    const today = new Date().toISOString().slice(0, 10);
+    const urls = ['/', ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), '/privacy', '/refund'];
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
+    return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
+  }
   const draft = String(req.query.draft || '');
   if (/^[a-z0-9-]{3,60}$/.test(draft)) { // หน้าร่าง /draft/<ชื่อ>: ไม่มีลิงก์จากหน้าร้าน และบอกเครื่องมือค้นหาไม่ให้เก็บ
     let page = null;
@@ -58,11 +80,10 @@ export default async function handler(req, res) {
     // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
     const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [] }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
-    const shopName = String(shop.settings.shopName || '').trim();
-    if (shopName) { // ชื่อร้านจากหลังบ้าน → ชื่อแท็บ/พรีวิวของหน้าแรก
-      out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(shopName)}</title>`)
-        .replace('<meta property="og:title" content="ร้านหนังสือ/ชีทเรียน">', `<meta property="og:title" content="${esc(shopName)}">`);
-    }
+    // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
+    const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';
+    out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(shopName)}</title>`)
+      .replace('<meta property="og:title" content="ร้านหนังสือ/ชีทเรียน">', `<meta property="og:title" content="${esc(shopName)}"><meta name="description" content="ชีทสรุป Grammar และคำศัพท์ TOEIC ภาษาไทย พร้อมแบบฝึกหัดและเฉลยละเอียด สแกนจ่ายแล้วดาวน์โหลดได้ทันที"><link rel="canonical" href="${NEW_SITE}/">`);
     const p = /^[a-z0-9-]+$/.test(slug) ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
     if (p) {
       const proto = req.headers['x-forwarded-proto'] || 'https';
@@ -79,6 +100,8 @@ export default async function handler(req, res) {
         img ? `<meta property="og:image" content="${esc(img)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="1200">` : '',
         `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}">`,
         `<meta name="description" content="${esc(desc)}">`,
+        `<link rel="canonical" href="${NEW_SITE}/p/${esc(p.slug)}">`,
+        productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img),
       ].join('');
       out = out
         .replace(/<title>[^<]*<\/title>/, `<title>${esc(p.name)}</title>`)

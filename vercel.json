@@ -5,6 +5,14 @@
       "destination": "/api/threads?action=callback"
     },
     {
+      "source": "/robots.txt",
+      "destination": "/api/page?seo=robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/page?seo=sitemap"
+    },
+    {
       "source": "/privacy",
       "destination": "/api/page?doc=privacy"
     },
