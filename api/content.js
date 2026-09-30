@@ -672,6 +672,31 @@ export default async function handler(req, res) {
         campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length, testOrdersExcluded: all.length - orders.length, paidDelivery: thisWeek.map((o) => ({ at: o.paid_at, via: String(o.session_id || '').startsWith('pi_') ? 'qr' : 'stripe_page', emailed: !!o.emailed_at })),
         posts, products: shop.products.map((p) => ({ name: p.name, status: p.status, price: p.price })) });
     }
+    if (action === 'article' || action === 'article_hide') {
+      // คลังความรู้: ทีมคอนเทนต์ส่ง/แก้ด้วย key (POST ตาม slug ขึ้นเว็บทันที) · คุณแดนซ่อน/เปิดได้ (article_hide แอดมิน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const rows = await sb('shop_state?id=eq.articles&select=data'); const list = rows?.[0]?.data?.list || [];
+      const saveA = (l) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'articles', data: { list: l }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (action === 'article_hide') {
+        if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+        const body = await readBody(req); const a = list.find((x) => x.slug === String(body.slug || ''));
+        if (!a) return res.status(404).json({ ok: false, error: 'not found' });
+        a.status = body.hidden ? 'hidden' : 'live'; a.updated_at = new Date().toISOString(); await saveA(list);
+        return res.status(200).json({ ok: true, status: a.status });
+      }
+      if (req.method !== 'POST') { const SU = await siteUrl(); return res.status(200).json({ ok: true, list: list.map((a) => ({ slug: a.slug, title: a.title, desc: a.desc, cat: a.cat, quiz_slug: a.quiz_slug, status: a.status, by: a.by, created_at: a.created_at, updated_at: a.updated_at, chars: a.body.length, url: `${SU}/learn/${a.slug}`, ...(req.query.full ? { body: a.body } : {}) })) }); }
+      const body = await readBody(req);
+      const { cleanArticle } = await import('../lib/quiz.js');
+      const r = cleanArticle(body); if (r.error) return res.status(400).json({ ok: false, error: r.error });
+      const src = MEMBER_TH[body.source] ? String(body.source) : 'writer';
+      const old = list.find((x) => x.slug === r.article.slug); const now = new Date().toISOString();
+      if (old) Object.assign(old, r.article, { updated_at: now, by: src }); else list.push({ ...r.article, status: 'live', by: src, created_at: now, updated_at: now });
+      await saveA(list);
+      const url = `${await siteUrl()}/learn/${r.article.slug}`;
+      await logNote(src, `${old ? 'แก้' : 'ลง'}บทความคลังความรู้: ${r.article.title} ${url}`, 'article');
+      return res.status(200).json({ ok: true, url, updated: !!old });
+    }
     if (action === 'quiz' || action === 'quiz_hide') {
       // แบบทดสอบบนเว็บ: ทีมคอนเทนต์ส่ง/แก้ด้วย key (POST ตาม slug) · คุณแดนซ่อน/เปิดได้ (quiz_hide แอดมิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

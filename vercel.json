@@ -37,6 +37,14 @@
       "destination": "/api/page?quiz=:slug"
     },
     {
+      "source": "/learn",
+      "destination": "/api/page?learn=_index"
+    },
+    {
+      "source": "/learn/:slug",
+      "destination": "/api/page?learn=:slug"
+    },
+    {
       "source": "/",
       "destination": "/api/page"
     },

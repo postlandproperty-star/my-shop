@@ -4,11 +4,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { newSiteLive, NEW_SITE } from '../lib/site.js';
 import { policyPage, POLICY_DOCS } from '../lib/policies.js';
-import { quizPage, quizIndex } from '../lib/quiz.js';
+import { quizPage, quizIndex, articlePage, articleIndex } from '../lib/quiz.js';
 import { sbSelect } from '../lib/shop.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
-async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden'); } catch (e) { return []; } }
+async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
+async function loadArticles() { try { const r = await sbSelect('shop_state?id=eq.articles&select=data'); return (r?.[0]?.data?.list || []).filter((a) => a.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY = 'sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
@@ -54,10 +55,10 @@ export default async function handler(req, res) {
   if (seo === 'sitemap') { // รายการหน้าที่ลูกค้าเปิดได้ (เฉพาะสินค้าที่เผยแพร่แล้ว)
     const shop = await loadShop().catch(() => ({ products: [] }));
     const today = new Date().toISOString().slice(0, 10);
-    const quizzes = await loadQuizzes();
-    const urls = ['/', ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
+    const [quizzes, articles] = await Promise.all([loadQuizzes(), loadArticles()]);
+    const urls = ['/', ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
     res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
-    return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
+    return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
   const draft = String(req.query.draft || '');
   if (/^[a-z0-9-]{3,60}$/.test(draft)) { // หน้าร่าง /draft/<ชื่อ>: ไม่มีลิงก์จากหน้าร้าน และบอกเครื่องมือค้นหาไม่ให้เก็บ
@@ -69,15 +70,27 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(page);
   }
+  const learn = String(req.query.learn || '');
+  if (learn) { // คลังความรู้ /learn และ /learn/<slug>
+    const [shop, articles, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadArticles(), loadQuizzes()]);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    if (learn === '_index') return res.status(200).send(articleIndex(articles, { settings: shop.settings, site: NEW_SITE }));
+    const a = articles.find((x) => x.slug === learn);
+    if (!a) { res.statusCode = 404; return res.end(articleIndex(articles, { settings: shop.settings, site: NEW_SITE })); }
+    const quiz = quizzes.find((q) => q.slug === a.quiz_slug) || quizzes.find((q) => q.article_slug === a.slug) || null;
+    return res.status(200).send(articlePage(a, { products: shop.products, settings: shop.settings, site: NEW_SITE, quiz, others: articles.filter((x) => x.slug !== a.slug && (x.cat === a.cat)).concat(articles.filter((x) => x.slug !== a.slug && x.cat !== a.cat)) }));
+  }
   const quiz = String(req.query.quiz || '');
   if (quiz) { // แบบทดสอบฟรี /quiz และ /quiz/<slug> (หน้าเนื้อหาให้ Google เก็บ)
-    const [shop, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadQuizzes()]);
+    const [shop, quizzes, articles] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadQuizzes(), loadArticles()]);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     if (quiz === '_index') return res.status(200).send(quizIndex(quizzes, { settings: shop.settings, site: NEW_SITE }));
     const q = quizzes.find((x) => x.slug === quiz);
     if (!q) { res.statusCode = 404; return res.end(quizIndex(quizzes, { settings: shop.settings, site: NEW_SITE })); }
-    return res.status(200).send(quizPage(q, { products: shop.products, settings: shop.settings, site: NEW_SITE, others: quizzes.filter((x) => x.slug !== q.slug) }));
+    const article = articles.find((x) => x.slug === q.article_slug) || articles.find((x) => x.quiz_slug === q.slug) || null;
+    return res.status(200).send(quizPage(q, { products: shop.products, settings: shop.settings, site: NEW_SITE, article, others: quizzes.filter((x) => x.slug !== q.slug) }));
   }
   if (POLICY_DOCS.includes(doc)) { // หน้านโยบาย /privacy และ /refund
     const shop = await loadShop().catch(() => ({ settings: {} }));
@@ -94,8 +107,10 @@ export default async function handler(req, res) {
       out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
     }
     // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
-    const quizList = (await loadQuizzes()).map((q) => ({ slug: q.slug, title: q.title, cat: q.cat || '', n: q.questions.length }));
-    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList }).replace(/<\//g, '<\\/');
+    const [qz, ar] = await Promise.all([loadQuizzes(), loadArticles()]);
+    const quizList = qz.map((q) => ({ slug: q.slug, title: q.title, cat: q.cat || '', n: q.questions.length }));
+    const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, mins: Math.max(2, Math.round(a.body.length / 900)) }));
+    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';
