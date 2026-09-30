@@ -725,7 +725,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
     }
     if (action === 'idea') {
-      // สุ่มหัวข้อชีทใหม่ครบทุกช่องในฟอร์มสั่งผลิต (แอดมิน): มี OPENAI_API_KEY ใช้ AI คิดใหม่ ไม่มีหรือ AI ล่ม สุ่มจากคลังหัวข้อสำเร็จรูป
+      // สุ่มหัวข้อชีทใหม่ครบทุกช่องในฟอร์มสั่งผลิต (แอดมิน): หยิบจากคลังไอเดียที่ทีม Claude เติมไว้ ถ้าว่างสุ่มจากคลังหัวข้อสำเร็จรูป (OpenAI ใช้ทำรูปเท่านั้น)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const body = await readBody(req);
