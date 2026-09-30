@@ -2062,13 +2062,13 @@ function facBox(){
   if(FAC.jobs===null){loadFacJobs();return '';}
   if(!FAC.jobs.length)return '';
   return `<section class="card facbox"><h3 class="h3" style="margin-top:0">🏭 จากโรงงาน รออนุมัติ (${FAC.jobs.length})</h3>
-    <p class="fine" style="margin:0 0 10px">กด "ตรวจและอนุมัติ" ระบบจะกรอกข้อมูล ทำภาพปกและหน้าตัวอย่างจาก PDF ให้ คุณแดนตรวจราคาและหน้าตาในตัวอย่างสด แล้วกดบันทึกเพื่อลงขาย</p>
+    <p class="fine" style="margin:0 0 10px">"อนุมัติเลย" = ระบบทำปกจากหน้าแรกของ PDF หน้าตัวอย่าง 4 หน้า ใส่ราคาตามใบสั่ง แล้วลงหน้าร้านทันที · "ตรวจก่อนอนุมัติ" = เปิดตัวแก้ไขพร้อมตัวอย่างสดให้ดูและแก้ก่อน</p>
     ${FAC.jobs.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.pages?j.pages+' หน้า · ':''}ราคาที่เสนอ ${baht(j.price)}${j.done_at?' · เสร็จ '+fdt(Date.parse(j.done_at)):''}</span></div>
-      <div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a><button class="btn btn-dark btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจและอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
+      <div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a><button class="btn btn-cta btn-sm" data-a="facQuick" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${FAC.busy===j.id&&FAC.quick?'กำลังเตรียมและลงขาย...':S.confirm==='fq:'+j.id?'กดอีกครั้ง: ลงขาย '+baht(j.price):'อนุมัติเลย'}</button><button class="btn btn-line btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจก่อนอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
   </section>`;
 }
 function guessCat(t){t=String(t||'').toLowerCase();return /grammar|ไวยากรณ์|tense/.test(t)?'grammar':/vocab|คำศัพท์|ศัพท์/.test(t)?'vocab':/listening|ฟัง/.test(t)?'listening':/reading|อ่าน/.test(t)?'reading':/mock|ข้อสอบเสมือน|full test/.test(t)?'mock':'';}
-async function facApprove(id){
+async function facApprove(id,quick){
   const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;
   const pages=Number(j.pages)||0;
   const p0=Object.assign(blankProduct(),{name:j.title,headline:j.title,desc:String(j.summary||'').split('\n')[0].slice(0,300),price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url,status:'published',sell:'store',
@@ -2088,7 +2088,12 @@ async function facApprove(id){
     }
     toast('พร้อมตรวจแล้ว ดูตัวอย่างสด แก้ราคาหรือข้อความได้ แล้วกด "อนุมัติ ลงขาย"');
   }catch(e){console.error(e);toast('ทำภาพจาก PDF ไม่สำเร็จ ('+(e.message||e)+') เพิ่มภาพเองได้ในฟอร์ม');}
-  FAC.busy='';render(true);pvPost(0);
+  if(quick&&S.draft&&S.draft.fromJob===id){ // อนุมัติเลย: บันทึกด้วยค่าที่ระบบเตรียม (หน้าร้านอย่างเดียว ราคาตามใบสั่ง)
+    FAC.busy='';FAC.quick=false;const btn={dataset:{}};act('saveProduct',btn);
+    if(S.err){toast('ลงขายไม่สำเร็จ: '+S.err+' เปิดตัวแก้ไขให้แล้ว แก้แล้วกดบันทึก');render(true);}else toast('ลงขายแล้ว ขึ้นหน้าร้านเรียบร้อย');
+    return;
+  }
+  FAC.busy='';FAC.quick=false;render(true);pvPost(0);
 }
 /* ===== ช่องโรงงาน: รออนุมัติ · สั่งผลิตเอง · คิวงาน (หน้าเว็บอ่านข้อมูลอย่างเดียว ไม่ใช้ AI) ===== */
 function nextFactoryRun(){ // รอบทำงานของโรงงาน (เวลาไทย) จาก SCHED
@@ -3278,6 +3283,7 @@ function act(a,el){
     case 'tplPick':{const sel=S.tplSel||(S.tplSel={});sel[el.dataset.v]=el.checked;S.confirm='';render(true);break;}
     case 'tplOrder':if(S.confirm!=='tpl:'+el.dataset.v){S.confirm='tpl:'+el.dataset.v;render(true);break;}S.confirm='';tplOrder(el.dataset.v);break;
     case 'facApprove':facApprove(id);break;
+    case 'facQuick':if(S.confirm!=='fq:'+id){S.confirm='fq:'+id;render(true);break;}S.confirm='';FAC.quick=true;facApprove(id,true);break;
     case 'propOpen':{const x=(PROP.list||[]).find(y=>y.id===id);const p=x&&getProduct(x.product_id);if(!p)break;S.draft=isBundle(p)?bundleDraft(p):initDraft(p);Object.assign(S.draft,x.fields);S.draft.fromProp=id;S.edit=p.id;S.err='';render(false);toast('ใส่ข้อความที่ '+member(x.source).name+' เสนอแล้ว ดูตัวอย่างสด แล้วกดบันทึกถ้าเห็นด้วย');break;}
     case 'propReject':if(S.confirm!=='pr:'+id){S.confirm='pr:'+id;render(true);break;}S.confirm='';propDone(id,false);toast('ไม่ใช้ข้อเสนอนี้แล้ว');break;
     case 'facReject':if(S.confirm!=='fr:'+id){S.confirm='fr:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reject:true})}).then(j=>{if(j&&j.ok){FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==id);toast('ไม่ลงขายชีทนี้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;
