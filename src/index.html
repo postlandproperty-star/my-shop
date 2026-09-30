@@ -204,7 +204,11 @@ footer{padding:28px 0 110px;text-align:center}
 .ceo-today{color:var(--ink)}
 .ceo-rep summary{cursor:pointer;color:var(--brand);font-size:13.5px}
 .ceo-rep>div:first-of-type{white-space:pre-line;background:var(--bg);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:13.5px;line-height:1.55}
-.propcard{border-top:1px solid var(--line);padding:14px 0 4px;display:flex;flex-direction:column;gap:8px}
+.propcard{border-top:1px solid var(--line);padding:10px 0 4px;display:flex;flex-direction:column;gap:8px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:11px 14px;margin:10px 0 0;cursor:pointer}
+button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding:0 0 6px;margin:0;background:transparent}.topbar-go{color:var(--brand);font-weight:600;white-space:nowrap}
+.propbox{padding:14px}
+.prop-tap{width:100%;text-align:left;font:inherit;color:var(--ink);background:none;border:0;padding:0;cursor:pointer}.prop-tap>span:nth-child(2){flex:1;display:flex;flex-direction:column;min-width:0}
 .prop-h{display:flex;gap:10px;align-items:center}.prop-h .ava{width:40px;height:40px;border-radius:50%;flex-shrink:0}.prop-h>div{display:flex;flex-direction:column;min-width:0}.prop-h b{font-size:16px;line-height:1.35}
 .prop-p{margin:0}
 .propcard details{border:0;padding:0;margin:0;background:transparent}.propcard summary{font-size:14px;color:var(--brand);font-weight:500}
@@ -2057,10 +2061,10 @@ function productForm(){
 
 /* ชีทขายที่โรงงานผลิตเสร็จ รอคุณแดนตรวจแล้วกดอนุมัติลงขาย (โรงงานไม่เคยลงขายเอง) */
 const FAC={jobs:null,loading:false,busy:''};
-function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory&status=done').then(j=>{FAC.jobs=j&&j.ok?j.jobs.filter(x=>x.listing==='pending'):[];}).catch(()=>{FAC.jobs=[];}).then(()=>{FAC.loading=false;render(true);});}
-function facBox(){
+function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>x.status==='done'&&x.listing==='pending');FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));}).catch(()=>{FAC.jobs=[];FAC.queue=[];}).then(()=>{FAC.loading=false;render(true);});}
+function facBox(inFactory){
   if(FAC.jobs===null){loadFacJobs();return '';}
-  if(!FAC.jobs.length)return '';
+  if(!FAC.jobs.length){if(inFactory)return '';const q=FAC.queue||[];return `<div class="topbar"><span>🏭 จากโรงงาน: <b>ไม่มีชีทรออนุมัติ</b>${q.length?` · กำลังผลิต/รอผลิต ${q.length} เล่ม`:' · คิวว่าง'}</span><button class="chip" data-a="toFactory">ไปโรงงาน</button></div>`;}
   return `<section class="card facbox"><h3 class="h3" style="margin-top:0">🏭 จากโรงงาน รออนุมัติ (${FAC.jobs.length})</h3>
     <p class="fine" style="margin:0 0 10px">"อนุมัติเลย" = ระบบทำปกจากหน้าแรกของ PDF หน้าตัวอย่าง 4 หน้า ใส่ราคาตามใบสั่ง แล้วลงหน้าร้านทันที · "ตรวจก่อนอนุมัติ" = เปิดตัวแก้ไขพร้อมตัวอย่างสดให้ดูและแก้ก่อน</p>
     ${FAC.jobs.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.pages?j.pages+' หน้า · ':''}ราคาที่เสนอ ${baht(j.price)}${j.done_at?' · เสร็จ '+fdt(Date.parse(j.done_at)):''}</span></div>
@@ -2173,7 +2177,7 @@ function factoryView(){
   return `${ceoBar('factory')}<div class="wrap wide fac" style="padding-bottom:60px">
     <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">${nx?'ผลิตรอบถัดไป '+new Date(nx).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' เวลาไทย (ทุกอาทิตย์และจันทร์ 10:00 / 22:00)':'ผลิตทุกอาทิตย์และจันทร์'} · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
       <button class="chip" data-a="toFactory">รีเฟรช</button></div>
-    ${facBox()||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
+    ${facBox(1)||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
     ${facSets()}
     ${facIdeas()}
     <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
@@ -2209,15 +2213,17 @@ function propBox(){
   const list=PROP.list.filter(x=>getProduct(x.product_id));if(!list.length)return '';
   const short=v=>{v=String(v==null?'':v).replace(/\n/g,' / ');return v.length>140?v.slice(0,140)+'…':v;};
   const full=v=>String(v==null?'':v).trim();
-  return `<section class="card facbox"><h3 class="h3" style="margin-top:0">💼 ข้อเสนอจาก CEO (${list.length})</h3>
-    <p class="fine" style="margin:0 0 4px">กด "เปิดดูในตัวแก้ไข" ข้อความใหม่จะถูกใส่ในฟอร์มพร้อมตัวอย่างสด ยังไม่เปลี่ยนบนเว็บจนกว่าคุณแดนกดบันทึก</p>
-    ${list.map(x=>{const p=getProduct(x.product_id);return `<article class="propcard">
-      <div class="prop-h">${ava(x.source)}<div><b>${esc(x.title)}</b><span class="fine">${esc(member(x.source).name)} · ${fdt(Date.parse(x.created_at))}</span></div></div>
-      <div class="fine prop-p">สินค้า: ${esc(p.name)}</div>
+  const who=[...new Set(list.map(x=>member(x.source).name))].join(', ');
+  if(!S.propShow)return `<button class="topbar" data-a="propShow"><span>💼 ข้อเสนอจาก CEO <b>${list.length} เรื่อง</b> · ${esc(who)}</span><span class="topbar-go">ดู ▾</span></button>`;
+  return `<section class="card facbox propbox"><button class="topbar flat" data-a="propShow"><span>💼 ข้อเสนอจาก CEO <b>${list.length} เรื่อง</b></span><span class="topbar-go">ย่อ ▴</span></button>
+    ${list.map(x=>{const p=getProduct(x.product_id),open=S.propX===x.id;return `<article class="propcard">
+      <button class="prop-h prop-tap" data-a="propX" data-id="${esc(x.id)}" aria-expanded="${open}">${ava(x.source)}<span><b>${esc(x.title)}</b><span class="fine">${esc(member(x.source).name)} · ${esc(Object.keys(x.fields).map(k=>PROP_F[k]||k).join(', '))}</span></span><span class="topbar-go">${open?'▴':'▾'}</span></button>
+      ${open?`<div class="fine prop-p">สินค้า: ${esc(p.name)}</div>
       ${x.why?`<details class="prop-why"><summary>ทำไมถึงเสนอ</summary><p>${esc(x.why)}</p></details>`:''}
       ${Object.entries(x.fields).map(([k,v])=>`<div class="prop-f"><div class="prop-fl">${esc(PROP_F[k]||k)}</div><div class="prop-new">${esc(full(v))}</div>${full(p[k])?`<details class="prop-old"><summary>ดูข้อความเดิม</summary><div>${esc(full(p[k]))}</div></details>`:'<div class="fine">(เดิมว่างอยู่)</div>'}</div>`).join('')}
-      <div class="prop-acts"><button class="btn btn-dark" data-a="propOpen" data-id="${esc(x.id)}">เปิดดูในตัวแก้ไข</button><button class="btn ${S.confirm==='pr:'+x.id?'btn-danger':'btn-line'}" data-a="propReject" data-id="${esc(x.id)}">${S.confirm==='pr:'+x.id?'กดอีกครั้ง: ไม่ใช้':'ไม่ใช้'}</button></div>
+      <div class="prop-acts"><button class="btn btn-dark" data-a="propOpen" data-id="${esc(x.id)}">เปิดดูในตัวแก้ไข</button><button class="btn ${S.confirm==='pr:'+x.id?'btn-danger':'btn-line'}" data-a="propReject" data-id="${esc(x.id)}">${S.confirm==='pr:'+x.id?'กดอีกครั้ง: ไม่ใช้':'ไม่ใช้'}</button></div>`:''}
     </article>`;}).join('')}
+    <p class="fine" style="margin:8px 0 0">กด "เปิดดูในตัวแก้ไข" ข้อความใหม่จะอยู่ในฟอร์มพร้อมตัวอย่างสด เว็บยังไม่เปลี่ยนจนกว่าคุณแดนกดบันทึก</p>
   </section>`;
 }
 function propDone(id,applied){authFetch('/api/content?action=proposal_done',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,applied})}).then(j=>{if(j&&j.ok)PROP.list=(PROP.list||[]).filter(x=>x.id!==id);render(true);}).catch(()=>{});}
@@ -3283,6 +3289,8 @@ function act(a,el){
     case 'tplPick':{const sel=S.tplSel||(S.tplSel={});sel[el.dataset.v]=el.checked;S.confirm='';render(true);break;}
     case 'tplOrder':if(S.confirm!=='tpl:'+el.dataset.v){S.confirm='tpl:'+el.dataset.v;render(true);break;}S.confirm='';tplOrder(el.dataset.v);break;
     case 'facApprove':facApprove(id);break;
+    case 'propShow':S.propShow=!S.propShow;render(true);break;
+    case 'propX':S.propX=S.propX===id?null:id;render(true);break;
     case 'facQuick':if(S.confirm!=='fq:'+id){S.confirm='fq:'+id;render(true);break;}S.confirm='';FAC.quick=true;facApprove(id,true);break;
     case 'propOpen':{const x=(PROP.list||[]).find(y=>y.id===id);const p=x&&getProduct(x.product_id);if(!p)break;S.draft=isBundle(p)?bundleDraft(p):initDraft(p);Object.assign(S.draft,x.fields);S.draft.fromProp=id;S.edit=p.id;S.err='';render(false);toast('ใส่ข้อความที่ '+member(x.source).name+' เสนอแล้ว ดูตัวอย่างสด แล้วกดบันทึกถ้าเห็นด้วย');break;}
     case 'propReject':if(S.confirm!=='pr:'+id){S.confirm='pr:'+id;render(true);break;}S.confirm='';propDone(id,false);toast('ไม่ใช้ข้อเสนอนี้แล้ว');break;
