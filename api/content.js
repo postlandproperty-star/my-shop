@@ -129,6 +129,31 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 // โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
 const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes'];
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
+// ชุดหนังสือและผลิตอัตโนมัติของโรงงาน (คุณแดนตั้งจากแท็บโรงงาน) · shop_state id=factory_cfg
+async function loadFacCfg() { const r = await sb('shop_state?id=eq.factory_cfg&select=data'); const d = r?.[0]?.data || {}; return { sets: Array.isArray(d.sets) ? d.sets : null, auto: { on: false, per_week: 1, sets: [], ...(d.auto || {}) }, updated_at: d.updated_at || null }; }
+// ผลิตอัตโนมัติ: ถ้าเปิดไว้และคิวว่าง หยิบเล่มถัดไปในชุดที่เลือก (ยังไม่มีในร้าน ยังไม่เคยสั่ง) เข้าคิว ไม่ใช้ AI
+async function autoFillFactory(jobs) {
+  const cfg = await loadFacCfg();
+  if (!cfg.auto.on || !cfg.sets) return null;
+  if (jobs.some((j) => ['queued', 'producing'].includes(j.status))) return null;
+  const week = Date.now() - 7 * 864e5;
+  if (jobs.filter((j) => j.ordered_by === 'auto' && Date.parse(j.created_at || 0) >= week).length >= Math.min(4, Math.max(1, Number(cfg.auto.per_week) || 1))) return null;
+  const shop = await loadShop().catch(() => ({ products: [] }));
+  const names = shop.products.map((p) => String(p.name || '').toLowerCase());
+  const used = (t) => jobs.some((j) => !['cancelled', 'failed'].includes(j.status) && String(j.title || '').slice(0, 24) === String(t).slice(0, 24));
+  for (const set of cfg.sets.filter((x) => (cfg.auto.sets || []).includes(x.id))) {
+    for (const b of set.books || []) {
+      const key = String(b.match || String(b.t).slice(0, 18)).toLowerCase();
+      if (!b.t || names.some((n) => n.includes(key)) || used(b.t)) continue;
+      const { randomUUID } = await import('node:crypto');
+      const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', title: String(b.t).slice(0, 200), category: String(b.cat || '').slice(0, 80), pages: Number(b.pages) || undefined, price: Number(b.price) || 0, notes: String(b.notes || '').slice(0, 1000), purpose: `ผลิตอัตโนมัติ: เล่มในชุด ${set.name} (ชีทขาย ผลิตเสร็จแล้วรอคุณแดนอนุมัติลงขาย)` };
+      jobs.push(job); await saveJobs(jobs);
+      await logNote('factory', `ผลิตอัตโนมัติหยิบเล่มถัดไปเข้าคิว: ${job.title} (ชุด ${set.name})`);
+      return job;
+    }
+  }
+  return null;
+}
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 // ห้องพักทีม: เหตุการณ์จริงในร้านสะท้อนเข้าห้องทันที (ไม่ใช้โมเดล ใช้แม่แบบสุ่ม)
@@ -1013,8 +1038,23 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const st = String(req.query.status || '');
-      const jobs = (await loadJobs()).filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      const all = await loadJobs();
+      if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
+      const jobs = all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
       return res.status(200).json({ ok: true, jobs });
+    }
+    if (action === 'factory_cfg') { // GET แอดมิน/key · POST เฉพาะคุณแดน {sets:[{id,name,emoji,goal,books:[{t,cat,pages,price,notes,match}]}], auto:{on,per_week,sets:[id]}}
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      if (req.method !== 'POST') return res.status(200).json({ ok: true, cfg: await loadFacCfg() });
+      if (!admin) return res.status(403).json({ ok: false, error: 'ตั้งค่าได้เฉพาะคุณแดน' });
+      const body = await readBody(req); const old = await loadFacCfg();
+      const sets = Array.isArray(body.sets) ? body.sets.slice(0, 20).map((x, i) => ({ id: /^[a-z0-9_-]{2,40}$/i.test(String(x.id || '')) ? String(x.id) : 'set' + Date.now().toString(36) + i, name: String(x.name || 'ชุดใหม่').slice(0, 80), emoji: String(x.emoji || '📚').slice(0, 4), goal: String(x.goal || '').slice(0, 200),
+        books: (Array.isArray(x.books) ? x.books : []).slice(0, 30).map((b) => ({ t: String(b.t || '').trim().slice(0, 200), cat: String(b.cat || '').slice(0, 60), pages: Math.min(400, Math.max(0, Number(b.pages) || 0)), price: Math.max(0, Number(b.price) || 0), notes: String(b.notes || '').slice(0, 600), match: String(b.match || '').slice(0, 60) })).filter((b) => b.t) })) : old.sets;
+      const a = body.auto || {}; const auto = { on: a.on != null ? !!a.on : old.auto.on, per_week: Math.min(4, Math.max(1, Number(a.per_week ?? old.auto.per_week) || 1)), sets: Array.isArray(a.sets) ? a.sets.map(String).slice(0, 20) : old.auto.sets };
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_cfg', data: { sets, auto, updated_at: new Date().toISOString() }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (auto.on !== old.auto.on) await logNote('factory', auto.on ? `คุณแดนเปิดผลิตอัตโนมัติ สัปดาห์ละ ${auto.per_week} เล่ม` : 'คุณแดนปิดผลิตอัตโนมัติ');
+      return res.status(200).json({ ok: true, cfg: { sets, auto } });
     }
     if (action === 'factory_order') { // พี่ต้นสั่ง (key) หรือคุณแดนสั่งเองจากช่องโรงงาน (แอดมิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

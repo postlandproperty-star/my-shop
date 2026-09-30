@@ -177,6 +177,8 @@ footer{padding:28px 0 110px;text-align:center}
 .aic-box{margin-top:10px;border:1.5px dashed var(--line);border-radius:12px;padding:12px}
 .aic-out{margin-top:10px;display:flex;flex-direction:column;gap:8px}.aic-out img{width:100%;max-width:360px;border-radius:12px;border:1px solid var(--line)}
 .fac{padding-top:16px}
+.switch{position:relative;display:inline-block;width:52px;height:30px;flex-shrink:0}.switch input{opacity:0;width:0;height:0}.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.15s;cursor:pointer}.switch span:before{content:'';position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}.switch input:checked+span{background:var(--ok)}.switch input:checked+span:before{transform:translateX(22px)}.switch input:focus-visible+span{outline:3px solid var(--brand);outline-offset:2px}
+.autobox.on{border:2px solid var(--ok)}.auto-sets{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:14.5px}.auto-sets label{display:flex;gap:6px;align-items:center}
 .prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--ok)}
 .setbooks{display:flex;flex-direction:column;gap:6px}
 .setbook{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--bg);border-radius:10px;padding:8px 10px;cursor:pointer}
@@ -2108,39 +2110,73 @@ function nextFactoryRun(){ // รอบทำงานของโรงงา�
 }
 /* ชุดสำเร็จรูปจากคิวโรงงานเก่า (ย้ายมาเฉพาะ TOEIC สำหรับ SheetLab) ราคาเป็นราคาเสนอ คุณแดนแก้ได้ตอนอนุมัติลงขาย */
 const FAC_SETS=[{id:'toeic750',emoji:'🎯',name:'ชุด TOEIC 750+',goal:'สอบ TOEIC ให้ได้ 750 คะแนนขึ้นไป',books:[
-  {t:'TOEIC GRAMMAR 15 จุดออกสอบบ่อยที่สุด + แบบฝึกหัด 500 ข้อ',match:/grammar/i,cat:'TOEIC Grammar',pages:120,price:179},
-  {t:'TOEIC VOCABULARY 1,000 คำ ศัพท์ออกสอบบ่อย พร้อมตัวอย่างประโยค',match:/vocab|คำศัพท์/i,cat:'TOEIC คำศัพท์',pages:100,price:129,notes:'เรียงตามหมวดธุรกิจ มีตัวอย่างประโยคและช่องทวนรอบ 1/2'},
-  {t:'TOEIC READING Part 5–7 ข้อสอบ 10 ชุด พร้อมเฉลยละเอียดทุกข้อ',match:/reading part 5/i,cat:'TOEIC Reading',pages:150,price:199,notes:'แต่ละชุดครบ Part 5, 6, 7 ตามสัดส่วนข้อสอบจริง เฉลยภาษาไทยทุกข้อ พร้อมเทคนิคทำเร็ว'},
-  {t:'TOEIC LISTENING Part 1–4 สคริปต์ข้อสอบ 10 ชุด + เฉลย + คำแปล',match:/listening part 1/i,cat:'TOEIC Listening',pages:130,price:199,notes:'สคริปต์เต็มทุกข้อให้อ่านตามหรืออัดเสียงเอง (PDF ไม่มีไฟล์เสียง) เน้น paraphrase และกับดักที่ออกบ่อย'},
-  {t:'TOEIC PART 7 READING SPEED 40 บทความธุรกิจ + 200 ข้อ',match:/part 7 reading speed/i,cat:'TOEIC Reading',pages:130,price:179},
-  {t:'TOEIC ERROR PATTERNS 300 ข้อ 30 กับดักที่คนไทยพลาดซ้ำ',match:/error patterns/i,cat:'TOEIC Grammar',pages:100,price:149},
-  {t:'TOEIC BUSINESS VOCABULARY 600 คำตามสถานการณ์ ประชุม การเงิน HR การตลาด',match:/business vocab/i,cat:'TOEIC คำศัพท์',pages:100,price:149},
-  {t:'TOEIC MOCK TEST เสมือนจริง 5 ชุด 1,000 ข้อ พร้อมตารางแปลงคะแนนโดยประมาณ',match:/mock test/i,cat:'TOEIC ข้อสอบเสมือนจริง',pages:160,price:249,notes:'ชุดละ 200 ข้อครบทุก Part มีกระดาษคำตอบ ตารางแปลงคะแนนเป็นค่าประมาณ ไม่ใช่เกณฑ์ทางการ'},
-  {t:'TOEIC 30-DAY STUDY PLAN แพลนอ่าน 30 วัน + สมุดจดศัพท์ + ตารางติดตามคะแนน',match:/study plan/i,cat:'อื่นๆ',pages:40,price:69,notes:'แผนวันต่อวันอ้างอิงเล่มอื่นในชุด มีช่องติ๊กและกราฟคะแนน'}]}];
+  {t:'TOEIC GRAMMAR 15 จุดออกสอบบ่อยที่สุด + แบบฝึกหัด 500 ข้อ',match:'grammar',cat:'TOEIC Grammar',pages:120,price:179},
+  {t:'TOEIC VOCABULARY 1,000 คำ ศัพท์ออกสอบบ่อย พร้อมตัวอย่างประโยค',match:'vocabulary 1,000',cat:'TOEIC คำศัพท์',pages:100,price:129,notes:'เรียงตามหมวดธุรกิจ มีตัวอย่างประโยคและช่องทวนรอบ 1/2'},
+  {t:'TOEIC READING Part 5–7 ข้อสอบ 10 ชุด พร้อมเฉลยละเอียดทุกข้อ',match:'reading part 5',cat:'TOEIC Reading',pages:150,price:199,notes:'แต่ละชุดครบ Part 5, 6, 7 ตามสัดส่วนข้อสอบจริง เฉลยภาษาไทยทุกข้อ พร้อมเทคนิคทำเร็ว'},
+  {t:'TOEIC LISTENING Part 1–4 สคริปต์ข้อสอบ 10 ชุด + เฉลย + คำแปล',match:'listening part 1',cat:'TOEIC Listening',pages:130,price:199,notes:'สคริปต์เต็มทุกข้อให้อ่านตามหรืออัดเสียงเอง (PDF ไม่มีไฟล์เสียง) เน้น paraphrase และกับดักที่ออกบ่อย'},
+  {t:'TOEIC PART 7 READING SPEED 40 บทความธุรกิจ + 200 ข้อ',match:'part 7 reading speed',cat:'TOEIC Reading',pages:130,price:179},
+  {t:'TOEIC ERROR PATTERNS 300 ข้อ 30 กับดักที่คนไทยพลาดซ้ำ',match:'error patterns',cat:'TOEIC Grammar',pages:100,price:149},
+  {t:'TOEIC BUSINESS VOCABULARY 600 คำตามสถานการณ์ ประชุม การเงิน HR การตลาด',match:'business vocab',cat:'TOEIC คำศัพท์',pages:100,price:149},
+  {t:'TOEIC MOCK TEST เสมือนจริง 5 ชุด 1,000 ข้อ พร้อมตารางแปลงคะแนนโดยประมาณ',match:'mock test',cat:'TOEIC ข้อสอบเสมือนจริง',pages:160,price:249,notes:'ชุดละ 200 ข้อครบทุก Part มีกระดาษคำตอบ ตารางแปลงคะแนนเป็นค่าประมาณ ไม่ใช่เกณฑ์ทางการ'},
+  {t:'TOEIC 30-DAY STUDY PLAN แพลนอ่าน 30 วัน + สมุดจดศัพท์ + ตารางติดตามคะแนน',match:'study plan',cat:'อื่นๆ',pages:40,price:69,notes:'แผนวันต่อวันอ้างอิงเล่มอื่นในชุด มีช่องติ๊กและกราฟคะแนน'}]}];
+const FCFG={cfg:null,loading:false};
+function loadFacCfg(){if(FCFG.loading)return;FCFG.loading=true;adminApi('/api/content?action=factory_cfg').then(j=>{FCFG.cfg=j&&j.ok?j.cfg:{sets:null,auto:{on:false,per_week:1,sets:[]}};}).catch(()=>{FCFG.cfg={sets:null,auto:{on:false,per_week:1,sets:[]}};}).then(()=>{FCFG.loading=false;render(true);});}
+function facSetList(){return (FCFG.cfg&&FCFG.cfg.sets)||FAC_SETS;}
+function saveFacCfg(patch,msg){
+  const body={sets:facSetList(),auto:Object.assign({},(FCFG.cfg&&FCFG.cfg.auto)||{on:false,per_week:1,sets:[]}),...patch};
+  S.fbusy=true;render(true);
+  return authFetch('/api/content?action=factory_cfg',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(j=>{if(j&&j.ok){FCFG.cfg=j.cfg;toast(msg||'บันทึกแล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{S.fbusy=false;render(true);});
+}
 function setBookState(b){
-  const inShop=D.products.find(p=>!isBundle(p)&&b.match.test(p.name||''));
+  const key=String(b.match||String(b.t).slice(0,18)).toLowerCase();
+  const inShop=D.products.find(p=>!isBundle(p)&&String(p.name||'').toLowerCase().includes(key));
   if(inShop)return ['มีในร้านแล้ว','ok',inShop];
-  const j=(FJOBS||[]).find(x=>String(x.title||'').slice(0,24)===b.t.slice(0,24)&&x.status!=='cancelled');
+  const j=(FJOBS||[]).find(x=>String(x.title||'').slice(0,24)===String(b.t).slice(0,24)&&!['cancelled','failed'].includes(x.status));
   if(j)return [j.status==='done'?(j.listing==='pending'?'ผลิตเสร็จ รออนุมัติ':j.listing==='listed'?'ลงขายแล้ว':'ผลิตเสร็จ'):FSTAT[j.status]?FSTAT[j.status][0]:j.status,j.status==='done'?'ok':'warn',null];
   return ['ยังไม่มี','gray',null];
 }
+// บรรทัดละเล่ม: ชื่อเล่ม | จำนวนหน้า | ราคา | หมวด | คำที่ใช้เช็คว่ามีในร้านแล้ว (3 ช่องหลังไม่บังคับ)
+const bookLine=b=>[b.t,b.pages||'',b.price||'',b.cat||'',b.match||''].join(' | ').replace(/( \| )+$/,'');
+function parseBooks(txt){return String(txt||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const c=l.split('|').map(x=>x.trim());return {t:c[0],pages:Number(c[1])||0,price:Number(c[2])||0,cat:c[3]||'',match:c[4]||''};}).filter(b=>b.t);}
+function setEditor(){
+  const f=S.fdraft;
+  return `<section class="card" style="margin-bottom:16px;border:2px solid var(--brand)"><h3 class="h3" style="margin-top:0">${S.fedit==='new'?'สร้างชุดใหม่':'แก้ไขชุด'}</h3>
+    <div class="grid2"><div class="field"><label for="fs-name">ชื่อชุด</label><input class="input" id="fs-name" data-fs="name" value="${esc(f.name)}" placeholder="เช่น ชุดคำศัพท์ TOEIC ครบทุกหมวด"></div>
+    <div class="field"><label for="fs-emoji">อีโมจิ</label><input class="input" id="fs-emoji" data-fs="emoji" value="${esc(f.emoji)}" style="max-width:90px"></div></div>
+    <div class="field"><label for="fs-goal">เป้าหมายของชุด</label><input class="input" id="fs-goal" data-fs="goal" value="${esc(f.goal)}" placeholder="เช่น คนที่อยากเก็บศัพท์ TOEIC ให้ครบใน 30 วัน"></div>
+    <div class="field"><label for="fs-books">เล่มในชุด บรรทัดละเล่ม</label><textarea class="input" id="fs-books" data-fs="books" rows="9" placeholder="ชื่อเล่ม | จำนวนหน้า | ราคา | หมวด | คำเช็คว่ามีในร้าน">${esc(f.books)}</textarea>
+      <span class="fine">รูปแบบ: ชื่อเล่ม | จำนวนหน้า | ราคา | หมวด | คำเช็คว่ามีในร้าน (ช่องหลังชื่อไม่บังคับ) เช่น<br>TOEIC Phrasal Verbs 300 คำ | 60 | 99 | TOEIC คำศัพท์ | phrasal</span></div>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-dark" data-a="fsSave" ${S.fbusy?'disabled':''}>บันทึกชุด</button><button class="btn btn-line" data-a="fsCancel">ยกเลิก</button>${S.fedit!=='new'?`<button class="btn ${S.confirm==='fsdel'?'btn-danger':'btn-line'}" data-a="fsDel">${S.confirm==='fsdel'?'กดอีกครั้งเพื่อลบชุด':'ลบชุดนี้'}</button>`:''}</div>
+  </section>`;
+}
+function autoBox(){
+  const a=(FCFG.cfg&&FCFG.cfg.auto)||{on:false,per_week:1,sets:[]};const sets=facSetList();
+  return `<section class="card autobox${a.on?' on':''}" style="margin-bottom:16px"><div class="row" style="justify-content:space-between;align-items:center;gap:10px"><div><h3 class="h3" style="margin:0">⚙️ ผลิตอัตโนมัติ</h3><span class="fine">${a.on?`เปิดอยู่ · สัปดาห์ละ ${a.per_week} เล่ม`:'ปิดอยู่ · ผลิตเฉพาะเล่มที่คุณแดนสั่ง'}</span></div>
+    <label class="switch"><input type="checkbox" data-a="autoOn" ${a.on?'checked':''} ${S.fbusy?'disabled':''} aria-label="เปิดผลิตอัตโนมัติ"><span></span></label></div>
+    <p class="fine" style="margin:8px 0">เปิดแล้ว ถ้าคิวว่างตอนถึงรอบผลิต พี่เหล็กหยิบเล่มถัดไปที่ยังไม่มีในร้านจากชุดที่ติ๊กไว้มาผลิตเอง (เรียงตามลำดับในชุด) ผลิตเสร็จยังรอคุณแดนอนุมัติลงขายเหมือนเดิม การหยิบหัวข้อไม่ใช้ AI แต่ละเล่มที่ผลิตใช้ token ตามปกติ</p>
+    <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap"><label class="fine" for="au-pw">ไม่เกินสัปดาห์ละ</label><select class="input" id="au-pw" style="width:auto" data-a-change="autoPw">${[1,2,3,4].map(n=>`<option value="${n}" ${a.per_week===n?'selected':''}>${n} เล่ม</option>`).join('')}</select></div>
+    <div class="auto-sets">${sets.map(st=>`<label><input type="checkbox" data-a="autoSet" data-v="${esc(st.id)}" ${(a.sets||[]).includes(st.id)?'checked':''}> ${esc(st.emoji||'📚')} ${esc(st.name)}</label>`).join('')}</div>
+  </section>`;
+}
 function facSets(){
+  if(FCFG.cfg===null){loadFacCfg();return '<p class="fine">กำลังโหลดชุดหนังสือ...</p>';}
   const sel=S.tplSel||(S.tplSel={});
-  return FAC_SETS.map(st=>{const rows=st.books.map((b,i)=>({b,i,state:setBookState(b)}));const todo=rows.filter(r=>r.state[0]==='ยังไม่มี');const have=rows.length-todo.length;const picked=todo.filter(r=>sel[st.id+':'+r.i]);
-    const pages=picked.reduce((a,r)=>a+r.b.pages,0);
-    return `<section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">${st.emoji} ${esc(st.name)} <span class="fine" style="font-weight:400">มีแล้ว ${have}/${rows.length} เล่ม</span></h3>
-      <p class="fine" style="margin:0 0 8px">${esc(st.goal)} · ติ๊กเล่มที่อยากให้พี่เหล็กผลิต ราคาเป็นราคาเสนอ แก้ได้ตอนอนุมัติลงขาย</p>
-      <div class="prog"><i style="width:${Math.round(have/rows.length*100)}%"></i></div>
-      <div class="setbooks">${rows.map(r=>{const k=st.id+':'+r.i,can=r.state[0]==='ยังไม่มี';return `<label class="setbook${can?'':' dim'}">${can?`<input type="checkbox" data-a="tplPick" data-v="${k}" ${sel[k]?'checked':''}>`:'<span class="sb-dot">✓</span>'}<span class="sb-t">${esc(r.b.t)}<span class="fine">${r.b.pages} หน้า · ${baht(r.b.price)}</span></span><span class="badge ${r.state[1]}">${esc(r.state[0])}</span></label>`;}).join('')}</div>
-      ${todo.length?`<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn ${S.confirm==='tpl:'+st.id?'btn-danger':'btn-dark'}" data-a="tplOrder" data-v="${st.id}" ${picked.length&&!S.fbusy?'':'disabled'}>${S.confirm==='tpl:'+st.id?`กดอีกครั้งเพื่อสั่ง ${picked.length} เล่ม`:`สั่งผลิตเล่มที่เลือก (${picked.length})`}</button>
-        <span class="fine">${picked.length?`รวม ${pages} หน้า · ผลิตรอบละ 1 เล่ม ${picked.length} เล่มใช้ประมาณ ${Math.ceil(picked.length/4)} สัปดาห์ · ใช้ token ตามจำนวนเล่ม แนะนำสั่งทีละ 1-2 เล่ม`:'ยังไม่ได้เลือกเล่ม'}</span></div>`:'<p class="fine" style="margin:10px 0 0">ครบทุกเล่มแล้ว สร้างชุดขายได้ที่ + สร้างชุด ในแท็บสินค้า</p>'}
+  const cards=facSetList().map(st=>{if(S.fedit===st.id)return setEditor();const rows=(st.books||[]).map((b,i)=>({b,i,state:setBookState(b)}));const todo=rows.filter(r=>r.state[0]==='ยังไม่มี');const have=rows.length-todo.length;const picked=todo.filter(r=>sel[st.id+':'+r.i]);
+    const pages=picked.reduce((a,r)=>a+(Number(r.b.pages)||0),0);
+    return `<section class="card" style="margin-bottom:16px"><div class="row" style="justify-content:space-between;align-items:flex-start;gap:8px"><h3 class="h3" style="margin:0">${esc(st.emoji||'📚')} ${esc(st.name)} <span class="fine" style="font-weight:400">มีแล้ว ${have}/${rows.length} เล่ม</span></h3><button class="chip" data-a="fsEdit" data-v="${esc(st.id)}">✏️ แก้ไขชุด</button></div>
+      <p class="fine" style="margin:6px 0 8px">${esc(st.goal||'')} · ติ๊กเล่มที่อยากให้พี่เหล็กผลิต ราคาเป็นราคาเสนอ แก้ได้ตอนอนุมัติลงขาย</p>
+      <div class="prog"><i style="width:${rows.length?Math.round(have/rows.length*100):0}%"></i></div>
+      <div class="setbooks">${rows.map(r=>{const k=st.id+':'+r.i,can=r.state[0]==='ยังไม่มี';return `<label class="setbook${can?'':' dim'}">${can?`<input type="checkbox" data-a="tplPick" data-v="${k}" ${sel[k]?'checked':''}>`:'<span class="sb-dot">✓</span>'}<span class="sb-t">${esc(r.b.t)}<span class="fine">${r.b.pages?r.b.pages+' หน้า · ':''}${Number(r.b.price)>=1?baht(r.b.price):'แจกฟรี'}</span></span><span class="badge ${r.state[1]}">${esc(r.state[0])}</span></label>`;}).join('')}</div>
+      ${todo.length?`<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn ${S.confirm==='tpl:'+st.id?'btn-danger':'btn-dark'}" data-a="tplOrder" data-v="${esc(st.id)}" ${picked.length&&!S.fbusy?'':'disabled'}>${S.confirm==='tpl:'+st.id?`กดอีกครั้งเพื่อสั่ง ${picked.length} เล่ม`:`สั่งผลิตเล่มที่เลือก (${picked.length})`}</button>
+        <span class="fine">${picked.length?`รวม ${pages} หน้า · ผลิตรอบละ 1 เล่ม · ใช้ token ตามจำนวนเล่ม แนะนำสั่งทีละ 1-2 เล่ม`:'ยังไม่ได้เลือกเล่ม'}</span></div>`:'<p class="fine" style="margin:10px 0 0">ครบทุกเล่มแล้ว สร้างชุดขายได้ที่ + สร้างชุด ในแท็บสินค้า</p>'}
     </section>`;}).join('');
+  return `${autoBox()}${cards}${S.fedit==='new'?setEditor():`<button class="btn btn-line" data-a="fsNew" style="margin:0 0 16px">+ สร้างชุดใหม่ (กำหนดหัวข้อเอง)</button>`}`;
 }
 async function tplOrder(id){
-  const st=FAC_SETS.find(x=>x.id===id);if(!st)return;const sel=S.tplSel||{};
-  const books=st.books.map((b,i)=>({b,i})).filter(r=>sel[id+':'+r.i]&&setBookState(r.b)[0]==='ยังไม่มี');
+  const st=facSetList().find(x=>x.id===id);if(!st)return;const sel=S.tplSel||{};
+  const books=(st.books||[]).map((b,i)=>({b,i})).filter(r=>sel[id+':'+r.i]&&setBookState(r.b)[0]==='ยังไม่มี');
   if(!books.length)return;S.fbusy=true;render(true);let ok=0;
-  for(const {b,i} of books){try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:b.t,category:b.cat,pages:b.pages,price:b.price,notes:b.notes||'',purpose:'เล่มในชุด '+st.name+' (ชีทขาย ผลิตเสร็จแล้วรอคุณแดนอนุมัติลงขาย)'})});if(j&&j.ok){ok++;delete sel[id+':'+i];}}catch(e){}}
+  for(const {b,i} of books){try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:b.t,category:b.cat||'',pages:b.pages||undefined,price:b.price||0,notes:b.notes||'',purpose:'เล่มในชุด '+st.name+(Number(b.price)>=1?' (ชีทขาย ผลิตเสร็จแล้วรอคุณแดนอนุมัติลงขาย)':' (ชีทแจกฟรี)')})});if(j&&j.ok){ok++;delete sel[id+':'+i];}}catch(e){}}
   S.fbusy=false;FJOBS=null;toast(`ส่งเข้าคิวโรงงาน ${ok} เล่ม`);render(true);
 }
 function facIdeas(){
@@ -3278,7 +3314,7 @@ function act(a,el){
     case 'toStore':go('store');break;
     case 'artHide':authFetch('/api/content?action=article_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนบทความแล้ว':'เปิดบทความแล้ว');QZ.arts=undefined;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'quizHide':authFetch('/api/content?action=quiz_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนแบบทดสอบแล้ว':'เปิดแบบทดสอบแล้ว');QZ.list=null;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
-    case 'toFactory':FJOBS=null;FAC.jobs=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
+    case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
     case 'forder':factoryOrder();break;
@@ -3286,6 +3322,17 @@ function act(a,el){
     case 'coverGen':coverGen();break;
     case 'coverUse':coverUse();break;
     case 'coverReset':S.coverPrompt=null;render(true);break;
+    case 'fsNew':S.fedit='new';S.fdraft={name:'',emoji:'📚',goal:'',books:''};S.confirm='';render(true);break;
+    case 'fsEdit':{const st=facSetList().find(x=>x.id===el.dataset.v);if(!st)break;S.fedit=st.id;S.fdraft={name:st.name,emoji:st.emoji||'📚',goal:st.goal||'',books:(st.books||[]).map(bookLine).join('\n')};S.confirm='';render(true);break;}
+    case 'fsCancel':S.fedit=null;S.fdraft=null;S.confirm='';render(true);break;
+    case 'fsSave':{const f=S.fdraft;const books=parseBooks(f.books);if(!String(f.name).trim()||!books.length){toast('ใส่ชื่อชุดและเล่มอย่างน้อย 1 เล่ม');break;}
+      const cur=facSetList().map(x=>Object.assign({},x));const keep=S.fedit!=='new'?(cur.find(x=>x.id===S.fedit)||{}).books||[]:[];
+      books.forEach(b=>{const o=keep.find(k=>k.t===b.t);if(o&&o.notes)b.notes=o.notes;});
+      const set={id:S.fedit==='new'?'set'+Date.now().toString(36):S.fedit,name:String(f.name).trim(),emoji:String(f.emoji||'📚').trim(),goal:String(f.goal||'').trim(),books};
+      const next=S.fedit==='new'?[...cur,set]:cur.map(x=>x.id===set.id?set:x);S.fedit=null;S.fdraft=null;saveFacCfg({sets:next},'บันทึกชุดแล้ว');break;}
+    case 'fsDel':if(S.confirm!=='fsdel'){S.confirm='fsdel';render(true);break;}{S.confirm='';const id2=S.fedit;const next=facSetList().filter(x=>x.id!==id2);const a=Object.assign({},(FCFG.cfg&&FCFG.cfg.auto)||{});a.sets=(a.sets||[]).filter(x=>x!==id2);S.fedit=null;S.fdraft=null;saveFacCfg({sets:next,auto:a},'ลบชุดแล้ว');}break;
+    case 'autoOn':{const a=Object.assign({on:false,per_week:1,sets:[]},(FCFG.cfg&&FCFG.cfg.auto)||{});a.on=el.checked;if(a.on&&!(a.sets||[]).length)a.sets=facSetList().slice(0,1).map(x=>x.id);saveFacCfg({auto:a},a.on?'เปิดผลิตอัตโนมัติแล้ว':'ปิดผลิตอัตโนมัติแล้ว');break;}
+    case 'autoSet':{const a=Object.assign({on:false,per_week:1,sets:[]},(FCFG.cfg&&FCFG.cfg.auto)||{});const v=el.dataset.v;a.sets=el.checked?[...new Set([...(a.sets||[]),v])]:(a.sets||[]).filter(x=>x!==v);saveFacCfg({auto:a},'บันทึกชุดที่ใช้ผลิตอัตโนมัติแล้ว');break;}
     case 'tplPick':{const sel=S.tplSel||(S.tplSel={});sel[el.dataset.v]=el.checked;S.confirm='';render(true);break;}
     case 'tplOrder':if(S.confirm!=='tpl:'+el.dataset.v){S.confirm='tpl:'+el.dataset.v;render(true);break;}S.confirm='';tplOrder(el.dataset.v);break;
     case 'facApprove':facApprove(id);break;
@@ -3584,6 +3631,7 @@ document.addEventListener('input',e=>{
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
   if(ds.cp){S.coverPrompt=t.value;}
+  if(ds.fs&&S.fdraft){S.fdraft[ds.fs]=t.value;}
   if(ds.bp&&S.draft&&S.draft.plans){const [k,f]=ds.bp.split('|');const pl=S.draft.plans.find(x=>x.key===k);if(pl){pl[f]=t.type==='checkbox'?t.checked:t.value;if(f==='on')render(true);}}
   if(ds.bl&&S.draft&&S.draft.planLinks){S.draft.planLinks[ds.bl]=t.value;}
   if(ds.d&&S.draft)S.draft[ds.d]=t.value;
@@ -3604,6 +3652,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='ad-camp'){S.ad.camp=t.value;render(true);}
   else if(t.id==='e-img'){addImages(t.files);t.value='';}
   else if(t.id==='e-pdf'){const f=t.files&&t.files[0];t.value='';if(f)makePreviews(f);}
+  else if(t.id==='au-pw'){const a=Object.assign({on:false,per_week:1,sets:[]},(FCFG.cfg&&FCFG.cfg.auto)||{});a.per_week=Number(t.value)||1;saveFacCfg({auto:a},'บันทึกจำนวนต่อสัปดาห์แล้ว');}
   else if(t.id==='e-file'){const f=t.files&&t.files[0];t.value='';if(f)uploadPdf(f);}
   else if(t.id==='e-pvpages'){S.pvPages=t.value;}
   else if(t.id==='pf'){S.pfilter=t.value;render(true);}
