@@ -179,6 +179,10 @@ footer{padding:28px 0 110px;text-align:center}
 @media(max-width:600px){.bar-in{flex-wrap:wrap;row-gap:6px}#seg{width:100%}#seg button{flex:1;padding:6px 4px;font-size:13.5px;white-space:nowrap}}
 .facrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
 .facrow>div:first-child{display:flex;flex-direction:column;min-width:0}
+.propf{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
+.propf li{display:grid;gap:2px;font-size:13.5px;background:var(--bg);border-radius:10px;padding:8px 10px}
+.propf s{color:var(--muted)}
+.propf span{color:var(--ok);font-weight:500}
 
 /* sticky cta */
 .sticky{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px;transform:translateY(0);transition:transform .2s ease}
@@ -1237,7 +1241,7 @@ function bundleForm(){
   </div>
   ${S.err?`<p class="err" style="margin:10px 0">${esc(S.err)}</p>`:''}
   <div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap">
-    <button class="btn btn-dark" data-a="saveBundle">บันทึกชุด</button>
+    <button class="btn btn-dark" data-a="saveBundle">${d.fromProp?'ใช้ข้อเสนอนี้ บันทึก':'บันทึกชุด'}</button>
     <button class="btn btn-line" data-a="saveBundle" data-then="view">บันทึกแล้วดูหน้า</button>
     <button class="btn btn-line" data-a="cancelEdit">ยกเลิก</button>
   </div>`;
@@ -1268,6 +1272,7 @@ function saveBundleDraft(el){
   if(isNew){saved=Object.assign({id:'b'+Date.now().toString(36)},data);D.products.push(saved);}
   else{saved=getProduct(selfId);Object.assign(saved,data);}
   if(saved.status==='published'&&!saved.publishedAt)saved.publishedAt=Date.now();
+  if(d.fromProp)propDone(d.fromProp,true);
   S.edit=null;S.draft=null;S.err='';save();
   if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');}else{render(false);toast('บันทึกชุดแล้ว');}
   return '';
@@ -1920,7 +1925,7 @@ function productForm(){
     </div>
 
     ${S.err?`<p class="err" style="margin-bottom:10px">${esc(S.err)}</p>`:''}
-    <div class="acts"><button class="btn btn-dark" data-a="saveProduct">${d.fromJob?(d.status==='published'?'อนุมัติ ลงขาย':'บันทึกเป็นฉบับร่าง'):'บันทึกสินค้า'}</button><button class="btn btn-cta" data-a="saveProduct" data-then="view">บันทึกและดูเซลเพจ</button><button class="btn btn-line" data-a="cancelEdit">ยกเลิก</button></div>
+    <div class="acts"><button class="btn btn-dark" data-a="saveProduct">${d.fromJob?(d.status==='published'?'อนุมัติ ลงขาย':'บันทึกเป็นฉบับร่าง'):d.fromProp?'ใช้ข้อเสนอนี้ บันทึก':'บันทึกสินค้า'}</button><button class="btn btn-cta" data-a="saveProduct" data-then="view">บันทึกและดูเซลเพจ</button><button class="btn btn-line" data-a="cancelEdit">ยกเลิก</button></div>
   </div>`;
 }
 
@@ -2019,10 +2024,30 @@ function factoryView(){
     </section>
   </div>`;
 }
+/* ข้อเสนอแก้ข้อความสินค้าจาก CEO: เปิดในตัวแก้ไขพร้อมตัวอย่างสด คุณแดนกดบันทึกเอง */
+const PROP={list:null,loading:false};
+const PROP_F={name:'ชื่อสินค้า',headline:'หัวข้อหลัก',desc:'คำอธิบายสั้น',features:'สิ่งที่ได้รับ',pains:'ปัญหาของผู้อ่าน',faq:'คำถามที่พบบ่อย',forwho:'เหมาะกับใคร',notfor:'ไม่เหมาะกับใคร',guarantee:'ข้อความรับประกัน',proof:'ข้อความใต้ปุ่มซื้อ',specs:'ข้อมูลไฟล์',cat:'หมวด',sell:'ขายที่ไหน'};
+function loadProps(){if(PROP.loading)return;PROP.loading=true;adminApi('/api/content?action=proposal&status=pending').then(j=>{PROP.list=j&&j.ok?j.list:[];}).catch(()=>{PROP.list=[];}).then(()=>{PROP.loading=false;render(true);});}
+function propBox(){
+  if(PROP.list===null){loadProps();return '';}
+  const list=PROP.list.filter(x=>getProduct(x.product_id));if(!list.length)return '';
+  const short=v=>{v=String(v==null?'':v).replace(/\n/g,' / ');return v.length>140?v.slice(0,140)+'…':v;};
+  return `<section class="card facbox"><h3 class="h3" style="margin-top:0">💼 ข้อเสนอจาก CEO (${list.length})</h3>
+    <p class="fine" style="margin:0 0 10px">กด "เปิดดูในตัวแก้ไข" ข้อความใหม่จะถูกใส่ในฟอร์มพร้อมตัวอย่างสด ยังไม่เปลี่ยนบนเว็บจนกว่าคุณแดนกดบันทึก</p>
+    ${list.map(x=>{const p=getProduct(x.product_id);return `<div class="facrow" style="align-items:flex-start"><div style="flex:1;min-width:0">
+      <div class="row" style="gap:8px;align-items:center">${ava(x.source,1)}<b>${esc(x.title)}</b></div>
+      <span class="fine">${esc(member(x.source).name)} · ${esc(p.name)} · ${fdt(Date.parse(x.created_at))}</span>
+      ${x.why?`<p class="fine" style="margin:6px 0 0;color:var(--ink)">${esc(x.why)}</p>`:''}
+      <ul class="propf">${Object.entries(x.fields).map(([k,v])=>`<li><b>${esc(PROP_F[k]||k)}</b><s>${esc(short(p[k]))||'(ว่าง)'}</s><span>${esc(short(v))}</span></li>`).join('')}</ul></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn btn-dark btn-sm" data-a="propOpen" data-id="${esc(x.id)}">เปิดดูในตัวแก้ไข</button><button class="btn btn-line btn-sm" data-a="propReject" data-id="${esc(x.id)}">${S.confirm==='pr:'+x.id?'กดอีกครั้ง: ไม่ใช้':'ไม่ใช้'}</button></div></div>`;}).join('')}
+  </section>`;
+}
+function propDone(id,applied){authFetch('/api/content?action=proposal_done',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,applied})}).then(j=>{if(j&&j.ok)PROP.list=(PROP.list||[]).filter(x=>x.id!==id);render(true);}).catch(()=>{});}
 function productsTab(){
   if(S.edit)return productForm();
   return `
   ${memberDesk('product')}
+  ${propBox()}
   ${facBox()}
   <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 10px;flex-wrap:wrap">
     <h3 class="h3" style="margin:0">สินค้าและเซลเพจ</h3>
@@ -2103,7 +2128,7 @@ function factoryBox(){
   return `<h3 class="h3">คิวโรงงานผลิตชีท</h3>${FJOBS.slice(0,6).map(j=>{const st=FSTAT[j.status]||[j.status,'gray'];return `<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:6px">${ava('factory')}<span><b>${esc(j.title)}</b> <span class="badge ${st[1]}">${st[0]}</span><span class="fine">สั่งโดย ${esc(member(j.ordered_by||'manager').name)} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${j.price?j.price+' บาท':'แจกฟรี'}</span></span></div>${j.purpose?`<div class="fine">${esc(j.purpose)}</div>`:''}${j.file_url?`<a class="btn btn-line btn-sm" href="${j.file_url}" target="_blank" rel="noopener noreferrer" style="margin-top:6px">เปิดไฟล์ PDF</a>`:''}${j.error?`<div class="fine" style="color:#B42318">${esc(j.error)}</div>`:''}</div>`;}).join('')}`;
 }
 let POSTS=[],postsLoaded=false;
-const KIND_TH={deck:'สไลด์รายงาน',handoff:'รับงานแทนคุณแดน',reply:'สั่งงาน',brief:'โจทย์ให้ทีม',meeting:'บันทึกประชุม',people:'รายงานทีม (ฝ่ายบุคคล)',handbook:'คู่มือพนักงาน',tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
+const KIND_TH={salepage:'รายงาน salepage',store:'รายงานหน้าร้าน',deck:'สไลด์รายงาน',handoff:'รับงานแทนคุณแดน',reply:'สั่งงาน',brief:'โจทย์ให้ทีม',meeting:'บันทึกประชุม',people:'รายงานทีม (ฝ่ายบุคคล)',handbook:'คู่มือพนักงาน',tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={},TH={};
 (function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
@@ -2143,8 +2168,8 @@ const TEAM={
   clip:{name:'น้องคลิป',role:'ตัดต่อคลิป Reels · ทำคลิปสั้นทายศัพท์จากไอเดียทีม ตรวจเองแล้วตั้งเวลาโพสต์ Reels และ Threads ไม่ต้องรออนุมัติ',bg:'#c7f9cc',sched:'ทุกวัน 10:00',img:AV+'accessoriesProbability=100&seed=clip&top=shortWaved&hairColor=2c1b18&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=defaultNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=c7f9cc'},
   hr:{name:'พี่เอชอาร์',role:'ฝ่ายบุคคล · ดูภาพรวมคน ทะเบียนทักษะ คู่มือพนักงาน',bg:'#ffe4e6',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=0&seed=hr&top=bun&hairColor=2c1b18&clothing=blazerAndShirt&clothesColor=e11d48&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=f8d25c&backgroundColor=ffe4e6'},
   factory:{name:'พี่เหล็ก',role:'CEO โรงงาน · ดูแลการผลิตชีททุกเล่ม',bg:'#fef3c7',sched:'ทำงานอาทิตย์และจันทร์ 10:00, 22:00 หรือเมื่อสั่ง',img:AV+'accessoriesProbability=100&seed=factory&top=shortFlat&hairColor=4a4a4a&accessories=prescription01&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=fef3c7'},
-  ceo_sale:{name:'พี่พลอย',role:'CEO salepage · ดูแลหน้าขายและยอดจากแอด',bg:'#dbeafe',exec:1,sched:'ตำแหน่งบริหาร',img:AV+'accessoriesProbability=0&seed=ploy&top=longButNotTooLong&hairColor=2c1b18&clothing=blazerAndShirt&clothesColor=2440e8&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=dbeafe'},
-  ceo_store:{name:'พี่โอ๊ค',role:'CEO หน้าร้าน · ดูแลชั้นวางสินค้าและชีทจากโรงงาน',bg:'#dcfce7',exec:1,sched:'ตำแหน่งบริหาร',img:AV+'accessoriesProbability=0&seed=oak&top=theCaesarAndSidePart&hairColor=2c1b18&clothing=blazerAndSweater&clothesColor=0f7a55&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=dcfce7'},
+  ceo_sale:{name:'พี่พลอย',role:'CEO salepage · ดูแลหน้าขายและยอดจากแอด',bg:'#dbeafe',sched:'ทุกอังคาร 09:30',img:AV+'accessoriesProbability=0&seed=ploy&top=longButNotTooLong&hairColor=2c1b18&clothing=blazerAndShirt&clothesColor=2440e8&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=dbeafe'},
+  ceo_store:{name:'พี่โอ๊ค',role:'CEO หน้าร้าน · ดูแลชั้นวางสินค้าและชีทจากโรงงาน',bg:'#dcfce7',sched:'ทุกพุธ 09:30',img:AV+'accessoriesProbability=0&seed=oak&top=theCaesarAndSidePart&hairColor=2c1b18&clothing=blazerAndSweater&clothesColor=0f7a55&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=dcfce7'},
   manual:{name:'คุณ',role:'President · เจ้าของร้าน ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
 TEAM.ads=TEAM.analyst;
@@ -2159,13 +2184,15 @@ const SCHED={
   analyst:{dow:[0,1,2,3,4,5,6],times:[[7,30]],dur:10},
   product:{dom:1,times:[[10,0]],dur:20},
   factory:{dow:[0,1],times:[[10,0],[22,0]],dur:60},
+  ceo_sale:{dow:[2],times:[[9,30]],dur:15},
+  ceo_store:{dow:[3],times:[[9,30]],dur:15},
   guard:{dow:[0],times:[[20,30]],dur:15},
   market:{dow:[0,1,2,3,4,5,6],times:[[7,0]],dur:10},
   clip:{dow:[0,1,2,3,4,5,6],times:[[10,0]],dur:30},
   hr:{dow:[1],times:[[8,30]],dur:15},
 };
 const BKK=7*3600e3;
-const POLITE={hr:'ค่ะ',clip:'ครับ',market:'ค่ะ',guard:'ครับ',factory:'ครับ',writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
+const POLITE={ceo_sale:'ค่ะ',ceo_store:'ครับ',hr:'ค่ะ',clip:'ครับ',market:'ค่ะ',guard:'ครับ',factory:'ครับ',writer:'ค่ะ',community:'ค่ะ',care:'ค่ะ',designer:'ค่ะ',manager:'ครับ',analyst:'ครับ',product:'ครับ',finance:'ครับ',trend:'ครับ'};
 function teamStatus(k){
   const sc=SCHED[k];const m=TEAM[k]||{};
   const last=POSTS.filter(x=>x.source===k).map(x=>Date.parse(x.created_at)).sort((a,b)=>b-a)[0]||null;
@@ -2586,8 +2613,8 @@ function adsTab(){
 }
 
 const ORG={
-  ceo_sale:{title:'CEO salepage · ฝ่ายหน้าขาย',do:['ดูแลหน้าขายของแต่ละเล่ม (salepage) และยอดที่มาจากแอด','เสนอปรับข้อความ ราคาขีดฆ่า และโปรบนหน้าขาย [ราคาและโปรต้องให้คุณแดนอนุมัติ]','ทำงานร่วมกับน้องบูสต์ (แอด) และพี่โปร (สินค้า)'],when:'ตำแหน่งบริหาร ยังไม่มีรอบทำงานของตัวเอง ตอนนี้งานหน้าขายยังทำโดยทีมเดิม'},
-  ceo_store:{title:'CEO หน้าร้าน · ฝ่ายหน้าร้าน',do:['ดูแลชั้นวางสินค้าบนหน้าร้าน sheetlabth.com: ชุดเด่น หมวด ป้ายใหม่/ขายดี','รับชีทจากโรงงานของพี่เหล็ก เตรียมให้คุณแดนตรวจและกดอนุมัติลงขาย','ดูแลหน้าหาออเดอร์ของฉัน ลูกค้าได้ไฟล์ครบ'],when:'ตำแหน่งบริหาร ยังไม่มีรอบทำงานของตัวเอง ตอนนี้งานหน้าร้านยังทำโดยทีมเดิม'},
+  ceo_sale:{title:'CEO salepage · ฝ่ายหน้าขาย',do:['ดูแลหน้าขายของแต่ละเล่ม (salepage) และยอดที่มาจากแอด','เสนอปรับข้อความ ราคาขีดฆ่า และโปรบนหน้าขาย [ราคาและโปรต้องให้คุณแดนอนุมัติ]','ทำงานร่วมกับน้องบูสต์ (แอด) และพี่โปร (สินค้า)'],when:'ทุกอังคาร 09:30 อ่านยอด ขั้นที่ลูกค้าหลุด ผลแอด และข้อความหน้าขาย ส่งรายงาน + ข้อเสนอแก้ข้อความ (คุณแดนกดใช้เอง)'},
+  ceo_store:{title:'CEO หน้าร้าน · ฝ่ายหน้าร้าน',do:['ดูแลชั้นวางสินค้าบนหน้าร้าน sheetlabth.com: ชุดเด่น หมวด ป้ายใหม่/ขายดี','รับชีทจากโรงงานของพี่เหล็ก เตรียมให้คุณแดนตรวจและกดอนุมัติลงขาย','ดูแลหน้าหาออเดอร์ของฉัน ลูกค้าได้ไฟล์ครบ'],when:'ทุกพุธ 09:30 ตรวจชั้นวาง ชีทรออนุมัติ ยอดจากหน้าร้าน ส่งรายงาน + ข้อเสนอแก้สินค้า (คุณแดนกดใช้เอง)'},
   manual:{title:'President · เจ้าของร้าน',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่ต้นส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
   manager:{title:'Vice President · หัวหน้าของทุกคน อำนาจรองจาก President',do:['ประชุมทีมทุกอาทิตย์ 21:00 อ่านรายงานทุกฝ่ายแล้ววางแผนสัปดาห์ให้ทุกคน','ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ สั่งงานได้ทุกคน','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ประชุมทีมอาทิตย์ 21:00 · ตรวจโพสต์และรายงานจันทร์ 09:00'},
   writer:{title:'Content Creator · ฝ่ายคอนเทนต์',do:['ร่างโพสต์ 5 ชิ้นต่อสัปดาห์ ควิซ เฉลย ชวนคุย ควิซ ขาย','สร้างรูปทุกโพสต์ด้วย Canva ในโทนแบรนด์','ส่งงานให้พี่ต้นตรวจ ไม่โพสต์เอง'],when:'ทุกจันทร์ 08:00 น.'},
@@ -2644,8 +2671,7 @@ function mood(k){
     case 'product':return age<35?M('💡','มีไอเดียสินค้าใหม่','ส่งข้อเสนอเดือนนี้แล้ว'):M('🗓️','รอรอบสิ้นเดือน','ยังไม่ถึงรอบรายงาน');
     case 'finance':return /ยอดขาย\s*0|0 ออเดอร์|ไม่มียอดขาย/.test(lastT)&&age<8?M('😐','เดือนนี้ยังเงียบ','ยอดขายสัปดาห์นี้ยังไม่มี'):M('🧮','ตัวเลขเรียบร้อย','บัญชีเป็นปัจจุบัน');
     case 'care':return M('☕','สแตนด์บาย','ยังไม่เปิดใช้งาน');
-    case 'ceo_sale':return M('💼','เพิ่งรับตำแหน่ง','CEO คนใหม่ของ salepage');
-    case 'ceo_store':return M('🏪','จัดชั้นวางรอลูกค้า','CEO คนใหม่ของหน้าร้าน');
+    case 'ceo_sale':case 'ceo_store':{const pend=(PROP.list||[]).filter(x=>x.source===k).length;if(!last)return M(k==='ceo_sale'?'💼':'🏪','เพิ่งรับตำแหน่ง รอรอบแรก','ยังไม่มีรายงานฉบับแรก');if(pend)return M('🤞','รอคุณแดนดูข้อเสนอ '+pend+' เรื่อง','มีข้อเสนอค้างในแท็บสินค้า');return age<8?M('😎','ส่งรายงานแล้ว','รายงานล่าสุด '+Math.round(age)+' วันก่อน'):M('📋','เตรียมรายงานรอบใหม่','ยังไม่ถึงรอบ');}
     case 'hr':{const last=notes[0];if(!last)return M('📋','เตรียมทำความรู้จักทุกคน','ยังไม่มีรายงานทีมฉบับแรก');if(age<2)return M('🙂','ส่งรายงานทีมแล้ว','รายงานล่าสุดเมื่อ '+Math.round(age*24)+' ชม.ก่อน');return M('☕','สังเกตทีมอยู่','รอรอบวันจันทร์');}
     case 'clip':{const cl=POSTS.filter(p=>p.source==='clip'&&p.kind==='reel').map(p=>Date.parse(p.created_at)).sort((a,b)=>b-a)[0];const cage=cl?(now-cl)/D:99;if(!cl)return M('🎬','รอไอเดียคลิปแรก','ยังไม่มีคลิปในระบบ');if(cage<3)return M('😎','เพิ่งส่งคลิปเข้าคิว','ส่งคลิปล่าสุดไม่เกิน 3 วัน');return M('🤔','กำลังหาไอเดียคลิปใหม่','คลิปล่าสุดเกิน 3 วัน');}
     case 'market':{const mk=notes.find(n=>n.kind==='market');const mage=mk?(now-Date.parse(mk.created_at))/D:99;if(!mk)return M('📊','วันแรก กำลังตั้งแดชบอร์ด','ยังไม่มีรายงานตลาด');if(mage<1.5)return M('🔎','เจอคำค้นใหม่ ส่งต่อทีมแล้ว','ส่งรายงานตลาดวันนี้แล้ว');return M('😐','ข้อมูลเก่าไปหน่อย','รายงานตลาดล่าสุดเกิน 1 วัน');}
@@ -3054,6 +3080,8 @@ function act(a,el){
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
     case 'forder':factoryOrder();break;
     case 'facApprove':facApprove(id);break;
+    case 'propOpen':{const x=(PROP.list||[]).find(y=>y.id===id);const p=x&&getProduct(x.product_id);if(!p)break;S.draft=isBundle(p)?bundleDraft(p):initDraft(p);Object.assign(S.draft,x.fields);S.draft.fromProp=id;S.edit=p.id;S.err='';render(false);toast('ใส่ข้อความที่ '+member(x.source).name+' เสนอแล้ว ดูตัวอย่างสด แล้วกดบันทึกถ้าเห็นด้วย');break;}
+    case 'propReject':if(S.confirm!=='pr:'+id){S.confirm='pr:'+id;render(true);break;}S.confirm='';propDone(id,false);toast('ไม่ใช้ข้อเสนอนี้แล้ว');break;
     case 'facReject':if(S.confirm!=='fr:'+id){S.confirm='fr:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reject:true})}).then(j=>{if(j&&j.ok){FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==id);toast('ไม่ลงขายชีทนี้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;
     case 'scat':S.scat=el.dataset.v;render(true);break;
     case 'findAgain':S.find={email:'',busy:false,done:false,err:''};render(false);break;
@@ -3291,6 +3319,7 @@ function act(a,el){
       if(isNew){saved=Object.assign({id:'p'+Date.now().toString(36)},data);D.products.push(saved);}
       else{saved=getProduct(selfId);Object.assign(saved,data);}
       if(saved.status==='published'&&!saved.publishedAt)saved.publishedAt=Date.now();
+      if(d.fromProp)propDone(d.fromProp,true);
       if(d.fromJob){const jid=d.fromJob;authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:jid,product_id:saved.id})}).then(j=>{if(j&&j.ok)FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==jid);render(true);}).catch(()=>{});}
       S.edit=null;S.draft=null;S.err='';save();
       if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');}

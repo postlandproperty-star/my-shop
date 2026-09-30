@@ -672,6 +672,52 @@ export default async function handler(req, res) {
         campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length, testOrdersExcluded: all.length - orders.length, paidDelivery: thisWeek.map((o) => ({ at: o.paid_at, via: String(o.session_id || '').startsWith('pi_') ? 'qr' : 'stripe_page', emailed: !!o.emailed_at })),
         posts, products: shop.products.map((p) => ({ name: p.name, status: p.status, price: p.price })) });
     }
+    if (action === 'store_audit') { // พี่โอ๊ค CEO หน้าร้าน: สภาพชั้นวางทุกเล่ม (รวมร่าง/หน้าร้านอย่างเดียว) ยอดจากหน้าร้าน คิวโรงงาน ไม่มีข้อมูลลูกค้า
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const [main, priv, orders, jobs] = await Promise.all([sb('shop_state?id=eq.main&select=data'), sb('shop_state?id=eq.private&select=data'), sb(`orders?status=eq.paid&select=product_id,product_name,amount,email,campaign,paid_at,created_at&created_at=gte.${new Date(Date.now() - 30 * 864e5).toISOString()}`), loadJobs().catch(() => [])]);
+      const products = main?.[0]?.data?.products || [], links = priv?.[0]?.data?.links || {};
+      const isTest = testOrder(products, priv?.[0]?.data?.testEmails || []);
+      const real = orders.filter((o) => !isTest(o)), wk = Date.now() - 7 * 864e5;
+      const sold = {}; real.forEach((o) => { if (o.product_id) sold[o.product_id] = (sold[o.product_id] || 0) + 1; });
+      const live = products.filter((p) => p.status === 'published' && p.sell !== 'salepage');
+      const SITE = await siteUrl();
+      return res.status(200).json({ ok: true, storeLive: live.length >= 2, storeMin: 2, liveInStore: live.length,
+        products: products.map((p) => ({ id: p.id, name: p.name, type: p.type === 'bundle' ? 'bundle' : 'single', status: p.status, sell: p.sell || 'both', cat: p.cat || '', price: p.price, fullPrice: p.fullPrice || 0,
+          images: (p.images || []).length, previews: (p.previews || []).length, hasFile: p.type === 'bundle' ? null : !!links[p.id], items: p.type === 'bundle' ? (p.items || []).length : undefined,
+          publishedAt: p.publishedAt ? new Date(p.publishedAt).toISOString() : null, sold30: sold[p.id] || 0, headline: p.headline || '', desc: String(p.desc || '').slice(0, 200), url: `${SITE}/p/${p.slug}` })),
+        storeSales: { orders7: real.filter((o) => o.campaign === 'store' && Date.parse(o.paid_at || o.created_at) >= wk).length, orders30: real.filter((o) => o.campaign === 'store').length, allOrders30: real.length },
+        factory: { awaitingApproval: jobs.filter((j) => j.listing === 'pending').map((j) => ({ title: j.title, price: j.price, pages: j.pages, days: Math.floor((Date.now() - Date.parse(j.done_at || j.created_at)) / 864e5) })),
+          queued: jobs.filter((j) => ['queued', 'producing'].includes(j.status)).map((j) => ({ title: j.title, status: j.status, price: j.price })), listedRecently: jobs.filter((j) => j.listing === 'listed' && Date.parse(j.listing_at || 0) >= Date.now() - 14 * 864e5).map((j) => j.title) } });
+    }
+    if (action === 'proposal' || action === 'proposal_done') {
+      // ข้อเสนอแก้ข้อความสินค้าจาก CEO (key POST) → คุณแดนเปิดในตัวแก้ไขพร้อมตัวอย่างสด แล้วกดบันทึกเอง (แอดมินปิดข้อเสนอ) ห้ามแตะราคา
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const rows = await sb('shop_state?id=eq.proposals&select=data'); let list = rows?.[0]?.data?.list || [];
+      const saveList = (l) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'proposals', data: { list: l.slice(-60) }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (action === 'proposal_done') {
+        if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+        const body = await readBody(req); const it = list.find((x) => x.id === String(body.id || ''));
+        if (!it) return res.status(404).json({ ok: false, error: 'not found' });
+        it.status = body.applied ? 'applied' : 'rejected'; it.done_at = new Date().toISOString(); await saveList(list);
+        await logNote(it.source, `คุณแดน${body.applied ? 'ใช้' : 'ไม่ใช้'}ข้อเสนอ: ${it.title}`);
+        return res.status(200).json({ ok: true });
+      }
+      if (req.method !== 'POST') return res.status(200).json({ ok: true, list: list.filter((x) => !req.query.status || x.status === req.query.status) });
+      const body = await readBody(req);
+      const ALLOW = ['headline', 'desc', 'features', 'pains', 'faq', 'forwho', 'notfor', 'guarantee', 'proof', 'specs', 'cat', 'sell', 'name'];
+      const main = await sb('shop_state?id=eq.main&select=data'); const prod = (main?.[0]?.data?.products || []).find((p) => p.id === String(body.product_id || ''));
+      if (!prod) return res.status(400).json({ ok: false, error: 'ไม่พบสินค้า product_id' });
+      const fields = {}; for (const k of ALLOW) if (body.fields && typeof body.fields[k] === 'string' && body.fields[k].trim() && body.fields[k] !== prod[k]) fields[k] = body.fields[k].slice(0, 3000);
+      if (!Object.keys(fields).length) return res.status(400).json({ ok: false, error: `ไม่มีช่องที่เปลี่ยน (แก้ได้เฉพาะ ${ALLOW.join(', ')} ห้ามราคา)` });
+      const src = ['ceo_sale', 'ceo_store', 'product', 'manager'].includes(body.source) ? body.source : 'manager';
+      list = list.filter((x) => !(x.status === 'pending' && x.product_id === prod.id && x.source === src)); // ข้อเสนอใหม่แทนอันเก่าที่ยังค้างของคนเดียวกัน
+      const { randomUUID } = await import('node:crypto');
+      const it = { id: randomUUID(), status: 'pending', source: src, product_id: prod.id, product_name: prod.name, title: String(body.title || 'ปรับข้อความหน้าขาย').slice(0, 120), why: String(body.why || '').slice(0, 1200), fields, created_at: new Date().toISOString() };
+      list.push(it); await saveList(list);
+      try { await addTodo({ text: `ข้อเสนอจาก ${MEMBER_TH[src]}: ${it.title} (${prod.name}) เปิดแท็บสินค้าและเซลเพจ → ข้อเสนอจาก CEO ดูตัวอย่างแล้วกดบันทึกถ้าเห็นด้วย`, type: 'decide', from: src }); } catch (e) {}
+      return res.status(200).json({ ok: true, id: it.id, fields: Object.keys(fields) });
+    }
     if (action === 'note') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const body = await readBody(req);
@@ -1246,7 +1292,7 @@ export default async function handler(req, res) {
         posts: { published: { facebook: pub.filter((p) => ch(p) === 'facebook').length, threads: pub.filter((p) => ch(p) === 'threads').length }, queued: { facebook: queued.filter((p) => ch(p) === 'facebook').length, threads: queued.filter((p) => ch(p) === 'threads').length }, held: posts.filter((p) => p.status === 'needs_owner').length, failed: posts.filter((p) => p.status === 'failed').length, policy: posts.filter((p) => p.status !== 'published' && (policyState(p.notes)?.level || 'ok') !== 'ok').length },
         todo: { open: openTodo.length, delegated: openTodo.filter((i) => i.delegated_at).length },
         factory: { active: jobs.filter((j) => ['queued', 'producing'].includes(j.status)).length, doneWeek: jobs.filter((j) => j.status === 'done' && (j.done_at || '') >= since).length },
-        team: { quiet: Object.keys(MEMBER_TH).filter((k) => !['care', 'factory', 'ceo_sale', 'ceo_store'].includes(k) && !reported[k]) },
+        team: { quiet: Object.keys(MEMBER_TH).filter((k) => !['care', 'factory'].includes(k) && !reported[k]) },
         report: rep ? { at: rep.created_at, decide: items(sec('ต้องขอคุณแดนตัดสิน')), ask: sec('สิ่งที่อยากให้คุณแดนทำ'), plan: sec('แผนสัปดาห์หน้า'), summary: sec('สรุปสัปดาห์') } : null });
     }
     if (action === 'deck') {
