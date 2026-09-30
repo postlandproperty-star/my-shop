@@ -502,7 +502,7 @@ export default async function handler(req, res) {
       const recent = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,notes${hasCh ? ',channel' : ''}&order=created_at.desc&limit=40`);
       const thConn = threadsConnected(await loadThreads());
       const SITE = await siteUrl();
-      const products = shop.products.filter((p) => p.status === 'published').map((p) => ({
+      const products = shop.products.filter((p) => p.status === 'published' && p.sell !== 'store').map((p) => ({
         id: p.id, slug: p.slug, name: p.name, headline: p.headline, desc: p.desc, price: p.price, fullPrice: p.fullPrice,
         features: p.features, specs: p.specs, toc: p.toc, forwho: p.forwho, pains: p.pains, faq: p.faq, images: p.images || [],
         url: `${SITE}/p/${p.slug}`,
@@ -886,6 +886,19 @@ export default async function handler(req, res) {
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
     }
+    if (action === 'factory_list') { // คุณแดนอนุมัติ (ลงขายแล้ว product_id) หรือไม่ลงขาย ชีทจากโรงงาน: แอดมินเท่านั้น
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req);
+      const jobs = await loadJobs();
+      const job = jobs.find((j) => j.id === String(body.id || ''));
+      if (!job) return res.status(404).json({ ok: false, error: 'not found' });
+      if (body.reject) { job.listing = 'rejected'; job.listing_at = new Date().toISOString(); }
+      else if (/^[a-z0-9]{2,40}$/i.test(String(body.product_id || ''))) { job.listing = 'listed'; job.product_id = String(body.product_id); job.listing_at = new Date().toISOString(); await logNote('factory', `คุณแดนอนุมัติลงขายแล้ว: ${job.title}`); }
+      else return res.status(400).json({ ok: false, error: 'ต้องมี product_id หรือ reject' });
+      await saveJobs(jobs);
+      return res.status(200).json({ ok: true, job });
+    }
     if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel'].includes(action)) {
       const admin = action === 'factory_cancel' && req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -911,7 +924,11 @@ export default async function handler(req, res) {
         if (body.summary) job.summary = String(body.summary).slice(0, 2000);
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
         await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
-        try { await addTodo({ text: `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`, type: 'do', from: 'factory', link: job.file_url || null }); } catch (e) { console.error('todo', e.message); }
+        if (Number(job.price) >= 1 && job.file_url) job.listing = 'pending'; // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
+        const todoText = job.listing === 'pending'
+          ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
+          : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
+        try { await addTodo({ text: todoText, type: job.listing === 'pending' ? 'decide' : 'do', from: 'factory', link: job.file_url || null }); } catch (e) { console.error('todo', e.message); }
       } else if (action === 'factory_fail') {
         job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
         await logNote('factory', `ผลิตไม่สำเร็จ: ${job.title} เหตุผล: ${job.error}`);
