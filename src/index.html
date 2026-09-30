@@ -824,13 +824,13 @@ function save(){
   saveTimer=setTimeout(flushRemote,400);
 }
 async function flushRemote(){
-  if(!savePending||!sb||!sbSession)return;
+  if(!savePending||!sb||!sbSession)return false;
   savePending=false;
-  const chk=await sb.from('shop_state').select('id,updated_at');
+  const chk=await sb.from('shop_state').select('id,updated_at').in('id',['main','private']);
   const newest=(chk.data||[]).map(r=>r.updated_at||'').sort().pop()||'';
   if(remoteStamp&&Date.parse(newest)>Date.parse(remoteStamp)){ // มีคนบันทึกจากแท็บ/เครื่องอื่นหลังจากเราโหลด
     await loadRemote();S.edit=null;S.draft=null;render(true);
-    toast('ข้อมูลถูกแก้จากที่อื่นก่อนหน้านี้ โหลดข้อมูลล่าสุดมาแล้ว กรุณาแก้อีกครั้ง');return;
+    toast('ข้อมูลถูกแก้จากที่อื่นก่อนหน้านี้ โหลดข้อมูลล่าสุดมาแล้ว กรุณาแก้อีกครั้ง');return false;
   }
   const now=new Date().toISOString();
   // ลิงก์ไฟล์สินค้า (link) เป็นความลับ: แยกออกจากข้อมูลสาธารณะไปเก็บในแถว private
@@ -842,18 +842,18 @@ async function flushRemote(){
   priv.orders=(priv.orders||[]).filter(o=>o.src!=='stripe'); // ออเดอร์จริงอยู่ในตาราง orders ไม่เก็บซ้ำในก้อนนี้
   // ค่าที่เซิร์ฟเวอร์เก็บในแถว private เอง (อีเมลทดสอบ เทมเพลต/ประวัติอีเมลเตือน ฯลฯ) หน้านี้ไม่รู้จัก: อ่านค่าล่าสุดแล้วเก็บไว้ ห้ามเขียนทับหาย
   {const cur=await sb.from('shop_state').select('data').eq('id','private').maybeSingle();
-   if(cur.error){toast('บันทึกไม่สำเร็จ: อ่านข้อมูลเดิมไม่ได้ ลองใหม่อีกครั้ง');return;}
+   if(cur.error){toast('บันทึกไม่สำเร็จ: อ่านข้อมูลเดิมไม่ได้ ลองใหม่อีกครั้ง');return false;}
    const old=(cur.data&&cur.data.data)||{};for(const k of Object.keys(old)){if(!(k in priv)&&!PRIVATE_KEYS.includes(k))priv[k]=old[k];}}
   const rows=[{id:'main',data:pub,updated_at:now},{id:'private',data:priv,updated_at:now}];
   const {error}=await sb.from('shop_state').upsert(rows);
-  if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);}
-  else remoteStamp=now;
+  if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);return false;}
+  remoteStamp=now;return true;
 }
 async function loadRemote(){
   if(!sb)return false;
   const {data,error}=await sb.from('shop_state').select('id,data,updated_at');
   if(error){console.error(error);return false;}
-  remoteStamp=(data||[]).map(r=>r.updated_at||'').sort().pop()||'';
+  remoteStamp=(data||[]).filter(r=>r.id==='main'||r.id==='private').map(r=>r.updated_at||'').sort().pop()||'';
   const main=(data||[]).find(r=>r.id==='main'),priv=(data||[]).find(r=>r.id==='private');
   remoteReady=true;
   if(!main||!main.data||!Array.isArray(main.data.products))return false; // ยังไม่เคยตั้งค่าข้อมูลบนระบบ
@@ -2096,7 +2096,7 @@ function productForm(){
 
 /* ชีทขายที่โรงงานผลิตเสร็จ รอคุณแดนตรวจแล้วกดอนุมัติลงขาย (โรงงานไม่เคยลงขายเอง) */
 const FAC={jobs:null,loading:false,busy:''};
-function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>x.status==='done'&&x.listing==='pending');FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));}).catch(()=>{FAC.jobs=[];FAC.queue=[];}).then(()=>{FAC.loading=false;render(true);});}
+function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));}).catch(()=>{FAC.jobs=[];FAC.queue=[];}).then(()=>{FAC.loading=false;render(true);});}
 function facBox(inFactory){
   if(FAC.jobs===null){loadFacJobs();return '';}
   if(!FAC.jobs.length){if(inFactory)return '';const q=FAC.queue||[];return `<div class="topbar"><span>🏭 จากโรงงาน: <b>ไม่มีชีทรออนุมัติ</b>${q.length?` · กำลังผลิต/รอผลิต ${q.length} เล่ม`:' · คิวว่าง'}</span><button class="chip" data-a="toFactory">ไปโรงงาน</button></div>`;}
@@ -3641,8 +3641,10 @@ function act(a,el){
       else{saved=getProduct(selfId);Object.assign(saved,data);}
       if(saved.status==='published'&&!saved.publishedAt)saved.publishedAt=Date.now();
       if(d.fromProp)propDone(d.fromProp,true);
-      if(d.fromJob){const jid=d.fromJob;authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:jid,product_id:saved.id})}).then(j=>{if(j&&j.ok)FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==jid);render(true);}).catch(()=>{});}
       S.edit=null;S.draft=null;S.err='';save();
+      if(d.fromJob){const jid=d.fromJob,pid=saved.id;clearTimeout(saveTimer);
+        flushRemote().then(ok=>{if(!ok||!getProduct(pid)){toast('ลงขายไม่สำเร็จ การ์ดโรงงานยังอยู่ กดอนุมัติใหม่อีกครั้ง');FAC.jobs=null;render(true);return;}
+          authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:jid,product_id:pid})}).then(j=>{if(j&&j.ok)FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==jid);render(true);}).catch(()=>{});});}
       if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');}
       else{render(false);toast('บันทึกสินค้าแล้ว');checkAllLinks();}
       break;}
