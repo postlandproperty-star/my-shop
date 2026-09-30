@@ -683,6 +683,38 @@ export default async function handler(req, res) {
         campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length, testOrdersExcluded: all.length - orders.length, paidDelivery: thisWeek.map((o) => ({ at: o.paid_at, via: String(o.session_id || '').startsWith('pi_') ? 'qr' : 'stripe_page', emailed: !!o.emailed_at })),
         posts, products: shop.products.map((p) => ({ name: p.name, status: p.status, price: p.price })) });
     }
+    if (action === 'file_uploadurl') { // อัปโหลดไฟล์ PDF สินค้าจากหน้าแก้สินค้า (แอดมิน) ผ่าน signed URL ไม่ต้องพึ่งสิทธิ์ฝั่งเบราว์เซอร์
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req);
+      const { randomUUID } = await import('node:crypto');
+      let safe = String(body.filename || 'sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(-60) || 'sheet.pdf';
+      if (!/\.pdf$/i.test(safe)) safe += '.pdf';
+      const path = `files/${randomUUID()}/${safe}`;
+      const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status}` });
+      return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
+    }
+    if (action === 'cover') {
+      // สร้างรูปปกด้วย OpenAI Images (คีย์อยู่ใน Vercel env OPENAI_API_KEY เท่านั้น) · คุณแดนกดจากหน้าแก้สินค้า ครั้งละ 1 รูป
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const KEY = process.env.OPENAI_API_KEY || '';
+      if (!KEY) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel (Settings → Environment Variables) ใส่แล้วกด Redeploy' });
+      const body = await readBody(req);
+      const prompt = String(body.prompt || '').trim().slice(0, 3000);
+      if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'คำสั่งสั้นเกินไป' });
+      try {
+        const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1', prompt, size: '1024x1024', quality: process.env.OPENAI_IMAGE_QUALITY || 'medium', n: 1 }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) return res.status(502).json({ ok: false, error: `OpenAI: ${j?.error?.message || r.status}` });
+        const b64 = j?.data?.[0]?.b64_json;
+        if (!b64) return res.status(502).json({ ok: false, error: 'OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง' });
+        return res.status(200).json({ ok: true, image: `data:image/png;base64,${b64}` });
+      } catch (e) { return res.status(502).json({ ok: false, error: 'เชื่อมต่อ OpenAI ไม่ได้: ' + String(e.message || e).slice(0, 120) }); }
+    }
     if (action === 'article' || action === 'article_hide') {
       // คลังความรู้: ทีมคอนเทนต์ส่ง/แก้ด้วย key (POST ตาม slug ขึ้นเว็บทันที) · คุณแดนซ่อน/เปิดได้ (article_hide แอดมิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

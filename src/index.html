@@ -174,6 +174,8 @@ footer{padding:28px 0 110px;text-align:center}
 .sellpick label:focus-within{outline:3px solid var(--brand);outline-offset:2px}
 .sellpick span{font-size:13px;color:var(--muted)}
 .facbox{margin:14px 0;border:2px solid var(--brand)}
+.aic-box{margin-top:10px;border:1.5px dashed var(--line);border-radius:12px;padding:12px}
+.aic-out{margin-top:10px;display:flex;flex-direction:column;gap:8px}.aic-out img{width:100%;max-width:360px;border-radius:12px;border:1px solid var(--line)}
 .fac{padding-top:16px}
 .prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--ok)}
 .setbooks{display:flex;flex-direction:column;gap:6px}
@@ -1065,6 +1067,52 @@ async function makePreviews(file){
   }catch(e){console.error(e);toast('สร้างหน้าตัวอย่างไม่สำเร็จ: '+(e.message||e));}
   S.pvBusy=false;render(true);
 }
+/* ทำปกด้วย AI: คำสั่งตั้งต้นจากข้อมูลสินค้า แบบเดียวกับปกเดิมของร้าน (สามมิติ น้ำเงิน-เหลือง ป้ายราคา) */
+function coverPrompt(d){
+  const price=Number(d.price)>=1?'฿'+Number(d.price).toLocaleString('th-TH'):'';
+  return `ปกหนังสือ e-book สำหรับขายออนไลน์ ภาพสี่เหลี่ยมจัตุรัส 1:1 สไตล์ภาพหนังสือสามมิติวางเอียงบนพื้นหลังสว่างสะอาด โทนสีน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab
+ชื่อบนปกตัวใหญ่ หนา อ่านง่าย: "${String(d.name||'').trim()}"
+${String(d.headline||'').trim()&&String(d.headline).trim()!==String(d.name).trim()?`คำโปรยรองบนปก: "${String(d.headline).trim()}"\n`:''}มุมล่างซ้ายมีป้ายวงกลมสีแดงเขียนว่า "ไฟล์ PDF${price?' '+price:''}"
+แถบล่างมีไอคอนเล็ก 3 อันพร้อมคำ: "ไฟล์ PDF" "อ่านได้ทุกอุปกรณ์" "ไม่ต้องรอจัดส่ง"
+ตัวอักษรภาษาไทยทุกคำต้องสะกดถูกต้องตามที่ให้ไว้ ห้ามมีตัวหนังสืออื่นนอกจากที่กำหนด ห้ามใส่โลโก้ของสถาบันอื่น`;
+}
+async function coverGen(){
+  const ta=document.getElementById('e-cover-prompt');const prompt=ta?ta.value:(S.coverPrompt||'');S.coverPrompt=prompt;
+  S.coverBusy=true;S.coverErr='';render(true);
+  try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    if(j&&j.ok)S.coverImg=j.image;else S.coverErr=(j&&j.error)||'สร้างรูปไม่สำเร็จ';}
+  catch(e){S.coverErr='เชื่อมต่อไม่ได้';}
+  S.coverBusy=false;render(true);
+}
+async function coverUse(){
+  if(!S.coverImg||!S.draft)return;S.coverBusy=true;render(true);
+  try{const blob=await (await fetch(S.coverImg)).blob();const r=await square(new File([blob],'cover.png',{type:'image/png'}));const url=await uploadImage(r.url);
+    S.draft.images=[url,...(S.draft.images||[])].slice(0,5);S.coverImg=null;S.coverOpen=false;toast('ใส่ปกใหม่เป็นภาพแรกแล้ว อย่าลืมกดบันทึกสินค้า');}
+  catch(e){console.error(e);S.coverErr='อัปโหลดรูปไม่สำเร็จ: '+(e.message||e);}
+  S.coverBusy=false;render(true);pvPost(0);
+}
+/* อัปโหลดไฟล์ PDF ของสินค้าขึ้นที่เก็บไฟล์ของร้าน (แทน Google Drive) แล้วใส่ลิงก์ ทำหน้าตัวอย่าง นับหน้าให้ */
+async function uploadPdf(file){
+  if(!S.draft||!file)return;if(!sb||!sbSession){toast('ต้องล็อกอินก่อนอัปโหลด');return;}
+  if(file.size>45*1024*1024){toast('ไฟล์ใหญ่เกิน 45 MB ลองบีบอัด PDF ก่อน');return;}
+  S.fileBusy=true;render(true);toast('กำลังอัปโหลดไฟล์ PDF...');
+  try{
+    const u=await authFetch('/api/content?action=file_uploadurl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:file.name})});
+    if(!u||!u.ok)throw new Error((u&&u.error)||'ขอที่อัปโหลดไม่ได้');
+    const put=await fetch(u.upload_url,{method:'PUT',headers:{'Content-Type':'application/pdf','x-upsert':'true'},body:file});
+    if(!put.ok)throw new Error('อัปโหลดไม่สำเร็จ ('+put.status+')');
+    S.draft.link=u.file_url;
+    try{if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+      const doc=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;const n=doc.numPages;
+      if(!String(S.draft.specs||'').trim())S.draft.specs=`รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | ${n} หน้า`;
+      else if(!/จำนวนหน้า/.test(S.draft.specs))S.draft.specs+=`\nจำนวนหน้า | ${n} หน้า`;}catch(e){}
+    toast('อัปโหลดไฟล์แล้ว กำลังทำหน้าตัวอย่าง...');
+    S.fileBusy=false;render(true);
+    if(!(S.draft.previews||[]).length)await makePreviews(file);
+    toast('เรียบร้อย ลิงก์ไฟล์ หน้าตัวอย่าง และจำนวนหน้าใส่ให้แล้ว อย่าลืมกดบันทึก');
+  }catch(e){console.error(e);toast('อัปโหลดไม่สำเร็จ: '+(e.message||e));}
+  S.fileBusy=false;render(true);pvPost(0);
+}
 async function addImages(files){
   const room=5-S.draft.images.length,list=Array.from(files).slice(0,Math.max(0,room));
   if(files.length>room)toast('ใส่ภาพได้สูงสุด 5 ภาพ');
@@ -1946,11 +1994,17 @@ function productForm(){
     </div>
     ${ta('e-features','features','สิ่งที่ลูกค้าจะได้รับ (บรรทัดละข้อ)')}
     <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — สำคัญ')}<div class="row"><input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/..."><button class="btn btn-line btn-sm" data-a="checkLink" data-for="e-link">ตรวจลิงก์</button></div>
+      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><label class="btn btn-dark btn-sm" for="e-file" style="cursor:pointer">${S.fileBusy?'กำลังอัปโหลด...':'📄 อัปโหลดไฟล์ PDF (ไม่ต้องใช้ Google Drive)'}<input type="file" id="e-file" accept="application/pdf" class="vh" ${S.fileBusy?'disabled':''}></label><span class="fine">อัปโหลดแล้วใส่ลิงก์ ทำหน้าตัวอย่าง และนับจำนวนหน้าให้อัตโนมัติ</span></div>
       ${linkCheckMsg('e-link')}
       <span class="fine">ลูกค้าจะได้ปุ่มดาวน์โหลดลิงก์นี้อัตโนมัติหลังจ่ายเงินสำเร็จ (ระบบตรวจกับ Stripe ก่อนทุกครั้ง) ตั้งค่าแชร์ไฟล์เป็น "ทุกคนที่มีลิงก์"</span></div>
     <p class="fine" style="margin:4px 0 12px">💳 ราคาขายด้านบนคือราคาที่เก็บเงินจริงผ่าน Stripe อัตโนมัติ ไม่ต้องตั้งค่าใน Stripe อีก</p>
     <div class="field"><span class="lbl" id="lbl-color">สีหลักของเซลเพจ</span>
       <div class="swatches" role="radiogroup" aria-labelledby="lbl-color">${COLORS.map(c=>`<label class="sw" style="--c:${c[0]}"><input type="radio" name="theme" data-d="color" value="${c[0]}" ${d.color===c[0]?'checked':''}><span class="dot"></span><span>${c[1]}</span></label>`).join('')}</div></div>
+    <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
+      ${S.coverOpen?`<div class="aic-box"><label for="e-cover-prompt">คำสั่งทำปก (แก้ได้)</label><textarea class="input" id="e-cover-prompt" data-cp="1" rows="7">${esc(S.coverPrompt==null?coverPrompt(d):S.coverPrompt)}</textarea>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
+        ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}</p>`:''}
+        ${S.coverImg?`<div class="aic-out"><img src="${S.coverImg}" alt="ปกที่สร้าง"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverUse" ${S.coverBusy?'disabled':''}>ใช้เป็นปก (ภาพแรก)</button><span class="fine">ตรวจตัวสะกดภาษาไทยบนปกก่อนใช้</span></div></div>`:''}</div>`:''}</div>
     <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
       <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button></div>`).join('')}
       ${d.images.length<5?`<label class="add"><input type="file" id="e-img" accept="image/*" multiple>+ เพิ่มภาพ</label>`:''}</div>
@@ -3217,6 +3271,10 @@ function act(a,el){
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
     case 'forder':factoryOrder();break;
+    case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
+    case 'coverGen':coverGen();break;
+    case 'coverUse':coverUse();break;
+    case 'coverReset':S.coverPrompt=null;render(true);break;
     case 'tplPick':{const sel=S.tplSel||(S.tplSel={});sel[el.dataset.v]=el.checked;S.confirm='';render(true);break;}
     case 'tplOrder':if(S.confirm!=='tpl:'+el.dataset.v){S.confirm='tpl:'+el.dataset.v;render(true);break;}S.confirm='';tplOrder(el.dataset.v);break;
     case 'facApprove':facApprove(id);break;
@@ -3428,7 +3486,7 @@ function act(a,el){
     case 'bxPlan':{S.bplan=S.bplan||{};S.bplan[el.dataset.slug]=el.dataset.v;S.qr=null;qrStop();render(true);break;}
     case 'bxPv':{S.bxPv=Number(el.dataset.v)||0;render(true);const t=document.getElementById('bx-preview');if(t)t.scrollIntoView({block:'start',behavior:'smooth'});break;}
     case 'editProduct':S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
-    case 'cancelEdit':S.edit=null;S.draft=null;S.err='';render(false);break;
+    case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published'&&!p.publishedAt)p.publishedAt=Date.now();save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
     case 'dupProduct':{
@@ -3511,6 +3569,7 @@ document.addEventListener('input',e=>{
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
+  if(ds.cp){S.coverPrompt=t.value;}
   if(ds.bp&&S.draft&&S.draft.plans){const [k,f]=ds.bp.split('|');const pl=S.draft.plans.find(x=>x.key===k);if(pl){pl[f]=t.type==='checkbox'?t.checked:t.value;if(f==='on')render(true);}}
   if(ds.bl&&S.draft&&S.draft.planLinks){S.draft.planLinks[ds.bl]=t.value;}
   if(ds.d&&S.draft)S.draft[ds.d]=t.value;
@@ -3531,6 +3590,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='ad-camp'){S.ad.camp=t.value;render(true);}
   else if(t.id==='e-img'){addImages(t.files);t.value='';}
   else if(t.id==='e-pdf'){const f=t.files&&t.files[0];t.value='';if(f)makePreviews(f);}
+  else if(t.id==='e-file'){const f=t.files&&t.files[0];t.value='';if(f)uploadPdf(f);}
   else if(t.id==='e-pvpages'){S.pvPages=t.value;}
   else if(t.id==='pf'){S.pfilter=t.value;render(true);}
   else if(t.id==='f-bump'){S.form.bump=t.checked;render(true);}
