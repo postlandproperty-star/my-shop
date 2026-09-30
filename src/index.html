@@ -177,6 +177,11 @@ footer{padding:28px 0 110px;text-align:center}
 .aic-box{margin-top:10px;border:1.5px dashed var(--line);border-radius:12px;padding:12px}
 .aic-out{margin-top:10px;display:flex;flex-direction:column;gap:8px}.aic-out img{width:100%;max-width:360px;border-radius:12px;border:1px solid var(--line)}
 .fac{padding-top:16px}
+.idea-bar{display:flex;gap:8px;margin:0 0 10px}.idea-bar input{flex:1;min-width:0}.idea-note{margin:-2px 0 10px;background:var(--bg);border-radius:10px;padding:8px 12px}
+.visits{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}.vis-total{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:15px}.vis-total b{font-size:20px}
+.vis-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.vis-cell{background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-width:0}.vis-cell span{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vis-cell b{font-size:18px}.vis-cell small{font-size:12px;color:var(--muted)}
+.vis-top{border:0!important;padding:0!important;margin:0!important;background:transparent!important}.vis-top ol{margin:6px 0 0;padding-left:20px;font-size:14px}
+@media(max-width:420px){.vis-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .switch{position:relative;display:inline-block;width:52px;height:30px;flex-shrink:0}.switch input{opacity:0;width:0;height:0}.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.15s;cursor:pointer}.switch span:before{content:'';position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}.switch input:checked+span{background:var(--ok)}.switch input:checked+span:before{transform:translateX(22px)}.switch input:focus-visible+span{outline:3px solid var(--brand);outline-offset:2px}
 .autobox.on{border:2px solid var(--ok)}.auto-sets{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:14.5px}.auto-sets label{display:flex;gap:6px;align-items:center}
 .prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--ok)}
@@ -1476,7 +1481,7 @@ function shopHead(p){
 }
 /* ===== หน้าร้าน (หน้าแรก sheetlabth.com) =====
    ชุดเด่นก่อน ตามด้วยเล่มเดี่ยว ทุกอย่างที่เผยแพร่ขึ้นเอง ถ้าเผยแพร่ไม่ถึง 2 รายการ หน้าแรกเปิดหน้าขายเลยเหมือนเดิม */
-const CATS={grammar:'Grammar',vocab:'คำศัพท์',listening:'Listening',reading:'Reading',mock:'ข้อสอบเสมือนจริง'};
+const CATS={grammar:'Grammar',vocab:'คำศัพท์',listening:'Listening',reading:'Reading',mock:'ข้อสอบเสมือนจริง',ielts:'IELTS',tgat:'TGAT / A-Level',kp:'สอบ ก.พ.',speak:'สนทนา',work:'ภาษาอังกฤษทำงาน / เที่ยว',general:'ภาษาอังกฤษทั่วไป'};
 const STORE_MIN=2,CHAT_URL='https://m.me/1264839566720049';
 const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
@@ -2073,7 +2078,7 @@ function facBox(inFactory){
       <div class="row" style="gap:6px;flex-wrap:wrap"><a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a><button class="btn btn-cta btn-sm" data-a="facQuick" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${FAC.busy===j.id&&FAC.quick?'กำลังเตรียมและลงขาย...':S.confirm==='fq:'+j.id?'กดอีกครั้ง: ลงขาย '+baht(j.price):'อนุมัติเลย'}</button><button class="btn btn-line btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจก่อนอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
   </section>`;
 }
-function guessCat(t){t=String(t||'').toLowerCase();return /grammar|ไวยากรณ์|tense/.test(t)?'grammar':/vocab|คำศัพท์|ศัพท์/.test(t)?'vocab':/listening|ฟัง/.test(t)?'listening':/reading|อ่าน/.test(t)?'reading':/mock|ข้อสอบเสมือน|full test/.test(t)?'mock':'';}
+function guessCat(t){t=String(t||'').toLowerCase();return /ielts/.test(t)?'ielts':/tgat|a-level|มหาลัย/.test(t)?'tgat':/ก\.พ|ราชการ/.test(t)?'kp':/สนทนา|พูด|speaking|conversation/.test(t)?'speak':/ทำงาน|เที่ยว|business|travel|office/.test(t)&&!/toeic/.test(t)?'work':/grammar|ไวยากรณ์|tense/.test(t)?'grammar':/vocab|คำศัพท์|ศัพท์/.test(t)?'vocab':/listening|ฟัง/.test(t)?'listening':/reading|อ่าน/.test(t)?'reading':/mock|ข้อสอบเสมือน|full test/.test(t)?'mock':'';}
 async function facApprove(id,quick){
   const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;
   const pages=Number(j.pages)||0;
@@ -2185,6 +2190,14 @@ function facIdeas(){
   const rows=[['product','พี่โปร'],['ceo_store','พี่โอ๊ค']].map(([k,n])=>{const x=pick(k);return x?`<details class="fac-idea"><summary>${ava(k,1)} ${n} · ${fdt(Date.parse(x.created_at))}</summary><div>${esc(x.text)}</div></details>`:'';}).filter(Boolean);
   return `<section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">💡 ไอเดียเล่มถัดไปจากทีม</h3><p class="fine" style="margin:0 0 8px">พี่โปรเสนอทุกจันทร์ พี่โอ๊คเสนอทุกพุธ จากยอดขายและคำที่คนค้นจริง อ่านแล้วสั่งผลิตในฟอร์มด้านล่างได้เลย (ไม่ใช้ token เพิ่ม)</p>${rows.length?rows.join(''):'<p class="fine">ยังไม่มีข้อเสนอ รอรอบถัดไป</p>'}</section>`;
 }
+async function fIdea(){
+  const f=S.fnew||{};S.fideaBusy=true;render(true);
+  try{const j=await authFetch('/api/content?action=idea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hint:f.hint||''})});
+    if(j&&j.ok){const d=j.idea;Object.assign(S.fnew,{title:d.title,cat:d.category||'',pages:d.pages?String(d.pages):'',price:String(d.price??''),audience:d.audience||'',notes:d.notes||''});S.fidea={source:j.source,why:d.why||'',aiErr:j.aiErr||''};}
+    else toast((j&&j.error)||'สุ่มไม่สำเร็จ');}
+  catch(e){toast('เชื่อมต่อไม่ได้');}
+  S.fideaBusy=false;render(true);
+}
 async function factoryOrder(){
   const f=S.fnew;S.ferr='';
   const title=String(f.title||'').trim(),pages=Number(f.pages)||0,price=Number(f.price)||0;
@@ -2195,7 +2208,7 @@ async function factoryOrder(){
   const body={title,category:f.cat,price,audience:String(f.audience||'').trim(),notes:String(f.notes||'').trim(),purpose:price>=1?'ชีทขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'ชีทแจกฟรี'};
   if(pages)body.pages=pages;
   try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(j&&j.ok){S.fnew={title:'',cat:f.cat,pages:'',price:'',audience:'',notes:''};FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
+    if(j&&j.ok){S.fnew={title:'',cat:f.cat,pages:'',price:'',audience:'',notes:'',hint:f.hint||''};S.fidea=null;FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
   catch(e){S.ferr='เชื่อมต่อไม่ได้';}
   S.fbusy=false;render(true);
 }
@@ -2217,9 +2230,11 @@ function factoryView(){
     ${facSets()}
     ${facIdeas()}
     <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
+      <div class="idea-bar"><input class="input" id="fn-hint" data-fn="hint" value="${esc(f.hint||'')}" placeholder="อยากได้แนวไหน (ไม่ใส่ก็ได้) เช่น IELTS, ทำงาน"><button class="btn btn-cta btn-sm" data-a="fIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 สุ่มหัวข้อให้'}</button></div>
+      ${S.fidea?`<p class="fine idea-note">${S.fidea.source==='ai'?'🤖 AI คิดให้':'🎲 สุ่มจากคลังหัวข้อ'}${S.fidea.why?' · '+esc(S.fidea.why):''}${S.fidea.source!=='ai'?' (ใส่ OPENAI_API_KEY ใน Vercel แล้ว AI จะคิดหัวข้อใหม่ให้)':''}${S.fidea.aiErr?' · AI ใช้ไม่ได้ตอนนี้: '+esc(S.fidea.aiErr):''} · ตรวจ แก้ แล้วกดส่งเข้าคิว หรือกดสุ่มใหม่</p>`:''}
       <div class="field">${lb('fn-title','ชื่อเรื่อง')}<input class="input" id="fn-title" data-fn="title" value="${esc(f.title)}" placeholder="เช่น TOEIC Part 5 Tense ที่ออกบ่อย 100 ข้อ พร้อมเฉลย"></div>
       <div class="grid2">
-        <div class="field">${lb('fn-cat','หมวด')}<select class="input" id="fn-cat" data-fn="cat">${['TOEIC Grammar','TOEIC คำศัพท์','TOEIC Listening','TOEIC Reading','TOEIC ข้อสอบเสมือนจริง','อื่นๆ'].map(c=>`<option ${f.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div class="field">${lb('fn-cat','หมวด (พิมพ์อะไรก็ได้)')}<input class="input" id="fn-cat" data-fn="cat" list="fn-cats" value="${esc(f.cat)}" placeholder="เช่น TOEIC คำศัพท์, IELTS, สอบ ก.พ."><datalist id="fn-cats">${['TOEIC Grammar','TOEIC คำศัพท์','TOEIC Listening','TOEIC Reading','TOEIC ข้อสอบเสมือนจริง','เตรียมสอบ IELTS','TGAT / A-Level','สอบ ก.พ. / ราชการ','คลังคำศัพท์','ไวยากรณ์','ฝึกพูด / สนทนา','อังกฤษใช้งาน (ทำงาน / เที่ยว)','ฝึกอ่าน / เรื่องสั้น','แพลนเนอร์ / สมุดจดศัพท์'].map(c=>`<option value="${c}">`).join('')}</datalist></div>
         <div class="field">${lb('fn-pages','จำนวนหน้า (เว้นว่างให้โรงงานกำหนด)')}<input class="input" id="fn-pages" data-fn="pages" type="number" inputmode="numeric" min="4" max="400" value="${esc(f.pages)}" placeholder="เช่น 40"></div>
         <div class="field">${lb('fn-price','ราคาขาย (บาท) ใส่ 0 = แจกฟรี')}<input class="input" id="fn-price" data-fn="price" type="number" inputmode="numeric" min="0" value="${esc(f.price)}" placeholder="เช่น 149"></div>
         <div class="field">${lb('fn-aud','เหมาะกับใคร')}<input class="input" id="fn-aud" data-fn="audience" value="${esc(f.audience)}" placeholder="เช่น คนที่ได้ 450–600 อยากถึง 750"></div>
@@ -2520,6 +2535,12 @@ function dashBox(){
       ${tile('checkout ค้างไม่จ่าย',num(d.sales.unpaid),'คนที่กดซื้อแต่ยังไม่จ่าย',d.sales.unpaid>0,vs('unpaid','down'))}
       ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0,vs('todo','down'))}
     </div>
+    ${(()=>{const V=d.visits;if(!V)return '';const G=[['store','🏪 หน้าร้าน'],['salepage','📄 salepage'],['quiz','📝 คลังข้อสอบ'],['learn','📖 คลังความรู้'],['daily','🗓️ ข้อสอบประจำวัน'],['order','🔎 หาออเดอร์']];const nm=k=>k==='store'?'หน้าร้าน':k==='order'?'หาออเดอร์':k==='daily'?'ข้อสอบประจำวัน':k==='quiz'?'คลังข้อสอบ (หน้ารวม)':k==='learn'?'คลังความรู้ (หน้ารวม)':k.startsWith('p/')?'salepage '+k.slice(2):k.startsWith('quiz/')?'ข้อสอบ '+k.slice(5):'บทความ '+k.slice(6);
+      const dv=(a,b)=>{const x=(a||0)-(b||0);return x?`<em class="vs ${x>0?'good':'bad'}">${x>0?'▲ +':'▼ −'}${Math.abs(x)} จากเมื่อวาน</em>`:''};
+      return `<div class="visits"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><b>👀 ผู้เข้าชมเว็บ 7 วัน</b><span class="fine">นับไม่ซ้ำต่อคนต่อวัน ไม่นับคุณแดน${V.since?' · เริ่มนับ '+new Date(V.since).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></div>
+        <div class="vis-total"><span><b>${num(V.total7)}</b> ครั้ง 7 วัน</span><span>วันนี้ <b>${num(V.totalToday)}</b> ${dv(V.totalToday,V.totalYesterday)}</span></div>
+        <div class="vis-grid">${G.map(([k,l])=>`<div class="vis-cell"><span>${l}</span><b>${num(V.week[k]||0)}</b><small>วันนี้ ${num(V.today[k]||0)}</small></div>`).join('')}</div>
+        ${V.top&&V.top.length?`<details class="vis-top"><summary>หน้าที่คนเข้ามากที่สุด</summary><ol>${V.top.map(([k,n])=>`<li>${esc(nm(k))} <b>${num(n)}</b></li>`).join('')}</ol></details>`:'<p class="fine" style="margin:6px 0 0">ยังไม่มีข้อมูล ตัวเลขจะเริ่มขึ้นหลังมีคนเข้าเว็บ</p>'}</div>`;})()}
     ${r?`<div class="dnotes"><p class="fine" style="margin:0 0 6px">${ava('manager',1)} จากรายงานพี่ต้น ${fmtD(r.at)}</p>
       ${r.decide.length?`<div class="dn"><b>ต้องขอคุณแดนตัดสิน</b><ol>${r.decide.map(x=>`<li>${esc(x)}</li>`).join('')}</ol><button class="chip" data-a="tab" data-v="todo">ไปตอบในเช็คลิสต์</button></div>`:''}
       ${r.ask?`<div class="dn"><b>อยากให้คุณแดนช่วย</b><p>${esc(r.ask)}</p></div>`:''}
@@ -3271,6 +3292,12 @@ async function afterLogin(){
   if(S.tab==='orders')autoSync(true);
   if(S.tab==='products')checkAllLinks();
 }
+function hit(k){
+  if(PV||!k||hasAdminToken()||hasAdminAccess())return;
+  try{const d=new Date(Date.now()+7*3600e3).toISOString().slice(0,10),key='hit:'+d+':'+k;if(localStorage.getItem(key))return;localStorage.setItem(key,'1');
+    if(!hit.pruned){hit.pruned=1;Object.keys(localStorage).forEach(x=>{if(x.startsWith('hit:')&&!x.startsWith('hit:'+d))localStorage.removeItem(x);});}}catch(e){return;}
+  try{fetch('/api/content?action=hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({s:k}),keepalive:true}).catch(()=>{});}catch(e){}
+}
 function render(keep){
   const y=window.scrollY,v=S.view;
   const isAdmin=hasAdminAccess();
@@ -3281,6 +3308,7 @@ function render(keep){
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
   $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:storeView,order:orderView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
+  if(v==='store')hit('store');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
   if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
   document.body.style.overflow=(v==='admin'&&S.cfgOpen)?'hidden':'';
@@ -3318,6 +3346,7 @@ function act(a,el){
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
     case 'forder':factoryOrder();break;
+    case 'fIdea':fIdea();break;
     case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
     case 'coverGen':coverGen();break;
     case 'coverUse':coverUse();break;

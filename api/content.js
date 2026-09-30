@@ -721,6 +721,53 @@ export default async function handler(req, res) {
       if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status}` });
       return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
     }
+    if (action === 'idea') {
+      // สุ่มหัวข้อชีทใหม่ครบทุกช่องในฟอร์มสั่งผลิต (แอดมิน): มี OPENAI_API_KEY ใช้ AI คิดใหม่ ไม่มีหรือ AI ล่ม สุ่มจากคลังหัวข้อสำเร็จรูป
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req);
+      const hint = String(body.hint || '').trim().slice(0, 200);
+      const [shop, jobs] = await Promise.all([loadShop().catch(() => ({ products: [] })), loadJobs().catch(() => [])]);
+      const have = [...shop.products.map((p) => p.name), ...jobs.filter((j) => !['cancelled', 'failed'].includes(j.status)).map((j) => j.title)].map((t) => String(t || '')).filter(Boolean);
+      const KEY = process.env.OPENAI_API_KEY || '';
+      let aiErr = '';
+      if (KEY) {
+        try {
+          const mk = await sb('posts?status=eq.note&kind=eq.market&select=text&order=created_at.desc&limit=1').catch(() => []);
+          const sys = 'คุณเป็นบรรณาธิการร้านขายชีทสรุปและหนังสือ PDF ภาษาอังกฤษสำหรับคนไทย (SheetLab) ตอบเป็น JSON อย่างเดียว';
+          const user = `คิดหัวข้อชีท PDF เล่มใหม่ 1 เล่มที่ขายได้จริงในไทย หมวดอะไรก็ได้เกี่ยวกับภาษาอังกฤษ (TOEIC, IELTS, TGAT/A-Level, สอบ ก.พ., คำศัพท์, ไวยากรณ์, สนทนา, ภาษาอังกฤษทำงาน/เที่ยว ฯลฯ) ห้ามซ้ำหรือใกล้เคียงกับเล่มที่มีแล้ว:\n${have.slice(0, 40).join('\n')}\n${hint ? `โจทย์จากเจ้าของร้าน: ${hint}\n` : ''}${mk?.[0]?.text ? `คำที่คนไทยค้นจริงล่าสุด (ใช้ประกอบ):\n${String(mk[0].text).slice(0, 1500)}\n` : ''}ตอบ JSON: {"title":"ชื่อเล่มขายได้ ≤ 90 ตัวอักษร","category":"หมวด","pages":จำนวนหน้า 20-160,"price":ราคาบาทลงท้าย 9 ระหว่าง 69-249,"audience":"เหมาะกับใคร","notes":"เนื้อหาที่ต้องมีในเล่ม 1-3 ประโยค","why":"ทำไมเล่มนี้น่าขาย 1 ประโยค"} ห้ามสัญญาผลคะแนน ห้ามอ้างว่าเป็นข้อสอบจริง`;
+          const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: process.env.OPENAI_TEXT_MODEL || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], response_format: { type: 'json_object' }, temperature: 1 }) });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(j?.error?.message || String(r.status));
+          const o = JSON.parse(j.choices?.[0]?.message?.content || '{}');
+          if (o.title) return res.status(200).json({ ok: true, source: 'ai', idea: { title: String(o.title).slice(0, 120), category: String(o.category || '').slice(0, 60), pages: Math.min(160, Math.max(20, Number(o.pages) || 60)), price: Math.max(0, Number(o.price) || 0), audience: String(o.audience || '').slice(0, 200), notes: String(o.notes || '').slice(0, 600), why: String(o.why || '').slice(0, 200) } });
+        } catch (e) { aiErr = String(e.message || e).slice(0, 120); }
+      }
+      const { IDEA_POOL } = await import('../lib/ideas.js');
+      const low = have.map((t) => t.toLowerCase().slice(0, 20));
+      const pool = IDEA_POOL.filter((b) => !low.some((h) => h && String(b.t).toLowerCase().startsWith(h.slice(0, 16))) && (!hint || (b.t + ' ' + b.cat).toLowerCase().includes(hint.toLowerCase())));
+      const list = pool.length ? pool : IDEA_POOL;
+      const b = list[Math.floor(Math.random() * list.length)];
+      return res.status(200).json({ ok: true, source: 'pool', aiErr: KEY ? aiErr : '', idea: { title: b.t, category: b.cat, pages: b.pages, price: b.price, audience: b.level ? `ระดับ ${b.level}` : '', notes: b.notes || '', why: '' } });
+    }
+    if (action === 'hit') {
+      // นับผู้เข้าชมแต่ละส่วนของเว็บ (สาธารณะ ไม่เก็บข้อมูลส่วนตัว): หน้าเว็บส่งครั้งเดียวต่อคนต่อส่วนต่อวัน · เก็บ 60 วันใน shop_state hits
+      if (req.method !== 'POST') return res.status(405).end();
+      const ua = String(req.headers['user-agent'] || '');
+      if (/bot|crawl|spider|slurp|facebookexternalhit|headless|preview/i.test(ua)) return res.status(204).end();
+      const body = await readBody(req);
+      const k = String(body.s || '');
+      if (!/^(store|order|quiz|learn|daily|p\/[a-z0-9-]{1,70}|quiz\/[a-z0-9-]{1,70}|learn\/[a-z0-9-]{1,70})$/.test(k)) return res.status(204).end();
+      try {
+        const day = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+        const rows = await sb('shop_state?id=eq.hits&select=data'); const d = rows?.[0]?.data || { days: {} }; const days = d.days || {};
+        days[day] = days[day] || {}; days[day][k] = (days[day][k] || 0) + 1;
+        const keep = {}; Object.keys(days).sort().slice(-60).forEach((x) => { keep[x] = days[x]; });
+        await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'hits', data: { days: keep }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      } catch (e) { console.error('hit', e.message); }
+      return res.status(204).end();
+    }
     if (action === 'cover') {
       // สร้างรูปปกด้วย OpenAI Images (คีย์อยู่ใน Vercel env OPENAI_API_KEY เท่านั้น) · คุณแดนกดจากหน้าแก้สินค้า ครั้งละ 1 รูป
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -1410,6 +1457,17 @@ export default async function handler(req, res) {
       posts.filter((p) => p.source && p.created_at >= since).forEach((p) => { reported[p.source] = true; });
       const todo = await loadTodo();
       const openTodo = todo.filter((i) => !i.done_at);
+      // ผู้เข้าชมเว็บแยกส่วน (นับไม่ซ้ำต่อคนต่อวัน) 7 วัน + วันนี้ + เมื่อวาน
+      let visits = null;
+      try {
+        const hr = await sb('shop_state?id=eq.hits&select=data'); const hd = hr?.[0]?.data?.days || {};
+        const dayK = (off) => new Date(now + 7 * 3600e3 - off * 864e5).toISOString().slice(0, 10);
+        const grp = (k) => k === 'store' ? 'store' : k.startsWith('p/') ? 'salepage' : k === 'daily' ? 'daily' : k.startsWith('quiz') ? 'quiz' : k.startsWith('learn') ? 'learn' : k === 'order' ? 'order' : 'other';
+        const sum = (keys) => { const g = {}, pages = {}; for (const dk of keys) for (const [k, v] of Object.entries(hd[dk] || {})) { g[grp(k)] = (g[grp(k)] || 0) + v; pages[k] = (pages[k] || 0) + v; } return { g, pages }; };
+        const w = sum([0, 1, 2, 3, 4, 5, 6].map(dayK)), t = sum([dayK(0)]), y = sum([dayK(1)]);
+        const tot = (o) => Object.values(o).reduce((a, b) => a + b, 0);
+        visits = { week: w.g, today: t.g, yesterday: y.g, total7: tot(w.g), totalToday: tot(t.g), totalYesterday: tot(y.g), top: Object.entries(w.pages).sort((a, b) => b[1] - a[1]).slice(0, 8), since: Object.keys(hd).sort()[0] || null };
+      } catch (e) {}
       // ภาพถ่ายตัวเลขรายวัน (วันที่ไทย): เก็บค่าที่คำนวณย้อนหลังไม่ได้ ไว้เทียบกับเมื่อวาน
       const spendNow = campaigns.reduce((a, c) => a + c.spend, 0), queuedNow = queued.length;
       const yKey = Object.keys(hist).sort().filter((k) => k < today).pop(); const yd = yKey ? hist[yKey] : null;
@@ -1418,7 +1476,7 @@ export default async function handler(req, res) {
       const dif = (cur, old) => (cur == null || old == null ? null : Math.round((cur - old) * 100) / 100);
       const vsY = { revenue: dif(sum(wk), sum(wkY)), orders: dif(wk.length, wkY.length), published: dif(pub.length, pubY), unpaid: dif(real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, unpaidY),
         spend: dif(spendNow, yd?.spend), queued: dif(queuedNow, yd?.queued), todo: dif(openTodo.length, yd?.todo), threads: dif(thF, yd?.th), facebook: dif(fbF, yd?.fb), since: yKey || null };
-      return res.status(200).json({ ok: true, at: nowIso, vsY,
+      return res.status(200).json({ ok: true, at: nowIso, vsY, visits,
         sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, store: { orders: wk.filter((o) => o.campaign === 'store').length, revenue: sum(wk.filter((o) => o.campaign === 'store')) } },
         ads: { spend: campaigns.reduce((a, c) => a + c.spend, 0), campaigns },
         followers: { threads: thF, facebook: fbF, threadsDelta: base && thF != null && base.th != null ? thF - base.th : null, facebookDelta: base && fbF != null && base.fb != null ? fbF - base.fb : null, since: weekAgo || null },
