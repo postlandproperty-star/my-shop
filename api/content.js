@@ -192,7 +192,8 @@ const FORMAT_BOARD = `== รูปแบบคอนเทนต์ที่ค�
    - เฉลย: โพสต์เฉลยแยกวันถัดไป (หรือโพสต์ถัดไปใน Threads) บอกจุดผิด ประโยคที่ถูก เหตุผล 1-2 บรรทัด และลิงก์บทความหรือแบบทดสอบบนเว็บที่ตรงหัวข้อ เช่น sheetlabth.com/learn/<slug> หรือ sheetlabth.com/quiz/<slug> (ดูรายการที่มีจาก GET content?action=article และ action=quiz) ถ้ายังไม่มีหัวข้อตรง ใช้ sheetlabth.com/quiz
    - ต้องเป็นประโยคที่ทีมเขียนเองทั้งหมด ห้ามเอาภาพหรือโพสต์ของคนอื่นมาใช้ ห้ามระบุชื่อสถาบันหรือข้อสอบของใคร ตรวจเฉลยให้ถูกแน่นอนก่อนส่ง
 2) Reels "หาจุดผิดใน 5 วินาที" (น้องคลิป สัปดาห์ละ 2 คลิป สลับกับแนวเดิม): ใช้โครงคลิปเดิม แต่ละข้อ = ประโยคที่มีจุดผิด 1 จุด ช่วงเฉลย = ประโยคที่ถูก + เหตุผลสั้น ปิดท้ายชวน "ฝึกต่อฟรีที่ sheetlabth.com/quiz"
-3) โพสต์ความรู้ทั่วไป (tip) ที่ตรงกับบทความในคลังความรู้ ให้ปิดท้ายด้วยลิงก์บทความนั้นแทนลิงก์หน้าขาย สัปดาห์ละไม่เกิน 3 โพสต์ที่มีลิงก์หน้าขาย`;
+3) ข้อสอบประจำวัน: Threads วันละ 1 โพสต์ (นับในโควตาเดิม) ชวนทำข้อสอบประจำวันที่ sheetlabth.com/quiz/daily (ข้อเปลี่ยนเองทุกวัน) และสัปดาห์ละ 2 ครั้ง (FB 1 + Threads 1) ชวนวัดระดับฟรี 20 ข้อที่ sheetlabth.com/quiz/toeic-level-test
+4) โพสต์ความรู้ทั่วไป (tip) ที่ตรงกับบทความในคลังความรู้ ให้ปิดท้ายด้วยลิงก์บทความนั้นแทนลิงก์หน้าขาย สัปดาห์ละไม่เกิน 3 โพสต์ที่มีลิงก์หน้าขาย`;
 async function loadCfg() { const rows = await sb('shop_state?id=eq.team_cfg&select=data'); const d = rows?.[0]?.data || {}; return { global: { todo_hours: 24, manager_money: false, team_note: '', ...(d.global || {}) }, members: d.members || {}, updated_at: d.updated_at || null }; }
 async function saveCfg(cfg) { cfg.updated_at = new Date().toISOString(); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'team_cfg', data: cfg, updated_at: cfg.updated_at }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 const todoHours = (cfg) => Math.min(168, Math.max(1, Number(cfg?.global?.todo_hours) || 24));

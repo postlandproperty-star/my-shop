@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { newSiteLive, NEW_SITE } from '../lib/site.js';
 import { policyPage, POLICY_DOCS } from '../lib/policies.js';
-import { quizPage, quizIndex, articlePage, articleIndex } from '../lib/quiz.js';
+import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } from '../lib/quiz.js';
 import { sbSelect } from '../lib/shop.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
@@ -87,6 +87,7 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
     if (quiz === '_index') return res.status(200).send(quizIndex(quizzes, { settings: shop.settings, site: NEW_SITE }));
+    if (quiz === 'daily') { res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=600'); return res.status(200).send(dailyPage(dailyPick(quizzes), { settings: shop.settings, site: NEW_SITE })); }
     const q = quizzes.find((x) => x.slug === quiz);
     if (!q) { res.statusCode = 404; return res.end(quizIndex(quizzes, { settings: shop.settings, site: NEW_SITE })); }
     const article = articles.find((x) => x.slug === q.article_slug) || articles.find((x) => x.quiz_slug === q.slug) || null;
@@ -109,8 +110,10 @@ export default async function handler(req, res) {
     // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
     const [qz, ar] = await Promise.all([loadQuizzes(), loadArticles()]);
     const quizList = qz.map((q) => ({ slug: q.slug, title: q.title, cat: q.cat || '', n: q.questions.length }));
+    const dp = dailyPick(qz); const daily = dp ? { q: dp.x.q, choices: dp.x.choices, answer: dp.x.answer, explain: dp.x.explain, slug: dp.quiz.slug, title: dp.quiz.title } : null;
+    const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, mins: Math.max(2, Math.round(a.body.length / 900)) }));
-    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList }).replace(/<\//g, '<\\/');
+    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';

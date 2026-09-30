@@ -175,6 +175,12 @@ footer{padding:28px 0 110px;text-align:center}
 .sellpick span{font-size:13px;color:var(--muted)}
 .facbox{margin:14px 0;border:2px solid var(--brand)}
 .fac{padding-top:16px}
+.prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--ok)}
+.setbooks{display:flex;flex-direction:column;gap:6px}
+.setbook{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:center;background:var(--bg);border-radius:10px;padding:8px 10px;cursor:pointer}
+.setbook.dim{cursor:default;opacity:.8}.setbook input{width:18px;height:18px}.sb-dot{color:var(--ok);font-weight:700;text-align:center}
+.sb-t{display:flex;flex-direction:column;font-size:14.5px;line-height:1.4;min-width:0}
+.fac-idea{border:0!important;padding:6px 0!important;margin:0!important;background:transparent!important;border-top:1px solid var(--line)!important}.fac-idea summary{display:flex;align-items:center;gap:6px}.fac-idea>div{white-space:pre-line;font-size:14px;background:var(--bg);border-radius:10px;padding:10px 12px;margin-top:6px}
 .fac-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 @media(max-width:600px){.bar-in{flex-wrap:wrap;row-gap:6px}#seg{width:100%}#seg button{flex:1;padding:6px 4px;font-size:13.5px;white-space:nowrap}}
 .facrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
@@ -182,6 +188,9 @@ footer{padding:28px 0 110px;text-align:center}
 .st-nav{display:flex;gap:4px;overflow-x:auto}.st-nav a{flex:1;text-align:center;white-space:nowrap;text-decoration:none;color:var(--muted);font-weight:600;font-size:15px;padding:8px 10px;border-bottom:3px solid transparent}.st-nav a.on{color:var(--brand);border-color:var(--brand)}
 .st-learn{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .st-lcard{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--ink);text-decoration:none}.st-lcard:hover{border-color:var(--brand)}.st-lcard b{font-size:16px;line-height:1.4}
+.st-level{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--accent);color:var(--accent-ink);border-radius:16px;padding:14px 16px;text-decoration:none}.st-level>span:first-child{display:flex;flex-direction:column;gap:2px}.st-level b{font-size:17px}.st-level .fine{color:var(--accent-ink);opacity:.8}.st-level .st-go{color:var(--accent-ink);white-space:nowrap}
+.st-dch{display:grid;gap:8px;margin-top:10px}.st-dch button{text-align:left;font:inherit;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer}.st-dch button.right{background:var(--okbg);border-color:var(--ok);font-weight:600}.st-dch button.wrong{background:var(--badbg);border-color:var(--bad)}.st-dch button:disabled{cursor:default}
+.st-dres{margin:10px 0 0;font-weight:700}.st-dres.ok{color:var(--ok)}.st-dres.no{color:var(--bad)}
 .st-quiz{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .st-qcard{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--ink);text-decoration:none}
 .st-qcard:hover{border-color:var(--brand)}.st-qcard b{font-size:16px;line-height:1.35}
@@ -1417,6 +1426,7 @@ const CATS={grammar:'Grammar',vocab:'คำศัพท์',listening:'Listening
 const STORE_MIN=2,CHAT_URL='https://m.me/1264839566720049';
 const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
+const DAILY=(()=>{try{return (window.__SHOP__&&window.__SHOP__.daily)||null;}catch(e){return null;}})(),LEVELQ=(()=>{try{return (window.__SHOP__&&window.__SHOP__.level)||null;}catch(e){return null;}})();
 const LEARN_CATS={grammar:'Grammar',vocab:'คำศัพท์',tips:'เทคนิคทำข้อสอบ',listening:'Listening',reading:'Reading'};
 const TITLE0=document.title;
 const SELL={both:['ทั้งหน้าร้านและ salepage','ขึ้นหน้าร้าน และทีมทำโพสต์/แอดพาเข้าหน้าขาย'],salepage:['salepage อย่างเดียว','ไม่ขึ้นหน้าร้าน เข้าได้จากลิงก์หรือแอดเท่านั้น'],store:['หน้าร้านอย่างเดียว','ขึ้นหน้าร้าน ทีมไม่ทำโพสต์ขายตรง']};
@@ -1461,11 +1471,16 @@ function storeView(){
   <section class="st-hero"><div class="wrap wide"><h1>ชีทสรุป TOEIC ที่ทำข้อสอบได้จริง</h1><p>ดูหน้าตัวอย่างก่อนซื้อทุกเล่ม</p>
     <ul class="st-why"><li>รับไฟล์ทันทีหลังจ่าย</li><li>สแกนจ่าย QR ได้</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></div></section>
   <main class="wrap wide st-main">
+    ${LEVELQ?`<a class="st-level" href="/quiz/${esc(LEVELQ.slug)}"><span><b>วัดระดับ TOEIC ฟรี ${LEVELQ.n} ข้อ</b><span class="fine">รู้ผลทันที พร้อมคำแนะนำว่าควรเริ่มฝึกตรงไหน</span></span><span class="st-go">เริ่มเลย →</span></a>`:''}
     ${bundles.length?`<section class="st-sec" aria-labelledby="st-b"><h2 id="st-b" class="st-h2">ชุดแนะนำ</h2><div class="st-bundles">${bundles.map(bcard).join('')}</div></section>`:''}
     <section class="st-sec" aria-labelledby="st-s"><h2 id="st-s" class="st-h2">${bundles.length?'เล่มเดี่ยว':'สินค้าทั้งหมด'}</h2>
       ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
       ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
     </section>
+    ${DAILY?(()=>{const a=S.dailyAns,L='ABCD';return `<section class="st-sec st-daily" aria-labelledby="st-d"><h2 id="st-d" class="st-h2">ข้อสอบประจำวัน</h2>
+      <div class="card"><div style="font-weight:600;white-space:pre-line">${esc(DAILY.q)}</div>
+      <div class="st-dch">${DAILY.choices.map((c,k)=>`<button type="button" data-a="dailyAns" data-v="${k}" class="${a==null?'':k===DAILY.answer?'right':k===a?'wrong':''}" ${a==null?'':'disabled'}>(${L[k]}) ${esc(c)}</button>`).join('')}</div>
+      ${a==null?'<p class="fine" style="margin:8px 0 0">วันละ 1 ข้อ กดเลือกแล้วดูเฉลยทันที</p>':`<p class="st-dres ${a===DAILY.answer?'ok':'no'}">${a===DAILY.answer?'ถูกต้อง ✓':'ยังไม่ถูก คำตอบคือ ('+L[DAILY.answer]+')'}</p><p class="fine" style="margin:4px 0 8px;color:var(--ink)">${esc(DAILY.explain)}</p><a href="/quiz/${esc(DAILY.slug)}">ทำต่อทั้งชุด: ${esc(DAILY.title)} →</a>`}</div></section>`;})():''}
     ${QUIZZES.length?`<section class="st-sec" aria-labelledby="st-q"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><h2 id="st-q" class="st-h2">คลังข้อสอบ TOEIC ฟรี</h2><a href="/quiz" class="fine">ดูทั้งหมด →</a></div>
       <p class="fine" style="margin:0">ลองทำโจทย์แนว TOEIC พร้อมเฉลยอธิบายภาษาไทย ไม่ต้องสมัครสมาชิก</p>
       <div class="st-quiz">${QUIZZES.slice(0,6).map(q=>`<a class="st-qcard" href="/quiz/${esc(q.slug)}"><span class="st-kicker">${esc(CATS[q.cat]||'TOEIC')} · ${q.n} ข้อ</span><b>${esc(q.title)}</b><span class="st-go">เริ่มทำ →</span></a>`).join('')}</div></section>`:''}
@@ -2028,6 +2043,49 @@ function nextFactoryRun(){ // รอบทำงานของโรงงา�
     for(const [h,m] of s.times){const t=Date.UTC(base.getUTCFullYear(),base.getUTCMonth(),base.getUTCDate(),h,m)-BKK;if(t>now)return t;}}
   return null;
 }
+/* ชุดสำเร็จรูปจากคิวโรงงานเก่า (ย้ายมาเฉพาะ TOEIC สำหรับ SheetLab) ราคาเป็นราคาเสนอ คุณแดนแก้ได้ตอนอนุมัติลงขาย */
+const FAC_SETS=[{id:'toeic750',emoji:'🎯',name:'ชุด TOEIC 750+',goal:'สอบ TOEIC ให้ได้ 750 คะแนนขึ้นไป',books:[
+  {t:'TOEIC GRAMMAR 15 จุดออกสอบบ่อยที่สุด + แบบฝึกหัด 500 ข้อ',match:/grammar/i,cat:'TOEIC Grammar',pages:120,price:179},
+  {t:'TOEIC VOCABULARY 1,000 คำ ศัพท์ออกสอบบ่อย พร้อมตัวอย่างประโยค',match:/vocab|คำศัพท์/i,cat:'TOEIC คำศัพท์',pages:100,price:129,notes:'เรียงตามหมวดธุรกิจ มีตัวอย่างประโยคและช่องทวนรอบ 1/2'},
+  {t:'TOEIC READING Part 5–7 ข้อสอบ 10 ชุด พร้อมเฉลยละเอียดทุกข้อ',match:/reading part 5/i,cat:'TOEIC Reading',pages:150,price:199,notes:'แต่ละชุดครบ Part 5, 6, 7 ตามสัดส่วนข้อสอบจริง เฉลยภาษาไทยทุกข้อ พร้อมเทคนิคทำเร็ว'},
+  {t:'TOEIC LISTENING Part 1–4 สคริปต์ข้อสอบ 10 ชุด + เฉลย + คำแปล',match:/listening part 1/i,cat:'TOEIC Listening',pages:130,price:199,notes:'สคริปต์เต็มทุกข้อให้อ่านตามหรืออัดเสียงเอง (PDF ไม่มีไฟล์เสียง) เน้น paraphrase และกับดักที่ออกบ่อย'},
+  {t:'TOEIC PART 7 READING SPEED 40 บทความธุรกิจ + 200 ข้อ',match:/part 7 reading speed/i,cat:'TOEIC Reading',pages:130,price:179},
+  {t:'TOEIC ERROR PATTERNS 300 ข้อ 30 กับดักที่คนไทยพลาดซ้ำ',match:/error patterns/i,cat:'TOEIC Grammar',pages:100,price:149},
+  {t:'TOEIC BUSINESS VOCABULARY 600 คำตามสถานการณ์ ประชุม การเงิน HR การตลาด',match:/business vocab/i,cat:'TOEIC คำศัพท์',pages:100,price:149},
+  {t:'TOEIC MOCK TEST เสมือนจริง 5 ชุด 1,000 ข้อ พร้อมตารางแปลงคะแนนโดยประมาณ',match:/mock test/i,cat:'TOEIC ข้อสอบเสมือนจริง',pages:160,price:249,notes:'ชุดละ 200 ข้อครบทุก Part มีกระดาษคำตอบ ตารางแปลงคะแนนเป็นค่าประมาณ ไม่ใช่เกณฑ์ทางการ'},
+  {t:'TOEIC 30-DAY STUDY PLAN แพลนอ่าน 30 วัน + สมุดจดศัพท์ + ตารางติดตามคะแนน',match:/study plan/i,cat:'อื่นๆ',pages:40,price:69,notes:'แผนวันต่อวันอ้างอิงเล่มอื่นในชุด มีช่องติ๊กและกราฟคะแนน'}]}];
+function setBookState(b){
+  const inShop=D.products.find(p=>!isBundle(p)&&b.match.test(p.name||''));
+  if(inShop)return ['มีในร้านแล้ว','ok',inShop];
+  const j=(FJOBS||[]).find(x=>String(x.title||'').slice(0,24)===b.t.slice(0,24)&&x.status!=='cancelled');
+  if(j)return [j.status==='done'?(j.listing==='pending'?'ผลิตเสร็จ รออนุมัติ':j.listing==='listed'?'ลงขายแล้ว':'ผลิตเสร็จ'):FSTAT[j.status]?FSTAT[j.status][0]:j.status,j.status==='done'?'ok':'warn',null];
+  return ['ยังไม่มี','gray',null];
+}
+function facSets(){
+  const sel=S.tplSel||(S.tplSel={});
+  return FAC_SETS.map(st=>{const rows=st.books.map((b,i)=>({b,i,state:setBookState(b)}));const todo=rows.filter(r=>r.state[0]==='ยังไม่มี');const have=rows.length-todo.length;const picked=todo.filter(r=>sel[st.id+':'+r.i]);
+    const pages=picked.reduce((a,r)=>a+r.b.pages,0);
+    return `<section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">${st.emoji} ${esc(st.name)} <span class="fine" style="font-weight:400">มีแล้ว ${have}/${rows.length} เล่ม</span></h3>
+      <p class="fine" style="margin:0 0 8px">${esc(st.goal)} · ติ๊กเล่มที่อยากให้พี่เหล็กผลิต ราคาเป็นราคาเสนอ แก้ได้ตอนอนุมัติลงขาย</p>
+      <div class="prog"><i style="width:${Math.round(have/rows.length*100)}%"></i></div>
+      <div class="setbooks">${rows.map(r=>{const k=st.id+':'+r.i,can=r.state[0]==='ยังไม่มี';return `<label class="setbook${can?'':' dim'}">${can?`<input type="checkbox" data-a="tplPick" data-v="${k}" ${sel[k]?'checked':''}>`:'<span class="sb-dot">✓</span>'}<span class="sb-t">${esc(r.b.t)}<span class="fine">${r.b.pages} หน้า · ${baht(r.b.price)}</span></span><span class="badge ${r.state[1]}">${esc(r.state[0])}</span></label>`;}).join('')}</div>
+      ${todo.length?`<div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn ${S.confirm==='tpl:'+st.id?'btn-danger':'btn-dark'}" data-a="tplOrder" data-v="${st.id}" ${picked.length&&!S.fbusy?'':'disabled'}>${S.confirm==='tpl:'+st.id?`กดอีกครั้งเพื่อสั่ง ${picked.length} เล่ม`:`สั่งผลิตเล่มที่เลือก (${picked.length})`}</button>
+        <span class="fine">${picked.length?`รวม ${pages} หน้า · ผลิตรอบละ 1 เล่ม ${picked.length} เล่มใช้ประมาณ ${Math.ceil(picked.length/4)} สัปดาห์ · ใช้ token ตามจำนวนเล่ม แนะนำสั่งทีละ 1-2 เล่ม`:'ยังไม่ได้เลือกเล่ม'}</span></div>`:'<p class="fine" style="margin:10px 0 0">ครบทุกเล่มแล้ว สร้างชุดขายได้ที่ + สร้างชุด ในแท็บสินค้า</p>'}
+    </section>`;}).join('');
+}
+async function tplOrder(id){
+  const st=FAC_SETS.find(x=>x.id===id);if(!st)return;const sel=S.tplSel||{};
+  const books=st.books.map((b,i)=>({b,i})).filter(r=>sel[id+':'+r.i]&&setBookState(r.b)[0]==='ยังไม่มี');
+  if(!books.length)return;S.fbusy=true;render(true);let ok=0;
+  for(const {b,i} of books){try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:b.t,category:b.cat,pages:b.pages,price:b.price,notes:b.notes||'',purpose:'เล่มในชุด '+st.name+' (ชีทขาย ผลิตเสร็จแล้วรอคุณแดนอนุมัติลงขาย)'})});if(j&&j.ok){ok++;delete sel[id+':'+i];}}catch(e){}}
+  S.fbusy=false;FJOBS=null;toast(`ส่งเข้าคิวโรงงาน ${ok} เล่ม`);render(true);
+}
+function facIdeas(){
+  needPosts();
+  const pick=k=>POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')&&['product','store'].includes(p.kind)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
+  const rows=[['product','พี่โปร'],['ceo_store','พี่โอ๊ค']].map(([k,n])=>{const x=pick(k);return x?`<details class="fac-idea"><summary>${ava(k,1)} ${n} · ${fdt(Date.parse(x.created_at))}</summary><div>${esc(x.text)}</div></details>`:'';}).filter(Boolean);
+  return `<section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">💡 ไอเดียเล่มถัดไปจากทีม</h3><p class="fine" style="margin:0 0 8px">พี่โปรเสนอทุกจันทร์ พี่โอ๊คเสนอทุกพุธ จากยอดขายและคำที่คนค้นจริง อ่านแล้วสั่งผลิตในฟอร์มด้านล่างได้เลย (ไม่ใช้ token เพิ่ม)</p>${rows.length?rows.join(''):'<p class="fine">ยังไม่มีข้อเสนอ รอรอบถัดไป</p>'}</section>`;
+}
 async function factoryOrder(){
   const f=S.fnew;S.ferr='';
   const title=String(f.title||'').trim(),pages=Number(f.pages)||0,price=Number(f.price)||0;
@@ -2057,6 +2115,8 @@ function factoryView(){
     <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">${nx?'ผลิตรอบถัดไป '+new Date(nx).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' เวลาไทย (ทุกอาทิตย์และจันทร์ 10:00 / 22:00)':'ผลิตทุกอาทิตย์และจันทร์'} · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
       <button class="chip" data-a="toFactory">รีเฟรช</button></div>
     ${facBox()||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
+    ${facSets()}
+    ${facIdeas()}
     <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
       <div class="field">${lb('fn-title','ชื่อเรื่อง')}<input class="input" id="fn-title" data-fn="title" value="${esc(f.title)}" placeholder="เช่น TOEIC Part 5 Tense ที่ออกบ่อย 100 ข้อ พร้อมเฉลย"></div>
       <div class="grid2">
@@ -3157,11 +3217,14 @@ function act(a,el){
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
     case 'forder':factoryOrder();break;
+    case 'tplPick':{const sel=S.tplSel||(S.tplSel={});sel[el.dataset.v]=el.checked;S.confirm='';render(true);break;}
+    case 'tplOrder':if(S.confirm!=='tpl:'+el.dataset.v){S.confirm='tpl:'+el.dataset.v;render(true);break;}S.confirm='';tplOrder(el.dataset.v);break;
     case 'facApprove':facApprove(id);break;
     case 'propOpen':{const x=(PROP.list||[]).find(y=>y.id===id);const p=x&&getProduct(x.product_id);if(!p)break;S.draft=isBundle(p)?bundleDraft(p):initDraft(p);Object.assign(S.draft,x.fields);S.draft.fromProp=id;S.edit=p.id;S.err='';render(false);toast('ใส่ข้อความที่ '+member(x.source).name+' เสนอแล้ว ดูตัวอย่างสด แล้วกดบันทึกถ้าเห็นด้วย');break;}
     case 'propReject':if(S.confirm!=='pr:'+id){S.confirm='pr:'+id;render(true);break;}S.confirm='';propDone(id,false);toast('ไม่ใช้ข้อเสนอนี้แล้ว');break;
     case 'facReject':if(S.confirm!=='fr:'+id){S.confirm='fr:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reject:true})}).then(j=>{if(j&&j.ok){FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==id);toast('ไม่ลงขายชีทนี้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;
     case 'scat':S.scat=el.dataset.v;render(true);break;
+    case 'dailyAns':if(S.dailyAns==null){S.dailyAns=Number(el.dataset.v);render(true);}break;
     case 'findAgain':S.find={email:'',busy:false,done:false,err:''};render(false);break;
     case 'pvOpen':document.body.classList.add('pv-open');pvPost(0);break;
     case 'pvClose':document.body.classList.remove('pv-open');break;
