@@ -31,6 +31,16 @@ export default async function handler(req, res) {
     res.statusCode = 301; res.setHeader('Location', `${NEW_SITE}${path}${q.toString() ? '?' + q : ''}`); res.setHeader('Cache-Control', 'no-store'); return res.end();
   }
   const doc = String(req.query.doc || '');
+  const draft = String(req.query.draft || '');
+  if (/^[a-z0-9-]{3,60}$/.test(draft)) { // หน้าร่าง /draft/<ชื่อ>: ไม่มีลิงก์จากหน้าร้าน และบอกเครื่องมือค้นหาไม่ให้เก็บ
+    let page = null;
+    try { page = readFileSync(join(process.cwd(), 'src', 'drafts', `${draft}.html`), 'utf8'); } catch (e) {}
+    if (!page) { res.statusCode = 404; return res.end('not found'); }
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).send(page);
+  }
   if (POLICY_DOCS.includes(doc)) { // หน้านโยบาย /privacy และ /refund
     const shop = await loadShop().catch(() => ({ settings: {} }));
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

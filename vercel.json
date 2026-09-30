@@ -13,6 +13,10 @@
       "destination": "/api/page?doc=refund"
     },
     {
+      "source": "/draft/:name",
+      "destination": "/api/page?draft=:name"
+    },
+    {
       "source": "/",
       "destination": "/api/page"
     },
@@ -23,7 +27,7 @@
   ],
   "functions": {
     "api/page.js": {
-      "includeFiles": "src/index.html"
+      "includeFiles": "src/**"
     },
     "api/content.js": {
       "maxDuration": 60

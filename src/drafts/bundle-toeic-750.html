@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ร่าง: ชุด TOEIC 750+ · SheetLab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Mitr:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF1F7;--surface:#fff;--ink:#0F1B33;--muted:#56637D;--line:#D3DBE8;--brand:#2440E8;--buy:#EE4D2D;--accent:#FFD23F;--ok:#0F7A55;--okbg:#DDF3EA}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 'IBM Plex Sans Thai',system-ui,sans-serif;padding-bottom:84px}
+h1,h2,h3{font-family:'Mitr','IBM Plex Sans Thai',sans-serif;font-weight:600;line-height:1.3;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+.draft{background:#FFF4CC;border-bottom:1px solid #F2D574;font-size:14px;padding:8px 16px;text-align:center}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px}
+section{padding:22px 0}
+.fine{color:var(--muted);font-size:14px}
+/* hero */
+.hero{background:linear-gradient(135deg,#2440E8,#5B2BD6);color:#fff;padding:28px 0 26px}
+.hero .tag{display:inline-block;background:var(--accent);color:var(--ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
+.hero h1{font-size:30px;margin:10px 0 6px}
+.hero p{margin:0;opacity:.92}
+.stack{display:flex;margin:18px 0 6px;padding-left:10px}
+.stack .mini{width:46px;height:64px;border-radius:5px;margin-left:-10px;box-shadow:0 3px 10px rgba(0,0,0,.25);border:2px solid #fff}
+.price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:12px}
+.price b{font-family:'Mitr';font-size:38px}
+.price s{opacity:.75}
+.off{background:#fff;color:var(--buy);font-weight:600;border-radius:8px;padding:1px 8px;font-size:14px}
+.cd{display:inline-flex;gap:6px;align-items:center;background:rgba(0,0,0,.22);border-radius:10px;padding:6px 10px;margin-top:10px;font-size:14px}
+.cd b{background:#fff;color:var(--ink);border-radius:6px;padding:0 6px;font-variant-numeric:tabular-nums}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font:600 17px 'IBM Plex Sans Thai';cursor:pointer;text-align:center}
+.buy{background:var(--buy);color:#fff}
+.line{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.hero .btn{margin-top:16px}
+/* books */
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(140px,45%),1fr));gap:12px;margin-top:14px}
+.book{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;text-align:left;padding:0;font:inherit;color:inherit}
+.cover{aspect-ratio:3/4;display:flex;flex-direction:column;justify-content:space-between;padding:10px;color:#fff;position:relative}
+.cover small{font-size:11px;opacity:.85}
+.cover strong{font-family:'Mitr';font-size:15px;line-height:1.25}
+.cover .audio{position:absolute;top:8px;right:8px;background:#fff;color:var(--ink);border-radius:999px;font-size:11px;padding:1px 7px}
+.cover .free{position:absolute;top:8px;left:8px;background:var(--accent);color:var(--ink);border-radius:999px;font-size:11px;padding:1px 7px;font-weight:600}
+.book .meta{padding:8px 10px;font-size:13px;color:var(--muted)}
+/* path */
+.path{list-style:none;padding:0;margin:14px 0 0;position:relative}
+.path li{display:flex;gap:12px;padding:0 0 16px;position:relative}
+.path li::before{content:"";position:absolute;left:17px;top:36px;bottom:0;width:2px;background:var(--line)}
+.path li:last-child::before{display:none}
+.wk{flex:none;width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px}
+/* preview */
+.pvtabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.pvtabs::-webkit-scrollbar{display:none}
+.pvtabs button{flex:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.pvtabs button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pv{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px 0 4px;scrollbar-width:thin}
+.pv a{flex:none;width:min(78%,300px);scroll-snap-align:start;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;box-shadow:0 4px 14px rgba(15,27,51,.08)}
+.pv img{display:block;width:100%;height:auto}
+.pv .empty{flex:1;border:1.5px dashed var(--line);border-radius:12px;padding:26px 14px;text-align:center;color:var(--muted);background:var(--surface)}
+/* plans */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.plan{border:2px solid var(--line);border-radius:16px;padding:16px;background:var(--surface);cursor:pointer;position:relative;text-align:left;font:inherit;color:inherit}
+.plan[aria-pressed=true]{border-color:var(--brand);box-shadow:0 0 0 3px #DCE2FF}
+.plan .best{position:absolute;top:-12px;left:14px;background:var(--buy);color:#fff;border-radius:999px;font-size:13px;font-weight:600;padding:2px 10px}
+.plan h3{font-size:20px}
+.plan .pp{font-family:'Mitr';font-size:26px;margin:4px 0}
+.plan .pp s{font-family:'IBM Plex Sans Thai';font-size:14px;color:var(--muted);font-weight:400}
+.plan ul{padding-left:18px;margin:8px 0 0;font-size:14.5px}
+.plan li.no{color:#9AA3B5;text-decoration:line-through}
+.pro{margin-top:10px;font-size:14px;color:var(--muted);text-align:center}
+/* checkout */
+.sum{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.sum b{font-family:'Mitr';font-size:28px}
+.logos{display:flex;gap:6px;justify-content:center;margin-top:10px;font-size:12px;color:var(--muted)}
+.logos span{border:1px solid var(--line);border-radius:6px;padding:2px 8px;background:#fff}
+.guar{display:flex;gap:10px;background:var(--okbg);color:#0B5A40;border:1.5px solid #9ED9C0;border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px}
+.upg{border:1.5px dashed var(--brand);border-radius:14px;padding:12px 14px;margin-top:14px;background:#F4F6FF;font-size:15px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+summary{cursor:pointer;font-weight:500}
+.sticky{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px;display:flex;gap:12px;align-items:center;z-index:9}
+.sticky .p b{font-family:'Mitr';font-size:22px;display:block;line-height:1}
+.sticky .p s{font-size:13px;color:var(--muted)}
+.sticky .btn{flex:1;padding:12px}
+.note{border-left:4px solid var(--accent);background:#FFFBEA;padding:8px 12px;border-radius:0 10px 10px 0;font-size:14px;margin-top:10px}
+@media(max-width:520px){.hero h1{font-size:25px}.plans{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="draft">📝 ฉบับร่าง ยังไม่เผยแพร่ · ชื่อเล่ม จำนวนหน้า และราคาทั้งหมดเป็นตัวอย่าง</div>
+
+<header class="hero"><div class="wrap">
+  <span class="tag">ชุดเตรียมสอบ 10 เล่ม</span>
+  <h1>TOEIC 750+ ใน 30 วัน<br>ครบทั้ง Listening และ Reading</h1>
+  <p>เส้นทางเรียนวันต่อวัน ไม่ใช่กองไฟล์ เริ่มจากจุดที่คุณอ่อนที่สุด แล้วไล่ไปจนทำข้อสอบเสมือนจริงได้</p>
+  <div class="stack" id="stack"></div>
+  <div class="price"><s>ราคาแยกเล่ม ฿1,700</s><span>เริ่มต้น</span><b id="heroPrice">฿690</b><span class="off">ราคาเปิดตัว −20%</span></div>
+  <div class="cd">ราคาเปิดตัวเหลือ <b id="cdd">6</b>วัน <b id="cdh">23</b>:<b id="cdm">59</b>:<b id="cds">59</b></div>
+  <button class="btn buy" onclick="go('checkout')">ดูแพ็กเกจและสั่งซื้อ</button>
+</div></header>
+
+<main class="wrap">
+  <section>
+    <h2>ในชุดมีอะไรบ้าง</h2>
+    <p class="fine" style="margin:4px 0 0">10 เล่ม รวม 1,030 หน้า · 🎧 มีไฟล์เสียงเจ้าของภาษา 3 เล่ม · กดที่เล่มเพื่อดูหน้าตัวอย่าง</p>
+    <div class="books" id="books"></div>
+  </section>
+
+  <section>
+    <h2>เส้นทางเรียน 30 วัน</h2>
+    <p class="fine" style="margin:4px 0 0">แพลนวันต่อวันอ้างเลขหน้าจริงของทุกเล่ม (มีในแพ็กเกจ Plus)</p>
+    <ol class="path">
+      <li><span class="wk">W1</span><div><b>ปูพื้น Grammar + ศัพท์ที่ออกบ่อย</b><div class="fine">เล่ม 1 และ 2 · วันละ 40 นาที</div></div></li>
+      <li><span class="wk">W2</span><div><b>Part 5–6 ทำให้เร็วขึ้น</b><div class="fine">เล่ม 3 และ 8 · จับเวลาข้อละ 20 วินาที</div></div></li>
+      <li><span class="wk">W3</span><div><b>Listening Part 1–4</b><div class="fine">เล่ม 5 และ 6 พร้อมไฟล์เสียง 2 ความเร็ว</div></div></li>
+      <li><span class="wk">W4</span><div><b>Reading Part 7 + ข้อสอบเสมือนจริง</b><div class="fine">เล่ม 4 และ 9 · ทำ Mock Test 2 ชุดเต็ม แล้วทบทวนด้วยเล่ม 10</div></div></li>
+    </ol>
+  </section>
+
+  <section id="preview">
+    <h2>ดูตัวอย่างเนื้อหา</h2>
+    <p class="fine" style="margin:4px 0 10px">หน้าจริงจากในเล่ม เลือกเล่มแล้วปัดดู กดที่หน้าเพื่อขยาย</p>
+    <div class="pvtabs" id="pvtabs"></div>
+    <div class="pv" id="pv"></div>
+  </section>
+
+  <section id="checkout">
+    <h2>เลือกแพ็กเกจ</h2>
+    <div class="plans" id="plans"></div>
+    <p class="pro">👑 แพ็กเกจ Pro (อัปเดตฟรี 1 ปี + ใบรับรอง + กลุ่มถามตอบ) เปิดเร็วๆ นี้</p>
+    <div class="card" style="margin-top:14px">
+      <div class="sum"><span>ยอดชำระ <span id="planName" class="fine"></span></span><b id="total">฿1,090</b></div>
+      <button class="btn buy">สแกนจ่าย PromptPay <span id="btnPrice">฿1,090</span></button>
+      <button class="btn line" style="margin-top:10px">จ่ายด้วยบัตรเครดิต / เดบิต</button>
+      <div class="logos"><span>THAI QR</span><span>VISA</span><span>Mastercard</span></div>
+      <p class="fine" style="text-align:center;margin:8px 0 0">จ่ายแล้วได้ลิงก์ดาวน์โหลดทุกเล่มทันทีบนหน้านี้และทางอีเมล</p>
+    </div>
+    <div class="guar"><span aria-hidden="true">🛡️</span><span>ไฟล์เสีย ดาวน์โหลดไม่ได้ หรือได้ไฟล์ผิด ร้านส่งให้ใหม่หรือคืนเงินเต็มจำนวน · <a href="#">นโยบายการคืนเงิน</a></span></div>
+    <div class="upg"><b>เคยซื้อ TOEIC Grammar แล้ว?</b><br>อัปเกรดเป็นชุดนี้ จ่ายแค่ส่วนต่าง (หักค่าเล่มที่ซื้อไปแล้ว ฿179) ลิงก์อัปเกรดอยู่ในอีเมลที่ได้รับตอนซื้อ</div>
+  </section>
+
+  <section>
+    <h2>รีวิวจากคนที่ใช้จริง</h2>
+    <div class="note">ช่องนี้จะแสดงเฉพาะรีวิวจริงจากลูกค้า ตอนเปิดขายยังไม่มี ส่วน "ขายแล้ว X ชุด" จะขึ้นเองเมื่อยอดขายจริงถึง 10 ชุด</div>
+  </section>
+
+  <section>
+    <h2>คำถามที่พบบ่อย</h2>
+    <details><summary>ได้ไฟล์แบบไหน เปิดบนมือถือได้ไหม</summary><p>ไฟล์ขนาด A4 สำหรับพิมพ์ และแพ็กเกจ Plus มีเวอร์ชันมือถือตัวอักษรใหญ่ อ่านบนโทรศัพท์ได้สบาย</p></details>
+    <details><summary>ไฟล์เสียงฟังยังไง</summary><p>ในเล่มมี QR และเลขแทร็กกำกับ สแกนแล้วฟังได้ทันที มี 2 ความเร็ว</p></details>
+    <details><summary>Basic กับ Plus ต่างกันยังไง</summary><p>Basic ได้หนังสือครบ 10 เล่ม Plus ได้เพิ่มไฟล์เสียง แพลน 30 วัน แบบทดสอบวัดระดับ 50 ข้อ แฟลชการ์ด และเวอร์ชันมือถือ</p></details>
+    <details><summary>เป็นข้อสอบจริงของ TOEIC หรือไม่</summary><p>ไม่ใช่ เนื้อหาและข้อสอบแต่งขึ้นใหม่ทั้งหมดตามรูปแบบการสอบ TOEIC เป็นเครื่องหมายการค้าของ ETS หนังสือชุดนี้ไม่เกี่ยวข้องกับผู้จัดสอบ</p></details>
+  </section>
+</main>
+
+<div class="sticky"><div class="p"><b id="stPrice">฿1,090</b><s id="stWas">฿1,390</s></div><button class="btn buy" onclick="go('checkout')">ซื้อชุดนี้</button></div>
+
+<script>
+const BOOKS=[
+ ['TOEIC GRAMMAR 15 จุดออกบ่อย + 500 ข้อ',120,0,'#2440E8'],['TOEIC VOCABULARY 1,000 คำ คัดมาแล้ว',140,1,'#0F7A55'],
+ ['PART 5–6 ทำเร็ว 300 ข้อ',110,0,'#B45309'],['PART 7 อ่านจับใจความ 60 บทความ',130,0,'#7C3AED'],
+ ['LISTENING PART 1–2',90,1,'#DB2777'],['LISTENING PART 3–4',100,1,'#0891B2'],
+ ['ศัพท์ธุรกิจออกบ่อย 500 คำ',90,0,'#4F46E5'],['COLLOCATIONS & PHRASAL VERBS',80,0,'#65A30D'],
+ ['MOCK TEST 2 ชุดเต็ม 400 ข้อ',140,0,'#DC2626'],['สรุปสูตรก่อนสอบ',30,0,'#0F1B33']];
+document.getElementById('stack').innerHTML=BOOKS.slice(0,8).map(b=>`<span class="mini" style="background:${b[3]}"></span>`).join('');
+document.getElementById('books').innerHTML=BOOKS.map((b,i)=>`<button class="book" title="ดูหน้าตัวอย่าง"><div class="cover" style="background:${i===0?'#fff url(https://lpeqaorswhwzlplsaqpe.supabase.co/storage/v1/object/public/product-images/products/muh5a6cp-pm70lo.jpg) center/cover':b[3]}">${b[2]?'<span class="audio">🎧 เสียง</span>':''}${i===9?'<span class="free">แถมฟรี</span>':''}${i===0?'':`<small>เล่ม ${i+1}</small><strong>${b[0]}</strong><small>SheetLab</small>`}</div><div class="meta">${b[1]} หน้า · ดูตัวอย่าง ›</div></button>`).join('');
+
+// หน้าตัวอย่าง: ตอนนี้มีของจริงเฉพาะเล่ม 1 (จากหน้าขายเดิม) เล่มอื่นจะใส่เมื่อผลิตเสร็จ
+const PV={0:['https://lpeqaorswhwzlplsaqpe.supabase.co/storage/v1/object/public/product-images/products/mumecfgf-0oo527.jpg','https://lpeqaorswhwzlplsaqpe.supabase.co/storage/v1/object/public/product-images/products/mumecgoe-1vg9m1.jpg','https://lpeqaorswhwzlplsaqpe.supabase.co/storage/v1/object/public/product-images/products/mumechqo-13fns7.jpg']};
+let pvSel=0;
+function drawPv(){document.getElementById('pvtabs').innerHTML=BOOKS.map((b,i)=>`<button aria-pressed="${pvSel===i}" onclick="pvSel=${i};drawPv()">เล่ม ${i+1}</button>`).join('');
+ const pages=PV[pvSel];document.getElementById('pv').innerHTML=pages?pages.map((u,k)=>`<a href="${u}" target="_blank" rel="noopener"><img src="${u}" width="1100" height="1556" loading="lazy" alt="หน้าตัวอย่างที่ ${k+1} ของ${BOOKS[pvSel][0]}"></a>`).join(''):`<div class="empty"><b>${BOOKS[pvSel][0]}</b><br>หน้าตัวอย่างจะขึ้นเมื่อเล่มนี้ผลิตเสร็จ (ร่าง)</div>`;}
+drawPv();
+document.querySelectorAll('.book').forEach((el,i)=>el.addEventListener('click',()=>{pvSel=i;drawPv();go('preview');}));
+const PLANS=[{k:'basic',n:'Basic',full:890,p:690,f:['หนังสือครบ 10 เล่ม (ไฟล์ A4)','ส่งลิงก์ทันทีหลังจ่าย'],no:['ไฟล์เสียง','แพลน 30 วัน + แบบทดสอบวัดระดับ','แฟลชการ์ด + เวอร์ชันมือถือ']},
+ {k:'plus',n:'Plus',full:1390,p:1090,best:1,f:['หนังสือครบ 10 เล่ม','🎧 ไฟล์เสียง 3 เล่ม 2 ความเร็ว','แพลนเรียน 30 วันวันต่อวัน','แบบทดสอบวัดระดับ 50 ข้อ','แฟลชการ์ด (Anki / Quizlet)','เวอร์ชันมือถือตัวอักษรใหญ่'],no:[]}];
+let sel='plus';const baht=n=>'฿'+n.toLocaleString('th-TH');
+function drawPlans(){document.getElementById('plans').innerHTML=PLANS.map(p=>`<button class="plan" aria-pressed="${sel===p.k}" onclick="sel='${p.k}';drawPlans()">${p.best?'<span class="best">คุ้มที่สุด</span>':''}<h3>${p.n}</h3><div class="pp">${baht(p.p)} <s>${baht(p.full)}</s></div><ul>${p.f.map(x=>`<li>${x}</li>`).join('')}${p.no.map(x=>`<li class="no">${x}</li>`).join('')}</ul></button>`).join('');
+ const p=PLANS.find(x=>x.k===sel);['total','btnPrice','stPrice'].forEach(id=>document.getElementById(id).textContent=baht(p.p));document.getElementById('stWas').textContent=baht(p.full);document.getElementById('planName').textContent='· แพ็กเกจ '+p.n;document.getElementById('heroPrice').textContent=baht(PLANS[0].p);}
+drawPlans();
+function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'});}
+const end=Date.now()+7*864e5-1000;setInterval(()=>{let t=Math.max(0,end-Date.now())/1000;const d=Math.floor(t/86400);t-=d*86400;const h=Math.floor(t/3600);t-=h*3600;const m=Math.floor(t/60),s=Math.floor(t-m*60);[['cdd',d],['cdh',h],['cdm',m],['cds',s]].forEach(([i,v])=>document.getElementById(i).textContent=String(v).padStart(2,'0'));},1000);
+</script>
+</body>
+</html>
