@@ -800,6 +800,33 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, image: `data:image/png;base64,${b64}` });
       } catch (e) { return res.status(502).json({ ok: false, error: 'เชื่อมต่อ OpenAI ไม่ได้: ' + String(e.message || e).slice(0, 120) }); }
     }
+    if (action === 'article_imageurl' || action === 'article_image') {
+      // รูปปกบทความคลังความรู้ (ทีมคอนเทนต์ทำจาก Canva): article_imageurl ขอ signed URL อัปโหลดเข้าคลังรูปร้าน · article_image ผูกรูปกับบทความ
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      const body = await readBody(req);
+      const slug = String(body.slug || '').toLowerCase();
+      if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug) || slug.length > 70) return res.status(400).json({ ok: false, error: 'slug ไม่ถูกต้อง' });
+      if (action === 'article_imageurl') {
+        const ext = ({ png: 'png', jpg: 'jpg', jpeg: 'jpg', webp: 'webp' })[String(body.ext || 'png').toLowerCase()];
+        if (!ext) return res.status(400).json({ ok: false, error: 'ext ต้องเป็น png jpg หรือ webp' });
+        const path = `learn/${slug}-${Date.now().toString(36)}.${ext}`;
+        const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status}` });
+        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, image_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, content_type: ext === 'jpg' ? 'image/jpeg' : `image/${ext}` });
+      }
+      const { cleanImg } = await import('../lib/quiz.js');
+      const image = cleanImg(body.image);
+      if (!image && body.image !== '') return res.status(400).json({ ok: false, error: 'image ต้องเป็น image_url จาก article_imageurl' });
+      const rows = await sb('shop_state?id=eq.articles&select=data'); const list = rows?.[0]?.data?.list || [];
+      const a = list.find((x) => x.slug === slug);
+      if (!a) return res.status(404).json({ ok: false, error: 'ไม่พบบทความ' });
+      if (image) a.image = image; else delete a.image;
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'articles', data: { list }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, slug, image: a.image || null });
+    }
     if (action === 'article' || action === 'article_hide') {
       // คลังความรู้: ทีมคอนเทนต์ส่ง/แก้ด้วย key (POST ตาม slug ขึ้นเว็บทันที) · คุณแดนซ่อน/เปิดได้ (article_hide แอดมิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -813,7 +840,7 @@ export default async function handler(req, res) {
         a.status = body.hidden ? 'hidden' : 'live'; a.updated_at = new Date().toISOString(); await saveA(list);
         return res.status(200).json({ ok: true, status: a.status });
       }
-      if (req.method !== 'POST') { const SU = await siteUrl(); return res.status(200).json({ ok: true, list: list.map((a) => ({ slug: a.slug, title: a.title, desc: a.desc, cat: a.cat, quiz_slug: a.quiz_slug, status: a.status, by: a.by, created_at: a.created_at, updated_at: a.updated_at, chars: a.body.length, url: `${SU}/learn/${a.slug}`, ...(req.query.full ? { body: a.body } : {}) })) }); }
+      if (req.method !== 'POST') { const SU = await siteUrl(); return res.status(200).json({ ok: true, list: list.map((a) => ({ slug: a.slug, title: a.title, desc: a.desc, cat: a.cat, image: a.image || null, quiz_slug: a.quiz_slug, status: a.status, by: a.by, created_at: a.created_at, updated_at: a.updated_at, chars: a.body.length, url: `${SU}/learn/${a.slug}`, ...(req.query.full ? { body: a.body } : {}) })) }); }
       const body = await readBody(req);
       const { cleanArticle } = await import('../lib/quiz.js');
       const r = cleanArticle(body); if (r.error) return res.status(400).json({ ok: false, error: r.error });

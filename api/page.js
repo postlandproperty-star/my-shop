@@ -112,7 +112,7 @@ export default async function handler(req, res) {
     const quizList = qz.map((q) => ({ slug: q.slug, title: q.title, cat: q.cat || '', n: q.questions.length }));
     const dp = dailyPick(qz); const daily = dp ? { q: dp.x.q, choices: dp.x.choices, answer: dp.x.answer, explain: dp.x.explain, slug: dp.quiz.slug, title: dp.quiz.title } : null;
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
-    const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, mins: Math.max(2, Math.round(a.body.length / 900)) }));
+    const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
     const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
