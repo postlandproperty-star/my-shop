@@ -2743,7 +2743,7 @@ function render(keep){
   const isAdmin=hasAdminAccess();
   $('#bar').style.display=isAdmin?'':'none';
   $('#bar-note').innerHTML=isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a>`:'';
-  $('#seg').innerHTML=isAdmin?`<button data-a="toShop" aria-pressed="${v!=='admin'}">หน้าลูกค้า</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button>`:'';
+  $('#seg').innerHTML=isAdmin?`<button data-a="toShop" aria-pressed="${v!=='admin'}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button>`:'';
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
