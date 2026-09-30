@@ -488,6 +488,20 @@ footer{padding:28px 0 110px;text-align:center}
 .list-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:8px}
 .prod{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:grid;gap:8px;border-left:6px solid var(--c,#2440E8)}
 .prod-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.prod-name{font-size:17px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.prod-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.prod-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.prod-kpis div{background:var(--bg);border-radius:10px;padding:6px 8px;min-width:0}
+.prod-kpis b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.prod-kpis span{font-size:12px;color:var(--muted)}
+.prod-link{display:flex;gap:6px;align-items:center;min-width:0}
+.prod-link code{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;padding:8px 10px}
+.prod-link .btn{flex:none}
+.prod-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.prod-acts .btn{width:100%;min-height:42px;padding:8px 4px;white-space:nowrap}
+.prod-more summary{font-size:14px;color:var(--muted);cursor:pointer;padding:2px 0;list-style:none}
+.prod-more summary::before{content:"⋯ "}
+.prod-more[open] .prod-acts{margin-top:6px}
 .prod-top b{font-size:17px}
 .prod-stats{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:14px;color:var(--muted)}
 .linkline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -1590,22 +1604,26 @@ async function checkAllLinks(force){
 }
 function linkBadge(p){const c=linkStatus[p.id];if(!c)return '';const cls=c.pending||c.unknown?'gray':c.ok?'ok':'bad';return `<span class="badge ${cls}" title="${esc(c.text)}">ไฟล์: ${c.pending?'กำลังตรวจ':c.unknown?'ยังไม่ได้ตรวจ':c.ok?'เปิดได้ ✓':'มีปัญหา ✗'}</span>`;}
 function linkCheckMsg(id){const c=S.linkCheck;if(!c||c.id!==id)return '';return `<div class="fine" style="margin-top:6px;color:${c.pending?'var(--muted)':c.ok?'var(--ok)':'var(--bad)'}">${esc(c.text)}${!c.pending&&c.url?` · <a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">เปิดดู</a>`:''}</div>`;}
+const prodKpis=a=>`<div class="prod-kpis">${a.map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;
+const prodLink=p=>`<div class="prod-link"><code title="${esc(DOMAIN+p.slug)}">${esc(DOMAIN.replace(/^https?:\/\//,'')+p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอกลิงก์</button></div>`;
 function productRow(p){
   if(isBundle(p)){const st=prodStats(p),pub=p.status==='published',bk=bundleBooks(p),miss=bk.filter(b=>!b.link).length;
-    return `<div class="prod" style="--c:${esc(p.color)}"><div class="prod-top"><b>📦 ${esc(p.name)}</b><span class="row" style="gap:6px;align-items:center"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span><span class="badge">ชุด ${bk.length} เล่ม</span></span></div>
+    return `<div class="prod" style="--c:${esc(p.color)}"><b class="prod-name">📦 ${esc(p.name)}</b>
+    <div class="prod-badges"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span><span class="badge">ชุด ${bk.length} เล่ม</span></div>
     ${miss?`<div class="warnline">⚠️ ${miss} เล่มในชุดยังไม่มีลิงก์ไฟล์ ลูกค้าจ่ายแล้วจะได้ไฟล์ไม่ครบ</div>`:''}
-    <div class="prod-stats">${bundlePlans(p).map(x=>`<span>${esc(x.name)} ${baht(x.price)}</span>`).join('')||'<span>ยังไม่ได้ตั้งราคา</span>'}<span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
-    <div class="linkline"><span class="fine">ลิงก์สำหรับแอด</span><code>${DOMAIN}${esc(p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอก</button></div>
-    <div class="acts" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-dark btn-sm" data-a="editProduct" data-id="${p.id}">แก้ไขชุด</button><button class="btn btn-line btn-sm" data-a="viewPage" data-id="${p.id}">ดูหน้า</button></div></div>`;}
+    ${prodKpis([['แพ็กเกจ',bundlePlans(p).map(x=>baht(x.price)).join(' / ')||'ยังไม่ตั้ง'],['ออเดอร์',st.paid],['ยอดขาย',baht(st.revenue)]])}
+    ${prodLink(p)}
+    <div class="prod-acts"><button class="btn btn-dark btn-sm" data-a="viewPage" data-id="${p.id}">ดูเซลเพจ</button><button class="btn btn-line btn-sm" data-a="editProduct" data-id="${p.id}">แก้ไขชุด</button><button class="btn btn-line btn-sm" data-a="togglePub" data-id="${p.id}">${pub?'เป็นฉบับร่าง':'เผยแพร่'}</button></div></div>`;}
   const st=prodStats(p);
   const pub=p.status==='published';
   const cf=S.confirm==='del:'+p.id;
   return `<div class="prod" style="--c:${esc(p.color)}">
-    <div class="prod-top"><b>${esc(p.name)}</b><span class="row" style="gap:6px;align-items:center"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span>${linkBadge(p)}</span></div>
+    <b class="prod-name">${esc(p.name)}</b>
+    <div class="prod-badges"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span>${linkBadge(p)}<span class="fine">${esc(kindName(p.kind))}</span></div>
     ${linkStatus[p.id]&&!linkStatus[p.id].ok&&!linkStatus[p.id].pending?`<div class="warnline">⚠️ ${esc(linkStatus[p.id].text)}</div>`:''}
     ${pub&&!linkStatus[p.id]&&!(p.link&&validLink(p.link))?`<div class="warnline">⚠️ ยังไม่ได้ใส่ลิงก์ไฟล์ (Google Drive) ลูกค้าจ่ายแล้วจะไม่ได้ไฟล์อัตโนมัติ</div>`:''}
-    <div class="prod-stats"><span>${esc(kindName(p.kind))}</span><span>ราคา ${baht(p.price)}</span><span>${st.paid} ออเดอร์ที่ชำระแล้ว</span><span>ยอดขาย ${baht(st.revenue)}</span></div>
-    <div class="linkline"><span class="fine">ลิงก์สำหรับแอด</span><code>${DOMAIN}${esc(p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอก</button></div>
+    ${prodKpis([['ราคา',baht(p.price)],['ออเดอร์',st.paid],['ยอดขาย',baht(st.revenue)]])}
+    ${prodLink(p)}
     ${S.quick===p.id?`<div class="quick">
       <div><label for="q-price-${p.id}">ราคาขาย (บาท) — เก็บเงินจริง</label><input class="input" id="q-price-${p.id}" inputmode="decimal" value="${esc(p.price)}"></div>
       <div><label for="q-full-${p.id}">ราคาเต็มที่ขีดฆ่า (บาท)</label><input class="input" id="q-full-${p.id}" inputmode="decimal" value="${esc(p.fullPrice||'')}"></div>
@@ -1618,14 +1636,16 @@ function productRow(p){
       <div style="display:flex;align-items:flex-end;gap:8px"><button class="btn btn-dark btn-sm" data-a="saveQuick" data-id="${p.id}">บันทึก</button><button class="btn btn-line btn-sm" data-a="quickEdit" data-id="${p.id}">ยกเลิก</button></div>
       ${S.err?`<p class="err full" style="margin:0">${esc(S.err)}</p>`:''}
     </div>`:''}
-    <div class="acts">
-      <button class="btn btn-cta btn-sm" data-a="quickEdit" data-id="${p.id}">${S.quick===p.id?'ปิดแก้ไขด่วน':'แก้ไขด่วน'}</button>
+    <div class="prod-acts">
+      <button class="btn btn-cta btn-sm" data-a="quickEdit" data-id="${p.id}">${S.quick===p.id?'ปิด':'แก้ไขด่วน'}</button>
       <button class="btn btn-dark btn-sm" data-a="viewPage" data-id="${p.id}">ดูเซลเพจ</button>
       <button class="btn btn-line btn-sm" data-a="editProduct" data-id="${p.id}">แก้ไขทั้งหมด</button>
+    </div>
+    <details class="prod-more" ${cf?'open':''}><summary>เพิ่มเติม</summary><div class="prod-acts">
       <button class="btn btn-line btn-sm" data-a="dupProduct" data-id="${p.id}">ทำสำเนา</button>
-      <button class="btn btn-line btn-sm" data-a="togglePub" data-id="${p.id}">${pub?'เปลี่ยนเป็นฉบับร่าง':'เผยแพร่'}</button>
-      <button class="btn ${cf?'btn-danger':'btn-line'} btn-sm" data-a="delProduct" data-id="${p.id}">${cf?'กดอีกครั้งเพื่อยืนยันลบ':'ลบ'}</button>
-    </div></div>`;
+      <button class="btn btn-line btn-sm" data-a="togglePub" data-id="${p.id}">${pub?'เป็นฉบับร่าง':'เผยแพร่'}</button>
+      <button class="btn ${cf?'btn-danger':'btn-line'} btn-sm" data-a="delProduct" data-id="${p.id}">${cf?'กดอีกครั้งเพื่อลบ':'ลบ'}</button>
+    </div></details></div>`;
 }
 
 function productForm(){
