@@ -1169,12 +1169,12 @@ export default async function handler(req, res) {
       // แดชบอร์ดห้องประชุม: ตัวเลขจริงของ 7 วัน + ประเด็นจากรายงานล่าสุดของพี่ต้น (ไม่ใช้ AI)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
-      const now = Date.now(), since = new Date(now - 7 * 864e5).toISOString(), prev = new Date(now - 14 * 864e5).toISOString(), ahead = new Date(now + 7 * 864e5).toISOString(), nowIso = new Date(now).toISOString();
+      const now = Date.now(), since = new Date(now - 7 * 864e5).toISOString(), sinceY = new Date(now - 8 * 864e5).toISOString(), untilY = new Date(now - 864e5).toISOString(), prev = new Date(now - 14 * 864e5).toISOString(), ahead = new Date(now + 7 * 864e5).toISOString(), nowIso = new Date(now).toISOString();
       const sum = (l) => l.reduce((a, o) => a + (Number(o.amount) || 0), 0);
       const hasCh = await channelCol();
       const [orders, posts, priv, notes, jobs] = await Promise.all([
         sb(`orders?select=created_at,paid_at,product_name,amount,status,email&created_at=gte.${prev}`),
-        sb(`posts?status=in.(approved,published,needs_owner,failed,draft)&or=(published_at.gte.${since},scheduled_at.gte.${since})&select=status,kind,source,created_at,published_at,scheduled_at,notes${hasCh ? ',channel' : ''}&limit=400`),
+        sb(`posts?status=in.(approved,published,needs_owner,failed,draft)&or=(published_at.gte.${sinceY},scheduled_at.gte.${since})&select=status,kind,source,created_at,published_at,scheduled_at,notes${hasCh ? ',channel' : ''}&limit=400`),
         sb('shop_state?id=eq.private&select=data'),
         sb(`posts?status=in.(note,log)&created_at=gte.${new Date(now - 14 * 864e5).toISOString()}&select=source,kind,text,created_at&order=created_at.desc&limit=200`),
         loadJobs().catch(() => []),
@@ -1184,6 +1184,11 @@ export default async function handler(req, res) {
       const paid = real.filter((o) => o.status === 'paid');
       const wk = paid.filter((o) => (o.paid_at || o.created_at) >= since), lw = paid.filter((o) => (o.paid_at || o.created_at) < since);
       const ch = (p) => p.channel === 'threads' ? 'threads' : 'facebook';
+      // หน้าต่าง 7 วันที่สิ้นสุดเมื่อวานเวลาเดียวกัน (ไว้เทียบกับเมื่อวาน)
+      const inY = (t) => t && t >= sinceY && t < untilY;
+      const wkY = paid.filter((o) => inY(o.paid_at || o.created_at));
+      const pubY = posts.filter((p) => p.status === 'published' && inY(p.published_at)).length;
+      const unpaidY = real.filter((o) => o.status !== 'paid' && inY(o.created_at)).length;
       const pub = posts.filter((p) => p.status === 'published' && p.published_at >= since);
       const queued = posts.filter((p) => p.status === 'approved' && p.scheduled_at >= nowIso && p.scheduled_at <= ahead);
       const campaigns = (priv?.[0]?.data?.campaigns || []).map((c) => ({ name: c.name, spend: Number(c.spend) || 0 }));
@@ -1193,7 +1198,6 @@ export default async function handler(req, res) {
       try { const fb = await loadFb(); if (fb) { const pg = await fbGet(fb.pageId, { fields: 'followers_count,fan_count', access_token: fb.token }); fbF = pg.followers_count ?? pg.fan_count ?? null; } } catch (e) {}
       const today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);
       const histRow = await sb('shop_state?id=eq.dash_hist&select=data'); const hist = histRow?.[0]?.data?.days || {};
-      if (thF != null || fbF != null) { hist[today] = { th: thF, fb: fbF }; const keep = Object.keys(hist).sort().slice(-40); const h2 = {}; keep.forEach((k) => { h2[k] = hist[k]; }); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'dash_hist', data: { days: h2 }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {}); }
       const weekAgo = Object.keys(hist).sort().filter((k) => k <= new Date(now + 7 * 3600e3 - 7 * 864e5).toISOString().slice(0, 10)).pop();
       const base = weekAgo ? hist[weekAgo] : null;
       // ประเด็นจากรายงานล่าสุดของพี่ต้น (โครงรายงานตายตัว)
@@ -1205,7 +1209,15 @@ export default async function handler(req, res) {
       posts.filter((p) => p.source && p.created_at >= since).forEach((p) => { reported[p.source] = true; });
       const todo = await loadTodo();
       const openTodo = todo.filter((i) => !i.done_at);
-      return res.status(200).json({ ok: true, at: nowIso,
+      // ภาพถ่ายตัวเลขรายวัน (วันที่ไทย): เก็บค่าที่คำนวณย้อนหลังไม่ได้ ไว้เทียบกับเมื่อวาน
+      const spendNow = campaigns.reduce((a, c) => a + c.spend, 0), queuedNow = queued.length;
+      const yKey = Object.keys(hist).sort().filter((k) => k < today).pop(); const yd = yKey ? hist[yKey] : null;
+      hist[today] = { ...(hist[today] || {}), ...(thF != null ? { th: thF } : {}), ...(fbF != null ? { fb: fbF } : {}), spend: spendNow, queued: queuedNow, todo: openTodo.length };
+      { const keep = Object.keys(hist).sort().slice(-40); const h2 = {}; keep.forEach((k) => { h2[k] = hist[k]; }); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'dash_hist', data: { days: h2 }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {}); }
+      const dif = (cur, old) => (cur == null || old == null ? null : Math.round((cur - old) * 100) / 100);
+      const vsY = { revenue: dif(sum(wk), sum(wkY)), orders: dif(wk.length, wkY.length), published: dif(pub.length, pubY), unpaid: dif(real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, unpaidY),
+        spend: dif(spendNow, yd?.spend), queued: dif(queuedNow, yd?.queued), todo: dif(openTodo.length, yd?.todo), threads: dif(thF, yd?.th), facebook: dif(fbF, yd?.fb), since: yKey || null };
+      return res.status(200).json({ ok: true, at: nowIso, vsY,
         sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => o.status !== 'paid' && o.created_at >= since).length },
         ads: { spend: campaigns.reduce((a, c) => a + c.spend, 0), campaigns },
         followers: { threads: thF, facebook: fbF, threadsDelta: base && thF != null && base.th != null ? thF - base.th : null, facebookDelta: base && fbF != null && base.fb != null ? fbF - base.fb : null, since: weekAgo || null },

@@ -168,13 +168,23 @@ footer{padding:28px 0 110px;text-align:center}
 .big-ok{width:64px;height:64px;border-radius:50%;background:var(--okbg);color:var(--ok);display:grid;place-items:center;margin:0 auto 14px}
 
 /* admin */
-.tabs{display:flex;flex-wrap:wrap;gap:6px;padding:14px 0 4px}
-.tabs button{border:1.5px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500;white-space:nowrap;font-size:15px}
+.tabs{padding:12px 0 6px;position:sticky;top:0;z-index:5;background:var(--bg)}
+.tabs button{border:1.5px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500;color:var(--ink);font-family:inherit}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs-main{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tabs-main button{min-height:56px;border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:15px;font-weight:600;line-height:1.2;position:relative}
+.tabs-main button i{font-style:normal;font-size:20px;line-height:1}
+.tabs-main button .tcount{position:absolute;top:6px;right:8px;margin:0}
+.tabs-more{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tabs-more button{min-height:40px;border-radius:999px;padding:6px 14px;font-size:14px;white-space:nowrap}
 @media(max-width:640px){
-  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;overflow:visible;padding:10px 0 6px;position:sticky;top:0;z-index:5;background:var(--bg)}
-  .tabs button{padding:9px 4px;font-size:13px;white-space:normal;line-height:1.2;border-radius:12px;min-height:40px}
-  .tabs button .tcount{margin-left:4px;min-width:18px;line-height:18px;font-size:11px}
+  .tabs{padding:8px 0 6px}
+  .tabs-main{gap:6px}
+  .tabs-main button{min-height:58px;font-size:13px;padding:6px 2px}
+  .tabs-more{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-top:6px;padding-bottom:2px}
+  .tabs-more::-webkit-scrollbar{display:none}
+  .tabs-more button{font-size:13px;min-height:38px;padding:6px 12px}
+  .tabs button .tcount{min-width:18px;line-height:18px;font-size:11px}
 }
 .chat{max-width:720px}
 .msg{display:flex;gap:10px;align-items:flex-end;margin:10px 0}
@@ -297,6 +307,7 @@ footer{padding:28px 0 110px;text-align:center}
 .dtile small{font-size:12.5px;color:var(--muted);line-height:1.35}
 .dtile small.up{color:var(--ok,#16a34a)}.dtile small.down{color:var(--bad)}
 .dtile.warn{border-color:#f59e0b}
+.dtile em.vs{font-style:normal;font-size:12.5px;font-weight:600;line-height:1.3}.dtile em.vs.good{color:var(--ok,#16a34a)}.dtile em.vs.bad{color:var(--bad)}.dtile em.vs.flat{color:var(--muted);font-weight:500}
 .dnotes{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
 .dn{margin-bottom:10px}.dn b{font-size:15px}.dn p,.dn ol{margin:4px 0 6px;font-size:14.5px;line-height:1.55}.dn ol{padding-left:20px}
 .cfgsheet{position:fixed;inset:0;z-index:55;display:flex;justify-content:flex-end}
@@ -1701,21 +1712,25 @@ function dashBox(){
   if(!DASH.d&&!DASH.loading&&!DASH.err){loadDash().then(()=>render(true));}
   const d=DASH.d;const baht2=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');const num=n=>n==null?'–':Number(n).toLocaleString('th-TH');
   const delta=(v,unit)=>v==null?'':`<small class="${v>0?'up':v<0?'down':''}">${v>0?'+':''}${num(v)} ${unit}</small>`;
-  const tile=(label,value,sub,warn)=>`<div class="dtile${warn?' warn':''}"><span>${label}</span><b>${value}</b>${sub?`<small>${sub}</small>`:''}</div>`;
+  // เทียบกับเมื่อวาน: good = ทิศที่ดี ('up' ยิ่งมากยิ่งดี, 'down' ยิ่งน้อยยิ่งดี, '' เป็นกลาง)
+  const Y=d&&d.vsY||{};
+  const vs=(k,good,money)=>{const v=Y[k];if(v==null)return '';const cls=v===0?'flat':(good===''?'flat':((v>0)===(good==='up')?'good':'bad'));
+    return `<em class="vs ${cls}" title="เทียบกับเมื่อวาน">${v===0?'เท่าเมื่อวาน':`${v>0?'▲ +':'▼ −'}${money?baht2(Math.abs(v)):num(Math.abs(v))} จากเมื่อวาน`}</em>`;};
+  const tile=(label,value,sub,warn,cmp)=>`<div class="dtile${warn?' warn':''}"><span>${label}</span><b>${value}</b>${cmp||''}${sub?`<small>${sub}</small>`:''}</div>`;
   if(!d)return `<section class="dash card"><h3 class="h3" style="margin:0">📊 ภาพรวมสัปดาห์นี้</h3><p class="fine">${DASH.err?esc(DASH.err):'กำลังโหลดตัวเลข...'}</p></section>`;
   const r=d.report;const fmtD=t=>t?new Date(t).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
   const salesSub=d.sales.lastRevenue||d.sales.lastOrders?`สัปดาห์ก่อน ${baht2(d.sales.lastRevenue)}`:'สัปดาห์ก่อน ฿0';
   return `<section class="dash card">
     <div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h3 class="h3" style="margin:0">📊 ภาพรวม 7 วันล่าสุด</h3><span class="fine">อัปเดต ${new Date(d.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} <button class="chip" data-a="dashRefresh">รีเฟรช</button></span></div>
     <div class="dgrid">
-      ${tile('ยอดขายจริง',baht2(d.sales.revenue),`${d.sales.orders} ออเดอร์ · ${salesSub}`)}
-      ${tile('ค่าแอดรวม',baht2(d.ads.spend),d.ads.campaigns.length?`${d.ads.campaigns.length} แคมเปญ`:'ยังไม่มีแคมเปญ')}
-      ${tile('ผู้ติดตาม Threads',num(d.followers.threads),d.followers.threadsDelta!=null?delta(d.followers.threadsDelta,'ใน 7 วัน'):'เริ่มเก็บสถิติวันนี้')}
-      ${tile('ผู้ติดตาม Facebook',num(d.followers.facebook),d.followers.facebookDelta!=null?delta(d.followers.facebookDelta,'ใน 7 วัน'):(d.followers.facebook==null?'ยังดึงตัวเลขไม่ได้':'เริ่มเก็บสถิติวันนี้'))}
-      ${tile('โพสต์ขึ้นแล้ว',`${d.posts.published.facebook+d.posts.published.threads}`,`Facebook ${d.posts.published.facebook} · Threads ${d.posts.published.threads}`)}
-      ${tile('คิวโพสต์ 7 วันข้างหน้า',`${d.posts.queued.facebook+d.posts.queued.threads}`,`Facebook ${d.posts.queued.facebook} · Threads ${d.posts.queued.threads}`,d.posts.queued.facebook+d.posts.queued.threads===0)}
-      ${tile('checkout ค้างไม่จ่าย',num(d.sales.unpaid),'คนที่กดซื้อแต่ยังไม่จ่าย',d.sales.unpaid>0)}
-      ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0)}
+      ${tile('ยอดขายจริง',baht2(d.sales.revenue),`${d.sales.orders} ออเดอร์ · ${salesSub}`,false,vs('revenue','up',1))}
+      ${tile('ค่าแอดรวม',baht2(d.ads.spend),d.ads.campaigns.length?`${d.ads.campaigns.length} แคมเปญ`:'ยังไม่มีแคมเปญ',false,vs('spend','',1))}
+      ${tile('ผู้ติดตาม Threads',num(d.followers.threads),d.followers.threadsDelta!=null?delta(d.followers.threadsDelta,'ใน 7 วัน'):'เริ่มเก็บสถิติวันนี้',false,vs('threads','up'))}
+      ${tile('ผู้ติดตาม Facebook',num(d.followers.facebook),d.followers.facebookDelta!=null?delta(d.followers.facebookDelta,'ใน 7 วัน'):(d.followers.facebook==null?'ยังดึงตัวเลขไม่ได้':'เริ่มเก็บสถิติวันนี้'),false,vs('facebook','up'))}
+      ${tile('โพสต์ขึ้นแล้ว',`${d.posts.published.facebook+d.posts.published.threads}`,`Facebook ${d.posts.published.facebook} · Threads ${d.posts.published.threads}`,false,vs('published','up'))}
+      ${tile('คิวโพสต์ 7 วันข้างหน้า',`${d.posts.queued.facebook+d.posts.queued.threads}`,`Facebook ${d.posts.queued.facebook} · Threads ${d.posts.queued.threads}`,d.posts.queued.facebook+d.posts.queued.threads===0,vs('queued','up'))}
+      ${tile('checkout ค้างไม่จ่าย',num(d.sales.unpaid),'คนที่กดซื้อแต่ยังไม่จ่าย',d.sales.unpaid>0,vs('unpaid','down'))}
+      ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0,vs('todo','down'))}
     </div>
     ${r?`<div class="dnotes"><p class="fine" style="margin:0 0 6px">${ava('manager',1)} จากรายงานพี่ต้น ${fmtD(r.at)}</p>
       ${r.decide.length?`<div class="dn"><b>ต้องขอคุณแดนตัดสิน</b><ol>${r.decide.map(x=>`<li>${esc(x)}</li>`).join('')}</ol><button class="chip" data-a="tab" data-v="todo">ไปตอบในเช็คลิสต์</button></div>`:''}
@@ -2393,11 +2408,15 @@ function teamTab(){
 }
 
 function adminView(){
-  const tabs=[['todo','เช็คลิสต์'],['orders','ออเดอร์'],['products','สินค้าและเซลเพจ'],['coupons','โค้ดส่วนลด'],['ads','โฆษณา'],['pay','ข้อมูลร้าน'],['pixel','Facebook Pixel'],['content','คอนเทนต์'],['team','ทีม'],['meeting','ห้องประชุม'],['chat','ห้องพัก'],['docs','ห้องเอกสาร']];
+  // เรียงตามความสำคัญ: 4 อันแรกใช้ทุกวัน (ปุ่มใหญ่) ที่เหลือเป็นแถวรองเลื่อนได้
+  const TABS_MAIN=[['todo','✅','เช็คลิสต์'],['meeting','📊','ห้องประชุม'],['orders','🧾','ออเดอร์'],['ads','📣','โฆษณา']];
+  const TABS_MORE=[['content','✍️','คอนเทนต์'],['team','👥','ทีม'],['products','🛍️','สินค้าและเซลเพจ'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['coupons','🏷️','โค้ดส่วนลด'],['pay','🏪','ข้อมูลร้าน'],['pixel','📡','Facebook Pixel']];
+  const badge=k=>k==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:k==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:'';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
   const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
-    <div class="tabs" role="tablist">${tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]}${t[0]==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:''}${t[0]==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:''}</button>`).join('')}</div>
+    <nav class="tabs" aria-label="เมนูหลังบ้าน"><div class="tabs-main">${TABS_MAIN.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}"><i aria-hidden="true">${t[1]}</i>${t[2]}${badge(t[0])}</button>`).join('')}</div>
+      <div class="tabs-more">${TABS_MORE.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]} ${t[2]}${badge(t[0])}</button>`).join('')}</div></nav>
     ${body}
   </div>${S.cfgOpen?cfgSheet():''}`;
 }
