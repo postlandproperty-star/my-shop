@@ -263,7 +263,10 @@ const CHAT_CAST = `ตัวละคร (source: ชื่อ บุคลิ�
 - hr พี่เอชอาร์ หญิง 36 ใจดีแต่ตรง โผล่น้อย ไม่รู้เรื่องต้น×การ์ด (มุกประจำ "เดี๋ยว HR รู้")
 - product พี่โปร ชาย 35 นิ่ง พูดประโยคเดียวแต่คม นานๆ โผล่
 - clip น้องคลิป ชาย 27 นักตัดต่อสายมีม ใส่แว่นดำ พูดเรื่องยอดวิว นานๆ โผล่
-- factory โรงงาน ชาย ช่าง พูดสั้นมาก นานๆ โผล่
+- factory พี่เหล็ก ชาย 45 CEO โรงงาน (เพิ่งเลื่อนจากช่างใหญ่ เดิมทีมเรียกว่า "โรงงาน") ใส่สูทแล้วยังเขินๆ พูดสั้นมาก นานๆ โผล่
+- ceo_sale พี่พลอย หญิง 34 CEO salepage คนใหม่ มือปิดการขาย พูดเรื่องยอดและปุ่มซื้อ มั่นใจ นานๆ โผล่
+- ceo_store พี่โอ๊ค ชาย 36 CEO หน้าร้านคนใหม่ ชอบจัดชั้นวางให้เป็นระเบียบ อารมณ์ดี นานๆ โผล่
+ผังใหม่ (30 ก.ย.): คุณแดน = President, พี่ต้น = Vice President (เพิ่งเลื่อนขั้น ทีมยังแซวว่า "ท่านรองฯ"), ใต้พี่ต้นมี CEO 3 คน: พี่พลอย (salepage) พี่โอ๊ค (หน้าร้าน) พี่เหล็ก (โรงงาน)
 คุณแดน (manual) คือเจ้าของร้าน ห้ามเขียนแทนคุณแดน ทุกคนตอบคุณแดนแบบเป็นกันเองแต่นอบน้อม`;
 const CHAT_RULES = `ฉาก: ห้องแชทกลุ่มพักผ่อนของทีม SheetLab ออฟฟิศตึก One Bangkok ชั้น 27 วิวสวนลุม คุยเล่นนอกเรื่องงาน ภาษาไทยพูดธรรมชาติแบบแชทไลน์กลุ่ม สะกดถูก ข้อความสั้น (ส่วนใหญ่ 15-70 ตัวอักษร)
 ระดับเนื้อหา (คุณแดนกำหนด ต้องทำตาม): ผู้ใหญ่อ่าน มุกสองแง่สองง่ามได้ แต่ห้ามเนื้อหาทางเพศตรงๆ ห้ามบรรยายกิจกรรมทางเพศ ห้ามเอ่ยถึงอวัยวะเพศ ห้ามคำหยาบ ห้ามลวนลามหรือบังคับใคร ความทะลึ่งต้องเกิดจากการตีความของคนอ่าน ไม่ใช่จากคำที่พิมพ์ ห้ามล้อเลียนเพศสภาพ ไม่การเมือง ไม่ศาสนา
@@ -441,7 +444,7 @@ function extractTodo(text) {
   }
   return out;
 }
-const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'โรงงาน', care: 'พี่แคร์', guard: 'พี่การ์ด', market: 'พี่มาร์เก็ต', clip: 'น้องคลิป', hr: 'พี่เอชอาร์' };
+const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปากกา', designer: 'น้องกราฟิก', trend: 'น้องเทรนด์', community: 'น้องคอม', analyst: 'น้องบูสต์', product: 'พี่โปร', finance: 'พี่บัญชี', factory: 'พี่เหล็ก', care: 'พี่แคร์', guard: 'พี่การ์ด', market: 'พี่มาร์เก็ต', clip: 'น้องคลิป', hr: 'พี่เอชอาร์', ceo_sale: 'พี่พลอย', ceo_store: 'พี่โอ๊ค' };
 // คอลัมน์ channel/th_post_id (Threads) มีหรือยัง (เพิ่มด้วย SQL ใน Supabase) ถ้ายังไม่มี ระบบทำงานแบบ Facebook อย่างเดียว
 async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
@@ -1243,7 +1246,7 @@ export default async function handler(req, res) {
         posts: { published: { facebook: pub.filter((p) => ch(p) === 'facebook').length, threads: pub.filter((p) => ch(p) === 'threads').length }, queued: { facebook: queued.filter((p) => ch(p) === 'facebook').length, threads: queued.filter((p) => ch(p) === 'threads').length }, held: posts.filter((p) => p.status === 'needs_owner').length, failed: posts.filter((p) => p.status === 'failed').length, policy: posts.filter((p) => p.status !== 'published' && (policyState(p.notes)?.level || 'ok') !== 'ok').length },
         todo: { open: openTodo.length, delegated: openTodo.filter((i) => i.delegated_at).length },
         factory: { active: jobs.filter((j) => ['queued', 'producing'].includes(j.status)).length, doneWeek: jobs.filter((j) => j.status === 'done' && (j.done_at || '') >= since).length },
-        team: { quiet: Object.keys(MEMBER_TH).filter((k) => !['care', 'factory'].includes(k) && !reported[k]) },
+        team: { quiet: Object.keys(MEMBER_TH).filter((k) => !['care', 'factory', 'ceo_sale', 'ceo_store'].includes(k) && !reported[k]) },
         report: rep ? { at: rep.created_at, decide: items(sec('ต้องขอคุณแดนตัดสิน')), ask: sec('สิ่งที่อยากให้คุณแดนทำ'), plan: sec('แผนสัปดาห์หน้า'), summary: sec('สรุปสัปดาห์') } : null });
     }
     if (action === 'deck') {

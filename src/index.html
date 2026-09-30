@@ -2129,7 +2129,7 @@ async function updatePost(id,patch){
 }
 const AV='https://api.dicebear.com/9.x/avataaars/svg?size=96&backgroundType=solid&facialHairProbability=0&';
 const TEAM={
-  manager:{name:'พี่ต้น',role:'ผู้จัดการเพจ · อนุมัติโพสต์แทนคุณ',bg:'#c0aede',sched:'ตรวจโพสต์ + รายงานทุกจันทร์ 09:00',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=1a2340&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
+  manager:{name:'พี่ต้น',role:'Vice President · อนุมัติโพสต์แทนคุณแดน ดูแล CEO ทุกฝ่าย',bg:'#c0aede',sched:'ตรวจโพสต์ + รายงานทุกจันทร์ 09:00',img:AV+'accessoriesProbability=100&seed=plan&top=shortFlat&hairColor=2c1b18&accessories=prescription02&clothing=blazerAndShirt&clothesColor=1a2340&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=c0aede'},
   writer:{name:'น้องปากกา',role:'นักเขียนคอนเทนต์',bg:'#ffd5dc',sched:'ส่งร่างโพสต์ทุกจันทร์ 08:00',img:AV+'accessoriesProbability=0&seed=pen&top=straight01&hairColor=4a312c&clothing=hoodie&clothesColor=3c4f5c&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=ffd5dc'},
   community:{name:'น้องคอม',role:'ดูแลคอมเมนต์ · ร่างคำตอบให้คุณส่ง',bg:'#d1fae5',sched:'เช็กคอมเมนต์ทุกวัน 08:00 และ 21:00',img:AV+'accessoriesProbability=0&seed=com&top=bob&hairColor=2c1b18&clothing=shirtCrewNeck&clothesColor=a7ffc4&eyes=happy&eyebrows=raisedExcitedNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=d1fae5'},
   analyst:{name:'น้องบูสต์',role:'นักวิเคราะห์แอด · เสนอปรับงบ คุณอนุมัติ',bg:'#ffdfbf',sched:'อ่านผลแอดทุกวัน 07:30',img:AV+'accessoriesProbability=100&seed=boost&top=theCaesar&hairColor=2c1b18&accessories=round&clothing=graphicShirt&clothesColor=ff5c5c&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=ffdfbf'},
@@ -2142,8 +2142,10 @@ const TEAM={
   market:{name:'พี่มาร์เก็ต',role:'วิจัยตลาด · หัวหน้าฝ่ายการตลาด ดึงคำค้นจริงและกระแส ส่งข้อมูลให้ทุกฝ่ายทุกเช้า',bg:'#fde68a',sched:'ทุกวัน 07:00 · จันทร์มีสรุปสัปดาห์',img:AV+'accessoriesProbability=100&seed=market&top=bob&hairColor=4a312c&accessories=round&clothing=blazerAndSweater&clothesColor=e6e6e6&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fde68a'},
   clip:{name:'น้องคลิป',role:'ตัดต่อคลิป Reels · ทำคลิปสั้นทายศัพท์จากไอเดียทีม ตรวจเองแล้วตั้งเวลาโพสต์ Reels และ Threads ไม่ต้องรออนุมัติ',bg:'#c7f9cc',sched:'ทุกวัน 10:00',img:AV+'accessoriesProbability=100&seed=clip&top=shortWaved&hairColor=2c1b18&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=defaultNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=c7f9cc'},
   hr:{name:'พี่เอชอาร์',role:'ฝ่ายบุคคล · ดูภาพรวมคน ทะเบียนทักษะ คู่มือพนักงาน',bg:'#ffe4e6',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=0&seed=hr&top=bun&hairColor=2c1b18&clothing=blazerAndShirt&clothesColor=e11d48&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=f8d25c&backgroundColor=ffe4e6'},
-  factory:{name:'โรงงาน',role:'โรงงานผลิตชีท · รับใบสั่งจากพี่ต้นโดยตรง',bg:'#fef3c7',sched:'ทำงานอาทิตย์และจันทร์ 10:00, 22:00 หรือเมื่อสั่ง',img:AV+'accessoriesProbability=0&seed=factory&top=shortFlat&hairColor=2c1b18&clothing=overall&clothesColor=ffb300&eyes=default&mouth=smile&skinColor=d08b5b'},
-  manual:{name:'คุณ',role:'เจ้าของร้าน · ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
+  factory:{name:'พี่เหล็ก',role:'CEO โรงงาน · ดูแลการผลิตชีททุกเล่ม',bg:'#fef3c7',sched:'ทำงานอาทิตย์และจันทร์ 10:00, 22:00 หรือเมื่อสั่ง',img:AV+'accessoriesProbability=100&seed=factory&top=shortFlat&hairColor=4a4a4a&accessories=prescription01&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=fef3c7'},
+  ceo_sale:{name:'พี่พลอย',role:'CEO salepage · ดูแลหน้าขายและยอดจากแอด',bg:'#dbeafe',exec:1,sched:'ตำแหน่งบริหาร',img:AV+'accessoriesProbability=0&seed=ploy&top=longButNotTooLong&hairColor=2c1b18&clothing=blazerAndShirt&clothesColor=2440e8&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=dbeafe'},
+  ceo_store:{name:'พี่โอ๊ค',role:'CEO หน้าร้าน · ดูแลชั้นวางสินค้าและชีทจากโรงงาน',bg:'#dcfce7',exec:1,sched:'ตำแหน่งบริหาร',img:AV+'accessoriesProbability=0&seed=oak&top=theCaesarAndSidePart&hairColor=2c1b18&clothing=blazerAndSweater&clothesColor=0f7a55&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=dcfce7'},
+  manual:{name:'คุณ',role:'President · เจ้าของร้าน ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
 };
 TEAM.ads=TEAM.analyst;
 // ตารางเวลาแต่ละคน (เวลากรุงเทพ) dow: 0=อาทิตย์ ... 6=เสาร์, dom: วันที่ของเดือน, dur: นาทีที่ถือว่า "กำลังทำงาน"
@@ -2167,7 +2169,7 @@ const POLITE={hr:'ค่ะ',clip:'ครับ',market:'ค่ะ',guard:'ค�
 function teamStatus(k){
   const sc=SCHED[k];const m=TEAM[k]||{};
   const last=POSTS.filter(x=>x.source===k).map(x=>Date.parse(x.created_at)).sort((a,b)=>b-a)[0]||null;
-  if(!sc)return{state:m.sched===''?'owner':'off',last,next:null};
+  if(!sc)return{state:m.sched===''?'owner':m.exec?'exec':'off',last,next:null};
   const now=Date.now();const base=new Date(now+BKK);let cur=null,next=null,prev=null;
   for(let d=-31;d<=45&&!next;d++){
     const day=new Date(Date.UTC(base.getUTCFullYear(),base.getUTCMonth(),base.getUTCDate()+d));
@@ -2191,6 +2193,7 @@ function statusText(k){
   switch(st.state){
     case 'owner':return '';
     case 'off':return 'ตำแหน่งว่าง รอรับสมัคร';
+    case 'exec':return 'ตำแหน่งบริหาร';
     case 'on':return 'ทำงานอยู่'+p;
     case 'done':return 'เพิ่งส่งงานเสร็จ'+p;
     case 'late':return 'สายนิดหน่อย'+p+' 😅';
@@ -2583,8 +2586,10 @@ function adsTab(){
 }
 
 const ORG={
-  manual:{title:'เจ้าของร้าน (CEO)',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่ต้นส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
-  manager:{title:'ผู้จัดการเพจ · หัวหน้าของทุกคน อำนาจรองจากเจ้าของ',do:['ประชุมทีมทุกอาทิตย์ 21:00 อ่านรายงานทุกฝ่ายแล้ววางแผนสัปดาห์ให้ทุกคน','ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ สั่งงานได้ทุกคน','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ประชุมทีมอาทิตย์ 21:00 · ตรวจโพสต์และรายงานจันทร์ 09:00'},
+  ceo_sale:{title:'CEO salepage · ฝ่ายหน้าขาย',do:['ดูแลหน้าขายของแต่ละเล่ม (salepage) และยอดที่มาจากแอด','เสนอปรับข้อความ ราคาขีดฆ่า และโปรบนหน้าขาย [ราคาและโปรต้องให้คุณแดนอนุมัติ]','ทำงานร่วมกับน้องบูสต์ (แอด) และพี่โปร (สินค้า)'],when:'ตำแหน่งบริหาร ยังไม่มีรอบทำงานของตัวเอง ตอนนี้งานหน้าขายยังทำโดยทีมเดิม'},
+  ceo_store:{title:'CEO หน้าร้าน · ฝ่ายหน้าร้าน',do:['ดูแลชั้นวางสินค้าบนหน้าร้าน sheetlabth.com: ชุดเด่น หมวด ป้ายใหม่/ขายดี','รับชีทจากโรงงานของพี่เหล็ก เตรียมให้คุณแดนตรวจและกดอนุมัติลงขาย','ดูแลหน้าหาออเดอร์ของฉัน ลูกค้าได้ไฟล์ครบ'],when:'ตำแหน่งบริหาร ยังไม่มีรอบทำงานของตัวเอง ตอนนี้งานหน้าร้านยังทำโดยทีมเดิม'},
+  manual:{title:'President · เจ้าของร้าน',do:['ตัดสินทุกเรื่องที่เกี่ยวกับเงิน ราคา ส่วนลด งบแอด','อนุมัติโพสต์ที่พี่ต้นส่งมา (ป้ายแดง "รอคุณอนุมัติ")','กดส่งคำตอบคอมเมนต์และอีเมลที่ทีมร่างให้','เชิญคนกดไลก์เพจ ตอบแชทลูกค้า'],when:'อ่าน Slack วันละครั้ง ประมาณ 10 นาที',human:true},
+  manager:{title:'Vice President · หัวหน้าของทุกคน อำนาจรองจาก President',do:['ประชุมทีมทุกอาทิตย์ 21:00 อ่านรายงานทุกฝ่ายแล้ววางแผนสัปดาห์ให้ทุกคน','ตรวจ แก้ อนุมัติ หรือปัดตกโพสต์ทุกชิ้น','จัดตารางโพสต์ให้ครบทุกวันทำการ สั่งงานได้ทุกคน','เขียนรายงานประจำสัปดาห์ถึงเจ้าของ'],when:'ประชุมทีมอาทิตย์ 21:00 · ตรวจโพสต์และรายงานจันทร์ 09:00'},
   writer:{title:'Content Creator · ฝ่ายคอนเทนต์',do:['ร่างโพสต์ 5 ชิ้นต่อสัปดาห์ ควิซ เฉลย ชวนคุย ควิซ ขาย','สร้างรูปทุกโพสต์ด้วย Canva ในโทนแบรนด์','ส่งงานให้พี่ต้นตรวจ ไม่โพสต์เอง'],when:'ทุกจันทร์ 08:00 น.'},
   designer:{title:'Graphic Designer · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['เปิดดูรูปทุกใบที่ Canva สร้างก่อนขึ้นเพจ','เช็คตัวอักษรไทย ข้อความตรงโพสต์ สีตรงแบรนด์','รูปไม่ผ่านสั่งสร้างใหม่และเปลี่ยนให้เอง'],when:'ทุกจันทร์ 08:40 น. หลังน้องปากกาส่งงาน'},
   trend:{title:'Trend Researcher · ฝ่ายคอนเทนต์ ลูกทีมน้องปากกา',do:['ค้นเว็บดูว่าคนเตรียมสอบ TOEIC กำลังสนใจอะไร','รอบสอบ ข่าวเกณฑ์คะแนน หัวข้อที่กำลังแชร์กัน','ส่งลิสต์ 8 หัวข้อพร้อมเหตุผลให้น้องปากกา'],when:'ทุกอาทิตย์ 20:00 น. ก่อนน้องปากกาเขียน'},
@@ -2592,7 +2597,7 @@ const ORG={
   analyst:{title:'Performance Analyst · ฝ่ายการตลาด',do:['อ่านผลแอด Facebook ทุกวัน','คำนวณต้นทุนต่อการซื้อ เทียบยอดขายจริง','เสนอเพิ่ม ลด หรือหยุดงบ [ต้องอนุมัติ]'],when:'ทุกวัน 07:30 น.'},
   product:{title:'Product Development Lead · ฝ่ายสินค้า',do:['วิเคราะห์ยอดขาย คอมเมนต์ และคำถามทั้งเดือน','เสนอสิ่งที่ควรปรับในสินค้าและหน้าเซลเพจ','เสนอชีทเล่มถัดไปพร้อมโครงสารบท'],when:'ทุกวันที่ 1 ของเดือน 10:00 น.'},
   finance:{title:'Accounting · ฝ่ายสนับสนุน รายงานพี่ต้น',do:['สรุปยอดขาย ค่าธรรมเนียม Stripe เงินสุทธิ','ค่าแอดและกำไรหลังค่าแอด','เงินพร้อมโอนและเงินโอนเข้าบัญชีล่าสุด'],when:'ทุกจันทร์ 08:30 น.'},
-  factory:{title:'Book Factory · ฝ่ายผลิต รับใบสั่งจากพี่ต้นโดยตรง',do:['ผลิตชีท PDF ตามใบสั่ง: ชีทแจกฟรี ชีทประกอบโพสต์ และชีทที่จะขาย','เขียนเนื้อหาใหม่ทั้งหมด ตรวจเฉลยทุกข้อ จัดหน้าตามธีม Modern Blue ของ SheetLab','เก็บไฟล์บนคลาวด์ของบริษัท (Storage ของโปรเจกต์ SheetLab) แล้วแจ้งพี่ต้นใน Slack'],when:'ทำงานอาทิตย์และจันทร์ 10:00 และ 22:00 (หลังพี่ต้นสั่งงาน) หรือเมื่อคุณแดนกดสั่ง ชีทแจกฟรีใช้ Sonnet ไม่เกิน 24 หน้า'},
+  factory:{title:'CEO โรงงาน · ฝ่ายผลิต รับใบสั่งจากคุณแดนและพี่ต้น',do:['ผลิตชีท PDF ตามใบสั่ง: ชีทแจกฟรี ชีทประกอบโพสต์ และชีทที่จะขาย','เขียนเนื้อหาใหม่ทั้งหมด ตรวจเฉลยทุกข้อ จัดหน้าตามธีม Modern Blue ของ SheetLab','เก็บไฟล์บนคลาวด์ของบริษัท (Storage ของโปรเจกต์ SheetLab) แล้วแจ้งพี่ต้นใน Slack'],when:'ทำงานอาทิตย์และจันทร์ 10:00 และ 22:00 (หลังพี่ต้นสั่งงาน) หรือเมื่อคุณแดนกดสั่ง ชีทแจกฟรีใช้ Sonnet ไม่เกิน 24 หน้า'},
   guard:{title:'Site Reliability & Security · ฝ่ายดูแลระบบ',do:['ทุกเช้า 10:00 ระบบตรวจ 9 จุดอัตโนมัติ (โพสต์ล้ม token เพจ/Threads คิวโรงงาน คิวโพสต์ ฐานข้อมูล ช่องแอดมิน คีย์หลุด) ไม่ใช้ AI','พบปัญหาส่งเข้าเช็คลิสต์ของคุณแดนทันที พร้อมวิธีแก้','ทุกอาทิตย์ 20:30 อ่านผลตรวจทั้งสัปดาห์และโค้ด ถ้าเป็นบั๊กในโค้ด เปิดสาขาแก้ให้คุณแดนกดรวมเอง ไม่แก้เข้าระบบจริงเอง'],when:'ตรวจอัตโนมัติทุกวัน 10:00 · พี่การ์ดทบทวนโค้ดทุกอาทิตย์ 20:30 (Sonnet รอบสั้น)'},
   market:{title:'Market Research · ฝ่ายการตลาด',do:['ทุกเช้า 07:00 ดึงคำที่คนไทยค้นจริง (Google Suggest) และกระแสไทยวันนี้ (Google Trends) ก่อนทีมเริ่มงาน','อ่านตัวเลขเพจ 7 วัน โพสต์ที่ดีสุด/แย่สุด ผู้ติดตาม คำถามที่ลูกค้าถามซ้ำ','ส่งต่อให้ทุกฝ่าย: หัวข้อที่มีคนค้นอยู่แล้วและประโยคที่คนพูดจริงให้น้องเทรนด์/น้องปากกา ความต้องการสินค้าให้พี่โปร คีย์เวิร์ดแอดให้น้องบูสต์ ข้อเสนอเชิงกลยุทธ์ให้พี่ต้น','วันจันทร์สรุปสัปดาห์: คำค้นที่โต แนวที่ได้ผล สิ่งที่ควรเลิก เป้าที่แนะนำ'],when:'ทุกวัน 07:00 · จันทร์มีสรุปสัปดาห์'},
   clip:{title:'Video Editor · ฝ่ายคลิปสั้น',do:['ทุกวัน 10:00 หยิบไอเดียจากพี่มาร์เก็ตและน้องเทรนด์ มาทำคลิปทายศัพท์ของใกล้ตัว 4 ข้อ ยาว 20-40 วินาที','รูปจากคลังภาพฟรีที่ใช้เชิงพาณิชย์ได้ มาสคอตน้องคลิป เสียงพากย์ไทยจาก ElevenLabs สลับรูปแบบ photo/motion วันเว้นวัน','ตรวจรูปและสะกดเองแล้วตั้งเวลาโพสต์ Facebook Reels และ Threads ไม่ต้องรออนุมัติ','ไม่โพสต์เองเด็ดขาด'],when:'ทุกวัน 10:00 (Sonnet)'},
@@ -2639,6 +2644,8 @@ function mood(k){
     case 'product':return age<35?M('💡','มีไอเดียสินค้าใหม่','ส่งข้อเสนอเดือนนี้แล้ว'):M('🗓️','รอรอบสิ้นเดือน','ยังไม่ถึงรอบรายงาน');
     case 'finance':return /ยอดขาย\s*0|0 ออเดอร์|ไม่มียอดขาย/.test(lastT)&&age<8?M('😐','เดือนนี้ยังเงียบ','ยอดขายสัปดาห์นี้ยังไม่มี'):M('🧮','ตัวเลขเรียบร้อย','บัญชีเป็นปัจจุบัน');
     case 'care':return M('☕','สแตนด์บาย','ยังไม่เปิดใช้งาน');
+    case 'ceo_sale':return M('💼','เพิ่งรับตำแหน่ง','CEO คนใหม่ของ salepage');
+    case 'ceo_store':return M('🏪','จัดชั้นวางรอลูกค้า','CEO คนใหม่ของหน้าร้าน');
     case 'hr':{const last=notes[0];if(!last)return M('📋','เตรียมทำความรู้จักทุกคน','ยังไม่มีรายงานทีมฉบับแรก');if(age<2)return M('🙂','ส่งรายงานทีมแล้ว','รายงานล่าสุดเมื่อ '+Math.round(age*24)+' ชม.ก่อน');return M('☕','สังเกตทีมอยู่','รอรอบวันจันทร์');}
     case 'clip':{const cl=POSTS.filter(p=>p.source==='clip'&&p.kind==='reel').map(p=>Date.parse(p.created_at)).sort((a,b)=>b-a)[0];const cage=cl?(now-cl)/D:99;if(!cl)return M('🎬','รอไอเดียคลิปแรก','ยังไม่มีคลิปในระบบ');if(cage<3)return M('😎','เพิ่งส่งคลิปเข้าคิว','ส่งคลิปล่าสุดไม่เกิน 3 วัน');return M('🤔','กำลังหาไอเดียคลิปใหม่','คลิปล่าสุดเกิน 3 วัน');}
     case 'market':{const mk=notes.find(n=>n.kind==='market');const mage=mk?(now-Date.parse(mk.created_at))/D:99;if(!mk)return M('📊','วันแรก กำลังตั้งแดชบอร์ด','ยังไม่มีรายงานตลาด');if(mage<1.5)return M('🔎','เจอคำค้นใหม่ ส่งต่อทีมแล้ว','ส่งรายงานตลาดวันนี้แล้ว');return M('😐','ข้อมูลเก่าไปหน่อย','รายงานตลาดล่าสุดเกิน 1 วัน');}
@@ -2647,7 +2654,7 @@ function mood(k){
   }
   return M('🙂','ปกติ','');
 }
-function moodStrip(){const ks=['manager','writer','designer','trend','community','analyst','factory','guard','market','clip','product','finance','hr','manual'];
+function moodStrip(){const ks=['manager','ceo_sale','ceo_store','factory','writer','designer','trend','community','analyst','guard','market','clip','product','finance','hr','manual'];
   return `<div class="moods">${ks.map(k=>{const m=mood(k),t=TEAM[k];return `<div class="md${TEAM_KEYS.includes(k)?' cfgable':''}" title="${esc(m.why)}"${TEAM_KEYS.includes(k)?` data-a="cfgOpen" data-v="${k}"`:''}><span class="e"><img class="ava" src="${t.img}" alt="" style="background:${t.bg}" loading="lazy"><span>${m.e}</span></span><b>${esc(t.name)}</b><small>${esc(m.t)}</small>${m.why?`<em>${esc(m.why)}</em>`:''}</div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];const cf=TEAM_KEYS.includes(k);const cs=cf?cfgSummary(k):'';return `<article class="ocard${o.vacant?' vacant':''}${cf?' cfgable':''}" style="--obg:${m.bg}"${cf?` data-a="cfgOpen" data-v="${k}" role="button" tabindex="0" aria-label="ตั้งค่า${esc(m.name)}"`:''}>${cs==='พักงาน'?`<span class="ocfg">พักงาน</span>`:''}
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
@@ -2753,7 +2760,7 @@ let CHAT={msgs:null,loading:false,err:'',next_at:null,next_source:null,pending:0
 async function loadChat(){CHAT.loading=true;try{await loadChat0();}finally{if(CHAT.msgs===null)CHAT.msgs=[];CHAT.loading=false;}}
 async function loadChat0(){try{const j=await adminApi('/api/content?action=chat&days=7');if(j.ok){CHAT.msgs=j.messages||[];CHAT.next_at=j.next_at||null;CHAT.next_source=j.next_source||null;CHAT.pending=j.pending||0;CHAT.engine=j.engine||'Claude';CHAT.err='';}else CHAT.err=j.error||'โหลดไม่ได้';}catch(e){CHAT.err='เชื่อมต่อไม่ได้';}CHAT.loading=false;}
 function onDutyNow(k){const sc=SCHED[k];if(!sc)return false;const b=new Date(Date.now()+BKK);const ok=sc.dow?sc.dow.includes(b.getUTCDay()):b.getUTCDate()===sc.dom;if(!ok)return false;const mins=b.getUTCHours()*60+b.getUTCMinutes();return sc.times.some(([h,mi])=>mins>=h*60+mi&&mins<h*60+mi+(sc.dur||15));}
-function onlineStrip(){const ks=['manager','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
+function onlineStrip(){const ks=['manager','ceo_sale','ceo_store','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
 function chatTab(){
   if(CHAT.msgs===null&&!CHAT.loading){loadChat().then(()=>{render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);});}
   const msgs=CHAT.msgs||[];let lastDay='';
@@ -2881,19 +2888,19 @@ function docsTab(){
 function teamTab(){
   needPosts();
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
-  return `${memberDesk('hr')}<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab · ออฟฟิศ One Bangkok ชั้น 27 ถนนพระราม 4 กรุงเทพฯ: เจ้าของร้าน 1 คน และผู้ช่วย AI 13 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และห้องประชุม ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
+  return `${memberDesk('hr')}<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab · ออฟฟิศ One Bangkok ชั้น 27 ถนนพระราม 4 กรุงเทพฯ: คุณแดน (President) และผู้ช่วย AI 15 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น (Vice President) โดยมี CEO 3 ฝ่าย: salepage หน้าร้าน และโรงงาน ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และห้องประชุม ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">อารมณ์ทีมวันนี้ <span class="fine" style="font-weight:400">(คำนวณจากผลงานจริง 7 วันล่าสุด เหตุผลอยู่ใต้ชื่อ)</span></h3>
   ${moodStrip()}
   <h3 class="h3">สายบังคับบัญชา</h3>
   <div class="org">
     <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
     <div class="tier one">${orgCard('manager')}</div><div class="conn"></div><div class="bar"></div><div class="conn"></div>
-    <div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div>
+    <div class="tier many">${orgCard('ceo_sale')}${orgCard('ceo_store')}${orgCard('factory')}</div>
   </div>
+  <h3 class="h3" style="margin-top:20px">ทีมที่ขึ้นกับพี่ต้นโดยตรง</h3>
+  <div class="org"><div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div></div>
   <h3 class="h3" style="margin-top:20px">ลูกทีมของน้องปากกา</h3>
   <div class="org"><div class="tier two">${orgCard('designer')}${orgCard('trend')}${orgCard('clip')}</div></div>
-  <h3 class="h3" style="margin-top:20px">ฝ่ายผลิต (พี่ต้นสั่งงานโดยตรง ไม่ต้องรอเจ้าของ)</h3>
-  <div class="org"><div class="tier one">${orgCard('factory')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายดูแลระบบ (รายงานคุณแดนโดยตรงเมื่อพบปัญหา)</h3>
   <div class="org"><div class="tier one">${orgCard('guard')}</div></div>
   <h3 class="h3" style="margin-top:20px">ฝ่ายการตลาด (วิจัยตลาด ส่งข้อมูลให้ทุกฝ่ายทุกเช้า)</h3>
@@ -2919,7 +2926,7 @@ function teamTab(){
       <div class="wke">${ava('analyst')}<div><div class="t">07:30</div><b>น้องบูสต์</b><div>อ่านผลแอด ต้นทุนต่อผู้ติดตามและต่อการซื้อ เสนอปรับงบ [ต้องอนุมัติ]</div></div></div>
       <div class="wke">${ava('community')}<div><div class="t">08:00 และ 21:00</div><b>น้องคอม</b><div>สรุปคอมเมนต์ใต้โพสต์ ร่างคำตอบให้คุณแดนกดส่ง ติดธงเรื่องที่พี่ต้นต้องดู</div></div></div>
       <div class="wke"><span class="ava sys">⚙</span><div><div class="t">10:00 และ 19:05</div><b>ระบบ</b><div>โพสต์ที่อนุมัติแล้วขึ้น Facebook และ Threads อัตโนมัติ วันละ 2 รอบ (โหมดเร่งผู้ติดตาม: Threads ได้ถึง 2 โพสต์ต่อวัน)</div></div></div>
-      <div class="wke">${ava('factory')}<div><div class="t">อาทิตย์ 22:00 และจันทร์ 10:00</div><b>โรงงาน</b><div>รับใบสั่งจากพี่ต้นหลังประชุม/หลังรอบตรวจ ผลิตชีท PDF เก็บไฟล์บนคลาวด์ของบริษัท แจ้งใน Slack เมื่อเสร็จ</div></div></div>
+      <div class="wke">${ava('factory')}<div><div class="t">อาทิตย์ 22:00 และจันทร์ 10:00</div><b>พี่เหล็ก (โรงงาน)</b><div>รับใบสั่งจากพี่ต้นหลังประชุม/หลังรอบตรวจ ผลิตชีท PDF เก็บไฟล์บนคลาวด์ของบริษัท แจ้งใน Slack เมื่อเสร็จ</div></div></div>
       <div class="wke">${ava('manual')}<div><div class="t">วันละ 10 นาที</div><b>คุณแดน</b><div>อ่าน Slack กดอนุมัติเฉพาะเรื่องเงิน กดส่งคำตอบคอมเมนต์ ส่งไฟล์ให้คนที่ทักแชท</div></div></div>
     </div>
     <div class="wkd"><h4>รายเดือน <span>วันที่ 1</span></h4>
