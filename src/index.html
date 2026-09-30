@@ -1703,8 +1703,15 @@ function salesChart(paidAll){
       <table><tr><th>วันที่</th><th>ออเดอร์</th><th>ยอดขาย</th></tr>${days.slice().reverse().filter(k=>map[k].n).map(k=>`<tr><td>${dmy(k)}</td><td>${map[k].n}</td><td>${baht(map[k].rev)}</td></tr>`).join('')||'<tr><td colspan="3" class="muted">ยังไม่มียอดขายในช่วงนี้</td></tr>'}</table></details>
   </div>`;
 }
+/* ออเดอร์ทดสอบ (เกณฑ์เดียวกับรายงานฝั่งเซิร์ฟเวอร์): สินค้าทดสอบ ราคาต่ำกว่า 30 สินค้าที่ไม่ได้เผยแพร่ หรืออีเมลที่คุณแดนใช้ทดลองซื้อ */
+let TEST_EM=null;
+function isTestOrd(o){
+  if(TEST_EM===null){TEST_EM=new Set();authFetch('/api/content?action=test_emails').then(j=>{if(j&&j.ok){TEST_EM=new Set(j.testEmails.map(e=>String(e).toLowerCase()));render(true);}}).catch(()=>{});}
+  const p=o.productId?getProduct(o.productId):null;
+  return /ทดสอบ|แคลคูลัส/.test(o.pname||'')||Number(o.amount)<30||!!(o.productId&&(!p||p.status!=='published'))||TEST_EM.has(String(o.email||'').trim().toLowerCase());
+}
 function ordersTab(){
-  const paidAll=D.orders.filter(o=>o.status==='paid');
+  const paidAll=D.orders.filter(o=>o.status==='paid'&&!isTestOrd(o)),nTest=D.orders.filter(o=>o.status==='paid'&&isTestOrd(o)).length;
   const now=Date.now(),day=864e5;
   const since=ms=>paidAll.filter(o=>(o.paidAt||o.created)>=now-ms);
   const sum=list=>list.reduce((a,o)=>a+(Number(o.amount)||0),0);
@@ -1713,8 +1720,8 @@ function ordersTab(){
   const byProduct=D.products.map(p=>{const l=paidAll.filter(o=>o.productId===p.id);return{p,n:l.length,rev:sum(l)};}).filter(x=>x.n).sort((a,b)=>b.rev-a.rev);
   const byCamp={};paidAll.forEach(o=>{const k=o.campaign||'(ไม่ได้มาจากแอด)';byCamp[k]=byCamp[k]||{n:0,rev:0};byCamp[k].n++;byCamp[k].rev+=Number(o.amount)||0;});
   const pool=D.orders.filter(o=>S.pfilter==='all'||o.productId===S.pfilter);
-  const list=pool.filter(o=>S.filter==='all'?true:S.filter==='paid'?o.status==='paid':o.status!=='paid').filter(o=>!S.chartDay||ymd(o.paidAt||o.created)===S.chartDay).sort((a,b)=>(b.paidAt||b.created)-(a.paidAt||a.created));
-  const chips=[['paid','ชำระแล้ว'],['unpaid','เปิดหน้าจ่ายแต่ยังไม่จ่าย'],['all','ทั้งหมด']];
+  const list=pool.filter(o=>S.filter==='test'?isTestOrd(o):!isTestOrd(o)&&(S.filter==='all'?true:S.filter==='paid'?o.status==='paid':o.status!=='paid')).filter(o=>!S.chartDay||ymd(o.paidAt||o.created)===S.chartDay).sort((a,b)=>(b.paidAt||b.created)-(a.paidAt||a.created));
+  const chips=[['paid','ชำระแล้ว'],['unpaid','เปิดหน้าจ่ายแต่ยังไม่จ่าย'],['all','ทั้งหมด'],['test','ออเดอร์ทดสอบ']];
   const kpi=(v,l,sub)=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}${sub?` · <span class="muted">${sub}</span>`:''}</div></div>`;
   return `
   ${memberDesk('finance')}
@@ -1729,6 +1736,7 @@ function ordersTab(){
     ${kpi(baht(sum(d30)),'30 วันล่าสุด',d30.length+' ออเดอร์')}
     ${kpi(baht(sum(paidAll)),'ยอดขายรวมทั้งหมด',paidAll.length+' ออเดอร์')}
   </div>
+  ${nTest?`<p class="fine" style="margin:-4px 0 12px">ยอดขายจริงเท่านั้น ไม่นับออเดอร์ทดสอบ ${nTest} รายการ (ดูได้ที่ปุ่ม "ออเดอร์ทดสอบ" ด้านล่าง)</p>`:''}
   ${salesChart(paidAll)}
   ${byProduct.length?`<div class="card" style="margin-bottom:14px"><h3 class="h3">ยอดขายแยกตามสินค้า</h3>
     ${byProduct.map(x=>`<div class="ticket"><span>${esc(x.p.name)} <span class="muted">· ${x.n} ออเดอร์</span></span><span class="val">${baht(x.rev)}</span></div>`).join('')}
