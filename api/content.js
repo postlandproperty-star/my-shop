@@ -874,9 +874,11 @@ export default async function handler(req, res) {
       const jobs = (await loadJobs()).filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
       return res.status(200).json({ ok: true, jobs });
     }
-    if (action === 'factory_order') {
-      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+    if (action === 'factory_order') { // พี่ต้นสั่ง (key) หรือคุณแดนสั่งเองจากช่องโรงงาน (แอดมิน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const body = await readBody(req);
+      if (admin) body.ordered_by = 'owner';
       if (!String(body.title || '').trim()) return res.status(400).json({ ok: false, error: 'ต้องมี title' });
       const { randomUUID } = await import('node:crypto');
       const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: String(body.ordered_by || 'manager').slice(0, 40) };

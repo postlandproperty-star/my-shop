@@ -174,6 +174,9 @@ footer{padding:28px 0 110px;text-align:center}
 .sellpick label:focus-within{outline:3px solid var(--brand);outline-offset:2px}
 .sellpick span{font-size:13px;color:var(--muted)}
 .facbox{margin:14px 0;border:2px solid var(--brand)}
+.fac{padding-top:16px}
+.fac-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+@media(max-width:600px){.bar-in{flex-wrap:wrap;row-gap:6px}#seg{width:100%}#seg button{flex:1;padding:6px 4px;font-size:13.5px;white-space:nowrap}}
 .facrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
 .facrow>div:first-child{display:flex;flex-direction:column;min-width:0}
 
@@ -1956,6 +1959,66 @@ async function facApprove(id){
   }catch(e){console.error(e);toast('ทำภาพจาก PDF ไม่สำเร็จ ('+(e.message||e)+') เพิ่มภาพเองได้ในฟอร์ม');}
   FAC.busy='';render(true);pvPost(0);
 }
+/* ===== ช่องโรงงาน: รออนุมัติ · สั่งผลิตเอง · คิวงาน (หน้าเว็บอ่านข้อมูลอย่างเดียว ไม่ใช้ AI) ===== */
+function nextFactoryRun(){ // รอบทำงานของโรงงาน (เวลาไทย) จาก SCHED
+  const s=SCHED.factory;if(!s)return null;const now=Date.now();
+  for(let d=0;d<8;d++){const base=new Date(now+BKK+d*864e5);const dow=base.getUTCDay();if(!s.dow.includes(dow))continue;
+    for(const [h,m] of s.times){const t=Date.UTC(base.getUTCFullYear(),base.getUTCMonth(),base.getUTCDate(),h,m)-BKK;if(t>now)return t;}}
+  return null;
+}
+async function factoryOrder(){
+  const f=S.fnew;S.ferr='';
+  const title=String(f.title||'').trim(),pages=Number(f.pages)||0,price=Number(f.price)||0;
+  if(title.length<4){S.ferr='ใส่ชื่อเรื่องของชีท';render(true);return;}
+  if(pages&&(pages<4||pages>400)){S.ferr='จำนวนหน้าอยู่ระหว่าง 4 ถึง 400';render(true);return;}
+  if(f.price!==''&&!(price>=0)){S.ferr='ราคาเป็นตัวเลข ใส่ 0 ถ้าแจกฟรี';render(true);return;}
+  S.fbusy=true;render(true);
+  const body={title,category:f.cat,price,audience:String(f.audience||'').trim(),notes:String(f.notes||'').trim(),purpose:price>=1?'ชีทขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'ชีทแจกฟรี'};
+  if(pages)body.pages=pages;
+  try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(j&&j.ok){S.fnew={title:'',cat:f.cat,pages:'',price:'',audience:'',notes:''};FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
+  catch(e){S.ferr='เชื่อมต่อไม่ได้';}
+  S.fbusy=false;render(true);
+}
+function factoryView(){
+  if(FJOBS===null){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
+  const f=S.fnew||(S.fnew={title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''});
+  const nx=nextFactoryRun(),jobs=FJOBS||[];
+  const cnt=k=>jobs.filter(j=>j.status===k).length;
+  const flt=S.ffilter||'active';
+  const shown=jobs.filter(j=>flt==='all'?true:flt==='active'?['queued','producing'].includes(j.status):j.status===flt);
+  const LIST={pending:['รออนุมัติลงขาย','warn'],listed:['ลงขายแล้ว','ok'],rejected:['ไม่ลงขาย','gray']};
+  const who=k=>k==='owner'?'คุณแดน':member(k||'manager').name;
+  const chips=[['active','รอ/กำลังผลิต',cnt('queued')+cnt('producing')],['done','เสร็จแล้ว',cnt('done')],['failed','ไม่สำเร็จ',cnt('failed')],['all','ทั้งหมด',jobs.length]];
+  const lb=(id,t)=>`<label for="${id}">${t}</label>`;
+  return `<div class="wrap wide fac" style="padding-bottom:60px">
+    <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">${nx?'ผลิตรอบถัดไป '+new Date(nx).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' เวลาไทย (ทุกอาทิตย์และจันทร์ 10:00 / 22:00)':'ผลิตทุกอาทิตย์และจันทร์'} · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
+      <button class="chip" data-a="toFactory">รีเฟรช</button></div>
+    ${facBox()||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
+    <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
+      <div class="field">${lb('fn-title','ชื่อเรื่อง')}<input class="input" id="fn-title" data-fn="title" value="${esc(f.title)}" placeholder="เช่น TOEIC Part 5 Tense ที่ออกบ่อย 100 ข้อ พร้อมเฉลย"></div>
+      <div class="grid2">
+        <div class="field">${lb('fn-cat','หมวด')}<select class="input" id="fn-cat" data-fn="cat">${['TOEIC Grammar','TOEIC คำศัพท์','TOEIC Listening','TOEIC Reading','TOEIC ข้อสอบเสมือนจริง','อื่นๆ'].map(c=>`<option ${f.cat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div class="field">${lb('fn-pages','จำนวนหน้า (เว้นว่างให้โรงงานกำหนด)')}<input class="input" id="fn-pages" data-fn="pages" type="number" inputmode="numeric" min="4" max="400" value="${esc(f.pages)}" placeholder="เช่น 40"></div>
+        <div class="field">${lb('fn-price','ราคาขาย (บาท) ใส่ 0 = แจกฟรี')}<input class="input" id="fn-price" data-fn="price" type="number" inputmode="numeric" min="0" value="${esc(f.price)}" placeholder="เช่น 149"></div>
+        <div class="field">${lb('fn-aud','เหมาะกับใคร')}<input class="input" id="fn-aud" data-fn="audience" value="${esc(f.audience)}" placeholder="เช่น คนที่ได้ 450–600 อยากถึง 750"></div>
+      </div>
+      <div class="field">${lb('fn-notes','รายละเอียดเพิ่ม (เนื้อหาที่ต้องมี สไตล์ ฯลฯ)')}<textarea class="input" id="fn-notes" data-fn="notes" rows="3">${esc(f.notes)}</textarea></div>
+      ${S.ferr?`<p class="err" style="margin:0 0 8px">${esc(S.ferr)}</p>`:''}
+      <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-dark" data-a="forder" ${S.fbusy?'disabled':''}>${S.fbusy?'กำลังส่ง...':'ส่งเข้าคิวโรงงาน'}</button>
+      <span class="fine">ชีทขายผลิตเสร็จแล้วจะขึ้น "รออนุมัติ" ด้านบน ยังไม่ขายจนกว่าคุณแดนกดอนุมัติ</span></div>
+    </section>
+    <section><h3 class="h3">คิวงาน</h3>
+      <div class="st-chips" role="group" aria-label="กรองงาน" style="margin-bottom:10px">${chips.map(c=>`<button class="chip" data-a="ffilter" data-v="${c[0]}" aria-pressed="${flt===c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>
+      ${S.floading?'<p class="fine">กำลังโหลด...</p>':shown.length?shown.map(j=>{const st=FSTAT[j.status]||[j.status,'gray'],ls=LIST[j.listing];const can=['queued','producing'].includes(j.status);
+        return `<div class="note-card"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(j.title)}</b><span><span class="badge ${st[1]}">${st[0]}</span>${ls?` <span class="badge ${ls[1]}">${ls[0]}</span>`:''}</span></div>
+          <div class="fine">สั่งโดย ${esc(who(j.ordered_by))} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${Number(j.price)>=1?baht(j.price):'แจกฟรี'}${j.category?' · '+esc(j.category):''}</div>
+          ${j.error?`<div class="fine" style="color:var(--bad)">${esc(j.error)}</div>`:''}
+          ${j.file_url||can?`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${j.file_url?`<a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิดไฟล์ PDF</a>`:''}${can?`<button class="btn ${S.confirm==='fc:'+j.id?'btn-danger':'btn-line'} btn-sm" data-a="fcancel" data-id="${esc(j.id)}">${S.confirm==='fc:'+j.id?'กดอีกครั้งเพื่อยกเลิก':'ยกเลิกงาน'}</button>`:''}</div>`:''}
+        </div>`;}).join(''):'<p class="fine">ไม่มีงานในหมวดนี้</p>'}
+    </section>
+  </div>`;
+}
 function productsTab(){
   if(S.edit)return productForm();
   return `
@@ -2943,11 +3006,11 @@ function render(keep){
   const isAdmin=hasAdminAccess();
   $('#bar').style.display=isAdmin?'':'none';
   $('#bar-note').innerHTML=isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a>`:'';
-  $('#seg').innerHTML=isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${v!=='admin'&&v!=='store'}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button>`:'';
+  $('#seg').innerHTML=isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button>`:'';
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
-  $('#app').innerHTML=({store:storeView,order:orderView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
+  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:storeView,order:orderView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
   if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
   document.body.style.overflow=(v==='admin'&&S.cfgOpen)?'hidden':'';
@@ -2979,6 +3042,10 @@ function act(a,el){
   switch(a){
     case 'toShop':go('shop');break;
     case 'toStore':go('store');break;
+    case 'toFactory':FJOBS=null;FAC.jobs=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
+    case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
+    case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
+    case 'forder':factoryOrder();break;
     case 'facApprove':facApprove(id);break;
     case 'facReject':if(S.confirm!=='fr:'+id){S.confirm='fr:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reject:true})}).then(j=>{if(j&&j.ok){FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==id);toast('ไม่ลงขายชีทนี้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;
     case 'scat':S.scat=el.dataset.v;render(true);break;
@@ -3266,6 +3333,7 @@ document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.ld){LEADS[ds.ld]=t.value;}
+  if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
   if(ds.bp&&S.draft&&S.draft.plans){const [k,f]=ds.bp.split('|');const pl=S.draft.plans.find(x=>x.key===k);if(pl){pl[f]=t.type==='checkbox'?t.checked:t.value;if(f==='on')render(true);}}
   if(ds.bl&&S.draft&&S.draft.planLinks){S.draft.planLinks[ds.bl]=t.value;}
   if(ds.d&&S.draft)S.draft[ds.d]=t.value;
