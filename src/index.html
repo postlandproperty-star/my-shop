@@ -43,6 +43,14 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background
 .fine{font-size:14px;color:var(--muted)}
 
 /* demo bar */
+ #pvw,#pvbtn{display:none}
+body.pv-on #pvw{display:flex;flex-direction:column;gap:8px;position:fixed;z-index:60;background:var(--bg)}
+.pvw-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pvw-phone{flex:1;min-height:0;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:var(--surface);box-shadow:0 8px 28px rgba(15,27,51,.14)}
+.pvw-phone iframe{display:block;width:100%;height:100%;border:0}
+@media(min-width:1100px){body.pv-on #pvw{top:64px;right:16px;bottom:16px;width:400px}body.pv-on #app{margin-right:432px}#pvw .pvw-x{display:none}}
+@media(max-width:1099px){body.pv-on:not(.pv-open) #pvw{display:none}body.pv-open #pvw{inset:0;padding:10px 10px 0}body.pv-open .pvw-phone{border-radius:16px 16px 0 0}body.pv-open{overflow:hidden}
+  body.pv-on:not(.pv-open) #pvbtn{display:inline-flex;position:fixed;right:16px;bottom:16px;z-index:59;box-shadow:0 6px 20px rgba(15,27,51,.25)}}
 .bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar-in{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;max-width:960px;margin:0 auto}
 .bar-note{font-size:13px;color:var(--muted);line-height:1.3}
@@ -674,6 +682,7 @@ function loadSb(){
     document.head.appendChild(t);
   });
 }
+const PV=(()=>{try{return new URLSearchParams(location.search).has('pv')&&window.parent!==window;}catch(e){return false;}})(); // หน้าตัวอย่างใน iframe ของตัวแก้สินค้า: ไม่บันทึก ไม่ยิง Pixel จ่ายเงินไม่ได้
 const hasAdminToken=()=>{try{return !!localStorage.getItem('sb-lpeqaorswhwzlplsaqpe-auth-token');}catch(e){return false;}};
 let sbSession=null,remoteReady=false,needsMigrate=false,remoteStamp='';
 const CACHE='dp-cache-v1',LEGACY='dp-demo-v3';
@@ -683,6 +692,7 @@ function load(){try{const r=localStorage.getItem(CACHE);if(r)return JSON.parse(r
 function loadLegacy(){try{const r=localStorage.getItem(LEGACY);if(r)return JSON.parse(r);}catch(e){}return null;}
 let saveWarned=false;
 function saveCache(){
+  if(PV)return;
   try{localStorage.setItem(CACHE,JSON.stringify(D));saveWarned=false;}
   catch(e){if(!saveWarned){saveWarned=true;try{toast('พื้นที่จัดเก็บในเบราว์เซอร์เต็ม ลองลดจำนวนหรือขนาดภาพ');}catch(_){}}}
 }
@@ -999,6 +1009,7 @@ function initPixel(id){
   fbq('init',String(id));pixelReady=true;
 }
 function track(name,data){
+  if(PV)return;
   if(pixelReady&&FB_EVENTS[name]&&!hasAdminAccess()){ // ไม่นับการเข้าดูของแอดมินเอง
     try{const d=Object.assign({},data||{});delete d.campaign;fbq('track',name,d);}catch(e){}
   }
@@ -1164,6 +1175,16 @@ function bundleForm(){
     <button class="btn btn-line" data-a="cancelEdit">ยกเลิก</button>
   </div>`;
 }
+function bundleData(d){ // ชุดจากช่องที่กรอกอยู่ (ยังไม่ตรวจ) ใช้ทั้งตอนบันทึกและหน้าตัวอย่างสด
+  const name=String(d.name||'').trim(),slug=String(d.slug||'').trim().toLowerCase();
+  const items=d.items.filter(id=>getProduct(id)&&!isBundle(getProduct(id)));
+  const plans=d.plans.map(x=>({key:x.key,name:x.name,on:x.key==='basic'?true:!!x.on,price:Number(x.price)||0,fullPrice:Number(x.fullPrice)||0,features:String(x.features||'')}));
+  const def=plans.find(x=>x.key===d.planDefault&&x.on)||plans.find(x=>x.on);
+  const first=getProduct(items[0]);
+  return {type:'bundle',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
+    plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
+    images:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
+}
 function saveBundleDraft(el){
   const d=S.draft,isNew=S.edit==='new',selfId=isNew?null:S.edit;
   const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase();
@@ -1172,15 +1193,10 @@ function saveBundleDraft(el){
   if(slugTaken(slug,selfId))return 'ชื่อในลิงก์นี้ถูกใช้แล้ว';
   const items=d.items.filter(id=>getProduct(id)&&!isBundle(getProduct(id)));
   if(items.length<2)return 'ชุดต้องมีอย่างน้อย 2 เล่ม';
-  const plans=d.plans.map(x=>({key:x.key,name:x.name,on:x.key==='basic'?true:!!x.on,price:Number(x.price)||0,fullPrice:Number(x.fullPrice)||0,features:String(x.features||'')}));
+  const plans=bundleData(d).plans;
   for(const x of plans)if(x.on&&!(x.price>=1))return `ใส่ราคาขายของแพ็กเกจ ${x.name}`;
   for(const k of Object.keys(d.planLinks))for(const line of String(d.planLinks[k]||'').split('\n').filter(l=>l.trim())){const i=line.lastIndexOf('|');if(i<1||!/^https:\/\//.test(line.slice(i+1).trim()))return `ไฟล์เพิ่มของแพ็กเกจ ${k}: ใช้รูปแบบ "ชื่อไฟล์ | https://ลิงก์" บรรทัดละไฟล์`;}
-  const promoEnd=d.promoEndStr?new Date(d.promoEndStr).getTime():0;
-  const def=plans.find(x=>x.key===d.planDefault&&x.on)||plans.find(x=>x.on);
-  const first=getProduct(items[0]);
-  const data={type:'bundle',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
-    plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
-    images:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
+  const data=bundleData(d);
   let saved;
   if(isNew){saved=Object.assign({id:'b'+Date.now().toString(36)},data);D.products.push(saved);}
   else{saved=getProduct(selfId);Object.assign(saved,data);}
@@ -1648,6 +1664,15 @@ function productRow(p){
     </div></details></div>`;
 }
 
+/* สินค้าจากช่องที่กรอกอยู่ (ยังไม่ตรวจ) ใช้ทั้งตอนบันทึกและหน้าตัวอย่างสด */
+function draftToProduct(d){
+  const t=k=>String(d[k]==null?'':d[k]).trim();
+  const name=t('name'),link=t('link'),sample=t('sampleLink');
+  return {slug:t('slug').toLowerCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
+    specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
+    proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
+    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink')};
+}
 function productForm(){
   if(S.draft&&S.draft.type==='bundle')return bundleForm();
   const isNew=S.edit==='new';
@@ -2734,6 +2759,7 @@ function render(keep){
     io=new IntersectionObserver(es=>{st.classList.toggle('hide',es[0].isIntersecting);},{threshold:.15});
     io.observe(cs);
   }
+  pvSync();
 }
 function go(v){
   if(v==='admin'&&!hasAdminAccess()){v='login';}
@@ -2752,6 +2778,8 @@ function act(a,el){
   const id=el.dataset.id;
   switch(a){
     case 'toShop':go('shop');break;
+    case 'pvOpen':document.body.classList.add('pv-open');pvPost(0);break;
+    case 'pvClose':document.body.classList.remove('pv-open');break;
     case 'recheckOrder':verifyOrder();break;
     case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
@@ -2978,11 +3006,7 @@ function act(a,el){
       const bumpPrice=Number(d.bumpPrice)||0;
       if(d.bumpProductId&&!(bumpPrice>=0)){S.err='ราคาพิเศษของ order bump ต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป';render(true);break;}
       if(d.bumpProductId&&d.bumpProductId===selfId){S.err='เลือกสินค้าอื่นสำหรับ order bump ไม่ใช่สินค้านี้เอง';render(true);break;}
-      const t=k=>String(d[k]==null?'':d[k]).trim();
-      const data={slug,name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price,fullPrice:full,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
-        specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
-        proof:t('proof'),promoEnd,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:d.images.slice(),previews:(d.previews||[]).slice(),
-        bumpProductId:d.bumpProductId||'',bumpPrice,stripeLink:t('stripeLink')};
+      const data=draftToProduct(d);
       if(data.stripeLink&&!/^https:\/\/buy\.stripe\.com\//.test(data.stripeLink)){S.err='ลิงก์ Stripe ต้องขึ้นต้นด้วย https://buy.stripe.com/';render(true);break;}
       let saved;
       if(isNew){saved=Object.assign({id:'p'+Date.now().toString(36)},data);D.products.push(saved);}
@@ -3036,6 +3060,7 @@ document.addEventListener('input',e=>{
   if(ds.bp&&S.draft&&S.draft.plans){const [k,f]=ds.bp.split('|');const pl=S.draft.plans.find(x=>x.key===k);if(pl){pl[f]=t.type==='checkbox'?t.checked:t.value;if(f==='on')render(true);}}
   if(ds.bl&&S.draft&&S.draft.planLinks){S.draft.planLinks[ds.bl]=t.value;}
   if(ds.d&&S.draft)S.draft[ds.d]=t.value;
+  if((ds.d||ds.bp)&&S.draft)pvPost();
   if(ds.ad&&S.ad){S.ad[ds.ad]=t.value;adLive(ds.ad);}
   if(ds.cf&&S.cfgDraft){const [mk,fk]=ds.cf.split('|');const m=S.cfgDraft.members[mk];if(m){if(fk==='__note')m.note=t.value;else m.fields[fk]=t.value;}}
   if(ds.cfg&&S.cfgDraft){S.cfgDraft.global[ds.cfg]=t.type==='checkbox'?t.checked:t.value;}
@@ -3177,6 +3202,54 @@ async function verifyOrder(){
   render(true);
   const c=document.getElementById('paid-card');if(c)c.scrollIntoView({block:'start'});
 }
+/* ---------- ตัวอย่างหน้าขายแบบสด ขณะสร้าง/แก้สินค้าหรือชุด ----------
+   หน้าจริง /?pv=1 ใน iframe ขนาดจอมือถือ รับสินค้าจากช่องที่กรอกทาง postMessage (ต้นทางเดียวกันเท่านั้น)
+   ในโหมดนี้หน้าไม่บันทึกอะไร ไม่ยิง Pixel ไม่ล็อกอิน และปุ่มจ่ายเงิน/ลิงก์ออกนอกหน้ากดไม่ได้ */
+let pvWrap=null,pvTimer=0;
+function pvData(){
+  const d=S.draft,id=S.edit==='new'?'__pv':S.edit;
+  const prod=Object.assign({id},isBundle(d)?bundleData(d):draftToProduct(d));
+  delete prod.link;delete prod.planLinks;
+  if(!(prod.price>=0))prod.price=0;
+  if(!prod.slug)prod.slug='preview';
+  const list=D.products.filter(x=>x.id!==id).map(x=>{const o=Object.assign({},x);delete o.link;delete o.planLinks;return o;});
+  list.push(prod);
+  return {type:'pv',id,products:list,settings:D.settings};
+}
+function pvPost(ms){
+  clearTimeout(pvTimer);
+  pvTimer=setTimeout(()=>{const f=document.getElementById('pvf');if(!f||!f.contentWindow||!S.draft)return;try{f.contentWindow.postMessage(pvData(),location.origin);}catch(e){console.error(e);}},ms==null?250:ms);
+}
+function pvSync(){
+  if(PV)return;
+  const on=S.view==='admin'&&S.tab==='products'&&!!S.edit&&!!S.draft;
+  document.body.classList.toggle('pv-on',on);
+  if(!on){document.body.classList.remove('pv-open');return;}
+  if(!pvWrap){
+    pvWrap=document.createElement('div');pvWrap.id='pvw';
+    pvWrap.innerHTML=`<div class="pvw-head"><div><b>👁 ตัวอย่างหน้าขาย</b><div class="fine">เปลี่ยนตามที่พิมพ์ทันที · ยังไม่บันทึก · ปุ่มจ่ายเงินกดไม่ได้</div></div><button class="btn btn-dark btn-sm pvw-x" data-a="pvClose">✏️ กลับไปแก้ไข</button></div><div class="pvw-phone"><iframe id="pvf" src="/?pv=1" title="ตัวอย่างหน้าขาย"></iframe></div>`;
+    const b=document.createElement('button');b.id='pvbtn';b.className='btn btn-cta';b.dataset.a='pvOpen';b.textContent='👁 ดูตัวอย่างหน้า';
+    document.body.appendChild(pvWrap);document.body.appendChild(b);
+  }
+  pvPost();
+}
+window.addEventListener('message',e=>{
+  if(e.origin!==location.origin)return;
+  const m=e.data||{};
+  if(!PV){const f=document.getElementById('pvf');if(m.type==='pvReady'&&f&&e.source===f.contentWindow)pvPost(0);return;}
+  if(e.source!==window.parent||m.type!=='pv'||!Array.isArray(m.products))return;
+  const first=!S.pvGot;S.pvGot=true;
+  D.products=m.products;if(m.settings)D.settings=m.settings;
+  S.productId=m.id;S.view='shop';S.loading=false;S.qr=null;
+  render(!first);
+});
+if(PV){
+  document.addEventListener('click',e=>{ // ตัวอย่างเท่านั้น: ห้ามพาไปหน้าจ่ายเงินหรือออกนอกหน้า
+    const a=e.target.closest('a[href]'),el=e.target.closest('[data-a]');
+    const blocked=(a&&!/^#/.test(a.getAttribute('href')||''))||(el&&['qrOpen','qrMake','payGo','recheckOrder','toAdmin','toShop'].includes(el.dataset.a));
+    if(blocked){e.preventDefault();e.stopImmediatePropagation();toast('นี่คือหน้าตัวอย่าง ปุ่มนี้ใช้ได้บนหน้าจริงหลังบันทึก');}
+  },true);
+}
 /* ---------- start ---------- */
 function applyUrl(){
   try{
@@ -3220,6 +3293,7 @@ document.addEventListener('visibilitychange',async()=>{
   S.loading=!inline&&!load(); // ไม่มีข้อมูลฝังและไม่มีแคช: รอโหลดจากระบบก่อน
   applyUrl();
   render(false);
+  if(PV){S.loading=!S.pvGot;render(false);try{window.parent.postMessage({type:'pvReady'},location.origin);}catch(e){}return;}
   if(wantAdmin||!inline){ // แอดมิน (หรือหน้าที่ไม่มีข้อมูลฝัง เช่นเปิดไฟล์ตรงๆ) ค่อยโหลดไลบรารีและดึงจากระบบ
     try{
       await loadSb();
