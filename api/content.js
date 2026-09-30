@@ -211,6 +211,20 @@ async function addTodo({ text, type = 'do', from = 'manager', link = null }) {
 }
 // ตั้งค่าทีมจากคุณแดน (shop_state id=team_cfg): global {todo_hours, manager_money, team_note}, members {<source>: {paused, note, fields:[{k,label,value}]}}
 // รูปแบบคอนเทนต์ที่คุณแดนสั่งเพิ่ม: ขึ้นบนกระดานทีมของทุกคนทุกรอบ (น้องปากกา น้องคลิป พี่ต้นใช้ตรวจ)
+const RL_GUIDE = `== ReadLab คู่มือแบรนด์ (คุณแดนอนุมัติ 1 ต.ค. 2569) ==
+ReadLab = เพจ Facebook + Threads เรื่องการอ่าน แยกจาก SheetLab ตอนนี้ยังไม่ขายอะไร เป้าหมายเดียวคือสร้างผู้ติดตามจริง (คนกดติดตาม แชร์ เซฟ คอมเมนต์) ถ้าผู้ติดตามเยอะค่อยขยายเป็นร้านหนังสือ
+กลุ่มเป้าหมาย: คนไทยวัยทำงาน 22-40 ที่อยากอ่านหนังสือมากขึ้น แต่ไม่มีเวลาหรืออ่านไม่จบ
+น้ำเสียง: อบอุ่น จริงใจ เหมือนเพื่อนที่ชอบอ่าน ไม่สั่งสอน ไม่ขายของ ประโยคสั้น เว้นบรรทัดให้อ่านง่ายบนมือถือ อิโมจิได้ไม่เกิน 2 ตัวต่อโพสต์
+3 เสาหลัก (สัดส่วนต่อสัปดาห์โดยประมาณ):
+1) quote ข้อคิดจากการอ่าน 40%: ข้อคิดที่ทีมเขียนเองเป็นภาษาไทย จากประสบการณ์การอ่าน ห้ามแต่งคำคมแล้วอ้างว่าเป็นคำพูดของคนดังหรือนักเขียน ถ้าจะยกประโยคจากหนังสือจริง ได้ไม่เกิน 1 ประโยคสั้น (≤ 20 คำ) พร้อมชื่อหนังสือและผู้เขียน และต้องมั่นใจว่ามีอยู่จริง (ไม่มั่นใจ = ไม่ยก)
+2) book แนะนำหนังสือ/รีวิวสั้น 30%: หนังสือที่มีอยู่จริง ตรวจชื่อเรื่อง ผู้เขียน (และชื่อฉบับแปลไทยถ้ามี) ด้วย WebSearch ก่อนทุกครั้ง บอกว่าเหมาะกับใคร ได้อะไร 2-3 ข้อด้วยคำพูดของเราเอง ห้ามสรุปเนื้อหาทั้งเล่มจนแทนการซื้อได้ ห้ามคัดลอกคำโปรยหรือรีวิวของคนอื่น ห้ามใส่ราคาหรือลิงก์ขาย ห้ามอ้างยอดขายหรือรางวัลที่ไม่ได้ตรวจ ใส่ชื่อหนังสือในช่อง book
+3) habit นิสัยการอ่าน/พัฒนาตัว 30%: เทคนิคอ่านให้จบ จัดเวลาอ่าน ชาเลนจ์อ่าน 30 วัน วิธีเลือกเล่ม จดโน้ต เปลี่ยนเวลาเล่นมือถือเป็นเวลาอ่าน
+เสริม question ชวนคุย: คำถามที่ตอบง่าย เช่น "เล่มล่าสุดที่อ่านจบคือเล่มไหน" "หนังสือที่เปลี่ยนความคิดคุณ" ใช้ได้สัปดาห์ละ 2-3 ชิ้น
+ช่องทาง: facebook 250-900 ตัวอักษร ขึ้นต้นด้วยประโยคหยุดนิ้ว 1 บรรทัด ปิดด้วยคำถามชวนคอมเมนต์หรือชวนเซฟ · threads ไม่เกิน 500 ตัวอักษร สั้น คม ขึ้นต้นแรง ไม่ต้องใส่แฮชแท็ก (facebook ใส่ได้ไม่เกิน 3 เช่น #ReadLab #อ่านหนังสือ)
+รูป: การ์ดสี่เหลี่ยม 4:5 โทนอบอุ่น ครีม #FFF8EE น้ำตาลเข้ม #2B2118 ส้มอิฐ #D9653B เขียวป่า #2F5D50 ภาพประกอบจาก Canva ไม่มีรูปคนจริง ไม่ใช้ปกหนังสือจริง (ลิขสิทธิ์) ข้อความบนการ์ดใช้ตัวอักษรไทยที่เราวางเองด้วยโค้ด
+ห้าม: เนื้อหาการเมือง ศาสนา เรื่องอ่อนไหว ข่าวปลอม อ้างสุขภาพ/การเงินเกินจริง พูดถึง SheetLab หรือขายของ ใช้ชื่อหรือรูปบุคคลจริงโดยไม่จำเป็น คัดลอกโพสต์ของเพจอื่น
+คุณแดนเป็นคนอนุมัติทุกโพสต์ในแท็บ คอนเทนต์ > ReadLab (ช่วงนี้ยังไม่เชื่อมเพจ คุณแดนคัดลอกไปโพสต์เองแล้วกด "โพสต์แล้ว")
+ดู recent: status rejected = คุณแดนไม่เอา, edited = คุณแดนแก้ก่อนโพสต์, owner_note = คำติชม ให้เรียนรู้จากสิ่งเหล่านี้`;
 const FORMAT_BOARD = `== รูปแบบคอนเทนต์ที่คุณแดนสั่งเพิ่ม (30 ก.ย. 2569) ใช้ทุกสัปดาห์ ==
 เป้าหมาย: ดึงคนเข้าเว็บ sheetlabth.com (คลังความรู้ /learn และคลังข้อสอบ /quiz) และเรียกคอมเมนต์ให้โพสต์ไปไกล
 คำสั่งคุณแดน 1 ต.ค. 2569: ผลิตคอนเทนต์ให้เยอะขึ้นและกระจายหมวด ทุกโพสต์ คลิป และบทความ ให้ TOEIC ประมาณครึ่งหนึ่ง อีกครึ่งสลับ IELTS, TGAT, สอบ ก.พ., ภาษาอังกฤษทำงาน/สัมภาษณ์งาน/สนทนา (ห้าม Excel/AI หรือเรื่องที่ไม่ใช่ภาษาอังกฤษ) ทำเต็มโควตาทุกช่องทาง ถ้าวันไหนมีบทความใหม่ในคลังความรู้ ให้มีโพสต์ tip ชวนอ่านบทความนั้นอย่างน้อย 1 โพสต์ใน Facebook หรือ Threads ภายใน 2 วัน
@@ -806,6 +820,103 @@ export default async function handler(req, res) {
         if (!b64) return res.status(502).json({ ok: false, error: 'OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง' });
         return res.status(200).json({ ok: true, image: `data:image/png;base64,${b64}` });
       } catch (e) { return res.status(502).json({ ok: false, error: 'เชื่อมต่อ OpenAI ไม่ได้: ' + String(e.message || e).slice(0, 120) }); }
+    }
+    if (action.startsWith('rl_')) {
+      // ReadLab: เพจหนังสือ/การอ่านแยกจาก SheetLab (สร้างผู้ติดตามก่อน) · ข้อมูลอยู่แถว shop_state readlab แยกจากตาราง posts
+      // จึงไม่มีทางหลุดไปโพสต์บนเพจ SheetLab · ทีม ReadLab ใช้ key · คุณแดนอนุมัติ/แก้/ปัดตก/บันทึกผู้ติดตามในแท็บคอนเทนต์ > ReadLab
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      const isKey = keyOk(req);
+      if (!admin && !isKey) return res.status(401).json({ ok: false, error: 'bad key' });
+      const RL_TEAM = { rl_lead: 'พี่บุ๊ค', rl_writer: 'น้องมิว', rl_design: 'น้องพิกเซล', rl_clip: 'น้องรีล' };
+      const RL_KIND = { quote: 'ข้อคิดจากการอ่าน', book: 'แนะนำหนังสือ', habit: 'นิสัยการอ่าน', question: 'ชวนคุย', reel: 'คลิป Reels' };
+      const RL_PREFIX = `${SB_URL}/storage/v1/object/public/product-images/readlab/`;
+      const rows = await sb('shop_state?id=eq.readlab&select=data'); const D = rows?.[0]?.data || {};
+      D.posts = D.posts || []; D.notes = D.notes || []; D.cfg = D.cfg || {}; D.followers = D.followers || {};
+      const save = () => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'readlab', data: D, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      const now = new Date().toISOString();
+      const media = (u) => { const x = String(u || '').trim(); return x.startsWith(RL_PREFIX) && /^[A-Za-z0-9._\/-]+$/.test(x.slice(RL_PREFIX.length)) ? x : ''; };
+      if (action === 'rl_board' || action === 'rl_list') {
+        const posts = D.posts.slice(-300);
+        const count = (st) => posts.filter((x) => x.status === st).length;
+        const fdays = Object.keys(D.followers).sort().slice(-30).map((d) => ({ date: d, ...D.followers[d] }));
+        const out = { ok: true, cfg: D.cfg, followers: fdays, counts: { draft: count('draft'), approved: count('approved'), published: count('published'), rejected: count('rejected') }, notes: D.notes.slice(-12) };
+        if (action === 'rl_list') { if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' }); return res.status(200).json({ ...out, posts }); }
+        // ทีมเห็นโพสต์ล่าสุด 60 ชิ้น (กันซ้ำ) + สิ่งที่คุณแดนปัดตก/แก้ (เรียนรู้รสนิยม)
+        return res.status(200).json({ ...out, guide: RL_GUIDE, team: RL_TEAM, kinds: RL_KIND,
+          recent: posts.slice(-60).map((x) => ({ id: x.id, by: x.source, channel: x.channel, kind: x.kind, status: x.status, has_media: !!(x.image_url || x.video_url), text: String(x.text).slice(0, 160), book: x.book || '', owner_note: x.owner_note || '', edited: !!x.edited })),
+          need_image: posts.filter((x) => x.status === 'draft' && x.channel === 'facebook' && x.kind !== 'reel' && !x.image_url).map((x) => ({ id: x.id, kind: x.kind, text: x.text, book: x.book || '' })).slice(0, 8) });
+      }
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      const body = await readBody(req);
+      if (action === 'rl_media') { // signed URL อัปโหลดรูป/คลิปของ ReadLab
+        const ext = ({ png: 'png', jpg: 'jpg', jpeg: 'jpg', webp: 'webp', mp4: 'mp4' })[String(body.ext || 'png').toLowerCase()];
+        if (!ext) return res.status(400).json({ ok: false, error: 'ext ต้องเป็น png jpg webp หรือ mp4' });
+        const { randomUUID } = await import('node:crypto');
+        const path = `readlab/${now.slice(0, 10)}-${randomUUID().slice(0, 8)}.${ext}`;
+        const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status}` });
+        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, url: `${RL_PREFIX}${path.slice(8)}`, content_type: ext === 'mp4' ? 'video/mp4' : ext === 'jpg' ? 'image/jpeg' : `image/${ext}` });
+      }
+      if (action === 'rl_post') { // ทีมส่งร่างโพสต์ (สูงสุด 10 ชิ้นต่อครั้ง) → รอคุณแดนอนุมัติ
+        const src = RL_TEAM[body.source] ? String(body.source) : 'rl_writer';
+        const seen = new Set(D.posts.map((x) => String(x.text).replace(/\s+/g, '').slice(0, 80)));
+        const added = [], errors = [];
+        for (const x of (Array.isArray(body.posts) ? body.posts : []).slice(0, 10)) {
+          const channel = x?.channel === 'threads' ? 'threads' : 'facebook';
+          const text = String(x?.text || '').replace(/\r/g, '').trim();
+          const kind = RL_KIND[x?.kind] ? x.kind : 'quote';
+          const max = channel === 'threads' ? 500 : 2000;
+          if (text.length < 20 || text.length > max) { errors.push(`ข้อความต้องยาว 20-${max} ตัวอักษร (${channel})`); continue; }
+          const key = text.replace(/\s+/g, '').slice(0, 80); if (seen.has(key)) { errors.push('ซ้ำกับโพสต์เดิม'); continue; } seen.add(key);
+          if ((x.image_url && !media(x.image_url)) || (x.video_url && !media(x.video_url))) { errors.push('รูป/คลิปต้องอัปโหลดผ่าน rl_media'); continue; }
+          const id = 'rl' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+          D.posts.push({ id, source: src, channel, kind, text, image_url: media(x.image_url) || null, video_url: media(x.video_url) || null, book: String(x.book || '').slice(0, 160), notes: String(x.notes || '').slice(0, 400), scheduled_at: /^\d{4}-\d\d-\d\d/.test(String(x.scheduled_at || '')) ? String(x.scheduled_at) : null, status: 'draft', created_at: now });
+          added.push(id);
+        }
+        D.posts = D.posts.filter((x) => x.status !== 'rejected').slice(-350).concat(D.posts.filter((x) => x.status === 'rejected').slice(-50)).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+        await save();
+        return res.status(200).json({ ok: added.length > 0, added, errors });
+      }
+      if (action === 'rl_attach') { // น้องพิกเซล/น้องรีลผูกรูปหรือคลิปกับร่างที่มีอยู่
+        const x = D.posts.find((y) => y.id === String(body.id || ''));
+        if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบโพสต์' });
+        if (x.status === 'published') return res.status(400).json({ ok: false, error: 'โพสต์แล้ว แก้ไม่ได้' });
+        const img = media(body.image_url), vid = media(body.video_url);
+        if (!img && !vid) return res.status(400).json({ ok: false, error: 'ต้องมี image_url หรือ video_url จาก rl_media' });
+        if (img) x.image_url = img; if (vid) x.video_url = vid; x.media_by = RL_TEAM[body.source] ? String(body.source) : 'rl_design'; x.updated_at = now;
+        await save(); return res.status(200).json({ ok: true, id: x.id });
+      }
+      if (action === 'rl_note') { // แผนสัปดาห์/รายงานของพี่บุ๊ค
+        const text = String(body.text || '').trim().slice(0, 4000);
+        if (text.length < 20) return res.status(400).json({ ok: false, error: 'ข้อความสั้นเกินไป' });
+        D.notes.push({ by: RL_TEAM[body.source] ? String(body.source) : 'rl_lead', kind: body.kind === 'report' ? 'report' : 'plan', text, at: now }); D.notes = D.notes.slice(-40);
+        await save(); return res.status(200).json({ ok: true });
+      }
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (action === 'rl_update') { // คุณแดน: approve | reject | edit | posted | unpost | delete
+        const x = D.posts.find((y) => y.id === String(body.id || ''));
+        if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบโพสต์' });
+        const op = String(body.op || '');
+        if (typeof body.text === 'string' && body.text.trim() && body.text.trim() !== x.text) { x.text = body.text.trim().slice(0, 2200); x.edited = true; }
+        if ('scheduled_at' in body) x.scheduled_at = body.scheduled_at ? String(body.scheduled_at) : null;
+        if (typeof body.owner_note === 'string') x.owner_note = body.owner_note.slice(0, 300);
+        if (op === 'approve') x.status = 'approved';
+        else if (op === 'reject') x.status = 'rejected';
+        else if (op === 'posted') { x.status = 'published'; x.published_at = now; }
+        else if (op === 'unpost') { x.status = 'approved'; delete x.published_at; }
+        else if (op === 'delete') D.posts = D.posts.filter((y) => y.id !== x.id);
+        x.updated_at = now; await save();
+        return res.status(200).json({ ok: true, post: op === 'delete' ? null : x });
+      }
+      if (action === 'rl_cfg') { // ชื่อเพจ/บัญชี Threads + บันทึกยอดผู้ติดตาม (กรอกเองจนกว่าจะเชื่อม API)
+        if (typeof body.fb_page === 'string') D.cfg.fb_page = body.fb_page.trim().slice(0, 200);
+        if (typeof body.threads === 'string') D.cfg.threads = body.threads.trim().replace(/^@/, '').slice(0, 60);
+        if (body.fb != null || body.th != null) { const d = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); D.followers[d] = { fb: Math.max(0, Number(body.fb) || 0), th: Math.max(0, Number(body.th) || 0) }; }
+        D.cfg.updated_at = now; await save();
+        return res.status(200).json({ ok: true, cfg: D.cfg });
+      }
+      return res.status(400).json({ ok: false, error: 'unknown rl action' });
     }
     if (action === 'article_imageurl' || action === 'article_image') {
       // รูปปกบทความคลังความรู้ (ทีมคอนเทนต์ทำจาก Canva): article_imageurl ขอ signed URL อัปโหลดเข้าคลังรูปร้าน · article_image ผูกรูปกับบทความ

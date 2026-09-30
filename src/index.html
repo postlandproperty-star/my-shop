@@ -183,6 +183,14 @@ footer{padding:28px 0 110px;text-align:center}
 .vis-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.vis-cell{background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;min-width:0}.vis-cell span{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vis-cell b{font-size:18px}.vis-cell small{font-size:12px;color:var(--muted)}
 .vis-top{border:0!important;padding:0!important;margin:0!important;background:transparent!important}.vis-top ol{margin:6px 0 0;padding-left:20px;font-size:14px}
 @media(max-width:420px){.vis-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.brand-seg{display:inline-flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 0 12px}.brand-seg button{font:inherit;font-weight:600;border:0;background:transparent;border-radius:999px;padding:7px 16px;cursor:pointer;color:var(--ink)}.brand-seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}.brand-seg .nb{background:#e5484d;color:#fff;border-radius:999px;padding:0 7px;font-size:12px;margin-left:2px}
+.rl-head{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;background:linear-gradient(180deg,#fff8ee,var(--surface))}
+.rl-teamd summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;font-size:14px;font-weight:600}.rl-teamd summary::-webkit-details-marker{display:none}.rl-teamd[open] summary{margin-bottom:8px}.rl-avs{display:flex;flex:none}.rl-avs img{border-radius:50%;border:2px solid var(--surface);margin-left:-8px}.rl-avs img:first-child{margin-left:0}
+.rl-team{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}.rl-mem{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}.rl-mem img{border-radius:50%;flex:none}.rl-mem span{display:flex;flex-direction:column;min-width:0}.rl-mem small{font-size:12.5px;line-height:1.4}
+.rl-fol{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px}.rl-cfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;align-items:end}.rl-cfg label{display:flex;flex-direction:column;gap:4px}
+.rl-setup,.rl-plan{background:var(--bg);border-radius:12px;padding:8px 12px}.rl-setup summary,.rl-plan summary{cursor:pointer;font-weight:600}.rl-setup ol{margin:6px 0 0;padding-left:20px;line-height:1.7;font-size:14px}
+.post img.rl-by{width:22px!important;height:22px!important;min-width:0;border-radius:50%;object-fit:cover;margin:0;flex:none;aspect-ratio:auto}
+.rl-noimg{display:flex!important;align-items:center;justify-content:center;background:var(--bg);font-size:26px;opacity:.6}
 .switch{position:relative;display:inline-block;width:52px;height:30px;flex-shrink:0}.switch input{opacity:0;width:0;height:0}.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.15s;cursor:pointer}.switch span:before{content:'';position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}.switch input:checked+span{background:var(--ok)}.switch input:checked+span:before{transform:translateX(22px)}.switch input:focus-visible+span{outline:3px solid var(--brand);outline-offset:2px}
 .autobox.on{border:2px solid var(--ok)}.auto-sets{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:14.5px}.auto-sets label{display:flex;gap:6px;align-items:center}
 .prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--ok)}
@@ -2597,7 +2605,79 @@ function meetingTab(){
   </div>
   ${!postsLoaded?'<p class="fine">กำลังโหลด...</p>':teamFeed(notes)}`;
 }
+/* ReadLab: เพจการอ่านแยกจาก SheetLab (สร้างผู้ติดตามก่อน) ข้อมูลจาก action=rl_list ไม่ปนกับคิวโพสต์ SheetLab */
+const RL={data:null,loading:false};
+const RL_TEAM={
+  rl_lead:{name:'พี่บุ๊ค',role:'หัวหน้าทีม ReadLab · วางแผนธีมรายสัปดาห์ เขียนโพสต์ชวนคุย ดูยอดผู้ติดตาม',sched:'ทุกอาทิตย์ 19:00',img:AV+'accessoriesProbability=100&seed=rlbook&top=shortWaved&hairColor=4a312c&accessories=round&clothing=collarAndSweater&clothesColor=2f5d50&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=edb98a&backgroundColor=e7dcc8'},
+  rl_writer:{name:'น้องมิว',role:'นักเขียน ReadLab · ข้อคิดจากการอ่าน แนะนำหนังสือ นิสัยการอ่าน',sched:'จันทร์ พุธ ศุกร์ 09:00',img:AV+'accessoriesProbability=0&seed=rlmew&top=longButNotTooLong&hairColor=2c1b18&clothing=hoodie&clothesColor=d9653b&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fde2cf'},
+  rl_design:{name:'น้องพิกเซล',role:'นักออกแบบ ReadLab · การ์ดคำคมและภาพประกอบจาก Canva',sched:'จันทร์ พุธ ศุกร์ 11:00',img:AV+'accessoriesProbability=0&seed=rlpixel&top=bun&hairColor=b58143&clothing=overall&clothesColor=ffafb9&eyes=happy&eyebrows=upDownNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fbe7ef'},
+  rl_clip:{name:'น้องรีล',role:'ทำคลิปสั้น ReadLab · Reels ข้อคิดจากหนังสือ',sched:'อังคาร เสาร์ 10:30',img:AV+'accessoriesProbability=100&seed=rlreel&top=shortCurly&hairColor=2c1b18&accessories=sunglasses&clothing=graphicShirt&clothesColor=2f5d50&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=d7eadf'},
+};
+const RL_KIND={quote:'ข้อคิดจากการอ่าน',book:'แนะนำหนังสือ',habit:'นิสัยการอ่าน',question:'ชวนคุย',reel:'คลิป Reels'};
+function loadRL(){if(RL.loading)return;RL.loading=true;adminApi('/api/content?action=rl_list').then(j=>{RL.data=j&&j.ok?j:{posts:[],notes:[],followers:[],cfg:{},counts:{}};}).catch(()=>{RL.data={posts:[],notes:[],followers:[],cfg:{},counts:{},err:1};}).then(()=>{RL.loading=false;render(true);});}
+function rlApi(action,body){return authFetch('/api/content?action='+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
+function readlabView(){
+  if(!RL.data){loadRL();return '<p class="fine">กำลังโหลด ReadLab...</p>';}
+  const d=RL.data,cfg=d.cfg||{},posts=(d.posts||[]).slice().reverse();
+  const f=S.rlf||'queue',exp=S.rlexp||{};
+  const inQ=x=>x.status==='draft'||x.status==='approved';
+  const cnt={queue:posts.filter(inQ).length,published:posts.filter(x=>x.status==='published').length,rejected:posts.filter(x=>x.status==='rejected').length,all:posts.length};
+  const list=posts.filter(x=>f==='queue'?inQ(x):f==='all'?true:x.status===f).sort((a,b)=>f==='queue'?((a.status==='draft'?0:1)-(b.status==='draft'?0:1)):0);
+  const num=n=>Number(n||0).toLocaleString('th-TH');
+  const fl=d.followers||[],last=fl[fl.length-1],prev=fl.length>1?fl[fl.length-2]:null;
+  const dlt=(a,b)=>{const x=(a||0)-(b||0);return prev&&x?`<em class="vs ${x>0?'good':'bad'}">${x>0?'+':'−'}${Math.abs(x)}</em>`:'';};
+  const plan=(d.notes||[]).filter(n=>n.kind==='plan').slice(-1)[0];
+  const ST={draft:['รออนุมัติ','warn'],approved:['อนุมัติแล้ว รอโพสต์','ok'],published:['โพสต์แล้ว','gray'],rejected:['ปัดตก','gray']};
+  const card=x=>{const open=!!exp[x.id],st=ST[x.status]||[x.status,'gray'],m=RL_TEAM[x.source]||{name:x.source,img:AV+'seed='+x.source},ed=x.status!=='published';
+    const media=x.video_url?`<video class="${open?'':'thumb'}" src="${esc(x.video_url)}${open?'':'#t=0.5'}" ${open?'controls':'muted'} playsinline preload="metadata" style="${open?'width:100%;max-height:420px;border-radius:12px;background:#000':''}"></video>`:x.image_url?`<img class="${open?'':'thumb'}" src="${esc(x.image_url)}" alt="" loading="lazy" style="${open?'width:100%;border-radius:12px':''}">`:(x.channel==='facebook'&&x.kind!=='reel'?'<span class="noimg" title="น้องพิกเซลจะทำรูปให้รอบถัดไป">🖼️<br>รอรูป</span>':'<span class="noimg" title="โพสต์ข้อความล้วน">💬<br>ข้อความ</span>');
+    return `<div class="post ${open?'':'compact'}">${media}<div>
+      <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="badge gray">${x.channel==='threads'?'Threads':'Facebook'}</span> <span class="fine">${esc(RL_KIND[x.kind]||x.kind)}</span></span><span class="fine row" style="gap:6px"><img class="rl-by" src="${m.img}" alt="" width="22" height="22">${esc(m.name)}</span></div>
+      ${x.book?`<p class="fine" style="margin:4px 0 0">📖 ${esc(x.book)}</p>`:''}
+      ${open&&ed?`<textarea class="input" id="rlt-${x.id}" style="margin-top:8px;min-height:180px">${esc(x.text)}</textarea><input class="input" id="rln-${x.id}" placeholder="คำติชมถึงทีม (ไม่บังคับ) เช่น สั้นกว่านี้ได้" value="${esc(x.owner_note||'')}" style="margin-top:6px">`:open?`<p style="white-space:pre-wrap;margin-top:8px">${esc(x.text)}</p>`:`<p class="ptxt" data-a="rlexp" data-id="${x.id}">${esc(x.text)}</p>`}
+      ${open&&x.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจาก ${esc(m.name)}: ${esc(x.notes)}</p>`:''}
+      <div class="acts">
+        ${x.status==='draft'?`<button class="btn btn-cta btn-sm" data-a="rlop" data-op="approve" data-id="${x.id}">อนุมัติ</button>`:''}
+        ${x.status==='approved'?`<button class="btn btn-dark btn-sm" data-a="rlop" data-op="posted" data-id="${x.id}">โพสต์แล้ว ✓</button>`:''}
+        ${x.status==='draft'||x.status==='approved'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="reject" data-id="${x.id}">ปัดตก</button>`:''}
+        ${x.status==='rejected'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="approve" data-id="${x.id}">เอากลับมา อนุมัติ</button>`:''}
+        ${x.status==='published'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="unpost" data-id="${x.id}">ยังไม่ได้โพสต์</button>`:''}
+        ${open&&ed?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="save" data-id="${x.id}">บันทึกที่แก้</button>`:''}
+        <button class="btn btn-line btn-sm" data-a="rlcopy" data-id="${x.id}">คัดลอกข้อความ</button>
+        ${open&&(x.image_url||x.video_url)?`<a class="btn btn-line btn-sm" href="${esc(x.video_url||x.image_url)}" download target="_blank" rel="noopener noreferrer">${x.video_url?'เปิดคลิป':'เปิดรูป'}</a>`:''}
+        <button class="btn btn-line btn-sm" data-a="rlexp" data-id="${x.id}">${open?'ย่อ':ed?'แก้ไข / ดูเต็ม':'ดูเต็ม'}</button>
+      </div></div></div>`;};
+  const connected=!!(cfg.fb_page||cfg.threads);
+  return `
+  <div class="card rl-head">
+    <div class="row" style="justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">📚 ReadLab</h3><span class="fine">เพจการอ่าน · สร้างผู้ติดตามก่อน ยังไม่ขายของ · แยกจาก SheetLab ทั้งหมด</span></div>
+    <details class="rl-teamd"><summary><span class="rl-avs">${Object.values(RL_TEAM).map(m=>`<img src="${m.img}" alt="" width="32" height="32">`).join('')}</span><span>ทีม ReadLab ${Object.keys(RL_TEAM).length} คน · ${Object.values(RL_TEAM).map(m=>esc(m.name)).join(' ')}</span></summary>
+      <div class="rl-team">${Object.entries(RL_TEAM).map(([k,m])=>`<div class="rl-mem"><img src="${m.img}" alt="" width="44" height="44"><span><b>${esc(m.name)}</b><small>${esc(m.role)}</small><small class="fine">🕘 ${esc(m.sched)}</small></span></div>`).join('')}</div></details>
+    <div class="rl-fol">
+      <span>👥 ผู้ติดตาม ${last?`Facebook <b>${num(last.fb)}</b> ${dlt(last.fb,prev&&prev.fb)} · Threads <b>${num(last.th)}</b> ${dlt(last.th,prev&&prev.th)} <span class="fine">(${esc(last.date)})</span>`:'<span class="fine">ยังไม่มีข้อมูล</span>'}</span>
+      <button class="btn btn-line btn-sm" data-a="rlcfgOpen">${S.rlcfg?'ปิด':'อัปเดตยอด / ตั้งค่าเพจ'}</button>
+    </div>
+    ${S.rlcfg?`<div class="rl-cfg">
+      <label class="fine">ชื่อเพจ Facebook<input class="input" id="rl-fbp" value="${esc(cfg.fb_page||'')}" placeholder="เช่น ReadLab - ห้องทดลองการอ่าน"></label>
+      <label class="fine">บัญชี Threads<input class="input" id="rl-thu" value="${esc(cfg.threads||'')}" placeholder="เช่น readlab.th"></label>
+      <label class="fine">ผู้ติดตาม Facebook วันนี้<input class="input" id="rl-fb" type="number" min="0" inputmode="numeric" value="${last?last.fb:''}"></label>
+      <label class="fine">ผู้ติดตาม Threads วันนี้<input class="input" id="rl-th" type="number" min="0" inputmode="numeric" value="${last?last.th:''}"></label>
+      <button class="btn btn-dark btn-sm" data-a="rlcfgSave">บันทึก</button></div>`:''}
+    ${!connected?`<details class="rl-setup"><summary>ยังไม่มีเพจ ReadLab — วิธีเริ่ม (กดดู)</summary><ol>
+      <li>สร้างเพจ Facebook ใหม่ชื่อ ReadLab (ใช้บัญชี Facebook ของคุณแดน) และสมัคร Threads ใหม่อีกบัญชี (Threads ใช้บัญชี Instagram เป็นตัวตั้งต้น)</li>
+      <li>กด "อัปเดตยอด / ตั้งค่าเพจ" ด้านบน ใส่ชื่อเพจกับชื่อบัญชี Threads</li>
+      <li>ช่วงแรก: อนุมัติโพสต์ในคิวด้านล่าง กด "คัดลอกข้อความ" + "เปิดรูป" ไปโพสต์เอง แล้วกด "โพสต์แล้ว ✓"</li>
+      <li>พอพร้อม บอก Claude ให้เชื่อมเพจและ Threads เพื่อโพสต์อัตโนมัติเหมือน SheetLab</li></ol></details>`:''}
+    ${plan?`<details class="rl-plan"><summary>📝 แผนสัปดาห์จากพี่บุ๊ค · ${new Date(plan.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</summary><p style="white-space:pre-wrap;margin:6px 0 0">${esc(plan.text)}</p></details>`:''}
+  </div>
+  <div class="chips" role="group" aria-label="กรองโพสต์ ReadLab">${[['queue','คิว'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']].map(([k,l])=>`<button class="chip" data-a="rlf" data-v="${k}" aria-pressed="${f===k}">${l} ${cnt[k]}</button>`).join('')}<button class="chip" data-a="rlRefresh">รีเฟรช</button></div>
+  ${list.length?list.map(card).join(''):`<p class="card fine">${f==='queue'?'ยังไม่มีโพสต์ในคิว ทีม ReadLab จะเริ่มส่งร่างในรอบถัดไป (น้องมิว จันทร์ พุธ ศุกร์ 09:00)':'ยังไม่มีโพสต์'}</p>`}`;
+}
 function contentTab(){
+  const brandBar=`<div class="brand-seg" role="group" aria-label="เลือกเพจ"><button data-a="cbrand" data-v="sheetlab" aria-pressed="${S.cbrand!=='readlab'}">SheetLab</button><button data-a="cbrand" data-v="readlab" aria-pressed="${S.cbrand==='readlab'}">📚 ReadLab${RL.data&&RL.data.counts&&RL.data.counts.draft?` <span class="nb">${RL.data.counts.draft}</span>`:''}</button></div>`;
+  if(S.cbrand==='readlab')return brandBar+readlabView();
+  return brandBar+sheetlabContent();
+}
+function sheetlabContent(){
   if(!postsLoaded&&!postsLoading){postsLoading=true;Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).catch(()=>{}).finally(()=>{postsLoading=false;postsLoaded=true;render(true);});}
   const f=S.cfilter||'queue';
   const all=POSTS.filter(p=>p.status!=='note'&&p.status!=='log');
@@ -3426,6 +3506,16 @@ function act(a,el){
     case 'qrCancel':{qrStop();const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;qrPaint();break;}
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
+    case 'cbrand':S.cbrand=el.dataset.v;if(S.cbrand==='readlab'&&!RL.data)loadRL();render(true);break;
+    case 'rlf':S.rlf=el.dataset.v;render(true);break;
+    case 'rlexp':{S.rlexp=S.rlexp||{};if(S.rlexp[id])delete S.rlexp[id];else S.rlexp[id]=1;render(true);break;}
+    case 'rlRefresh':RL.data=null;loadRL();render(true);break;
+    case 'rlcfgOpen':S.rlcfg=!S.rlcfg;render(true);break;
+    case 'rlcopy':{const x=(RL.data&&RL.data.posts||[]).find(y=>y.id===id);const t=$('#rlt-'+id);copyText((t?t.value:x&&x.text)||'','คัดลอกข้อความแล้ว');break;}
+    case 'rlcfgSave':{const b={fb_page:$('#rl-fbp').value,threads:$('#rl-thu').value};const fb=$('#rl-fb').value,th=$('#rl-th').value;if(fb!==''||th!==''){b.fb=Number(fb)||0;b.th=Number(th)||0;}
+      rlApi('rl_cfg',b).then(j=>{if(j&&j.ok){S.rlcfg=false;RL.data=null;loadRL();toast('บันทึกแล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
+    case 'rlop':{const op=el.dataset.op,t=$('#rlt-'+id),n=$('#rln-'+id);const b={id,op:op==='save'?'':op};if(t)b.text=t.value;if(n)b.owner_note=n.value;
+      rlApi('rl_update',b).then(j=>{if(j&&j.ok){const L=RL.data.posts,i=L.findIndex(y=>y.id===id);if(i>=0&&j.post)L[i]=j.post;RL.data.counts=RL.data.counts||{};RL.data.counts.draft=L.filter(y=>y.status==='draft').length;if(op!=='save'&&S.rlexp)delete S.rlexp[id];render(true);toast(op==='approve'?'อนุมัติแล้ว คัดลอกไปโพสต์ได้เลย':op==='posted'?'บันทึกว่าโพสต์แล้ว':op==='reject'?'ปัดตกแล้ว ทีมจะเรียนรู้จากโพสต์นี้':op==='unpost'?'ย้ายกลับไปรอโพสต์':'บันทึกที่แก้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
     case 'pexp':{S.pexp=S.pexp||{};if(S.pexp[id])delete S.pexp[id];else S.pexp[id]=1;render(true);break;}
     case 'rxOpen':S.rxOpen=S.rxOpen===id?null:id;render(true);break;
     case 'cmOpen':S.cmOpen=S.cmOpen===id?null:id;render(true);setTimeout(()=>{const i=$('#cm-'+id);if(i)i.focus();},30);break;
