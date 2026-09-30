@@ -183,6 +183,16 @@ async function addTodo({ text, type = 'do', from = 'manager', link = null }) {
   return { items, item, duplicate: false };
 }
 // ตั้งค่าทีมจากคุณแดน (shop_state id=team_cfg): global {todo_hours, manager_money, team_note}, members {<source>: {paused, note, fields:[{k,label,value}]}}
+// รูปแบบคอนเทนต์ที่คุณแดนสั่งเพิ่ม: ขึ้นบนกระดานทีมของทุกคนทุกรอบ (น้องปากกา น้องคลิป พี่ต้นใช้ตรวจ)
+const FORMAT_BOARD = `== รูปแบบคอนเทนต์ที่คุณแดนสั่งเพิ่ม (30 ก.ย. 2569) ใช้ทุกสัปดาห์ ==
+เป้าหมาย: ดึงคนเข้าเว็บ sheetlabth.com (คลังความรู้ /learn และคลังข้อสอบ /quiz) และเรียกคอมเมนต์ให้โพสต์ไปไกล
+1) "ผิดตรงไหน?" (Facebook สัปดาห์ละ 2 โพสต์ · Threads วันละ 2 โพสต์ นับรวมในโควตาเดิม)
+   - แบบ ก จับผิดประโยค: ประโยคภาษาอังกฤษบริบทที่ทำงาน 1 ประโยค มีจุดผิดจุดเดียว (tense, preposition, word form, คอมมาหลังอนุประโยค while/when/if ที่ขึ้นต้นประโยค, ตัว I พิมพ์เล็ก, a/an/the) ถามว่า "ประโยคนี้ผิดตรงไหน? คอมเมนต์มาเลย"
+   - แบบ ข ตอบแบบนี้โดนหักคะแนน: โจทย์สั้น + "คำตอบของนักเรียน" ที่ดูถูกแต่มีจุดพลาดเล็กๆ (ตัวพิมพ์ใหญ่ เครื่องหมาย รูปคำ) ชวนเดาว่าทำไมโดนหัก เขียนขำๆ เห็นใจคนสอบ ไม่ล้อเลียนใคร
+   - เฉลย: โพสต์เฉลยแยกวันถัดไป (หรือโพสต์ถัดไปใน Threads) บอกจุดผิด ประโยคที่ถูก เหตุผล 1-2 บรรทัด และลิงก์บทความหรือแบบทดสอบบนเว็บที่ตรงหัวข้อ เช่น sheetlabth.com/learn/<slug> หรือ sheetlabth.com/quiz/<slug> (ดูรายการที่มีจาก GET content?action=article และ action=quiz) ถ้ายังไม่มีหัวข้อตรง ใช้ sheetlabth.com/quiz
+   - ต้องเป็นประโยคที่ทีมเขียนเองทั้งหมด ห้ามเอาภาพหรือโพสต์ของคนอื่นมาใช้ ห้ามระบุชื่อสถาบันหรือข้อสอบของใคร ตรวจเฉลยให้ถูกแน่นอนก่อนส่ง
+2) Reels "หาจุดผิดใน 5 วินาที" (น้องคลิป สัปดาห์ละ 2 คลิป สลับกับแนวเดิม): ใช้โครงคลิปเดิม แต่ละข้อ = ประโยคที่มีจุดผิด 1 จุด ช่วงเฉลย = ประโยคที่ถูก + เหตุผลสั้น ปิดท้ายชวน "ฝึกต่อฟรีที่ sheetlabth.com/quiz"
+3) โพสต์ความรู้ทั่วไป (tip) ที่ตรงกับบทความในคลังความรู้ ให้ปิดท้ายด้วยลิงก์บทความนั้นแทนลิงก์หน้าขาย สัปดาห์ละไม่เกิน 3 โพสต์ที่มีลิงก์หน้าขาย`;
 async function loadCfg() { const rows = await sb('shop_state?id=eq.team_cfg&select=data'); const d = rows?.[0]?.data || {}; return { global: { todo_hours: 24, manager_money: false, team_note: '', ...(d.global || {}) }, members: d.members || {}, updated_at: d.updated_at || null }; }
 async function saveCfg(cfg) { cfg.updated_at = new Date().toISOString(); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'team_cfg', data: cfg, updated_at: cfg.updated_at }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 const todoHours = (cfg) => Math.min(168, Math.max(1, Number(cfg?.global?.todo_hours) || 24));
@@ -883,7 +893,7 @@ export default async function handler(req, res) {
       const ho = handoffBlock(tItems, cfg);
       let mailTask = '';
       try { const pr = await sb('shop_state?id=eq.private&select=data'); if (!pr?.[0]?.data?.mailTemplate?.by) mailTask = '== งานใหม่จากคุณแดน (29 ก.ย.) ถึงน้องคอม ==\nร่างเทมเพลตอีเมลเตือนลูกค้าที่กรอกอีเมลแล้วยังไม่จ่าย (ส่งครั้งเดียว สุภาพ สั้น ไม่เกิน 6 บรรทัด ไม่ใส่ส่วนลดหรือของแถม ไม่เร่งเร้า) แล้ว POST https://my-shop-lake-ten.vercel.app/api/content?action=mail_template JSON {subject, body, source:"community"} ใช้ตัวแทน {สินค้า} {ราคา} {ลิงก์} (body ต้องมี {ลิงก์}) ระบบใช้ข้อความนี้ส่งให้อัตโนมัติในนามน้องคอมทุกรอบ publish (คนละครั้ง หลังค้างจ่าย 1 ชม.) ทีมไม่เห็นอีเมลลูกค้าและไม่ต้องขอ คุณแดนดูผลที่ห้องเอกสาร GET action=mail_template ดูร่างปัจจุบันและจำนวนคนที่รอได้'; } catch (e) {}
-      const topBlock = [cfgBlock(cfg), POLICY_BOARD, mailTask, ho.text].filter(Boolean).join('\n\n');
+      const topBlock = [cfgBlock(cfg), POLICY_BOARD, FORMAT_BOARD, mailTask, ho.text].filter(Boolean).join('\n\n');
       plan = plan ? { ...plan, text: `${topBlock}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: topBlock, created_at: cfg.updated_at || new Date().toISOString() };
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.kind === 'handoff' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
