@@ -1173,7 +1173,7 @@ export default async function handler(req, res) {
       const sum = (l) => l.reduce((a, o) => a + (Number(o.amount) || 0), 0);
       const hasCh = await channelCol();
       const [orders, posts, priv, notes, jobs] = await Promise.all([
-        sb(`orders?select=created_at,paid_at,product_name,amount,status,email&created_at=gte.${prev}`),
+        sb(`orders?select=created_at,paid_at,product_name,amount,status,email,campaign&created_at=gte.${prev}`),
         sb(`posts?status=in.(approved,published,needs_owner,failed,draft)&or=(published_at.gte.${sinceY},scheduled_at.gte.${since})&select=status,kind,source,created_at,published_at,scheduled_at,notes${hasCh ? ',channel' : ''}&limit=400`),
         sb('shop_state?id=eq.private&select=data'),
         sb(`posts?status=in.(note,log)&created_at=gte.${new Date(now - 14 * 864e5).toISOString()}&select=source,kind,text,created_at&order=created_at.desc&limit=200`),
@@ -1218,7 +1218,7 @@ export default async function handler(req, res) {
       const vsY = { revenue: dif(sum(wk), sum(wkY)), orders: dif(wk.length, wkY.length), published: dif(pub.length, pubY), unpaid: dif(real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, unpaidY),
         spend: dif(spendNow, yd?.spend), queued: dif(queuedNow, yd?.queued), todo: dif(openTodo.length, yd?.todo), threads: dif(thF, yd?.th), facebook: dif(fbF, yd?.fb), since: yKey || null };
       return res.status(200).json({ ok: true, at: nowIso, vsY,
-        sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => o.status !== 'paid' && o.created_at >= since).length },
+        sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, store: { orders: wk.filter((o) => o.campaign === 'store').length, revenue: sum(wk.filter((o) => o.campaign === 'store')) } },
         ads: { spend: campaigns.reduce((a, c) => a + c.spend, 0), campaigns },
         followers: { threads: thF, facebook: fbF, threadsDelta: base && thF != null && base.th != null ? thF - base.th : null, facebookDelta: base && fbF != null && base.fb != null ? fbF - base.fb : null, since: weekAgo || null },
         posts: { published: { facebook: pub.filter((p) => ch(p) === 'facebook').length, threads: pub.filter((p) => ch(p) === 'threads').length }, queued: { facebook: queued.filter((p) => ch(p) === 'facebook').length, threads: queued.filter((p) => ch(p) === 'threads').length }, held: posts.filter((p) => p.status === 'needs_owner').length, failed: posts.filter((p) => p.status === 'failed').length, policy: posts.filter((p) => p.status !== 'published' && (policyState(p.notes)?.level || 'ok') !== 'ok').length },

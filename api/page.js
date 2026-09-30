@@ -84,6 +84,16 @@ export default async function handler(req, res) {
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';
     out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(shopName)}</title>`)
       .replace('<meta property="og:title" content="ร้านหนังสือ/ชีทเรียน">', `<meta property="og:title" content="${esc(shopName)}"><meta name="description" content="ชีทสรุป Grammar และคำศัพท์ TOEIC ภาษาไทย พร้อมแบบฝึกหัดและเฉลยละเอียด สแกนจ่ายแล้วดาวน์โหลดได้ทันที"><link rel="canonical" href="${NEW_SITE}/">`);
+    const view = String(req.query.view || '');
+    if (view === 'order') { // หน้าหาออเดอร์: ไม่ต้องให้ Google เก็บ
+      out = out.replace(/<title>[^<]*<\/title>/, '<title>หาออเดอร์ของฉัน · SheetLab</title>')
+        .replace(/<!--OG-START-->[\s\S]*?<!--OG-END-->/, '<meta name="robots" content="noindex">');
+    }
+    const live = shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || ''));
+    if (!slug && !view && live.length >= 2) { // หน้าแรกเป็นหน้าร้าน: บอก Google ว่ามีสินค้าอะไรบ้าง
+      const ld = { '@context': 'https://schema.org', '@type': 'ItemList', name: shopName, itemListElement: live.map((x, i) => ({ '@type': 'ListItem', position: i + 1, url: `${NEW_SITE}/p/${x.slug}`, name: x.name })) };
+      out = out.replace('<!--OG-END-->', `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script><!--OG-END-->`);
+    }
     const p = /^[a-z0-9-]+$/.test(slug) ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
     if (p) {
       const proto = req.headers['x-forwarded-proto'] || 'https';

@@ -25,6 +25,10 @@
       "destination": "/api/page?draft=:name"
     },
     {
+      "source": "/order",
+      "destination": "/api/page?view=order"
+    },
+    {
       "source": "/",
       "destination": "/api/page"
     },
