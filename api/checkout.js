@@ -1,6 +1,6 @@
 // ปุ่ม "ชำระเงิน" ชี้มาที่นี่: สร้างหน้าจ่ายเงิน Stripe จากราคาในหลังบ้าน แล้วพาลูกค้าไป
 // GET /api/checkout?p=<slug>&c=<campaign>
-import { loadShop, stripe, configured, htmlError, createQrPayment } from '../lib/shop.js';
+import { loadShop, stripe, configured, htmlError, createQrPayment, bundlePlan } from '../lib/shop.js';
 
 // POST /api/checkout?m=qr  JSON {p, bump, c, e} → สร้าง QR PromptPay ให้แสดงบนหน้าร้านเลย (ลูกค้าไม่ต้องออกไปหน้า Stripe)
 async function qr(req, res) {
@@ -11,14 +11,17 @@ async function qr(req, res) {
   const shop = await loadShop();
   const p = shop.products.find((x) => x.slug === String(b.p || '') && x.status === 'published');
   if (!p || !(Number(p.price) >= 1)) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้า' });
-  const bp = b.bump && p.bumpProductId ? shop.products.find((x) => x.id === p.bumpProductId && x.status === 'published') : null;
+  const plan = p.type === 'bundle' ? bundlePlan(p, String(b.plan || '')) : null;
+  if (p.type === 'bundle' && !plan) return res.status(400).json({ ok: false, error: 'ชุดนี้ยังไม่ได้ตั้งราคาแพ็กเกจ' });
+  const bp = !plan && b.bump && p.bumpProductId ? shop.products.find((x) => x.id === p.bumpProductId && x.status === 'published') : null;
   const bumpPrice = bp && Number(p.bumpPrice) >= 1 ? Number(p.bumpPrice) : 0;
   const campaign = String(b.c || '').slice(0, 60);
+  const pname = plan ? `${p.name} · แพ็กเกจ ${plan.name}` : p.name;
   try {
     const r = await createQrPayment({
-      amount: Number(p.price) + bumpPrice, email,
-      description: `${p.name}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug}) QR`,
-      metadata: { productId: p.id, productName: p.name, slug: p.slug, campaign, bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '' },
+      amount: plan ? Number(plan.price) : Number(p.price) + bumpPrice, email,
+      description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug}) QR`,
+      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '' },
     });
     if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายผ่านหน้า Stripe แทน' });
     return res.status(200).json({ ok: true, ...r });
@@ -63,14 +66,17 @@ export default async function handler(req, res) {
     const origin = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
     const img = (p.images || [])[0];
     // สินค้าคู่ (order bump): ลูกค้าติ๊กเพิ่ม → เพิ่มเป็นรายการที่ 2 ในราคาพิเศษ
-    const bp = req.query.bump === '1' && p.bumpProductId ? shop.products.find((x) => x.id === p.bumpProductId && x.status === 'published') : null;
+    const plan = p.type === 'bundle' ? bundlePlan(p, String(req.query.plan || '')) : null;
+    if (p.type === 'bundle' && !plan) return htmlError(res, 'ยังไม่เปิดขายชุดนี้', 'ชุดนี้ยังไม่ได้ตั้งราคาแพ็กเกจ');
+    const pname = plan ? `${p.name} · แพ็กเกจ ${plan.name}` : p.name;
+    const bp = !plan && req.query.bump === '1' && p.bumpProductId ? shop.products.find((x) => x.id === p.bumpProductId && x.status === 'published') : null;
     const bumpPrice = bp && Number(p.bumpPrice) >= 1 ? Number(p.bumpPrice) : 0;
     const items = [{
       quantity: 1,
       price_data: {
         currency: 'thb',
-        unit_amount: Math.round(Number(p.price) * 100),
-        product_data: Object.assign({ name: p.name, description: (p.headline || '').slice(0, 200) || undefined }, img ? { images: [img] } : {}),
+        unit_amount: Math.round(Number(plan ? plan.price : p.price) * 100),
+        product_data: Object.assign({ name: pname, description: (p.headline || '').slice(0, 200) || undefined }, img ? { images: [img] } : {}),
       },
     }];
     if (bumpPrice) items.push({
@@ -89,8 +95,8 @@ export default async function handler(req, res) {
       allow_promotion_codes: true,
       success_url: `${origin}/p/${p.slug}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/p/${p.slug}`,
-      metadata: { productId: p.id, productName: p.name, slug: p.slug, campaign, bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '' },
-      payment_intent_data: { description: `${p.name}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})` },
+      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '' },
+      payment_intent_data: { description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})` },
     };
     if (email) {
       base.customer_email = email;
