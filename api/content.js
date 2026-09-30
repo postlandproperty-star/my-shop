@@ -672,6 +672,31 @@ export default async function handler(req, res) {
         campaigns, unpaidCheckouts: orders.filter((o) => o.status !== 'paid' && o.created_at >= since).length, testOrdersExcluded: all.length - orders.length, paidDelivery: thisWeek.map((o) => ({ at: o.paid_at, via: String(o.session_id || '').startsWith('pi_') ? 'qr' : 'stripe_page', emailed: !!o.emailed_at })),
         posts, products: shop.products.map((p) => ({ name: p.name, status: p.status, price: p.price })) });
     }
+    if (action === 'quiz' || action === 'quiz_hide') {
+      // แบบทดสอบบนเว็บ: ทีมคอนเทนต์ส่ง/แก้ด้วย key (POST ตาม slug) · คุณแดนซ่อน/เปิดได้ (quiz_hide แอดมิน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const rows = await sb('shop_state?id=eq.quizzes&select=data'); const list = rows?.[0]?.data?.list || [];
+      const saveQ = (l) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'quizzes', data: { list: l }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (action === 'quiz_hide') {
+        if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+        const body = await readBody(req); const q = list.find((x) => x.slug === String(body.slug || ''));
+        if (!q) return res.status(404).json({ ok: false, error: 'not found' });
+        q.status = body.hidden ? 'hidden' : 'live'; q.updated_at = new Date().toISOString(); await saveQ(list);
+        return res.status(200).json({ ok: true, status: q.status });
+      }
+      if (req.method !== 'POST') { const SU = await siteUrl(); return res.status(200).json({ ok: true, list: list.map((q) => ({ ...q, n: q.questions.length, url: `${SU}/quiz/${q.slug}` })) }); }
+      const body = await readBody(req);
+      const { cleanQuiz } = await import('../lib/quiz.js');
+      const r = cleanQuiz(body); if (r.error) return res.status(400).json({ ok: false, error: r.error });
+      const src = MEMBER_TH[body.source] ? String(body.source) : 'writer';
+      const old = list.find((x) => x.slug === r.quiz.slug); const now = new Date().toISOString();
+      if (old) Object.assign(old, r.quiz, { updated_at: now, by: src }); else list.push({ ...r.quiz, status: 'live', by: src, created_at: now, updated_at: now });
+      await saveQ(list);
+      const url = `${await siteUrl()}/quiz/${r.quiz.slug}`;
+      await logNote(src, `${old ? 'แก้' : 'ลง'}แบบทดสอบบนเว็บ: ${r.quiz.title} (${r.quiz.questions.length} ข้อ) ${url}`, 'quiz');
+      return res.status(200).json({ ok: true, url, updated: !!old });
+    }
     if (action === 'store_audit') { // พี่โอ๊ค CEO หน้าร้าน: สภาพชั้นวางทุกเล่ม (รวมร่าง/หน้าร้านอย่างเดียว) ยอดจากหน้าร้าน คิวโรงงาน ไม่มีข้อมูลลูกค้า
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const [main, priv, orders, jobs] = await Promise.all([sb('shop_state?id=eq.main&select=data'), sb('shop_state?id=eq.private&select=data'), sb(`orders?status=eq.paid&select=product_id,product_name,amount,email,campaign,paid_at,created_at&created_at=gte.${new Date(Date.now() - 30 * 864e5).toISOString()}`), loadJobs().catch(() => [])]);

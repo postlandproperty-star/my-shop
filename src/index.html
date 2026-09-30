@@ -179,6 +179,16 @@ footer{padding:28px 0 110px;text-align:center}
 @media(max-width:600px){.bar-in{flex-wrap:wrap;row-gap:6px}#seg{width:100%}#seg button{flex:1;padding:6px 4px;font-size:13.5px;white-space:nowrap}}
 .facrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
 .facrow>div:first-child{display:flex;flex-direction:column;min-width:0}
+.st-quiz{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.st-qcard{display:flex;flex-direction:column;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--ink);text-decoration:none}
+.st-qcard:hover{border-color:var(--brand)}.st-qcard b{font-size:16px;line-height:1.35}
+.ceobar{background:var(--surface);border-bottom:1px solid var(--line)}
+.ceobar-in{display:flex;gap:12px;align-items:flex-start;padding-block:10px}
+.ceobar .ava{width:48px;height:48px;border-radius:50%;flex-shrink:0}
+.ceo-t{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;font-size:14px}
+.ceo-today{color:var(--ink)}
+.ceo-rep summary{cursor:pointer;color:var(--brand);font-size:13.5px}
+.ceo-rep>div:first-of-type{white-space:pre-line;background:var(--bg);border-radius:10px;padding:10px 12px;margin:6px 0;font-size:13.5px;line-height:1.55}
 .propf{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
 .propf li{display:grid;gap:2px;font-size:13.5px;background:var(--bg);border-radius:10px;padding:8px 10px}
 .propf s{color:var(--muted)}
@@ -1335,7 +1345,7 @@ function bundleView(p){
     <section class="bx-sec"><h2>คำถามที่พบบ่อย</h2>${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}</section>
   </main>
   </div>
-  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}<br>${storeMode()?'<a href="/" data-go="">ดูสินค้าทั้งหมด</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
+  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}<br>${storeMode()?'<a href="/" data-go="">ดูสินค้าทั้งหมด</a> · ':''}${QUIZZES.length?'<a href="/quiz">แบบทดสอบฟรี</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
   <div class="sticky" id="sticky"><div class="sticky-in">
     <div class="sp-sp"><span class="p">${baht(payTotal)}</span>${sel&&sel.fullPrice>sel.price?`<s>${baht(sel.fullPrice)}</s>`:''}</div>
     <button class="btn btn-buy" data-a="toCheckout">ซื้อชุดนี้</button>
@@ -1343,9 +1353,31 @@ function bundleView(p){
 }
 
 /* ส่วนบนของเซลเพจ (ใช้ร่วมกันทั้งเล่มเดี่ยวและชุด): แถบเลือกหน้าของแอดมิน + การ์ดผลการชำระเงิน */
+/* แถบ CEO ของแต่ละหน้า (เห็นเฉพาะคุณแดนตอนล็อกอิน): ตัวเลขวันนี้คำนวณจากข้อมูลจริง ไม่ใช้ AI + รายงานล่าสุดของ CEO คนนั้น */
+function ceoBar(k){
+  if(PV||!hasAdminAccess())return '';
+  needPosts();if(PROP.list===null)loadProps();
+  const m=TEAM[k];if(!m)return '';
+  const t0=new Date();t0.setHours(0,0,0,0);const T=t0.getTime();
+  const paidToday=D.orders.filter(o=>o.status==='paid'&&(o.paidAt||o.created)>=T&&!isTestOrd(o));
+  const pend=(PROP.list||[]).filter(x=>x.source===k).length;
+  let today='';
+  if(k==='ceo_sale'){const unpaid=D.orders.filter(o=>o.status!=='paid'&&o.created>=T&&!isTestOrd(o)).length;today=`ขายได้ ${paidToday.length} ออเดอร์ ${baht(paidToday.reduce((a,o)=>a+(Number(o.amount)||0),0))} · เปิดหน้าจ่ายแต่ยังไม่จ่าย ${unpaid}`;}
+  else if(k==='ceo_store'){const st=paidToday.filter(o=>o.campaign==='store');today=`หน้าร้าน${storeMode()?'เปิดให้ลูกค้าเห็นแล้ว':'ยังไม่เปิด'} · ขึ้นชั้นวาง ${storeItems().length} รายการ · ขายจากหน้าร้านวันนี้ ${st.length} ออเดอร์`;}
+  else if(k==='factory'){const j=FJOBS||[];today=`ในคิว ${j.filter(x=>x.status==='queued').length} · กำลังผลิต ${j.filter(x=>x.status==='producing').length} · รออนุมัติลงขาย ${j.filter(x=>x.listing==='pending').length}`;}
+  const notes=POSTS.filter(x=>x.source===k&&(x.status==='note'||x.status==='log')&&!['chat','reply','comment'].includes(x.kind)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at));
+  const last=notes[0];
+  return `<div class="ceobar"><div class="wrap wide ceobar-in">
+    <img class="ava" src="${m.img}" alt="" style="background:${m.bg}">
+    <div class="ceo-t"><div><b>${esc(m.name)}</b> <span class="fine">${esc(String(m.role).split('·')[0].trim())}</span> ${statusBadge(k,false)}</div>
+      <div class="ceo-today">วันนี้: ${today}${pend?` · <a href="#" data-a="tab" data-v="products" data-goadmin="1">ข้อเสนอรอคุณแดน ${pend}</a>`:''}</div>
+      ${last?`<details class="ceo-rep"><summary>รายงานล่าสุด ${fdt(Date.parse(last.created_at))}</summary><div>${esc(last.text)}</div>${notes.slice(1,4).map(n=>`<div class="fine">· ${fdt(Date.parse(n.created_at))} ${esc(String(n.text).split('\n')[0].slice(0,90))}</div>`).join('')}</details>`:`<div class="fine">${postsLoaded?'ยังไม่มีรายงาน รอรอบแรกตามตาราง':'กำลังโหลดรายงาน...'}</div>`}
+    </div></div></div>`;
+}
 function shopHead(p){
   const opts=D.products.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(x.name)}${x.status==='draft'?' (ฉบับร่าง)':''}</option>`).join('');
   return `
+  ${ceoBar('ceo_sale')}
   ${hasAdminAccess()?`<div class="urlbar"><div class="wrap wide urlbar-in">
     <span class="fine">เซลเพจ</span>
     <select id="pick" aria-label="เลือกเซลเพจที่จะดู">${opts}</select>
@@ -1367,6 +1399,7 @@ function shopHead(p){
    ชุดเด่นก่อน ตามด้วยเล่มเดี่ยว ทุกอย่างที่เผยแพร่ขึ้นเอง ถ้าเผยแพร่ไม่ถึง 2 รายการ หน้าแรกเปิดหน้าขายเลยเหมือนเดิม */
 const CATS={grammar:'Grammar',vocab:'คำศัพท์',listening:'Listening',reading:'Reading',mock:'ข้อสอบเสมือนจริง'};
 const STORE_MIN=2,CHAT_URL='https://m.me/1264839566720049';
+const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const TITLE0=document.title;
 const SELL={both:['ทั้งหน้าร้านและ salepage','ขึ้นหน้าร้าน และทีมทำโพสต์/แอดพาเข้าหน้าขาย'],salepage:['salepage อย่างเดียว','ไม่ขึ้นหน้าร้าน เข้าได้จากลิงก์หรือแอดเท่านั้น'],store:['หน้าร้านอย่างเดียว','ขึ้นหน้าร้าน ทีมไม่ทำโพสต์ขายตรง']};
 function sellPicker(d){const v=SELL[d.sell]?d.sell:'both';return `<div class="field"><span class="lbl" id="lbl-sell">ขายที่ไหน</span><div class="sellpick" role="radiogroup" aria-labelledby="lbl-sell">${Object.entries(SELL).map(([k,x])=>`<label class="${v===k?'on':''}"><input type="radio" name="sell" data-d="sell" value="${k}" ${v===k?'checked':''}><b>${x[0]}</b><span>${x[1]}</span></label>`).join('')}</div></div>`;}
@@ -1404,7 +1437,7 @@ function storeView(){
       ${live?`<span class="st-promo">ราคาเปิดตัวเหลืออีก ${Math.max(1,Math.ceil((b.promoEnd-Date.now())/864e5))} วัน</span>`:''}
       <span class="st-go">ดูชุดนี้ →</span></span></a>`;};
   const note=hasAdminAccess()&&!storeMode()?`<div class="wrap"><p class="st-note">ลูกค้ายังไม่เห็นหน้านี้ หน้าแรกจะเปลี่ยนเป็นหน้าร้านเองเมื่อมีสินค้าเผยแพร่ตั้งแต่ ${STORE_MIN} รายการ ตอนนี้มี ${all.length}</p></div>`:'';
-  return `${note}
+  return `${ceoBar('ceo_store')}${note}
   <header class="st-top"><div class="wrap wide st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a><a class="st-chat" href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a></div></header>
   <section class="st-hero"><div class="wrap wide"><h1>ชีทสรุป TOEIC ที่ทำข้อสอบได้จริง</h1><p>ดูหน้าตัวอย่างก่อนซื้อทุกเล่ม</p>
     <ul class="st-why"><li>รับไฟล์ทันทีหลังจ่าย</li><li>สแกนจ่าย QR ได้</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></div></section>
@@ -1414,10 +1447,13 @@ function storeView(){
       ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
       ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
     </section>
+    ${QUIZZES.length?`<section class="st-sec" aria-labelledby="st-q"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><h2 id="st-q" class="st-h2">แบบทดสอบ TOEIC ฟรี</h2><a href="/quiz" class="fine">ดูทั้งหมด →</a></div>
+      <p class="fine" style="margin:0">ลองทำโจทย์แนว TOEIC พร้อมเฉลยอธิบายภาษาไทย ไม่ต้องสมัครสมาชิก</p>
+      <div class="st-quiz">${QUIZZES.slice(0,6).map(q=>`<a class="st-qcard" href="/quiz/${esc(q.slug)}"><span class="st-kicker">${esc(CATS[q.cat]||'TOEIC')} · ${q.n} ข้อ</span><b>${esc(q.title)}</b><span class="st-go">เริ่มทำ →</span></a>`).join('')}</div></section>`:''}
     <section class="st-sec st-how" aria-labelledby="st-h"><h2 id="st-h" class="st-h2">สั่งซื้ออย่างไร</h2>
       <ol><li><b>เลือกเล่มหรือชุด</b><span>ดูหน้าตัวอย่างจริงในหน้าขายก่อนตัดสินใจ</span></li><li><b>สแกนจ่าย</b><span>QR PromptPay บนหน้าเดียว หรือจ่ายด้วยบัตร ไม่ต้องสมัครสมาชิก</span></li><li><b>รับไฟล์ทันที</b><span>ปุ่มดาวน์โหลดขึ้นหลังจ่าย และส่งลิงก์ไปที่อีเมลด้วย</span></li></ol></section>
   </main>
-  <footer class="fine st-foot"><b>SheetLab</b><br><a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
+  <footer class="fine st-foot"><b>SheetLab</b><br>${QUIZZES.length?'<a href="/quiz">แบบทดสอบฟรี</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
     <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;
 }
 function orderView(){
@@ -1575,7 +1611,7 @@ function shopView(){
     <h2>คำถามที่พบบ่อย</h2>
     ${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}
   </div></section>
-  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}<br>${storeMode()?'<a href="/" data-go="">ดูสินค้าทั้งหมด</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
+  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}<br>${storeMode()?'<a href="/" data-go="">ดูสินค้าทั้งหมด</a> · ':''}${QUIZZES.length?'<a href="/quiz">แบบทดสอบฟรี</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
 
   <div class="sticky" id="sticky"><div class="sticky-in">
     ${D.settings.chatLink?`<a class="sp-chat" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer" aria-label="แชทกับร้าน"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><small>แชท</small></a>`:''}
@@ -1996,7 +2032,7 @@ function factoryView(){
   const who=k=>k==='owner'?'คุณแดน':member(k||'manager').name;
   const chips=[['active','รอ/กำลังผลิต',cnt('queued')+cnt('producing')],['done','เสร็จแล้ว',cnt('done')],['failed','ไม่สำเร็จ',cnt('failed')],['all','ทั้งหมด',jobs.length]];
   const lb=(id,t)=>`<label for="${id}">${t}</label>`;
-  return `<div class="wrap wide fac" style="padding-bottom:60px">
+  return `${ceoBar('factory')}<div class="wrap wide fac" style="padding-bottom:60px">
     <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">${nx?'ผลิตรอบถัดไป '+new Date(nx).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' เวลาไทย (ทุกอาทิตย์และจันทร์ 10:00 / 22:00)':'ผลิตทุกอาทิตย์และจันทร์'} · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
       <button class="chip" data-a="toFactory">รีเฟรช</button></div>
     ${facBox()||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
@@ -2412,7 +2448,19 @@ function contentTab(){
 `:''}
   <div class="filters sticky"><div class="chips">${chips.map(c=>`<button class="chip" data-a="cfilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]}<span class="n">${cnt[c[0]]}</span>${c[0]==='queue'&&urgent?`<span class="n alert">${urgent}</span>`:''}</button>`).join('')}</div>${f==='queue'?`<span class="fine">เรียงตามความด่วน แล้วตามเวลาโพสต์ · กดข้อความเพื่อดูเต็ม/แก้ไข</span>`:''}</div>
   ${!postsLoaded?`<p class="muted">กำลังโหลด...</p>`:list.length?rows:`<div class="empty"><p>${f==='queue'?'คิวว่าง — นักเขียนจะส่งร่างมาทุกเช้าวันจันทร์ หรือกด "+ เพิ่มโพสต์เอง"':'ไม่มีรายการ'}</p></div>`}
+  ${quizAdmin()}
   ${(()=>{const fx=factoryBox();return fx?`<details class="fold"><summary>คิวโรงงานผลิตชีท</summary>${fx.replace('<h3 class="h3">คิวโรงงานผลิตชีท</h3>','')}</details>`:'';})()}`;
+}
+/* แบบทดสอบบนเว็บ (ทีมคอนเทนต์ดูแล) คุณแดนเปิดดูและซ่อนได้ */
+const QZ={list:null,loading:false};
+function quizAdmin(){
+  if(QZ.list===null&&!QZ.loading){QZ.loading=true;adminApi('/api/content?action=quiz').then(j=>{QZ.list=j&&j.ok?j.list:[];}).catch(()=>{QZ.list=[];}).then(()=>{QZ.loading=false;render(true);});}
+  const l=(QZ.list||[]).slice().sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+  return `<details class="fold"><summary>แบบทดสอบบนเว็บ (${l.filter(q=>q.status!=='hidden').length} ชุด) · น้องปากกาเขียนทุกพฤหัส</summary>
+    <p class="fine">หน้า /quiz ให้คนจาก Google มาลองทำโจทย์ แล้วพาไปหน้าขาย ถ้าชุดไหนผิดหรือไม่ชอบ กดซ่อนได้ทันที</p>
+    ${l.length?l.map(q=>`<div class="facrow"><div><b>${esc(q.title)}</b><span class="fine">${q.n} ข้อ · ${esc(member(q.by||'writer').name)} · ${fdt(Date.parse(q.updated_at||q.created_at))}${q.status==='hidden'?' · <b style="color:var(--bad)">ซ่อนอยู่</b>':''}</span></div>
+      <div class="row" style="gap:6px"><a class="btn btn-line btn-sm" href="/quiz/${esc(q.slug)}" target="_blank" rel="noopener">เปิดดู</a><button class="btn btn-line btn-sm" data-a="quizHide" data-v="${esc(q.slug)}" data-h="${q.status==='hidden'?0:1}">${q.status==='hidden'?'เปิดให้เห็น':'ซ่อน'}</button></div></div>`).join(''):'<p class="fine">ยังไม่มีแบบทดสอบ</p>'}
+  </details>`;
 }
 function pixelTab(){
   const live=/^\d{6,20}$/.test(String(D.settings.pixelId||''));
@@ -3075,6 +3123,7 @@ function act(a,el){
   switch(a){
     case 'toShop':go('shop');break;
     case 'toStore':go('store');break;
+    case 'quizHide':authFetch('/api/content?action=quiz_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนแบบทดสอบแล้ว':'เปิดแบบทดสอบแล้ว');QZ.list=null;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'toFactory':FJOBS=null;FAC.jobs=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
@@ -3246,7 +3295,7 @@ function act(a,el){
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว จะตอบรับภายใน 1-3 นาที และทำตามในรอบงานถัดไป');setTimeout(()=>{postsLoaded=false;loadPosts().then(()=>render(true));},200000);S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
-    case 'tab':S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='meeting')postsLoaded=false;if(S.tab==='docs'){DOCS.links=null;LEADS.list=null;postsLoaded=false;}render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
+    case 'tab':if(el.dataset.goadmin&&S.view!=='admin'){S.view='admin';}S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='meeting')postsLoaded=false;if(S.tab==='docs'){DOCS.links=null;LEADS.list=null;postsLoaded=false;}render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{

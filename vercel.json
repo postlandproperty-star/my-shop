@@ -29,6 +29,14 @@
       "destination": "/api/page?view=order"
     },
     {
+      "source": "/quiz",
+      "destination": "/api/page?quiz=_index"
+    },
+    {
+      "source": "/quiz/:slug",
+      "destination": "/api/page?quiz=:slug"
+    },
+    {
       "source": "/",
       "destination": "/api/page"
     },
