@@ -174,6 +174,7 @@ footer{padding:28px 0 110px;text-align:center}
 .sellpick label:focus-within{outline:3px solid var(--brand);outline-offset:2px}
 .sellpick span{font-size:13px;color:var(--muted)}
 .facbox{margin:14px 0;border:2px solid var(--brand)}
+.imgset{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:10px}.imgset-it{display:flex;flex-direction:column;gap:4px;font-size:13px}.imgset-it img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--line)}.imgset-ph{display:grid;place-items:center;aspect-ratio:1;border-radius:10px;background:var(--bg);color:var(--muted);font-size:12px;text-align:center;padding:6px}
 .aic-box{margin-top:10px;border:1.5px dashed var(--line);border-radius:12px;padding:12px}
 .aic-out{margin-top:10px;display:flex;flex-direction:column;gap:8px}.aic-out img{width:100%;max-width:360px;border-radius:12px;border:1px solid var(--line)}
 .fac{padding-top:16px}
@@ -1095,6 +1096,32 @@ async function coverGen(){
   catch(e){S.coverErr='เชื่อมต่อไม่ได้';}
   S.coverBusy=false;render(true);
 }
+/* ชุดภาพสินค้า 5 รูป (OpenAI): ปก + ภาพในเล่ม + สิ่งที่ได้ + เหมาะกับใคร + วิธีรับไฟล์ สร้างทีละรูป เลือกเฉพาะรูปที่ชอบ */
+function imgSetPrompts(d){
+  const n=String(d.name||'').trim(),base=' ภาพสี่เหลี่ยมจัตุรัส 1:1 สไตล์โฆษณาสินค้าออนไลน์ สะอาด โทนน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab ตัวอักษรไทยต้องสะกดถูกทุกคำตามที่ให้ไว้ ห้ามมีตัวหนังสืออื่นนอกจากที่กำหนด ห้ามโลโก้สถาบันอื่น';
+  const feats=String(d.features||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,4);
+  return [coverPrompt(d),
+    `ภาพ mockup หนังสือ "${n}" เปิดกางบนโต๊ะทำงาน เห็นหน้าด้านในเป็นตารางคำศัพท์และแบบฝึกหัดแบบเบลอเล็กน้อย มีป้ายมุมบนเขียนว่า "ดูตัวอย่างข้างใน"`+base,
+    `อินโฟกราฟิกหัวข้อ "ในเล่มนี้มีอะไรบ้าง" แสดงเป็นรายการพร้อมไอคอน ${feats.length?feats.map(x=>'"'+x+'"').join(' '):'"เนื้อหาสรุปครบ" "แบบฝึกหัดพร้อมเฉลย" "อ่านได้ทุกอุปกรณ์"'}`+base,
+    `ภาพคนไทยวัยทำงานนั่งอ่านไฟล์ PDF บนแท็บเล็ตอย่างมั่นใจ ข้อความบนภาพ: "เหมาะกับคนเตรียมสอบที่อยากทำคะแนนเพิ่ม"`+base,
+    `อินโฟกราฟิก 3 ขั้นตอน "สั่งซื้อ → สแกนจ่าย QR → รับไฟล์ PDF ทันที" มีไอคอนมือถือ QR code และไฟล์ PDF`+base];
+}
+async function imgSetGen(){
+  if(!S.draft)return;const ps=imgSetPrompts(S.draft);S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
+  for(let i=0;i<ps.length;i++){
+    try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i]})});
+      if(j&&j.ok)S.imgSet[i].url=j.image;else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
+    catch(e){S.imgSet[i].err='เชื่อมต่อไม่ได้';S.imgSet[i].pick=false;}
+    render(true);
+  }
+  S.coverBusy=false;render(true);
+}
+async function imgSetUse(){
+  if(!S.imgSet||!S.draft)return;S.coverBusy=true;render(true);const urls=[];
+  for(const it of S.imgSet){if(!it.pick||!it.url)continue;try{const blob=await (await fetch(it.url)).blob();const r=await square(new File([blob],'img.png',{type:'image/png'}));urls.push(await uploadImage(r.url));}catch(e){console.error(e);}}
+  if(urls.length){S.draft.images=urls.slice(0,5);toast('ใส่ภาพสินค้า '+urls.length+' รูปแล้ว (แทนภาพเดิม) อย่าลืมกดบันทึก');S.imgSet=null;S.coverOpen=false;}
+  S.coverBusy=false;render(true);pvPost(0);
+}
 async function coverUse(){
   if(!S.coverImg||!S.draft)return;S.coverBusy=true;render(true);
   try{const blob=await (await fetch(S.coverImg)).blob();const r=await square(new File([blob],'cover.png',{type:'image/png'}));const url=await uploadImage(r.url);
@@ -2013,8 +2040,9 @@ function productForm(){
       <div class="swatches" role="radiogroup" aria-labelledby="lbl-color">${COLORS.map(c=>`<label class="sw" style="--c:${c[0]}"><input type="radio" name="theme" data-d="color" value="${c[0]}" ${d.color===c[0]?'checked':''}><span class="dot"></span><span>${c[1]}</span></label>`).join('')}</div></div>
     <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
       ${S.coverOpen?`<div class="aic-box"><label for="e-cover-prompt">คำสั่งทำปก (แก้ได้)</label><textarea class="input" id="e-cover-prompt" data-cp="1" rows="7">${esc(S.coverPrompt==null?coverPrompt(d):S.coverPrompt)}</textarea>
-        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button><button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
         ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}</p>`:''}
+        ${S.imgSet?`<div class="imgset">${S.imgSet.map((it,i)=>`<label class="imgset-it">${it.url?`<img src="${it.url}" alt="ภาพที่ ${i+1}">`:`<span class="imgset-ph">${it.err?esc(it.err):'กำลังสร้าง...'}</span>`}<span><input type="checkbox" data-a="imgPick" data-v="${i}" ${it.pick&&it.url?'checked':''} ${it.url?'':'disabled'}> ${['ปก','ภาพในเล่ม','มีอะไรบ้าง','เหมาะกับใคร','วิธีรับไฟล์'][i]}</span></label>`).join('')}</div>${!S.coverBusy&&S.imgSet.some(x=>x.url)?`<button class="btn btn-cta btn-sm" data-a="imgSetUse" style="margin-top:8px">ใช้รูปที่เลือก (แทนภาพเดิม)</button>`:''}<p class="fine" style="margin:6px 0 0">สร้างทีละรูป 5 รูปใช้เวลาประมาณ 2-4 นาที คิดเงิน OpenAI 5 รูป</p>`:''}
         ${S.coverImg?`<div class="aic-out"><img src="${S.coverImg}" alt="ปกที่สร้าง"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverUse" ${S.coverBusy?'disabled':''}>ใช้เป็นปก (ภาพแรก)</button><span class="fine">ตรวจตัวสะกดภาษาไทยบนปกก่อนใช้</span></div></div>`:''}</div>`:''}</div>
     <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
       <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button></div>`).join('')}
@@ -2086,6 +2114,7 @@ async function facApprove(id,quick){
     cat:guessCat(j.title+' '+(j.category||'')),slug:'sheet-'+String(j.id).replace(/[^a-z0-9]/gi,'').slice(0,8).toLowerCase(),
     features:[pages?`ไฟล์ PDF ${pages} หน้า`:'ไฟล์ PDF',j.level?`ระดับ ${j.level}`:'',j.audience?`เหมาะกับ ${j.audience}`:'','ดาวน์โหลดได้ทันทีหลังจ่าย'].filter(Boolean).join('\n'),
     specs:`รูปแบบ | ไฟล์ PDF${pages?`\nจำนวนหน้า | ${pages} หน้า`:''}`});
+  const lc=j.listing_copy||{};['name','headline','desc','features','forwho','notfor','faq','specs','toc'].forEach(k=>{if(String(lc[k]||'').trim())p0[k]=lc[k];});
   S.draft=initDraft(p0);S.draft.fromJob=j.id;S.edit='new';S.err='';S.pvPages='1-4';render(false);
   FAC.busy=id;toast('กำลังเปิดไฟล์จากโรงงานเพื่อทำภาพปกและหน้าตัวอย่าง...');
   try{
@@ -2193,7 +2222,7 @@ function facIdeas(){
 async function fIdea(){
   const f=S.fnew||{};S.fideaBusy=true;render(true);
   try{const j=await authFetch('/api/content?action=idea',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hint:f.hint||''})});
-    if(j&&j.ok){const d=j.idea;Object.assign(S.fnew,{title:d.title,cat:d.category||'',pages:d.pages?String(d.pages):'',price:String(d.price??''),audience:d.audience||'',notes:d.notes||''});S.fidea={source:j.source,why:d.why||'',aiErr:j.aiErr||''};}
+    if(j&&j.ok){const d=j.idea;Object.assign(S.fnew,{title:d.title,cat:d.category||'',pages:d.pages?String(d.pages):'',price:String(d.price??''),audience:d.audience||'',notes:d.notes||''});S.fidea={source:j.source,why:d.why||'',by:j.by||'',left:j.left||0};}
     else toast((j&&j.error)||'สุ่มไม่สำเร็จ');}
   catch(e){toast('เชื่อมต่อไม่ได้');}
   S.fideaBusy=false;render(true);
@@ -2231,7 +2260,7 @@ function factoryView(){
     ${facIdeas()}
     <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
       <div class="idea-bar"><input class="input" id="fn-hint" data-fn="hint" value="${esc(f.hint||'')}" placeholder="อยากได้แนวไหน (ไม่ใส่ก็ได้) เช่น IELTS, ทำงาน"><button class="btn btn-cta btn-sm" data-a="fIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 สุ่มหัวข้อให้'}</button></div>
-      ${S.fidea?`<p class="fine idea-note">${S.fidea.source==='ai'?'🤖 AI คิดให้':'🎲 สุ่มจากคลังหัวข้อ'}${S.fidea.why?' · '+esc(S.fidea.why):''}${S.fidea.source!=='ai'?' (ใส่ OPENAI_API_KEY ใน Vercel แล้ว AI จะคิดหัวข้อใหม่ให้)':''}${S.fidea.aiErr?' · AI ใช้ไม่ได้ตอนนี้: '+esc(S.fidea.aiErr):''} · ตรวจ แก้ แล้วกดส่งเข้าคิว หรือกดสุ่มใหม่</p>`:''}
+      ${S.fidea?`<p class="fine idea-note">${S.fidea.source==='claude'?`🤖 ไอเดียจาก${esc(S.fidea.by)} (Claude) · เหลือในคลัง ${S.fidea.left} ไอเดีย`:'🎲 สุ่มจากคลังหัวข้อสำเร็จรูป (คลังไอเดียของทีมว่าง พี่โปรเติมทุกจันทร์ พี่โอ๊คทุกพุธ)'}${S.fidea.why?' · '+esc(S.fidea.why):''} · ตรวจ แก้ แล้วกดส่งเข้าคิว หรือกดสุ่มใหม่</p>`:''}
       <div class="field">${lb('fn-title','ชื่อเรื่อง')}<input class="input" id="fn-title" data-fn="title" value="${esc(f.title)}" placeholder="เช่น TOEIC Part 5 Tense ที่ออกบ่อย 100 ข้อ พร้อมเฉลย"></div>
       <div class="grid2">
         <div class="field">${lb('fn-cat','หมวด (พิมพ์อะไรก็ได้)')}<input class="input" id="fn-cat" data-fn="cat" list="fn-cats" value="${esc(f.cat)}" placeholder="เช่น TOEIC คำศัพท์, IELTS, สอบ ก.พ."><datalist id="fn-cats">${['TOEIC Grammar','TOEIC คำศัพท์','TOEIC Listening','TOEIC Reading','TOEIC ข้อสอบเสมือนจริง','เตรียมสอบ IELTS','TGAT / A-Level','สอบ ก.พ. / ราชการ','คลังคำศัพท์','ไวยากรณ์','ฝึกพูด / สนทนา','อังกฤษใช้งาน (ทำงาน / เที่ยว)','ฝึกอ่าน / เรื่องสั้น','แพลนเนอร์ / สมุดจดศัพท์'].map(c=>`<option value="${c}">`).join('')}</datalist></div>
@@ -3349,6 +3378,9 @@ function act(a,el){
     case 'fIdea':fIdea();break;
     case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
     case 'coverGen':coverGen();break;
+    case 'imgSetGen':imgSetGen();break;
+    case 'imgSetUse':imgSetUse();break;
+    case 'imgPick':if(S.imgSet&&S.imgSet[+el.dataset.v])S.imgSet[+el.dataset.v].pick=el.checked;break;
     case 'coverUse':coverUse();break;
     case 'coverReset':S.coverPrompt=null;render(true);break;
     case 'fsNew':S.fedit='new';S.fdraft={name:'',emoji:'📚',goal:'',books:''};S.confirm='';render(true);break;
@@ -3576,7 +3608,7 @@ function act(a,el){
     case 'bxPlan':{S.bplan=S.bplan||{};S.bplan[el.dataset.slug]=el.dataset.v;S.qr=null;qrStop();render(true);break;}
     case 'bxPv':{S.bxPv=Number(el.dataset.v)||0;render(true);const t=document.getElementById('bx-preview');if(t)t.scrollIntoView({block:'start',behavior:'smooth'});break;}
     case 'editProduct':S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
-    case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;render(false);break;
+    case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published'&&!p.publishedAt)p.publishedAt=Date.now();save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
     case 'dupProduct':{

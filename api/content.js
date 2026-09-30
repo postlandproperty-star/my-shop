@@ -154,6 +154,8 @@ async function autoFillFactory(jobs) {
   }
   return null;
 }
+// ข้อความหน้าขายที่ Claude เขียนมาพร้อมไฟล์ (ใช้กรอกตัวแก้สินค้าตอนอนุมัติ) ห้ามราคา
+function cleanListing(l) { const t = (k, n) => String(l[k] || '').trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 // ห้องพักทีม: เหตุการณ์จริงในร้านสะท้อนเข้าห้องทันที (ไม่ใช้โมเดล ใช้แม่แบบสุ่ม)
@@ -218,6 +220,7 @@ const FORMAT_BOARD = `== รูปแบบคอนเทนต์ที่ค�
    - ต้องเป็นประโยคที่ทีมเขียนเองทั้งหมด ห้ามเอาภาพหรือโพสต์ของคนอื่นมาใช้ ห้ามระบุชื่อสถาบันหรือข้อสอบของใคร ตรวจเฉลยให้ถูกแน่นอนก่อนส่ง
 2) Reels "หาจุดผิดใน 5 วินาที" (น้องคลิป สัปดาห์ละ 2 คลิป สลับกับแนวเดิม): ใช้โครงคลิปเดิม แต่ละข้อ = ประโยคที่มีจุดผิด 1 จุด ช่วงเฉลย = ประโยคที่ถูก + เหตุผลสั้น ปิดท้ายชวน "ฝึกต่อฟรีที่ sheetlabth.com/quiz"
 3) ข้อสอบประจำวัน: Threads วันละ 1 โพสต์ (นับในโควตาเดิม) ชวนทำข้อสอบประจำวันที่ sheetlabth.com/quiz/daily (ข้อเปลี่ยนเองทุกวัน) และสัปดาห์ละ 2 ครั้ง (FB 1 + Threads 1) ชวนวัดระดับฟรี 20 ข้อที่ sheetlabth.com/quiz/toeic-level-test
+5) คลังไอเดียเล่มใหม่ (พี่โปรทุกจันทร์ 5 เล่ม · พี่โอ๊คทุกพุธ 5 เล่ม): POST content?action=idea_bank JSON {"source":"product" หรือ "ceo_store","ideas":[{"title":"ชื่อเล่มขายได้ ≤ 90 ตัวอักษร","category":"หมวด (อะไรก็ได้ เช่น TOEIC คำศัพท์, IELTS, สอบ ก.พ., สนทนา)","pages":60,"price":129,"audience":"เหมาะกับใคร","notes":"เนื้อหาที่ต้องมี 1-3 ประโยค","why":"หลักฐานว่าน่าขาย เช่น คำค้นจริง"}]} ห้ามซ้ำเล่มที่มีในร้านหรือในคิว ราคาเป็นแค่ข้อเสนอ คุณแดนเลือกเองในแท็บโรงงานด้วยปุ่ม 🎲
 4) โพสต์ความรู้ทั่วไป (tip) ที่ตรงกับบทความในคลังความรู้ ให้ปิดท้ายด้วยลิงก์บทความนั้นแทนลิงก์หน้าขาย สัปดาห์ละไม่เกิน 3 โพสต์ที่มีลิงก์หน้าขาย`;
 async function loadCfg() { const rows = await sb('shop_state?id=eq.team_cfg&select=data'); const d = rows?.[0]?.data || {}; return { global: { todo_hours: 24, manager_money: false, team_note: '', ...(d.global || {}) }, members: d.members || {}, updated_at: d.updated_at || null }; }
 async function saveCfg(cfg) { cfg.updated_at = new Date().toISOString(); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'team_cfg', data: cfg, updated_at: cfg.updated_at }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
@@ -729,27 +732,37 @@ export default async function handler(req, res) {
       const hint = String(body.hint || '').trim().slice(0, 200);
       const [shop, jobs] = await Promise.all([loadShop().catch(() => ({ products: [] })), loadJobs().catch(() => [])]);
       const have = [...shop.products.map((p) => p.name), ...jobs.filter((j) => !['cancelled', 'failed'].includes(j.status)).map((j) => j.title)].map((t) => String(t || '')).filter(Boolean);
-      const KEY = process.env.OPENAI_API_KEY || '';
-      let aiErr = '';
-      if (KEY) {
-        try {
-          const mk = await sb('posts?status=eq.note&kind=eq.market&select=text&order=created_at.desc&limit=1').catch(() => []);
-          const sys = 'คุณเป็นบรรณาธิการร้านขายชีทสรุปและหนังสือ PDF ภาษาอังกฤษสำหรับคนไทย (SheetLab) ตอบเป็น JSON อย่างเดียว';
-          const user = `คิดหัวข้อชีท PDF เล่มใหม่ 1 เล่มที่ขายได้จริงในไทย หมวดอะไรก็ได้เกี่ยวกับภาษาอังกฤษ (TOEIC, IELTS, TGAT/A-Level, สอบ ก.พ., คำศัพท์, ไวยากรณ์, สนทนา, ภาษาอังกฤษทำงาน/เที่ยว ฯลฯ) ห้ามซ้ำหรือใกล้เคียงกับเล่มที่มีแล้ว:\n${have.slice(0, 40).join('\n')}\n${hint ? `โจทย์จากเจ้าของร้าน: ${hint}\n` : ''}${mk?.[0]?.text ? `คำที่คนไทยค้นจริงล่าสุด (ใช้ประกอบ):\n${String(mk[0].text).slice(0, 1500)}\n` : ''}ตอบ JSON: {"title":"ชื่อเล่มขายได้ ≤ 90 ตัวอักษร","category":"หมวด","pages":จำนวนหน้า 20-160,"price":ราคาบาทลงท้าย 9 ระหว่าง 69-249,"audience":"เหมาะกับใคร","notes":"เนื้อหาที่ต้องมีในเล่ม 1-3 ประโยค","why":"ทำไมเล่มนี้น่าขาย 1 ประโยค"} ห้ามสัญญาผลคะแนน ห้ามอ้างว่าเป็นข้อสอบจริง`;
-          const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model: process.env.OPENAI_TEXT_MODEL || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, { role: 'user', content: user }], response_format: { type: 'json_object' }, temperature: 1 }) });
-          const j = await r.json().catch(() => ({}));
-          if (!r.ok) throw new Error(j?.error?.message || String(r.status));
-          const o = JSON.parse(j.choices?.[0]?.message?.content || '{}');
-          if (o.title) return res.status(200).json({ ok: true, source: 'ai', idea: { title: String(o.title).slice(0, 120), category: String(o.category || '').slice(0, 60), pages: Math.min(160, Math.max(20, Number(o.pages) || 60)), price: Math.max(0, Number(o.price) || 0), audience: String(o.audience || '').slice(0, 200), notes: String(o.notes || '').slice(0, 600), why: String(o.why || '').slice(0, 200) } });
-        } catch (e) { aiErr = String(e.message || e).slice(0, 120); }
+      // คลังไอเดียที่ทีม Claude (พี่โปร พี่โอ๊ค) เติมไว้ หยิบข้อแรกที่ยังไม่ใช้และไม่ซ้ำเล่มที่มี
+      const bankRows = await sb('shop_state?id=eq.idea_bank&select=data').catch(() => []); const bank = bankRows?.[0]?.data?.list || [];
+      const lowHave = have.map((t) => t.toLowerCase().slice(0, 16));
+      const fresh = bank.find((b) => !b.used && !lowHave.some((h) => h && String(b.title).toLowerCase().startsWith(h)) && (!hint || (b.title + ' ' + b.category).toLowerCase().includes(hint.toLowerCase())));
+      if (fresh) {
+        fresh.used = new Date().toISOString();
+        await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'idea_bank', data: { list: bank }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {});
+        return res.status(200).json({ ok: true, source: 'claude', by: MEMBER_TH[fresh.by] || 'ทีม', left: bank.filter((b) => !b.used).length, idea: { title: fresh.title, category: fresh.category, pages: fresh.pages, price: fresh.price, audience: fresh.audience || '', notes: fresh.notes || '', why: fresh.why || '' } });
       }
       const { IDEA_POOL } = await import('../lib/ideas.js');
       const low = have.map((t) => t.toLowerCase().slice(0, 20));
       const pool = IDEA_POOL.filter((b) => !low.some((h) => h && String(b.t).toLowerCase().startsWith(h.slice(0, 16))) && (!hint || (b.t + ' ' + b.cat).toLowerCase().includes(hint.toLowerCase())));
       const list = pool.length ? pool : IDEA_POOL;
       const b = list[Math.floor(Math.random() * list.length)];
-      return res.status(200).json({ ok: true, source: 'pool', aiErr: KEY ? aiErr : '', idea: { title: b.t, category: b.cat, pages: b.pages, price: b.price, audience: b.level ? `ระดับ ${b.level}` : '', notes: b.notes || '', why: '' } });
+      return res.status(200).json({ ok: true, source: 'pool', left: 0, idea: { title: b.t, category: b.cat, pages: b.pages, price: b.price, audience: b.level ? `ระดับ ${b.level}` : '', notes: b.notes || '', why: '' } });
+    }
+    if (action === 'idea_bank') {
+      // ทีม Claude เติมไอเดียเล่มใหม่ (key POST {source, ideas:[{title,category,pages,price,audience,notes,why}]}) · GET ดูจำนวนคงเหลือ
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const rows = await sb('shop_state?id=eq.idea_bank&select=data'); let list = rows?.[0]?.data?.list || [];
+      if (req.method !== 'POST') return res.status(200).json({ ok: true, left: list.filter((b) => !b.used).length, list: list.slice(-40) });
+      const body = await readBody(req); const by = MEMBER_TH[body.source] ? String(body.source) : 'product';
+      const seen = new Set(list.map((b) => String(b.title).toLowerCase())); let added = 0;
+      for (const x of (Array.isArray(body.ideas) ? body.ideas : []).slice(0, 15)) {
+        const title = String(x?.title || '').trim().slice(0, 120); if (title.length < 8 || seen.has(title.toLowerCase())) continue; seen.add(title.toLowerCase());
+        list.push({ title, category: String(x.category || '').slice(0, 60), pages: Math.min(200, Math.max(10, Number(x.pages) || 60)), price: Math.max(0, Number(x.price) || 0), audience: String(x.audience || '').slice(0, 200), notes: String(x.notes || '').slice(0, 600), why: String(x.why || '').slice(0, 200), by, created_at: new Date().toISOString() }); added++;
+      }
+      list = list.filter((b) => !b.used).concat(list.filter((b) => b.used).slice(-30)).slice(-120);
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'idea_bank', data: { list }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, added, left: list.filter((b) => !b.used).length });
     }
     if (action === 'hit') {
       // นับผู้เข้าชมแต่ละส่วนของเว็บ (สาธารณะ ไม่เก็บข้อมูลส่วนตัว): หน้าเว็บส่งครั้งเดียวต่อคนต่อส่วนต่อวัน · เก็บ 60 วันใน shop_state hits
@@ -1130,7 +1143,7 @@ export default async function handler(req, res) {
       await saveJobs(jobs);
       return res.status(200).json({ ok: true, job });
     }
-    if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel'].includes(action)) {
+    if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel', 'factory_listing'].includes(action)) {
       const admin = action === 'factory_cancel' && req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const body = await readBody(req);
@@ -1153,6 +1166,7 @@ export default async function handler(req, res) {
         if (body.pages) job.pages = Number(body.pages);
         if (body.size) job.size = Number(body.size);
         if (body.summary) job.summary = String(body.summary).slice(0, 2000);
+        if (body.listing && typeof body.listing === 'object') job.listing_copy = cleanListing(body.listing);
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
         await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
         if (Number(job.price) >= 1 && job.file_url) job.listing = 'pending'; // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
@@ -1160,6 +1174,9 @@ export default async function handler(req, res) {
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
         try { await addTodo({ text: todoText, type: job.listing === 'pending' ? 'decide' : 'do', from: 'factory', link: job.file_url || null }); } catch (e) { console.error('todo', e.message); }
+      } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
+        if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
+        job.listing_copy = cleanListing(body.listing);
       } else if (action === 'factory_fail') {
         job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
         await logNote('factory', `ผลิตไม่สำเร็จ: ${job.title} เหตุผล: ${job.error}`);
