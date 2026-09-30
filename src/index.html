@@ -1084,7 +1084,7 @@ function blankBundle(){return{type:'bundle',name:'',slug:'',kind:'book',headline
 function bundleDraft(p){const b=blankBundle();const d=Object.assign({},b,JSON.parse(JSON.stringify(p||{})));
   d.plans=b.plans.map(x=>Object.assign({},x,(p&&p.plans||[]).find(y=>y.key===x.key)||{}));d.items=(d.items||[]).slice();d.planLinks=Object.assign({},(p&&p.planLinks)||{});d.promoEndStr=toLocalInput(d.promoEnd);return d;}
 const isBundle=p=>p&&p.type==='bundle';
-const end90=x=>Math.max(90,Math.floor((Number(x)+10)/100)*100-10); // ราคาลงท้าย 90
+const end90=x=>Math.max(90,Math.round((Number(x)-90)/100)*100+90); // ปัดเป็นราคาลงท้าย 90 ที่ใกล้ที่สุด (1,700×55% → 890)
 function bundleBooks(p){return (p.items||[]).map(getProduct).filter(Boolean);}
 function bundlePlans(p){return (p.plans||[]).filter(x=>x.on!==false&&Number(x.price)>=1);}
 
@@ -1102,7 +1102,7 @@ function bundleForm(){
     <div class="field">${lb('b-headline','เป้าหมาย (หัวข้อใหญ่บนหน้า)')}<input class="input" id="b-headline" data-d="headline" value="${esc(d.headline)}" placeholder="เช่น TOEIC 750+ ใน 30 วัน ครบทั้ง Listening และ Reading"></div>
     <div class="field">${lb('b-desc','คำโปรย 1–2 ประโยค')}<textarea class="input" id="b-desc" data-d="desc" rows="2">${esc(d.desc)}</textarea></div>
     <div class="grid2">
-      <div class="field">${lb('b-slug','ชื่อในลิงก์')}<div class="row"><code style="align-self:center">${DOMAIN}</code><input class="input" id="b-slug" data-d="slug" value="${esc(d.slug)}" placeholder="toeic-750" autocapitalize="none"></div></div>
+      <div class="field">${lb('b-slug','ชื่อในลิงก์ (sheetlabth.com/p/...)')}<div class="row"><code style="align-self:center">/p/</code><input class="input" id="b-slug" data-d="slug" value="${esc(d.slug)}" placeholder="toeic-750" autocapitalize="none"></div></div>
       <div class="field">${lb('b-status','สถานะ')}<select class="input" id="b-status" data-d="status"><option value="draft" ${d.status==='draft'?'selected':''}>ฉบับร่าง (ลูกค้ายังเข้าไม่ได้)</option><option value="published" ${d.status==='published'?'selected':''}>เผยแพร่</option></select></div>
     </div>
     <div class="field">${lb('b-color','สีประจำชุด')}<select class="input" id="b-color" data-d="color">${COLORS.map(c=>`<option value="${c[0]}" ${d.color===c[0]?'selected':''}>${esc(c[1])}</option>`).join('')}</select></div>
