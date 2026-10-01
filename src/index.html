@@ -751,6 +751,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .toc li{display:flex;align-items:baseline;gap:6px}
 .toc .dots{flex:1;border-bottom:2px dotted var(--line);transform:translateY(-4px);min-width:16px}
 .toc .pg{color:var(--muted);font-variant-numeric:tabular-nums}
+.toc li.toc-d{display:block;padding-bottom:10px;border-bottom:1px solid var(--line)}.toc li.toc-d:last-child{border-bottom:0;padding-bottom:0}.toc-d b{display:block;font-weight:600;line-height:1.45}.toc-d span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:2px}
 .toc-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
 .toc-card details{border:0;padding:0;margin:12px 0 0;background:transparent}
 .who{display:grid;gap:12px}
@@ -1751,7 +1752,8 @@ function shopView(){
   const units={d:'วัน',h:'ชม.',m:'นาที',s:'วินาที'};
   const promo=live?`<div class="promo" data-end="${p.promoEnd}"><div class="wrap promo-in"><span>โปรโมชันนี้หมดเวลาใน</span><div class="cd">${['d','h','m','s'].map(u=>`<div><b data-u="${u}">00</b><small>${units[u]}</small></div>`).join('')}</div></div></div>`:'';
   const X='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  const tocRow=t=>`<li><span>${esc(t[0])}</span><i class="dots"></i><span class="pg">${esc(t[1])}</span></li>`;
+  // สารบัญ: ขวาเป็นเลขหน้า (สั้น) = แถวเดียวมีจุดนำสายตา · ขวาเป็นคำอธิบาย (เช่น ส่วนของ Notion template) = ชื่อตัวหนา คำอธิบายบรรทัดล่าง
+  const tocRow=t=>String(t[1]||'').trim().length>8?`<li class="toc-d"><b>${esc(t[0])}</b>${t[1]?`<span>${esc(t[1])}</span>`:''}</li>`:`<li><span>${esc(t[0])}</span><i class="dots"></i><span class="pg">${esc(t[1])}</span></li>`;
   const authorTitle=kind==='book'?'เกี่ยวกับผู้เขียน':kind==='sheet'||kind==='exam'?'เกี่ยวกับผู้จัดทำ':kind==='course'?'เกี่ยวกับผู้สอน':'เกี่ยวกับผู้สร้าง';
   return `
   ${shopHead(p)}
