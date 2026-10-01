@@ -407,7 +407,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .leadlist{display:flex;flex-direction:column;gap:6px}.lead{display:flex;gap:10px;align-items:flex-start;padding:8px;border:1px solid var(--line);border-radius:10px}.lead input{margin-top:4px}.lead-m{display:flex;flex-direction:column;gap:2px;min-width:0}.lead-m b{overflow-wrap:anywhere}.lead-m .badge{align-self:flex-start}.leadauto{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:10px;padding:10px;margin:0 0 10px}.leadauto>div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
 .qpay{margin:4px 0 0}.qpay.center{text-align:center}.qpay label{display:block;margin-bottom:6px}.qpay .input{width:100%;font-size:16px}.qrimg{display:block;margin:8px auto;width:min(260px,100%);height:auto;background:#fff;border-radius:10px;padding:8px;border:1px solid var(--line)}.qrsteps{text-align:left;font-size:14px;background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0}.qrsteps ol{margin:4px 0 0;padding-left:20px}
 .btn-buy{background:#EE4D2D;color:#fff;border:0;font-weight:700}
-.cart-btn{margin-top:10px}
+.cart-btn{margin-top:10px;display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:2px 8px;line-height:1.35}.cb-hook{font-size:14px;font-weight:500;color:#D9401F}
 .sp-cart{display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:0;color:var(--brand);font:inherit;cursor:pointer;padding:0 6px;flex:none;font-size:18px}.sp-cart small{font-size:11px;font-weight:700}
 .st-item{position:relative;display:flex;min-width:0}.st-item>.st-card{flex:1;min-width:0}.st-item.picked>.st-card{border-color:#16a34a;box-shadow:0 0 0 2px #16a34a inset}
 .st-item.has-add>.st-card{padding-bottom:56px}
@@ -1411,7 +1411,7 @@ const cartCardHref=()=>`/api/checkout?cart=${encodeURIComponent(cartItems().map(
 function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เพิ่มไว้ ${n} เล่ม">✓ เพิ่มแล้ว ${n} เล่ม · ${baht(cartTotal())}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
 function cartBtn(p){if(!cartOk(p)||PV)return '';const n=cartItems().length;
   return CART.includes(p.id)?`<button class="btn btn-line btn-block cart-btn in" data-a="cartOpen">✓ เพิ่มแล้ว · ดูที่เพิ่มไว้ (${n} เล่ม)</button>`
-    :`<button class="btn btn-line btn-block cart-btn" data-a="cartAdd" data-id="${esc(p.id)}">+ เพิ่ม <span class="fine">ซื้อพร้อมเล่มอื่น จ่ายครั้งเดียว</span></button>`;}
+    :`<button class="btn btn-line btn-block cart-btn" data-a="cartAdd" data-id="${esc(p.id)}"><b>+ เพิ่ม</b> <span class="cb-hook">จัดชุดเอง เลือกกี่เล่มก็จ่ายครั้งเดียว</span></button>`;}
 function drawCart(){
   const root=$('#cart-root');if(!root)return;
   document.body.style.overflow=S.cart?'hidden':'';
