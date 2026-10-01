@@ -1328,6 +1328,10 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (action === 'review_mail') {
         if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+        if (req.query.preview) { // ลิงก์หน้ารีวิวของออเดอร์ล่าสุด (ไว้ดูหน้าตา ไม่ส่งอีเมล ไม่บันทึกอะไร)
+          const o = await sb('orders?status=eq.paid&select=session_id&order=paid_at.desc&limit=1');
+          return res.status(200).json({ ok: true, link: o?.[0] ? `${await siteUrl()}/review?o=${encodeURIComponent(o[0].session_id)}&t=${RV.reviewToken(o[0].session_id)}&s=5` : null });
+        }
         return res.status(200).json(await RV.sendReviewRequests({ dry: !!req.query.dry }));
       }
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
