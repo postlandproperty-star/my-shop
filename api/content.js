@@ -18,7 +18,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
-import { adsAccess, launchAd, setCampaignStatus, campaignStats } from '../lib/ads.js';
+import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
 import { sendRecoveries } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
@@ -2172,8 +2172,22 @@ export default async function handler(req, res) {
         if (fb && fb.userToken && req.query.stats) for (const x of items.filter((y) => y.fb?.campaign && ['live', 'ended', 'paused'].includes(y.status)).slice(0, 8)) { try { x.stats = await campaignStats(fb, x.fb.campaign); } catch (e) {} }
         return res.status(200).json({ ok: true, items, access, defaults: ADS_DEFAULT });
       }
+      if (action === 'ads_auto_status') { // สถานะแอดทุกตัวในบัญชีจาก Facebook (อ่านอย่างเดียว ทีมดูได้)
+        const fb = await loadFb().catch(() => null);
+        const acc = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) }));
+        if (!fb?.userToken || (acc.reason === 'token' || acc.reason === 'perm')) return res.status(200).json({ ok: false, access: acc, error: acc.error });
+        try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD' }); return res.status(200).json({ ok: true, access: acc, ...r }); }
+        catch (e) { return res.status(200).json({ ok: false, access: acc, error: String(e.message || e) }); }
+      }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       const body = await readBody(req);
+      if (action === 'ads_auto_adset') { // หยุด/เปิดแอดรายตัวจากแท็บสถานะ (เฉพาะคุณแดน)
+        if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
+        const st = body.status === 'ACTIVE' ? 'ACTIVE' : 'PAUSED', adId = String(body.adId || '');
+        if (!/^\d{6,30}$/.test(adId)) return res.status(400).json({ ok: false, error: 'bad ad id' });
+        try { const fb = await loadFb(); await setAdStatus(fb, adId, st); if (st === 'ACTIVE' && body.campaignId && /^\d{6,30}$/.test(String(body.campaignId))) await setCampaignStatus(fb, String(body.campaignId), 'ACTIVE').catch(() => {}); return res.status(200).json({ ok: true }); }
+        catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
+      }
       if (action === 'ads_auto_draft') { // ร่างแอด (ไม่เสียเงิน) ทีมขอได้
         try { const r = await draftAd(String(body.productId || ''), { by: admin ? 'owner' : 'team', force: !!body.force && !!admin }); return res.status(200).json({ ok: true, ...r }); }
         catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }

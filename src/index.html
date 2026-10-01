@@ -205,6 +205,12 @@ footer{padding:28px 0 110px;text-align:center}
 .adq-total{margin:0;font-size:15px}.adq-total b{font-size:18px}
 .adq-lbl{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
 .adq-imgs{display:flex;gap:6px;flex-wrap:wrap}.adq-pick{width:56px;height:56px;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:none}.adq-pick img{width:100%;height:100%;object-fit:cover;display:block}.adq-pick.on{border-color:#EE4D2D}
+.adst{margin-bottom:14px}.adst-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.chip.warnchip:not([aria-pressed="true"]){border-color:var(--bad);color:var(--bad)}
+.ads-row{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}.ads-row.fix{background:var(--badbg);margin:0 -10px 6px;padding:12px 10px;border-radius:10px;border-top:0}
+.ads-img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--bg);display:block}
+.ads-info{display:grid;gap:4px;min-width:0}.ads-info>b{font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ads-st{display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center}
+.ads-todo{font-size:13.5px;font-weight:600;color:var(--bad)}.ads-why{color:var(--bad)}.ads-acts{display:flex;flex-direction:column;gap:6px}
+@media (max-width:760px){.ads-row{grid-template-columns:48px minmax(0,1fr)}.ads-img{width:48px;height:48px}.ads-acts{grid-column:1/-1;flex-direction:row}}
 .adq-plats{display:flex;gap:6px;flex-wrap:wrap}
 .adq-ai{display:grid;gap:6px;margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}.adq-ai .adq-lbl{margin:4px 0 0}.adq-ai .input{margin:0}
 .adq-tl{padding:8px 12px 0;margin:0}.adq-text{border-top:0}
@@ -2726,6 +2732,7 @@ function productsTab(){
   ${reviewBox()}
   ${(()=>{const all=D.products,st=S.pstat||'all',k=S.pkind||'all',q=(S.pq||'').toLowerCase().trim();
     if(ADA.items===null&&!ADA.loading)loadAdsAuto();
+    const adFix=ADST.d&&ADST.d.ads?ADST.d.ads.filter(a=>a.group==='fix').length+(ADST.d.access&&!ADST.d.access.ok&&ADST.d.access.reason==='account'?1:0):0;
     const adN=(ADA.items||[]).filter(x=>['pending','failed','launching','live','paused'].includes(x.status)).length,adWait=(ADA.items||[]).filter(x=>['pending','failed'].includes(x.status)).length;
     const tabs=[['all','ทั้งหมด',all.length],['live','ขายอยู่',all.filter(x=>x.status==='published').length],['draft','ฉบับร่าง',all.filter(x=>x.status!=='published').length],['fix','ต้องแก้ไข',all.filter(pNeedsFix).length]];
     let list=all.filter(x=>st==='all'||(st==='live'?x.status==='published':st==='draft'?x.status!=='published':pNeedsFix(x))).filter(x=>k==='all'||pfmt(x)===k);
@@ -2734,8 +2741,8 @@ function productsTab(){
     else if(so==='rev')list=list.slice().sort((a,b)=>prodStats(b).revenue-prodStats(a).revenue);
     else if(so==='hi'||so==='lo'){const pr=x=>isBundle(x)?Math.min(...bundlePlans(x).map(y=>y.price),1e9):Number(x.price)||0;list=list.slice().sort((a,b)=>so==='hi'?pr(b)-pr(a):pr(a)-pr(b));}
     const shown=list.filter(x=>!q||pq(x).includes(q));
-    const tabBar=`<div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='fix'&&t[2]?' warn':''}" data-a="pstat" data-v="${t[0]}" aria-selected="${st===t[0]}">${t[1]} (${t[2]})</button>`).join('')}<button role="tab" class="pt-tab${adWait?' warn':''}" data-a="pstat" data-v="ads" aria-selected="${st==='ads'}">📣 แอด (${adN})${adWait?` <span class="badge warn">รอตกลง ${adWait}</span>`:''}</button></div>`;
-    if(st==='ads')return `<div class="pt-card">${tabBar}<div style="padding:14px 0 6px">${adsAutoBox(false)}</div></div>`;
+    const tabBar=`<div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='fix'&&t[2]?' warn':''}" data-a="pstat" data-v="${t[0]}" aria-selected="${st===t[0]}">${t[1]} (${t[2]})</button>`).join('')}<button role="tab" class="pt-tab${adWait||adFix?' warn':''}" data-a="pstat" data-v="ads" aria-selected="${st==='ads'}">📣 แอด${ADST.d&&ADST.d.ads?` (${ADST.d.ads.length+adWait})`:` (${adN})`}${adFix?` <span class="badge bad">ต้องแก้ ${adFix}</span>`:''}${adWait?` <span class="badge warn">รอตกลง ${adWait}</span>`:''}</button></div>`;
+    if(st==='ads')return `<div class="pt-card">${tabBar}<div style="padding:14px 0 6px">${adsStatusBox()}</div></div>`;
     return `<div class="pt-card">
     ${tabBar}
     <div class="pt-tools">
@@ -3442,7 +3449,41 @@ const AD_PLATS=[['facebook','Facebook'],['instagram','Instagram'],['threads','Th
 function adRecommend(x){const p=getProduct(x.productId),notion=p&&pfmt(p)==='notion';
   return notion?{plats:['facebook','instagram'],why:'Notion template ขายด้วยภาพสวย คนบน Instagram ตัดสินใจจากรูปได้ไว แนะนำ Facebook + Instagram (หรือปล่อยอัตโนมัติก็ได้)'}
     :{plats:[],why:'แนะนำ "อัตโนมัติ" ให้ Facebook ย้ายงบไปช่องที่ได้ยอดซื้อถูกที่สุดเอง (ส่วนใหญ่ได้ทั้ง FB และ IG) งบ ฿100/วัน ถ้าแบ่งเองหลายช่อง แต่ละช่องจะได้งบน้อยจนเรียนรู้ช้า · Threads คนเห็นแอดยังน้อย ใช้เป็นช่องเสริมเมื่ออยากลอง'};}
-function adsAutoBox(compact){
+/* แท็บสถานะแอด: แอดทุกตัวในบัญชี (สถานะจริงจาก Facebook) แยก วิ่งอยู่ / รอรีวิว / ต้องแก้ / หยุด / จบ + แอดที่รอคุณแดนกดตกลง */
+const ADST={d:null,loading:false,f:'all',busy:''};
+function loadAdsStatus(){if(ADST.loading)return;ADST.loading=true;adminApi('/api/content?action=ads_auto_status').then(j=>{ADST.d=j||{ok:false};}).catch(()=>{ADST.d={ok:false,error:'เชื่อมต่อไม่ได้'};}).then(()=>{ADST.loading=false;render(true);});}
+const ADG={fix:['🔴','ต้องแก้ไข','bad'],review:['🟡','รอรีวิว','warn'],run:['🟢','กำลังวิ่ง','ok'],paused:['⏸','หยุดไว้','gray'],ended:['✓','จบแล้ว','gray']};
+function adsStatusBox(){
+  if(!ADST.d&&!ADST.loading)loadAdsStatus();
+  const d=ADST.d,ads=(d&&d.ads)||[],A=d&&d.access,pend=(ADA.items||[]).filter(x=>['pending','failed','launching'].includes(x.status));
+  const accBad=A&&!A.ok&&A.reason==='account';
+  const cnt=k=>ads.filter(a=>a.group===k).length+(k==='fix'&&accBad?1:0);
+  const chips=[['all','ทั้งหมด',ads.length+pend.length],['fix','🔴 ต้องแก้ไข',cnt('fix')],['pending','📝 รอกดตกลง',pend.length],['review','🟡 รอรีวิว',cnt('review')],['run','🟢 กำลังวิ่ง',cnt('run')],['paused','⏸ หยุด/จบ',cnt('paused')+cnt('ended')]];
+  const f=ADST.f||'all';
+  const list=ads.filter(a=>f==='all'||(f==='paused'?['paused','ended'].includes(a.group):a.group===f));
+  const auto=n=>(ADA.items||[]).find(x=>x.campaign===n);
+  const money=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');
+  const row=a=>{const g=ADG[a.group],au=auto(a.campaign);return `<div class="ads-row ${a.group}">
+    ${a.image?`<img src="${esc(a.image)}" alt="" class="ads-img" loading="lazy">`:'<span class="ads-img"></span>'}
+    <div class="ads-info"><b>${esc(au?au.name:a.campaign||a.name)}</b>
+      <span class="ads-st"><span class="badge ${g[2]}">${g[0]} ${esc(a.label)}</span>${a.dailyTHB?`<span class="fine">≈${money(a.dailyTHB)}/วัน</span>`:''}${a.end&&a.group!=='ended'?`<span class="fine">ถึง ${new Date(a.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}</span>
+      ${a.todo?`<span class="ads-todo">👉 ${esc(a.todo)}</span>`:''}${a.reasons.length?`<span class="fine ads-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</span>`:''}
+      <span class="fine">7 วัน: ใช้ไป ${money(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · ซื้อ ${a.week.purchases}${a.week.purchases?` · ต้นทุน/ซื้อ ${money(a.week.spendTHB/a.week.purchases)}`:''}</span></div>
+    <div class="ads-acts">${a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`:a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:''}
+      <a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${esc(a.id)}" target="_blank" rel="noopener noreferrer">Ads Manager</a></div></div>`;};
+  return `<section class="card adst">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">สถานะแอดทั้งหมด</h3><button class="chip" data-a="adsStRefresh">${ADST.loading?'กำลังโหลด...':'รีเฟรช'}</button></div>
+    <p class="fine" style="margin:4px 0 10px">ดึงจาก Facebook จริงทุกครั้งที่เปิด รวมแอดที่ทำเองใน Ads Manager ด้วย · ตัวเลข 7 วันล่าสุด แปลงเป็นบาทตามเรทวันนี้</p>
+    <div class="adst-chips">${chips.map(c=>`<button class="chip${c[0]==='fix'&&c[2]?' warnchip':''}" data-a="adsFilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>
+    ${accBad&&(f==='all'||f==='fix')?`<div class="ads-row fix"><span class="ads-img" style="display:grid;place-items:center;font-size:24px">🏦</span><div class="ads-info"><b>บัญชีโฆษณา</b><span class="ads-st"><span class="badge bad">🔴 ${esc(A.error||'ใช้งานไม่ได้')}</span></span><span class="ads-todo">👉 แก้ที่หน้าการชำระเงิน แอดทุกตัวจะหยุดจนกว่าจะแก้</span></div><div class="ads-acts"><a class="btn btn-cta btn-sm" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">ไปหน้าชำระเงิน</a></div></div>`:''}
+    ${d&&!d.ok&&!accBad?`<p class="fine" style="color:var(--bad)">ดึงสถานะไม่ได้: ${esc(d.error||'')}</p>`:''}
+    ${!d?'<p class="fine">กำลังโหลด...</p>':''}
+    ${f==='pending'?'':list.map(row).join('')}
+    ${d&&d.ok&&f!=='pending'&&!list.length?`<p class="fine" style="padding:10px 0">ไม่มีแอดในกลุ่มนี้</p>`:''}
+  </section>
+  ${f==='all'||f==='pending'?adsAutoBox(false,true):''}`;
+}
+function adsAutoBox(compact,noLive){
   if(ADA.items===null&&!ADA.loading)loadAdsAuto();
   const items=ADA.items||[],A=ADA.access;
   const pend=items.filter(x=>x.status==='pending'||x.status==='failed'||x.status==='launching'),live=items.filter(x=>['live','paused'].includes(x.status)),old=items.filter(x=>['ended','dismissed'].includes(x.status));
@@ -3496,8 +3537,8 @@ function adsAutoBox(compact){
     ${permBox}
     ${ADA.items===null?'<p class="fine">กำลังโหลด...</p>':''}
     ${pend.map(card).join('')}
-    ${!compact&&live.length?`<h4 style="margin:14px 0 6px">แอดที่ยิงอยู่</h4>${live.map(liveRow).join('')}`:''}
-    ${!compact&&!pend.length&&!live.length&&ADA.items?'<p class="fine">ยังไม่มีแอดรอตกลง สินค้าที่เผยแพร่ใหม่จะขึ้นที่นี่เอง</p>':''}
+    ${!compact&&!noLive&&live.length?`<h4 style="margin:14px 0 6px">แอดที่ยิงอยู่</h4>${live.map(liveRow).join('')}`:''}
+    ${!compact&&!pend.length&&(noLive||!live.length)&&ADA.items?'<p class="fine">ยังไม่มีแอดรอตกลง สินค้าที่เผยแพร่ใหม่จะขึ้นที่นี่เอง</p>':''}
     ${!compact&&old.length?`<details style="margin-top:10px"><summary class="fine">ประวัติ (${old.length})</summary>${old.map(x=>`<p class="fine" style="margin:4px 0">${x.status==='ended'?'✓ จบแล้ว':'✖ ไม่เอา'} · ${esc(x.name)} · ฿${esc(x.dailyTHB)}/วัน × ${esc(x.days)} วัน</p>`).join('')}</details>`:''}
   </section>`;
 }
@@ -4351,6 +4392,10 @@ function act(a,el){
       authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:x.aiModel||imgModel(),quality:imgQuality()})})
         .then(async j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');await adsUseImage(x,j.image);toast('ได้รูปแอดใหม่แล้ว ✨');})
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
+    case 'adsFilter':ADST.f=el.dataset.v;render(true);break;
+    case 'adsStRefresh':ADST.d=null;ADA.items=null;loadAdsStatus();loadAdsAuto();render(true);break;
+    case 'adsSet':{const on=el.dataset.v==='ACTIVE';if(!confirm(on?'เปิดแอดนี้ต่อ? (จะเริ่มใช้งบอีกครั้ง)':'หยุดแอดนี้? (เปิดต่อได้ภายหลัง)'))break;ADST.busy=id;render(true);
+      adminPost('/api/content?action=ads_auto_adset',{adId:id,status:el.dataset.v,campaignId:el.dataset.camp||''}).then(j=>{ADST.busy='';if(j&&j.ok){toast(on?'เปิดแอดต่อแล้ว':'หยุดแอดแล้ว');ADST.d=null;loadAdsStatus();}else{toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}}).catch(()=>{ADST.busy='';toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'goAds':S.tab='products';S.pstat='ads';S.edit=null;render(false);break;
     case 'adsRefresh':ADA.items=null;loadAdsAuto();render(true);break;
     case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
@@ -4360,7 +4405,7 @@ function act(a,el){
       if(!(daily>=50&&daily<=2000)){toast('งบต่อวัน ฿50 - ฿2,000');break;}if(!(days>=1&&days<=30)){toast('จำนวนวัน 1-30 วัน');break;}
       if(!confirm(`ยืนยันยิงแอด "${x.name}"\nลงที่: ${(x.platforms||[]).length?x.platforms.map(k=>(AD_PLATS.find(p=>p[0]===k)||[,k])[1]).join(' + '):'อัตโนมัติ (Facebook เลือกเอง)'}\nงบ ฿${daily}/วัน × ${days} วัน = รวมไม่เกิน ฿${(daily*days).toLocaleString('th-TH')}\nเงินจะตัดจากบัญชีโฆษณา Facebook ของคุณแดน`))break;
       Object.assign(x,{dailyTHB:daily,days,text,headline});ADA.busy=id;render(true);
-      adminPost('/api/content?action=ads_auto_launch',{id,dailyTHB:daily,days,text,headline,image:x.image,platforms:x.platforms||[]}).then(j=>{ADA.busy='';if(j&&j.ok){Object.assign(x,j.item);toast('🚀 ยิงแอดแล้ว รอ Facebook รีวิว (ปกติไม่เกิน 1 วัน)');}else{if(j&&j.item)Object.assign(x,j.item);toast('ยิงแอดไม่สำเร็จ: '+((j&&j.error)||''));}render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้ กดรีเฟรชดูสถานะก่อนกดซ้ำ');render(true);});break;}
+      adminPost('/api/content?action=ads_auto_launch',{id,dailyTHB:daily,days,text,headline,image:x.image,platforms:x.platforms||[]}).then(j=>{ADA.busy='';if(j&&j.ok){Object.assign(x,j.item);toast('🚀 ยิงแอดแล้ว รอ Facebook รีวิว (ปกติไม่เกิน 1 วัน)');ADST.d=null;}else{if(j&&j.item)Object.assign(x,j.item);toast('ยิงแอดไม่สำเร็จ: '+((j&&j.error)||''));}render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้ กดรีเฟรชดูสถานะก่อนกดซ้ำ');render(true);});break;}
     case 'adsConnect':{const ta=$('#ads-token'),token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}ADA.tokMsg='กำลังอัปเดต...';render(true);const t1=$('#ads-token');if(t1)t1.value=token;
       adminPost('/api/fb?action=connect',{token,pageId:(FB.page&&FB.page.id)||''}).then(async j=>{if(!j||!j.ok){ADA.tokMsg='ไม่สำเร็จ: '+((j&&j.error)||'');render(true);const t2=$('#ads-token');if(t2)t2.value=token;return;}
         ADA.tokMsg='';await loadFbStatus();ADA.items=null;await loadAdsAuto();toast(ADA.access&&ADA.access.ok?'อัปเดตสิทธิ์แล้ว ยิงแอดจากหลังบ้านได้แล้ว':'อัปเดตโทเค็นแล้ว แต่ยังขาด: '+((ADA.access&&ADA.access.error)||''));if(!j.ig)toast('⚠️ โทเค็นนี้ไม่มีสิทธิ์ IG คลิปจะไม่ลง IG ใส่ instagram_basic/instagram_content_publish แล้ววางใหม่');}).catch(()=>{ADA.tokMsg='เชื่อมต่อไม่ได้';render(true);});break;}
