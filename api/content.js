@@ -854,7 +854,9 @@ export default async function handler(req, res) {
       if (!KEY) return res.status(200).json({ ok: false, configured: false, error: 'ยังไม่ได้ใส่ OPENAI_API_KEY' });
       const r = await fetch(`https://api.openai.com/v1/models/${model}`, { headers: { Authorization: `Bearer ${KEY}` } }).catch(() => null);
       const j = r ? await r.json().catch(() => ({})) : {};
-      return res.status(200).json({ ok: !!(r && r.ok), configured: true, model, status: r ? r.status : 0, error: r && r.ok ? null : (j?.error?.message || 'เชื่อมต่อ OpenAI ไม่ได้').slice(0, 200) });
+      let imageModels = []; // โมเดลสร้างรูปที่บัญชีนี้ใช้ได้ (ไว้ให้เลือกในหลังบ้าน)
+      try { const m = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${KEY}` } }).then((x) => x.json()); imageModels = (m.data || []).map((x) => x.id).filter((id) => /image|dall-e/i.test(id)).sort(); } catch (e) {}
+      return res.status(200).json({ ok: !!(r && r.ok), configured: true, model, imageModels, status: r ? r.status : 0, error: r && r.ok ? null : (j?.error?.message || 'เชื่อมต่อ OpenAI ไม่ได้').slice(0, 200) });
     }
     if (action === 'cover') {
       // สร้างรูปปกด้วย OpenAI Images (คีย์อยู่ใน Vercel env OPENAI_API_KEY เท่านั้น) · คุณแดนกดจากหน้าแก้สินค้า ครั้งละ 1 รูป
