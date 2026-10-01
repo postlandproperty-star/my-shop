@@ -338,23 +338,6 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .qpay{margin:4px 0 0}.qpay.center{text-align:center}.qpay label{display:block;margin-bottom:6px}.qpay .input{width:100%;font-size:16px}.qrimg{display:block;margin:8px auto;width:min(260px,100%);height:auto;background:#fff;border-radius:10px;padding:8px;border:1px solid var(--line)}.qrsteps{text-align:left;font-size:14px;background:var(--bg);border-radius:10px;padding:10px 12px;margin:8px 0}.qrsteps ol{margin:4px 0 0;padding-left:20px}
 .btn-buy{background:#EE4D2D;color:#fff;border:0;font-weight:700}
 .cart-btn{margin-top:10px}
-/* ธีมหน้าขายสินค้า Notion "Broken White": พื้นขาวหม่น หมึกดำ กล่องขาวขอบดำหนา เงาดำทึบ จุดฮาล์ฟโทน (คุณแดนเลือก ต.ค. 2569) */
-body.th-notion{--bg:#EEEDE9;--ink:#111;--muted:#55554F;--line:#CFCFCA;--brand:#111;--accent:#111;--accent-ink:#fff;--ok:#111}
-body.th-notion .sp-band{--hero:#111 !important;background:#111;color:#fff;border:3px solid #111;box-shadow:6px 6px 0 #9A9A94}
-body.th-notion .card{border:3px solid #111;box-shadow:8px 8px 0 #111;border-radius:16px}
-body.th-notion .btn{border-radius:12px}
-body.th-notion .btn-buy,body.th-notion .btn-cta{background:#111;color:#fff;border:3px solid #111;box-shadow:4px 4px 0 #9A9A94}
-body.th-notion .btn-line{background:#fff;color:#111;border:2.5px solid #111;box-shadow:4px 4px 0 #111}
-body.th-notion .btn:active{transform:translate(2px,2px)}
-body.th-notion .sp-info h1,body.th-notion h2{color:#111;letter-spacing:-.01em}
-body.th-notion .spx{position:relative}
-body.th-notion .spx::before{content:'';position:absolute;left:0;top:4px;width:190px;height:190px;pointer-events:none;background-image:radial-gradient(#111 1.7px,transparent 2.1px);background-size:13px 13px;-webkit-mask-image:radial-gradient(circle at 35% 35%,#000 0,transparent 68%);mask-image:radial-gradient(circle at 35% 35%,#000 0,transparent 68%);opacity:.6}
-body.th-notion .spx>*{position:relative;z-index:1}
-body.th-notion .sp-car-wrap{margin:14px 0 0 14px}
-body.th-notion .sp-car img{border:3px solid #111;border-radius:14px;background:#fff}
-body.th-notion .sticky{border-top:3px solid #111;background:#fff}
-body.th-notion .sp-perks span{border:2px solid #111;background:#fff;color:#111;border-radius:999px;padding:2px 12px}body.th-notion .badge{border:1.5px solid #111;background:#fff;color:#111}
-body.th-notion .ct-pay{background:#111}.cart-btn .fine{font-weight:400}.cart-btn.in{border-color:var(--ok);color:var(--ok)}
 .sp-cart{display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:0;color:var(--brand);font:inherit;cursor:pointer;padding:0 6px;flex:none;font-size:18px}.sp-cart small{font-size:11px;font-weight:700}
 .cartfab{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:8px;background:#EE4D2D;color:#fff;border:0;border-radius:999px;padding:12px 18px;font:inherit;font-weight:700;box-shadow:0 6px 20px rgba(15,27,51,.25);cursor:pointer}.cartfab b{background:#fff;color:#EE4D2D;border-radius:999px;min-width:22px;height:22px;display:inline-grid;place-items:center;font-size:13px;padding:0 6px}
 .ct-back{position:fixed;inset:0;background:rgba(15,27,51,.45);z-index:60}
@@ -3673,7 +3656,6 @@ function render(keep){
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
-  {const cp=v==='shop'?curProduct():null;document.body.classList.toggle('th-notion',!!cp&&(cp.cat==='notion'||/^notion-/.test(cp.slug||'')||/Notion Template/i.test(cp.specs||'')));}
   $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:storeView,order:orderView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
   if(v==='store')hit('store');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
