@@ -420,6 +420,10 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .ct-list{list-style:none;margin:0;padding:0}.ct-list li{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .ct-img{width:56px;height:56px;border-radius:10px;overflow:hidden;background:var(--bg);display:block}.ct-img img,.ct-img svg{width:100%;height:100%;object-fit:cover;display:block}
 .ct-nm{display:flex;flex-direction:column;gap:2px;min-width:0}.ct-nm b{font-size:14.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.ct-nm span{color:var(--muted);font-size:14px}
+.ct-recs{margin:6px 0 12px;border-top:1px dashed var(--line);padding-top:12px}.ct-rh{display:block;font-size:15px;margin-bottom:4px}
+.ct-recs ul{list-style:none;margin:0;padding:0}.ct-recs li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.ct-rl{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center;text-decoration:none;color:inherit}
+.ct-add{background:#fff;border:1.5px solid #EE4D2D;color:#EE4D2D;border-radius:10px;padding:7px 12px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}.ct-add:hover{background:#FFF1EE}
 .ct-rm{background:none;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
 .ct-hint{display:block;margin:12px 0 0;background:#FFF6CC;border-radius:12px;padding:10px 12px;font-size:14px;color:var(--ink);text-decoration:none}
 .ct-sum{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 12px}.ct-sum b{font-size:24px}
@@ -1409,15 +1413,20 @@ function drawCart(){
   document.body.style.overflow=S.cart?'hidden':'';
   if(!S.cart){root.innerHTML='';return;}
   const L=cartItems(),n=L.length,tot=cartTotal();
+  // แนะนำเล่มอื่นให้กดเพิ่มต่อได้ในหน้าต่างนี้เลย (หมวดเดียวกับเล่มล่าสุดก่อน) ไม่พาออกจากหน้าที่ดูอยู่
+  const last=L[L.length-1],sold=id=>D.orders.filter(o=>o.productId===id&&o.status==='paid').length;
+  const recs=n?D.products.filter(x=>x.status==='published'&&!isBundle(x)&&cartOk(x)&&!CART.includes(x.id)).map(x=>({x,s:(last&&x.cat&&x.cat===last.cat?4:0)+(last&&pfmt(x)===pfmt(last)?2:0)+Math.min(1,sold(x.id)/10)})).sort((a,b)=>b.s-a.s).slice(0,4).map(o=>o.x):[];
   const bh=n>=2?D.products.filter(b=>isBundle(b)&&b.status==='published').map(b=>({b,k:(b.items||[]).filter(i=>CART.includes(i)).length})).filter(x=>x.k>=2).sort((a,b)=>b.k-a.k)[0]:null;
+  const justAdded=S.cartJust&&CART.includes(S.cartJust)?getProduct(S.cartJust):null;
   root.innerHTML=`<div class="ct-back" data-a="cartClose"></div>
   <div class="ct-sheet" role="dialog" aria-modal="true" aria-labelledby="ct-h">
-    <div class="ct-head"><h2 id="ct-h">เล่มที่เพิ่มไว้${n?` (${n})`:''}</h2><button class="ct-x" data-a="cartClose" aria-label="ปิด">×</button></div>
+    <div class="ct-head"><h2 id="ct-h">${justAdded?'✓ เพิ่มแล้ว':'เล่มที่เพิ่มไว้'}${n?` (${n} เล่ม)`:''}</h2><button class="ct-x" data-a="cartClose" aria-label="ปิด">×</button></div>
     ${n?`<ul class="ct-list">${L.map(p=>{const img=(p.images||[])[0];return `<li><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56">`:cover(p.color,p.kind||'other')}</span><span class="ct-nm"><b>${esc(p.name)}</b><span>${baht(p.price)}</span></span><button class="ct-rm" data-a="cartRemove" data-id="${esc(p.id)}" aria-label="เอา ${esc(p.name)} ออก">เอาออก</button></li>`;}).join('')}</ul>
       ${bh?`<a class="ct-hint" href="/p/${esc(bh.b.slug)}" data-go="${esc(bh.b.id)}">💡 ${bh.k} เล่มนี้อยู่ใน${esc(bh.b.name)} ซื้อเป็นชุดอาจคุ้มกว่า (เริ่มต้น ${baht(fromPrice(bh.b))}) ดูชุด →</a>`:''}
       <div class="ct-sum"><span>รวม ${n} รายการ</span><b>${baht(tot)}</b></div>
       <a class="btn btn-buy btn-block ct-pay" href="${cartHref()}" data-a="cartPay">ชำระเงิน ${baht(tot)}</a>
-      <p class="fine ct-note">จ่ายครั้งเดียวด้วย QR พร้อมเพย์ หรือบัตร · ได้ลิงก์ดาวน์โหลดทุกเล่มทันทีหลังจ่าย และส่งเข้าอีเมลด้วย</p>`
+      <p class="fine ct-note">จ่ายครั้งเดียวด้วย QR พร้อมเพย์ หรือบัตร · ได้ลิงก์ดาวน์โหลดทุกเล่มทันทีหลังจ่าย และส่งเข้าอีเมลด้วย</p>
+      ${recs.length?`<div class="ct-recs"><b class="ct-rh">ซื้อเพิ่มอีกเล่ม จ่ายครั้งเดียว</b><ul>${recs.map(x=>{const img=(x.images||[])[0];return `<li><a class="ct-rl" href="/p/${esc(x.slug)}" data-go="${esc(x.id)}"><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56" loading="lazy">`:cover(x.color,x.kind||'other')}</span><span class="ct-nm"><b>${esc(x.name)}</b><span>${baht(x.price)}</span></span></a><button class="ct-add" data-a="cartAddIn" data-id="${esc(x.id)}" aria-label="เพิ่ม ${esc(x.name)}">+ เพิ่ม</button></li>`;}).join('')}</ul></div>`:''}`
       :`<p class="ct-empty">ยังไม่ได้เพิ่มเล่มไหน</p>`}
     ${storeMode()?`<button class="btn btn-line btn-block" data-a="cartMore">${n?'เลือกเล่มอื่นต่อ':'ไปเลือกสินค้า'}</button>`:''}
   </div>`;
@@ -4166,14 +4175,15 @@ function act(a,el){
     case 'exportOne':{const p=getProduct(el.dataset.id);if(p)exportCsv(p);break;}
     case 'exportOneImgs':{const p=getProduct(el.dataset.id);if(p&&!S.zipBusy)exportImgs(p);break;}
     case 'facAiToggle':FAC.aiOff=Object.assign(FAC.aiOff||{},{[el.dataset.id]:!el.checked});break;
-    case 'cartAdd':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
-      toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);render(true);break;}
-    case 'cartOpen':S.cart=true;drawCart._f=false;drawCart();break;
+    case 'cartAdd':case 'cartAddIn':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
+      // กดเพิ่มแล้วเปิดหน้าต่าง "✓ เพิ่มแล้ว" + แนะนำเล่มอื่น + ปุ่มชำระเงิน (แบบ Shopee) อยู่หน้าเดิม ไม่พาไปไหน
+      S.cartJust=id;S.cart=true;if(a==='cartAdd')drawCart._f=false;render(true);drawCart();break;}
+    case 'cartOpen':S.cart=true;S.cartJust=null;drawCart._f=false;drawCart();break;
     case 'cartTick':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;
       if(CART.includes(id)){CART=CART.filter(x=>x!==id);toast('เอาออกแล้ว');}
       else{CART.push(id);CART=CART.slice(-20);track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);}
       cartSave();render(true);break;}
-    case 'cartClose':S.cart=false;drawCart();break;
+    case 'cartClose':S.cart=false;S.cartJust=null;drawCart();break;
     case 'cartRemove':CART=CART.filter(x=>x!==id);cartSave();drawCart();render(true);break;
     case 'cartMore':S.cart=false;drawCart();if(S.view!=='store')navTo('/');break;
     case 'cartPay':S.cart=false;drawCart();S.sessionId=null;S.order=null;navTo('/checkout');break;
