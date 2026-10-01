@@ -2165,7 +2165,11 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
       const tok = process.env.FB_CAPI_TOKEN || '', shop = await loadShop(); const pid = String(shop.settings?.pixelId || '');
-      if (!tok) return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ FB_CAPI_TOKEN บน Vercel' });
+      if (!tok) { // ยังไม่มีคีย์: บอกว่า Pixel ของร้านอยู่บัญชีโฆษณาไหน + ลิงก์ตรงไปหน้าสร้างโทเค็น
+        let pixels = [];
+        try { const fb = await loadFb(); const { AD_ACCOUNT } = await import('../lib/ads.js'); const j = await fbGet(`${AD_ACCOUNT}/adspixels`, { fields: 'id,name,last_fired_time,owner_business{id,name}', access_token: fb.userToken }); pixels = (j.data || []).map((x) => ({ ...x, shop: x.id === pid, settings: `https://business.facebook.com/events_manager2/list/dataset/${x.id}/settings?act=${AD_ACCOUNT.replace('act_', '')}${x.owner_business?.id ? '&business_id=' + x.owner_business.id : ''}` })); } catch (e) { pixels = [{ error: String(e.message || e) }]; }
+        return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ FB_CAPI_TOKEN บน Vercel', pixelId: pid, pixels });
+      }
       if (!/^\d{6,20}$/.test(pid)) return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ Pixel ID ในหลังบ้าน' });
       try { const j = await fbGet(pid, { fields: 'id,name,last_fired_time', access_token: tok }); return res.status(200).json({ ok: true, pixel: j }); }
       catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e) }); }
