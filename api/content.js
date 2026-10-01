@@ -1305,7 +1305,7 @@ export default async function handler(req, res) {
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'pins', data: { list: log.slice(-500) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, pin_id: j.id });
     }
-    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_mail') {
+    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_mail' || action === 'review_send') {
       // รีวิวผู้ซื้อ: review_submit (สาธารณะ ต้องมีลายเซ็นออเดอร์) · reviews / review_hide (แอดมิน) · review_mail (แอดมิน/key ส่งอีเมลขอรีวิวทันที ?dry=1 ดูอย่างเดียว)
       const RV = await import('../lib/reviews.js');
       if (action === 'review_submit') {
@@ -1335,8 +1335,14 @@ export default async function handler(req, res) {
         return res.status(200).json(await RV.sendReviewRequests({ dry: !!req.query.dry }));
       }
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (action === 'review_send') { // คุณแดนกดขอรีวิวเอง: to = customer (ลูกค้าของออเดอร์นี้) | me (อีเมลที่ล็อกอินหลังบ้าน ไว้ดูหน้าตา)
+        const b = await readBody(req); const sid = String(b.sid || '');
+        if (!/^[A-Za-z0-9_-]{6,200}$/.test(sid)) return res.status(400).json({ ok: false, error: 'ออเดอร์ไม่ถูกต้อง' });
+        try { return res.status(200).json(await RV.sendReviewTo(sid, b.to === 'me' ? admin.email : '', { mark: b.to !== 'me' })); }
+        catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e).slice(0, 200) }); }
+      }
       const d = await RV.loadReviews();
-      if (action === 'reviews') return res.status(200).json({ ok: true, list: d.list.slice().reverse().slice(0, 300), sent: Object.keys(d.sent).length });
+      if (action === 'reviews') return res.status(200).json({ ok: true, list: d.list.slice().reverse().slice(0, 300), sent: Object.keys(d.sent).length, sentAt: d.sent });
       const b = await readBody(req); const r = d.list.find((x) => x.id === String(b.id || ''));
       if (!r) return res.status(404).json({ ok: false, error: 'ไม่พบรีวิว' });
       r.status = b.hidden ? 'hidden' : 'live'; r.updated_at = new Date().toISOString(); await RV.saveReviews(d);

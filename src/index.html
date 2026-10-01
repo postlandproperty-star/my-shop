@@ -183,6 +183,7 @@ footer{padding:28px 0 110px;text-align:center}
 .st-rv{font-size:13px;color:var(--muted)}.st-rv b{color:#b7791f}
 .rv-sum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 12px}.rv-sum>b{font-size:34px;line-height:1}.rv-stars{color:#F5B301;letter-spacing:1px}
 .rv-list{display:grid;gap:10px}.rv-item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.rv-item p{margin:6px 0 4px;white-space:pre-wrap}
+.rvreq{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .rvbox{margin:0 0 12px;padding:12px 14px}.rvbox summary{cursor:pointer;list-style:none}.rvbox summary::-webkit-details-marker{display:none}.rv-admin{display:grid;gap:8px;margin-top:10px}.rv-arow{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px}.rv-arow p{margin:4px 0 0;font-size:14px}.rv-arow.off{opacity:.5}
 .psearch{margin:0 0 8px}.ptag{background:#eef2ff;color:#3730a3}.ptag.cat{background:#f1f5f9;color:#475569}
 .facnotion{background:var(--bg);border-radius:10px;padding:8px 10px;margin:6px 0}
@@ -1869,7 +1870,7 @@ function orderRow(o){
       <ul class="log">${o.log.map(l=>`<li><span class="muted">${fdt(l.t)}</span>${esc(l.text)}</li>`).join('')}</ul>
       <div class="acts">
         ${o.src==='stripe'?`<a class="btn btn-line btn-sm" href="https://dashboard.stripe.com/${o.paymentIntent?'payments/'+esc(o.paymentIntent):'payments'}" target="_blank" rel="noopener noreferrer">ดู/คืนเงินใน Stripe</a>
-          ${o.status==='paid'?`<button class="btn btn-line btn-sm" data-a="resendEmail" data-sid="${esc(o.sid)}" ${o.email?'':'disabled'}>${o.emailedAt?'ส่งอีเมลซ้ำ':'ส่งอีเมลลิงก์ไฟล์'}</button><span class="fine">${o.emailedAt?'อีเมลส่งแล้ว '+fdt(o.emailedAt):o.email?'ยังไม่ได้ส่งอีเมล':'ไม่มีอีเมลลูกค้า'}</span>`:''}`:''}
+          ${o.status==='paid'?`<button class="btn btn-line btn-sm" data-a="resendEmail" data-sid="${esc(o.sid)}" ${o.email?'':'disabled'}>${o.emailedAt?'ส่งอีเมลซ้ำ':'ส่งอีเมลลิงก์ไฟล์'}</button><span class="fine">${o.emailedAt?'อีเมลส่งแล้ว '+fdt(o.emailedAt):o.email?'ยังไม่ได้ส่งอีเมล':'ไม่มีอีเมลลูกค้า'}</span>`:''}${o.status==='paid'&&o.src==='stripe'?rvReqRow(o):''}`:''}
         ${o.status==='paid'&&o.src!=='stripe'?`<button class="btn btn-line btn-sm" data-a="resend" data-id="${o.id}">ส่งลิงก์ซ้ำ</button>
           <button class="btn ${cf?'btn-danger':'btn-line'} btn-sm" data-a="refund" data-id="${o.id}">${cf?'กดอีกครั้งเพื่อยืนยันคืนเงิน':'คืนเงิน'}</button>`:''}
         ${o.status==='pending'&&o.src!=='stripe'?`<button class="btn btn-dark btn-sm" data-a="manualPaid" data-id="${o.id}">ยืนยันว่าชำระแล้ว</button>`:''}
@@ -2389,8 +2390,12 @@ function propBox(){
 }
 function propDone(id,applied){authFetch('/api/content?action=proposal_done',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,applied})}).then(j=>{if(j&&j.ok)PROP.list=(PROP.list||[]).filter(x=>x.id!==id);render(true);}).catch(()=>{});}
 const RVA={list:null,loading:false};
+function loadRVA(){if(RVA.list===null&&!RVA.loading){RVA.loading=true;adminApi('/api/content?action=reviews').then(j=>{RVA.list=j&&j.ok?j.list:[];RVA.sent=j&&j.sent||0;RVA.sentAt=j&&j.sentAt||{};}).catch(()=>{RVA.list=[];RVA.sentAt={};}).then(()=>{RVA.loading=false;render(true);});}}
+function rvReqRow(o){loadRVA();const rv=(RVA.list||[]).find(x=>x.order===o.sid),at=(RVA.sentAt||{})[o.sid];
+  return `<div class="rvreq"><button class="btn btn-line btn-sm" data-a="rvReq" data-sid="${esc(o.sid)}" data-to="customer" ${o.email&&!rv?'':'disabled'}>⭐ ${at?'ขอรีวิวอีกครั้ง':'ขอรีวิวตอนนี้'}</button><button class="btn btn-line btn-sm" data-a="rvReq" data-sid="${esc(o.sid)}" data-to="me">ส่งทดสอบถึงอีเมลฉัน</button>
+    <span class="fine">${rv?`รีวิวแล้ว ${starStr(rv.stars)}`:at?'ขอรีวิวแล้ว '+fdt(Date.parse(at)):'ระบบจะขอรีวิวเองหลังซื้อ 3 วัน'}</span></div>`;}
 function reviewBox(){
-  if(RVA.list===null&&!RVA.loading){RVA.loading=true;adminApi('/api/content?action=reviews').then(j=>{RVA.list=j&&j.ok?j.list:[];RVA.sent=j&&j.sent||0;}).catch(()=>{RVA.list=[];}).then(()=>{RVA.loading=false;render(true);});}
+  loadRVA();
   const L=RVA.list||[];const live=L.filter(x=>x.status!=='hidden');const avg=live.length?(live.reduce((a,x)=>a+x.stars,0)/live.length).toFixed(1):'-';
   return `<details class="card rvbox" ${S.rvopen?'open':''}><summary data-a="rvopen"><b>⭐ รีวิวลูกค้า</b> <span class="fine">${L.length?`${live.length} รีวิวบนหน้าร้าน · เฉลี่ย ${avg}${L.length>live.length?` · ซ่อน ${L.length-live.length}`:''}`:'ยังไม่มีรีวิว ระบบส่งอีเมลขอรีวิว 3 วันหลังลูกค้าซื้อ'}${RVA.sent?` · ส่งอีเมลขอรีวิวแล้ว ${RVA.sent} ฉบับ`:''}</span></summary>
     ${L.length?`<div class="rv-admin">${L.slice(0,60).map(x=>`<div class="rv-arow ${x.status==='hidden'?'off':''}"><div><span class="rv-stars">${starStr(x.stars)}</span> <b>${esc(x.name)}</b> <span class="fine">· ${esc(x.product_name||'')} · ${esc(String(x.created_at).slice(0,10))}</span>${x.text?`<p>${esc(x.text)}</p>`:''}</div>
@@ -3775,6 +3780,8 @@ function act(a,el){
       S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');checkAllLinks();break;}
     case 'newProduct':S.draft=initDraft(blankProduct());S.edit='new';S.err='';render(false);break;
     case 'newBundle':S.draft=bundleDraft(null);S.edit='new';S.err='';render(false);break;
+    case 'rvReq':{const to=el.dataset.to,sid=el.dataset.sid;if(to==='customer'&&S.confirm!=='rv:'+sid){S.confirm='rv:'+sid;el.textContent='กดอีกครั้งเพื่อส่งถึงลูกค้า';break;}S.confirm='';el.disabled=true;toast('กำลังส่ง...');
+      authFetch('/api/content?action=review_send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid,to})}).then(j=>{if(j&&j.ok){toast(to==='me'?'ส่งตัวอย่างไปที่อีเมลของคุณแดนแล้ว':'ส่งอีเมลขอรีวิวถึงลูกค้าแล้ว');if(to==='customer'){RVA.sentAt=RVA.sentAt||{};RVA.sentAt[sid]=new Date().toISOString();}}else toast((j&&j.error)||'ส่งไม่สำเร็จ');render(true);});break;}
     case 'rvopen':S.rvopen=!S.rvopen;break;
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนรีวิวแล้ว ไม่แสดงบนหน้าร้าน':'แสดงรีวิวบนหน้าร้านแล้ว');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
