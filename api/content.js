@@ -1472,7 +1472,8 @@ export default async function handler(req, res) {
         const safe = String(body.filename || 'sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'sheet.pdf';
         const ctype = /\.png$/i.test(safe) ? 'image/png' : /\.jpe?g$/i.test(safe) ? 'image/jpeg' : 'application/pdf';
         const path = `factory/${job.id}/${safe}`;
-        const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: '{}' });
+        // x-upsert: ทำรูปใหม่ทับชื่อไฟล์เดิมได้ (เช่น เปลี่ยนธีมรูปสินค้า) ลิงก์ในหน้าขายไม่ต้องเปลี่ยน
+        const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', 'x-upsert': 'true' }, body: '{}' });
         const j = await r.json().catch(() => ({}));
         if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status} ${JSON.stringify(j).slice(0, 200)}` });
         return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, headers: { 'Content-Type': ctype, 'x-upsert': 'true' } });
