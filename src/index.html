@@ -340,8 +340,9 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .cart-btn{margin-top:10px}
 .sp-cart{display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:0;color:var(--brand);font:inherit;cursor:pointer;padding:0 6px;flex:none;font-size:18px}.sp-cart small{font-size:11px;font-weight:700}
 .st-item{position:relative;display:flex;min-width:0}.st-item>.st-card{flex:1;min-width:0}.st-item.picked>.st-card{border-color:#16a34a;box-shadow:0 0 0 2px #16a34a inset}
-.st-tick{position:absolute;bottom:12px;right:10px;z-index:2;width:28px;height:28px;border-radius:50%;border:2px solid #9AA6BC;background:#fff;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.25)}
-.st-tick::after{content:'';position:absolute;inset:-9px}.st-item .st-price,.st-item .st-meta,.st-item .st-inb{padding-right:32px}.st-tick svg{width:16px;height:16px}.st-tick[aria-pressed="true"]{background:#16a34a;border-color:#16a34a}
+.st-item.has-add>.st-card{padding-bottom:56px}
+.st-add{position:absolute;left:9px;right:9px;bottom:10px;z-index:2;height:36px;border-radius:9px;border:1.5px solid #EE4D2D;background:#fff;color:#EE4D2D;font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.st-add.on{background:#E7F7EE;border-color:#16a34a;color:#0F7A3B}
 .st-pickhint{font-size:13.5px;color:var(--muted);margin:0 0 10px}
 .cartfab{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:8px;background:#EE4D2D;color:#fff;border:0;border-radius:999px;padding:12px 18px;font:inherit;font-weight:700;box-shadow:0 6px 20px rgba(15,27,51,.25);cursor:pointer}.cartfab{left:16px;justify-content:space-between;max-width:520px;margin:0 auto;padding:8px 8px 8px 18px;cursor:default}.cartfab .cf-l{background:none;border:0;color:#fff;font:inherit;font-weight:700;cursor:pointer;padding:6px 0;text-align:left}.cartfab .cf-r{background:#fff;color:#EE4D2D;border-radius:999px;padding:9px 16px;font-size:15px;font-weight:700;text-decoration:none;white-space:nowrap}
 .sp-two{flex:1;padding:12px 10px;font-size:15px;white-space:nowrap}.sticky-in .btn-line.sp-two{flex:.8}
@@ -1310,10 +1311,10 @@ function paidCard(){return S.sessionId?`<div class="wrap section" style="padding
   </div></div>`:'';}
 const cartHref=()=>'/checkout';
 const cartCardHref=()=>`/api/checkout?cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}`;
-function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เลือก ${n} เล่ม">✓ เลือก ${n} เล่ม · ${baht(cartTotal())}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
+function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เพิ่มไว้ ${n} เล่ม">✓ เพิ่มแล้ว ${n} เล่ม · ${baht(cartTotal())}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
 function cartBtn(p){if(!cartOk(p)||PV)return '';const n=cartItems().length;
-  return CART.includes(p.id)?`<button class="btn btn-line btn-block cart-btn in" data-a="cartOpen">✓ เลือกเล่มนี้แล้ว · ดูที่เลือกไว้ (${n} เล่ม)</button>`
-    :`<button class="btn btn-line btn-block cart-btn" data-a="cartAdd" data-id="${esc(p.id)}">◯ เลือกเล่มนี้ไว้ <span class="fine">ซื้อพร้อมเล่มอื่น จ่ายครั้งเดียว</span></button>`;}
+  return CART.includes(p.id)?`<button class="btn btn-line btn-block cart-btn in" data-a="cartOpen">✓ เพิ่มแล้ว · ดูที่เพิ่มไว้ (${n} เล่ม)</button>`
+    :`<button class="btn btn-line btn-block cart-btn" data-a="cartAdd" data-id="${esc(p.id)}">+ เพิ่ม <span class="fine">ซื้อพร้อมเล่มอื่น จ่ายครั้งเดียว</span></button>`;}
 function drawCart(){
   const root=$('#cart-root');if(!root)return;
   document.body.style.overflow=S.cart?'hidden':'';
@@ -1322,13 +1323,13 @@ function drawCart(){
   const bh=n>=2?D.products.filter(b=>isBundle(b)&&b.status==='published').map(b=>({b,k:(b.items||[]).filter(i=>CART.includes(i)).length})).filter(x=>x.k>=2).sort((a,b)=>b.k-a.k)[0]:null;
   root.innerHTML=`<div class="ct-back" data-a="cartClose"></div>
   <div class="ct-sheet" role="dialog" aria-modal="true" aria-labelledby="ct-h">
-    <div class="ct-head"><h2 id="ct-h">เล่มที่เลือก${n?` (${n})`:''}</h2><button class="ct-x" data-a="cartClose" aria-label="ปิด">×</button></div>
+    <div class="ct-head"><h2 id="ct-h">เล่มที่เพิ่มไว้${n?` (${n})`:''}</h2><button class="ct-x" data-a="cartClose" aria-label="ปิด">×</button></div>
     ${n?`<ul class="ct-list">${L.map(p=>{const img=(p.images||[])[0];return `<li><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56">`:cover(p.color,p.kind||'other')}</span><span class="ct-nm"><b>${esc(p.name)}</b><span>${baht(p.price)}</span></span><button class="ct-rm" data-a="cartRemove" data-id="${esc(p.id)}" aria-label="เอา ${esc(p.name)} ออก">เอาออก</button></li>`;}).join('')}</ul>
       ${bh?`<a class="ct-hint" href="/p/${esc(bh.b.slug)}" data-go="${esc(bh.b.id)}">💡 ${bh.k} เล่มนี้อยู่ใน${esc(bh.b.name)} ซื้อเป็นชุดอาจคุ้มกว่า (เริ่มต้น ${baht(fromPrice(bh.b))}) ดูชุด →</a>`:''}
       <div class="ct-sum"><span>รวม ${n} รายการ</span><b>${baht(tot)}</b></div>
       <a class="btn btn-buy btn-block ct-pay" href="${cartHref()}" data-a="cartPay">ชำระเงิน ${baht(tot)}</a>
       <p class="fine ct-note">จ่ายครั้งเดียวด้วย QR พร้อมเพย์ หรือบัตร · ได้ลิงก์ดาวน์โหลดทุกเล่มทันทีหลังจ่าย และส่งเข้าอีเมลด้วย</p>`
-      :`<p class="ct-empty">ยังไม่ได้เลือกเล่มไหน</p>`}
+      :`<p class="ct-empty">ยังไม่ได้เพิ่มเล่มไหน</p>`}
     ${storeMode()?`<button class="btn btn-line btn-block" data-a="cartMore">${n?'เลือกเล่มอื่นต่อ':'ไปเลือกสินค้า'}</button>`:''}
   </div>`;
   const x=root.querySelector('.ct-x');if(x&&!drawCart._f){x.focus({preventScroll:true});}drawCart._f=true;
@@ -1632,7 +1633,7 @@ function storeView(){
   const inBundle=id=>bundles.find(b=>(b.items||[]).includes(id));
   const card=p=>{const pr=Number(p.price)||0,full=Number(p.fullPrice)||0,off=full>pr&&pr>=1?Math.round((1-pr/full)*100):0,n=sold(p.id),b=inBundle(p.id),img=(p.images||[])[0];
     const on=CART.includes(p.id);
-    return `<div class="st-item${on?' picked':''}">${cartOk(p)&&!PV?`<button class="st-tick" data-a="cartTick" data-id="${esc(p.id)}" aria-pressed="${on}" aria-label="${on?'เอาออกจากที่เลือก':'เลือกซื้อ'} ${esc(p.name)}">${on?'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':''}</button>`:''}<a class="st-card" href="/p/${esc(p.slug)}" data-go="${esc(p.id)}">
+    return `<div class="st-item${on?' picked':''}${cartOk(p)&&!PV?' has-add':''}">${cartOk(p)&&!PV?`<button class="st-add${on?' on':''}" data-a="cartTick" data-id="${esc(p.id)}" aria-pressed="${on}" aria-label="${on?'เอาออก':'เพิ่ม'} ${esc(p.name)}">${on?'✓ เพิ่มแล้ว':'+ เพิ่ม'}</button>`:''}<a class="st-card" href="/p/${esc(p.slug)}" data-go="${esc(p.id)}">
       <span class="st-cover">${img?`<img src="${esc(img)}" alt="" loading="lazy" width="600" height="600">`:cover(p.color,p.kind||'other')}${hot.includes(p.id)?'<em class="st-badge hot">ขายดี</em>':fresh(p)?'<em class="st-badge">ใหม่</em>':''}</span>
       <b class="st-name">${esc(p.name)}</b>
       ${rvLine(p)}
@@ -1659,7 +1660,7 @@ function storeView(){
     ${bundles.length?`<section class="st-sec" aria-labelledby="st-b"><h2 id="st-b" class="st-h2">ชุดแนะนำ</h2><div class="st-bundles">${bundles.map(bcard).join('')}</div></section>`:''}
     <section class="st-sec" aria-labelledby="st-s"><h2 id="st-s" class="st-h2">${bundles.length?'เล่มเดี่ยว':'สินค้าทั้งหมด'}</h2>
       ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
-      ${shown.some(cartOk)&&!PV?`<p class="st-pickhint">ซื้อหลายเล่ม: แตะวงกลม ◯ ข้างราคาให้เป็น ✓ แล้วกดชำระเงินครั้งเดียว</p>`:''}
+      ${shown.some(cartOk)&&!PV?`<p class="st-pickhint">ซื้อหลายเล่ม: กด + เพิ่ม ใต้ราคา แล้วกดชำระเงินครั้งเดียว</p>`:''}
       ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
     </section>
     ${DAILY?(()=>{const a=S.dailyAns,L='ABCD';return `<section class="st-sec st-daily" aria-labelledby="st-d"><h2 id="st-d" class="st-h2">ข้อสอบประจำวัน</h2>
@@ -1682,7 +1683,7 @@ function cartView(){
   const L=cartItems(),tot=cartTotal();
   const top=`<header class="st-top"><div class="wrap st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a>${storeMode()&&!S.sessionId?'<a class="co-back" href="/" data-go="">← เลือกเล่มอื่นต่อ</a>':''}</div></header>`;
   if(S.sessionId)return `${top}${paidCard()}<div class="wrap" style="max-width:560px;padding:12px 16px 40px"><button class="btn btn-line btn-block" data-a="coDone">กลับหน้าร้าน</button></div>`;
-  if(!L.length)return `${top}<div class="wrap" style="max-width:560px;padding:24px 16px 40px"><div class="card center"><h2 style="margin:0 0 8px">ยังไม่ได้เลือกเล่มไหน</h2><p class="muted" style="margin:0 0 14px">แตะวงกลม ◯ ข้างราคาในหน้าร้านเพื่อเลือกหลายเล่ม แล้วจ่ายครั้งเดียว</p><a class="btn btn-buy" href="/" data-go="">ไปหน้าร้าน</a></div></div>`;
+  if(!L.length)return `${top}<div class="wrap" style="max-width:560px;padding:24px 16px 40px"><div class="card center"><h2 style="margin:0 0 8px">ยังไม่ได้เพิ่มเล่มไหน</h2><p class="muted" style="margin:0 0 14px">กด + เพิ่ม ใต้ราคาในหน้าร้านเพื่อซื้อหลายเล่ม แล้วจ่ายครั้งเดียว</p><a class="btn btn-buy" href="/" data-go="">ไปหน้าร้าน</a></div></div>`;
   return `${top}<div class="wrap co" style="max-width:560px;padding:18px 16px 40px">
     <h1 class="co-h">ชำระเงิน ${L.length} เล่ม</h1>
     <div class="card">
@@ -1858,7 +1859,7 @@ function shopView(){
 
   <div class="sticky" id="sticky"><div class="sticky-in">
     ${D.settings.chatLink?`<a class="sp-chat" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer" aria-label="แชทกับร้าน"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><small>แชท</small></a>`:''}
-    ${cartItems().length&&!PV&&cartOk(p)?(CART.includes(p.id)?`<button class="btn btn-line sp-two" data-a="cartMore">เลือกเล่มอื่นต่อ</button>`:`<button class="btn btn-line sp-two" data-a="cartAdd" data-id="${esc(p.id)}">◯ เลือกเล่มนี้ด้วย</button>`)+`<a class="btn btn-buy sp-two" href="${cartHref()}" data-a="cartPay">ชำระเงิน ${cartItems().length} เล่ม · ${baht(cartTotal())}</a>`
+    ${cartItems().length&&!PV&&cartOk(p)?(CART.includes(p.id)?`<button class="btn btn-line sp-two" data-a="cartMore">เลือกเล่มอื่นต่อ</button>`:`<button class="btn btn-line sp-two" data-a="cartAdd" data-id="${esc(p.id)}">+ เพิ่มเล่มนี้ด้วย</button>`)+`<a class="btn btn-buy sp-two" href="${cartHref()}" data-a="cartPay">ชำระเงิน ${cartItems().length} เล่ม · ${baht(cartTotal())}</a>`
     :`<div class="sp-sp"><span class="p">${baht(p.price)}</span>${p.fullPrice>p.price?`<s>${baht(p.fullPrice)}</s>`:''}</div>
     <button class="btn btn-buy" data-a="toCheckout">ซื้อเลย</button>`}
   </div></div>`;
@@ -3896,11 +3897,11 @@ function act(a,el){
       else{S.confirm='import';render(true);}break;}
     case 'toCheckout':glideTo('checkout');break;
     case 'cartAdd':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
-      toast(`เลือกแล้ว ${cartItems().length} เล่ม`);render(true);break;}
+      toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);render(true);break;}
     case 'cartOpen':S.cart=true;drawCart._f=false;drawCart();break;
     case 'cartTick':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;
       if(CART.includes(id)){CART=CART.filter(x=>x!==id);toast('เอาออกแล้ว');}
-      else{CART.push(id);CART=CART.slice(-20);track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));toast(`เลือกแล้ว ${cartItems().length} เล่ม`);}
+      else{CART.push(id);CART=CART.slice(-20);track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);}
       cartSave();render(true);break;}
     case 'cartClose':S.cart=false;drawCart();break;
     case 'cartRemove':CART=CART.filter(x=>x!==id);cartSave();drawCart();render(true);break;
