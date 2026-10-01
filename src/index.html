@@ -189,6 +189,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rvt-sum{display:flex;flex-direction:column;gap:2px}.rvt-avg{font-size:40px;line-height:1}.rvt-dist{display:grid;gap:4px;margin-top:10px;font-size:13px}.rvt-dist div{display:grid;grid-template-columns:28px 1fr 24px;gap:8px;align-items:center}.rvt-dist i{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:block}.rvt-dist em{display:block;height:100%;background:#F5B301;border-radius:4px}
 .rvt-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.rvt-sel{width:auto;min-width:0;max-width:100%;padding:6px 10px;font-size:14px}
 .rl-conn{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.rl-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}.rl-howto{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px}.rl-howto ol{padding-left:20px;line-height:1.7;margin:6px 0 8px}
+.thumb .mv{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between;pointer-events:none}.thumb .mv button{pointer-events:auto;width:26px;height:26px;border-radius:50%;border:0;background:rgba(15,27,51,.75);color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0}.thumb .mv button:only-child{margin-left:auto}.thumb .mv button[data-d="-1"]:only-child{margin-left:0;margin-right:auto}.th-cover{position:absolute;left:4px;top:4px;background:#2440E8;color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
 .rvt-link{background:none;border:0;padding:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer}.rvt-list{display:grid;gap:10px}.rvt-card{padding:14px 16px}.rvt-card.off{opacity:.55}.rvt-st{font-size:17px}.rvt-text{margin:8px 0 6px;white-space:pre-wrap}.empty-rv{padding:18px}
 .so{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.so>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.so>summary::-webkit-details-marker{display:none}.so>summary::after{content:'▾';color:var(--muted)}.so[open]>summary{margin-bottom:10px}.so[open]>summary::after{content:'▴'}
 .dtile.wide{grid-column:span 2}.dtile .so-live{margin-left:4px}.srcbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 6px;background:var(--line);gap:2px}.srcbar i,.srcleg i{display:block}.srcbar i.ads,.srcleg .ads i{background:#2440E8}.srcbar i.organic,.srcleg .organic i{background:#0F9D6B}.srcbar i.direct,.srcleg .direct i{background:#9AA6BC}
@@ -1142,10 +1143,13 @@ ${String(d.headline||'').trim()&&String(d.headline).trim()!==String(d.name).trim
 แถบล่างมีไอคอนเล็ก 3 อันพร้อมคำ: "ไฟล์ PDF" "อ่านได้ทุกอุปกรณ์" "ไม่ต้องรอจัดส่ง"
 ตัวอักษรภาษาไทยทุกคำต้องสะกดถูกต้องตามที่ให้ไว้ ห้ามมีตัวหนังสืออื่นนอกจากที่กำหนด ห้ามใส่โลโก้ของสถาบันอื่น`;
 }
+const IMG_MODELS=[['gpt-image-2','gpt-image-2 (แนะนำ สมจริงกว่า)'],['gpt-image-2.5-sunburst','gpt-image-2.5 sunburst (ใหม่สุด)'],['gpt-image-2.5-flare','gpt-image-2.5 flare (ใหม่สุด)'],['chatgpt-image-latest','แบบเดียวกับใน ChatGPT'],['gpt-image-1.5','gpt-image-1.5'],['gpt-image-1','gpt-image-1 (ตัวเดิม)']];
+const imgModel=()=>{try{return localStorage.getItem('sl_imgmodel')||'gpt-image-2';}catch(e){return 'gpt-image-2';}};
+const imgQuality=()=>{try{return localStorage.getItem('sl_imgq')||'medium';}catch(e){return 'medium';}};
 async function coverGen(){
   const ta=document.getElementById('e-cover-prompt');const prompt=ta?ta.value:(S.coverPrompt||'');S.coverPrompt=prompt;
   S.coverBusy=true;S.coverErr='';render(true);
-  try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+  try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:imgModel(),quality:imgQuality()})});
     if(j&&j.ok)S.coverImg=j.image;else S.coverErr=(j&&j.error)||'สร้างรูปไม่สำเร็จ';}
   catch(e){S.coverErr='เชื่อมต่อไม่ได้';}
   S.coverBusy=false;render(true);
@@ -1163,7 +1167,7 @@ function imgSetPrompts(d){
 async function imgSetGen(){
   if(!S.draft)return;const ps=imgSetPrompts(S.draft);S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
   for(let i=0;i<ps.length;i++){
-    try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i]})});
+    try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i],model:imgModel(),quality:imgQuality()})});
       if(j&&j.ok)S.imgSet[i].url=j.image;else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
     catch(e){S.imgSet[i].err='เชื่อมต่อไม่ได้';S.imgSet[i].pick=false;}
     render(true);
@@ -2169,20 +2173,23 @@ function productForm(){
     <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
       ${S.coverOpen?`<div class="aic-box"><label for="e-cover-prompt">คำสั่งทำปก (แก้ได้)</label><textarea class="input" id="e-cover-prompt" data-cp="1" rows="7">${esc(S.coverPrompt==null?coverPrompt(d):S.coverPrompt)}</textarea>
         <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button><button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
+        <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><label class="fine">โมเดล <select class="input" data-imgset="model" style="width:auto;display:inline-block;padding:6px 8px">${IMG_MODELS.map(m=>`<option value="${m[0]}" ${imgModel()===m[0]?'selected':''}>${esc(m[1])}</option>`).join('')}</select></label>
+          <label class="fine">คุณภาพ <select class="input" data-imgset="q" style="width:auto;display:inline-block;padding:6px 8px">${[['medium','ปกติ (~1.5 บาท/รูป)'],['high','สูง (~6 บาท/รูป)'],['low','ร่าง (ถูกสุด)']].map(q=>`<option value="${q[0]}" ${imgQuality()===q[0]?'selected':''}>${q[1]}</option>`).join('')}</select></label></div>
         ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}</p>`:''}
         ${S.imgSet?`<div class="imgset">${S.imgSet.map((it,i)=>`<label class="imgset-it">${it.url?`<img src="${it.url}" alt="ภาพที่ ${i+1}">`:`<span class="imgset-ph">${it.err?esc(it.err):'กำลังสร้าง...'}</span>`}<span><input type="checkbox" data-a="imgPick" data-v="${i}" ${it.pick&&it.url?'checked':''} ${it.url?'':'disabled'}> ${['ปก','ภาพในเล่ม','มีอะไรบ้าง','เหมาะกับใคร','วิธีรับไฟล์'][i]}</span></label>`).join('')}</div>${!S.coverBusy&&S.imgSet.some(x=>x.url)?`<button class="btn btn-cta btn-sm" data-a="imgSetUse" style="margin-top:8px">ใช้รูปที่เลือก (แทนภาพเดิม)</button>`:''}<p class="fine" style="margin:6px 0 0">สร้างทีละรูป 5 รูปใช้เวลาประมาณ 2-4 นาที คิดเงิน OpenAI 5 รูป</p>`:''}
         ${S.coverImg?`<div class="aic-out"><img src="${S.coverImg}" alt="ปกที่สร้าง"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverUse" ${S.coverBusy?'disabled':''}>ใช้เป็นปก (ภาพแรก)</button><span class="fine">ตรวจตัวสะกดภาษาไทยบนปกก่อนใช้ · กดบันทึกสินค้าได้เลย ระบบใส่รูปนี้เป็นภาพแรกให้อัตโนมัติ</span></div></div>`:''}</div>`:''}</div>
     <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
-      <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button></div>`).join('')}
+      <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button>${i===0?'<span class="th-cover">ปก</span>':''}${d.images.length>1?`<span class="mv">${i>0?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="-1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางซ้าย">‹</button>`:''}${i<d.images.length-1?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางขวา">›</button>`:''}</span>`:''}</div>`).join('')}
       ${d.images.length<5?`<label class="add"><input type="file" id="e-img" accept="image/*" multiple>+ เพิ่มภาพ</label>`:''}</div>
       <span class="fine">ระบบจัดภาพเป็นสี่เหลี่ยมจัตุรัส 1200×1200 พิกเซล และแสดงภาพเต็มไม่ตัดขอบ ถ้าภาพไม่เป็นจัตุรัส จะเติมพื้นขาวรอบภาพ ภาพแรกเป็นภาพปกหลัก ภาพถัดไปเป็นตัวอย่างหน้าในไฟล์ ควรเลือกเฉพาะบางหน้า ไม่ใส่เนื้อหาทั้งเล่ม ผู้ซื้อกดที่ภาพเพื่อดูขยายเต็มจอได้ ถ้าไม่ใส่ภาพ จะใช้ภาพวาดตัวอย่างแทน</span></div>
     <div class="field"><span class="lbl">หน้าตัวอย่างเนื้อหา (ลูกค้าเห็นใต้คำบรรยาย มีลายน้ำ หน้าสุดท้ายจะเบลอชวนซื้อ)</span>
-      <div class="thumbs">${(d.previews||[]).map((src,i)=>`<div class="thumb pvthumb"><img src="${esc(src)}" alt="หน้าตัวอย่าง ${i+1}"><button class="x" data-a="rmPv" data-i="${i}" aria-label="ลบหน้าตัวอย่าง ${i+1}">×</button></div>`).join('')}</div>
+      <div class="thumbs">${(d.previews||[]).map((src,i,A)=>`<div class="thumb pvthumb"><img src="${esc(src)}" alt="หน้าตัวอย่าง ${i+1}"><button class="x" data-a="rmPv" data-i="${i}" aria-label="ลบหน้าตัวอย่าง ${i+1}">×</button>${A.length>1?`<span class="mv">${i>0?`<button data-a="mvImg" data-k="previews" data-i="${i}" data-d="-1" aria-label="เลื่อนหน้าตัวอย่าง ${i+1} ไปทางซ้าย">‹</button>`:''}${i<A.length-1?`<button data-a="mvImg" data-k="previews" data-i="${i}" data-d="1" aria-label="เลื่อนหน้าตัวอย่าง ${i+1} ไปทางขวา">›</button>`:''}</span>`:''}</div>`).join('')}</div>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
-        <label class="btn btn-line btn-sm" for="e-pdf" style="cursor:pointer">${S.pvBusy?'กำลังสร้าง...':'เลือกไฟล์ PDF แล้วสร้างหน้าตัวอย่าง'}<input type="file" id="e-pdf" accept="application/pdf" class="vh" ${S.pvBusy?'disabled':''}></label>
         <label class="fine">หน้าที่ต้องการ <input class="input" id="e-pvpages" value="${esc(S.pvPages||'1-4')}" style="width:110px;display:inline-block;padding:6px 8px" placeholder="1-4 หรือ 1,3,5"></label>
+        ${/^https:\/\/[^ ]+\.pdf(\?|$)/i.test(String(d.link||''))?`<button class="btn btn-dark btn-sm" data-a="pvFromLink" ${S.pvBusy?'disabled':''}>${S.pvBusy?'กำลังสร้าง...':'🔄 สร้างหน้าตัวอย่างใหม่จากไฟล์ของสินค้านี้'}</button>`:''}
+        <label class="btn btn-line btn-sm" for="e-pdf" style="cursor:pointer">${S.pvBusy?'กำลังสร้าง...':'เลือกไฟล์ PDF จากเครื่อง'}<input type="file" id="e-pdf" accept="application/pdf" class="vh" ${S.pvBusy?'disabled':''}></label>
       </div>
-      <span class="fine">ไฟล์ PDF ไม่ถูกอัปโหลด เครื่องของคุณแปลงเฉพาะหน้าที่เลือกเป็นรูปพร้อมลายน้ำ แล้วอัปโหลดแค่รูป สูงสุด 6 หน้า ถ้าสร้างใหม่ ของเดิมจะถูกแทนที่</span></div>
+      <span class="fine">แก้เลขหน้าแล้วกดปุ่มสร้างใหม่ (แก้แค่เลขหน้าเฉยๆ หน้าตัวอย่างจะยังไม่เปลี่ยน) · เครื่องของคุณแปลงเฉพาะหน้าที่เลือกเป็นรูปพร้อมลายน้ำ สูงสุด 6 หน้า ของเดิมจะถูกแทนที่ · เสร็จแล้วกดบันทึกสินค้า</span></div>
 
     <hr class="sep">
     <h3 class="h3">รายละเอียดหนังสือและชีทเรียน</h3>
@@ -3951,6 +3958,9 @@ function act(a,el){
     case 'spGo':{const c=document.getElementById('sp-car');if(c)c.scrollTo({left:c.clientWidth*Number(el.dataset.i),behavior:'smooth'});break;}
     case 'zoomPv':S.zoomSet='pv';S.zoom=Number(el.dataset.i);drawLB();break;
     case 'rmPv':S.draft.previews.splice(Number(el.dataset.i),1);render(true);break;
+    case 'pvFromLink':{const u=String(S.draft&&S.draft.link||'');S.pvBusy=true;render(true);toast('กำลังดึงไฟล์ของสินค้า...');
+      fetch(u).then(r=>{if(!r.ok)throw new Error('ดึงไฟล์ไม่ได้ ('+r.status+')');return r.blob();}).then(b=>{S.pvBusy=false;return makePreviews(new File([b],'product.pdf',{type:'application/pdf'}));})
+        .catch(e=>{S.pvBusy=false;render(true);toast('ดึงไฟล์จากลิงก์ไม่ได้ ให้กด "เลือกไฟล์ PDF จากเครื่อง" แทน');});break;}
     case 'closeZoom':S.zoom=null;drawLB();break;
     case 'zoomPrev':case 'zoomNext':{const n=((S.zoomSet==='pv'?curProduct().previews:curProduct().images)||[]).length;if(n){S.zoom=(S.zoom+(a==='zoomNext'?1:n-1))%n;drawLB();}break;}
     case 'filter':S.filter=el.dataset.v;render(true);break;
@@ -4011,6 +4021,7 @@ function act(a,el){
     case 'editProduct':S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
     case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
+    case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}
     case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published'&&!p.publishedAt)p.publishedAt=Date.now();save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
     case 'dupProduct':{
       const p=getProduct(id);let slug=p.slug+'-copy',n=2;while(slugTaken(slug))slug=p.slug+'-copy'+n++;
@@ -4129,6 +4140,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='au-pw'){const a=Object.assign({on:false,per_week:1,sets:[]},(FCFG.cfg&&FCFG.cfg.auto)||{});a.per_week=Number(t.value)||1;saveFacCfg({auto:a},'บันทึกจำนวนต่อสัปดาห์แล้ว');}
   else if(t.id==='e-file'){const f=t.files&&t.files[0];t.value='';if(f)uploadPdf(f);}
   else if(t.id==='e-pvpages'){S.pvPages=t.value;}
+  else if(t.dataset&&t.dataset.imgset){try{localStorage.setItem(t.dataset.imgset==='model'?'sl_imgmodel':'sl_imgq',t.value);}catch(e){}}
   else if(t.id==='pf'){S.pfilter=t.value;render(true);}
   else if(t.id==='f-bump'){S.form.bump=t.checked;render(true);}
   else if(t.name==='sell'&&S.draft){render(true);}

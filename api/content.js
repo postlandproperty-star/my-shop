@@ -869,7 +869,8 @@ export default async function handler(req, res) {
       if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'คำสั่งสั้นเกินไป' });
       try {
         const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1', prompt, size: '1024x1024', quality: process.env.OPENAI_IMAGE_QUALITY || 'medium', n: 1 }) });
+          // คุณแดนเลือกโมเดล/คุณภาพได้ในหลังบ้าน (ค่าตั้งต้น gpt-image-2)
+          body: JSON.stringify({ model: /^(gpt-image|chatgpt-image)[a-z0-9.\-]{0,40}$/.test(String(body.model || '')) ? String(body.model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2'), prompt, size: '1024x1024', quality: ['low', 'medium', 'high'].includes(body.quality) ? body.quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) return res.status(502).json({ ok: false, error: `OpenAI: ${j?.error?.message || r.status}` });
         const b64 = j?.data?.[0]?.b64_json;
