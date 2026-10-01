@@ -1,6 +1,7 @@
 // ปุ่ม "ชำระเงิน" ชี้มาที่นี่: สร้างหน้าจ่ายเงิน Stripe จากราคาในหลังบ้าน แล้วพาลูกค้าไป
 // GET /api/checkout?p=<slug>&c=<campaign>
 // GET /api/checkout?cart=<id,id,...>&c=<campaign>  ตะกร้า: หลายเล่มจ่ายครั้งเดียว (ออเดอร์เดียว ได้ลิงก์ทุกเล่ม)
+import { capiMeta } from '../lib/capi.js';
 import { loadShop, stripe, configured, htmlError, createQrPayment, bundlePlan } from '../lib/shop.js';
 
 // POST /api/checkout?m=qr  JSON {p, bump, c, e} → สร้าง QR PromptPay ให้แสดงบนหน้าร้านเลย (ลูกค้าไม่ต้องออกไปหน้า Stripe)
@@ -17,7 +18,7 @@ async function qr(req, res) {
     let pname = ps.map((p) => p.name).join(' + '); if (pname.length > 400) pname = `${ps[0].name.slice(0, 200)} + อีก ${ps.length - 1} รายการ`;
     try {
       const r = await createQrPayment({ amount: ps.reduce((a, p) => a + Number(p.price), 0), email, description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) + ' QR',
-        metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '' } });
+        metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '', ...capiMeta(req) } });
       if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' });
       return res.status(200).json({ ok: true, ...r });
     } catch (e) { console.error(e); return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' }); }
@@ -34,7 +35,7 @@ async function qr(req, res) {
     const r = await createQrPayment({
       amount: plan ? Number(plan.price) : Number(p.price) + bumpPrice, email,
       description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug}) QR`,
-      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '' },
+      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '', ...capiMeta(req) },
     });
     if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายผ่านหน้า Stripe แทน' });
     return res.status(200).json({ ok: true, ...r });
@@ -79,7 +80,7 @@ async function cartCheckout(req, res) {
     allow_promotion_codes: true,
     success_url: `${origin}/checkout?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/checkout`,
-    metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign, cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '' },
+    metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign, cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '', ...capiMeta(req) },
     payment_intent_data: { description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) },
   };
   if (email) { base.customer_email = email; base.metadata.remind = '1'; base.expires_at = Math.floor(Date.now() / 1000) + 2 * 3600; }
@@ -143,7 +144,7 @@ export default async function handler(req, res) {
       allow_promotion_codes: true,
       success_url: `${origin}/p/${p.slug}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/p/${p.slug}`,
-      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '' },
+      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '', ...capiMeta(req) },
       payment_intent_data: { description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})` },
     };
     if (email) {

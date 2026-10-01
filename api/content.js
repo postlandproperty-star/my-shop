@@ -2161,6 +2161,15 @@ export default async function handler(req, res) {
       const rid = await ownerReply(to, text);
       return res.status(200).json({ ok: true, to, name: MEMBER_TH[to], id: rid });
     }
+    if (action === 'capi_check') { // เช็คว่าใส่ FB_CAPI_TOKEN แล้วและใช้กับ Pixel ของร้านได้ (ไม่ส่งเหตุการณ์ซื้อปลอม)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
+      const tok = process.env.FB_CAPI_TOKEN || '', shop = await loadShop(); const pid = String(shop.settings?.pixelId || '');
+      if (!tok) return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ FB_CAPI_TOKEN บน Vercel' });
+      if (!/^\d{6,20}$/.test(pid)) return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ Pixel ID ในหลังบ้าน' });
+      try { const j = await fbGet(pid, { fields: 'id,name,last_fired_time', access_token: tok }); return res.status(200).json({ ok: true, pixel: j }); }
+      catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e) }); }
+    }
     if (action.startsWith('ads_auto')) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       const team = keyOk(req);

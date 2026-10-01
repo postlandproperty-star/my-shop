@@ -1367,7 +1367,7 @@ function initPixel(id){
 function track(name,data){
   if(PV)return;
   if(pixelReady&&FB_EVENTS[name]&&!hasAdminAccess()){ // ไม่นับการเข้าดูของแอดมินเอง
-    try{const d=Object.assign({},data||{});delete d.campaign;fbq('track',name,d);}catch(e){}
+    try{const d=Object.assign({},data||{}),eid=d.event_id;delete d.campaign;delete d.event_id;if(eid)fbq('track',name,d,{eventID:String(eid)});else fbq('track',name,d);}catch(e){} // eventID = รหัสออเดอร์ ให้ Facebook ตัดซ้ำกับ Conversions API ฝั่งเซิร์ฟเวอร์
   }
   D.events.unshift({t:Date.now(),name,data:data||{}});
   D.events=D.events.slice(0,60);saveCache();
@@ -3304,7 +3304,7 @@ function pixelTab(){
   </div>
   <div class="card" style="margin-top:14px">
     <h3 class="h3">เหตุการณ์ที่เว็บส่งไป Facebook</h3>
-    <p class="fine" style="margin:0"><b>PageView</b> ทุกหน้า · <b>ViewContent</b> เมื่อดูสินค้า (ส่งชื่อ+ราคา) · <b>InitiateCheckout</b> เมื่อกดปุ่มจ่ายเงิน (ส่งชื่อ+ราคา) · <b>Purchase</b> เมื่อลูกค้ากลับมาหน้าร้านหลังจ่ายสำเร็จ (ยืนยันกับ Stripe ก่อนยิง 1 ครั้งต่อออเดอร์ ส่งชื่อ+ยอด) · การเข้าดูของแอดมินเองจะไม่ถูกนับ</p>
+    <p class="fine" style="margin:0"><b>PageView</b> ทุกหน้า · <b>ViewContent</b> เมื่อดูสินค้า (ส่งชื่อ+ราคา) · <b>InitiateCheckout</b> เมื่อกดปุ่มจ่ายเงิน (ส่งชื่อ+ราคา) · <b>Purchase</b> เมื่อลูกค้ากลับมาหน้าร้านหลังจ่ายสำเร็จ (ยืนยันกับ Stripe ก่อนยิง 1 ครั้งต่อออเดอร์ ส่งชื่อ+ยอด) และ<b>เซิร์ฟเวอร์แจ้งซ้ำผ่าน Conversions API ทุกออเดอร์ที่จ่ายจริง</b> แม้ลูกค้าจ่าย QR แล้วไม่กลับมา (Facebook ตัดตัวซ้ำให้เอง ต้องมี FB_CAPI_TOKEN บน Vercel) · การเข้าดูของแอดมินเองจะไม่ถูกนับ</p>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px">
     <h3 class="h3" style="margin:0">เหตุการณ์ล่าสุด</h3>
@@ -4669,7 +4669,7 @@ async function verifyOrder(){
       const k='purchased:'+S.sessionId;
       if(!localStorage.getItem(k)){ // ยิง Purchase ครั้งเดียวต่อออเดอร์ แม้รีเฟรชหน้า
         try{localStorage.setItem(k,'1');}catch(e){}
-        track('Purchase',Object.assign({content_name:j.productName,value:j.amount,currency:j.currency||'THB'},S.src?{campaign:S.src}:{}));
+        track('Purchase',Object.assign({content_name:j.productName,value:j.amount,currency:j.currency||'THB',event_id:S.sessionId},S.src?{campaign:S.src}:{}));
       }
     }
   }catch(e){S.order={paid:false,error:'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง'};}
