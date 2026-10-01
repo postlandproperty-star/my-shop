@@ -191,6 +191,20 @@ footer{padding:28px 0 110px;text-align:center}
 .rl-conn{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.rl-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}.rl-howto{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px}.rl-howto ol{padding-left:20px;line-height:1.7;margin:6px 0 8px}
 .thumb .mv{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between;pointer-events:none}.thumb .mv button{pointer-events:auto;width:26px;height:26px;border-radius:50%;border:0;background:rgba(15,27,51,.75);color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0}.thumb .mv button:only-child{margin-left:auto}.thumb .mv button[data-d="-1"]:only-child{margin-left:0;margin-right:auto}.th-cover{position:absolute;left:4px;top:4px;background:#2440E8;color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
 .facai{display:flex;gap:6px;align-items:center;margin:8px 0;cursor:pointer}.facai input{width:18px;height:18px}.facai-imgs{display:flex;gap:6px;flex-wrap:wrap}.facai-imgs img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#fff}.facai .btn{align-self:flex-start}
+/* แอดสินค้าใหม่รอกดตกลง */
+.adq-box{margin-bottom:14px}
+.adq{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--bg)}
+.adq-prev{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:grid}
+.adq-h{display:flex;flex-direction:column;padding:10px 12px 4px}.adq-text{border:0;border-radius:0;font-size:14px;resize:vertical;background:transparent;min-height:120px}
+.adq-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-top:1px solid var(--line)}
+.adq-f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:var(--bg)}.adq-f>div{display:grid}
+.adq-head{border:0;padding:2px 0;font-weight:600;background:transparent;font-size:14px}
+.adq-cta{flex:none;background:var(--line);border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600}
+.adq-side{display:grid;gap:10px;align-content:start}.adq-name{font-size:16px}
+.adq-budget{display:grid;grid-template-columns:1fr 1fr;gap:10px}.adq-budget label{font-size:13px;color:var(--muted);display:grid;gap:4px}
+.adq-total{margin:0;font-size:15px}.adq-total b{font-size:18px}
+.adq-live{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;border-top:1px solid var(--line);padding:10px 0}
+@media (max-width:760px){.adq{grid-template-columns:1fr}}
 /* แท็บสินค้าแบบตาราง (คล้าย Shopee) */
 .pt-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:14px 0 10px;flex-wrap:wrap}
 .pt-new{background:#EE4D2D;color:#fff;border:0}.pt-new:hover{filter:brightness(.95)}
@@ -2188,6 +2202,7 @@ function productRow(p){
       ${more?`<div class="pt-menu">
         ${bun?'':`<button class="pt-a" data-a="copyLink" data-id="${p.id}">คัดลอกลิงก์เซลเพจ</button><button class="pt-a" data-a="dupProduct" data-id="${p.id}">ทำสำเนา</button>`}
         <button class="pt-a" data-a="togglePub" data-id="${p.id}">${pub?'เปลี่ยนเป็นฉบับร่าง':'เผยแพร่'}</button>
+        ${!bun&&pub?`<button class="pt-a" data-a="adsDraftOne" data-id="${p.id}">📣 ทำแอดสินค้านี้</button>`:''}
         ${bun?'':`<button class="pt-a" data-a="exportOne" data-id="${p.id}">⬇ โหลดข้อมูล (Excel)</button><button class="pt-a" data-a="exportOneImgs" data-id="${p.id}" ${S.zipBusy||!(p.images||[]).length?'disabled':''}>${S.zipBusy===p.id?'กำลังรวมรูป...':'⬇ โหลดรูป (ZIP)'}</button>
         <button class="pt-a del" data-a="delProduct" data-id="${p.id}">${cf?'กดอีกครั้งเพื่อลบ':'ลบสินค้า'}</button>`}
       </div>`:''}
@@ -3364,6 +3379,60 @@ function memberDesk(k){
     ${open?`<div class="cmt open" style="border:0;margin:0;padding:0"><textarea id="cmt-${k}" placeholder="${esc(cfg.ph)}"></textarea><div class="send"><button class="btn btn-cta btn-sm" data-a="cmtSend" data-v="${k}">ส่งถึง${esc(t.name)}</button></div></div>`:''}
   </div>`;
 }
+/* แอดสินค้าใหม่อัตโนมัติ: ระบบร่างแอดเมื่อสินค้าเผยแพร่ → คุณแดนกด "ตกลง ยิงแอด" (เงินออกตอนกดเท่านั้น) */
+const ADA={items:null,access:null,loading:false,busy:'',msg:'',tokMsg:''};
+function loadAdsAuto(){if(ADA.loading)return Promise.resolve();ADA.loading=true;return adminApi('/api/content?action=ads_auto&stats=1').then(j=>{if(j&&j.ok){ADA.items=j.items||[];ADA.access=j.access;}else{ADA.items=ADA.items||[];ADA.msg=(j&&j.error)||'';}}).catch(()=>{ADA.items=ADA.items||[];}).then(()=>{ADA.loading=false;render(true);});}
+/* หลังเผยแพร่สินค้าใหม่ครั้งแรก: รอข้อมูลขึ้นเซิร์ฟเวอร์แล้วขอร่างแอด (ไม่เสียเงิน) */
+function adDraftSoon(pid,tries){tries=tries||0;setTimeout(()=>{const p=getProduct(pid);if(!p||p.status!=='published'||isBundle(p)||Number(p.price)<30||!(p.images||[]).length)return;
+  authFetch('/api/content?action=ads_auto_draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:pid})}).then(j=>{
+    if(j&&j.ok){if(!j.existed){ADA.items=null;toast('📣 เตรียมแอดสินค้าใหม่ไว้แล้ว รอคุณแดนกดตกลงที่แท็บโฆษณา (ยังไม่เสียเงิน)');}}
+    else if(tries<2)adDraftSoon(pid,tries+1);}).catch(()=>{if(tries<2)adDraftSoon(pid,tries+1);});},2500+tries*3000);}
+const adsPerms='<code>pages_show_list</code> <code>pages_manage_posts</code> <code>pages_read_engagement</code> <code>publish_video</code> <code>read_insights</code> <code>business_management</code> <code>instagram_basic</code> <code>instagram_content_publish</code> <code>ads_read</code> <b><code>ads_management</code></b>';
+function adsAutoBox(compact){
+  if(ADA.items===null&&!ADA.loading)loadAdsAuto();
+  const items=ADA.items||[],A=ADA.access;
+  const pend=items.filter(x=>x.status==='pending'||x.status==='failed'||x.status==='launching'),live=items.filter(x=>['live','paused'].includes(x.status)),old=items.filter(x=>['ended','dismissed'].includes(x.status));
+  if(compact&&!pend.length)return '';
+  const okAcc=A&&A.ok,cur=A&&A.account&&A.account.currency;
+  const permBox=A&&!A.ok?`<div class="rl-howto" style="margin:0 0 12px"><b>⚠️ ยังยิงแอดจากหลังบ้านไม่ได้: ${esc(A.error||'')}</b>${A.reason==='perm'||A.reason==='token'?`<ol>
+      <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → Meta App เลือกแอปเดิม (SheetLab Publisher)</li>
+      <li>Permissions ใส่ให้ครบ: ${adsPerms} <span class="fine">(ต้องมีตัวเดิมครบด้วย ไม่งั้น IG/เพจจะหลุด)</span></li>
+      <li>กด <b>Generate Access Token</b> → ติ๊กเพจ SheetLab, IG sheetlabth และ<b>บัญชีโฆษณา</b> → อนุญาต</li>
+      <li>คัดลอกโทเค็นมาวางด้านล่าง แล้วกด "อัปเดตสิทธิ์"</li></ol>
+      <textarea class="input" id="ads-token" rows="3" placeholder="วางโทเค็นที่นี่"></textarea>
+      <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="adsConnect">อัปเดตสิทธิ์</button></div>${ADA.tokMsg?`<p class="fine" style="margin-top:8px">${esc(ADA.tokMsg)}</p>`:''}`:'<p class="fine" style="margin:6px 0 0">เปิด Ads Manager ดูสถานะบัญชีหรือวิธีชำระเงิน</p>'}</div>`:'';
+  const card=x=>{const tot=(Number(x.dailyTHB)||0)*(Number(x.days)||0),busy=ADA.busy===x.id;
+    return `<div class="adq">
+      <div class="adq-prev"><div class="adq-h"><b>SheetLab</b><span class="fine">ได้รับการสนับสนุน</span></div>
+        <textarea class="input adq-text" id="adt-${x.id}" rows="6" aria-label="ข้อความแอด">${esc(x.text)}</textarea>
+        ${x.image?`<img src="${esc(x.image)}" alt="" class="adq-img">`:''}
+        <div class="adq-f"><div style="min-width:0"><span class="fine">sheetlabth.com</span><input class="input adq-head" id="adh-${x.id}" value="${esc(x.headline)}" aria-label="หัวข้อแอด"><span class="fine">${esc(x.description||'')}</span></div><span class="adq-cta">ซื้อเลย</span></div></div>
+      <div class="adq-side">
+        <b class="adq-name">${esc(x.name)}</b>
+        <span class="fine">แคมเปญยอดขาย · คนไทย (Facebook หาคนที่น่าจะซื้อเอง) · ลง Facebook + Instagram · หยุดเองเมื่อครบวัน</span>
+        <div class="adq-budget"><label>งบต่อวัน (บาท)<input class="input" type="number" min="50" max="2000" step="10" id="add-${x.id}" value="${esc(x.dailyTHB)}" data-adsum="${x.id}"></label>
+          <label>จำนวนวัน<input class="input" type="number" min="1" max="30" id="adn-${x.id}" value="${esc(x.days)}" data-adsum="${x.id}"></label></div>
+        <p class="adq-total">รวมไม่เกิน <b id="ads-sum-${x.id}">฿${tot.toLocaleString('th-TH')}</b>${cur&&cur!=='THB'?` <span class="fine">(บัญชีโฆษณาตัดเป็น ${esc(cur)} ตามเรทวันนี้)</span>`:''}</p>
+        ${x.status==='failed'&&x.error?`<p class="err" style="margin:0">ยิงไม่สำเร็จ: ${esc(x.error)}</p>`:''}
+        <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="adsLaunch" data-id="${x.id}" ${!okAcc||busy||x.status==='launching'?'disabled':''}>${busy||x.status==='launching'?'กำลังสร้างแอด...':x.status==='failed'?'↻ ลองยิงใหม่':'✅ ตกลง ยิงแอด'}</button>${x.status!=='launching'?`<button class="btn btn-line btn-sm" data-a="adsDismiss" data-id="${x.id}">ไม่เอา</button>`:''}</div>
+        <span class="fine">กดตกลงแล้วแอดจะเข้ารีวิวของ Facebook (ปกติไม่เกิน 1 วัน) แล้วเริ่มวิ่งเอง · เงินยังไม่ออกจนกว่าจะกดตกลง</span>
+      </div></div>`;};
+  const liveRow=x=>{const st=x.stats||{};const end=x.ends_at?new Date(x.ends_at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
+    return `<div class="adq-live"><b>${esc(x.name)}</b><span class="badge ${x.status==='live'?'ok':'gray'}">${x.status==='live'?'กำลังวิ่ง':'หยุดไว้'}</span>
+      <span class="fine">฿${esc(x.dailyTHB)}/วัน · ถึง ${end}${st.status&&st.status!=='ACTIVE'&&x.status==='live'?' · สถานะ FB: '+esc(st.status):''}</span>
+      <span class="fine">${x.stats?`ใช้ไป ${st.spend.toLocaleString('th-TH',{maximumFractionDigits:2})} ${esc(x.currency||'')} · คลิก ${st.clicks} · ซื้อ ${st.purchases}`:'ยังไม่มีตัวเลข'}</span>
+      <span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="${x.status==='live'?'adsStop':'adsResume'}" data-id="${x.id}" ${ADA.busy===x.id?'disabled':''}>${x.status==='live'?'⏸ หยุด':'▶ เปิดต่อ'}</button>${x.fb&&x.fb.campaign?`<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?selected_campaign_ids=${esc(x.fb.campaign)}" target="_blank" rel="noopener noreferrer">ดูใน Ads Manager</a>`:''}</span></div>`;};
+  return `<section class="card adq-box">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">📣 แอดสินค้าใหม่ ${pend.length?`<span class="badge warn">รอกดตกลง ${pend.length}</span>`:''}</h3><button class="chip" data-a="adsRefresh">รีเฟรช</button></div>
+    <p class="fine" style="margin:4px 0 12px">เผยแพร่สินค้าใหม่แล้วระบบเตรียมแอดให้ครบ (ข้อความ รูป ลิงก์ งบ ฿100/วัน × 7 วัน) แก้ข้อความหรืองบได้ แล้วกด "ตกลง ยิงแอด" ไม่ต้องเข้า Ads Manager · ทำแอดให้สินค้าเก่าได้ที่แท็บสินค้า → ดูเพิ่มเติม → ทำแอด</p>
+    ${permBox}
+    ${ADA.items===null?'<p class="fine">กำลังโหลด...</p>':''}
+    ${pend.map(card).join('')}
+    ${!compact&&live.length?`<h4 style="margin:14px 0 6px">แอดที่ยิงอยู่</h4>${live.map(liveRow).join('')}`:''}
+    ${!compact&&!pend.length&&!live.length&&ADA.items?'<p class="fine">ยังไม่มีแอดรอตกลง สินค้าที่เผยแพร่ใหม่จะขึ้นที่นี่เอง</p>':''}
+    ${!compact&&old.length?`<details style="margin-top:10px"><summary class="fine">ประวัติ (${old.length})</summary>${old.map(x=>`<p class="fine" style="margin:4px 0">${x.status==='ended'?'✓ จบแล้ว':'✖ ไม่เอา'} · ${esc(x.name)} · ฿${esc(x.dailyTHB)}/วัน × ${esc(x.days)} วัน</p>`).join('')}</details>`:''}
+  </section>`;
+}
 function adsTab(){
   const tot=D.campaigns.reduce((a,c)=>{const st=campStats(c);a.spend+=Number(c.spend)||0;a.rev+=st.rev;a.paid+=st.paid;return a;},{spend:0,rev:0,paid:0});
   const roasAll=tot.spend>0?(tot.rev/tot.spend).toFixed(2):'-';
@@ -3407,6 +3476,7 @@ function adsTab(){
     </div>`;
   } else writer=`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าก่อนแล้วกลับมาเขียนโฆษณา</p></div>`;
   return `
+  ${adsAutoBox(false)}
   ${boostDesk()}
   <h3 class="h3" style="margin-top:14px">ผลลัพธ์แต่ละแคมเปญ</h3>
   <div class="kpis">
@@ -3540,6 +3610,7 @@ function todoTab(){
   ${TODO.err?`<p class="fine" style="color:var(--bad)">${esc(TODO.err)}</p>`:''}
   ${TODO.items===null&&!TODO.err?'<p class="fine">กำลังโหลด...</p>':''}
   ${healthBox()}
+  ${adsAutoBox(true)}
   ${autoRows?`<h3 class="h3">ค้างในระบบ (${TODO.auto.length})</h3>${autoRows}`:''}
   <h3 class="h3">ต้องทำ (${open.length})</h3>
   <p class="fine" style="margin:-4px 0 8px">⏰ ทุกเรื่องที่ทีมส่งมามีเวลาตอบ ${TODO.hours||24} ชั่วโมง ถ้าเลยเวลา พี่ต้นจะตัดสินหรือทำแทน เปลี่ยนเวลาได้ที่ <button class="chip" data-a="cfgOpen" data-v="manager">⚙️ ตั้งค่าพี่ต้น</button></p>
@@ -4199,6 +4270,18 @@ function act(a,el){
     case 'soOpen':S.soOpen=!S.soOpen;break;
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที':'แสดงอีกครั้งแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
+    case 'adsRefresh':ADA.items=null;loadAdsAuto();render(true);break;
+    case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'adsDismiss':{if(!confirm('ไม่ยิงแอดสินค้านี้?'))break;adminPost('/api/content?action=ads_auto_dismiss',{id}).then(j=>{if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status='dismissed';render(true);}else toast((j&&j.error)||'ไม่สำเร็จ');});break;}
+    case 'adsStop':case 'adsResume':{const on=a==='adsResume';if(!on&&!confirm('หยุดแอดนี้? (เปิดต่อได้ภายหลัง)'))break;ADA.busy=id;render(true);adminPost('/api/content?action='+(on?'ads_auto_resume':'ads_auto_stop'),{id}).then(j=>{ADA.busy='';if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status=j.item.status;toast(on?'เปิดแอดต่อแล้ว':'หยุดแอดแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้');render(true);});break;}
+    case 'adsLaunch':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;const daily=Number($('#add-'+id).value),days=Number($('#adn-'+id).value),text=$('#adt-'+id).value,headline=$('#adh-'+id).value;
+      if(!(daily>=50&&daily<=2000)){toast('งบต่อวัน ฿50 - ฿2,000');break;}if(!(days>=1&&days<=30)){toast('จำนวนวัน 1-30 วัน');break;}
+      if(!confirm(`ยืนยันยิงแอด "${x.name}"\nงบ ฿${daily}/วัน × ${days} วัน = รวมไม่เกิน ฿${(daily*days).toLocaleString('th-TH')}\nเงินจะตัดจากบัญชีโฆษณา Facebook ของคุณแดน`))break;
+      Object.assign(x,{dailyTHB:daily,days,text,headline});ADA.busy=id;render(true);
+      adminPost('/api/content?action=ads_auto_launch',{id,dailyTHB:daily,days,text,headline}).then(j=>{ADA.busy='';if(j&&j.ok){Object.assign(x,j.item);toast('🚀 ยิงแอดแล้ว รอ Facebook รีวิว (ปกติไม่เกิน 1 วัน)');}else{if(j&&j.item)Object.assign(x,j.item);toast('ยิงแอดไม่สำเร็จ: '+((j&&j.error)||''));}render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้ กดรีเฟรชดูสถานะก่อนกดซ้ำ');render(true);});break;}
+    case 'adsConnect':{const ta=$('#ads-token'),token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}ADA.tokMsg='กำลังอัปเดต...';render(true);const t1=$('#ads-token');if(t1)t1.value=token;
+      adminPost('/api/fb?action=connect',{token,pageId:(FB.page&&FB.page.id)||''}).then(async j=>{if(!j||!j.ok){ADA.tokMsg='ไม่สำเร็จ: '+((j&&j.error)||'');render(true);const t2=$('#ads-token');if(t2)t2.value=token;return;}
+        ADA.tokMsg='';await loadFbStatus();ADA.items=null;await loadAdsAuto();toast(ADA.access&&ADA.access.ok?'อัปเดตสิทธิ์แล้ว ยิงแอดจากหลังบ้านได้แล้ว':'อัปเดตโทเค็นแล้ว แต่ยังขาด: '+((ADA.access&&ADA.access.error)||''));if(!j.ig)toast('⚠️ โทเค็นนี้ไม่มีสิทธิ์ IG คลิปจะไม่ลง IG ใส่ instagram_basic/instagram_content_publish แล้ววางใหม่');}).catch(()=>{ADA.tokMsg='เชื่อมต่อไม่ได้';render(true);});break;}
     case 'pstat':S.pstat=el.dataset.v;S.pmore=null;render(true);break;
     case 'pmore':S.pmore=S.pmore===el.dataset.id?null:el.dataset.id;if(S.confirm==='del:'+el.dataset.id)S.confirm='';render(true);break;
     case 'bxItem':{const d=S.draft;const i=d.items.indexOf(id);if(i>=0){d.items.splice(i,1);if(d.freeItem===id)d.freeItem='';}else d.items.push(id);render(true);break;}
@@ -4216,7 +4299,7 @@ function act(a,el){
     case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}
-    case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published'&&!p.publishedAt)p.publishedAt=Date.now();save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
+    case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published'&&!p.publishedAt){p.publishedAt=Date.now();adDraftSoon(p.id);}save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
     case 'dupProduct':{
       const p=getProduct(id);let slug=p.slug+'-copy',n=2;while(slugTaken(slug))slug=p.slug+'-copy'+n++;
       const nid='p'+Date.now().toString(36);
@@ -4250,7 +4333,7 @@ function act(a,el){
       let saved;
       if(isNew){saved=Object.assign({id:'p'+Date.now().toString(36)},data);D.products.push(saved);}
       else{saved=getProduct(selfId);Object.assign(saved,data);}
-      if(saved.status==='published'&&!saved.publishedAt)saved.publishedAt=Date.now();
+      if(saved.status==='published'&&!saved.publishedAt){saved.publishedAt=Date.now();adDraftSoon(saved.id);}
       if(d.fromProp)propDone(d.fromProp,true);
       S.edit=null;S.draft=null;S.err='';save();
       if(d.fromJob){const jid=d.fromJob,pid=saved.id;clearTimeout(saveTimer);
@@ -4306,6 +4389,7 @@ document.addEventListener('input',e=>{
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
   if(ds.rvp){S.rvp=t.value;render(true);return;}
+  if(ds.adsum){const id=ds.adsum,d=Number(($('#add-'+id)||{}).value)||0,n=Number(($('#adn-'+id)||{}).value)||0,e=document.getElementById('ads-sum-'+id);if(e)e.textContent='฿'+(d*n).toLocaleString('th-TH');}
   if(ds.psearch){S.pq=t.value;const q=t.value.toLowerCase().trim();let n=0;document.querySelectorAll('#plist [data-q]').forEach(e=>{const ok=!q||e.dataset.q.includes(q);e.hidden=!ok;if(ok)n++;});const z=document.getElementById('pnone');if(z)z.hidden=n>0;const c=document.getElementById('pcount');if(c)c.textContent=n;}
   else if(ds.psort){S.psort=t.value;render(true);}
   if(ds.fpub){FAC.pub=Object.assign(FAC.pub||{},{[ds.fpub]:t.value});}

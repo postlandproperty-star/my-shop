@@ -18,6 +18,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
+import { adsAccess, launchAd, setCampaignStatus, campaignStats } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
 import { sendRecoveries } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
@@ -273,6 +274,52 @@ async function checkFeedCategories() {
   }
   if (fresh.length) await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'feedcats', data: { seen: [...seen] }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
   return { ok: true, fresh };
+}
+// แอดสินค้าใหม่ (shop_state id=ads_auto): ร่างอัตโนมัติเมื่อสินค้าเผยแพร่ → คุณแดนกดตกลงในหลังบ้าน → ยิงแอด
+// ร่างไม่เสียเงิน · ยิงแอดได้เฉพาะแอดมิน (ads_auto_launch) · งบตั้งต้น ฿100/วัน × 7 วัน (คุณแดนเลือก 1 ต.ค. 69)
+const ADS_DEFAULT = { dailyTHB: 100, days: 7 };
+const ADS_SINCE = '2026-10-01T00:00:00Z'; // ร่างอัตโนมัติเฉพาะสินค้าที่เผยแพร่หลังเปิดระบบนี้
+async function loadAdsAuto() { const rows = await sb('shop_state?id=eq.ads_auto&select=data'); return rows?.[0]?.data?.items || []; }
+async function saveAdsAuto(items) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ads_auto', data: { items: items.slice(0, 100) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+const adsTestProduct = (p) => Number(p.price) < 30 || /ทดสอบ|แคลคูลัส|test/i.test(`${p.name} ${p.slug}`);
+function adCopy(p, site) {
+  const L = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
+  const notion = /notion/i.test(`${p.cat} ${p.link}`);
+  const full = Number(p.fullPrice) > Number(p.price) ? ` (ปกติ ฿${Number(p.fullPrice).toLocaleString('th-TH')})` : '';
+  const text = [p.headline && p.headline !== p.name ? p.headline : p.name, p.desc || '', L(p.features).slice(0, 4).map((x) => '✅ ' + x).join('\n'),
+    `ราคา ฿${Number(p.price).toLocaleString('th-TH')}${full} · ${notion ? 'ได้ลิงก์เทมเพลต Notion ทันทีหลังจ่าย' : 'ได้ไฟล์ PDF ทันทีหลังจ่าย'} สแกน QR จ่ายได้เลย`].filter(Boolean).join('\n\n').slice(0, 1500);
+  const camp = ('auto-' + String(p.slug || p.id)).slice(0, 60);
+  return { text, headline: String(p.name || '').slice(0, 40), description: notion ? 'Notion Template · ได้ทันที' : 'ไฟล์ PDF · ได้ทันทีหลังจ่าย', campaign: camp,
+    link: `${site}/p/${p.slug}?utm_source=facebook&utm_medium=paid&utm_campaign=${encodeURIComponent(camp)}&utm_content=auto`, image: (p.images || [])[0] || '' };
+}
+async function draftAd(productId, { by = 'system', force = false } = {}) {
+  const shop = await loadShop(); const p = shop.products.find((x) => x.id === productId);
+  if (!p) throw new Error('ไม่พบสินค้า');
+  if (p.status !== 'published') throw new Error('สินค้ายังเป็นฉบับร่าง เผยแพร่ก่อนจึงจะทำแอดได้');
+  if (!(p.images || []).length) throw new Error('สินค้ายังไม่มีรูป ใส่รูปก่อนจึงจะทำแอดได้');
+  const items = await loadAdsAuto();
+  const open = items.find((x) => x.productId === p.id && ['pending', 'launching', 'live'].includes(x.status));
+  if (open && !force) return { item: open, existed: true };
+  const { randomUUID } = await import('node:crypto');
+  const item = { id: randomUUID(), productId: p.id, name: p.name, price: Number(p.price) || 0, ...adCopy(p, await siteUrl()), ...ADS_DEFAULT, status: 'pending', by, created_at: new Date().toISOString() };
+  items.unshift(item); await saveAdsAuto(items);
+  await addTodo({ text: `แอดสินค้าใหม่พร้อมแล้ว "${String(p.name).slice(0, 60)}" งบ ฿${item.dailyTHB}/วัน × ${item.days} วัน (รวม ฿${item.dailyTHB * item.days}) ตรวจข้อความแล้วกดตกลงที่แท็บโฆษณา (ยังไม่เสียเงินจนกว่าจะกดตกลง)`, type: 'decide', from: 'analyst' });
+  return { item, existed: false };
+}
+// cron วันละครั้ง: สินค้าที่เผยแพร่ใหม่แต่ยังไม่มีร่างแอด → ร่างให้ (ข้ามสินค้าทดสอบ/ไม่มีรูป)
+async function ensureAdDrafts() {
+  const shop = await loadShop(); const items = await loadAdsAuto(); const made = [];
+  for (const p of shop.products) {
+    if (p.status !== 'published' || p.type === 'bundle' || adsTestProduct(p) || !(p.images || []).length) continue;
+    const pub = p.publishedAt ? new Date(p.publishedAt).toISOString() : '';
+    if (!pub || pub < ADS_SINCE || items.some((x) => x.productId === p.id)) continue;
+    try { await draftAd(p.id); made.push(p.name); } catch (e) {}
+  }
+  // แอดที่ครบวันแล้ว → ปิดการ์ดเป็น "จบแล้ว"
+  const now = new Date().toISOString(); let ended = false;
+  for (const x of items) if (x.status === 'live' && x.ends_at && x.ends_at < now) { x.status = 'ended'; ended = true; }
+  if (ended) { const cur = await loadAdsAuto(); for (const x of cur) { const y = items.find((z) => z.id === x.id); if (y && y.status === 'ended') x.status = 'ended'; } await saveAdsAuto(cur); }
+  return { ok: true, drafted: made };
 }
 // สร้างรูป 1 รูปจาก OpenAI (gpt-image*) หรือ Google (gemini-*image*) คืน {b64, mime} · โมเดลที่ไม่รู้จักใช้ค่าตั้งต้น
 const IMG_MODEL_RE = /^(gpt-image|chatgpt-image|gemini-)[a-z0-9.\-]{0,40}$/;
@@ -653,7 +700,9 @@ export default async function handler(req, res) {
       if (cronOk(req)) { try { const { sendReviewRequests } = await import('../lib/reviews.js'); reviewmail = await sendReviewRequests(); } catch (e) { reviewmail = { ok: false, error: String(e.message || e) }; } }
       let feedcats = null; // หมวดสินค้าใหม่ที่ฟีด Google ยังจัดหมวดไม่ตรง → แจ้งคุณแดนในเช็คลิสต์ครั้งเดียวต่อหมวด
       if (cronOk(req)) { try { feedcats = await checkFeedCategories(); } catch (e) { feedcats = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats });
+      let adsdraft = null; // สินค้าเผยแพร่ใหม่ → ร่างแอดรอคุณแดนกดตกลง
+      if (cronOk(req)) { try { adsdraft = await ensureAdDrafts(); } catch (e) { adsdraft = { ok: false, error: String(e.message || e) }; } }
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -2111,6 +2160,62 @@ export default async function handler(req, res) {
       if (!MEMBER_TH[to] || !text) return res.status(400).json({ ok: false, error: 'ต้องระบุผู้รับและข้อความ' });
       const rid = await ownerReply(to, text);
       return res.status(200).json({ ok: true, to, name: MEMBER_TH[to], id: rid });
+    }
+    if (action.startsWith('ads_auto')) {
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      const team = keyOk(req);
+      if (!admin && !team) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (action === 'ads_auto') { // รายการแอดอัตโนมัติ + สถานะสิทธิ์ (แอดมิน) / ทีมอ่านได้อย่างเดียว
+        const items = await loadAdsAuto();
+        let access = null; const fb = await loadFb().catch(() => null);
+        if (admin) { access = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) })); }
+        if (fb && fb.userToken && req.query.stats) for (const x of items.filter((y) => y.fb?.campaign && ['live', 'ended', 'paused'].includes(y.status)).slice(0, 8)) { try { x.stats = await campaignStats(fb, x.fb.campaign); } catch (e) {} }
+        return res.status(200).json({ ok: true, items, access, defaults: ADS_DEFAULT });
+      }
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      const body = await readBody(req);
+      if (action === 'ads_auto_draft') { // ร่างแอด (ไม่เสียเงิน) ทีมขอได้
+        try { const r = await draftAd(String(body.productId || ''), { by: admin ? 'owner' : 'team', force: !!body.force && !!admin }); return res.status(200).json({ ok: true, ...r }); }
+        catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
+      }
+      if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
+      const items = await loadAdsAuto(); const x = items.find((y) => y.id === String(body.id || ''));
+      if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบแอดนี้' });
+      if (action === 'ads_auto_dismiss') { if (x.status !== 'pending') return res.status(400).json({ ok: false, error: 'แอดนี้ยิงไปแล้ว ใช้ปุ่มหยุดแทน' }); x.status = 'dismissed'; x.updated_at = new Date().toISOString(); await saveAdsAuto(items); return res.status(200).json({ ok: true, item: x }); }
+      const fb = await loadFb();
+      if (action === 'ads_auto_stop' || action === 'ads_auto_resume') {
+        if (!x.fb?.campaign) return res.status(400).json({ ok: false, error: 'แอดนี้ยังไม่ได้ยิง' });
+        const on = action === 'ads_auto_resume';
+        try { await setCampaignStatus(fb, x.fb.campaign, on ? 'ACTIVE' : 'PAUSED'); } catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
+        x.status = on ? 'live' : 'paused'; x.updated_at = new Date().toISOString(); await saveAdsAuto(items); return res.status(200).json({ ok: true, item: x });
+      }
+      if (action === 'ads_auto_launch') {
+        if (!['pending', 'failed'].includes(x.status)) return res.status(400).json({ ok: false, error: 'แอดนี้ยิงไปแล้ว' });
+        const daily = Math.round(Number(body.dailyTHB) || 0), days = Math.round(Number(body.days) || 0);
+        if (daily < 50 || daily > 2000) return res.status(400).json({ ok: false, error: 'งบต่อวันต้องอยู่ระหว่าง ฿50 - ฿2,000' });
+        if (days < 1 || days > 30) return res.status(400).json({ ok: false, error: 'จำนวนวันต้อง 1-30 วัน' });
+        const text = String(body.text || x.text).trim().slice(0, 1500), headline = String(body.headline || x.headline).trim().slice(0, 60);
+        if (text.length < 20) return res.status(400).json({ ok: false, error: 'ข้อความแอดสั้นเกินไป' });
+        const acc = await adsAccess(fb);
+        if (!acc.ok) return res.status(400).json({ ok: false, error: acc.error, reason: acc.reason });
+        const shop = await loadShop();
+        Object.assign(x, { text, headline, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() }); await saveAdsAuto(items);
+        try {
+          const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency });
+          const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
+          Object.assign(y, { text, headline, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad }, objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
+          await saveAdsAuto(cur);
+          // แคมเปญในหลังบ้านร้าน (ชื่อเดียวกับ utm_campaign) ให้ตารางแคมเปญ/ยอดขายนับตรง
+          try { const pr = await sb('shop_state?id=eq.private&select=data'); const data = pr?.[0]?.data || {}; data.campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
+            if (!data.campaigns.some((c) => c.name === x.campaign)) { data.campaigns.push({ id: 'c' + Date.now().toString(36), name: x.campaign, productId: x.productId, spend: 0, auto: true }); await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' }); } } catch (e) { console.error('ads camp', e.message); }
+          await chatEvent('analyst', pick([`ยิงแอด "${String(x.name).slice(0, 40)}" แล้วครับ งบ ฿${daily}/วัน ${days} วัน เดี๋ยวผมเฝ้าตัวเลขให้`, `แอดสินค้าใหม่วิ่งแล้วครับ ฿${daily}/วัน ผมจะรายงานต้นทุนต่อการซื้อทุกวัน`]), 'ads');
+          return res.status(200).json({ ok: true, item: y });
+        } catch (e) {
+          const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id); Object.assign(y, { status: 'failed', error: String(e.message || e).slice(0, 400) }); await saveAdsAuto(cur);
+          return res.status(400).json({ ok: false, error: y.error, item: y });
+        }
+      }
+      return res.status(400).json({ ok: false, error: 'unknown action' });
     }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
