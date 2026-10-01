@@ -255,6 +255,29 @@ async function checkFeedCategories() {
   if (fresh.length) await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'feedcats', data: { seen: [...seen] }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
   return { ok: true, fresh };
 }
+// สร้างรูป 1 รูปจาก OpenAI (gpt-image*) หรือ Google (gemini-*image*) คืน {b64, mime} · โมเดลที่ไม่รู้จักใช้ค่าตั้งต้น
+const IMG_MODEL_RE = /^(gpt-image|chatgpt-image|gemini-)[a-z0-9.\-]{0,40}$/;
+async function genImage({ model, prompt, quality }) {
+  model = IMG_MODEL_RE.test(String(model || '')) ? String(model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
+  if (model.startsWith('gemini-')) {
+    const G = process.env.GEMINI_API_KEY || ''; if (!G) throw new Error('ยังไม่ได้ใส่ GEMINI_API_KEY ใน Vercel');
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '1:1' } } }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(`Google: ${j?.error?.message || r.status}`);
+    const part = (j?.candidates?.[0]?.content?.parts || []).find((x) => x.inlineData || x.inline_data);
+    const d = part && (part.inlineData || part.inline_data);
+    if (!d?.data) throw new Error('Google ไม่ส่งรูปกลับมา (อาจติดตัวกรองเนื้อหา) ลองแก้คำสั่งแล้วสร้างใหม่');
+    return { b64: d.data, mime: d.mimeType || d.mime_type || 'image/png', model };
+  }
+  const KEY = process.env.OPENAI_API_KEY || ''; if (!KEY) throw new Error('ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel');
+  const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(quality) ? quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`OpenAI: ${j?.error?.message || r.status}`);
+  if (!j?.data?.[0]?.b64_json) throw new Error('OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง');
+  return { b64: j.data[0].b64_json, mime: 'image/jpeg', model };
+}
 async function addTodo({ text, type = 'do', from = 'manager', link = null }) {
   const items = await loadTodo();
   const norm = (t) => String(t).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -867,22 +890,17 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       const diag = !admin && keyOk(req) && req.query.diag === '1'; // ทดสอบระบบ: คุณภาพต่ำสุด ไม่เกิน 2 รูป
       if (!admin && !diag) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
-      const KEY = process.env.OPENAI_API_KEY || '';
-      if (!KEY) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel' });
       const body = await readBody(req); if (diag) { body.quality = 'low'; body.prompts = (body.prompts || []).slice(0, 2); }
       const jobs = await loadJobs(); const job = jobs.find((j) => j.id === String(body.id || ''));
       if (!job) return res.status(404).json({ ok: false, error: 'ไม่พบใบสั่ง' });
       const prompts = (Array.isArray(body.prompts) ? body.prompts : []).map((p) => String(p || '').trim().slice(0, 3000)).filter((p) => p.length >= 20).slice(0, 5);
       if (!prompts.length) return res.status(400).json({ ok: false, error: 'ไม่มีคำสั่งทำรูป' });
-      const model = /^(gpt-image|chatgpt-image)[a-z0-9.\-]{0,40}$/.test(String(body.model || '')) ? String(body.model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
-      const quality = ['low', 'medium', 'high'].includes(body.quality) ? body.quality : 'medium';
       const stamp = Date.now().toString(36);
       const one = async (prompt, i) => {
-        const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality, n: 1 }) });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok || !j?.data?.[0]?.b64_json) throw new Error(j?.error?.message || `OpenAI ${r.status}`);
-        const path = `factory/${job.id}/ai-${stamp}-${i + 1}.jpg`;
-        const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' }, body: Buffer.from(j.data[0].b64_json, 'base64') });
+        const g = await genImage({ model: body.model, prompt, quality: body.quality });
+        const ext = /png/.test(g.mime) ? 'png' : /webp/.test(g.mime) ? 'webp' : 'jpg';
+        const path = `factory/${job.id}/ai-${stamp}-${i + 1}.${ext}`;
+        const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': g.mime, 'x-upsert': 'true' }, body: Buffer.from(g.b64, 'base64') });
         if (!up.ok) throw new Error(`อัปโหลดรูปไม่ได้ (${up.status})`);
         return `${SB_URL}/storage/v1/object/public/product-images/${path}`;
       };
@@ -891,6 +909,25 @@ export default async function handler(req, res) {
       const errors = out.filter((x) => x.status === 'rejected').map((x) => String(x.reason?.message || x.reason).slice(0, 160));
       if (urls.length) { const all = await loadJobs(); const jj = all.find((x) => x.id === job.id); if (jj) { jj.ai_images = urls; await saveJobs(all); } }
       return res.status(200).json({ ok: urls.length > 0, images: urls, errors });
+    }
+    if (action === 'tts') { // เสียงพากย์ภาษาไทยจาก Google Cloud TTS (key/แอดมิน) {text, voice?, rate?} → ไฟล์ mp3 บนคลังร้าน ให้ทีมทำคลิปใช้
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const T = process.env.GOOGLE_TTS_API_KEY || ''; if (!T) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ใส่ GOOGLE_TTS_API_KEY ใน Vercel' });
+      const body = await readBody(req);
+      const text = String(body.text || '').trim().slice(0, 1500);
+      if (text.length < 2) return res.status(400).json({ ok: false, error: 'ไม่มีข้อความ' });
+      const voice = /^th-TH-[A-Za-z0-9-]{3,40}$/.test(String(body.voice || '')) ? String(body.voice) : 'th-TH-Chirp3-HD-Achernar';
+      const rate = Math.min(1.3, Math.max(0.8, Number(body.rate) || 1));
+      const r = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(T)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: { text }, voice: { languageCode: 'th-TH', name: voice }, audioConfig: { audioEncoding: 'MP3', speakingRate: rate } }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.audioContent) return res.status(502).json({ ok: false, error: `Google TTS: ${j?.error?.message || r.status}` });
+      const { randomUUID } = await import('node:crypto');
+      const path = `tts/${new Date().toISOString().slice(0, 10)}-${randomUUID().slice(0, 8)}.mp3`;
+      const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'audio/mpeg', 'x-upsert': 'true' }, body: Buffer.from(j.audioContent, 'base64') });
+      if (!up.ok) return res.status(502).json({ ok: false, error: `อัปโหลดเสียงไม่ได้ (${up.status})` });
+      return res.status(200).json({ ok: true, url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, voice, chars: text.length });
     }
     if (action === 'google_check') { // เช็ค key ของ Google: GEMINI_API_KEY (รูป) และ GOOGLE_TTS_API_KEY (เสียง) ไม่สร้างอะไร ไม่เสียเงิน
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -913,27 +950,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: !!(r && r.ok), configured: true, model, imageModels, status: r ? r.status : 0, error: r && r.ok ? null : (j?.error?.message || 'เชื่อมต่อ OpenAI ไม่ได้').slice(0, 200) });
     }
     if (action === 'cover') {
-      // สร้างรูปปกด้วย OpenAI Images (คีย์อยู่ใน Vercel env OPENAI_API_KEY เท่านั้น) · คุณแดนกดจากหน้าแก้สินค้า ครั้งละ 1 รูป
+      // สร้างรูปด้วย AI จากหน้าแก้สินค้า ครั้งละ 1 รูป: OpenAI (gpt-image*) หรือ Google (gemini-*image*) ตามที่คุณแดนเลือก · คีย์อยู่ใน Vercel เท่านั้น
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       const diag = !admin && keyOk(req) && req.query.diag === '1'; // ทดสอบระบบ: คุณภาพต่ำสุด คืนแค่เวลา/ขนาด ไม่คืนรูป
       if (!admin && !diag) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
-      const KEY = process.env.OPENAI_API_KEY || '';
-      if (!KEY) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel (Settings → Environment Variables) ใส่แล้วกด Redeploy' });
       const body = await readBody(req); if (diag) body.quality = 'low';
       const t0 = Date.now();
       const prompt = String(body.prompt || '').trim().slice(0, 3000);
       if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'คำสั่งสั้นเกินไป' });
       try {
-        const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-          // คุณแดนเลือกโมเดล/คุณภาพได้ในหลังบ้าน (ค่าตั้งต้น gpt-image-2)
-          body: JSON.stringify({ model: /^(gpt-image|chatgpt-image)[a-z0-9.\-]{0,40}$/.test(String(body.model || '')) ? String(body.model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2'), prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(body.quality) ? body.quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok) return res.status(502).json({ ok: false, error: `OpenAI: ${j?.error?.message || r.status}` });
-        const b64 = j?.data?.[0]?.b64_json;
-        if (!b64) return res.status(502).json({ ok: false, error: 'OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง' });
-        if (diag) return res.status(200).json({ ok: true, ms: Date.now() - t0, kb: Math.round(b64.length * 0.75 / 1024) });
-        return res.status(200).json({ ok: true, image: `data:image/jpeg;base64,${b64}` });
-      } catch (e) { return res.status(502).json({ ok: false, error: 'เชื่อมต่อ OpenAI ไม่ได้: ' + String(e.message || e).slice(0, 120) }); }
+        const g = await genImage({ model: body.model, prompt, quality: body.quality });
+        if (diag) return res.status(200).json({ ok: true, model: g.model, ms: Date.now() - t0, kb: Math.round(g.b64.length * 0.75 / 1024), mime: g.mime });
+        return res.status(200).json({ ok: true, image: `data:${g.mime};base64,${g.b64}` });
+      } catch (e) { return res.status(502).json({ ok: false, error: String(e.message || e).slice(0, 240) }); }
     }
     if (action.startsWith('rl_')) {
       // ReadLab: เพจหนังสือ/การอ่านแยกจาก SheetLab (สร้างผู้ติดตามก่อน) · ข้อมูลอยู่แถว shop_state readlab แยกจากตาราง posts

@@ -1156,7 +1156,7 @@ ${price?`มุมล่างขวามีป้ายราคาสีเ�
 ${sub?`คำโปรยรองบนปก: "${sub}"\n`:''}มุมล่างซ้ายมีป้ายวงกลมสีแดงเขียนว่า "ไฟล์ PDF${price?' '+price:''}"
 แถบล่างมีไอคอนเล็ก 3 อันพร้อมคำ: "ไฟล์ PDF" "อ่านได้ทุกอุปกรณ์" "ไม่ต้องรอจัดส่ง"`+AI_NO_TEXT;
 }
-const IMG_MODELS=[['gpt-image-2','gpt-image-2 (แนะนำ สมจริงกว่า)'],['gpt-image-2.5-sunburst','gpt-image-2.5 sunburst (ใหม่สุด)'],['gpt-image-2.5-flare','gpt-image-2.5 flare (ใหม่สุด)'],['chatgpt-image-latest','แบบเดียวกับใน ChatGPT'],['gpt-image-1.5','gpt-image-1.5'],['gpt-image-1','gpt-image-1 (ตัวเดิม)']];
+const IMG_MODELS=[['gemini-3-pro-image','Google Nano Banana Pro (ตัวหนังสือแม่น ~4.5 บาท)'],['gemini-3.1-flash-image','Google Nano Banana (เร็ว ~1.5 บาท)'],['gpt-image-2','OpenAI gpt-image-2'],['gpt-image-2.5-sunburst','OpenAI gpt-image-2.5 sunburst'],['gpt-image-2.5-flare','OpenAI gpt-image-2.5 flare'],['chatgpt-image-latest','OpenAI แบบเดียวกับใน ChatGPT'],['gpt-image-1','OpenAI gpt-image-1 (ตัวเดิม)']];
 const imgModel=()=>{try{return localStorage.getItem('sl_imgmodel')||'gpt-image-2';}catch(e){return 'gpt-image-2';}};
 const imgQuality=()=>{try{return localStorage.getItem('sl_imgq')||'medium';}catch(e){return 'medium';}};
 async function coverGen(){
