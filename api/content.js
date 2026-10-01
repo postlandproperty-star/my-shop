@@ -1395,13 +1395,19 @@ export default async function handler(req, res) {
       await saveJobs(jobs);
       return res.status(200).json({ ok: true, job });
     }
-    if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel', 'factory_listing'].includes(action)) {
+    if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel', 'factory_listing', 'factory_copy'].includes(action)) {
       const admin = action === 'factory_cancel' && req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const body = await readBody(req);
       const jobs = await loadJobs();
       const job = jobs.find((j) => j.id === String(body.id || ''));
       if (!job) return res.status(404).json({ ok: false, error: 'not found' });
+      if (action === 'factory_copy') { // แก้ข้อความขายต่างประเทศบางช่องหลังผลิตเสร็จ (ไม่แตะสถานะ/รูป/ลิงก์)
+        if (!job.global_copy || !body.global || typeof body.global !== 'object') return res.status(400).json({ ok: false, error: 'no global copy' });
+        job.global_copy = cleanGlobal({ ...job.global_copy, ...body.global });
+        await saveJobs(jobs);
+        return res.status(200).json({ ok: true, copy: job.global_copy });
+      }
       if (action === 'factory_claim') {
         if (job.status !== 'queued') return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${job.status}` });
         job.status = 'producing'; job.started_at = new Date().toISOString();
