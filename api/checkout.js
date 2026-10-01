@@ -1,5 +1,6 @@
 // ปุ่ม "ชำระเงิน" ชี้มาที่นี่: สร้างหน้าจ่ายเงิน Stripe จากราคาในหลังบ้าน แล้วพาลูกค้าไป
 // GET /api/checkout?p=<slug>&c=<campaign>
+// GET /api/checkout?cart=<id,id,...>&c=<campaign>  ตะกร้า: หลายเล่มจ่ายครั้งเดียว (ออเดอร์เดียว ได้ลิงก์ทุกเล่ม)
 import { loadShop, stripe, configured, htmlError, createQrPayment, bundlePlan } from '../lib/shop.js';
 
 // POST /api/checkout?m=qr  JSON {p, bump, c, e} → สร้าง QR PromptPay ให้แสดงบนหน้าร้านเลย (ลูกค้าไม่ต้องออกไปหน้า Stripe)
@@ -47,12 +48,47 @@ async function qrImage(req, res) {
   return res.status(200).send(Buffer.from(await r.arrayBuffer()));
 }
 
+// ตะกร้า: เฉพาะเล่มเดี่ยวที่เผยแพร่และราคา ≥ 1 (ชุดซื้อจากหน้าชุดเพราะมีแพ็กเกจ) สูงสุด 20 รายการ ราคาจากหลังบ้านเสมอ
+async function cartCheckout(req, res) {
+  const ids = [...new Set(String(req.query.cart || '').split(',').map((s) => s.trim()).filter((s) => /^[A-Za-z0-9_-]{1,60}$/.test(s)))].slice(0, 20);
+  const campaign = String(req.query.c || '').slice(0, 60);
+  const email = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
+  const shop = await loadShop();
+  const ps = ids.map((id) => shop.products.find((x) => x.id === id && x.status === 'published' && x.type !== 'bundle' && Number(x.price) >= 1)).filter(Boolean);
+  if (!ps.length) return htmlError(res, 'ตะกร้าว่าง', 'สินค้าในตะกร้าอาจถูกปิดการขายแล้ว กลับไปเลือกใหม่ที่หน้าร้าน');
+  const origin = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
+  let pname = ps.map((p) => p.name).join(' + ');
+  if (pname.length > 400) pname = `${ps[0].name.slice(0, 200)} + อีก ${ps.length - 1} รายการ`;
+  const base = {
+    mode: 'payment',
+    locale: 'th',
+    line_items: ps.map((p) => ({ quantity: 1, price_data: { currency: 'thb', unit_amount: Math.round(Number(p.price) * 100), product_data: Object.assign({ name: p.name, description: (p.headline || '').slice(0, 200) || undefined }, (p.images || [])[0] ? { images: [p.images[0]] } : {}) } })),
+    adaptive_pricing: { enabled: false },
+    allow_promotion_codes: true,
+    success_url: `${origin}/p/${ps[0].slug}?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/?cart=open`,
+    metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign, cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '' },
+    payment_intent_data: { description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) },
+  };
+  if (email) { base.customer_email = email; base.metadata.remind = '1'; base.expires_at = Math.floor(Date.now() / 1000) + 2 * 3600; }
+  let session;
+  try { session = await stripe('POST', 'checkout/sessions', email ? { ...base, after_expiration: { recovery: { enabled: true } } } : base); }
+  catch (e) { if (!email) throw e; session = await stripe('POST', 'checkout/sessions', base); }
+  res.setHeader('Cache-Control', 'no-store');
+  res.redirect(303, session.url);
+}
+
 export default async function handler(req, res) {
   if (req.query.m === 'qrimg') { try { return await qrImage(req, res); } catch (e) { console.error(e); return res.status(500).end(); } }
   if (req.query.m === 'qr') {
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!configured().stripe) return res.status(500).json({ ok: false, error: 'ร้านยังไม่พร้อมรับชำระเงิน' });
     return qr(req, res);
+  }
+  if (req.query.cart) {
+    if (!configured().stripe) return htmlError(res, 'ร้านยังไม่พร้อมรับชำระเงิน', 'ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY บน Vercel');
+    try { return await cartCheckout(req, res); }
+    catch (e) { console.error(e); return htmlError(res, 'เปิดหน้าชำระเงินไม่สำเร็จ', 'ลองใหม่อีกครั้ง หรือทักแชทหาร้าน<br><small style="color:#999">' + String(e.message || e).replace(/[<>]/g, '') + '</small>'); }
   }
   const slug = String(req.query.p || '');
   const campaign = String(req.query.c || '').slice(0, 60);
