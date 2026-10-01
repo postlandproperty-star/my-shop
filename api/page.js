@@ -91,7 +91,7 @@ export default async function handler(req, res) {
   if (learn) { // คลังความรู้ /learn และ /learn/<slug>
     const [shop, articles, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadArticles(), loadQuizzes()]);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     if (learn === '_index') return res.status(200).send(articleIndex(articles, { settings: shop.settings, site: NEW_SITE }));
     const a = articles.find((x) => x.slug === learn);
     if (!a) { res.statusCode = 404; return res.end(articleIndex(articles, { settings: shop.settings, site: NEW_SITE })); }
@@ -102,7 +102,7 @@ export default async function handler(req, res) {
   if (quiz) { // แบบทดสอบฟรี /quiz และ /quiz/<slug> (หน้าเนื้อหาให้ Google เก็บ)
     const [shop, quizzes, articles] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadQuizzes(), loadArticles()]);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     if (quiz === '_index') return res.status(200).send(quizIndex(quizzes, { settings: shop.settings, site: NEW_SITE }));
     if (quiz === 'daily') { res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=600'); return res.status(200).send(dailyPage(dailyPick(quizzes), { settings: shop.settings, site: NEW_SITE })); }
     const q = quizzes.find((x) => x.slug === quiz);
@@ -113,7 +113,7 @@ export default async function handler(req, res) {
   if (POLICY_DOCS.includes(doc)) { // หน้านโยบาย /privacy และ /refund
     const shop = await loadShop().catch(() => ({ settings: {} }));
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     return res.status(200).send(policyPage(doc, shop.settings));
   }
   let out = html;
@@ -173,6 +173,7 @@ export default async function handler(req, res) {
     console.error(e); // ถ้าดึงข้อมูลไม่ได้ ก็เสิร์ฟหน้าปกติไปก่อน
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=600');
+  // หน้าร้าน/หน้าขาย: จำไว้แค่ 10 วินาที แก้หลังบ้านแล้วลูกค้าเห็นของใหม่แทบทันที (เดิม 60 วิ + เสิร์ฟของเก่าอีก 10 นาที)
+  res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=20');
   res.status(200).send(out);
 }
