@@ -892,6 +892,15 @@ export default async function handler(req, res) {
       if (urls.length) { const all = await loadJobs(); const jj = all.find((x) => x.id === job.id); if (jj) { jj.ai_images = urls; await saveJobs(all); } }
       return res.status(200).json({ ok: urls.length > 0, images: urls, errors });
     }
+    if (action === 'google_check') { // เช็ค key ของ Google: GEMINI_API_KEY (รูป) และ GOOGLE_TTS_API_KEY (เสียง) ไม่สร้างอะไร ไม่เสียเงิน
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const G = process.env.GEMINI_API_KEY || '', T = process.env.GOOGLE_TTS_API_KEY || '';
+      const out = { gemini: { configured: !!G }, tts: { configured: !!T } };
+      if (G) { try { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${encodeURIComponent(G)}`); const j = await r.json().catch(() => ({})); out.gemini.ok = r.ok; out.gemini.error = r.ok ? null : (j?.error?.message || r.status); out.gemini.imageModels = (j.models || []).map((m) => m.name.replace(/^models\//, '')).filter((n) => /image|imagen/i.test(n)); } catch (e) { out.gemini.error = String(e.message || e); } }
+      if (T) { try { const r = await fetch(`https://texttospeech.googleapis.com/v1/voices?languageCode=th-TH&key=${encodeURIComponent(T)}`); const j = await r.json().catch(() => ({})); out.tts.ok = r.ok; out.tts.error = r.ok ? null : (j?.error?.message || r.status); out.tts.thaiVoices = (j.voices || []).map((v) => `${v.name} (${v.ssmlGender})`); } catch (e) { out.tts.error = String(e.message || e); } }
+      return res.status(200).json({ ok: true, ...out });
+    }
     if (action === 'openai_check') { // เช็คว่าใส่ OPENAI_API_KEY แล้วและใช้โมเดลสร้างรูปได้ (อ่านข้อมูลโมเดล ไม่สร้างรูป ไม่เสียเงิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
