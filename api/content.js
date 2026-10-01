@@ -1313,16 +1313,17 @@ export default async function handler(req, res) {
         const b = await readBody(req); const o = String(b.o || '');
         if (!/^[A-Za-z0-9_-]{6,200}$/.test(o) || !RV.tokenOk(o, b.t)) return res.status(403).json({ ok: false, error: 'ลิงก์รีวิวไม่ถูกต้อง' });
         const stars = Math.round(Number(b.stars)); if (!(stars >= 1 && stars <= 5)) return res.status(400).json({ ok: false, error: 'ให้ดาว 1-5' });
-        const rows = await sb(`orders?session_id=eq.${encodeURIComponent(o)}&status=eq.paid&select=session_id,name,product_id,product_name`);
+        const rows = await sb(`orders?session_id=eq.${encodeURIComponent(o)}&status=eq.paid&select=session_id,name,email,product_id,product_name`);
         if (!rows?.length) return res.status(404).json({ ok: false, error: 'ไม่พบคำสั่งซื้อ' });
+        const email_mask = b.showEmail === false ? '' : RV.maskEmail(rows[0].email); // ลูกค้าเลือกได้ในหน้ารีวิว
         const text = String(b.text || '').replace(/[<>]/g, '').replace(/\s+\n/g, '\n').trim().slice(0, 500);
         const name = String(b.name || '').replace(/[<>]/g, '').trim().slice(0, 30) || RV.displayName(rows[0].name);
         const d = await RV.loadReviews(); const now = new Date().toISOString();
         const old = d.list.find((x) => x.order === o);
-        if (old) Object.assign(old, { stars, text, name, updated_at: now });
-        else d.list.push({ id: 'rv' + Date.now().toString(36), order: o, product_id: rows[0].product_id, product_name: rows[0].product_name, stars, text, name, status: 'live', created_at: now });
+        if (old) Object.assign(old, { stars, text, name, email_mask, updated_at: now });
+        else d.list.push({ id: 'rv' + Date.now().toString(36), order: o, product_id: rows[0].product_id, product_name: rows[0].product_name, stars, text, name, email_mask, status: 'live', created_at: now });
         await RV.saveReviews(d);
-        if (stars <= 3 && !old) { try { await addTodo({ text: `รีวิว ${stars} ดาว "${rows[0].product_name}": ${text.slice(0, 120) || '(ไม่มีความเห็น)'} อ่านแล้วถ้าไม่เหมาะซ่อนได้ในแท็บสินค้า → ⭐ รีวิวลูกค้า หรือทักลูกค้าช่วยแก้ปัญหา`, type: 'decide', from: 'care' }); } catch (e) {} }
+        if (stars <= 3 && !old) { try { await addTodo({ text: `รีวิว ${stars} ดาว "${rows[0].product_name}": ${text.slice(0, 120) || '(ไม่มีความเห็น)'} อ่านแล้วถ้าไม่เหมาะซ่อนได้ในแท็บ ⭐ รีวิว หรือทักลูกค้าช่วยแก้ปัญหา`, type: 'decide', from: 'care' }); } catch (e) {} }
         return res.status(200).json({ ok: true });
       }
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -1700,6 +1701,22 @@ export default async function handler(req, res) {
       meta.state = state; meta.state_at = new Date().toISOString();
       await sbPatch(`posts?id=eq.${id}`, { notes: JSON.stringify(meta) });
       return res.status(200).json({ ok: true, id, state });
+    }
+    if (action === 'dash_orders') {
+      // การ์ดออเดอร์ Stripe แบบสด: webhook บันทึกลงตาราง orders ทันทีที่ลูกค้าจ่าย ห้องประชุมดึงซ้ำทุก 30 วินาที (เบา ไม่เรียก API ภายนอก)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const now = Date.now(), since = new Date(now - 15 * 864e5).toISOString();
+      const [orders, priv] = await Promise.all([sb(`orders?select=created_at,paid_at,product_name,amount,status,email,campaign&created_at=gte.${since}&order=created_at.desc&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
+      const isTest = testOrder(null, priv?.[0]?.data?.testEmails);
+      const thDay = (t) => new Date(Date.parse(t) + 7 * 3600e3).toISOString().slice(0, 10);
+      const real = orders.filter((o) => !isTest(o)), paid = real.filter((o) => o.status === 'paid');
+      const pAt = (o) => o.paid_at || o.created_at;
+      const days = [];
+      for (let i = 13; i >= 0; i--) { const k = thDay(new Date(now - i * 864e5).toISOString()); const L = paid.filter((o) => thDay(pAt(o)) === k); days.push({ d: k, n: L.length, rev: L.reduce((a, o) => a + (Number(o.amount) || 0), 0), unpaid: real.filter((o) => o.status !== 'paid' && thDay(o.created_at) === k).length }); }
+      const mask = (e) => { const m = String(e || '').toLowerCase().match(/^([^@\s]+)@(.+)$/); return m ? m[1].slice(0, 2) + '•••@' + m[2] : ''; };
+      const latest = paid.slice().sort((a, b) => String(pAt(b)).localeCompare(String(pAt(a)))).slice(0, 10).map((o) => ({ at: pAt(o), product: o.product_name, amount: Number(o.amount) || 0, email: mask(o.email), src: o.campaign || '' }));
+      return res.status(200).json({ ok: true, at: new Date(now).toISOString(), days, latest, test: orders.length - real.length });
     }
     if (action === 'dash') {
       // แดชบอร์ดห้องประชุม: ตัวเลขจริงของ 7 วัน + ประเด็นจากรายงานล่าสุดของพี่ต้น (ไม่ใช้ AI)

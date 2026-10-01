@@ -184,6 +184,15 @@ footer{padding:28px 0 110px;text-align:center}
 .rv-sum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 12px}.rv-sum>b{font-size:34px;line-height:1}.rv-stars{color:#F5B301;letter-spacing:1px}
 .rv-list{display:grid;gap:10px}.rv-item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.rv-item p{margin:6px 0 4px;white-space:pre-wrap}
 .rvreq{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.rv-ver{display:inline-block;font-size:12.5px;color:var(--ok);margin-top:2px}
+.rvt-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px;margin-bottom:12px}@media(max-width:720px){.rvt-top{grid-template-columns:1fr}}
+.rvt-sum{display:flex;flex-direction:column;gap:2px}.rvt-avg{font-size:40px;line-height:1}.rvt-dist{display:grid;gap:4px;margin-top:10px;font-size:13px}.rvt-dist div{display:grid;grid-template-columns:28px 1fr 24px;gap:8px;align-items:center}.rvt-dist i{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:block}.rvt-dist em{display:block;height:100%;background:#F5B301;border-radius:4px}
+.rvt-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.rvt-sel{width:auto;min-width:0;max-width:100%;padding:6px 10px;font-size:14px}
+.rvt-link{background:none;border:0;padding:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer}.rvt-list{display:grid;gap:10px}.rvt-card{padding:14px 16px}.rvt-card.off{opacity:.55}.rvt-st{font-size:17px}.rvt-text{margin:8px 0 6px;white-space:pre-wrap}.empty-rv{padding:18px}
+.so{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.so-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.so-live{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}.so-live i{width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:sop 2s infinite}@keyframes sop{70%{box-shadow:0 0 0 7px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}@media(prefers-reduced-motion:reduce){.so-live i{animation:none}}
+.so-today{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0 10px;font-size:14px}.so-today b{font-size:20px}
+.so-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;align-items:end;height:118px}.so-bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;font-size:11px;color:var(--muted);min-width:0}.so-bar em{font-style:normal;font-weight:700;color:var(--ink);font-size:11px}.so-bar i{display:block;width:100%;max-width:26px;background:var(--brand);opacity:.75;border-radius:4px 4px 0 0;min-height:2px}.so-bar.z i{background:var(--line);opacity:1}.so-bar.t i{opacity:1}.so-bar.t span{color:var(--ink);font-weight:700}
+.so-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0}.so-list li{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px}.so-list li:first-child{border-top:0}.so-list .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.so-list small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.so-list b{white-space:nowrap}.so-new{animation:sonew 2.5s ease-out}@keyframes sonew{0%{background:#FFF6CC}100%{background:transparent}}
 .rvbox{margin:0 0 12px;padding:12px 14px}.rvbox summary{cursor:pointer;list-style:none}.rvbox summary::-webkit-details-marker{display:none}.rv-admin{display:grid;gap:8px;margin-top:10px}.rv-arow{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px}.rv-arow p{margin:4px 0 0;font-size:14px}.rv-arow.off{opacity:.5}
 .psearch{margin:0 0 8px}.ptag{background:#eef2ff;color:#3730a3}.ptag.cat{background:#f1f5f9;color:#475569}
 .facnotion{background:var(--bg);border-radius:10px;padding:8px 10px;margin:6px 0}
@@ -1538,7 +1547,7 @@ const rvLine=p=>{const r=REVIEWS[p.id];return r&&r.count?`<span class="st-rv" ar
 function rvSection(p,cls){const r=REVIEWS[p.id];if(!r||!r.count)return '';
   return `<section class="${cls}"><div class="${cls==='section'?'wrap':''}"><h2>รีวิวจากผู้ซื้อจริง</h2>
     <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ทุกรีวิวมาจากคนที่ซื้อจริง</span></div>
-    <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
+    <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div><span class="rv-ver">✓ ผู้ซื้อจริง${x.em?` · ${esc(x.em)}`:''}</span>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
 const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
 const DAILY=(()=>{try{return (window.__SHOP__&&window.__SHOP__.daily)||null;}catch(e){return null;}})(),LEVELQ=(()=>{try{return (window.__SHOP__&&window.__SHOP__.level)||null;}catch(e){return null;}})();
@@ -2397,10 +2406,40 @@ function rvReqRow(o){loadRVA();const rv=(RVA.list||[]).find(x=>x.order===o.sid),
 function reviewBox(){
   loadRVA();
   const L=RVA.list||[];const live=L.filter(x=>x.status!=='hidden');const avg=live.length?(live.reduce((a,x)=>a+x.stars,0)/live.length).toFixed(1):'-';
-  return `<details class="card rvbox" ${S.rvopen?'open':''}><summary data-a="rvopen"><b>⭐ รีวิวลูกค้า</b> <span class="fine">${L.length?`${live.length} รีวิวบนหน้าร้าน · เฉลี่ย ${avg}${L.length>live.length?` · ซ่อน ${L.length-live.length}`:''}`:'ยังไม่มีรีวิว ระบบส่งอีเมลขอรีวิว 3 วันหลังลูกค้าซื้อ'}${RVA.sent?` · ส่งอีเมลขอรีวิวแล้ว ${RVA.sent} ฉบับ`:''}</span></summary>
-    ${L.length?`<div class="rv-admin">${L.slice(0,60).map(x=>`<div class="rv-arow ${x.status==='hidden'?'off':''}"><div><span class="rv-stars">${starStr(x.stars)}</span> <b>${esc(x.name)}</b> <span class="fine">· ${esc(x.product_name||'')} · ${esc(String(x.created_at).slice(0,10))}</span>${x.text?`<p>${esc(x.text)}</p>`:''}</div>
-      <button class="btn ${x.status==='hidden'?'btn-dark':'btn-line'} btn-sm" data-a="rvhide" data-id="${esc(x.id)}" data-v="${x.status==='hidden'?'0':'1'}">${x.status==='hidden'?'แสดงอีกครั้ง':'ซ่อน'}</button></div>`).join('')}</div>`:''}
-  </details>`;
+  return `<div class="card rvbox row" style="justify-content:space-between;gap:8px;align-items:center"><span><b>⭐ รีวิวลูกค้า</b> <span class="fine">${L.length?`${live.length} รีวิวบนหน้าร้าน · เฉลี่ย ${avg}`:'ยังไม่มีรีวิว'}</span></span><button class="chip" data-a="tab" data-v="reviews">จัดการรีวิว →</button></div>`;
+}
+/* แท็บรีวิว: ดูทุกรีวิว กรอง ซ่อน/แสดง ส่งอีเมลขอรีวิวรอบนี้ และดูหน้ารีวิวตัวอย่าง */
+function reviewsTab(){
+  loadRVA();
+  if(RVA.due===undefined&&!RVA.dueLoading){RVA.dueLoading=true;adminApi('/api/content?action=review_mail&dry=1').then(j=>{RVA.due=j&&j.ok?j.sent:null;}).catch(()=>{RVA.due=null;}).then(()=>{RVA.dueLoading=false;render(true);});}
+  if(RVA.list===null)return '<p class="fine">กำลังโหลดรีวิว...</p>';
+  const L=RVA.list,live=L.filter(x=>x.status!=='hidden'),low=L.filter(x=>x.stars<=3);
+  const avg=live.length?(live.reduce((a,x)=>a+x.stars,0)/live.length):0;
+  const sent=RVA.sent||0,rate=sent?Math.round(L.length/sent*100):null;
+  const f=S.rvf||'all',pf=S.rvp||'';
+  const prods=[...new Set(L.map(x=>x.product_name).filter(Boolean))];
+  const shown=L.filter(x=>f==='all'||(f==='live'?x.status!=='hidden':f==='hidden'?x.status==='hidden':x.stars<=3)).filter(x=>!pf||x.product_name===pf);
+  const dist=[5,4,3,2,1].map(n=>[n,live.filter(x=>x.stars===n).length]);
+  return `<p class="fine" style="margin:0 0 12px">รีวิวมาจากลิงก์ในอีเมลที่ส่งถึงผู้ซื้อเท่านั้น (ลิงก์มีลายเซ็นต่อออเดอร์ บอทปลอมไม่ได้) ทุกรีวิวขึ้นหน้าร้านทันทีพร้อมป้าย "ผู้ซื้อจริง" ซ่อนรีวิวไหนก็ได้ที่นี่</p>
+  <div class="rvt-top">
+    <div class="card rvt-sum"><b class="rvt-avg">${live.length?avg.toFixed(1):'–'}</b><span class="rv-stars" aria-hidden="true">${live.length?starStr(avg):'☆☆☆☆☆'}</span><span class="fine">${live.length} รีวิวบนหน้าร้าน${L.length>live.length?` · ซ่อน ${L.length-live.length}`:''}</span>
+      <div class="rvt-dist">${dist.map(([n,c])=>`<div><span>${n}★</span><i><em style="width:${live.length?Math.round(c/live.length*100):0}%"></em></i><span>${c}</span></div>`).join('')}</div></div>
+    <div class="card rvt-mail"><b>📨 อีเมลขอรีวิว</b>
+      <p class="fine" style="margin:4px 0 8px">ระบบส่งเองทุกวัน 10:00 น. ถึงออเดอร์ที่จ่ายครบ 3 วัน (ครั้งเดียวต่อออเดอร์ ไม่ส่งอีเมลทดสอบของคุณแดน)</p>
+      <div class="rvt-nums"><span>ส่งแล้ว <b>${sent}</b> ฉบับ</span><span>ได้รีวิว <b>${L.length}</b>${rate!=null?` (${rate}%)`:''}</span><span>รอส่งรอบนี้ <b>${RVA.due==null?'–':RVA.due}</b></span></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-line btn-sm" data-a="rvMailNow" ${RVA.due?'':'disabled'}>${S.confirm==='rvmail'?`กดอีกครั้งเพื่อส่ง ${RVA.due} ฉบับ`:'ส่งรอบนี้ตอนนี้'}</button><button class="btn btn-line btn-sm" data-a="rvPreview">ดูหน้ารีวิวตัวอย่าง</button></div>
+      <p class="fine" style="margin:8px 0 0">ขอรีวิวรายออเดอร์ หรือส่งตัวอย่างถึงอีเมลตัวเองได้ที่แท็บ <button class="rvt-link" data-a="tab" data-v="orders">🧾 ออเดอร์</button></p></div>
+  </div>
+  <div class="pfilter" role="group" aria-label="กรองรีวิว">${[['all','ทั้งหมด',L.length],['live','แสดงอยู่',live.length],['hidden','ซ่อนอยู่',L.length-live.length],['low','⚠️ 1-3 ดาว',low.length]].map(x=>`<button class="chip" data-a="rvf" data-v="${x[0]}" aria-pressed="${f===x[0]}">${x[1]} ${x[2]}</button>`).join('')}
+    ${prods.length>1?`<select class="input rvt-sel" data-rvp="1" aria-label="กรองตามสินค้า"><option value="">ทุกสินค้า</option>${prods.map(p=>`<option ${p===pf?'selected':''}>${esc(p)}</option>`).join('')}</select>`:''}</div>
+  ${!L.length?`<div class="card empty-rv"><p style="margin:0"><b>ยังไม่มีรีวิว</b></p><p class="fine" style="margin:6px 0 0">พอลูกค้าซื้อครบ 3 วัน ระบบจะส่งอีเมลขอรีวิวให้เอง รีวิวแรกจะขึ้นที่นี่และบนหน้าขายทันที</p></div>`
+   :!shown.length?'<p class="fine">ไม่มีรีวิวในตัวกรองนี้</p>'
+   :`<div class="rvt-list">${shown.map(x=>`<article class="card rvt-card ${x.status==='hidden'?'off':''}">
+      <div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="rv-stars rvt-st" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span> <b>${esc(x.name)}</b>${x.status==='hidden'?' <span class="badge gray">ซ่อนอยู่</span>':''}
+        <div class="fine">✓ ผู้ซื้อจริง${x.email_mask?` · ${esc(x.email_mask)}`:' · ลูกค้าไม่แสดงอีเมล'} · ${esc(x.product_name||'')}</div></div>
+        <button class="btn ${x.status==='hidden'?'btn-dark':'btn-line'} btn-sm" data-a="rvhide" data-id="${esc(x.id)}" data-v="${x.status==='hidden'?'0':'1'}">${x.status==='hidden'?'แสดงอีกครั้ง':'ซ่อน'}</button></div>
+      ${x.text?`<p class="rvt-text">${esc(x.text)}</p>`:'<p class="fine rvt-text">(ให้ดาวอย่างเดียว ไม่มีความเห็น)</p>'}
+      <span class="fine">${new Date(x.created_at).toLocaleString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}${x.updated_at?' · ลูกค้าแก้ไขล่าสุด '+new Date(x.updated_at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></article>`).join('')}</div>`}`;
 }
 function productsTab(){
   if(S.edit)return productForm();
@@ -2638,6 +2677,28 @@ const teamNotes=()=>POSTS.filter(p=>p.status==='note'&&p.kind!=='chat'&&p.kind!=
 function unseenNotes(){if(!postsLoaded)return 0;const st=seenSet();return teamNotes().filter(n=>!st.has(n.id)&&Date.now()-Date.parse(n.created_at)<7*864e5).length;}
 let DASH={d:null,loading:false,err:''};
 async function loadDash(){DASH.loading=true;try{const j=await adminApi('/api/content?action=dash');if(j.ok){DASH.d=j;DASH.err='';}else DASH.err=j.error||'โหลดไม่ได้';}catch(e){DASH.err='เชื่อมต่อไม่ได้';}DASH.loading=false;}
+/* ออเดอร์ Stripe สด: webhook บันทึกทันทีที่จ่าย การ์ดนี้ดึง action=dash_orders ทุก 30 วินาทีตอนเปิดห้องประชุม */
+const SO={d:null,loading:false,err:'',top:null,fresh:''};
+function loadSO(force){if(SO.loading)return;SO.loading=true;if(force)render(true);adminApi('/api/content?action=dash_orders').then(j=>{if(j&&j.ok){const top=j.latest[0];const k=top?top.at+top.product:'';
+    if(SO.top!==null&&k&&k!==SO.top){SO.fresh=k;toast(`🎉 ออเดอร์ใหม่ ${'฿'+Math.round(top.amount).toLocaleString('th-TH')} · ${top.product}`);}
+    SO.top=k;SO.d=j;SO.err='';}else SO.err=(j&&j.error)||'โหลดไม่ได้';}).catch(()=>{SO.err='เชื่อมต่อไม่ได้';}).then(()=>{SO.loading=false;const a=document.activeElement;if(!(a&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)))render(true);});}
+function stripeBox(){
+  if(!SO.d&&!SO.loading&&!SO.err)loadSO();
+  const d=SO.d;const b=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');
+  const head=`<div class="so-head"><b>💳 ออเดอร์จาก Stripe รายวัน</b><span class="so-live"><i aria-hidden="true"></i>สด · เช็คทุก 30 วินาที${d?' · ล่าสุด '+new Date(d.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):''} <button class="chip" data-a="soRefresh" ${SO.loading?'disabled':''}>${SO.loading?'...':'รีเฟรช'}</button></span></div>`;
+  if(!d)return `<div class="so">${head}<p class="fine">${SO.err?esc(SO.err):'กำลังโหลดออเดอร์...'}</p></div>`;
+  const D=d.days,t=D[D.length-1],y=D[D.length-2],mx=Math.max(1,...D.map(x=>x.rev));
+  const dl=k=>new Date(k+'T00:00:00+07:00');
+  const ago=at=>{const m=Math.round((Date.now()-Date.parse(at))/60000);return m<1?'เมื่อกี้':m<60?m+' นาทีที่แล้ว':m<1440?Math.floor(m/60)+' ชม.ที่แล้ว':new Date(at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' '+new Date(at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});};
+  const src=s=>s==='store'?'หน้าร้าน':s?'แอด '+s:'ลิงก์ตรง';
+  return `<div class="so">${head}
+    <div class="so-today"><span>วันนี้ <b>${t.n}</b> ออเดอร์ · <b>${b(t.rev)}</b></span><span class="fine">เมื่อวาน ${y.n} ออเดอร์ · ${b(y.rev)}${t.unpaid?` · วันนี้มีคนกดซื้อแต่ยังไม่จ่าย ${t.unpaid}`:''}</span></div>
+    <div class="so-bars" role="img" aria-label="ยอดขาย 14 วันล่าสุด">${D.map((x,i)=>`<div class="so-bar${x.n?'':' z'}${i===D.length-1?' t':''}" title="${dl(x.d).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})} · ${x.n} ออเดอร์ · ${b(x.rev)}${x.unpaid?' · ค้างจ่าย '+x.unpaid:''}">${x.n?`<em>${x.n}</em>`:''}<i style="height:${x.rev?Math.max(6,Math.round(x.rev/mx*84)):2}px"></i><span>${dl(x.d).getDate()}</span></div>`).join('')}</div>
+    <p class="fine" style="margin:8px 0 0">แท่งขวาสุด = วันนี้ · ตัวเลขบนแท่ง = จำนวนออเดอร์ ความสูง = ยอดเงิน · แตะแท่งค้างไว้ดูรายละเอียด · ไม่นับออเดอร์ทดสอบ</p>
+    ${d.latest.length?`<ol class="so-list" aria-label="ออเดอร์ล่าสุด">${d.latest.map(o=>`<li class="${SO.fresh===o.at+o.product?'so-new':''}"><span class="fine">${ago(o.at)}</span><span class="p">${esc(o.product||'')}<small>${esc(o.email||'ไม่มีอีเมล')} · ${esc(src(o.src))}</small></span><b>${b(o.amount)}</b></li>`).join('')}</ol>`:'<p class="fine" style="margin:10px 0 0">ยังไม่มีออเดอร์ใน 14 วัน</p>'}
+    <button class="chip" data-a="tab" data-v="orders" style="margin-top:8px">ดูออเดอร์ทั้งหมด →</button>
+  </div>`;
+}
 function dashBox(){
   if(!DASH.d&&!DASH.loading&&!DASH.err){loadDash().then(()=>render(true));}
   const d=DASH.d;const baht2=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');const num=n=>n==null?'–':Number(n).toLocaleString('th-TH');
@@ -2662,6 +2723,7 @@ function dashBox(){
       ${tile('checkout ค้างไม่จ่าย',num(d.sales.unpaid),'คนที่กดซื้อแต่ยังไม่จ่าย',d.sales.unpaid>0,vs('unpaid','down'))}
       ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0,vs('todo','down'))}
     </div>
+    ${stripeBox()}
     ${(()=>{const V=d.visits;if(!V)return '';const G=[['store','🏪 หน้าร้าน'],['salepage','📄 salepage'],['quiz','📝 คลังข้อสอบ'],['learn','📖 คลังความรู้'],['daily','🗓️ ข้อสอบประจำวัน'],['order','🔎 หาออเดอร์']];const nm=k=>k==='store'?'หน้าร้าน':k==='order'?'หาออเดอร์':k==='daily'?'ข้อสอบประจำวัน':k==='quiz'?'คลังข้อสอบ (หน้ารวม)':k==='learn'?'คลังความรู้ (หน้ารวม)':k.startsWith('p/')?'salepage '+k.slice(2):k.startsWith('quiz/')?'ข้อสอบ '+k.slice(5):'บทความ '+k.slice(6);
       const dv=(a,b)=>{const x=(a||0)-(b||0);return x?`<em class="vs ${x>0?'good':'bad'}">${x>0?'▲ +':'▼ −'}${Math.abs(x)} จากเมื่อวาน</em>`:''};
       return `<div class="visits"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><b>👀 ผู้เข้าชมเว็บ 7 วัน</b><span class="fine">นับไม่ซ้ำต่อคนต่อวัน ไม่นับคุณแดน${V.since?' · เริ่มนับ '+new Date(V.since).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></div>
@@ -3438,10 +3500,10 @@ function teamTab(){
 function adminView(){
   // เรียงตามความสำคัญ: 4 อันแรกใช้ทุกวัน (ปุ่มใหญ่) ที่เหลือเป็นแถวรองเลื่อนได้
   const TABS_MAIN=[['todo','✅','เช็คลิสต์'],['meeting','📊','ห้องประชุม'],['orders','🧾','ออเดอร์'],['ads','📣','โฆษณา']];
-  const TABS_MORE=[['content','✍️','คอนเทนต์'],['team','👥','ทีม'],['products','🛍️','สินค้าและเซลเพจ'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['coupons','🏷️','โค้ดส่วนลด'],['pay','🏪','ข้อมูลร้าน'],['pixel','📡','Facebook Pixel']];
+  const TABS_MORE=[['content','✍️','คอนเทนต์'],['team','👥','ทีม'],['products','🛍️','สินค้าและเซลเพจ'],['reviews','⭐','รีวิว'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['coupons','🏷️','โค้ดส่วนลด'],['pay','🏪','ข้อมูลร้าน'],['pixel','📡','Facebook Pixel']];
   const badge=k=>k==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:k==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:'';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={todo:todoTab,orders:ordersTab,products:productsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
+  const body={todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <nav class="tabs" aria-label="เมนูหลังบ้าน"><div class="tabs-main">${TABS_MAIN.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}"><i aria-hidden="true">${t[1]}</i>${t[2]}${badge(t[0])}</button>`).join('')}</div>
       <div class="tabs-more">${TABS_MORE.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]} ${t[2]}${badge(t[0])}</button>`).join('')}</div></nav>
@@ -3783,6 +3845,11 @@ function act(a,el){
     case 'rvReq':{const to=el.dataset.to,sid=el.dataset.sid;if(to==='customer'&&S.confirm!=='rv:'+sid){S.confirm='rv:'+sid;el.textContent='กดอีกครั้งเพื่อส่งถึงลูกค้า';break;}S.confirm='';el.disabled=true;toast('กำลังส่ง...');
       authFetch('/api/content?action=review_send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid,to})}).then(j=>{if(j&&j.ok){toast(to==='me'?'ส่งตัวอย่างไปที่อีเมลของคุณแดนแล้ว':'ส่งอีเมลขอรีวิวถึงลูกค้าแล้ว');if(to==='customer'){RVA.sentAt=RVA.sentAt||{};RVA.sentAt[sid]=new Date().toISOString();}}else toast((j&&j.error)||'ส่งไม่สำเร็จ');render(true);});break;}
     case 'rvopen':S.rvopen=!S.rvopen;break;
+    case 'rvf':S.rvf=el.dataset.v;break;
+    case 'rvMailNow':if(S.confirm!=='rvmail'){S.confirm='rvmail';break;}S.confirm='';el.disabled=true;toast('กำลังส่งอีเมลขอรีวิว...');
+      adminApi('/api/content?action=review_mail').then(j=>{toast(j&&j.ok?(j.skipped?'ยังไม่ได้ตั้งค่าอีเมลบน Vercel':`ส่งแล้ว ${j.sent} ฉบับ`):((j&&j.error)||'ส่งไม่สำเร็จ'));RVA.list=null;RVA.due=undefined;render(true);});break;
+    case 'rvPreview':{const w=window.open('','_blank');adminApi('/api/content?action=review_mail&preview=1').then(j=>{if(j&&j.link){if(w)w.location=j.link;else location.href=j.link;}else{if(w)w.close();toast('ยังไม่มีออเดอร์ที่จ่ายแล้วให้ทำตัวอย่าง');}});break;}
+    case 'soRefresh':loadSO(true);break;
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนรีวิวแล้ว ไม่แสดงบนหน้าร้าน':'แสดงรีวิวบนหน้าร้านแล้ว');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
     case 'bxItem':{const d=S.draft;const i=d.items.indexOf(id);if(i>=0){d.items.splice(i,1);if(d.freeItem===id)d.freeItem='';}else d.items.push(id);render(true);break;}
@@ -3882,6 +3949,7 @@ document.addEventListener('input',e=>{
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
+  if(ds.rvp){S.rvp=t.value;render(true);return;}
   if(ds.psearch){S.pq=t.value;const q=t.value.toLowerCase().trim();let n=0;document.querySelectorAll('.prod[data-q]').forEach(e=>{const ok=!q||e.dataset.q.includes(q);e.hidden=!ok;if(ok)n++;});const z=document.getElementById('pnone');if(z)z.hidden=n>0;}
   if(ds.fpub){FAC.pub=Object.assign(FAC.pub||{},{[ds.fpub]:t.value});}
   if(ds.gl){const [gid,gf]=ds.gl.split('|');FAC.gl=FAC.gl||{};FAC.gl[gid]=Object.assign(FAC.gl[gid]||{},{[gf]:t.value.trim()});}
@@ -4113,6 +4181,7 @@ function wireAuth(){
     else if(ev==='SIGNED_OUT'){if(S.relogin){S.relogin=false;S.view='login';render(false);return;}S.view='shop';S.tab='todo';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
   });
 }
+setInterval(()=>{if(S.view==='admin'&&S.tab==='meeting'&&sbSession&&document.visibilityState==='visible'&&SO.d)loadSO();},30e3);
 setInterval(()=>{if(S.view==='admin'&&S.tab==='chat'&&sbSession&&document.visibilityState==='visible'&&!CHAT.loading){loadChat().then(()=>render(true));}},60e3);
 setInterval(()=>{if(CHAT.fastUntil>Date.now()&&S.view==='admin'&&S.tab==='chat'&&sbSession&&!CHAT.loading){const n=(CHAT.msgs||[]).length;loadChat().then(()=>{render(true);if((CHAT.msgs||[]).length>n){const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end',behavior:'smooth'});}});}},8e3);
 document.addEventListener('visibilitychange',async()=>{
