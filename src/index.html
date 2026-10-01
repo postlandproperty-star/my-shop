@@ -1111,14 +1111,15 @@ setInterval(tick,1000);
 let SOLD=null;
 function loadSold(){if(SOLD!==null)return;SOLD={};fetch('/api/content?action=sold').then(r=>r.json()).then(j=>{if(j&&j.ok){SOLD=j.counts||{};if(S.view==='shop'||!S.view)render(true);}}).catch(()=>{});}
 function loadScript(src){return new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('โหลดตัวแปลง PDF ไม่ได้'));document.head.appendChild(e);});}
-function parsePages(spec,max){const out=[];String(spec||'1-4').split(',').forEach(part=>{const m=part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)return;const a=+m[1],b=m[2]?+m[2]:a;for(let i=Math.min(a,b);i<=Math.max(a,b);i++)if(i>=1&&i<=max&&!out.includes(i))out.push(i);});return out.slice(0,6);}
+function parsePages(spec,max){const out=[];String(spec||'3-6').split(',').forEach(part=>{const m=part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)return;const a=+m[1],b=m[2]?+m[2]:a;for(let i=Math.min(a,b);i<=Math.max(a,b);i++)if(i>=1&&i<=max&&!out.includes(i))out.push(i);});return out.slice(0,6);}
 async function makePreviews(file){
   if(!S.draft)return;const inp=document.getElementById('e-pvpages');if(inp)S.pvPages=inp.value;
   S.pvBusy=true;render(true);toast('กำลังเปิดไฟล์ PDF ในเครื่อง...');
   try{
     if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
     const doc=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
-    const pages=parsePages(S.pvPages,doc.numPages);if(!pages.length)throw new Error('เลขหน้าไม่ถูกต้อง ไฟล์นี้มี '+doc.numPages+' หน้า');
+    let pages=parsePages(S.pvPages,doc.numPages);if(!pages.length&&!String(S.pvPages||'').trim())pages=parsePages('1-4',doc.numPages); // ไฟล์สั้นไม่ถึงหน้า 3
+    if(!pages.length)throw new Error('เลขหน้าไม่ถูกต้อง ไฟล์นี้มี '+doc.numPages+' หน้า');
     const urls=[];
     for(const n of pages){
       toast('กำลังแปลงหน้า '+n+' ('+(urls.length+1)+'/'+pages.length+')');
@@ -1151,7 +1152,7 @@ async function coverGen(){
   S.coverBusy=true;S.coverErr='';render(true);
   try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:imgModel(),quality:imgQuality()})});
     if(j&&j.ok)S.coverImg=j.image;else S.coverErr=(j&&j.error)||'สร้างรูปไม่สำเร็จ';}
-  catch(e){S.coverErr='เชื่อมต่อไม่ได้';}
+  catch(e){S.coverErr='สร้างไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองใหม่ หรือเลือกคุณภาพปกติ';}
   S.coverBusy=false;render(true);
 }
 /* ชุดภาพสินค้า 5 รูป (OpenAI): ปก + ภาพในเล่ม + สิ่งที่ได้ + เหมาะกับใคร + วิธีรับไฟล์ สร้างทีละรูป เลือกเฉพาะรูปที่ชอบ */
@@ -1169,7 +1170,7 @@ async function imgSetGen(){
   for(let i=0;i<ps.length;i++){
     try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i],model:imgModel(),quality:imgQuality()})});
       if(j&&j.ok)S.imgSet[i].url=j.image;else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
-    catch(e){S.imgSet[i].err='เชื่อมต่อไม่ได้';S.imgSet[i].pick=false;}
+    catch(e){S.imgSet[i].err='ไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองคุณภาพปกติ';S.imgSet[i].pick=false;}
     render(true);
   }
   S.coverBusy=false;render(true);
@@ -2185,7 +2186,7 @@ function productForm(){
     <div class="field"><span class="lbl">หน้าตัวอย่างเนื้อหา (ลูกค้าเห็นใต้คำบรรยาย มีลายน้ำ หน้าสุดท้ายจะเบลอชวนซื้อ)</span>
       <div class="thumbs">${(d.previews||[]).map((src,i,A)=>`<div class="thumb pvthumb"><img src="${esc(src)}" alt="หน้าตัวอย่าง ${i+1}"><button class="x" data-a="rmPv" data-i="${i}" aria-label="ลบหน้าตัวอย่าง ${i+1}">×</button>${A.length>1?`<span class="mv">${i>0?`<button data-a="mvImg" data-k="previews" data-i="${i}" data-d="-1" aria-label="เลื่อนหน้าตัวอย่าง ${i+1} ไปทางซ้าย">‹</button>`:''}${i<A.length-1?`<button data-a="mvImg" data-k="previews" data-i="${i}" data-d="1" aria-label="เลื่อนหน้าตัวอย่าง ${i+1} ไปทางขวา">›</button>`:''}</span>`:''}</div>`).join('')}</div>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
-        <label class="fine">หน้าที่ต้องการ <input class="input" id="e-pvpages" value="${esc(S.pvPages||'1-4')}" style="width:110px;display:inline-block;padding:6px 8px" placeholder="1-4 หรือ 1,3,5"></label>
+        <label class="fine">หน้าที่ต้องการ <input class="input" id="e-pvpages" value="${esc(S.pvPages||'3-6')}" style="width:110px;display:inline-block;padding:6px 8px" placeholder="1-4 หรือ 1,3,5"></label>
         ${/^https:\/\/[^ ]+\.pdf(\?|$)/i.test(String(d.link||''))?`<button class="btn btn-dark btn-sm" data-a="pvFromLink" ${S.pvBusy?'disabled':''}>${S.pvBusy?'กำลังสร้าง...':'🔄 สร้างหน้าตัวอย่างใหม่จากไฟล์ของสินค้านี้'}</button>`:''}
         <label class="btn btn-line btn-sm" for="e-pdf" style="cursor:pointer">${S.pvBusy?'กำลังสร้าง...':'เลือกไฟล์ PDF จากเครื่อง'}<input type="file" id="e-pdf" accept="application/pdf" class="vh" ${S.pvBusy?'disabled':''}></label>
       </div>
@@ -2263,7 +2264,7 @@ async function facApprove(id,quick){
     features:[pages?`ไฟล์ PDF ${pages} หน้า`:'ไฟล์ PDF',j.level?`ระดับ ${j.level}`:'',j.audience?`เหมาะกับ ${j.audience}`:'','ดาวน์โหลดได้ทันทีหลังจ่าย'].filter(Boolean).join('\n'),
     specs:`รูปแบบ | ไฟล์ PDF${pages?`\nจำนวนหน้า | ${pages} หน้า`:''}`});
   const lc=j.listing_copy||{};['name','headline','desc','features','forwho','notfor','faq','specs','toc'].forEach(k=>{if(String(lc[k]||'').trim())p0[k]=lc[k];});
-  S.draft=initDraft(p0);S.draft.fromJob=j.id;S.edit='new';S.err='';S.pvPages='1-4';render(false);
+  S.draft=initDraft(p0);S.draft.fromJob=j.id;S.edit='new';S.err='';S.pvPages='3-6';render(false);
   FAC.busy=id;toast('กำลังเปิดไฟล์จากโรงงานเพื่อทำภาพปกและหน้าตัวอย่าง...');
   try{
     const blob=await fetch(j.file_url).then(r=>{if(!r.ok)throw new Error('เปิดไฟล์ไม่ได้ ('+r.status+')');return r.blob();});

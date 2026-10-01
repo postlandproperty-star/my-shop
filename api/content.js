@@ -861,21 +861,24 @@ export default async function handler(req, res) {
     if (action === 'cover') {
       // สร้างรูปปกด้วย OpenAI Images (คีย์อยู่ใน Vercel env OPENAI_API_KEY เท่านั้น) · คุณแดนกดจากหน้าแก้สินค้า ครั้งละ 1 รูป
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
-      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const diag = !admin && keyOk(req) && req.query.diag === '1'; // ทดสอบระบบ: คุณภาพต่ำสุด คืนแค่เวลา/ขนาด ไม่คืนรูป
+      if (!admin && !diag) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const KEY = process.env.OPENAI_API_KEY || '';
       if (!KEY) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel (Settings → Environment Variables) ใส่แล้วกด Redeploy' });
-      const body = await readBody(req);
+      const body = await readBody(req); if (diag) body.quality = 'low';
+      const t0 = Date.now();
       const prompt = String(body.prompt || '').trim().slice(0, 3000);
       if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'คำสั่งสั้นเกินไป' });
       try {
         const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
           // คุณแดนเลือกโมเดล/คุณภาพได้ในหลังบ้าน (ค่าตั้งต้น gpt-image-2)
-          body: JSON.stringify({ model: /^(gpt-image|chatgpt-image)[a-z0-9.\-]{0,40}$/.test(String(body.model || '')) ? String(body.model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2'), prompt, size: '1024x1024', quality: ['low', 'medium', 'high'].includes(body.quality) ? body.quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
+          body: JSON.stringify({ model: /^(gpt-image|chatgpt-image)[a-z0-9.\-]{0,40}$/.test(String(body.model || '')) ? String(body.model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2'), prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(body.quality) ? body.quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) return res.status(502).json({ ok: false, error: `OpenAI: ${j?.error?.message || r.status}` });
         const b64 = j?.data?.[0]?.b64_json;
         if (!b64) return res.status(502).json({ ok: false, error: 'OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง' });
-        return res.status(200).json({ ok: true, image: `data:image/png;base64,${b64}` });
+        if (diag) return res.status(200).json({ ok: true, ms: Date.now() - t0, kb: Math.round(b64.length * 0.75 / 1024) });
+        return res.status(200).json({ ok: true, image: `data:image/jpeg;base64,${b64}` });
       } catch (e) { return res.status(502).json({ ok: false, error: 'เชื่อมต่อ OpenAI ไม่ได้: ' + String(e.message || e).slice(0, 120) }); }
     }
     if (action.startsWith('rl_')) {
