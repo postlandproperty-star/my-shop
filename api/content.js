@@ -2171,8 +2171,10 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ FB_CAPI_TOKEN บน Vercel', pixelId: pid, pixels });
       }
       if (!/^\d{6,20}$/.test(pid)) return res.status(200).json({ ok: false, error: 'ยังไม่ได้ใส่ Pixel ID ในหลังบ้าน' });
-      try { const j = await fbGet(pid, { fields: 'id,name,last_fired_time', access_token: tok }); return res.status(200).json({ ok: true, pixel: j }); }
-      catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e) }); }
+      // โทเค็น Conversions API ส่งเหตุการณ์ได้อย่างเดียว อ่านข้อมูล Pixel ไม่ได้ → ทดสอบด้วยเหตุการณ์ PageView แบบ test_event_code (ขึ้นแค่แท็บ Test events ไม่นับเข้าแอด)
+      const body = new URLSearchParams({ access_token: tok, test_event_code: 'TEST' + String(Date.now()).slice(-5), data: JSON.stringify([{ event_name: 'PageView', event_time: Math.floor(Date.now() / 1000), action_source: 'website', event_source_url: 'https://sheetlabth.com/', user_data: { client_ip_address: '1.1.1.1', client_user_agent: 'sheetlab-capi-check' } }]) });
+      const r = await fetch(`https://graph.facebook.com/v21.0/${pid}/events`, { method: 'POST', body }); const j = await r.json().catch(() => ({}));
+      return res.status(200).json({ ok: !!(r.ok && !j.error && j.events_received), received: j.events_received || 0, error: j.error?.message || null, test_code: body.get('test_event_code') });
     }
     if (action.startsWith('ads_auto')) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
