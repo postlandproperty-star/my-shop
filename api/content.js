@@ -2181,6 +2181,15 @@ export default async function handler(req, res) {
       if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
       const items = await loadAdsAuto(); const x = items.find((y) => y.id === String(body.id || ''));
       if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบแอดนี้' });
+      if (action === 'ads_auto_update') { // บันทึกรูปที่เลือก/อัปโหลด/สร้างด้วย AI และข้อความ ก่อนกดตกลง (ยังไม่เสียเงิน)
+        if (!['pending', 'failed'].includes(x.status)) return res.status(400).json({ ok: false, error: 'แอดนี้ยิงไปแล้ว' });
+        const url = (u) => /^https:\/\/\S+$/.test(String(u || '')) ? String(u).slice(0, 500) : null;
+        if (url(body.image)) x.image = url(body.image);
+        if (Array.isArray(body.extra)) x.extra = body.extra.map(url).filter(Boolean).slice(-12);
+        if (typeof body.text === 'string' && body.text.trim().length >= 20) x.text = body.text.trim().slice(0, 1500);
+        if (typeof body.headline === 'string' && body.headline.trim()) x.headline = body.headline.trim().slice(0, 60);
+        x.updated_at = new Date().toISOString(); await saveAdsAuto(items); return res.status(200).json({ ok: true, item: x });
+      }
       if (action === 'ads_auto_dismiss') { if (x.status !== 'pending') return res.status(400).json({ ok: false, error: 'แอดนี้ยิงไปแล้ว ใช้ปุ่มหยุดแทน' }); x.status = 'dismissed'; x.updated_at = new Date().toISOString(); await saveAdsAuto(items); return res.status(200).json({ ok: true, item: x }); }
       const fb = await loadFb();
       if (action === 'ads_auto_stop' || action === 'ads_auto_resume') {
