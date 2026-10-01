@@ -62,17 +62,18 @@ export default async function handler(req, res) {
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
   if (req.query.review) { // หน้ารีวิวจากลิงก์ในอีเมล (ลายเซ็นต่อออเดอร์) ไม่ให้ Google เก็บ
-    const { tokenOk, loadReviews, reviewPage, maskEmail } = await import('../lib/reviews.js');
+    const { tokenOk, previewOk, loadReviews, reviewPage, maskEmail } = await import('../lib/reviews.js');
     const o = String(req.query.o || ''), t = String(req.query.t || '');
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Robots-Tag', 'noindex');
     const bad = (m) => res.status(404).send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:sans-serif;padding:24px">${m} <a href="${NEW_SITE}">กลับหน้าร้าน</a></body>`);
-    if (!/^[A-Za-z0-9_-]{6,200}$/.test(o) || !tokenOk(o, t)) return bad('ลิงก์รีวิวไม่ถูกต้องหรือหมดอายุ');
+    const pv = previewOk(o, t);
+    if (!/^[A-Za-z0-9_-]{6,200}$/.test(o) || !(tokenOk(o, t) || pv)) return bad('ลิงก์รีวิวไม่ถูกต้องหรือหมดอายุ');
     const rows = await sbSelect(`orders?session_id=eq.${encodeURIComponent(o)}&status=eq.paid&select=session_id,name,email,product_id,product_name`).catch(() => []);
     if (!rows.length) return bad('ไม่พบคำสั่งซื้อนี้');
     const shop = await loadShop().catch(() => ({ products: [] }));
     const prod = shop.products.find((x) => x.id === rows[0].product_id);
     const rv = await loadReviews();
-    return res.status(200).send(reviewPage({ product: prod ? prod.name : rows[0].product_name, order: rows[0], token: t, stars: req.query.s, existing: rv.list.find((x) => x.order === o), site: NEW_SITE, mask: maskEmail(rows[0].email) }));
+    return res.status(200).send(reviewPage({ product: prod ? prod.name : rows[0].product_name, order: rows[0], token: t, stars: req.query.s, existing: rv.list.find((x) => x.order === o), site: NEW_SITE, mask: pv ? 'ตัวอย่าง•••@gmail.com' : maskEmail(rows[0].email), preview: pv }));
   }
   const draft = String(req.query.draft || '');
   if (/^[a-z0-9-]{3,60}$/.test(draft)) { // หน้าร่าง /draft/<ชื่อ>: ไม่มีลิงก์จากหน้าร้าน และบอกเครื่องมือค้นหาไม่ให้เก็บ

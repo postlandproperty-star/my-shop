@@ -188,8 +188,11 @@ footer{padding:28px 0 110px;text-align:center}
 .rvt-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px;margin-bottom:12px}@media(max-width:720px){.rvt-top{grid-template-columns:1fr}}
 .rvt-sum{display:flex;flex-direction:column;gap:2px}.rvt-avg{font-size:40px;line-height:1}.rvt-dist{display:grid;gap:4px;margin-top:10px;font-size:13px}.rvt-dist div{display:grid;grid-template-columns:28px 1fr 24px;gap:8px;align-items:center}.rvt-dist i{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:block}.rvt-dist em{display:block;height:100%;background:#F5B301;border-radius:4px}
 .rvt-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.rvt-sel{width:auto;min-width:0;max-width:100%;padding:6px 10px;font-size:14px}
+.rl-conn{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.rl-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}.rl-howto{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px}.rl-howto ol{padding-left:20px;line-height:1.7;margin:6px 0 8px}
 .rvt-link{background:none;border:0;padding:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer}.rvt-list{display:grid;gap:10px}.rvt-card{padding:14px 16px}.rvt-card.off{opacity:.55}.rvt-st{font-size:17px}.rvt-text{margin:8px 0 6px;white-space:pre-wrap}.empty-rv{padding:18px}
-.so{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}.so-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.so-live{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}.so-live i{width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:sop 2s infinite}@keyframes sop{70%{box-shadow:0 0 0 7px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}@media(prefers-reduced-motion:reduce){.so-live i{animation:none}}
+.so{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.so>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.so>summary::-webkit-details-marker{display:none}.so>summary::after{content:'▾';color:var(--muted)}.so[open]>summary{margin-bottom:10px}.so[open]>summary::after{content:'▴'}
+.dtile.wide{grid-column:span 2}.dtile .so-live{margin-left:4px}.srcbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 6px;background:var(--line);gap:2px}.srcbar i,.srcleg i{display:block}.srcbar i.ads,.srcleg .ads i{background:#2440E8}.srcbar i.organic,.srcleg .organic i{background:#0F9D6B}.srcbar i.direct,.srcleg .direct i{background:#9AA6BC}
+.srcleg{display:flex;gap:10px;flex-wrap:wrap;font-size:13px}.srcleg span{display:inline-flex;align-items:center;gap:5px}.dtile .srcleg b{display:inline;font-size:13px;line-height:1.4;margin:0}.dtile span .fine{font-size:11.5px;font-weight:400}.srcleg i{width:9px;height:9px;border-radius:2px}.so-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.so-live{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}.so-live i{width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 0 rgba(22,163,74,.5);animation:sop 2s infinite}@keyframes sop{70%{box-shadow:0 0 0 7px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}@media(prefers-reduced-motion:reduce){.so-live i{animation:none}}
 .so-today{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0 10px;font-size:14px}.so-today b{font-size:20px}
 .so-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;align-items:end;height:118px}.so-bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;font-size:11px;color:var(--muted);min-width:0}.so-bar em{font-style:normal;font-weight:700;color:var(--ink);font-size:11px}.so-bar i{display:block;width:100%;max-width:26px;background:var(--brand);opacity:.75;border-radius:4px 4px 0 0;min-height:2px}.so-bar.z i{background:var(--line);opacity:1}.so-bar.t i{opacity:1}.so-bar.t span{color:var(--ink);font-weight:700}
 .so-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0}.so-list li{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px}.so-list li:first-child{border-top:0}.so-list .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.so-list small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.so-list b{white-space:nowrap}.so-new{animation:sonew 2.5s ease-out}@keyframes sonew{0%{background:#FFF6CC}100%{background:transparent}}
@@ -2427,7 +2430,7 @@ function reviewsTab(){
     <div class="card rvt-mail"><b>📨 อีเมลขอรีวิว</b>
       <p class="fine" style="margin:4px 0 8px">ระบบส่งเองทุกวัน 10:00 น. ถึงออเดอร์ที่จ่ายครบ 3 วัน (ครั้งเดียวต่อออเดอร์ ไม่ส่งอีเมลทดสอบของคุณแดน)</p>
       <div class="rvt-nums"><span>ส่งแล้ว <b>${sent}</b> ฉบับ</span><span>ได้รีวิว <b>${L.length}</b>${rate!=null?` (${rate}%)`:''}</span><span>รอส่งรอบนี้ <b>${RVA.due==null?'–':RVA.due}</b></span></div>
-      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-line btn-sm" data-a="rvMailNow" ${RVA.due?'':'disabled'}>${S.confirm==='rvmail'?`กดอีกครั้งเพื่อส่ง ${RVA.due} ฉบับ`:'ส่งรอบนี้ตอนนี้'}</button><button class="btn btn-line btn-sm" data-a="rvPreview">ดูหน้ารีวิวตัวอย่าง</button></div>
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-line btn-sm" data-a="rvMailNow" ${RVA.due?'':'disabled'}>${S.confirm==='rvmail'?`กดอีกครั้งเพื่อส่ง ${RVA.due} ฉบับ`:'ส่งรอบนี้ตอนนี้'}</button><button class="btn btn-line btn-sm" data-a="rvPreview" title="เปิดดูหน้าตาได้ ส่งไม่ได้">ดูหน้ารีวิวตัวอย่าง</button></div>
       <p class="fine" style="margin:8px 0 0">ขอรีวิวรายออเดอร์ หรือส่งตัวอย่างถึงอีเมลตัวเองได้ที่แท็บ <button class="rvt-link" data-a="tab" data-v="orders">🧾 ออเดอร์</button></p></div>
   </div>
   <div class="pfilter" role="group" aria-label="กรองรีวิว">${[['all','ทั้งหมด',L.length],['live','แสดงอยู่',live.length],['hidden','ซ่อนอยู่',L.length-live.length],['low','⚠️ 1-3 ดาว',low.length]].map(x=>`<button class="chip" data-a="rvf" data-v="${x[0]}" aria-pressed="${f===x[0]}">${x[1]} ${x[2]}</button>`).join('')}
@@ -2437,7 +2440,7 @@ function reviewsTab(){
    :`<div class="rvt-list">${shown.map(x=>`<article class="card rvt-card ${x.status==='hidden'?'off':''}">
       <div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="rv-stars rvt-st" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span> <b>${esc(x.name)}</b>${x.status==='hidden'?' <span class="badge gray">ซ่อนอยู่</span>':''}
         <div class="fine">✓ ผู้ซื้อจริง${x.email_mask?` · ${esc(x.email_mask)}`:' · ลูกค้าไม่แสดงอีเมล'} · ${esc(x.product_name||'')}</div></div>
-        <button class="btn ${x.status==='hidden'?'btn-dark':'btn-line'} btn-sm" data-a="rvhide" data-id="${esc(x.id)}" data-v="${x.status==='hidden'?'0':'1'}">${x.status==='hidden'?'แสดงอีกครั้ง':'ซ่อน'}</button></div>
+        <span class="row" style="gap:6px"><button class="btn ${x.status==='hidden'?'btn-dark':'btn-line'} btn-sm" data-a="rvhide" data-id="${esc(x.id)}" data-v="${x.status==='hidden'?'0':'1'}">${x.status==='hidden'?'แสดงอีกครั้ง':'ซ่อน'}</button><button class="btn btn-line btn-sm" data-a="rvdel" data-id="${esc(x.id)}" title="ลบถาวร เช่น รีวิวที่ลองส่งเอง">${S.confirm==='rvdel:'+x.id?'กดอีกครั้งเพื่อลบ':'ลบ'}</button></span></div>
       ${x.text?`<p class="rvt-text">${esc(x.text)}</p>`:'<p class="fine rvt-text">(ให้ดาวอย่างเดียว ไม่มีความเห็น)</p>'}
       <span class="fine">${new Date(x.created_at).toLocaleString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}${x.updated_at?' · ลูกค้าแก้ไขล่าสุด '+new Date(x.updated_at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></article>`).join('')}</div>`}`;
 }
@@ -2532,7 +2535,7 @@ let POSTS=[],postsLoaded=false;
 const KIND_TH={salepage:'รายงาน salepage',store:'รายงานหน้าร้าน',deck:'สไลด์รายงาน',handoff:'รับงานแทนคุณแดน',reply:'สั่งงาน',brief:'โจทย์ให้ทีม',meeting:'บันทึกประชุม',people:'รายงานทีม (ฝ่ายบุคคล)',handbook:'คู่มือพนักงาน',tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={},TH={};
-(function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){setTimeout(()=>{toast(q.get('threads')==='ok'?'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ':'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
+(function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){const rl=q.get('brand')==='readlab';if(rl){S.tab='content';S.cbrand='readlab';}setTimeout(()=>{toast(q.get('threads')==='ok'?(rl?'เชื่อม Threads ReadLab เรียบร้อย โพสต์ที่อนุมัติจะขึ้นเอง':'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ'):'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
 async function loadThStatus(){try{const j=await adminApi('/api/threads?action=status');if(j.ok)TH=Object.assign(TH,{connected:j.connected,user:j.user,app:j.app,redirect:j.redirect});}catch(e){}}
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
 async function adminPost(path,body){return authFetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});}
@@ -2682,22 +2685,34 @@ const SO={d:null,loading:false,err:'',top:null,fresh:''};
 function loadSO(force){if(SO.loading)return;SO.loading=true;if(force)render(true);adminApi('/api/content?action=dash_orders').then(j=>{if(j&&j.ok){const top=j.latest[0];const k=top?top.at+top.product:'';
     if(SO.top!==null&&k&&k!==SO.top){SO.fresh=k;toast(`🎉 ออเดอร์ใหม่ ${'฿'+Math.round(top.amount).toLocaleString('th-TH')} · ${top.product}`);}
     SO.top=k;SO.d=j;SO.err='';}else SO.err=(j&&j.error)||'โหลดไม่ได้';}).catch(()=>{SO.err='เชื่อมต่อไม่ได้';}).then(()=>{SO.loading=false;const a=document.activeElement;if(!(a&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)))render(true);});}
-function stripeBox(){
+const SRC_ICON={ads:'📣',organic:'🌱',direct:'🔗'};
+function liveTiles(){
   if(!SO.d&&!SO.loading&&!SO.err)loadSO();
   const d=SO.d;const b=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');
-  const head=`<div class="so-head"><b>💳 ออเดอร์จาก Stripe รายวัน</b><span class="so-live"><i aria-hidden="true"></i>สด · เช็คทุก 30 วินาที${d?' · ล่าสุด '+new Date(d.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):''} <button class="chip" data-a="soRefresh" ${SO.loading?'disabled':''}>${SO.loading?'...':'รีเฟรช'}</button></span></div>`;
-  if(!d)return `<div class="so">${head}<p class="fine">${SO.err?esc(SO.err):'กำลังโหลดออเดอร์...'}</p></div>`;
-  const D=d.days,t=D[D.length-1],y=D[D.length-2],mx=Math.max(1,...D.map(x=>x.rev));
+  const live=`<span class="so-live"><i aria-hidden="true"></i>สด</span>`;
+  if(!d)return `<div class="dtile wide"><span>ยอดวันนี้ ${live}</span><b>${SO.err?'–':'...'}</b><small>${SO.err?esc(SO.err):'กำลังโหลดจาก Stripe'}</small></div><div class="dtile wide"><span>ยอดขายมาจากไหน (7 วัน)</span><b>–</b></div>`;
+  const D=d.days,t=D[D.length-1],y=D[D.length-2],T=d.src.today.groups,W=d.src.week;
+  const dv=t.rev-y.rev,cmp=dv?`<em class="vs ${dv>0?'good':'bad'}">${dv>0?'▲ +':'▼ −'}${b(Math.abs(dv))} จากเมื่อวาน</em>`:`<em class="vs flat">เท่าเมื่อวาน</em>`;
+  const parts=g=>[['ads','แอด'],['organic','ออร์แกนิก'],['direct','ลิงก์ตรง']].filter(([k])=>g[k].n).map(([k,l])=>`${l} ${g[k].n}`).join(' · ');
+  const tot=W.groups.ads.rev+W.groups.organic.rev+W.groups.direct.rev;
+  const pct=k=>tot?Math.round(W.groups[k].rev/tot*100):0;
+  return `<div class="dtile wide live"><span>ยอดวันนี้ ${live} <small class="fine">อัปเดต ${new Date(d.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</small></span><b>${b(t.rev)}</b>${cmp}<small>${t.n} ออเดอร์${t.n?' · '+parts(T):''}${t.unpaid?` · ค้างจ่าย ${t.unpaid}`:''}</small></div>
+    <div class="dtile wide"><span>ยอดขายมาจากไหน (7 วัน)</span>${tot?`<div class="srcbar" role="img" aria-label="แอด ${pct('ads')}% ออร์แกนิก ${pct('organic')}% ลิงก์ตรง ${pct('direct')}%">${['ads','organic','direct'].filter(k=>W.groups[k].rev).map(k=>`<i class="${k}" style="width:${pct(k)}%"></i>`).join('')}</div>
+      <div class="srcleg">${['ads','organic','direct'].map(k=>`<span class="${k}"><i></i>${{ads:'แอด',organic:'ออร์แกนิก',direct:'ลิงก์ตรง'}[k]} <b>${b(W.groups[k].rev)}</b> (${W.groups[k].n})</span>`).join('')}</div>
+      <small>${W.labels.slice(0,4).map(x=>`${SRC_ICON[x.group]} ${esc(x.label)} ${x.n}`).join(' · ')}</small>`:'<b>–</b><small>ยังไม่มีออเดอร์ใน 7 วัน</small>'}</div>`;
+}
+function stripeBox(){
+  const d=SO.d;if(!d)return '';const b=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');
+  const D=d.days,mx=Math.max(1,...D.map(x=>x.rev));
   const dl=k=>new Date(k+'T00:00:00+07:00');
   const ago=at=>{const m=Math.round((Date.now()-Date.parse(at))/60000);return m<1?'เมื่อกี้':m<60?m+' นาทีที่แล้ว':m<1440?Math.floor(m/60)+' ชม.ที่แล้ว':new Date(at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' '+new Date(at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});};
-  const src=s=>s==='store'?'หน้าร้าน':s?'แอด '+s:'ลิงก์ตรง';
-  return `<div class="so">${head}
-    <div class="so-today"><span>วันนี้ <b>${t.n}</b> ออเดอร์ · <b>${b(t.rev)}</b></span><span class="fine">เมื่อวาน ${y.n} ออเดอร์ · ${b(y.rev)}${t.unpaid?` · วันนี้มีคนกดซื้อแต่ยังไม่จ่าย ${t.unpaid}`:''}</span></div>
+  return `<details class="so" ${S.soOpen?'open':''}><summary data-a="soOpen"><b>💳 ออเดอร์ Stripe 14 วัน และออเดอร์ล่าสุด</b> <span class="fine">เช็คทุก 30 วินาที</span></summary>
     <div class="so-bars" role="img" aria-label="ยอดขาย 14 วันล่าสุด">${D.map((x,i)=>`<div class="so-bar${x.n?'':' z'}${i===D.length-1?' t':''}" title="${dl(x.d).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})} · ${x.n} ออเดอร์ · ${b(x.rev)}${x.unpaid?' · ค้างจ่าย '+x.unpaid:''}">${x.n?`<em>${x.n}</em>`:''}<i style="height:${x.rev?Math.max(6,Math.round(x.rev/mx*84)):2}px"></i><span>${dl(x.d).getDate()}</span></div>`).join('')}</div>
-    <p class="fine" style="margin:8px 0 0">แท่งขวาสุด = วันนี้ · ตัวเลขบนแท่ง = จำนวนออเดอร์ ความสูง = ยอดเงิน · แตะแท่งค้างไว้ดูรายละเอียด · ไม่นับออเดอร์ทดสอบ</p>
-    ${d.latest.length?`<ol class="so-list" aria-label="ออเดอร์ล่าสุด">${d.latest.map(o=>`<li class="${SO.fresh===o.at+o.product?'so-new':''}"><span class="fine">${ago(o.at)}</span><span class="p">${esc(o.product||'')}<small>${esc(o.email||'ไม่มีอีเมล')} · ${esc(src(o.src))}</small></span><b>${b(o.amount)}</b></li>`).join('')}</ol>`:'<p class="fine" style="margin:10px 0 0">ยังไม่มีออเดอร์ใน 14 วัน</p>'}
+    <p class="fine" style="margin:8px 0 0">แท่งขวาสุด = วันนี้ · ตัวเลขบนแท่ง = จำนวนออเดอร์ ความสูง = ยอดเงิน · ไม่นับออเดอร์ทดสอบ</p>
+    ${d.latest.length?`<ol class="so-list" aria-label="ออเดอร์ล่าสุด">${d.latest.map(o=>`<li class="${SO.fresh===o.at+o.product?'so-new':''}"><span class="fine">${ago(o.at)}</span><span class="p">${esc(o.product||'')}<small>${SRC_ICON[o.group]||''} ${esc(o.label||'')} · ${esc(o.email||'ไม่มีอีเมล')}</small></span><b>${b(o.amount)}</b></li>`).join('')}</ol>`:'<p class="fine" style="margin:10px 0 0">ยังไม่มีออเดอร์ใน 14 วัน</p>'}
+    <p class="fine" style="margin:8px 0 0">ที่มา: 📣 แอด = มาจากลิงก์แอดที่มีชื่อแคมเปญ · 🌱 ออร์แกนิก = หน้าร้าน เพจ Threads Google ฯลฯ (ดูจากเว็บที่ลูกค้ากดมา) · 🔗 ลิงก์ตรง = พิมพ์เว็บเอง/แอปที่ไม่บอกที่มา</p>
     <button class="chip" data-a="tab" data-v="orders" style="margin-top:8px">ดูออเดอร์ทั้งหมด →</button>
-  </div>`;
+  </details>`;
 }
 function dashBox(){
   if(!DASH.d&&!DASH.loading&&!DASH.err){loadDash().then(()=>render(true));}
@@ -2714,6 +2729,7 @@ function dashBox(){
   return `<section class="dash card">
     <div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h3 class="h3" style="margin:0">📊 ภาพรวม 7 วันล่าสุด</h3><span class="fine">อัปเดต ${new Date(d.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})} <button class="chip" data-a="dashRefresh">รีเฟรช</button></span></div>
     <div class="dgrid">
+      ${liveTiles()}
       ${tile('ยอดขายจริง',baht2(d.sales.revenue),`${d.sales.orders} ออเดอร์${d.sales.store&&d.sales.store.orders?` (มาจากหน้าร้าน ${d.sales.store.orders})`:''} · ${salesSub}`,false,vs('revenue','up',1))}
       ${tile('ค่าแอดรวม',baht2(d.ads.spend),d.ads.campaigns.length?`${d.ads.campaigns.length} แคมเปญ`:'ยังไม่มีแคมเปญ',false,vs('spend','',1))}
       ${tile('ผู้ติดตาม Threads',num(d.followers.threads),d.followers.threadsDelta!=null?delta(d.followers.threadsDelta,'ใน 7 วัน'):'เริ่มเก็บสถิติวันนี้',false,vs('threads','up'))}
@@ -2770,14 +2786,15 @@ function readlabView(){
   if(!RL.data){loadRL();return '<p class="fine">กำลังโหลด ReadLab...</p>';}
   const d=RL.data,cfg=d.cfg||{},posts=(d.posts||[]).slice().reverse();
   const f=S.rlf||'queue',exp=S.rlexp||{};
-  const inQ=x=>x.status==='draft'||x.status==='approved';
+  const inQ=x=>['draft','approved','failed','publishing'].includes(x.status);
   const cnt={queue:posts.filter(inQ).length,published:posts.filter(x=>x.status==='published').length,rejected:posts.filter(x=>x.status==='rejected').length,all:posts.length};
   const list=posts.filter(x=>f==='queue'?inQ(x):f==='all'?true:x.status===f).sort((a,b)=>f==='queue'?((a.status==='draft'?0:1)-(b.status==='draft'?0:1)):0);
   const num=n=>Number(n||0).toLocaleString('th-TH');
   const fl=d.followers||[],last=fl[fl.length-1],prev=fl.length>1?fl[fl.length-2]:null;
   const dlt=(a,b)=>{const x=(a||0)-(b||0);return prev&&x?`<em class="vs ${x>0?'good':'bad'}">${x>0?'+':'−'}${Math.abs(x)}</em>`:'';};
   const plan=(d.notes||[]).filter(n=>n.kind==='plan').slice(-1)[0];
-  const ST={draft:['รออนุมัติ','warn'],approved:['อนุมัติแล้ว รอโพสต์','ok'],published:['โพสต์แล้ว','gray'],rejected:['ปัดตก','gray']};
+  const C=d.connect||{},auto=ch=>ch==='threads'?!!C.th:!!C.fb;
+  const ST={draft:['รออนุมัติ','warn'],approved:['อนุมัติแล้ว รอโพสต์','ok'],publishing:['กำลังโพสต์','warn'],failed:['โพสต์ไม่ผ่าน','bad'],published:['โพสต์แล้ว','gray'],rejected:['ปัดตก','gray']};
   const card=x=>{const open=!!exp[x.id],st=ST[x.status]||[x.status,'gray'],m=RL_TEAM[x.source]||{name:x.source,img:AV+'seed='+x.source},ed=x.status!=='published';
     const media=x.video_url?`<video class="${open?'':'thumb'}" src="${esc(x.video_url)}${open?'':'#t=0.5'}" ${open?'controls':'muted'} playsinline preload="metadata" style="${open?'width:100%;max-height:420px;border-radius:12px;background:#000':''}"></video>`:x.image_url?`<img class="${open?'':'thumb'}" src="${esc(x.image_url)}" alt="" loading="lazy" style="${open?'width:100%;border-radius:12px':''}">`:(x.channel==='facebook'&&x.kind!=='reel'?'<span class="noimg" title="น้องพิกเซลจะทำรูปให้รอบถัดไป">🖼️<br>รอรูป</span>':'<span class="noimg" title="โพสต์ข้อความล้วน">💬<br>ข้อความ</span>');
     return `<div class="post ${open?'':'compact'}">${media}<div>
@@ -2785,10 +2802,14 @@ function readlabView(){
       ${x.book?`<p class="fine" style="margin:4px 0 0">📖 ${esc(x.book)}</p>`:''}
       ${open&&ed?`<textarea class="input" id="rlt-${x.id}" style="margin-top:8px;min-height:180px">${esc(x.text)}</textarea><input class="input" id="rln-${x.id}" placeholder="คำติชมถึงทีม (ไม่บังคับ) เช่น สั้นกว่านี้ได้" value="${esc(x.owner_note||'')}" style="margin-top:6px">`:open?`<p style="white-space:pre-wrap;margin-top:8px">${esc(x.text)}</p>`:`<p class="ptxt" data-a="rlexp" data-id="${x.id}">${esc(x.text)}</p>`}
       ${open&&x.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจาก ${esc(m.name)}: ${esc(x.notes)}</p>`:''}
+      ${x.status==='failed'&&x.error?`<p class="err" style="margin-top:6px">${esc(x.error)}</p>`:''}
+      ${x.status==='approved'&&auto(x.channel)?`<p class="fine" style="margin-top:6px">⏱ จะขึ้นเองรอบถัดไป (10:00 / 19:05 น.)${x.scheduled_at?' หลัง '+fdt(Date.parse(x.scheduled_at)):''}</p>`:''}
+      ${x.status==='published'&&x.auto?`<p class="fine" style="margin-top:6px">🤖 ระบบโพสต์ให้ ${x.published_at?fdt(Date.parse(x.published_at)):''}</p>`:''}
       <div class="acts">
+        ${(x.status==='approved'||x.status==='failed')&&auto(x.channel)?`<button class="btn btn-cta btn-sm" data-a="rlpub" data-id="${x.id}">${x.status==='failed'?'ลองโพสต์ใหม่':'โพสต์ตอนนี้'}</button>`:''}
         ${x.status==='draft'?`<button class="btn btn-cta btn-sm" data-a="rlop" data-op="approve" data-id="${x.id}">อนุมัติ</button>`:''}
-        ${x.status==='approved'?`<button class="btn btn-dark btn-sm" data-a="rlop" data-op="posted" data-id="${x.id}">โพสต์แล้ว ✓</button>`:''}
-        ${x.status==='draft'||x.status==='approved'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="reject" data-id="${x.id}">ปัดตก</button>`:''}
+        ${x.status==='approved'&&!auto(x.channel)||x.status==='failed'?`<button class="btn btn-dark btn-sm" data-a="rlop" data-op="posted" data-id="${x.id}">โพสต์เองแล้ว ✓</button>`:''}
+        ${['draft','approved','failed'].includes(x.status)?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="reject" data-id="${x.id}">ปัดตก</button>`:''}
         ${x.status==='rejected'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="approve" data-id="${x.id}">เอากลับมา อนุมัติ</button>`:''}
         ${x.status==='published'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="unpost" data-id="${x.id}">ยังไม่ได้โพสต์</button>`:''}
         ${open&&ed?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="save" data-id="${x.id}">บันทึกที่แก้</button>`:''}
@@ -2812,15 +2833,35 @@ function readlabView(){
       <label class="fine">ผู้ติดตาม Facebook วันนี้<input class="input" id="rl-fb" type="number" min="0" inputmode="numeric" value="${last?last.fb:''}"></label>
       <label class="fine">ผู้ติดตาม Threads วันนี้<input class="input" id="rl-th" type="number" min="0" inputmode="numeric" value="${last?last.th:''}"></label>
       <button class="btn btn-dark btn-sm" data-a="rlcfgSave">บันทึก</button></div>`:''}
-    ${!connected?`<details class="rl-setup"><summary>ยังไม่มีเพจ ReadLab — วิธีเริ่ม (กดดู)</summary><ol>
-      <li>สร้างเพจ Facebook ใหม่ชื่อ ReadLab (ใช้บัญชี Facebook ของคุณแดน) และสมัคร Threads ใหม่อีกบัญชี (Threads ใช้บัญชี Instagram เป็นตัวตั้งต้น)</li>
-      <li>กด "อัปเดตยอด / ตั้งค่าเพจ" ด้านบน ใส่ชื่อเพจกับชื่อบัญชี Threads</li>
-      <li>ช่วงแรก: อนุมัติโพสต์ในคิวด้านล่าง กด "คัดลอกข้อความ" + "เปิดรูป" ไปโพสต์เอง แล้วกด "โพสต์แล้ว ✓"</li>
-      <li>พอพร้อม บอก Claude ให้เชื่อมเพจและ Threads เพื่อโพสต์อัตโนมัติเหมือน SheetLab</li></ol></details>`:''}
+    ${rlConnBox(C)}
     ${plan?`<details class="rl-plan"><summary>📝 แผนสัปดาห์จากพี่บุ๊ค · ${new Date(plan.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</summary><p style="white-space:pre-wrap;margin:6px 0 0">${esc(plan.text)}</p></details>`:''}
   </div>
   <div class="chips" role="group" aria-label="กรองโพสต์ ReadLab">${[['queue','คิว'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']].map(([k,l])=>`<button class="chip" data-a="rlf" data-v="${k}" aria-pressed="${f===k}">${l} ${cnt[k]}</button>`).join('')}<button class="chip" data-a="rlRefresh">รีเฟรช</button></div>
   ${list.length?list.map(card).join(''):`<p class="card fine">${f==='queue'?'ยังไม่มีโพสต์ในคิว ทีม ReadLab จะเริ่มส่งร่างในรอบถัดไป (น้องมิว จันทร์ พุธ ศุกร์ 09:00)':'ยังไม่มีโพสต์'}</p>`}`;
+}
+const RLC={choose:null,msg:''};
+function rlConnBox(C){
+  const fbOk=!!C.fb,thOk=!!C.th,o=S.rlConn||'';
+  return `<div class="rl-conn">
+    <div class="rl-ch"><span><b>Facebook</b> ${fbOk?`✅ ${esc(C.fb.name||'เพจ ReadLab')}`:'○ ยังไม่เชื่อม'}</span>${fbOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="fb">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="fb">ยกเลิก</button></span>`:`<button class="btn ${o==='fb'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="fb">${o==='fb'?'ปิด':'เชื่อมเพจ ReadLab'}</button>`}</div>
+    <div class="rl-ch"><span><b>Threads</b> ${thOk?`✅ @${esc(C.th.username||'')}`:'○ ยังไม่เชื่อม'}</span>${thOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="th">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="th">ยกเลิก</button></span>`:`<button class="btn ${o==='th'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="th">${o==='th'?'ปิด':'เชื่อม Threads ReadLab'}</button>`}</div>
+    ${fbOk||thOk?`<p class="fine" style="margin:6px 0 0">ช่องที่เชื่อมแล้ว: โพสต์ที่อนุมัติจะขึ้นเองวันละ 2 รอบ (10:00 และ 19:05 น.) รอบละไม่เกิน 2 ชิ้นต่อช่อง ยอดผู้ติดตามดึงจริงทุกครั้งที่เปิดหน้านี้ · ไม่เติมแฮชแท็ก SheetLab</p>`:`<p class="fine" style="margin:6px 0 0">ยังไม่เชื่อม: อนุมัติแล้วกด "คัดลอกข้อความ" ไปโพสต์เอง แล้วกด "โพสต์เองแล้ว ✓"</p>`}
+    ${o==='fb'&&!fbOk?`<div class="rl-howto"><b>เชื่อมเพจ Facebook ReadLab (ทำครั้งเดียว ~3 นาที)</b><ol>
+      <li>สร้างเพจ ReadLab ด้วยบัญชี Facebook เดียวกับที่เป็นแอดมินเพจ SheetLab</li>
+      <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → Meta App เลือก<b>แอปเดิมที่ใช้กับ SheetLab</b> → Permissions ใส่ <code>pages_show_list</code> <code>pages_manage_posts</code> <code>pages_read_engagement</code> <code>publish_video</code> <code>read_insights</code></li>
+      <li>กด <b>Generate Access Token</b> ตอน Facebook ถามว่าให้สิทธิ์เพจไหน <b>ติ๊กเพจ ReadLab ด้วย</b> (ถ้าเคยเลือกแค่ SheetLab ให้กด "แก้ไขการตั้งค่าเดิม / Edit previous settings" แล้วเพิ่ม ReadLab)</li>
+      <li>คัดลอกโทเค็นในช่อง Access Token มาวางด้านล่าง กดเชื่อม ถ้ามีหลายเพจให้เลือก ReadLab</li></ol>
+      <textarea class="input" id="rl-fb-token" rows="3" placeholder="วางโทเค็นที่นี่ (ระบบแลกเป็นโทเค็นเพจแบบไม่หมดอายุ เก็บแยกจาก SheetLab)"></textarea>
+      ${RLC.choose?`<p class="fine" style="margin-top:8px">เลือกเพจ ReadLab:</p><div class="row" style="gap:8px;flex-wrap:wrap">${RLC.choose.map(c=>`<button class="btn btn-dark btn-sm" data-a="rlFbConnect" data-page="${esc(c.id)}">${esc(c.name)} (${c.followers} ผู้ติดตาม)</button>`).join('')}</div>`:''}
+      <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="rlFbConnect">เชื่อมเพจ</button></div>${RLC.msg?`<p class="fine" style="margin-top:8px">${esc(RLC.msg)}</p>`:''}</div>`:''}
+    ${o==='th'&&!thOk?`<div class="rl-howto"><b>เชื่อม Threads ReadLab (ทำครั้งเดียว)</b><ol>
+      <li>สมัคร Threads ReadLab (Threads ใช้บัญชี Instagram ตั้งต้น ให้สร้าง Instagram ReadLab ก่อน)</li>
+      <li>เพิ่มบัญชีนี้เป็นผู้ทดสอบของแอปเดิม: <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps</a> → แอปที่ใช้กับ SheetLab → <b>App roles → Roles → Add People → Threads Tester</b> → พิมพ์ชื่อผู้ใช้ Threads ReadLab</li>
+      <li>ในแอป Threads (บัญชี ReadLab): <b>Settings → Account → Website permissions → Invites</b> → กด Accept</li>
+      <li>ในเบราว์เซอร์นี้ เปิด <a href="https://www.threads.net/" target="_blank" rel="noopener noreferrer">threads.net</a> <b>ออกจากระบบบัญชี SheetLab</b> แล้วเข้าสู่ระบบด้วยบัญชี ReadLab</li>
+      <li>กลับมากดปุ่มด้านล่าง → กดอนุญาต → ระบบพากลับมาหน้านี้เอง (ถ้าเผลอเป็นบัญชี SheetLab ระบบจะไม่รับ)</li></ol>
+      <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="rlThGo">ไปหน้าอนุญาต Threads</button></div></div>`:''}
+  </div>`;
 }
 function contentTab(){
   const brandBar=`<div class="brand-seg" role="group" aria-label="เลือกเพจ"><button data-a="cbrand" data-v="sheetlab" aria-pressed="${S.cbrand!=='readlab'}">SheetLab</button><button data-a="cbrand" data-v="readlab" aria-pressed="${S.cbrand==='readlab'}">📚 ReadLab${RL.data&&RL.data.counts&&RL.data.counts.draft?` <span class="nb">${RL.data.counts.draft}</span>`:''}</button></div>`;
@@ -3666,6 +3707,15 @@ function act(a,el){
     case 'rlexp':{S.rlexp=S.rlexp||{};if(S.rlexp[id])delete S.rlexp[id];else S.rlexp[id]=1;render(true);break;}
     case 'rlRefresh':RL.data=null;loadRL();render(true);break;
     case 'rlcfgOpen':S.rlcfg=!S.rlcfg;render(true);break;
+    case 'rlConnOpen':S.rlConn=S.rlConn===el.dataset.v?'':el.dataset.v;RLC.choose=null;RLC.msg='';render(true);break;
+    case 'rlFbConnect':{const ta=$('#rl-fb-token');const token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}RLC.msg='กำลังเชื่อม...';render(true);const t2=$('#rl-fb-token');if(t2)t2.value=token;
+      adminPost('/api/fb?action=connect&brand=readlab',{token,pageId:el.dataset.page||''}).then(j=>{if(!j.ok){RLC.msg='ไม่สำเร็จ: '+(j.error||'');render(true);const t3=$('#rl-fb-token');if(t3)t3.value=token;return;}
+        if(j.choose){RLC.choose=j.choose;RLC.msg='';render(true);const t3=$('#rl-fb-token');if(t3)t3.value=token;return;}
+        RLC.choose=null;RLC.msg='';S.rlConn='';RL.data=null;loadRL();toast('เชื่อมเพจ "'+j.page.name+'" แล้ว');}).catch(()=>{RLC.msg='เชื่อมต่อไม่ได้';render(true);});break;}
+    case 'rlThGo':adminApi('/api/threads?action=authurl&brand=readlab').then(j=>{if(j&&j.ok&&j.url)location.href=j.url;else toast((j&&j.error)||'สร้างลิงก์ไม่ได้');});break;
+    case 'rlConnTest':{const fb=el.dataset.v==='fb';adminApi(fb?'/api/fb?action=test&brand=readlab':'/api/threads?action=test&brand=readlab').then(j=>toast(j&&j.ok?(fb?'เพจ "'+j.page.name+'" ใช้งานได้ · ผู้ติดตาม '+j.page.followers:'Threads @'+j.user.username+' ใช้งานได้'):'ใช้ไม่ได้: '+((j&&j.error)||''))).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'rlConnOff':{const fb=el.dataset.v==='fb';if(!confirm(fb?'ยกเลิกการเชื่อมเพจ ReadLab? โพสต์อัตโนมัติช่องนี้จะหยุด':'ยกเลิกการเชื่อม Threads ReadLab?'))break;adminPost(fb?'/api/fb?action=disconnect&brand=readlab':'/api/threads?action=disconnect&brand=readlab').then(()=>{RL.data=null;loadRL();toast('ยกเลิกแล้ว');});break;}
+    case 'rlpub':{el.disabled=true;el.textContent='กำลังโพสต์...';rlApi('rl_update',{id,op:'publish_now'}).then(j=>{const L=RL.data&&RL.data.posts||[],i=L.findIndex(y=>y.id===id);if(j&&j.post&&i>=0)L[i]=j.post;toast(j&&j.ok?'โพสต์ขึ้นแล้ว':'โพสต์ไม่ผ่าน: '+((j&&j.error)||''));render(true);});break;}
     case 'rlcopy':{const x=(RL.data&&RL.data.posts||[]).find(y=>y.id===id);const t=$('#rlt-'+id);copyText((t?t.value:x&&x.text)||'','คัดลอกข้อความแล้ว');break;}
     case 'rlcfgSave':{const b={fb_page:$('#rl-fbp').value,threads:$('#rl-thu').value};const fb=$('#rl-fb').value,th=$('#rl-th').value;if(fb!==''||th!==''){b.fb=Number(fb)||0;b.th=Number(th)||0;}
       rlApi('rl_cfg',b).then(j=>{if(j&&j.ok){S.rlcfg=false;RL.data=null;loadRL();toast('บันทึกแล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
@@ -3846,11 +3896,14 @@ function act(a,el){
       authFetch('/api/content?action=review_send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid,to})}).then(j=>{if(j&&j.ok){toast(to==='me'?'ส่งตัวอย่างไปที่อีเมลของคุณแดนแล้ว':'ส่งอีเมลขอรีวิวถึงลูกค้าแล้ว');if(to==='customer'){RVA.sentAt=RVA.sentAt||{};RVA.sentAt[sid]=new Date().toISOString();}}else toast((j&&j.error)||'ส่งไม่สำเร็จ');render(true);});break;}
     case 'rvopen':S.rvopen=!S.rvopen;break;
     case 'rvf':S.rvf=el.dataset.v;break;
+    case 'rvdel':if(S.confirm!=='rvdel:'+id){S.confirm='rvdel:'+id;render(true);break;}S.confirm='';
+      authFetch('/api/content?action=review_delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){RVA.list=(RVA.list||[]).filter(x=>x.id!==id);toast('ลบรีวิวแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ลบไม่สำเร็จ');render(true);});break;
     case 'rvMailNow':if(S.confirm!=='rvmail'){S.confirm='rvmail';break;}S.confirm='';el.disabled=true;toast('กำลังส่งอีเมลขอรีวิว...');
       adminApi('/api/content?action=review_mail').then(j=>{toast(j&&j.ok?(j.skipped?'ยังไม่ได้ตั้งค่าอีเมลบน Vercel':`ส่งแล้ว ${j.sent} ฉบับ`):((j&&j.error)||'ส่งไม่สำเร็จ'));RVA.list=null;RVA.due=undefined;render(true);});break;
     case 'rvPreview':{const w=window.open('','_blank');adminApi('/api/content?action=review_mail&preview=1').then(j=>{if(j&&j.link){if(w)w.location=j.link;else location.href=j.link;}else{if(w)w.close();toast('ยังไม่มีออเดอร์ที่จ่ายแล้วให้ทำตัวอย่าง');}});break;}
     case 'soRefresh':loadSO(true);break;
-    case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนรีวิวแล้ว ไม่แสดงบนหน้าร้าน':'แสดงรีวิวบนหน้าร้านแล้ว');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
+    case 'soOpen':S.soOpen=!S.soOpen;break;
+    case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที':'แสดงอีกครั้งแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
     case 'bxItem':{const d=S.draft;const i=d.items.indexOf(id);if(i>=0){d.items.splice(i,1);if(d.freeItem===id)d.freeItem='';}else d.items.push(id);render(true);break;}
     case 'bxMove':{const d=S.draft,i=d.items.indexOf(id),j=i+Number(el.dataset.v);if(i>=0&&j>=0&&j<d.items.length){[d.items[i],d.items[j]]=[d.items[j],d.items[i]];}render(true);break;}
@@ -4166,6 +4219,12 @@ function applyUrl(){
     const q=new URLSearchParams(location.search);
     const camp=q.get('utm_campaign');
     if(camp)S.src=camp;
+    else{ // ไม่มี utm (ไม่ใช่แอด): เดาที่มาจากเว็บที่กดมา ใช้ดูว่ายอดขายมาจากเพจ/Threads/Google หรือแอด
+      let h='';try{h=document.referrer?new URL(document.referrer).hostname.toLowerCase():'';}catch(e){}
+      if(h&&h!==location.hostname)S.src=/(^|\.)(facebook\.com|fb\.com|fb\.me)$/.test(h)?'fb_page':/(^|\.)threads\.(net|com)$/.test(h)?'threads':/(^|\.)google\./.test(h)?'google':/(^|\.)instagram\.com$/.test(h)?'instagram':/(^|\.)pinterest\./.test(h)?'pinterest':/(^|\.)line\.me$/.test(h)?'line':/(^|\.)tiktok\.com$/.test(h)?'tiktok':/(^|\.)(youtube\.com|youtu\.be)$/.test(h)?'youtube':/mail\./.test(h)?'email':'web';
+      else if(q.has('fbclid'))S.src='fb_page';
+    }
+    try{if(S.src)sessionStorage.setItem('sl_src',S.src);else S.src=sessionStorage.getItem('sl_src')||'';}catch(e){}
     const sid=q.get('session_id');if(sid&&/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid))S.sessionId=sid;
     const pi=q.get('pi'),pk=q.get('k');if(pi&&/^pi_[A-Za-z0-9]+$/.test(pi)&&pk){S.sessionId=pi;S.piKey=pk;}
     if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';

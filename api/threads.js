@@ -27,6 +27,7 @@ async function readBody(req) {
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const action = String(req.query.action || 'status');
+  const brand = req.query.brand === 'readlab' ? 'readlab' : ''; // ?brand=readlab = บัญชี Threads ของ ReadLab (ใช้ Threads App เดียวกัน)
   const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
   const teamOk = admin || keyOk(req);
   try {
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
       const back = (q) => { res.statusCode = 302; res.setHeader('Location', `${SITE}/?${q}`); res.end(); };
       const code = String(req.query.code || ''), state = String(req.query.state || '');
       if (req.query.error) return back(`threads=error&msg=${encodeURIComponent(String(req.query.error_description || req.query.error))}`);
-      const th = await loadThreads();
+      const th = await loadThreads(state.startsWith('rl') ? 'readlab' : ''); // state ของ ReadLab ขึ้นต้น rl
       if (!code || !th.appId || !th.appSecret) return back('threads=error&msg=' + encodeURIComponent('ยังไม่ได้ตั้งค่า Threads App'));
       if (!state || state !== th.state) return back('threads=error&msg=' + encodeURIComponent('state ไม่ตรง ลองกดเชื่อมใหม่'));
       const r = await fetch('https://graph.threads.net/oauth/access_token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: th.appId, client_secret: th.appSecret, grant_type: 'authorization_code', redirect_uri: TH_REDIRECT, code }).toString() });
@@ -43,8 +44,9 @@ export default async function handler(req, res) {
       if (!r.ok || !short.access_token) return back('threads=error&msg=' + encodeURIComponent(short.error_message || short.error?.message || `แลกโทเค็นไม่ได้ (${r.status})`));
       const long = await thGet('access_token', { grant_type: 'th_exchange_token', client_secret: th.appSecret, access_token: short.access_token });
       const me = await thGet('me', { fields: 'id,username,threads_profile_picture_url', access_token: long.access_token });
-      await saveThreads({ appId: th.appId, appSecret: th.appSecret, token: long.access_token, userId: String(me.id || short.user_id), username: me.username || '', picture: me.threads_profile_picture_url || '', expiresAt: new Date(Date.now() + (long.expires_in || 5184000) * 1000).toISOString(), connectedAt: new Date().toISOString() });
-      return back('threads=ok');
+      if (th.brand === 'readlab') { const main = await loadThreads(); if (main.userId && main.userId === String(me.id || short.user_id)) return back('threads=error&msg=' + encodeURIComponent(`บัญชี @${me.username} เป็น Threads ของ SheetLab ออกจากระบบ threads.net แล้วเข้าด้วยบัญชี ReadLab ก่อนกดเชื่อม`)); }
+      await saveThreads({ brand: th.brand || '', appId: th.appId, appSecret: th.appSecret, token: long.access_token, userId: String(me.id || short.user_id), username: me.username || '', picture: me.threads_profile_picture_url || '', expiresAt: new Date(Date.now() + (long.expires_in || 5184000) * 1000).toISOString(), connectedAt: new Date().toISOString() });
+      return back(th.brand === 'readlab' ? 'threads=ok&brand=readlab' : 'threads=ok');
     }
     if (['insights', 'replies'].includes(action)) {
       if (!teamOk) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -83,7 +85,7 @@ export default async function handler(req, res) {
     }
     if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
     if (action === 'status') {
-      const th = await loadThreads();
+      const th = await loadThreads(brand);
       return res.status(200).json({ ok: true, app: !!(th.appId && th.appSecret), connected: threadsConnected(th), user: threadsConnected(th) ? { id: th.userId, username: th.username, picture: th.picture || '', connectedAt: th.connectedAt, expiresAt: th.expiresAt } : null, redirect: TH_REDIRECT });
     }
     if (action === 'setup') {
@@ -96,24 +98,24 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     }
     if (action === 'authurl') {
-      const th = await loadThreads();
+      const th = await loadThreads(brand);
       if (!th.appId || !th.appSecret) return res.status(400).json({ ok: false, error: 'ใส่ Threads App ID / Secret ก่อน' });
       const { randomBytes } = await import('node:crypto');
-      const state = randomBytes(12).toString('hex');
+      const state = (brand === 'readlab' ? 'rl' : '') + randomBytes(12).toString('hex');
       await saveThreads({ ...th, state });
       const url = `https://threads.net/oauth/authorize?${new URLSearchParams({ client_id: th.appId, redirect_uri: TH_REDIRECT, scope: TH_SCOPES, response_type: 'code', state }).toString()}`;
       return res.status(200).json({ ok: true, url, redirect: TH_REDIRECT });
     }
     if (action === 'test') {
-      const th = await loadThreads();
+      const th = await loadThreads(brand);
       if (!threadsConnected(th)) return res.status(200).json({ ok: false, error: 'ยังไม่ได้เชื่อม Threads' });
       const me = await thGet('me', { fields: 'id,username,threads_profile_picture_url', access_token: th.token });
       return res.status(200).json({ ok: true, user: { id: me.id, username: me.username } });
     }
     if (action === 'disconnect') {
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
-      const th = await loadThreads();
-      await saveThreads({ appId: th.appId || '', appSecret: th.appSecret || '' });
+      const th = await loadThreads(brand);
+      await saveThreads({ brand: th.brand || '', appId: th.appId || '', appSecret: th.appSecret || '' });
       return res.status(200).json({ ok: true });
     }
     res.status(400).json({ ok: false, error: 'unknown action' });

@@ -16,9 +16,10 @@ export default async function handler(req, res) {
   const admin = await verifyAdmin(req.headers.authorization);
   if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
   const action = String(req.query.action || 'status');
+  const brand = req.query.brand === 'readlab' ? 'readlab' : ''; // ?brand=readlab = เพจ ReadLab (เก็บแยกจาก SheetLab)
   try {
     if (action === 'status') {
-      const fb = await loadFb();
+      const fb = await loadFb(brand);
       return res.status(200).json({ ok: true, app: appConfigured(), connected: !!fb, page: fb ? { id: fb.pageId, name: fb.pageName || '', connectedAt: fb.connectedAt || null, by: fb.userName || '' } : null });
     }
     if (action === 'connect') {
@@ -32,18 +33,19 @@ export default async function handler(req, res) {
       const page = want ? pages.find((p) => p.id === want) : pages.length === 1 ? pages[0] : null;
       if (!page) return res.status(200).json({ ok: true, choose: pages.map((p) => ({ id: p.id, name: p.name, followers: p.followers_count || 0 })) });
       const info = await fbGet(page.id, { access_token: page.access_token, fields: 'id,name,followers_count,link' });
-      await saveFb({ pageId: page.id, pageName: info.name, token: page.access_token, userToken, userName: user.name, connectedAt: new Date().toISOString() });
+      if (brand === 'readlab') { const other = await loadFb(); if (other && other.pageId === page.id) return res.status(400).json({ ok: false, error: `เพจ "${info.name}" เป็นเพจของ SheetLab เลือกเพจ ReadLab แทน` }); }
+      await saveFb({ pageId: page.id, pageName: info.name, token: page.access_token, userToken, userName: user.name, connectedAt: new Date().toISOString(), brand });
       return res.status(200).json({ ok: true, page: { id: page.id, name: info.name, followers: info.followers_count || 0, link: info.link } });
     }
     if (action === 'test') {
-      const fb = await loadFb();
+      const fb = await loadFb(brand);
       if (!fb) return res.status(200).json({ ok: false, error: 'ยังไม่ได้เชื่อมเพจ' });
       const info = await fbGet(fb.pageId, { access_token: fb.token, fields: 'id,name,followers_count,link' });
       return res.status(200).json({ ok: true, page: { id: info.id, name: info.name, followers: info.followers_count || 0, link: info.link } });
     }
     if (action === 'disconnect') {
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
-      await clearFb();
+      await clearFb(brand);
       return res.status(200).json({ ok: true });
     }
     res.status(400).json({ ok: false, error: 'unknown action' });

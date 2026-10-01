@@ -167,6 +167,38 @@ function cleanGlobal(g) {
 }
 // ข้อความหน้าขายที่ Claude เขียนมาพร้อมไฟล์ (ใช้กรอกตัวแก้สินค้าตอนอนุมัติ) ห้ามราคา
 function cleanListing(l) { const t = (k, n) => String(l[k] || '').trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
+// ReadLab: โพสต์ที่คุณแดนอนุมัติขึ้นเพจ/Threads ของ ReadLab เอง (บัญชีแยกจาก SheetLab ไม่เติมแฮชแท็ก SheetLab)
+// รอบอัตโนมัติไม่เกิน 2 ชิ้นต่อช่องทาง เรียงตามเวลาที่กำหนด (ไม่กำหนด = รอบถัดไป) · onlyId = คุณแดนกดโพสต์ตอนนี้
+async function publishReadlab(onlyId = '') {
+  const fb = await loadFb('readlab'); let th = await loadThreads('readlab'); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
+  if (!fb && !th) return { ok: false, skipped: 'ยังไม่ได้เชื่อมบัญชี ReadLab' };
+  const load = async () => { const rows = await sb('shop_state?id=eq.readlab&select=data'); const D = rows?.[0]?.data || {}; D.posts = D.posts || []; return D; };
+  const save = (D) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'readlab', data: D, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  const nowIso = new Date().toISOString();
+  let D = await load();
+  // ค้าง publishing เกิน 15 นาที (ฟังก์ชันหมดเวลา) = ล้มเหลว ให้คุณแดนเช็คเพจก่อนกดซ้ำ ไม่โพสต์ซ้ำเอง
+  let fixed = false; for (const x of D.posts) if (x.status === 'publishing' && Date.now() - Date.parse(x.updated_at || 0) > 15 * 60e3) { x.status = 'failed'; x.error = 'ค้างระหว่างโพสต์ ดูในเพจก่อนว่าขึ้นแล้วหรือยัง ถ้ายังให้กดโพสต์ตอนนี้'; fixed = true; }
+  const per = { facebook: 0, threads: 0 };
+  const due = D.posts.filter((x) => onlyId ? x.id === onlyId && ['approved', 'failed'].includes(x.status) : x.status === 'approved' && (!x.scheduled_at || x.scheduled_at <= nowIso))
+    .sort((a, b) => String(a.scheduled_at || a.created_at).localeCompare(String(b.scheduled_at || b.created_at)))
+    .filter((x) => { const ch = x.channel === 'threads' ? 'threads' : 'facebook'; if (ch === 'threads' ? !th : !fb) return false; if (!onlyId && per[ch] >= 2) return false; per[ch]++; return true; });
+  if (!due.length) { if (fixed) await save(D); return { ok: true, published: 0, results: [] }; }
+  const ids = new Set(due.map((x) => x.id));
+  D.posts.forEach((x) => { if (ids.has(x.id)) { x.status = 'publishing'; x.updated_at = nowIso; } }); await save(D);
+  const results = [];
+  for (const x of due) {
+    const ch = x.channel === 'threads' ? 'threads' : 'facebook';
+    const p = { text: x.text, image_url: x.video_url || x.image_url || null, kind: x.kind, raw: true, brand: 'readlab' };
+    let patchX;
+    try { const pid = ch === 'threads' ? await publishToThreads(th, p) : await publishToPage(fb, p); patchX = { status: 'published', published_at: new Date().toISOString(), post_id: String(pid), error: null, auto: true }; results.push({ id: x.id, ok: true, channel: ch }); }
+    catch (e) { patchX = { status: 'failed', error: String(e.message || e).slice(0, 400) }; results.push({ id: x.id, ok: false, channel: ch, error: patchX.error }); }
+    D = await load(); const y = D.posts.find((z) => z.id === x.id); if (y) Object.assign(y, patchX, { updated_at: new Date().toISOString() }); await save(D);
+  }
+  return { ok: true, published: results.filter((r) => r.ok).length, results };
+}
+// ที่มาของออเดอร์จาก campaign (utm_campaign หรือที่หน้าเว็บเดาจาก referrer) · แอด = ชื่อแคมเปญอื่นทั้งหมด
+const ORGANIC_SRC = { store: 'หน้าร้าน', fb_page: 'เพจ Facebook', threads: 'Threads', google: 'Google', instagram: 'Instagram', pinterest: 'Pinterest', line: 'LINE', tiktok: 'TikTok', youtube: 'YouTube', email: 'อีเมล', web: 'เว็บอื่น' };
+const srcGroup = (c) => { const k = String(c || '').trim().toLowerCase(); if (!k) return { g: 'direct', label: 'เข้าลิงก์ตรง' }; if (ORGANIC_SRC[k]) return { g: 'organic', label: ORGANIC_SRC[k] }; if (/test/.test(k)) return { g: 'direct', label: 'ทดสอบ' }; return { g: 'ads', label: 'แอด ' + c }; };
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 // ห้องพักทีม: เหตุการณ์จริงในร้านสะท้อนเข้าห้องทันที (ไม่ใช้โมเดล ใช้แม่แบบสุ่ม)
@@ -853,7 +885,19 @@ export default async function handler(req, res) {
         const count = (st) => posts.filter((x) => x.status === st).length;
         const fdays = Object.keys(D.followers).sort().slice(-30).map((d) => ({ date: d, ...D.followers[d] }));
         const out = { ok: true, cfg: D.cfg, followers: fdays, counts: { draft: count('draft'), approved: count('approved'), published: count('published'), rejected: count('rejected') }, notes: D.notes.slice(-12) };
-        if (action === 'rl_list') { if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' }); return res.status(200).json({ ...out, posts }); }
+        if (action === 'rl_list') {
+          if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+          // เชื่อมบัญชีแล้ว: ดึงยอดผู้ติดตามจริงมาบันทึกวันนี้แทนการกรอกเอง
+          const fbR = await loadFb('readlab').catch(() => null); let thR = await loadThreads('readlab').catch(() => ({})); thR = threadsConnected(thR) ? thR : null;
+          const conn = { fb: fbR ? { id: fbR.pageId, name: fbR.pageName || '' } : null, th: thR ? { username: thR.username || '' } : null };
+          if (fbR || thR) {
+            const dk = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); const cur = { ...(D.followers[dk] || {}) }; let changed = false;
+            if (fbR) { try { const pg = await fbGet(fbR.pageId, { fields: 'followers_count,fan_count', access_token: fbR.token }); const n = pg.followers_count ?? pg.fan_count; if (n != null && n !== cur.fb) { cur.fb = n; changed = true; } } catch (e) { conn.fbErr = String(e.message || e).slice(0, 120); } }
+            if (thR) { try { const u = await thGet(`${thR.userId}/threads_insights`, { metric: 'followers_count', access_token: thR.token }); const n = u.data?.[0]?.total_value?.value ?? u.data?.[0]?.values?.[0]?.value; if (n != null && n !== cur.th) { cur.th = n; changed = true; } } catch (e) { conn.thErr = String(e.message || e).slice(0, 120); } }
+            if (changed) { D.followers[dk] = { fb: cur.fb || 0, th: cur.th || 0 }; await save(); out.followers = Object.keys(D.followers).sort().slice(-30).map((d) => ({ date: d, ...D.followers[d] })); }
+          }
+          return res.status(200).json({ ...out, posts, connect: conn });
+        }
         // ทีมเห็นโพสต์ล่าสุด 60 ชิ้น (กันซ้ำ) + สิ่งที่คุณแดนปัดตก/แก้ (เรียนรู้รสนิยม)
         return res.status(200).json({ ...out, guide: RL_GUIDE, team: RL_TEAM, kinds: RL_KIND,
           recent: posts.slice(-60).map((x) => ({ id: x.id, by: x.source, channel: x.channel, kind: x.kind, status: x.status, has_media: !!(x.image_url || x.video_url), text: String(x.text).slice(0, 160), book: x.book || '', owner_note: x.owner_note || '', edited: !!x.edited })),
@@ -919,7 +963,9 @@ export default async function handler(req, res) {
         else if (op === 'posted') { x.status = 'published'; x.published_at = now; }
         else if (op === 'unpost') { x.status = 'approved'; delete x.published_at; }
         else if (op === 'delete') D.posts = D.posts.filter((y) => y.id !== x.id);
+        else if (op === 'publish_now') { if (!['approved', 'failed', 'draft'].includes(x.status)) return res.status(400).json({ ok: false, error: 'โพสต์นี้ขึ้นไปแล้ว' }); x.status = 'approved'; }
         x.updated_at = now; await save();
+        if (op === 'publish_now') { const r = await publishReadlab(x.id); const rows2 = await sb('shop_state?id=eq.readlab&select=data'); const y = (rows2?.[0]?.data?.posts || []).find((z) => z.id === x.id); const rr = (r.results || [])[0]; return res.status(200).json({ ok: !!(rr && rr.ok), error: rr ? rr.error : (r.skipped || 'ยังไม่ได้เชื่อมช่องทางนี้ของ ReadLab'), post: y || x }); }
         return res.status(200).json({ ok: true, post: op === 'delete' ? null : x });
       }
       if (action === 'rl_cfg') { // ชื่อเพจ/บัญชี Threads + บันทึกยอดผู้ติดตาม (กรอกเองจนกว่าจะเชื่อม API)
@@ -1305,7 +1351,7 @@ export default async function handler(req, res) {
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'pins', data: { list: log.slice(-500) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, pin_id: j.id });
     }
-    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_mail' || action === 'review_send') {
+    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_delete' || action === 'review_mail' || action === 'review_send') {
       // รีวิวผู้ซื้อ: review_submit (สาธารณะ ต้องมีลายเซ็นออเดอร์) · reviews / review_hide (แอดมิน) · review_mail (แอดมิน/key ส่งอีเมลขอรีวิวทันที ?dry=1 ดูอย่างเดียว)
       const RV = await import('../lib/reviews.js');
       if (action === 'review_submit') {
@@ -1331,7 +1377,8 @@ export default async function handler(req, res) {
         if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
         if (req.query.preview) { // ลิงก์หน้ารีวิวของออเดอร์ล่าสุด (ไว้ดูหน้าตา ไม่ส่งอีเมล ไม่บันทึกอะไร)
           const o = await sb('orders?status=eq.paid&select=session_id&order=paid_at.desc&limit=1');
-          return res.status(200).json({ ok: true, link: o?.[0] ? `${await siteUrl()}/review?o=${encodeURIComponent(o[0].session_id)}&t=${RV.reviewToken(o[0].session_id)}&s=5` : null });
+          // ลายเซ็นแบบตัวอย่าง (pv) เปิดดูหน้าได้แต่ส่งรีวิวไม่ได้ กันรีวิวตัวอย่างไปผูกกับออเดอร์ลูกค้าจริง
+          return res.status(200).json({ ok: true, link: o?.[0] ? `${await siteUrl()}/review?o=${encodeURIComponent(o[0].session_id)}&t=${RV.previewToken(o[0].session_id)}&s=5` : null });
         }
         return res.status(200).json(await RV.sendReviewRequests({ dry: !!req.query.dry }));
       }
@@ -1346,7 +1393,8 @@ export default async function handler(req, res) {
       if (action === 'reviews') return res.status(200).json({ ok: true, list: d.list.slice().reverse().slice(0, 300), sent: Object.keys(d.sent).length, sentAt: d.sent });
       const b = await readBody(req); const r = d.list.find((x) => x.id === String(b.id || ''));
       if (!r) return res.status(404).json({ ok: false, error: 'ไม่พบรีวิว' });
-      r.status = b.hidden ? 'hidden' : 'live'; r.updated_at = new Date().toISOString(); await RV.saveReviews(d);
+      if (action === 'review_delete') { d.list = d.list.filter((x) => x.id !== r.id); await RV.saveReviews(d); return res.status(200).json({ ok: true, deleted: r.id }); }
+      r.status = b.hidden ? 'hidden' : 'live'; r.hidden_at = b.hidden ? new Date().toISOString() : null; await RV.saveReviews(d);
       return res.status(200).json({ ok: true, review: r });
     }
     if (action === 'factory_cfg') { // GET แอดมิน/key · POST เฉพาะคุณแดน {sets:[{id,name,emoji,goal,books:[{t,cat,pages,price,notes,match}]}], auto:{on,per_week,sets:[id]}}
@@ -1715,8 +1763,12 @@ export default async function handler(req, res) {
       const days = [];
       for (let i = 13; i >= 0; i--) { const k = thDay(new Date(now - i * 864e5).toISOString()); const L = paid.filter((o) => thDay(pAt(o)) === k); days.push({ d: k, n: L.length, rev: L.reduce((a, o) => a + (Number(o.amount) || 0), 0), unpaid: real.filter((o) => o.status !== 'paid' && thDay(o.created_at) === k).length }); }
       const mask = (e) => { const m = String(e || '').toLowerCase().match(/^([^@\s]+)@(.+)$/); return m ? m[1].slice(0, 2) + '•••@' + m[2] : ''; };
-      const latest = paid.slice().sort((a, b) => String(pAt(b)).localeCompare(String(pAt(a)))).slice(0, 10).map((o) => ({ at: pAt(o), product: o.product_name, amount: Number(o.amount) || 0, email: mask(o.email), src: o.campaign || '' }));
-      return res.status(200).json({ ok: true, at: new Date(now).toISOString(), days, latest, test: orders.length - real.length });
+      const latest = paid.slice().sort((a, b) => String(pAt(b)).localeCompare(String(pAt(a)))).slice(0, 10).map((o) => { const s = srcGroup(o.campaign); return { at: pAt(o), product: o.product_name, amount: Number(o.amount) || 0, email: mask(o.email), src: o.campaign || '', group: s.g, label: s.label }; });
+      // ที่มาของยอดขาย: วันนี้ และ 7 วัน แยก แอด / ออร์แกนิก (เพจ Threads หน้าร้าน Google ...) / ลิงก์ตรง
+      const today = thDay(new Date(now).toISOString()), wkFrom = thDay(new Date(now - 6 * 864e5).toISOString());
+      const bySrc = (L) => { const g = { ads: { n: 0, rev: 0 }, organic: { n: 0, rev: 0 }, direct: { n: 0, rev: 0 } }, labels = {}; for (const o of L) { const s = srcGroup(o.campaign); g[s.g].n++; g[s.g].rev += Number(o.amount) || 0; const l = labels[s.label] || (labels[s.label] = { group: s.g, n: 0, rev: 0 }); l.n++; l.rev += Number(o.amount) || 0; } return { groups: g, labels: Object.entries(labels).map(([label, v]) => ({ label, ...v })).sort((a, b) => b.rev - a.rev) }; };
+      const src = { today: bySrc(paid.filter((o) => thDay(pAt(o)) === today)), week: bySrc(paid.filter((o) => thDay(pAt(o)) >= wkFrom)) };
+      return res.status(200).json({ ok: true, at: new Date(now).toISOString(), days, latest, src, test: orders.length - real.length });
     }
     if (action === 'dash') {
       // แดชบอร์ดห้องประชุม: ตัวเลขจริงของ 7 วัน + ประเด็นจากรายงานล่าสุดของพี่ต้น (ไม่ใช้ AI)
@@ -1934,9 +1986,11 @@ export default async function handler(req, res) {
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !cronOk(req) && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      let readlab = null; // เพจ/Threads ReadLab (บัญชีแยก) รอบเดียวกัน
+      if (!req.query.id) { try { readlab = await publishReadlab(); } catch (e) { readlab = { ok: false, error: String(e.message || e) }; } }
       const fb = await loadFb();
       let th = await loadThreads(); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
-      if (!fb && !th) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)' });
+      if (!fb && !th) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)', readlab });
       const id = String(req.query.id || '');
       const due = id
         ? await sb(`posts?id=eq.${encodeURIComponent(id)}&status=in.(approved,draft,failed,needs_owner)&select=*`)
@@ -1989,7 +2043,7 @@ export default async function handler(req, res) {
       if (!id) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
       let leadmail = null; // รอบเดียวกัน: น้องคอมส่งอีเมลเตือนคนค้างจ่าย
       if (!id) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
-      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover, qr, leadmail });
+      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover, qr, leadmail, readlab });
     }
     res.status(400).json({ ok: false, error: 'unknown action' });
   } catch (e) {
