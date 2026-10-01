@@ -388,6 +388,13 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-hero h1{font-family:var(--font-head);font-size:30px;line-height:1.3;margin:10px 0 6px;color:#fff}
 .bx-hero p{margin:0;opacity:.92}
 .bx-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
+.bxi-hero{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}.bxi-big{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;background:var(--bg);text-align:center}.bxi-big img{width:100%;height:100%;object-fit:cover}
+.bxi-side{display:grid;gap:8px;align-content:start;justify-items:start}
+.bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
+.bxi-bc{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--line);position:relative}.bxi-bc img{width:100%;height:100%;object-fit:cover}
+.bxi-ok{position:absolute;left:4px;bottom:4px;background:var(--ok);color:#fff;font-size:10.5px;border-radius:999px;padding:1px 6px}
+.bx-heroimg{display:block;width:100%;max-width:420px;aspect-ratio:1/1;object-fit:cover;border-radius:14px;margin:18px auto 6px;box-shadow:0 12px 30px rgba(0,0,0,.28)}
+@media (max-width:600px){.bxi-hero{grid-template-columns:1fr}}
 .bx-stack{display:flex;margin:18px 0 6px;padding-left:10px}
 .bx-mini{width:46px;height:64px;border-radius:5px;margin-left:-10px;box-shadow:0 3px 10px rgba(0,0,0,.25);border:2px solid #fff;display:block}
 .bx-price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:10px}
@@ -1524,6 +1531,20 @@ const end90=x=>Math.max(90,Math.round((Number(x)-90)/100)*100+90); // ปัด�
 function bundleBooks(p){return (p.items||[]).map(getProduct).filter(Boolean);}
 function bundlePlans(p){return (p.plans||[]).filter(x=>x.on!==false&&Number(x.price)>=1);}
 
+/* รูปชุดด้วย AI: รูปใหญ่ของชุด (หนังสือหลายเล่มวางเป็นเซ็ต) + ปกเล่มเดี่ยวแบบเรียบ สไตล์เดียวกันทั้งชุด */
+function bxCoverPrompt(d,books){const n=books.length,price=Number((d.plans||[]).find(x=>x.key===d.planDefault)&&d.plans.find(x=>x.key===d.planDefault).price||d.price)||0;
+  return `ภาพปกชุดหนังสือ e-book สำหรับขายออนไลน์ ภาพสี่เหลี่ยมจัตุรัส 1:1 ภาพถ่ายสินค้าสมจริง แสงสตูดิโอนุ่ม พื้นหลังสะอาด: หนังสือ ${n} เล่มวางเรียงซ้อนกันเป็นเซ็ตแบบพัดและแบบตั้ง เห็นปกหน้าหลายเล่ม ทุกเล่มปกโทนเดียวกันสีน้ำเงินเข้ม (#1d2b53) แถบสีเหลือง (#FFD23F) บนปกแต่ละเล่มเป็นแค่บล็อกสีและเส้น ไม่ต้องมีตัวหนังสือ
+หัวข้อใหญ่ด้านบนภาพ ตัวหนา อ่านง่าย: "${aiTitle(d).slice(0,40)}"
+ป้ายวงกลมสีแดงมุมขวาบนเขียนว่า "${n} เล่ม"${price?`
+ป้ายราคาสีเหลืองขอบดำมุมล่างขวาเขียนว่า "${price} บาท"`:''}
+แถบล่างตัวเล็กเขียนว่า "ไฟล์ PDF · ได้ทันทีหลังจ่าย"`+AI_NO_TEXT;}
+function bxBookPrompt(b,i,n){const t=String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);
+  return `หน้าปกหนังสือ e-book 1 เล่ม มองจากด้านหน้าตรงๆ ตั้งอยู่กลางภาพ บนพื้นหลังสีขาวล้วนเรียบสะอาด มีเงาบางๆ ใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 หนังสือสูงประมาณ 85% ของภาพ กว้างไม่เกิน 60% ของภาพ
+ดีไซน์ปกเรียบ มินิมอล อ่านง่าย (ทุกเล่มในชุดใช้แบบเดียวกัน): พื้นปกสีน้ำเงินเข้ม (#1d2b53) แถบเฉียงสีเหลือง (#FFD23F) ด้านล่าง ชื่อเรื่องตัวใหญ่สีขาวกลางปก: "${t}"
+มุมบนซ้ายของปกมีป้ายเล็กสีเหลืองเขียนว่า "เล่ม ${i+1}/${n}" ห้ามมีป้ายราคา ไอคอน ภาพประกอบ หรือข้อความอื่นนอกจากที่กำหนด`+AI_NO_TEXT;}
+async function bxAiImage(prompt){const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:imgModel(),quality:imgQuality()})});
+  if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');const blob=await (await fetch(j.image)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
+async function bxMakeBook(id,i,n){const b=getProduct(id);if(!b)return;const url=await bxAiImage(bxBookPrompt(b,i,n));b.bookCover=url;save();}
 function bundleForm(){
   const d=S.draft,isNew=S.edit==='new';
   const books=D.products.filter(x=>!isBundle(x));
@@ -1557,6 +1578,21 @@ function bundleForm(){
     </details>
   </div>
 
+  ${(()=>{const pend=S.bxImg||'';const shortT=b=>String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);
+    return `<div class="card" style="margin-top:14px">
+    <h3 class="h3">3. รูปชุด <span class="fine" style="font-weight:400">สร้างด้วย AI (โมเดล ${esc((IMG_MODELS.find(m=>m[0]===imgModel())||[,imgModel()])[1])}) หรืออัปโหลดเอง</span></h3>
+    <div class="bxi-hero"><div class="bxi-big">${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
+      <div class="bxi-side"><b>รูป thumbnail ใหญ่ของชุด</b><span class="fine">แสดงตัวใหญ่บนหัวหน้าขาย และเป็นรูปการ์ดสินค้าในหน้าร้าน/แอด</span>
+        <button class="btn btn-dark btn-sm" data-a="bxAiCover" ${pend?'disabled':''}>${pend==='cover'?'กำลังสร้าง... (20-60 วินาที)':'✨ สร้างรูปชุดด้วย AI'}</button>
+        <label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-bxup="cover"></label>
+        ${d.cover?'<button class="chip" data-a="bxCoverClear">ใช้ปกเล่มแรกแทน</button>':''}</div></div>
+    <h4 style="margin:16px 0 4px">ปกเล่มเดี่ยวใน "ในชุดมีอะไรบ้าง"</h4>
+    <p class="fine" style="margin:0 0 8px">ปกหน้าตรง พื้นขาวเรียบ สไตล์เดียวกันทุกเล่ม ใช้เฉพาะในหน้าชุด (ไม่เปลี่ยนรูปสินค้าของแต่ละเล่ม)</p>
+    <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b"><div class="bxi-bc">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?'<span class="bxi-ok">✓ ปกเรียบ</span>':''}</div>
+      <span class="fine">เล่ม ${i+1}</span><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button></div>`).join('')}</div>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!chosen.length?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${chosen.length}...`:`✨ ทำปกเรียบให้ทุกเล่ม (${chosen.filter(b=>!b.bookCover).length||chosen.length} รูป)`}</button><span class="fine">เสียค่า AI ต่อรูปตามโมเดล · ไม่ชอบเล่มไหนกด "ทำใหม่" ทีละเล่มได้</span></div>
+    ${S.bxImgErr?`<p class="err" style="margin:8px 0 0">${esc(S.bxImgErr)}</p>`:''}
+  </div>`;})()}
   <div class="card" style="margin-top:14px">
     <h3 class="h3">3. ราคาและแพ็กเกจ</h3>
     <p class="fine" style="margin:0 0 8px">กดปุ่มให้ระบบคิดราคาตามสูตรในแผน (5–6 เล่ม 60% · 7–8 เล่ม 55% · 9 เล่มขึ้นไป 50% ของราคาแยกรวม ลงท้าย 90 · Plus ≈ 1.65 เท่า · Pro ≈ 1.5 เท่าของ Plus · ราคาเปิดตัว −20%) แล้วแก้เองได้ทุกช่อง</p>
@@ -1595,7 +1631,7 @@ function bundleData(d){ // ชุดจากช่องที่กรอก�
   const first=getProduct(items[0]);
   return {type:'bundle',sell:SELL[d.sell]?d.sell:'both',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
     plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
-    images:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
+    cover:d.cover||'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
 }
 function saveBundleDraft(el){
   const d=S.draft,isNew=S.edit==='new',selfId=isNew?null:S.edit;
@@ -1629,7 +1665,7 @@ function bundleView(p){
   const off=sum>minP?Math.round((1-minP/sum)*100):0;
   const pvSel=Math.min(S.bxPv||0,Math.max(0,books.length-1));
   const pv=books[pvSel]?(books[pvSel].previews||[]):[];
-  const cover=(b,i)=>b.images&&b.images[0]?`style="background:#fff url('${esc(b.images[0])}') center/cover"`:`style="background:${esc(b.color||'#2440E8')}"`;
+  const cover=(b,i)=>{const u=b.bookCover||(b.images&&b.images[0]);return u?`style="background:#fff url('${esc(u)}') center/cover"`:`style="background:${esc(b.color||'#2440E8')}"`;};
   const lines2=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
   let faqs=lines(p.faq).map(pair);
   if(!faqs.length)faqs=[['ได้รับไฟล์เมื่อไหร่','ทันทีที่ชำระเงินสำเร็จ ลิงก์ทุกเล่มจะขึ้นในหน้านี้และส่งไปที่อีเมลของคุณ'],
@@ -1644,7 +1680,7 @@ function bundleView(p){
     <span class="bx-tag">ชุด ${books.length} เล่ม</span>
     <h1>${esc(p.headline||p.name)}</h1>
     ${p.desc?`<p>${esc(p.desc)}</p>`:''}
-    <div class="bx-stack">${books.slice(0,8).map((b,i)=>`<span class="bx-mini" ${cover(b,i)}></span>`).join('')}</div>
+    ${p.cover?`<img class="bx-heroimg" src="${esc(p.cover)}" alt="${esc(p.name)}">`:`<div class="bx-stack">${books.slice(0,8).map((b,i)=>`<span class="bx-mini" ${cover(b,i)}></span>`).join('')}</div>`}
     <div class="bx-price">${sum>minP?`<s>ราคาแยกเล่ม ${baht(sum)}</s>`:''}${plans.length>1?'<span>เริ่มต้น</span>':''}<b>${baht(minP)}</b>${off>0?`<span class="bx-off">ประหยัด ${off}%</span>`:''}</div>
     ${live?`<div class="sp-cd bx-cd" data-end="${p.promoEnd}"><span>ราคาเปิดตัวเหลือ</span>${p.promoEnd-Date.now()>864e5?'<b data-u="d">00</b><i>วัน</i>':''}<b data-u="h">00</b><i>:</i><b data-u="m">00</b><i>:</i><b data-u="s">00</b></div>`:''}
     <button class="btn btn-buy btn-block" style="margin-top:16px" data-a="toCheckout">ดูแพ็กเกจและสั่งซื้อ</button>
@@ -4457,6 +4493,15 @@ function act(a,el){
       if(!(price>=1)){toast('ใส่ราคาชุดก่อน');break;}
       SETI.busy=id;render(true);
       setListRun(x,{price,full,solo,pub}).then(()=>{toast(pub?'📦 ลงขายชุดแล้ว':'📦 ชุดอยู่ในแท็บ "มาใหม่" แล้ว ตรวจแล้วกดเผยแพร่');S.pstat=pub?'all':'new';}).catch(e=>toast('ไม่สำเร็จ: '+(e.message||e)+' ลองกดใหม่')).then(()=>{SETI.busy='';render(true);});break;}
+    case 'bxAiCover':{const d=S.draft;if(!d)break;const books=d.items.map(getProduct).filter(Boolean);S.bxImg='cover';S.bxImgErr='';render(true);
+      bxAiImage(bxCoverPrompt(d,books)).then(u=>{S.draft.cover=u;toast('ได้รูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
+    case 'bxCoverClear':if(S.draft){S.draft.cover='';render(true);}break;
+    case 'bxAiBook':{const n=(S.draft&&S.draft.items.length)||1;S.bxImg=id;S.bxImgErr='';render(true);
+      bxMakeBook(id,Number(el.dataset.v)||0,n).then(()=>toast('ทำปกเล่มนี้แล้ว')).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
+    case 'bxAiBooks':{const d=S.draft;if(!d)break;const ids=d.items.filter(i=>getProduct(i));const todo=ids.filter(i=>!getProduct(i).bookCover);const list=todo.length?todo:ids;
+      if(!confirm(`ทำปกเรียบ ${list.length} รูป (เสียค่า AI ต่อรูปตามโมเดลที่เลือก) ใช้เวลาประมาณ ${Math.ceil(list.length*0.6)} นาที ทำเลยไหม?`))break;
+      S.bxImg='all';S.bxImgErr='';S.bxImgN=1;render(true);
+      (async()=>{for(const id2 of list){try{await bxMakeBook(id2,ids.indexOf(id2),ids.length);}catch(e){S.bxImgErr='บางเล่มทำไม่สำเร็จ: '+(e.message||e);}S.bxImgN++;render(true);}})().then(()=>{S.bxImg='';toast('ทำปกเรียบครบแล้ว');render(true);});break;}
     case 'goAds':S.tab='products';S.pstat='ads';S.edit=null;render(false);break;
     case 'adsRefresh':ADA.items=null;loadAdsAuto();render(true);break;
     case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
@@ -4595,6 +4640,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.id==='sp-car'){const c=document.getElementById('sp-count');if(c){const n=t.children.length;const i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));c.textContent='📷 '+(Math.min(n,i+1))+'/'+n;}const th=document.querySelectorAll('#sp-thumbs .sp-th');const ii=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));th.forEach((b,k)=>b.classList.toggle('on',k===ii));}},true);
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t.dataset&&t.dataset.bxup&&S.draft){const f=t.files&&t.files[0];if(!f)return;toast('กำลังอัปโหลดรูป...');square(f).then(r=>uploadImage(r.url)).then(u=>{S.draft.cover=u;render(true);toast('ใส่รูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e)));return;}
   if(t.dataset&&t.dataset.adsup){const x=(ADA.items||[]).find(y=>y.id===t.dataset.adsup),f=t.files&&t.files[0];if(!x||!f)return;adsKeep(x);toast('กำลังอัปโหลดรูป...');
     square(f).then(r=>uploadImage(r.url)).then(async url=>{x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;await adsSave(x);render(true);toast('ใช้รูปนี้ในแอดแล้ว');}).catch(err=>toast('อัปโหลดไม่สำเร็จ: '+(err.message||err)));return;}
   if(t.name==='method'){S.method=t.value;render(true);}
