@@ -157,6 +157,14 @@ async function autoFillFactory(jobs) {
   }
   return null;
 }
+// ชุดข้อความขายต่างประเทศ (ภาษาอังกฤษ) ที่โรงงานเขียนมา: Gumroad / Notion Gallery / Pinterest / Reddit
+function cleanGlobal(g) {
+  const t = (v, n) => String(v || '').trim().slice(0, n);
+  return { title: t(g.title, 100), summary: t(g.summary, 160), description: t(g.description, 4000), tags: (Array.isArray(g.tags) ? g.tags : []).map((x) => t(x, 40)).filter(Boolean).slice(0, 15),
+    price_usd: Math.max(0, Math.min(99, Number(g.price_usd) || 0)), lite_title: t(g.lite_title, 100), lite_description: t(g.lite_description, 2000), gallery_description: t(g.gallery_description, 600),
+    pins: (Array.isArray(g.pins) ? g.pins : []).slice(0, 10).map((p) => ({ title: t(p && p.title, 100), description: t(p && p.description, 500) })).filter((p) => p.title),
+    reddit: g.reddit && typeof g.reddit === 'object' ? { sub: t(g.reddit.sub, 40), title: t(g.reddit.title, 300), body: t(g.reddit.body, 4000) } : null };
+}
 // ข้อความหน้าขายที่ Claude เขียนมาพร้อมไฟล์ (ใช้กรอกตัวแก้สินค้าตอนอนุมัติ) ห้ามราคา
 function cleanListing(l) { const t = (k, n) => String(l[k] || '').trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
@@ -1251,6 +1259,50 @@ export default async function handler(req, res) {
       const jobs = all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
       return res.status(200).json({ ok: true, jobs });
     }
+    if (action === 'global_list' || action === 'gumroad' || action === 'pin_post' || action === 'pin_log') {
+      // ขายต่างประเทศ: global_list (key/แอดมิน) สินค้าที่ลง Gumroad แล้ว + ข้อความ Pin · gumroad (แอดมิน) ยอดขายจาก Gumroad API (env GUMROAD_ACCESS_TOKEN)
+      // pin_post (key) โพสต์ Pin ผ่าน Pinterest API v5 (env PINTEREST_TOKEN, PINTEREST_BOARD_ID) · pin_log ประวัติ Pin กันซ้ำ
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const pinRows = async () => { const r = await sb('shop_state?id=eq.pins&select=data'); return r?.[0]?.data?.list || []; };
+      if (action === 'global_list') {
+        const jobs = (await loadJobs()).filter((j) => j.lang === 'en' && ['global', 'global_pending'].includes(j.listing));
+        return res.status(200).json({ ok: true, pinterest: !!(process.env.PINTEREST_TOKEN && process.env.PINTEREST_BOARD_ID), gumroad: !!process.env.GUMROAD_ACCESS_TOKEN,
+          products: jobs.map((j) => ({ id: j.id, title: j.title, listing: j.listing, links: j.global_links || null, images: j.images || [], pin_images: j.pin_images || [], copy: j.global_copy || null })) });
+      }
+      if (action === 'pin_log') return res.status(200).json({ ok: true, list: (await pinRows()).slice(-100) });
+      if (action === 'gumroad') {
+        if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+        const T = process.env.GUMROAD_ACCESS_TOKEN || '';
+        if (!T) return res.status(200).json({ ok: true, connected: false });
+        try {
+          const g = async (path) => { const r = await fetch(`https://api.gumroad.com/v2/${path}${path.includes('?') ? '&' : '?'}access_token=${encodeURIComponent(T)}`); const j = await r.json().catch(() => ({})); if (!r.ok || j.success === false) throw new Error(j.message || String(r.status)); return j; };
+          const after = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+          const [p, s] = await Promise.all([g('products'), g(`sales?after=${after}`)]);
+          const sales = (s.sales || []).filter((x) => !x.refunded);
+          const usd = sales.reduce((a, x) => a + (Number(x.price) || 0) / 100, 0);
+          return res.status(200).json({ ok: true, connected: true, products: (p.products || []).map((x) => ({ name: x.name, url: x.short_url, published: x.published, sales: x.sales_count, revenue_usd: (Number(x.sales_usd_cents) || 0) / 100 })),
+            last30: { count: sales.length, usd: Math.round(usd * 100) / 100, recent: sales.slice(0, 10).map((x) => ({ product: x.product_name, usd: (Number(x.price) || 0) / 100, at: x.created_at, country: x.country || '' })) } });
+        } catch (e) { return res.status(200).json({ ok: false, connected: true, error: String(e.message || e).slice(0, 200) }); }
+      }
+      // pin_post
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      const PT = process.env.PINTEREST_TOKEN || '', BOARD = process.env.PINTEREST_BOARD_ID || '';
+      if (!PT || !BOARD) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ตั้งค่า PINTEREST_TOKEN / PINTEREST_BOARD_ID บน Vercel' });
+      const body = await readBody(req);
+      const img = String(body.image_url || ''), link = String(body.link || '');
+      if (!img.startsWith(`${SB_URL}/storage/v1/object/public/product-images/`)) return res.status(400).json({ ok: false, error: 'image_url ต้องเป็นรูปในคลังของร้าน' });
+      if (!/^https:\/\/([a-z0-9-]+\.)?(gumroad\.com|notion\.site|notion\.so|sheetlabth\.com)\//i.test(link)) return res.status(400).json({ ok: false, error: 'link ต้องไป Gumroad / Notion / sheetlabth.com' });
+      const log = await pinRows();
+      if (log.some((x) => x.image_url === img && x.title === String(body.title || ''))) return res.status(400).json({ ok: false, error: 'Pin นี้เคยโพสต์แล้ว' });
+      const r = await fetch('https://api.pinterest.com/v5/pins', { method: 'POST', headers: { Authorization: `Bearer ${PT}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ board_id: BOARD, title: String(body.title || '').slice(0, 100), description: String(body.description || '').slice(0, 500), link, alt_text: String(body.alt || body.title || '').slice(0, 500), media_source: { source_type: 'image_url', url: img } }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) return res.status(200).json({ ok: false, error: `Pinterest ${r.status}: ${String(j.message || JSON.stringify(j)).slice(0, 200)}` });
+      log.push({ id: j.id, image_url: img, title: String(body.title || '').slice(0, 100), link, job: String(body.job || '').slice(0, 60), at: new Date().toISOString() });
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'pins', data: { list: log.slice(-500) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, pin_id: j.id });
+    }
     if (action === 'factory_cfg') { // GET แอดมิน/key · POST เฉพาะคุณแดน {sets:[{id,name,emoji,goal,books:[{t,cat,pages,price,notes,match}]}], auto:{on,per_week,sets:[id]}}
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -1273,7 +1325,7 @@ export default async function handler(req, res) {
       const { randomUUID } = await import('node:crypto');
       const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: String(body.ordered_by || 'manager').slice(0, 40) };
       for (const f of FACTORY_FIELDS) if (body[f] != null && body[f] !== '') job[f] = typeof body[f] === 'number' ? body[f] : String(body[f]).slice(0, 2000);
-      job.price = Number(job.price || 0); job.kind = jobKind(body);
+      job.price = Number(job.price || 0); job.kind = jobKind(body); job.lang = body.lang === 'en' ? 'en' : 'th';
       const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
@@ -1286,6 +1338,13 @@ export default async function handler(req, res) {
       const job = jobs.find((j) => j.id === String(body.id || ''));
       if (!job) return res.status(404).json({ ok: false, error: 'not found' });
       if (body.reject) { job.listing = 'rejected'; job.listing_at = new Date().toISOString(); }
+      else if (body.global && typeof body.global === 'object') { // คุณแดนลงขายต่างประเทศแล้ว: เก็บลิงก์ไว้ให้ทีม Pinterest ใช้
+        const g = body.global, u = (x) => /^https:\/\/[^\s"<>]{6,300}$/.test(String(x || '')) ? String(x) : '';
+        job.global_links = { gumroad: u(g.gumroad), lite_gumroad: u(g.lite_gumroad), notion_pub: u(g.notion_pub), lite_pub: u(g.lite_pub), gallery: u(g.gallery) };
+        if (!job.global_links.gumroad) return res.status(400).json({ ok: false, error: 'ต้องมีลิงก์ Gumroad ของตัวเต็ม' });
+        job.listing = 'global'; job.listing_at = new Date().toISOString();
+        await logNote('factory', `คุณแดนลงขายต่างประเทศแล้ว: ${job.title} ${job.global_links.gumroad}`);
+      }
       else if (/^[a-z0-9]{2,40}$/i.test(String(body.product_id || ''))) { job.listing = 'listed'; job.product_id = String(body.product_id); job.listing_at = new Date().toISOString(); await logNote('factory', `คุณแดนอนุมัติลงขายแล้ว: ${job.title}`); }
       else return res.status(400).json({ ok: false, error: 'ต้องมี product_id หรือ reject' });
       await saveJobs(jobs);
@@ -1320,15 +1379,21 @@ export default async function handler(req, res) {
         if (isNotionUrl(body.notion_url)) { job.notion_url = String(body.notion_url).slice(0, 400); job.kind = 'notion'; }
         const own = `${SB_URL}/storage/v1/object/public/product-images/factory/${job.id}/`;
         if (Array.isArray(body.images)) job.images = body.images.map(String).filter((u) => u.startsWith(own)).slice(0, 6);
+        if (Array.isArray(body.pins)) job.pin_images = body.pins.map(String).filter((u) => u.startsWith(own)).slice(0, 10);
+        if (isNotionUrl(body.lite_url)) job.lite_url = String(body.lite_url).slice(0, 400);
+        if (body.global && typeof body.global === 'object') job.global_copy = cleanGlobal(body.global);
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
         await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
-        if (Number(job.price) >= 1 && (job.file_url || job.notion_url)) job.listing = 'pending'; // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
-        const todoText = job.listing === 'pending' && job.kind === 'notion'
+        if (job.lang === 'en' && job.notion_url) job.listing = 'global_pending'; // ขายต่างประเทศ: ชุดลง Gumroad/Notion Gallery/Pinterest ไม่ขึ้นหน้าร้านไทย
+        else if (Number(job.price) >= 1 && (job.file_url || job.notion_url)) job.listing = 'pending'; // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
+        const todoText = job.listing === 'global_pending'
+          ? `ลงขายต่างประเทศ "${job.title}" (Notion EN) เปิดแท็บโรงงาน → 🌏 ชุดลงขายต่างประเทศ: Publish ตัวเต็มและตัว Lite ใน Notion แล้วคัดลอกข้อความ/รูปไปลง Gumroad และส่ง Notion Template Gallery แล้ววางลิงก์กลับมา`
+          : job.listing === 'pending' && job.kind === 'notion'
           ? `อนุมัติ Notion template "${job.title}" (ราคาที่เสนอ ${job.price} บาท) เปิดหน้าใน Notion กด Share → Publish → เปิด Allow duplicate คัดลอกลิงก์ แล้ววางในการ์ด "จากโรงงาน รออนุมัติ" แล้วกดอนุมัติ`
           : job.listing === 'pending'
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
-        try { await addTodo({ text: todoText, type: job.listing === 'pending' ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
+        try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);

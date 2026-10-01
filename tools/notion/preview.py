@@ -7,7 +7,9 @@ spec: {
   "bullets": ["แผนอ่าน 32 งาน", "คลังคำศัพท์ + ทวน 3 รอบ", "สมุดจดจุดผิด", "บันทึกคะแนน Mock Test"],
   "sections": [{"name": "แผนอ่าน 8 สัปดาห์", "columns": ["งาน","สัปดาห์","ส่วน","สถานะ"], "rows": [["Tense พื้นฐาน","สัปดาห์ 1","Grammar","ยังไม่เริ่ม"], ...]}, ...]
 }
-ได้ไฟล์: cover.png (1200x1200) และ preview-1.png ... (1200x900 ต่อ section สูงสุด 4) ใช้ข้อมูลจริงจากเทมเพลตเท่านั้น
+  "lang": "en" (ไม่บังคับ: ป้ายบนรูปเป็นภาษาอังกฤษ สำหรับขายต่างประเทศ),
+  "pins": [{"headline": "How I planned IELTS Band 7 in 12 weeks", "sub": "Notion template · free Lite version"}, ...] (ไม่บังคับ: รูป Pinterest 1000x1500)
+ได้ไฟล์: cover.png (1200x1200), preview-1.png ... (1200x900 ต่อ section สูงสุด 4), pin-1.png ... (1000x1500 ต่อ pin สูงสุด 6) ใช้ข้อมูลจริงจากเทมเพลตเท่านั้น
 ต้องมี: pip install pillow
 """
 import sys, os, json
@@ -16,6 +18,7 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONTS = os.path.join(HERE, '..', 'reel', 'fonts')
 INK, MUTED, LINE, BG, BRAND, ACC = (25, 25, 25), (120, 120, 120), (233, 233, 231), (255, 255, 255), (36, 64, 232), (255, 210, 63)
+LANG = {'th': 'Notion Template · กด Duplicate ใช้ได้ทันที', 'en': 'Notion Template · Duplicate and start in seconds'}
 TAGS = [(227, 237, 252), (219, 240, 227), (253, 236, 200), (240, 228, 250), (252, 228, 228), (238, 238, 238)]
 
 def font(kind, sz):
@@ -111,8 +114,53 @@ def section(spec, sec, out, idx, n):
                 d.text((xs[j] + 11, y), t, font=f, fill=INK)
         y += 64
     d.rectangle([0, H - 64, W, H], fill=BRAND)
-    d.text((40, H - 54), 'Notion Template · กด Duplicate ใช้ได้ทันที', font=font('md', 28), fill=(255, 255, 255))
+    d.text((40, H - 54), LANG.get(spec.get('lang'), LANG['th']), font=font('md', 28), fill=(255, 255, 255))
     d.text((W - 200, H - 56), 'SheetLab', font=font('xb', 32), fill=(255, 255, 255))
+    im.save(out)
+
+def wrap_lines(d, text, f, maxw, maxn=4):
+    words, lines, cur = str(text).split(' '), [], ''
+    for w in words:
+        t = (cur + ' ' + w).strip()
+        if d.textlength(t, font=f) <= maxw: cur = t
+        else:
+            if cur: lines.append(cur)
+            cur = w
+    if cur: lines.append(cur)
+    return lines[:maxn]
+
+def pin(spec, pn, out, idx):
+    W, H = 1000, 1500
+    bgs = [BRAND, (17, 24, 39), (250, 246, 238)]
+    bg = bgs[idx % len(bgs)]; light = bg != (250, 246, 238); fg = (255, 255, 255) if light else INK
+    im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im)
+    d.rounded_rectangle([60, 70, 60 + d.textlength('NOTION TEMPLATE', font=font('sb', 30)) + 40, 120], radius=25, fill=ACC)
+    d.text((80, 76), 'NOTION TEMPLATE', font=font('sb', 30), fill=INK)
+    f = font('xb', 78); y = 160
+    for l in wrap_lines(d, pn.get('headline', spec.get('title', '')), f, 880, 4): d.text((60, y), l, font=f, fill=fg); y += 92
+    if pn.get('sub'): d.text((60, y + 10), fit(d, pn['sub'], font('md', 36), 880), font=font('md', 36), fill=(214, 224, 255) if bg == BRAND else MUTED if not light else (200, 200, 200)); y += 70
+    sec = (spec.get('sections') or [{}])[idx % max(1, len(spec.get('sections') or [1]))] if spec.get('sections') else {}
+    top = y + 50; ch = H - 130 - top
+    card = Image.new('RGB', (880, ch), BG); cd = ImageDraw.Draw(card)
+    cd.rectangle([0, 0, 880, 44], fill=(247, 247, 245))
+    for i, c in enumerate([(255, 95, 87), (255, 189, 46), (40, 200, 64)]): cd.ellipse([18 + i * 24, 15, 31 + i * 24, 28], fill=c)
+    cd.text((30, 64), fit(cd, sec.get('name', spec.get('title', '')), font('sb', 44), 820), font=font('sb', 44), fill=INK)
+    cols = (sec.get('columns') or [])[:3]; rows = (sec.get('rows') or [])[:9]
+    if cols:
+        cw = 820 // len(cols); yy = 140; fs = 28
+        for j, c in enumerate(cols): cd.text((30 + j * cw, yy), fit(cd, c, font('md', fs - 2), cw - 14), font=font('md', fs - 2), fill=MUTED)
+        yy += 50
+        for r in rows:
+            if yy > ch - 60: break
+            cd.line([30, yy - 8, 850, yy - 8], fill=LINE, width=2)
+            for j, v in enumerate(r[:len(cols)]):
+                t = fit(cd, '' if v is None else v, font('md', fs), cw - 30)
+                if j and t: w = cd.textlength(t, font=font('md', fs)); cd.rounded_rectangle([30 + j * cw, yy - 2, 30 + j * cw + w + 18, yy + 38], radius=8, fill=TAGS[(j + sum(map(ord, t))) % len(TAGS)]); cd.text((39 + j * cw, yy), t, font=font('md', fs), fill=INK)
+                else: cd.text((30, yy), t, font=font('md', fs), fill=INK)
+            yy += 76
+    im.paste(card, (60, top))
+    d.text((60, H - 90), 'SheetLab', font=font('xb', 44), fill=fg)
+    d.text((W - 60 - d.textlength('Duplicate → start today', font=font('md', 30)), H - 80), 'Duplicate → start today', font=font('md', 30), fill=fg)
     im.save(out)
 
 if __name__ == '__main__':
@@ -122,4 +170,7 @@ if __name__ == '__main__':
     secs = (spec.get('sections') or [])[:4]
     for i, sc in enumerate(secs, 1):
         p = os.path.join(outd, f'preview-{i}.png'); section(spec, sc, p, i, len(secs)); files.append(p)
-    print(json.dumps({'ok': True, 'files': files}, ensure_ascii=False))
+    pins = []
+    for i, pn in enumerate((spec.get('pins') or [])[:6], 1):
+        pp = os.path.join(outd, f'pin-{i}.png'); pin(spec, pn, pp, i - 1); pins.append(pp)
+    print(json.dumps({'ok': True, 'files': files, 'pins': pins}, ensure_ascii=False))

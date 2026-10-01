@@ -179,6 +179,7 @@ footer{padding:28px 0 110px;text-align:center}
 .aic-out{margin-top:10px;display:flex;flex-direction:column;gap:8px}.aic-out img{width:100%;max-width:360px;border-radius:12px;border:1px solid var(--line)}
 .fac{padding-top:16px}
 .kind-seg{display:inline-flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 0 10px}.kind-seg button{font:inherit;font-weight:600;border:0;background:transparent;border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--ink)}.kind-seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.gkit{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--bg)}.gsteps{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14px}.gsum{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:baseline;margin-bottom:6px}
 .facnotion{background:var(--bg);border-radius:10px;padding:8px 10px;margin:6px 0}
 .idea-bar{display:flex;gap:8px;margin:0 0 10px}.idea-bar input{flex:1;min-width:0}.idea-note{margin:-2px 0 10px;background:var(--bg);border-radius:10px;padding:8px 12px}
 .visits{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}.vis-total{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:15px}.vis-total b{font-size:20px}
@@ -2110,7 +2111,7 @@ function productForm(){
 
 /* ชีทขายที่โรงงานผลิตเสร็จ รอคุณแดนตรวจแล้วกดอนุมัติลงขาย (โรงงานไม่เคยลงขายเอง) */
 const FAC={jobs:null,loading:false,busy:''};
-function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));}).catch(()=>{FAC.jobs=[];FAC.queue=[];}).then(()=>{FAC.loading=false;render(true);});}
+function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));FAC.global=all.filter(x=>x.lang==='en'&&['global_pending','global'].includes(x.listing));}).catch(()=>{FAC.jobs=[];FAC.queue=[];FAC.global=[];}).then(()=>{FAC.loading=false;render(true);});}
 function facBox(inFactory){
   if(FAC.jobs===null){loadFacJobs();return '';}
   if(!FAC.jobs.length){if(inFactory)return '';const q=FAC.queue||[];return `<div class="topbar"><span>🏭 จากโรงงาน: <b>ไม่มีชีทรออนุมัติ</b>${q.length?` · กำลังผลิต/รอผลิต ${q.length} เล่ม`:' · คิวว่าง'}</span><button class="chip" data-a="toFactory">ไปโรงงาน</button></div>`;}
@@ -2254,6 +2255,34 @@ async function fIdea(){
   catch(e){toast('เชื่อมต่อไม่ได้');}
   S.fideaBusy=false;render(true);
 }
+/* ===== ขายต่างประเทศ (Notion EN): ชุดลง Gumroad / Notion Gallery / Pinterest ให้คุณแดนคัดลอกไปวาง + ยอดขาย Gumroad ===== */
+const GUM={d:null,loading:false};
+function loadGum(){if(GUM.loading)return;GUM.loading=true;adminApi('/api/content?action=gumroad').then(j=>{GUM.d=j||{};}).catch(()=>{GUM.d={ok:false};}).then(()=>{GUM.loading=false;render(true);});}
+function globalBox(){
+  const G=FAC.global||[];if(GUM.d===null)loadGum();
+  const gd=GUM.d||{};const pend=G.filter(j=>j.listing==='global_pending'),live=G.filter(j=>j.listing==='global');
+  const gl=(id,f)=>esc(((FAC.gl||{})[id]||{})[f]||'');
+  const inp=(id,f,ph)=>`<input class="input" data-gl="${esc(id)}|${f}" value="${gl(id,f)}" placeholder="${ph}" inputmode="url">`;
+  const cp=(id,f,l)=>`<button class="chip" data-a="gcopy" data-id="${esc(id)}" data-f="${f}">📋 ${l}</button>`;
+  const kit=j=>{const c=j.global_copy||{};return `<div class="gkit"><div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><b>${esc(c.title||j.title)}</b><span class="fine">ราคาที่ทีมเสนอ $${esc(c.price_usd||'-')} (คุณแดนตั้งเอง)</span></div>
+    <ol class="gsteps">
+      <li><b>Publish ใน Notion</b> (Share → Publish → เปิด Allow duplicate) <span class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px"><a class="btn btn-dark btn-sm" href="${esc(j.notion_url||'#')}" target="_blank" rel="noopener noreferrer">เปิดตัวเต็ม</a>${j.lite_url?`<a class="btn btn-line btn-sm" href="${esc(j.lite_url)}" target="_blank" rel="noopener noreferrer">เปิดตัว Lite (ฟรี)</a>`:''}</span></li>
+      <li><b>Gumroad</b> → New product → Digital product → คัดลอกไปวาง: <span class="row" style="gap:6px;flex-wrap:wrap;margin-top:4px">${cp(j.id,'title','ชื่อ')}${cp(j.id,'description','คำอธิบาย')}${cp(j.id,'tags','แท็ก')}${cp(j.id,'summary','สรุปสั้น')}</span>
+        <span class="fine" style="display:block;margin-top:4px">ช่อง Content ใส่ลิงก์ Notion ตัวเต็มที่ Publish แล้ว · รูป: ${(j.images||[]).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer" download>${i?'ตัวอย่าง '+i:'ปก'}</a>`).join(' · ')}</span>
+        ${j.lite_url?`<span class="fine" style="display:block;margin-top:4px">ตัว Lite ลงอีกชิ้น ราคา $0+ (ให้คนจ่ายเท่าไหร่ก็ได้) ${cp(j.id,'lite_title','ชื่อ Lite')} ${cp(j.id,'lite_description','คำอธิบาย Lite')}</span>`:''}</li>
+      <li><b>Notion Template Gallery</b> <a href="https://www.notion.com/templates/submit" target="_blank" rel="noopener noreferrer">ส่งเทมเพลต</a> (ส่งตัว Lite ฟรี ดึงคนไปตัวเต็ม) ${cp(j.id,'gallery','คำอธิบาย Gallery')}</li>
+      ${c.reddit?`<li><b>Reddit</b> (โพสต์เองใน r/${esc(c.reddit.sub||'')} อ่านกฎกลุ่มก่อน ห้ามขายตรง) ${cp(j.id,'reddit','ร่างโพสต์')}</li>`:''}
+      <li><b>วางลิงก์กลับมา</b> แล้วทีม Pinterest จะเริ่มทำ Pin ให้
+        <div class="grid2" style="margin-top:6px">${inp(j.id,'gumroad','ลิงก์ Gumroad ตัวเต็ม (จำเป็น)')}${inp(j.id,'lite_gumroad','ลิงก์ Gumroad ตัว Lite')}${inp(j.id,'notion_pub','ลิงก์ Notion ตัวเต็มที่ Publish')}${inp(j.id,'gallery','ลิงก์ใน Notion Gallery (ถ้าได้)')}</div>
+        <button class="btn btn-cta btn-sm" data-a="gsave" data-id="${esc(j.id)}" style="margin-top:6px">บันทึกว่าลงขายแล้ว</button></li>
+    </ol></div>`;};
+  if(!G.length&&!gd.connected)return '';
+  return `<section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">🌏 ขายต่างประเทศ (Notion EN)</h3>
+    <div class="gsum">${gd.connected?(gd.ok===false?`<span class="err">Gumroad: ${esc(gd.error||'ดึงข้อมูลไม่ได้')}</span>`:`<span>Gumroad 30 วัน: <b>${(gd.last30&&gd.last30.count)||0}</b> ออเดอร์ · <b>$${(gd.last30&&gd.last30.usd)||0}</b></span>${(gd.last30&&gd.last30.recent||[]).slice(0,3).map(x=>`<span class="fine">${esc(x.product)} $${x.usd}${x.country?' · '+esc(x.country):''}</span>`).join('')}`):'<span class="fine">ยังไม่เชื่อม Gumroad: สร้าง access token ใน Gumroad (Settings → Advanced → Applications) แล้วใส่ GUMROAD_ACCESS_TOKEN ใน Vercel เอง ยอดขายจะขึ้นตรงนี้</span>'}</div>
+    ${pend.map(kit).join('')}
+    ${live.length?`<p class="fine" style="margin:10px 0 4px">ลงขายแล้ว</p>${live.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.global_links&&j.global_links.gumroad?`<a href="${esc(j.global_links.gumroad)}" target="_blank" rel="noopener noreferrer">Gumroad</a>`:''}${j.global_links&&j.global_links.lite_gumroad?` · <a href="${esc(j.global_links.lite_gumroad)}" target="_blank" rel="noopener noreferrer">Lite</a>`:''}${j.global_links&&j.global_links.gallery?` · <a href="${esc(j.global_links.gallery)}" target="_blank" rel="noopener noreferrer">Notion Gallery</a>`:''}</span></div></div>`).join('')}`:''}
+  </section>`;
+}
 async function factoryOrder(){
   const f=S.fnew;S.ferr='';
   const title=String(f.title||'').trim(),pages=Number(f.pages)||0,price=Number(f.price)||0;
@@ -2261,10 +2290,10 @@ async function factoryOrder(){
   if(pages&&(pages<4||pages>400)){S.ferr='จำนวนหน้าอยู่ระหว่าง 4 ถึง 400';render(true);return;}
   if(f.price!==''&&!(price>=0)){S.ferr='ราคาเป็นตัวเลข ใส่ 0 ถ้าแจกฟรี';render(true);return;}
   S.fbusy=true;render(true);
-  const body={title,kind:f.kind==='notion'?'notion':'pdf',category:f.cat,price,audience:String(f.audience||'').trim(),notes:String(f.notes||'').trim(),purpose:(f.kind==='notion'?'Notion template ':'')+(price>=1?'ขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'แจกฟรี')};
+  const body={title,lang:f.kind==='notion'&&f.lang==='en'?'en':'th',kind:f.kind==='notion'?'notion':'pdf',category:f.cat,price,audience:String(f.audience||'').trim(),notes:String(f.notes||'').trim(),purpose:(f.kind==='notion'?'Notion template ':'')+(price>=1?'ขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'แจกฟรี')};
   if(pages)body.pages=pages;
   try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(j&&j.ok){S.fnew={title:'',cat:f.cat,kind:f.kind,pages:'',price:'',audience:'',notes:'',hint:f.hint||''};S.fidea=null;FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
+    if(j&&j.ok){S.fnew={title:'',cat:f.cat,kind:f.kind,lang:f.lang,pages:'',price:'',audience:'',notes:'',hint:f.hint||''};S.fidea=null;FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
   catch(e){S.ferr='เชื่อมต่อไม่ได้';}
   S.fbusy=false;render(true);
 }
@@ -2283,12 +2312,15 @@ function factoryView(){
     <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">${nx?'ผลิตรอบถัดไป '+new Date(nx).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' เวลาไทย (ทุกอาทิตย์และจันทร์ 10:00 / 22:00)':'ผลิตทุกอาทิตย์และจันทร์'} · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
       <button class="chip" data-a="toFactory">รีเฟรช</button></div>
     ${facBox(1)||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
+    ${globalBox()}
     ${facSets()}
     ${facIdeas()}
     <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
       <div class="idea-bar"><input class="input" id="fn-hint" data-fn="hint" value="${esc(f.hint||'')}" placeholder="อยากได้แนวไหน (ไม่ใส่ก็ได้) เช่น IELTS, ทำงาน"><button class="btn btn-cta btn-sm" data-a="fIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 สุ่มหัวข้อให้'}</button></div>
       ${S.fidea?`<p class="fine idea-note">${S.fidea.source==='claude'?`🤖 ไอเดียจาก${esc(S.fidea.by)} (Claude) · เหลือในคลัง ${S.fidea.left} ไอเดีย`:'🎲 สุ่มจากคลังหัวข้อสำเร็จรูป (คลังไอเดียของทีมว่าง พี่โปรเติมทุกจันทร์ พี่โอ๊คทุกพุธ)'}${S.fidea.why?' · '+esc(S.fidea.why):''} · ตรวจ แก้ แล้วกดส่งเข้าคิว หรือกดสุ่มใหม่</p>`:''}
       <div class="kind-seg" role="group" aria-label="ประเภทงาน"><button data-a="fkind" data-v="pdf" aria-pressed="${f.kind!=='notion'}">📄 ชีท PDF</button><button data-a="fkind" data-v="notion" aria-pressed="${f.kind==='notion'}">📒 Notion Template</button></div>
+      ${f.kind==='notion'?`<div class="kind-seg" role="group" aria-label="ภาษา" style="margin-left:6px"><button data-a="flang" data-v="th" aria-pressed="${f.lang!=='en'}">🇹🇭 ไทย (หน้าร้าน)</button><button data-a="flang" data-v="en" aria-pressed="${f.lang==='en'}">🌏 English (ขายต่างประเทศ)</button></div>`:''}
+      ${f.kind==='notion'&&f.lang==='en'?'<p class="fine" style="margin:-4px 0 10px">ทำเป็นภาษาอังกฤษทั้งหมด ได้ตัวเต็ม + ตัว Lite ฟรี + รูปสินค้า + รูป Pin + ข้อความลง Gumroad / Notion Gallery / Pinterest / Reddit ไม่ขึ้นหน้าร้านไทย ราคาใส่เป็นดอลลาร์ในช่องราคา</p>':''}
       ${f.kind==='notion'?'<p class="fine" style="margin:-4px 0 10px">พี่เหล็กสร้างเทมเพลตใน Notion ของคุณแดน + ทำรูปปกและรูปตัวอย่าง + เขียนหน้าขาย เสร็จแล้วคุณแดนกด Publish ใน Notion แล้ววางลิงก์ในการ์ดรออนุมัติ</p>':''}
       <div class="field">${lb('fn-title','ชื่อเรื่อง')}<input class="input" id="fn-title" data-fn="title" value="${esc(f.title)}" placeholder="เช่น TOEIC Part 5 Tense ที่ออกบ่อย 100 ข้อ พร้อมเฉลย"></div>
       <div class="grid2">
@@ -3498,6 +3530,10 @@ function act(a,el){
     case 'tplPick':{const sel=S.tplSel||(S.tplSel={});sel[el.dataset.v]=el.checked;S.confirm='';render(true);break;}
     case 'tplOrder':if(S.confirm!=='tpl:'+el.dataset.v){S.confirm='tpl:'+el.dataset.v;render(true);break;}S.confirm='';tplOrder(el.dataset.v);break;
     case 'facApprove':facApprove(id);break;
+    case 'flang':S.fnew=S.fnew||{};S.fnew.lang=el.dataset.v;render(true);break;
+    case 'gcopy':{const j=(FAC.global||[]).find(x=>x.id===id);const c=(j&&j.global_copy)||{};const f=el.dataset.f;
+      const t=f==='tags'?(c.tags||[]).join(', '):f==='gallery'?c.gallery_description:f==='reddit'?(c.reddit?c.reddit.title+'\n\n'+c.reddit.body:''):c[f];copyText(t||'','คัดลอกแล้ว');break;}
+    case 'gsave':{const v=(FAC.gl||{})[id]||{};authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,global:v})}).then(j=>{if(j&&j.ok){FAC.jobs=null;toast('บันทึกแล้ว ทีม Pinterest จะใช้ลิงก์นี้');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;}
     case 'fkind':S.fnew=S.fnew||{};S.fnew.kind=el.dataset.v;if(el.dataset.v==='notion'&&!/notion/i.test(S.fnew.cat||''))S.fnew.cat='Notion Template';render(true);break;
     case 'propShow':S.propShow=!S.propShow;render(true);break;
     case 'propX':S.propX=S.propX===id?null:id;render(true);break;
@@ -3806,6 +3842,7 @@ document.addEventListener('input',e=>{
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
   if(ds.fpub){FAC.pub=Object.assign(FAC.pub||{},{[ds.fpub]:t.value});}
+  if(ds.gl){const [gid,gf]=ds.gl.split('|');FAC.gl=FAC.gl||{};FAC.gl[gid]=Object.assign(FAC.gl[gid]||{},{[gf]:t.value.trim()});}
   if(ds.cp){S.coverPrompt=t.value;}
   if(ds.fs&&S.fdraft){S.fdraft[ds.fs]=t.value;}
   if(ds.bp&&S.draft&&S.draft.plans){const [k,f]=ds.bp.split('|');const pl=S.draft.plans.find(x=>x.key===k);if(pl){pl[f]=t.type==='checkbox'?t.checked:t.value;if(f==='on')render(true);}}
