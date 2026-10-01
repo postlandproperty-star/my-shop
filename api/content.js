@@ -847,6 +847,15 @@ export default async function handler(req, res) {
       } catch (e) { console.error('hit', e.message); }
       return res.status(204).end();
     }
+    if (action === 'openai_check') { // เช็คว่าใส่ OPENAI_API_KEY แล้วและใช้โมเดลสร้างรูปได้ (อ่านข้อมูลโมเดล ไม่สร้างรูป ไม่เสียเงิน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const KEY = process.env.OPENAI_API_KEY || '', model = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
+      if (!KEY) return res.status(200).json({ ok: false, configured: false, error: 'ยังไม่ได้ใส่ OPENAI_API_KEY' });
+      const r = await fetch(`https://api.openai.com/v1/models/${model}`, { headers: { Authorization: `Bearer ${KEY}` } }).catch(() => null);
+      const j = r ? await r.json().catch(() => ({})) : {};
+      return res.status(200).json({ ok: !!(r && r.ok), configured: true, model, status: r ? r.status : 0, error: r && r.ok ? null : (j?.error?.message || 'เชื่อมต่อ OpenAI ไม่ได้').slice(0, 200) });
+    }
     if (action === 'cover') {
       // สร้างรูปปกด้วย OpenAI Images (คีย์อยู่ใน Vercel env OPENAI_API_KEY เท่านั้น) · คุณแดนกดจากหน้าแก้สินค้า ครั้งละ 1 รูป
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
