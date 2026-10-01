@@ -29,6 +29,10 @@
       "destination": "/api/page?view=order"
     },
     {
+      "source": "/checkout",
+      "destination": "/api/page?view=checkout"
+    },
+    {
       "source": "/review",
       "destination": "/api/page?review=1"
     },

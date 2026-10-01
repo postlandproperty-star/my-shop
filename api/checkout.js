@@ -10,6 +10,18 @@ async function qr(req, res) {
   const email = String(b.e || '').trim().toLowerCase();
   if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง (ใช้ส่งไฟล์)' });
   const shop = await loadShop();
+  if (b.cart) { // หลายเล่มที่ลูกค้าติ๊กเลือก: QR เดียวยอดรวม ได้ลิงก์ทุกเล่มหลังจ่าย
+    const ids = [...new Set((Array.isArray(b.cart) ? b.cart : String(b.cart).split(',')).map((s) => String(s).trim()).filter((s) => /^[A-Za-z0-9_-]{1,60}$/.test(s)))].slice(0, 20);
+    const ps = ids.map((id) => shop.products.find((x) => x.id === id && x.status === 'published' && x.type !== 'bundle' && Number(x.price) >= 1)).filter(Boolean);
+    if (!ps.length) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้าที่เลือก กลับไปเลือกใหม่ที่หน้าร้าน' });
+    let pname = ps.map((p) => p.name).join(' + '); if (pname.length > 400) pname = `${ps[0].name.slice(0, 200)} + อีก ${ps.length - 1} รายการ`;
+    try {
+      const r = await createQrPayment({ amount: ps.reduce((a, p) => a + Number(p.price), 0), email, description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) + ' QR',
+        metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '' } });
+      if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' });
+      return res.status(200).json({ ok: true, ...r });
+    } catch (e) { console.error(e); return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' }); }
+  }
   const p = shop.products.find((x) => x.slug === String(b.p || '') && x.status === 'published');
   if (!p || !(Number(p.price) >= 1)) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้า' });
   const plan = p.type === 'bundle' ? bundlePlan(p, String(b.plan || '')) : null;
@@ -65,8 +77,8 @@ async function cartCheckout(req, res) {
     line_items: ps.map((p) => ({ quantity: 1, price_data: { currency: 'thb', unit_amount: Math.round(Number(p.price) * 100), product_data: Object.assign({ name: p.name, description: (p.headline || '').slice(0, 200) || undefined }, (p.images || [])[0] ? { images: [p.images[0]] } : {}) } })),
     adaptive_pricing: { enabled: false },
     allow_promotion_codes: true,
-    success_url: `${origin}/p/${ps[0].slug}?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/?cart=open`,
+    success_url: `${origin}/checkout?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/checkout`,
     metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign, cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '' },
     payment_intent_data: { description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) },
   };

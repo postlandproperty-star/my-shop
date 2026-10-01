@@ -345,6 +345,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .st-pickhint{font-size:13.5px;color:var(--muted);margin:0 0 10px}
 .cartfab{position:fixed;right:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:8px;background:#EE4D2D;color:#fff;border:0;border-radius:999px;padding:12px 18px;font:inherit;font-weight:700;box-shadow:0 6px 20px rgba(15,27,51,.25);cursor:pointer}.cartfab{left:16px;justify-content:space-between;max-width:520px;margin:0 auto;padding:8px 8px 8px 18px;cursor:default}.cartfab .cf-l{background:none;border:0;color:#fff;font:inherit;font-weight:700;cursor:pointer;padding:6px 0;text-align:left}.cartfab .cf-r{background:#fff;color:#EE4D2D;border-radius:999px;padding:9px 16px;font-size:15px;font-weight:700;text-decoration:none;white-space:nowrap}
 .sp-two{flex:1;padding:12px 10px;font-size:15px;white-space:nowrap}.sticky-in .btn-line.sp-two{flex:.8}
+.co-h{font-size:24px;margin:0 0 12px}.co-back{font-size:15px;text-decoration:none;color:var(--brand);font-weight:600}.co .ct-list li:first-child{padding-top:0}
 .ct-back{position:fixed;inset:0;background:rgba(15,27,51,.45);z-index:60}
 .ct-sheet{position:fixed;z-index:61;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--surface);border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(15,27,51,.2)}
 @media(min-width:720px){.ct-sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:440px;border-radius:20px}}
@@ -1297,7 +1298,17 @@ const cartOk=p=>!!p&&p.status==='published'&&!isBundle(p)&&Number(p.price)>=1;
 const cartItems=()=>CART.map(id=>D.products.find(p=>p.id===id)).filter(cartOk);
 const cartTotal=()=>cartItems().reduce((a,p)=>a+Number(p.price),0);
 function cartSave(){try{localStorage.setItem('sl_cart',JSON.stringify(CART));}catch(e){}}
-const cartHref=()=>`/api/checkout?cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}`;
+function paidCard(){return S.sessionId?`<div class="wrap section" style="padding-top:20px;padding-bottom:0"><div class="card center" id="paid-card">
+    ${!S.order?`<h2 style="margin-bottom:8px">กำลังตรวจสอบการชำระเงิน...</h2><p class="muted">รอสักครู่</p>`:
+      S.order.paid?`<h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
+        <p class="muted" style="margin-bottom:14px">${esc(S.order.productName||'')} · ${baht(S.order.amount)} · เลขออเดอร์ ${esc(S.order.orderId)}${S.order.email?`<br>ใบเสร็จส่งไปที่ ${esc(S.order.email)}`:''}</p>
+        ${(S.order.items&&S.order.items.length?S.order.items:[{name:S.order.productName,link:S.order.link}]).map(it=>it.link?`<div style="margin-bottom:8px">${dlBtn(it.link,esc(it.name||''))}</div>`:`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของ ${esc(it.name||'สินค้านี้')} กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`).join('')}
+        <p class="fine" style="margin-top:12px">${S.order.emailed&&S.order.email?'ส่งลิงก์ไปที่อีเมล '+esc(S.order.email)+' ให้แล้วด้วย · ':''}เก็บหน้านี้ไว้ กดลิงก์ดาวน์โหลดซ้ำได้ตลอด${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">มีปัญหา? ทักแชท</a>`:''}</p>`:
+      S.order.error?`<h2 style="margin-bottom:8px">ตรวจสอบไม่สำเร็จ</h2><p class="muted">${esc(S.order.error)}</p><button class="btn btn-line btn-sm" data-a="recheckOrder">ลองใหม่</button>`:
+      `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
+  </div></div>`:'';}
+const cartHref=()=>'/checkout';
+const cartCardHref=()=>`/api/checkout?cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}`;
 function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เลือก ${n} เล่ม">✓ เลือก ${n} เล่ม · ${baht(cartTotal())}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
 function cartBtn(p){if(!cartOk(p)||PV)return '';const n=cartItems().length;
   return CART.includes(p.id)?`<button class="btn btn-line btn-block cart-btn in" data-a="cartOpen">✓ เลือกเล่มนี้แล้ว · ดูที่เลือกไว้ (${n} เล่ม)</button>`
@@ -1580,15 +1591,7 @@ function shopHead(p){
     <code>${DOMAIN}${esc(p.slug)}</code>
     ${D.campaigns.length?`<span class="fine">จำลองว่าลูกค้ามาจาก</span><select id="src" aria-label="จำลองแหล่งที่มาของลูกค้า"><option value="">เข้าตรง ไม่ได้มาจากโฆษณา</option>${D.campaigns.map(c=>`<option value="${esc(c.name)}" ${S.src===c.name?'selected':''}>โฆษณา ${esc(c.name)}</option>`).join('')}</select>`:''}
   </div></div>`:''}
-  ${S.sessionId?`<div class="wrap section" style="padding-top:20px;padding-bottom:0"><div class="card center" id="paid-card">
-    ${!S.order?`<h2 style="margin-bottom:8px">กำลังตรวจสอบการชำระเงิน...</h2><p class="muted">รอสักครู่</p>`:
-      S.order.paid?`<h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
-        <p class="muted" style="margin-bottom:14px">${esc(S.order.productName||'')} · ${baht(S.order.amount)} · เลขออเดอร์ ${esc(S.order.orderId)}${S.order.email?`<br>ใบเสร็จส่งไปที่ ${esc(S.order.email)}`:''}</p>
-        ${(S.order.items&&S.order.items.length?S.order.items:[{name:S.order.productName,link:S.order.link}]).map(it=>it.link?`<div style="margin-bottom:8px">${dlBtn(it.link,esc(it.name||''))}</div>`:`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของ ${esc(it.name||'สินค้านี้')} กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`).join('')}
-        <p class="fine" style="margin-top:12px">${S.order.emailed&&S.order.email?'ส่งลิงก์ไปที่อีเมล '+esc(S.order.email)+' ให้แล้วด้วย · ':''}เก็บหน้านี้ไว้ กดลิงก์ดาวน์โหลดซ้ำได้ตลอด${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">มีปัญหา? ทักแชท</a>`:''}</p>`:
-      S.order.error?`<h2 style="margin-bottom:8px">ตรวจสอบไม่สำเร็จ</h2><p class="muted">${esc(S.order.error)}</p><button class="btn btn-line btn-sm" data-a="recheckOrder">ลองใหม่</button>`:
-      `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
-  </div></div>`:''}
+  ${paidCard()}
 `;
 }
 /* ===== หน้าร้าน (หน้าแรก sheetlabth.com) =====
@@ -1673,6 +1676,24 @@ function storeView(){
   <footer class="fine st-foot"><b>SheetLab</b><br>${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
     <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;
 }
+/* หน้าชำระเงินหลายเล่ม (/checkout): รายการที่เลือก + ยอดรวม + สแกน QR บนหน้าเดียว (เหมือนซื้อเล่มเดียว) จ่ายแล้วได้ลิงก์ทุกเล่มบนหน้านี้ */
+function cartView(){
+  const L=cartItems(),tot=cartTotal();
+  const top=`<header class="st-top"><div class="wrap st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a>${storeMode()&&!S.sessionId?'<a class="co-back" href="/" data-go="">← เลือกเล่มอื่นต่อ</a>':''}</div></header>`;
+  if(S.sessionId)return `${top}${paidCard()}<div class="wrap" style="max-width:560px;padding:12px 16px 40px"><button class="btn btn-line btn-block" data-a="coDone">กลับหน้าร้าน</button></div>`;
+  if(!L.length)return `${top}<div class="wrap" style="max-width:560px;padding:24px 16px 40px"><div class="card center"><h2 style="margin:0 0 8px">ยังไม่ได้เลือกเล่มไหน</h2><p class="muted" style="margin:0 0 14px">แตะวงกลม ◯ ข้างราคาในหน้าร้านเพื่อเลือกหลายเล่ม แล้วจ่ายครั้งเดียว</p><a class="btn btn-buy" href="/" data-go="">ไปหน้าร้าน</a></div></div>`;
+  return `${top}<div class="wrap co" style="max-width:560px;padding:18px 16px 40px">
+    <h1 class="co-h">ชำระเงิน ${L.length} เล่ม</h1>
+    <div class="card">
+      <ul class="ct-list">${L.map(p=>{const img=(p.images||[])[0];return `<li><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56">`:cover(p.color,p.kind||'other')}</span><span class="ct-nm"><b>${esc(p.name)}</b><span>${baht(p.price)}</span></span><button class="ct-rm" data-a="cartRemove" data-id="${esc(p.id)}" aria-label="เอา ${esc(p.name)} ออก">เอาออก</button></li>`;}).join('')}</ul>
+      <div class="ct-sum"><span>รวม ${L.length} เล่ม</span><b>${baht(tot)}</b></div>
+      ${qrBox({slug:'__cart__'},false,tot)}
+      <a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(cartCardHref())}">จ่ายด้วยบัตรเครดิต / เดบิต</a>
+      ${payLogos(1)}${paySafe()}
+      <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทุกเล่มบนหน้านี้ทันที และส่งเข้าอีเมลด้วย</p>
+    </div>
+  </div>`;
+}
 function orderView(){
   const f=S.find||(S.find={email:'',busy:false,done:false,err:''});
   return `<div class="wrap section st-order">
@@ -1701,6 +1722,7 @@ function route(){
   const m=location.pathname.match(/\/p\/([a-z0-9-]+)\/?$/i);
   if(m){const p=D.products.find(x=>x.slug===m[1]);if(p)selectProduct(p.id);S.view='shop';const c=curProduct();document.title=c?c.name:TITLE0;if(c)track('ViewContent',{content_name:c.name,value:c.price,currency:'THB'});}
   else if(location.pathname==='/order'){S.view='order';document.title='หาออเดอร์ของฉัน · SheetLab';}
+  else if(location.pathname==='/checkout'){S.view='cart';document.title='ชำระเงิน · SheetLab';if(!S.sessionId&&cartItems().length)track('InitiateCheckout',Object.assign({content_name:'เลือก '+cartItems().length+' เล่ม',value:cartTotal(),currency:'THB',num_items:cartItems().length},S.src?{campaign:S.src}:{}));}
   else{S.view=storeMode()?'store':'shop';document.title=TITLE0;}
   render(false);
 }
@@ -3664,7 +3686,7 @@ function render(keep){
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
-  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:storeView,order:orderView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
+  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:storeView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
   if(v==='store')hit('store');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
   if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
@@ -3881,7 +3903,8 @@ function act(a,el){
     case 'cartClose':S.cart=false;drawCart();break;
     case 'cartRemove':CART=CART.filter(x=>x!==id);cartSave();drawCart();render(true);break;
     case 'cartMore':S.cart=false;drawCart();if(S.view!=='store')navTo('/');break;
-    case 'cartPay':{const href=el.getAttribute('href');track('InitiateCheckout',Object.assign({content_name:'ตะกร้า '+cartItems().length+' รายการ',value:cartTotal(),currency:'THB',num_items:cartItems().length},S.src?{campaign:S.src}:{}));el.textContent='กำลังไปหน้าชำระเงิน...';setTimeout(()=>{location.href=href;},pixelReady?350:0);break;}
+    case 'cartPay':S.cart=false;drawCart();S.sessionId=null;S.order=null;navTo('/checkout');break;
+    case 'coDone':S.sessionId=null;S.order=null;S.qr=null;navTo('/');break;
     case 'applyCoupon':{
       const p=curProduct(),code=(S.form.coupon||'').trim().toUpperCase();S.form.coupon=code;
       if(!code){S.coupon='';S.couponErr='';}
@@ -4197,7 +4220,7 @@ async function qrMake(el){
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur(); // ปิดคีย์บอร์ดก่อน หน้าจะได้ไม่กระโดด
   S.qr={slug,total,email,step:'loading'};qrPaint();
   try{
-    const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email,plan:(S.bplan||{})[slug]||''})}).then(r=>r.json());
+    const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(slug==='__cart__'?{cart:cartItems().map(p=>p.id),c:S.src||'',e:email}:{p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email,plan:(S.bplan||{})[slug]||''})}).then(r=>r.json());
     if(!j.ok)throw new Error(j.error||'สร้าง QR ไม่สำเร็จ');
     S.qr={slug,total,email,step:'show',pi:j.pi,k:j.k,png:j.png,hosted:j.hosted};
     qrPaint();qrStop();qrTimer=setInterval(qrPoll,3000);qrPrefetch();
@@ -4283,6 +4306,7 @@ function applyUrl(){
       if(p)S.productId=p.id;
     }
     if(location.pathname==='/order')S.view='order';
+    else if(location.pathname==='/checkout')S.view='cart';
     else if(!m&&location.pathname==='/'&&S.view==='shop'&&!new URLSearchParams(location.search).has('session_id')&&storeMode())S.view='store';
     const q=new URLSearchParams(location.search);
     const camp=q.get('utm_campaign');

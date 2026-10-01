@@ -137,8 +137,8 @@ export default async function handler(req, res) {
     out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(shopName)}</title>`)
       .replace('<meta property="og:title" content="ร้านหนังสือ/ชีทเรียน">', `<meta property="og:title" content="${esc(shopName)}"><meta name="description" content="ชีทสรุป Grammar และคำศัพท์ TOEIC ภาษาไทย พร้อมแบบฝึกหัดและเฉลยละเอียด สแกนจ่ายแล้วดาวน์โหลดได้ทันที"><link rel="canonical" href="${NEW_SITE}/">`);
     const view = String(req.query.view || '');
-    if (view === 'order') { // หน้าหาออเดอร์: ไม่ต้องให้ Google เก็บ
-      out = out.replace(/<title>[^<]*<\/title>/, '<title>หาออเดอร์ของฉัน · SheetLab</title>')
+    if (view === 'order' || view === 'checkout') { // หน้าหาออเดอร์ / หน้าชำระเงินหลายเล่ม: ไม่ต้องให้ Google เก็บ
+      out = out.replace(/<title>[^<]*<\/title>/, view === 'checkout' ? '<title>ชำระเงิน · SheetLab</title>' : '<title>หาออเดอร์ของฉัน · SheetLab</title>')
         .replace(/<!--OG-START-->[\s\S]*?<!--OG-END-->/, '<meta name="robots" content="noindex">');
     }
     const live = shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || ''));
