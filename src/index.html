@@ -3432,7 +3432,7 @@ function adsAutoBox(compact){
       <li>กด <b>Generate Access Token</b> → ติ๊กเพจ SheetLab, IG sheetlabth และ<b>บัญชีโฆษณา</b> → อนุญาต</li>
       <li>คัดลอกโทเค็นมาวางด้านล่าง แล้วกด "อัปเดตสิทธิ์"</li></ol>
       <textarea class="input" id="ads-token" rows="3" placeholder="วางโทเค็นที่นี่"></textarea>
-      <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="adsConnect">อัปเดตสิทธิ์</button></div>${ADA.tokMsg?`<p class="fine" style="margin-top:8px">${esc(ADA.tokMsg)}</p>`:''}`:'<p class="fine" style="margin:6px 0 0">เปิด Ads Manager ดูสถานะบัญชีหรือวิธีชำระเงิน</p>'}</div>`:'';
+      <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="adsConnect">อัปเดตสิทธิ์</button></div>${ADA.tokMsg?`<p class="fine" style="margin-top:8px">${esc(ADA.tokMsg)}</p>`:''}`:`<p class="fine" style="margin:6px 0 0">โทเค็นและสิทธิ์ครบแล้ว ติดที่บัญชีโฆษณาอย่างเดียว แก้เสร็จกด "รีเฟรช" ด้านบน</p><a class="btn btn-cta btn-sm" style="margin-top:8px" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">เปิดหน้าการชำระเงินของบัญชีโฆษณา →</a>`}</div>`:'';
   const card=x=>{const tot=(Number(x.dailyTHB)||0)*(Number(x.days)||0),busy=ADA.busy===x.id;
     return `<div class="adq">
       <div class="adq-prev"><div class="adq-h"><b>SheetLab</b><span class="fine">ได้รับการสนับสนุน</span></div>
