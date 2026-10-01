@@ -354,12 +354,22 @@ async function cleanupReels() {
 }
 // สร้างรูป 1 รูปจาก OpenAI (gpt-image*) หรือ Google (gemini-*image*) คืน {b64, mime} · โมเดลที่ไม่รู้จักใช้ค่าตั้งต้น
 const IMG_MODEL_RE = /^(gpt-image|chatgpt-image|gemini-)[a-z0-9.\-]{0,40}$/;
-async function genImage({ model, prompt, quality }) {
+// refs = รูปต้นแบบ (เช่น ปกจริงของแต่ละเล่ม) ให้ AI ใช้อ้างอิง ไม่ต้องวาดปกขึ้นเอง · รับเฉพาะรูปในคลังร้าน สูงสุด 10 รูป
+async function loadRefs(refs) {
+  const own = `${SB_URL}/storage/v1/object/public/product-images/`;
+  const out = [];
+  for (const u of (Array.isArray(refs) ? refs : []).map(String).filter((x) => x.startsWith(own)).slice(0, 10)) {
+    try { const r = await fetch(u); if (!r.ok) continue; const b = Buffer.from(await r.arrayBuffer()); if (b.length > 6e6) continue; out.push({ mime: r.headers.get('content-type') || 'image/jpeg', b64: b.toString('base64'), buf: b }); } catch (e) {}
+  }
+  return out;
+}
+async function genImage({ model, prompt, quality, refs }) {
   model = IMG_MODEL_RE.test(String(model || '')) ? String(model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
+  const ref = await loadRefs(refs);
   if (model.startsWith('gemini-')) {
     const G = process.env.GEMINI_API_KEY || ''; if (!G) throw new Error('ยังไม่ได้ใส่ GEMINI_API_KEY ใน Vercel');
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '1:1' } } }) });
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [...ref.map((x) => ({ inlineData: { mimeType: x.mime, data: x.b64 } })), { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '1:1' } } }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(`Google: ${j?.error?.message || r.status}`);
     const part = (j?.candidates?.[0]?.content?.parts || []).find((x) => x.inlineData || x.inline_data);
@@ -368,6 +378,16 @@ async function genImage({ model, prompt, quality }) {
     return { b64: d.data, mime: d.mimeType || d.mime_type || 'image/png', model };
   }
   const KEY = process.env.OPENAI_API_KEY || ''; if (!KEY) throw new Error('ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel');
+  if (ref.length) { // มีรูปต้นแบบ: ใช้ images/edits (รับหลายรูป)
+    const fd = new FormData(); fd.append('model', model); fd.append('prompt', prompt); fd.append('size', '1024x1024'); fd.append('n', '1');
+    fd.append('quality', ['low', 'medium', 'high'].includes(quality) ? quality : 'medium');
+    ref.forEach((x, i) => fd.append('image[]', new Blob([x.buf], { type: x.mime }), `ref${i}.${/png/.test(x.mime) ? 'png' : 'jpg'}`));
+    const re = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { Authorization: `Bearer ${KEY}` }, body: fd });
+    const je = await re.json().catch(() => ({}));
+    if (!re.ok) throw new Error(`OpenAI: ${je?.error?.message || re.status}`);
+    if (!je?.data?.[0]?.b64_json) throw new Error('OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง');
+    return { b64: je.data[0].b64_json, mime: 'image/png', model };
+  }
   const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(quality) ? quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
   const j = await r.json().catch(() => ({}));
@@ -999,7 +1019,7 @@ export default async function handler(req, res) {
       if (!prompts.length) return res.status(400).json({ ok: false, error: 'ไม่มีคำสั่งทำรูป' });
       const stamp = Date.now().toString(36);
       const one = async (prompt, i) => {
-        const g = await genImage({ model: body.model, prompt, quality: body.quality });
+        const g = await genImage({ model: body.model, prompt, quality: body.quality, refs: body.refs });
         const ext = /png/.test(g.mime) ? 'png' : /webp/.test(g.mime) ? 'webp' : 'jpg';
         const path = `factory/${job.id}/ai-${stamp}-${i + 1}.${ext}`;
         const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': g.mime, 'x-upsert': 'true' }, body: Buffer.from(g.b64, 'base64') });
@@ -1061,7 +1081,7 @@ export default async function handler(req, res) {
       const prompt = String(body.prompt || '').trim().slice(0, 3000);
       if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'คำสั่งสั้นเกินไป' });
       try {
-        const g = await genImage({ model: body.model, prompt, quality: body.quality });
+        const g = await genImage({ model: body.model, prompt, quality: body.quality, refs: body.refs });
         if (diag) return res.status(200).json({ ok: true, model: g.model, ms: Date.now() - t0, kb: Math.round(g.b64.length * 0.75 / 1024), mime: g.mime });
         return res.status(200).json({ ok: true, image: `data:${g.mime};base64,${g.b64}` });
       } catch (e) { return res.status(502).json({ ok: false, error: String(e.message || e).slice(0, 240) }); }
