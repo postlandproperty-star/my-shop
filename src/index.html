@@ -190,6 +190,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rvt-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.rvt-sel{width:auto;min-width:0;max-width:100%;padding:6px 10px;font-size:14px}
 .rl-conn{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.rl-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}.rl-howto{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px}.rl-howto ol{padding-left:20px;line-height:1.7;margin:6px 0 8px}
 .thumb .mv{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between;pointer-events:none}.thumb .mv button{pointer-events:auto;width:26px;height:26px;border-radius:50%;border:0;background:rgba(15,27,51,.75);color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0}.thumb .mv button:only-child{margin-left:auto}.thumb .mv button[data-d="-1"]:only-child{margin-left:0;margin-right:auto}.th-cover{position:absolute;left:4px;top:4px;background:#2440E8;color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
+.facai{display:flex;flex-direction:column;gap:6px;margin:8px 0}.facai-imgs{display:flex;gap:6px;flex-wrap:wrap}.facai-imgs img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#fff}.facai .btn{align-self:flex-start}
 .rvt-link{background:none;border:0;padding:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer}.rvt-list{display:grid;gap:10px}.rvt-card{padding:14px 16px}.rvt-card.off{opacity:.55}.rvt-st{font-size:17px}.rvt-text{margin:8px 0 6px;white-space:pre-wrap}.empty-rv{padding:18px}
 .so{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.so>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.so>summary::-webkit-details-marker{display:none}.so>summary::after{content:'▾';color:var(--muted)}.so[open]>summary{margin-bottom:10px}.so[open]>summary::after{content:'▴'}
 .dtile.wide{grid-column:span 2}.dtile .so-live{margin-left:4px}.srcbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 6px;background:var(--line);gap:2px}.srcbar i,.srcleg i{display:block}.srcbar i.ads,.srcleg .ads i{background:#2440E8}.srcbar i.organic,.srcleg .organic i{background:#0F9D6B}.srcbar i.direct,.srcleg .direct i{background:#9AA6BC}
@@ -1147,7 +1148,7 @@ function coverPrompt(d){
   if(isNotionDraft(d))return `ภาพปกสินค้า Notion Template สำหรับขายออนไลน์ ภาพสี่เหลี่ยมจัตุรัส 1:1 สไตล์ "Broken White Notion": พื้นหลังสีขาวหม่น (#EEEDE9) ตัวหนังสือสีดำ กล่องสีขาวขอบดำหนาพร้อมเงาดำทึบเยื้องมุม จุดฮาล์ฟโทนสีดำที่มุมภาพ ภาพประกอบลายเส้นดำแบบมินิมอล ขาวดำทั้งภาพ (มีสีเฉพาะป้ายราคา)
 ตรงกลางเป็นแล็ปท็อปและมือถือแสดงหน้า Notion ที่มีตารางแผนอ่านหนังสือ เช็คบ็อกซ์ และป้ายหมวดสีเทา
 หัวข้อใหญ่ในกล่องขาวขอบดำ อ่านง่าย: "${aiTitle(d)}"
-${sub?`คำโปรยรองตัวเล็กใต้หัวข้อ: "${sub}"\n`:''}มุมบนซ้ายมีป้ายแคปซูลขอบดำเขียนว่า "NOTION TEMPLATE"
+${sub?`คำโปรยรองตัวเล็กใต้หัวข้อ: "${sub}"\n`:''}มุมบนซ้ายมีไอคอนโลโก้ Notion ขนาดเล็ก (สี่เหลี่ยมสีขาวขอบดำหนา มีตัว N สีดำแบบมีเชิง) ตามด้วยป้ายแคปซูลขอบดำเขียนว่า "NOTION TEMPLATE"
 ${price?`มุมล่างขวามีป้ายราคาสีเหลือง (#FFD23F) ขอบดำ เขียนว่า "${price}"\n`:''}แถบล่างมีไอคอนลายเส้น 3 อันพร้อมคำ: "ใช้ Notion ฟรีได้" "มือถือ / คอม" "กด Duplicate ใช้ได้ทันที"`+AI_NO_TEXT;
   const bundle=d.type==='bundle';
   return `ภาพปก${bundle?'ชุดหนังสือ e-book หลายเล่มวางซ้อนกัน':'หนังสือ e-book'} สำหรับขายออนไลน์ ภาพสี่เหลี่ยมจัตุรัส 1:1 ภาพถ่ายสินค้าสมจริง หนังสือสามมิติวางเอียงบนโต๊ะไม้สีอ่อน แสงธรรมชาติจากหน้าต่าง ${CAT_SCENE[d.cat]||CAT_SCENE.general} โทนปกสีน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab
@@ -2260,17 +2261,30 @@ function facBox(inFactory){
     ${FAC.jobs.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.kind==='notion'?'Notion Template · ':j.pages?j.pages+' หน้า · ':''}ราคาที่เสนอ ${baht(j.price)}${j.done_at?' · เสร็จ '+fdt(Date.parse(j.done_at)):''}</span></div>
       ${j.kind==='notion'?`<div class="facnotion"><span class="fine">📒 Notion Template · <b>ขั้นตอนเดียวที่ต้องกดเอง:</b> เปิดหน้าใน Notion → Share → Publish → เปิด Allow duplicate → คัดลอกลิงก์มาวางด้านล่าง</span>
         <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><a class="btn btn-dark btn-sm" href="${esc(j.notion_url||'#')}" target="_blank" rel="noopener noreferrer">เปิดใน Notion</a><input class="input" id="fpub-${esc(j.id)}" data-fpub="${esc(j.id)}" inputmode="url" placeholder="วางลิงก์ที่ Publish แล้ว เช่น https://xxx.notion.site/..." value="${esc((FAC.pub||{})[j.id]||'')}" style="flex:1;min-width:220px"></div></div>`:''}
+      <div class="facai">${(j.ai_images||[]).length?`<div class="facai-imgs">${j.ai_images.map((u,i)=>`<img src="${esc(u)}" alt="รูปขายที่ AI ทำ ${i+1}" width="72" height="72" loading="lazy">`).join('')}</div><span class="fine">รูปขายจาก AI ${j.ai_images.length} รูป จะใส่เป็นภาพแรกของสินค้าตอนอนุมัติ (เลื่อนลำดับหรือลบได้ในหน้าแก้สินค้า)</span>`:''}
+        <button class="btn btn-line btn-sm" data-a="facAiImgs" data-id="${esc(j.id)}" ${FAC.aiBusy?'disabled':''}>${FAC.aiBusy===j.id?'กำลังทำรูป 5 รูปพร้อมกัน (1-3 นาที)...':(j.ai_images||[]).length?'✨ ทำรูปขายชุดใหม่':'✨ ทำรูปขาย 5 รูปด้วย AI (กดครั้งเดียว)'}</button></div>
       <div class="row" style="gap:6px;flex-wrap:wrap">${j.kind==='notion'?'':`<a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a>`}<button class="btn btn-cta btn-sm" data-a="facQuick" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${FAC.busy===j.id&&FAC.quick?'กำลังเตรียมและลงขาย...':S.confirm==='fq:'+j.id?'กดอีกครั้ง: ลงขาย '+baht(j.price):'อนุมัติเลย'}</button><button class="btn btn-line btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจก่อนอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
   </section>`;
 }
 function guessCat(t){t=String(t||'').toLowerCase();return /notion|โนชั่น/.test(t)?'notion':/ielts/.test(t)?'ielts':/tgat|a-level|มหาลัย/.test(t)?'tgat':/ก\.พ|ราชการ/.test(t)?'kp':/สนทนา|พูด|speaking|conversation/.test(t)?'speak':/ทำงาน|เที่ยว|business|travel|office/.test(t)&&!/toeic/.test(t)?'work':/grammar|ไวยากรณ์|tense/.test(t)?'grammar':/vocab|คำศัพท์|ศัพท์/.test(t)?'vocab':/listening|ฟัง/.test(t)?'listening':/reading|อ่าน/.test(t)?'reading':/mock|ข้อสอบเสมือน|full test/.test(t)?'mock':'';}
+/* ทำรูปขายทั้งชุดจากการ์ดโรงงาน: ใช้คำสั่งตามหมวดเดียวกับหน้าแก้สินค้า โมเดล/คุณภาพตามที่เลือกไว้ล่าสุด */
+async function facAiImages(id){
+  const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;const lc=j.listing_copy||{};
+  const d={name:lc.name||j.title,headline:lc.headline||'',price:Number(j.price)||0,features:lc.features||'',specs:lc.specs||'',cat:j.kind==='notion'?'notion':guessCat(j.title+' '+(j.category||'')),slug:j.kind==='notion'?'notion-x':'sheet-x',type:''};
+  FAC.aiBusy=id;render(true);toast('กำลังทำรูปขาย 5 รูปพร้อมกัน ใช้เวลา 1-3 นาที');
+  try{const r=await authFetch('/api/content?action=ai_images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,prompts:imgSetPrompts(d),model:imgModel(),quality:imgQuality()})});
+    if(r&&r.images&&r.images.length){j.ai_images=r.images;toast(`ได้รูปขาย ${r.images.length} รูป${r.errors&&r.errors.length?` (ไม่สำเร็จ ${r.errors.length} รูป)`:''} · ตอนอนุมัติจะใส่ให้อัตโนมัติ`);}
+    else toast('ทำรูปไม่สำเร็จ: '+((r&&(r.error||(r.errors||[])[0]))||'ลองใหม่อีกครั้ง'));}
+  catch(e){toast('ทำรูปไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองคุณภาพปกติ');}
+  FAC.aiBusy='';render(true);
+}
 async function facApprove(id,quick){
   const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;
   if(j.kind==='notion'){ // Notion template: ต้องมีลิงก์ที่คุณแดน Publish แล้ว (notion.site) รูปปก/ตัวอย่างโรงงานทำมาให้แล้ว
     const inp=document.getElementById('fpub-'+id);const pub=String(inp?inp.value:(FAC.pub||{})[id]||'').trim();FAC.pub=Object.assign(FAC.pub||{},{[id]:pub});
     if(!/^https:\/\/([a-z0-9-]+\.)?notion\.(site|so)\//i.test(pub)||/app\.notion\.com/i.test(pub)){FAC.quick=false;toast('วางลิงก์ที่ Publish แล้วก่อน (ขึ้นต้น https://…notion.site/…) ในการ์ดนี้');render(true);return;}
     const p0=Object.assign(blankProduct(),{name:j.title,headline:j.title,desc:String(j.summary||'').split('\n')[0].slice(0,300),price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:pub,status:'published',sell:'store',cat:'notion',
-      slug:'notion-'+String(j.id).replace(/[^a-z0-9]/gi,'').slice(0,8).toLowerCase(),images:(j.images||[]).slice(0,6),
+      slug:'notion-'+String(j.id).replace(/[^a-z0-9]/gi,'').slice(0,8).toLowerCase(),images:[...(j.ai_images||[]),...(j.images||[])].slice(0,5),
       features:['เทมเพลต Notion กด Duplicate ใช้ได้ทันที','ใช้กับ Notion ฟรีได้ ทั้งมือถือและคอม',j.audience?`เหมาะกับ ${j.audience}`:''].filter(Boolean).join('\n'),specs:'รูปแบบ | Notion Template\nใช้ได้กับ | Notion ฟรี / มือถือ / คอม'});
     const lc=j.listing_copy||{};['name','headline','desc','features','forwho','notfor','faq','specs','toc'].forEach(k=>{if(String(lc[k]||'').trim())p0[k]=lc[k];});
     S.draft=initDraft(p0);S.draft.fromJob=j.id;S.edit='new';S.err='';render(false);
@@ -2293,6 +2307,7 @@ async function facApprove(id,quick){
       const doc=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;const pg=await doc.getPage(1);const v0=pg.getViewport({scale:1});const vp=pg.getViewport({scale:1200/Math.max(v0.width,v0.height)});
       const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:vp}).promise;
       const cb=await new Promise(r=>c.toBlob(r,'image/png'));await addImages([new File([cb],'cover.png',{type:'image/png'})]);
+      if((j.ai_images||[]).length)S.draft.images=[...j.ai_images,...(S.draft.images||[])].slice(0,5); // รูปขายจาก AI ขึ้นก่อน
     }
     toast('พร้อมตรวจแล้ว ดูตัวอย่างสด แก้ราคาหรือข้อความได้ แล้วกด "อนุมัติ ลงขาย"');
   }catch(e){console.error(e);toast('ทำภาพจาก PDF ไม่สำเร็จ ('+(e.message||e)+') เพิ่มภาพเองได้ในฟอร์ม');}
@@ -3923,6 +3938,7 @@ function act(a,el){
       if(S.confirm==='import'){const l=loadLegacy();if(l){D=normalize(l);S.confirm='';S.productId=null;pushAll().then(()=>{render(true);toast('นำเข้าข้อมูลเก่าแล้ว');});}}
       else{S.confirm='import';render(true);}break;}
     case 'toCheckout':glideTo('checkout');break;
+    case 'facAiImgs':if(!FAC.aiBusy)facAiImages(el.dataset.id);break;
     case 'cartAdd':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
       toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);render(true);break;}
     case 'cartOpen':S.cart=true;drawCart._f=false;drawCart();break;

@@ -863,6 +863,35 @@ export default async function handler(req, res) {
       } catch (e) { console.error('hit', e.message); }
       return res.status(204).end();
     }
+    if (action === 'ai_images') { // คุณแดนกดครั้งเดียวที่การ์ดโรงงาน: สร้างรูปขายทั้งชุดพร้อมกัน เก็บไว้ที่ factory/<id>/ai-N.jpg แล้วผูกกับใบสั่ง (ใช้ตอนอนุมัติ)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      const diag = !admin && keyOk(req) && req.query.diag === '1'; // ทดสอบระบบ: คุณภาพต่ำสุด ไม่เกิน 2 รูป
+      if (!admin && !diag) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const KEY = process.env.OPENAI_API_KEY || '';
+      if (!KEY) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel' });
+      const body = await readBody(req); if (diag) { body.quality = 'low'; body.prompts = (body.prompts || []).slice(0, 2); }
+      const jobs = await loadJobs(); const job = jobs.find((j) => j.id === String(body.id || ''));
+      if (!job) return res.status(404).json({ ok: false, error: 'ไม่พบใบสั่ง' });
+      const prompts = (Array.isArray(body.prompts) ? body.prompts : []).map((p) => String(p || '').trim().slice(0, 3000)).filter((p) => p.length >= 20).slice(0, 5);
+      if (!prompts.length) return res.status(400).json({ ok: false, error: 'ไม่มีคำสั่งทำรูป' });
+      const model = /^(gpt-image|chatgpt-image)[a-z0-9.\-]{0,40}$/.test(String(body.model || '')) ? String(body.model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
+      const quality = ['low', 'medium', 'high'].includes(body.quality) ? body.quality : 'medium';
+      const stamp = Date.now().toString(36);
+      const one = async (prompt, i) => {
+        const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality, n: 1 }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j?.data?.[0]?.b64_json) throw new Error(j?.error?.message || `OpenAI ${r.status}`);
+        const path = `factory/${job.id}/ai-${stamp}-${i + 1}.jpg`;
+        const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' }, body: Buffer.from(j.data[0].b64_json, 'base64') });
+        if (!up.ok) throw new Error(`อัปโหลดรูปไม่ได้ (${up.status})`);
+        return `${SB_URL}/storage/v1/object/public/product-images/${path}`;
+      };
+      const out = await Promise.allSettled(prompts.map(one)); // ทำพร้อมกันทุกรูป ไม่ต้องรอทีละรูป
+      const urls = out.filter((x) => x.status === 'fulfilled').map((x) => x.value);
+      const errors = out.filter((x) => x.status === 'rejected').map((x) => String(x.reason?.message || x.reason).slice(0, 160));
+      if (urls.length) { const all = await loadJobs(); const jj = all.find((x) => x.id === job.id); if (jj) { jj.ai_images = urls; await saveJobs(all); } }
+      return res.status(200).json({ ok: urls.length > 0, images: urls, errors });
+    }
     if (action === 'openai_check') { // เช็คว่าใส่ OPENAI_API_KEY แล้วและใช้โมเดลสร้างรูปได้ (อ่านข้อมูลโมเดล ไม่สร้างรูป ไม่เสียเงิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
