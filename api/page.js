@@ -71,9 +71,11 @@ export default async function handler(req, res) {
     const rows = await sbSelect(`orders?session_id=eq.${encodeURIComponent(o)}&status=eq.paid&select=session_id,name,email,product_id,product_name`).catch(() => []);
     if (!rows.length) return bad('ไม่พบคำสั่งซื้อนี้');
     const shop = await loadShop().catch(() => ({ products: [] }));
-    const prod = shop.products.find((x) => x.id === rows[0].product_id);
+    const { orderProducts } = await import('../lib/reviews.js');
+    const ids = await orderProducts(o, rows[0].product_id);
     const rv = await loadReviews();
-    return res.status(200).send(reviewPage({ product: prod ? prod.name : rows[0].product_name, order: rows[0], token: t, stars: req.query.s, existing: rv.list.find((x) => x.order === o), site: NEW_SITE, mask: pv ? 'ตัวอย่าง•••@gmail.com' : maskEmail(rows[0].email), preview: pv }));
+    const products = ids.map((id) => ({ id, name: shop.products.find((x) => x.id === id)?.name || (id === rows[0].product_id ? rows[0].product_name : ''), existing: rv.list.find((x) => x.order === o && x.product_id === id) })).filter((p) => p.name);
+    return res.status(200).send(reviewPage({ products: products.length ? products : [{ id: rows[0].product_id, name: rows[0].product_name, existing: rv.list.find((x) => x.order === o) }], order: rows[0], token: t, stars: req.query.s, site: NEW_SITE, mask: pv ? 'ตัวอย่าง•••@gmail.com' : maskEmail(rows[0].email), preview: pv }));
   }
   const draft = String(req.query.draft || '');
   if (/^[a-z0-9-]{3,60}$/.test(draft)) { // หน้าร่าง /draft/<ชื่อ>: ไม่มีลิงก์จากหน้าร้าน และบอกเครื่องมือค้นหาไม่ให้เก็บ

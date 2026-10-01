@@ -2732,7 +2732,7 @@ const SO={d:null,loading:false,err:'',top:null,fresh:''};
 function loadSO(force){if(SO.loading)return;SO.loading=true;if(force)render(true);adminApi('/api/content?action=dash_orders').then(j=>{if(j&&j.ok){const top=j.latest[0];const k=top?top.at+top.product:'';
     if(SO.top!==null&&k&&k!==SO.top){SO.fresh=k;toast(`🎉 ออเดอร์ใหม่ ${'฿'+Math.round(top.amount).toLocaleString('th-TH')} · ${top.product}`);}
     SO.top=k;SO.d=j;SO.err='';}else SO.err=(j&&j.error)||'โหลดไม่ได้';}).catch(()=>{SO.err='เชื่อมต่อไม่ได้';}).then(()=>{SO.loading=false;const a=document.activeElement;if(!(a&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)))render(true);});}
-const SRC_ICON={ads:'📣',organic:'🌱',direct:'🔗'};
+const SRC_ICON={ads:'📣',organic:'🌱',direct:'❔'};
 function liveTiles(){
   if(!SO.d&&!SO.loading&&!SO.err)loadSO();
   const d=SO.d;const b=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');
@@ -2740,12 +2740,12 @@ function liveTiles(){
   if(!d)return `<div class="dtile wide"><span>ยอดวันนี้ ${live}</span><b>${SO.err?'–':'...'}</b><small>${SO.err?esc(SO.err):'กำลังโหลดจาก Stripe'}</small></div><div class="dtile wide"><span>ยอดขายมาจากไหน (7 วัน)</span><b>–</b></div>`;
   const D=d.days,t=D[D.length-1],y=D[D.length-2],T=d.src.today.groups,W=d.src.week;
   const dv=t.rev-y.rev,cmp=dv?`<em class="vs ${dv>0?'good':'bad'}">${dv>0?'▲ +':'▼ −'}${b(Math.abs(dv))} จากเมื่อวาน</em>`:`<em class="vs flat">เท่าเมื่อวาน</em>`;
-  const parts=g=>[['ads','แอด'],['organic','ออร์แกนิก'],['direct','ลิงก์ตรง']].filter(([k])=>g[k].n).map(([k,l])=>`${l} ${g[k].n}`).join(' · ');
+  const parts=g=>[['ads','แอด'],['organic','ออร์แกนิก'],['direct','ไม่ทราบที่มา']].filter(([k])=>g[k].n).map(([k,l])=>`${l} ${g[k].n}`).join(' · ');
   const tot=W.groups.ads.rev+W.groups.organic.rev+W.groups.direct.rev;
   const pct=k=>tot?Math.round(W.groups[k].rev/tot*100):0;
   return `<div class="dtile wide live"><span>ยอดวันนี้ ${live} <small class="fine">อัปเดต ${new Date(d.at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</small></span><b>${b(t.rev)}</b>${cmp}<small>${t.n} ออเดอร์${t.n?' · '+parts(T):''}${t.unpaid?` · ค้างจ่าย ${t.unpaid}`:''}</small></div>
-    <div class="dtile wide"><span>ยอดขายมาจากไหน (7 วัน)</span>${tot?`<div class="srcbar" role="img" aria-label="แอด ${pct('ads')}% ออร์แกนิก ${pct('organic')}% ลิงก์ตรง ${pct('direct')}%">${['ads','organic','direct'].filter(k=>W.groups[k].rev).map(k=>`<i class="${k}" style="width:${pct(k)}%"></i>`).join('')}</div>
-      <div class="srcleg">${['ads','organic','direct'].map(k=>`<span class="${k}"><i></i>${{ads:'แอด',organic:'ออร์แกนิก',direct:'ลิงก์ตรง'}[k]} <b>${b(W.groups[k].rev)}</b> (${W.groups[k].n})</span>`).join('')}</div>
+    <div class="dtile wide"><span>ยอดขายมาจากไหน (7 วัน)</span>${tot?`<div class="srcbar" role="img" aria-label="แอด ${pct('ads')}% ออร์แกนิก ${pct('organic')}% ไม่ทราบที่มา ${pct('direct')}%">${['ads','organic','direct'].filter(k=>W.groups[k].rev).map(k=>`<i class="${k}" style="width:${pct(k)}%"></i>`).join('')}</div>
+      <div class="srcleg">${['ads','organic','direct'].map(k=>`<span class="${k}"><i></i>${{ads:'แอด',organic:'ออร์แกนิก',direct:'ไม่ทราบที่มา'}[k]} <b>${b(W.groups[k].rev)}</b> (${W.groups[k].n})</span>`).join('')}</div>
       <small>${W.labels.slice(0,4).map(x=>`${SRC_ICON[x.group]} ${esc(x.label)} ${x.n}`).join(' · ')}</small>`:'<b>–</b><small>ยังไม่มีออเดอร์ใน 7 วัน</small>'}</div>`;
 }
 function stripeBox(){
@@ -2757,7 +2757,7 @@ function stripeBox(){
     <div class="so-bars" role="img" aria-label="ยอดขาย 14 วันล่าสุด">${D.map((x,i)=>`<div class="so-bar${x.n?'':' z'}${i===D.length-1?' t':''}" title="${dl(x.d).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})} · ${x.n} ออเดอร์ · ${b(x.rev)}${x.unpaid?' · ค้างจ่าย '+x.unpaid:''}">${x.n?`<em>${x.n}</em>`:''}<i style="height:${x.rev?Math.max(6,Math.round(x.rev/mx*84)):2}px"></i><span>${dl(x.d).getDate()}</span></div>`).join('')}</div>
     <p class="fine" style="margin:8px 0 0">แท่งขวาสุด = วันนี้ · ตัวเลขบนแท่ง = จำนวนออเดอร์ ความสูง = ยอดเงิน · ไม่นับออเดอร์ทดสอบ</p>
     ${d.latest.length?`<ol class="so-list" aria-label="ออเดอร์ล่าสุด">${d.latest.map(o=>`<li class="${SO.fresh===o.at+o.product?'so-new':''}"><span class="fine">${ago(o.at)}</span><span class="p">${esc(o.product||'')}<small>${SRC_ICON[o.group]||''} ${esc(o.label||'')} · ${esc(o.email||'ไม่มีอีเมล')}</small></span><b>${b(o.amount)}</b></li>`).join('')}</ol>`:'<p class="fine" style="margin:10px 0 0">ยังไม่มีออเดอร์ใน 14 วัน</p>'}
-    <p class="fine" style="margin:8px 0 0">ที่มา: 📣 แอด = มาจากลิงก์แอดที่มีชื่อแคมเปญ · 🌱 ออร์แกนิก = หน้าร้าน เพจ Threads Google ฯลฯ (ดูจากเว็บที่ลูกค้ากดมา) · 🔗 ลิงก์ตรง = พิมพ์เว็บเอง/แอปที่ไม่บอกที่มา</p>
+    <p class="fine" style="margin:8px 0 0">ที่มา: 📣 แอด = มาจากลิงก์แอดที่มีชื่อแคมเปญ · 🌱 ออร์แกนิก = หน้าร้าน เพจ Threads Google ฯลฯ (ดูจากเว็บที่ลูกค้ากดมา) · ❔ ไม่ทราบที่มา = ออเดอร์ก่อนวันที่ 1 ต.ค. ที่ไม่ได้มาจากแอด หรือลูกค้าพิมพ์เว็บเอง/มาจากแอปที่ไม่บอกที่มา</p>
     <button class="chip" data-a="tab" data-v="orders" style="margin-top:8px">ดูออเดอร์ทั้งหมด →</button>
   </details>`;
 }

@@ -198,7 +198,7 @@ async function publishReadlab(onlyId = '') {
 }
 // ที่มาของออเดอร์จาก campaign (utm_campaign หรือที่หน้าเว็บเดาจาก referrer) · แอด = ชื่อแคมเปญอื่นทั้งหมด
 const ORGANIC_SRC = { store: 'หน้าร้าน', fb_page: 'เพจ Facebook', threads: 'Threads', google: 'Google', instagram: 'Instagram', pinterest: 'Pinterest', line: 'LINE', tiktok: 'TikTok', youtube: 'YouTube', email: 'อีเมล', web: 'เว็บอื่น' };
-const srcGroup = (c) => { const k = String(c || '').trim().toLowerCase(); if (!k) return { g: 'direct', label: 'เข้าลิงก์ตรง' }; if (ORGANIC_SRC[k]) return { g: 'organic', label: ORGANIC_SRC[k] }; if (/test/.test(k)) return { g: 'direct', label: 'ทดสอบ' }; return { g: 'ads', label: 'แอด ' + c }; };
+const srcGroup = (c) => { const k = String(c || '').trim().toLowerCase(); if (!k) return { g: 'direct', label: 'ไม่ทราบที่มา' }; if (ORGANIC_SRC[k]) return { g: 'organic', label: ORGANIC_SRC[k] }; return { g: 'ads', label: 'แอด ' + c }; }; // ชื่อแคมเปญแอดที่มีคำว่า test (เช่น fb-toeic-test) คือแอดจริง
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 // ห้องพักทีม: เหตุการณ์จริงในร้านสะท้อนเข้าห้องทันที (ไม่ใช้โมเดล ใช้แม่แบบสุ่ม)
@@ -1358,19 +1358,27 @@ export default async function handler(req, res) {
         if (req.method !== 'POST') return res.status(405).end();
         const b = await readBody(req); const o = String(b.o || '');
         if (!/^[A-Za-z0-9_-]{6,200}$/.test(o) || !RV.tokenOk(o, b.t)) return res.status(403).json({ ok: false, error: 'ลิงก์รีวิวไม่ถูกต้อง' });
-        const stars = Math.round(Number(b.stars)); if (!(stars >= 1 && stars <= 5)) return res.status(400).json({ ok: false, error: 'ให้ดาว 1-5' });
         const rows = await sb(`orders?session_id=eq.${encodeURIComponent(o)}&status=eq.paid&select=session_id,name,email,product_id,product_name`);
         if (!rows?.length) return res.status(404).json({ ok: false, error: 'ไม่พบคำสั่งซื้อ' });
         const email_mask = b.showEmail === false ? '' : RV.maskEmail(rows[0].email); // ลูกค้าเลือกได้ในหน้ารีวิว
-        const text = String(b.text || '').replace(/[<>]/g, '').replace(/\s+\n/g, '\n').trim().slice(0, 500);
+        // ให้ดาวแยกทีละเล่ม (ออเดอร์ตะกร้า/สินค้าคู่) · ฟอร์มเก่าส่ง stars/text เดี่ยว = สินค้าหลักของออเดอร์
+        const allowed = await RV.orderProducts(o, rows[0].product_id);
+        const shopN = await loadShop().catch(() => ({ products: [] }));
+        const clean = (x) => String(x || '').replace(/[<>]/g, '').replace(/\s+\n/g, '\n').trim().slice(0, 500);
+        const items = (Array.isArray(b.items) ? b.items : [{ pid: rows[0].product_id, stars: b.stars, text: b.text }]).slice(0, 20)
+          .map((x) => ({ pid: String(x?.pid || ''), stars: Math.round(Number(x?.stars)), text: clean(x?.text) })).filter((x) => allowed.includes(x.pid) && x.stars >= 1 && x.stars <= 5);
+        if (!items.length) return res.status(400).json({ ok: false, error: 'ให้ดาวอย่างน้อย 1 เล่ม (1-5 ดาว)' });
         const name = String(b.name || '').replace(/[<>]/g, '').trim().slice(0, 30) || RV.displayName(rows[0].name);
-        const d = await RV.loadReviews(); const now = new Date().toISOString();
-        const old = d.list.find((x) => x.order === o);
-        if (old) Object.assign(old, { stars, text, name, email_mask, updated_at: now });
-        else d.list.push({ id: 'rv' + Date.now().toString(36), order: o, product_id: rows[0].product_id, product_name: rows[0].product_name, stars, text, name, email_mask, status: 'live', created_at: now });
+        const d = await RV.loadReviews(); const now = new Date().toISOString(); const low = [];
+        items.forEach((x, i) => {
+          const pname = shopN.products.find((p) => p.id === x.pid)?.name || rows[0].product_name;
+          const old = d.list.find((r) => r.order === o && (r.product_id === x.pid || (!r.product_id && x.pid === rows[0].product_id)));
+          if (old) Object.assign(old, { stars: x.stars, text: x.text, name, email_mask, product_id: x.pid, product_name: pname, updated_at: now });
+          else { d.list.push({ id: 'rv' + Date.now().toString(36) + i, order: o, product_id: x.pid, product_name: pname, stars: x.stars, text: x.text, name, email_mask, status: 'live', created_at: now }); if (x.stars <= 3) low.push({ ...x, pname }); }
+        });
         await RV.saveReviews(d);
-        if (stars <= 3 && !old) { try { await addTodo({ text: `รีวิว ${stars} ดาว "${rows[0].product_name}": ${text.slice(0, 120) || '(ไม่มีความเห็น)'} อ่านแล้วถ้าไม่เหมาะซ่อนได้ในแท็บ ⭐ รีวิว หรือทักลูกค้าช่วยแก้ปัญหา`, type: 'decide', from: 'care' }); } catch (e) {} }
-        return res.status(200).json({ ok: true });
+        for (const x of low) { try { await addTodo({ text: `รีวิว ${x.stars} ดาว "${x.pname}": ${x.text.slice(0, 120) || '(ไม่มีความเห็น)'} อ่านแล้วถ้าไม่เหมาะซ่อนได้ในแท็บ ⭐ รีวิว หรือทักลูกค้าช่วยแก้ปัญหา`, type: 'decide', from: 'care' }); } catch (e) {} }
+        return res.status(200).json({ ok: true, saved: items.length });
       }
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (action === 'review_mail') {
