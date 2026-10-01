@@ -321,6 +321,37 @@ async function ensureAdDrafts() {
   if (ended) { const cur = await loadAdsAuto(); for (const x of cur) { const y = items.find((z) => z.id === x.id); if (y && y.status === 'ended') x.status = 'ended'; } await saveAdsAuto(cur); }
   return { ok: true, drafted: made };
 }
+// คลิป Reels ที่โพสต์ครบทุกช่องแล้ว (เพจ/IG/Threads เก็บคลิปไว้เองแล้ว) ลบไฟล์ออกจากคลังร้าน ไม่ให้พื้นที่เต็ม (คุณแดนสั่ง 1 ต.ค. 69)
+// ลบเมื่อ: ทุกโพสต์ที่ใช้คลิปนั้นโพสต์แล้วหรือถูกปัดตก · โพสต์ล่าสุดผ่านมาแล้ว 3 วัน (เผื่อโพสต์ซ้ำ) · ไม่มี IG ที่ยังประมวลผลค้าง · คลิปที่ถูกปัดตกทั้งหมดลบหลัง 14 วัน
+async function cleanupReels() {
+  const PUB = `${SB_URL}/storage/v1/object/public/product-images/`;
+  const H = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
+  const cut = Date.now() - 3 * 864e5, cutRej = Date.now() - 14 * 864e5;
+  const done = (xs, url) => xs.length && xs.every((x) => ['published', 'rejected'].includes(x.status)) && !xs.some((x) => /ig_container:/.test(x.notes || x.ig || '')) &&
+    (xs.some((x) => x.status === 'published') ? Math.max(...xs.filter((x) => x.status === 'published').map((x) => Date.parse(x.published_at || 0))) < cut : Math.max(...xs.map((x) => Date.parse(x.created_at || 0))) < cutRej) && url.startsWith(PUB);
+  const del = async (paths) => { if (!paths.length) return; const r = await fetch(`${SB_URL}/storage/v1/object/product-images`, { method: 'DELETE', headers: H, body: JSON.stringify({ prefixes: paths }) }); if (!r.ok) throw new Error(`delete ${r.status}`); };
+  const NOTE = 'คลิปลบออกจากคลังร้านแล้ว (ยังอยู่บนเพจ/IG/Threads)';
+  // SheetLab: ตาราง posts (คลิปอยู่โฟลเดอร์ reels/)
+  const rows = await sb(`posts?image_url=ilike.*${encodeURIComponent('/product-images/reels/')}*&select=id,status,published_at,created_at,notes,image_url&limit=500`);
+  const by = {}; for (const r of rows) (by[r.image_url] = by[r.image_url] || []).push(r);
+  const gone = Object.entries(by).filter(([u, xs]) => done(xs, u));
+  await del(gone.map(([u]) => decodeURIComponent(u.slice(PUB.length))));
+  for (const [, xs] of gone) for (const x of xs) await sbPatch(`posts?id=eq.${x.id}`, { image_url: null, notes: [x.notes, NOTE].filter(Boolean).join('\n').slice(0, 1500) });
+  // ReadLab: shop_state readlab (คลิปอยู่โฟลเดอร์ readlab/)
+  let rl = 0;
+  const rr = await sb('shop_state?id=eq.readlab&select=data'); const D = rr?.[0]?.data;
+  if (D && Array.isArray(D.posts)) {
+    const g = {}; for (const x of D.posts) if (x.video_url) (g[x.video_url] = g[x.video_url] || []).push(x);
+    const old = Object.entries(g).filter(([u, xs]) => done(xs, u));
+    if (old.length) {
+      await del(old.map(([u]) => decodeURIComponent(u.slice(PUB.length))));
+      const urls = new Set(old.map(([u]) => u)); const cur = (await sb('shop_state?id=eq.readlab&select=data'))?.[0]?.data || D;
+      for (const x of cur.posts || []) if (urls.has(x.video_url)) { x.video_url = null; x.media_removed = true; rl++; }
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'readlab', data: cur, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
+    }
+  }
+  return { ok: true, sheetlab: gone.length, readlab: rl };
+}
 // สร้างรูป 1 รูปจาก OpenAI (gpt-image*) หรือ Google (gemini-*image*) คืน {b64, mime} · โมเดลที่ไม่รู้จักใช้ค่าตั้งต้น
 const IMG_MODEL_RE = /^(gpt-image|chatgpt-image|gemini-)[a-z0-9.\-]{0,40}$/;
 async function genImage({ model, prompt, quality }) {
@@ -700,9 +731,11 @@ export default async function handler(req, res) {
       if (cronOk(req)) { try { const { sendReviewRequests } = await import('../lib/reviews.js'); reviewmail = await sendReviewRequests(); } catch (e) { reviewmail = { ok: false, error: String(e.message || e) }; } }
       let feedcats = null; // หมวดสินค้าใหม่ที่ฟีด Google ยังจัดหมวดไม่ตรง → แจ้งคุณแดนในเช็คลิสต์ครั้งเดียวต่อหมวด
       if (cronOk(req)) { try { feedcats = await checkFeedCategories(); } catch (e) { feedcats = { ok: false, error: String(e.message || e) }; } }
+      let reelclean = null; // คลิปที่โพสต์แล้ว ลบออกจากคลังร้าน
+      if (cronOk(req)) { try { reelclean = await cleanupReels(); } catch (e) { reelclean = { ok: false, error: String(e.message || e) }; } }
       let adsdraft = null; // สินค้าเผยแพร่ใหม่ → ร่างแอดรอคุณแดนกดตกลง
       if (cronOk(req)) { try { adsdraft = await ensureAdDrafts(); } catch (e) { adsdraft = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft });
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft, reelclean });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -2192,7 +2225,7 @@ export default async function handler(req, res) {
         const item = { id: sid, name: T(body.name, 160), emoji: T(body.emoji, 4) || '📦', headline: T(body.headline, 200), desc: T(body.desc, 600), features: T(body.features, 1500), forwho: T(body.forwho, 600), price: Number(body.price) || 0, fullPrice: Number(body.fullPrice) || 0,
           note: T(body.note, 600), notion: /^https:\/\/(app\.)?notion\.(so|com)\//.test(String(body.notion || '')) ? T(body.notion, 300) : '', books, status: prev && prev.status === 'listed' ? 'listed' : 'pending', created_at: prev?.created_at || new Date().toISOString(), updated_at: new Date().toISOString() };
         const rest = items.filter((x) => x.id !== sid); rest.unshift(item); await save(rest);
-        if (!prev) await addTodo({ text: `ชุดใหม่พร้อมลงขาย "${item.name}" (${books.length} เล่ม) เปิดแท็บสินค้าและเซลเพจ → 📦 ชุดพร้อมลงขาย ตรวจราคาแล้วกด "ลงขายทั้งชุด"`, type: 'decide', from: 'factory', link: item.notion || null });
+        if (!prev) await addTodo({ text: `ชุดใหม่ "${item.name}" (${books.length} เล่ม) เข้าฉบับร่างแล้ว เปิดแท็บสินค้าและเซลเพจ → ฉบับร่าง ตรวจหน้าขายและราคา แล้วกด "เผยแพร่"`, type: 'decide', from: 'factory', link: item.notion || null });
         return res.status(200).json({ ok: true, item });
       }
       if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน' });
@@ -2202,6 +2235,7 @@ export default async function handler(req, res) {
       if (action === 'set_reject') { x.status = 'rejected'; await save(items); return res.status(200).json({ ok: true }); }
       return res.status(400).json({ ok: false, error: 'unknown action' });
     }
+    if (action === 'reel_cleanup') { if (!keyOk(req)) return res.status(401).json({ ok: false }); return res.status(200).json(await cleanupReels()); }
     if (action === 'storage_usage') { // ขนาดไฟล์ใน bucket product-images แยกตามโฟลเดอร์บนสุด (ดูว่าใกล้เต็มโควตาไหม)
       if (!keyOk(req) && !(req.headers.authorization && await verifyAdmin(req.headers.authorization))) return res.status(401).json({ ok: false });
       const H = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };

@@ -205,6 +205,7 @@ footer{padding:28px 0 110px;text-align:center}
 .adq-total{margin:0;font-size:15px}.adq-total b{font-size:18px}
 .adq-lbl{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
 .adq-imgs{display:flex;gap:6px;flex-wrap:wrap}.adq-pick{width:56px;height:56px;padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:none}.adq-pick img{width:100%;height:100%;object-fit:cover;display:block}.adq-pick.on{border-color:#EE4D2D}
+.pt-tab.newt:not([aria-selected="true"]){color:#B45309;font-weight:600}.pt-a.pub{color:var(--ok);font-weight:700}
 .seti{margin-bottom:14px;border:2px solid #EE4D2D}.seti-books{list-style:none;margin:12px 0;padding:0;display:grid;gap:6px}
 .seti-books li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:center}.seti-books img,.seti-noimg{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--bg);display:grid;place-items:center}
 .seti-t{display:grid;min-width:0}.seti-t b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2211,6 +2212,7 @@ function pHints(p){
     if(!(p.images||[]).length)h.push(['warn','ยังไม่มีรูปสินค้า']);
     if(pfmt(p)==='pdf'&&!(p.previews||[]).length)h.push(['warn','ยังไม่มีหน้าตัวอย่าง']);
   }
+  if(p.fresh&&!pub&&p.freshNote)h.unshift([/🎧/.test(p.freshNote)?'warn':'muted','✨ มาใหม่ · '+p.freshNote]);
   if(!h.length)h.push(pub?(prodStats(p).paid?['ok','พร้อมขาย']:['muted','พร้อมขาย · ยังไม่มียอดขาย']):['muted','ฉบับร่าง ลูกค้ายังไม่เห็น']);
   return h;
 }
@@ -2220,7 +2222,7 @@ function productRow(p){
   const hints=pHints(p),plans=bun?bundlePlans(p):[];
   const price=bun?(plans.length?(plans.length>1?baht(Math.min(...plans.map(x=>x.price)))+' - '+baht(Math.max(...plans.map(x=>x.price))):baht(plans[0].price)):'-'):baht(p.price);
   const full=!bun&&Number(p.fullPrice)>Number(p.price)?`<s class="fine">${baht(p.fullPrice)}</s>`:'';
-  const acts=bun?[['editProduct','แก้ไขชุด'],['viewPage','ดูเซลเพจ'],['copyLink','คัดลอกลิงก์']]:[['quickEdit',S.quick===p.id?'ปิดแก้ไขด่วน':'แก้ไขด่วน'],['editProduct','แก้ไขทั้งหมด'],['viewPage','ดูเซลเพจ']];
+  const acts=p.fresh&&!pub?[['togglePub','✅ เผยแพร่'],['viewPage','ดูเซลเพจ'],['editProduct',bun?'แก้ไขชุด':'แก้ไขทั้งหมด']]:bun?[['editProduct','แก้ไขชุด'],['viewPage','ดูเซลเพจ'],['copyLink','คัดลอกลิงก์']]:[['quickEdit',S.quick===p.id?'ปิดแก้ไขด่วน':'แก้ไขด่วน'],['editProduct','แก้ไขทั้งหมด'],['viewPage','ดูเซลเพจ']];
   return `<div class="pt-row${pub?'':' draft'}" data-q="${esc(pq(p))}">
     <div class="pt-prod">${pthumb(p)}<div class="pt-info">
       <b class="pt-name" title="${esc(p.name)}">${bun?'📦 ':''}${esc(p.name||'(ยังไม่มีชื่อ)')}</b>
@@ -2233,10 +2235,10 @@ function productRow(p){
     <div class="pt-price"><span class="pt-lbl">ราคา</span><b>${price}</b>${full}</div>
     <div class="pt-sales"><span class="pt-lbl">ยอดขาย</span><b>${st.paid}</b><span class="fine">${baht(st.revenue)}</span></div>
     <div class="pt-stat"><span class="badge ${pub?'ok':'gray'}">${pub?'ขายอยู่':'ฉบับร่าง'}</span>${(()=>{const ad=(ADA.items||[]).find(y=>y.productId===p.id&&['pending','failed','launching','live','paused'].includes(y.status));return ad?`<button class="pt-a" data-a="goAds">${ad.status==='live'?'📣 แอดกำลังวิ่ง':ad.status==='paused'?'📣 แอดหยุดไว้':'📣 แอดรอกดตกลง'}</button>`:'';})()}${bun?'':linkBadge(p)}${hints.map(x=>`<span class="pt-hint ${x[0]}">${x[0]==='bad'?'⚠️ ':x[0]==='warn'?'• ':x[0]==='ok'?'✓ ':''}${esc(x[1])}</span>`).join('')}</div>
-    <div class="pt-acts">${acts.map((a,i)=>`<button class="pt-a${i===1?' dt':''}" data-a="${a[0]}" data-id="${p.id}">${i===0&&!bun?(S.quick===p.id?'ปิด':'แก้ไขด่วน'):a[1]}</button>`).join('')}
+    <div class="pt-acts">${acts.map((a,i)=>`<button class="pt-a${a[0]==='editProduct'&&i>0?' dt':''}${a[0]==='togglePub'?' pub':''}" data-a="${a[0]}" data-id="${p.id}">${a[0]==='quickEdit'?(S.quick===p.id?'ปิด':'แก้ไขด่วน'):a[1]}</button>`).join('')}
       <button class="pt-a" data-a="pmore" data-id="${p.id}" aria-expanded="${more}">ดูเพิ่มเติม ${more?'▴':'▾'}</button>
       ${more?`<div class="pt-menu">
-        <button class="pt-a mo" data-a="${acts[1][0]}" data-id="${p.id}">${acts[1][1]}</button>
+        ${(acts.find((x,i)=>x[0]==='editProduct'&&i>0))?`<button class="pt-a mo" data-a="editProduct" data-id="${p.id}">${bun?'แก้ไขชุด':'แก้ไขทั้งหมด'}</button>`:''}
         ${bun?'':`<button class="pt-a" data-a="copyLink" data-id="${p.id}">คัดลอกลิงก์เซลเพจ</button><button class="pt-a" data-a="dupProduct" data-id="${p.id}">ทำสำเนา</button>`}
         <button class="pt-a" data-a="togglePub" data-id="${p.id}">${pub?'เปลี่ยนเป็นฉบับร่าง':'เผยแพร่'}</button>
         ${!bun&&pub?`<button class="pt-a" data-a="adsDraftOne" data-id="${p.id}">📣 ทำแอดสินค้านี้</button>`:''}
@@ -2369,7 +2371,28 @@ const FAC={jobs:null,loading:false,busy:''};
 function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));FAC.global=all.filter(x=>x.lang==='en'&&['global_pending','global'].includes(x.listing));}).catch(()=>{FAC.jobs=[];FAC.queue=[];FAC.global=[];}).then(()=>{FAC.loading=false;render(true);});}
 /* 📦 ชุดพร้อมลงขาย: ชุดที่คิวหนังสือบนคอมคุณแดนผลิตเสร็จ (ไฟล์อัปขึ้นคลังแล้ว) กดลงขายทั้งชุดครั้งเดียว: สร้างเล่มที่ยังไม่มี + สร้างชุด */
 const SETI={items:null,loading:false,busy:''};
-function loadSets(){if(SETI.loading)return;SETI.loading=true;adminApi('/api/content?action=set_list').then(j=>{SETI.items=j&&j.ok?j.items:[];}).catch(()=>{SETI.items=[];}).then(()=>{SETI.loading=false;render(true);});}
+function loadSets(){if(SETI.loading)return;SETI.loading=true;adminApi('/api/content?action=set_list').then(j=>{SETI.items=j&&j.ok?j.items:[];}).catch(()=>{SETI.items=[];}).then(()=>{SETI.loading=false;setAutoImport();render(true);});}
+/* ชุดที่ส่งมาจากคอม: สร้างเป็นฉบับร่างในแท็บ "มาใหม่" ทันทีที่เปิดหลังบ้าน (ราคาตามที่ทีมเสนอ ขายเฉพาะในชุด) คุณแดนตรวจแล้วกดเผยแพร่เอง */
+SETI.auto={};
+function setAutoImport(){if(!sbSession||!D.products.length)return;
+  for(const x of (SETI.items||[]).filter(y=>y.status==='pending'&&!SETI.auto[y.id])){SETI.auto[x.id]=1;
+    const sum=x.books.reduce((a,b)=>{const ex=setMatch(b);return a+(ex?Number(ex.price)||0:Number(b.price)||0);},0);
+    setListRun(x,{price:Number(x.price)||sum,full:sum,solo:false,pub:false,auto:true}).then(()=>{toast('📦 ชุดใหม่ "'+x.name+'" เข้าแท็บมาใหม่แล้ว ตรวจแล้วกดเผยแพร่');SETI.items=(SETI.items||[]).filter(y=>y.id!==x.id);render(true);}).catch(e=>{console.error(e);delete SETI.auto[x.id];});}}
+function setListRun(x,{price,full,solo,pub,auto}){
+  const old=D.products.find(p=>isBundle(p)&&p.fromSet===x.id); // กันสร้างซ้ำ (เปิดหลายแท็บ)
+  if(old)return adminPost('/api/content?action=set_done',{id:x.id,bundle_id:old.id});
+  const now=Date.now(),ids=[];let n=0;const audio=x.books.filter(b=>b.audio&&!setMatch(b)).length;
+  for(const b of x.books){const ex=setMatch(b);if(ex){ids.push(ex.id);continue;}if(!b.file_url)continue;
+    const p=Object.assign(blankProduct(),{id:'p'+(now+n++).toString(36),name:b.name||b.title,slug:setSlug(b.title||b.name),kind:'book',headline:b.title||b.name,desc:b.desc||'',price:b.price||0,fullPrice:0,features:b.features||'',forwho:b.forwho||'',specs:b.specs||'',link:b.file_url,cat:CATS[b.cat]?b.cat:'',images:b.cover?[b.cover]:[],previews:b.previews||[],status:solo?'published':'draft',publishedAt:solo?now:0,fromSet:x.id});
+    D.products.push(p);ids.push(p.id);}
+  const first=x.books[0]&&(setMatch(x.books[0])||{}),cover=(x.books.find(b=>b.cover)||{}).cover||((first.images||[])[0])||'';
+  const fp=full>price?full:0;
+  const bd=Object.assign(blankBundle(),{id:'b'+now.toString(36),name:x.name,slug:setSlug(x.name),headline:x.headline||x.name,desc:x.desc||'',items:ids,status:pub?'published':'draft',publishedAt:pub?now:0,planDefault:'basic',price,fullPrice:fp,images:cover?[cover]:[],faq:'',reviews:'',
+    fromSet:x.id,fresh:!pub,freshNote:[`${ids.length} เล่ม · เล่มใหม่ขายเฉพาะในชุด`,x.note||'',audio?`🎧 ${audio} เล่มมีไฟล์เสียงผ่าน QR → อัป mp3 ขึ้น Google Drive และแชร์ก่อนเผยแพร่`:''].filter(Boolean).join(' · ')});
+  bd.plans=bd.plans.map(pl=>pl.key==='basic'?Object.assign({},pl,{name:'ครบชุด '+ids.length+' เล่ม',on:true,price,fullPrice:fp,features:x.features||pl.features}):Object.assign({},pl,{on:false}));
+  D.products.push(bd);save();clearTimeout(saveTimer);
+  return flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=set_done',{id:x.id,bundle_id:bd.id});}).then(()=>{SETI.items=(SETI.items||[]).map(y=>y.id===x.id?Object.assign({},y,{status:'listed'}):y);});
+}
 // จับคู่เล่มในชุดกับสินค้าที่ร้านมีอยู่แล้ว (ไม่สร้างซ้ำ) จากคำสำคัญ match
 function setMatch(b){if(!b.match)return null;const m=String(b.match).toLowerCase();return D.products.find(p=>!isBundle(p)&&String(p.name).toLowerCase().includes(m))||null;}
 function setImportBox(){
@@ -2764,14 +2787,14 @@ function productsTab(){
     if(ADA.items===null&&!ADA.loading)loadAdsAuto();
     const adFix=ADST.d&&ADST.d.ads?ADST.d.ads.filter(a=>a.group==='fix').length+(ADST.d.access&&!ADST.d.access.ok&&ADST.d.access.reason==='account'?1:0):0;
     const adN=(ADA.items||[]).filter(x=>['pending','failed','launching','live','paused'].includes(x.status)).length,adWait=(ADA.items||[]).filter(x=>['pending','failed'].includes(x.status)).length;
-    const tabs=[['all','ทั้งหมด',all.length],['live','ขายอยู่',all.filter(x=>x.status==='published').length],['draft','ฉบับร่าง',all.filter(x=>x.status!=='published').length],['fix','ต้องแก้ไข',all.filter(pNeedsFix).length]];
-    let list=all.filter(x=>st==='all'||(st==='live'?x.status==='published':st==='draft'?x.status!=='published':pNeedsFix(x))).filter(x=>k==='all'||pfmt(x)===k);
+    const tabs=[['all','ทั้งหมด',all.length],['live','ขายอยู่',all.filter(x=>x.status==='published').length],['draft','ฉบับร่าง',all.filter(x=>x.status!=='published').length],['new','✨ มาใหม่',all.filter(x=>x.fresh&&x.status!=='published').length],['fix','ต้องแก้ไข',all.filter(pNeedsFix).length]];
+    let list=all.filter(x=>st==='all'||(st==='live'?x.status==='published':st==='draft'?x.status!=='published':st==='new'?(x.fresh&&x.status!=='published'):pNeedsFix(x))).filter(x=>k==='all'||pfmt(x)===k);
     const so=S.psort||'new';
     if(so==='sales')list=list.slice().sort((a,b)=>prodStats(b).paid-prodStats(a).paid);
     else if(so==='rev')list=list.slice().sort((a,b)=>prodStats(b).revenue-prodStats(a).revenue);
     else if(so==='hi'||so==='lo'){const pr=x=>isBundle(x)?Math.min(...bundlePlans(x).map(y=>y.price),1e9):Number(x.price)||0;list=list.slice().sort((a,b)=>so==='hi'?pr(b)-pr(a):pr(a)-pr(b));}
     const shown=list.filter(x=>!q||pq(x).includes(q));
-    const tabBar=`<div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='fix'&&t[2]?' warn':''}" data-a="pstat" data-v="${t[0]}" aria-selected="${st===t[0]}">${t[1]} (${t[2]})</button>`).join('')}<button role="tab" class="pt-tab${adWait||adFix?' warn':''}" data-a="pstat" data-v="ads" aria-selected="${st==='ads'}">📣 แอด${ADST.d&&ADST.d.ads?` (${ADST.d.ads.length+adWait})`:` (${adN})`}${adFix?` <span class="badge bad">ต้องแก้ ${adFix}</span>`:''}${adWait?` <span class="badge warn">รอตกลง ${adWait}</span>`:''}</button></div>`;
+    const tabBar=`<div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='fix'&&t[2]?' warn':''}${t[0]==='new'&&t[2]?' newt':''}" data-a="pstat" data-v="${t[0]}" aria-selected="${st===t[0]}">${t[1]} (${t[2]})</button>`).join('')}<button role="tab" class="pt-tab${adWait||adFix?' warn':''}" data-a="pstat" data-v="ads" aria-selected="${st==='ads'}">📣 แอด${ADST.d&&ADST.d.ads?` (${ADST.d.ads.length+adWait})`:` (${adN})`}${adFix?` <span class="badge bad">ต้องแก้ ${adFix}</span>`:''}${adWait?` <span class="badge warn">รอตกลง ${adWait}</span>`:''}</button></div>`;
     if(st==='ads')return `<div class="pt-card">${tabBar}<div style="padding:14px 0 6px">${adsStatusBox()}</div></div>`;
     return `<div class="pt-card">
     ${tabBar}
@@ -2784,6 +2807,7 @@ function productsTab(){
     ${all.length?`<div class="pt-table" id="plist">
       <div class="pt-th"><span>สินค้า</span><span>ราคา</span><span>ยอดขาย</span><span>สถานะ / คำแนะนำ</span><span>การดำเนินการ</span></div>
       ${list.map(productRow).join('').replace(/<div class="pt-row([^"]*)" data-q="([^"]*)"/g,(m,c,dq)=>q&&!dq.includes(q)?`<div class="pt-row${c}" hidden data-q="${dq}"`:m)}
+      ${st==='new'&&shown.length?'<p class="fine" style="padding:8px 14px 0;margin:0">ของใหม่ที่ทีมหรือโรงงานเตรียมไว้ให้ (ยังเป็นฉบับร่าง ลูกค้ายังไม่เห็น) กด "ดูเซลเพจ" ตรวจหน้าขายและราคา แล้วกด ✅ เผยแพร่</p>':''}
       <p class="fine pt-none" id="pnone" ${shown.length?'hidden':''}>ไม่พบสินค้า${q?'ที่ค้นหา':'ในแท็บนี้'}</p>
     </div>`:`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าแรก แล้วระบบจะสร้างเซลเพจและลิงก์สำหรับแอดให้</p><button class="btn btn-dark btn-sm" data-a="newProduct">เพิ่มสินค้าใหม่</button></div>`}
   </div>`;})()}
@@ -3737,6 +3761,7 @@ function todoOpenCount(){return (TODO.items||[]).filter(i=>!i.done_at).length+(T
 const TODO_FROM={manager:'พี่ต้น (รายงานวันจันทร์)',plan:'พี่ต้น (ประชุมทีมวันอาทิตย์)',owner:'คุณแดนเพิ่มเอง',community:'น้องคอม',analyst:'น้องบูสต์',factory:'โรงงาน',guard:'พี่การ์ด (ตรวจระบบ)',market:'พี่มาร์เก็ต (วิจัยตลาด)',clip:'น้องคลิป',hr:'พี่เอชอาร์',writer:'น้องปากกา',designer:'น้องกราฟิก',trend:'น้องเทรนด์',product:'พี่โปร',finance:'พี่บัญชี'};
 function todoTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
+  if(SETI.items===null&&!SETI.loading)loadSets();
   const items=TODO.items||[];const open=items.filter(i=>!i.done_at),done=items.filter(i=>i.done_at);
   const fmt=d=>d?new Date(d).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
   const who=i=>i.from==='plan'?'manager':i.from==='owner'?'manual':(TEAM[i.from]?i.from:'manager');
@@ -4430,21 +4455,8 @@ function act(a,el){
     case 'setList':{const x=(SETI.items||[]).find(y=>y.id===id);if(!x)break;
       const price=Number($('#seti-p-'+id).value),full=Number($('#seti-f-'+id).value)||0,solo=$('#seti-solo-'+id).checked,pub=$('#seti-pub-'+id).checked;
       if(!(price>=1)){toast('ใส่ราคาชุดก่อน');break;}
-      if(!confirm(`ลงขาย "${x.name}"\nราคาชุด ${baht(price)}${full>price?' (ขีดฆ่า '+baht(full)+')':''}\n${solo?'ขายแยกเล่มด้วย':'ขายเป็นชุดอย่างเดียว'} · ${pub?'เผยแพร่ทันที':'เก็บเป็นฉบับร่าง'}`))break;
       SETI.busy=id;render(true);
-      const now=Date.now(),ids=[];let n=0;
-      const miss=x.books.filter(b=>!setMatch(b)&&!b.file_url);if(miss.length&&!confirm(`มี ${miss.length} เล่มที่ไม่มีไฟล์และไม่เจอในร้าน (${miss.map(b=>b.name||b.title).join(', ')}) จะข้ามเล่มนี้ไป ทำต่อไหม?`)){SETI.busy='';render(true);break;}
-      for(const b of x.books){const ex=setMatch(b);if(ex){ids.push(ex.id);continue;}if(!b.file_url)continue;
-        const p=Object.assign(blankProduct(),{id:'p'+(now+n++).toString(36),name:b.name||b.title,slug:setSlug(b.title||b.name),kind:'book',headline:b.title||b.name,desc:b.desc||'',price:b.price||0,fullPrice:0,features:b.features||'',forwho:b.forwho||'',specs:b.specs||'',link:b.file_url,cat:CATS[b.cat]?b.cat:'',images:b.cover?[b.cover]:[],previews:b.previews||[],status:solo?'published':'draft',publishedAt:solo?now:0});
-        D.products.push(p);ids.push(p.id);}
-      const first=x.books[0]&&(setMatch(x.books[0])||{}),cover=(x.books.find(b=>b.cover)||{}).cover||((first.images||[])[0])||'';
-      const bd=Object.assign(blankBundle(),{id:'b'+now.toString(36),name:x.name,slug:setSlug(x.name),headline:x.headline||x.name,desc:x.desc||'',items:ids,status:pub?'published':'draft',publishedAt:pub?now:0,planDefault:'basic',
-        price,fullPrice:full>price?full:0,images:cover?[cover]:[],faq:'',reviews:''});
-      bd.plans=bd.plans.map(pl=>pl.key==='basic'?Object.assign({},pl,{name:'ครบชุด '+ids.length+' เล่ม',on:true,price,fullPrice:full>price?full:0,features:x.features||pl.features}):Object.assign({},pl,{on:false}));
-      D.products.push(bd);save();clearTimeout(saveTimer);
-      flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=set_done',{id,bundle_id:bd.id});})
-        .then(()=>{SETI.busy='';SETI.items=null;loadSets();toast(pub?'📦 ลงขายชุดแล้ว':'📦 สร้างชุดแล้ว (ฉบับร่าง) เผยแพร่ได้เมื่อพร้อม');S.pstat='all';render(true);})
-        .catch(e=>{SETI.busy='';toast('ลงขายไม่สำเร็จ: '+(e.message||e)+' ลองกดใหม่');render(true);});break;}
+      setListRun(x,{price,full,solo,pub}).then(()=>{toast(pub?'📦 ลงขายชุดแล้ว':'📦 ชุดอยู่ในแท็บ "มาใหม่" แล้ว ตรวจแล้วกดเผยแพร่');S.pstat=pub?'all':'new';}).catch(e=>toast('ไม่สำเร็จ: '+(e.message||e)+' ลองกดใหม่')).then(()=>{SETI.busy='';render(true);});break;}
     case 'goAds':S.tab='products';S.pstat='ads';S.edit=null;render(false);break;
     case 'adsRefresh':ADA.items=null;loadAdsAuto();render(true);break;
     case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
@@ -4475,7 +4487,7 @@ function act(a,el){
     case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}
-    case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published'&&!p.publishedAt){p.publishedAt=Date.now();adDraftSoon(p.id);}save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
+    case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published')delete p.fresh;if(p.status==='published'&&!p.publishedAt){p.publishedAt=Date.now();adDraftSoon(p.id);}save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
     case 'dupProduct':{
       const p=getProduct(id);let slug=p.slug+'-copy',n=2;while(slugTaken(slug))slug=p.slug+'-copy'+n++;
       const nid='p'+Date.now().toString(36);
