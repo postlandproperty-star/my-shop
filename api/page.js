@@ -18,12 +18,13 @@ const html = readFileSync(join(process.cwd(), 'src', 'index.html'), 'utf8');
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ข้อมูลสินค้าแบบที่ Google อ่านได้ (ผลค้นหาแสดงราคา/มีของ) ชุดหนังสือใช้ช่วงราคาของแพ็กเกจ
-function productLd(p, url, desc, img) {
+function productLd(p, url, desc, img, rv) {
   const plans = p.type === 'bundle' ? (p.plans || []).filter((x) => x.on !== false && Number(x.price) >= 1).map((x) => Number(x.price)) : [];
   const offers = plans.length > 1
     ? { '@type': 'AggregateOffer', priceCurrency: 'THB', lowPrice: Math.min(...plans), highPrice: Math.max(...plans), offerCount: plans.length, availability: 'https://schema.org/InStock', url }
     : { '@type': 'Offer', priceCurrency: 'THB', price: plans[0] || Number(p.price) || 0, availability: 'https://schema.org/InStock', url };
   const ld = { '@context': 'https://schema.org', '@type': 'Product', name: p.name, description: desc, brand: { '@type': 'Brand', name: 'SheetLab' }, url, ...(img ? { image: [img] } : {}), offers };
+  if (rv && rv.count) { ld.aggregateRating = { '@type': 'AggregateRating', ratingValue: rv.avg, reviewCount: rv.count, bestRating: 5, worstRating: 1 }; ld.review = rv.items.slice(0, 5).map((x) => ({ '@type': 'Review', reviewRating: { '@type': 'Rating', ratingValue: x.stars, bestRating: 5 }, author: { '@type': 'Person', name: x.name }, ...(x.text ? { reviewBody: x.text } : {}), datePublished: x.at })); }
   return `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
 }
 
@@ -59,6 +60,19 @@ export default async function handler(req, res) {
     const urls = ['/', ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
     res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
+  }
+  if (req.query.review) { // หน้ารีวิวจากลิงก์ในอีเมล (ลายเซ็นต่อออเดอร์) ไม่ให้ Google เก็บ
+    const { tokenOk, loadReviews, reviewPage } = await import('../lib/reviews.js');
+    const o = String(req.query.o || ''), t = String(req.query.t || '');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Robots-Tag', 'noindex');
+    const bad = (m) => res.status(404).send(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:sans-serif;padding:24px">${m} <a href="${NEW_SITE}">กลับหน้าร้าน</a></body>`);
+    if (!/^[A-Za-z0-9_-]{6,200}$/.test(o) || !tokenOk(o, t)) return bad('ลิงก์รีวิวไม่ถูกต้องหรือหมดอายุ');
+    const rows = await sbSelect(`orders?session_id=eq.${encodeURIComponent(o)}&status=eq.paid&select=session_id,name,product_id,product_name`).catch(() => []);
+    if (!rows.length) return bad('ไม่พบคำสั่งซื้อนี้');
+    const shop = await loadShop().catch(() => ({ products: [] }));
+    const prod = shop.products.find((x) => x.id === rows[0].product_id);
+    const rv = await loadReviews();
+    return res.status(200).send(reviewPage({ product: prod ? prod.name : rows[0].product_name, order: rows[0], token: t, stars: req.query.s, existing: rv.list.find((x) => x.order === o), site: NEW_SITE }));
   }
   const draft = String(req.query.draft || '');
   if (/^[a-z0-9-]{3,60}$/.test(draft)) { // หน้าร่าง /draft/<ชื่อ>: ไม่มีลิงก์จากหน้าร้าน และบอกเครื่องมือค้นหาไม่ให้เก็บ
@@ -108,12 +122,12 @@ export default async function handler(req, res) {
       out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
     }
     // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
-    const [qz, ar] = await Promise.all([loadQuizzes(), loadArticles()]);
+    const [qz, ar, rvAll] = await Promise.all([loadQuizzes(), loadArticles(), import('../lib/reviews.js').then((m) => m.loadReviews().then((d) => m.reviewSummary(d.list))).catch(() => ({}))]);
     const quizList = qz.map((q) => ({ slug: q.slug, title: q.title, cat: q.cat || '', n: q.questions.length }));
     const dp = dailyPick(qz); const daily = dp ? { q: dp.x.q, choices: dp.x.choices, answer: dp.x.answer, explain: dp.x.explain, slug: dp.quiz.slug, title: dp.quiz.title } : null;
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
-    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level }).replace(/<\//g, '<\\/');
+    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';
@@ -146,7 +160,7 @@ export default async function handler(req, res) {
         `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}">`,
         `<meta name="description" content="${esc(desc)}">`,
         `<link rel="canonical" href="${NEW_SITE}/p/${esc(p.slug)}">`,
-        productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img),
+        productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img, rvAll[p.id]),
       ].join('');
       out = out
         .replace(/<title>[^<]*<\/title>/, `<title>${esc(p.name)}</title>`)

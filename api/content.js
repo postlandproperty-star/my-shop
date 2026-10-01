@@ -561,7 +561,9 @@ export default async function handler(req, res) {
       let qr = null, leadmail = null;
       if (cronOk(req)) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
       if (cronOk(req)) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail });
+      let reviewmail = null;
+      if (cronOk(req)) { try { const { sendReviewRequests } = await import('../lib/reviews.js'); reviewmail = await sendReviewRequests(); } catch (e) { reviewmail = { ok: false, error: String(e.message || e) }; } }
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -1302,6 +1304,39 @@ export default async function handler(req, res) {
       log.push({ id: j.id, image_url: img, title: String(body.title || '').slice(0, 100), link, job: String(body.job || '').slice(0, 60), at: new Date().toISOString() });
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'pins', data: { list: log.slice(-500) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, pin_id: j.id });
+    }
+    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_mail') {
+      // รีวิวผู้ซื้อ: review_submit (สาธารณะ ต้องมีลายเซ็นออเดอร์) · reviews / review_hide (แอดมิน) · review_mail (แอดมิน/key ส่งอีเมลขอรีวิวทันที ?dry=1 ดูอย่างเดียว)
+      const RV = await import('../lib/reviews.js');
+      if (action === 'review_submit') {
+        if (req.method !== 'POST') return res.status(405).end();
+        const b = await readBody(req); const o = String(b.o || '');
+        if (!/^[A-Za-z0-9_-]{6,200}$/.test(o) || !RV.tokenOk(o, b.t)) return res.status(403).json({ ok: false, error: 'ลิงก์รีวิวไม่ถูกต้อง' });
+        const stars = Math.round(Number(b.stars)); if (!(stars >= 1 && stars <= 5)) return res.status(400).json({ ok: false, error: 'ให้ดาว 1-5' });
+        const rows = await sb(`orders?session_id=eq.${encodeURIComponent(o)}&status=eq.paid&select=session_id,name,product_id,product_name`);
+        if (!rows?.length) return res.status(404).json({ ok: false, error: 'ไม่พบคำสั่งซื้อ' });
+        const text = String(b.text || '').replace(/[<>]/g, '').replace(/\s+\n/g, '\n').trim().slice(0, 500);
+        const name = String(b.name || '').replace(/[<>]/g, '').trim().slice(0, 30) || RV.displayName(rows[0].name);
+        const d = await RV.loadReviews(); const now = new Date().toISOString();
+        const old = d.list.find((x) => x.order === o);
+        if (old) Object.assign(old, { stars, text, name, updated_at: now });
+        else d.list.push({ id: 'rv' + Date.now().toString(36), order: o, product_id: rows[0].product_id, product_name: rows[0].product_name, stars, text, name, status: 'live', created_at: now });
+        await RV.saveReviews(d);
+        if (stars <= 3 && !old) { try { await addTodo({ text: `รีวิว ${stars} ดาว "${rows[0].product_name}": ${text.slice(0, 120) || '(ไม่มีความเห็น)'} อ่านแล้วถ้าไม่เหมาะซ่อนได้ในแท็บสินค้า → ⭐ รีวิวลูกค้า หรือทักลูกค้าช่วยแก้ปัญหา`, type: 'decide', from: 'care' }); } catch (e) {} }
+        return res.status(200).json({ ok: true });
+      }
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (action === 'review_mail') {
+        if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+        return res.status(200).json(await RV.sendReviewRequests({ dry: !!req.query.dry }));
+      }
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const d = await RV.loadReviews();
+      if (action === 'reviews') return res.status(200).json({ ok: true, list: d.list.slice().reverse().slice(0, 300), sent: Object.keys(d.sent).length });
+      const b = await readBody(req); const r = d.list.find((x) => x.id === String(b.id || ''));
+      if (!r) return res.status(404).json({ ok: false, error: 'ไม่พบรีวิว' });
+      r.status = b.hidden ? 'hidden' : 'live'; r.updated_at = new Date().toISOString(); await RV.saveReviews(d);
+      return res.status(200).json({ ok: true, review: r });
     }
     if (action === 'factory_cfg') { // GET แอดมิน/key · POST เฉพาะคุณแดน {sets:[{id,name,emoji,goal,books:[{t,cat,pages,price,notes,match}]}], auto:{on,per_week,sets:[id]}}
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

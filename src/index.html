@@ -180,6 +180,11 @@ footer{padding:28px 0 110px;text-align:center}
 .fac{padding-top:16px}
 .kind-seg{display:inline-flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 0 10px}.kind-seg button{font:inherit;font-weight:600;border:0;background:transparent;border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--ink)}.kind-seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
 .gkit{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--bg)}.gsteps{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14px}.gsum{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:baseline;margin-bottom:6px}
+.st-rv{font-size:13px;color:var(--muted)}.st-rv b{color:#b7791f}
+.rv-sum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 12px}.rv-sum>b{font-size:34px;line-height:1}.rv-stars{color:#F5B301;letter-spacing:1px}
+.rv-list{display:grid;gap:10px}.rv-item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.rv-item p{margin:6px 0 4px;white-space:pre-wrap}
+.rvbox{margin:0 0 12px;padding:12px 14px}.rvbox summary{cursor:pointer;list-style:none}.rvbox summary::-webkit-details-marker{display:none}.rv-admin{display:grid;gap:8px;margin-top:10px}.rv-arow{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line);padding-top:8px}.rv-arow p{margin:4px 0 0;font-size:14px}.rv-arow.off{opacity:.5}
+.psearch{margin:0 0 8px}.ptag{background:#eef2ff;color:#3730a3}.ptag.cat{background:#f1f5f9;color:#475569}
 .facnotion{background:var(--bg);border-radius:10px;padding:8px 10px;margin:6px 0}
 .idea-bar{display:flex;gap:8px;margin:0 0 10px}.idea-bar input{flex:1;min-width:0}.idea-note{margin:-2px 0 10px;background:var(--bg);border-radius:10px;padding:8px 12px}
 .visits{margin-top:14px;border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}.vis-total{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:15px}.vis-total b{font-size:20px}
@@ -1468,6 +1473,7 @@ function bundleView(p){
     </section>
 
     ${reviews.length?`<section class="bx-sec"><h2>รีวิวจากคนที่ใช้จริง</h2><div class="chat">${reviews.map(r=>{const w=r[1]?r[0]:'',t=r[1]||r[0];return `<div class="msg">${w?`<p class="who">${esc(w)}</p>`:''}<div class="bub">${esc(t)}</div></div>`;}).join('')}</div></section>`:''}
+    ${rvSection(p,'bx-sec')}
     <section class="bx-sec"><h2>คำถามที่พบบ่อย</h2>${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}</section>
   </main>
   </div>
@@ -1525,6 +1531,13 @@ function shopHead(p){
    ชุดเด่นก่อน ตามด้วยเล่มเดี่ยว ทุกอย่างที่เผยแพร่ขึ้นเอง ถ้าเผยแพร่ไม่ถึง 2 รายการ หน้าแรกเปิดหน้าขายเลยเหมือนเดิม */
 const CATS={notion:'Notion Template',grammar:'Grammar',vocab:'คำศัพท์',listening:'Listening',reading:'Reading',mock:'ข้อสอบเสมือนจริง',ielts:'IELTS',tgat:'TGAT / A-Level',kp:'สอบ ก.พ.',speak:'สนทนา',work:'ภาษาอังกฤษทำงาน / เที่ยว',general:'ภาษาอังกฤษทั่วไป'};
 const STORE_MIN=2,CHAT_URL='https://m.me/1264839566720049';
+const REVIEWS=(()=>{try{return (window.__SHOP__&&window.__SHOP__.reviews)||{};}catch(e){return {};}})(); // รีวิวจากผู้ซื้อจริง {productId:{avg,count,items}}
+const starStr=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
+const rvLine=p=>{const r=REVIEWS[p.id];return r&&r.count?`<span class="st-rv" aria-label="คะแนน ${r.avg} จาก 5 จาก ${r.count} รีวิว"><b>★ ${r.avg.toFixed(1)}</b> (${r.count})</span>`:'';};
+function rvSection(p,cls){const r=REVIEWS[p.id];if(!r||!r.count)return '';
+  return `<section class="${cls}"><div class="${cls==='section'?'wrap':''}"><h2>รีวิวจากผู้ซื้อจริง</h2>
+    <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ทุกรีวิวมาจากคนที่ซื้อจริง</span></div>
+    <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
 const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
 const DAILY=(()=>{try{return (window.__SHOP__&&window.__SHOP__.daily)||null;}catch(e){return null;}})(),LEVELQ=(()=>{try{return (window.__SHOP__&&window.__SHOP__.level)||null;}catch(e){return null;}})();
@@ -1553,6 +1566,7 @@ function storeView(){
     return `<a class="st-card" href="/p/${esc(p.slug)}" data-go="${esc(p.id)}">
       <span class="st-cover">${img?`<img src="${esc(img)}" alt="" loading="lazy" width="600" height="600">`:cover(p.color,p.kind||'other')}${hot.includes(p.id)?'<em class="st-badge hot">ขายดี</em>':fresh(p)?'<em class="st-badge">ใหม่</em>':''}</span>
       <b class="st-name">${esc(p.name)}</b>
+      ${rvLine(p)}
       <span class="st-price">${free(p)?'<strong>ฟรี</strong>':`<strong>${baht(pr)}</strong>${full>pr?` <s>${baht(full)}</s>`:''}${off?` <span class="st-off">−${off}%</span>`:''}`}</span>
       ${n>=SOLD_MIN?`<span class="st-meta">ขายแล้ว ${n.toLocaleString('th-TH')} ชิ้น</span>`:''}
       ${b?`<span class="st-inb">มีในชุด ${esc(String(b.name).replace(/^ชุด\s*/,''))}</span>`:''}
@@ -1744,6 +1758,7 @@ function shopView(){
     ${p.terms?`<p class="fine terms">${esc(p.terms)}</p>`:''}
   </div></section>
 
+  ${rvSection(p,'section')}
   <section class="section"><div class="wrap">
     <h2>คำถามที่พบบ่อย</h2>
     ${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}
@@ -1964,10 +1979,15 @@ function linkBadge(p){const c=linkStatus[p.id];if(!c)return '';const cls=c.pendi
 function linkCheckMsg(id){const c=S.linkCheck;if(!c||c.id!==id)return '';return `<div class="fine" style="margin-top:6px;color:${c.pending?'var(--muted)':c.ok?'var(--ok)':'var(--bad)'}">${esc(c.text)}${!c.pending&&c.url?` · <a href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">เปิดดู</a>`:''}</div>`;}
 const prodKpis=a=>`<div class="prod-kpis">${a.map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>`;
 const prodLink=p=>`<div class="prod-link"><code title="${esc(DOMAIN+p.slug)}">${esc(DOMAIN.replace(/^https?:\/\//,'')+p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอกลิงก์</button></div>`;
+/* ป้ายประเภทสินค้า (คิดจากข้อมูลจริง ไม่ต้องกรอกเอง) + ข้อความสำหรับค้นหาในแท็บสินค้า */
+const PFMT={pdf:['📄','PDF'],notion:['📒','Notion'],bundle:['📦','ชุด']};
+const pfmt=p=>isBundle(p)?'bundle':(isNotion(p.link)||p.cat==='notion')?'notion':'pdf';
+const ptags=p=>{const f=PFMT[pfmt(p)];return `<span class="badge ptag">${f[0]} ${f[1]}</span>${p.cat&&CATS[p.cat]&&p.cat!=='notion'?`<span class="badge ptag cat">#${esc(CATS[p.cat])}</span>`:''}`;};
+const pq=p=>[p.name,p.headline,PFMT[pfmt(p)][1],p.cat&&CATS[p.cat]||'',p.slug,p.status==='published'?'เผยแพร่':'ร่าง'].join(' ').toLowerCase();
 function productRow(p){
   if(isBundle(p)){const st=prodStats(p),pub=p.status==='published',bk=bundleBooks(p),miss=bk.filter(b=>!b.link).length;
-    return `<div class="prod" style="--c:${esc(p.color)}"><b class="prod-name">📦 ${esc(p.name)}</b>
-    <div class="prod-badges"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span><span class="badge">ชุด ${bk.length} เล่ม</span>${p.sell&&p.sell!=='both'?`<span class="badge">${esc(SELL[p.sell]?SELL[p.sell][0]:'')}</span>`:''}</div>
+    return `<div class="prod" style="--c:${esc(p.color)}" data-q="${esc(pq(p))}"><b class="prod-name">📦 ${esc(p.name)}</b>
+    <div class="prod-badges"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span>${ptags(p)}<span class="badge">ชุด ${bk.length} เล่ม</span>${p.sell&&p.sell!=='both'?`<span class="badge">${esc(SELL[p.sell]?SELL[p.sell][0]:'')}</span>`:''}</div>
     ${miss?`<div class="warnline">⚠️ ${miss} เล่มในชุดยังไม่มีลิงก์ไฟล์ ลูกค้าจ่ายแล้วจะได้ไฟล์ไม่ครบ</div>`:''}
     ${prodKpis([['แพ็กเกจ',bundlePlans(p).map(x=>baht(x.price)).join(' / ')||'ยังไม่ตั้ง'],['ออเดอร์',st.paid],['ยอดขาย',baht(st.revenue)]])}
     ${prodLink(p)}
@@ -1975,9 +1995,9 @@ function productRow(p){
   const st=prodStats(p);
   const pub=p.status==='published';
   const cf=S.confirm==='del:'+p.id;
-  return `<div class="prod" style="--c:${esc(p.color)}">
+  return `<div class="prod" style="--c:${esc(p.color)}" data-q="${esc(pq(p))}">
     <b class="prod-name">${esc(p.name)}</b>
-    <div class="prod-badges"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span>${p.sell&&p.sell!=='both'?`<span class="badge">${esc(SELL[p.sell]?SELL[p.sell][0]:'')}</span>`:''}${linkBadge(p)}<span class="fine">${esc(kindName(p.kind))}</span></div>
+    <div class="prod-badges"><span class="badge ${pub?'ok':'gray'}">${pub?'เผยแพร่แล้ว':'ฉบับร่าง'}</span>${ptags(p)}${p.sell&&p.sell!=='both'?`<span class="badge">${esc(SELL[p.sell]?SELL[p.sell][0]:'')}</span>`:''}${linkBadge(p)}</div>
     ${linkStatus[p.id]&&!linkStatus[p.id].ok&&!linkStatus[p.id].pending?`<div class="warnline">⚠️ ${esc(linkStatus[p.id].text)}</div>`:''}
     ${pub&&!linkStatus[p.id]&&!(p.link&&validLink(p.link))?`<div class="warnline">⚠️ ยังไม่ได้ใส่ลิงก์ไฟล์ (Google Drive) ลูกค้าจ่ายแล้วจะไม่ได้ไฟล์อัตโนมัติ</div>`:''}
     ${prodKpis([['ราคา',baht(p.price)],['ออเดอร์',st.paid],['ยอดขาย',baht(st.revenue)]])}
@@ -2368,6 +2388,15 @@ function propBox(){
   </section>`;
 }
 function propDone(id,applied){authFetch('/api/content?action=proposal_done',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,applied})}).then(j=>{if(j&&j.ok)PROP.list=(PROP.list||[]).filter(x=>x.id!==id);render(true);}).catch(()=>{});}
+const RVA={list:null,loading:false};
+function reviewBox(){
+  if(RVA.list===null&&!RVA.loading){RVA.loading=true;adminApi('/api/content?action=reviews').then(j=>{RVA.list=j&&j.ok?j.list:[];RVA.sent=j&&j.sent||0;}).catch(()=>{RVA.list=[];}).then(()=>{RVA.loading=false;render(true);});}
+  const L=RVA.list||[];const live=L.filter(x=>x.status!=='hidden');const avg=live.length?(live.reduce((a,x)=>a+x.stars,0)/live.length).toFixed(1):'-';
+  return `<details class="card rvbox" ${S.rvopen?'open':''}><summary data-a="rvopen"><b>⭐ รีวิวลูกค้า</b> <span class="fine">${L.length?`${live.length} รีวิวบนหน้าร้าน · เฉลี่ย ${avg}${L.length>live.length?` · ซ่อน ${L.length-live.length}`:''}`:'ยังไม่มีรีวิว ระบบส่งอีเมลขอรีวิว 3 วันหลังลูกค้าซื้อ'}${RVA.sent?` · ส่งอีเมลขอรีวิวแล้ว ${RVA.sent} ฉบับ`:''}</span></summary>
+    ${L.length?`<div class="rv-admin">${L.slice(0,60).map(x=>`<div class="rv-arow ${x.status==='hidden'?'off':''}"><div><span class="rv-stars">${starStr(x.stars)}</span> <b>${esc(x.name)}</b> <span class="fine">· ${esc(x.product_name||'')} · ${esc(String(x.created_at).slice(0,10))}</span>${x.text?`<p>${esc(x.text)}</p>`:''}</div>
+      <button class="btn ${x.status==='hidden'?'btn-dark':'btn-line'} btn-sm" data-a="rvhide" data-id="${esc(x.id)}" data-v="${x.status==='hidden'?'0':'1'}">${x.status==='hidden'?'แสดงอีกครั้ง':'ซ่อน'}</button></div>`).join('')}</div>`:''}
+  </details>`;
+}
 function productsTab(){
   if(S.edit)return productForm();
   return `
@@ -2378,8 +2407,11 @@ function productsTab(){
     <h3 class="h3" style="margin:0">สินค้าและเซลเพจ</h3>
     <span class="row" style="gap:6px"><button class="btn btn-dark btn-sm" data-a="newProduct">+ เล่มเดี่ยว</button><button class="btn btn-dark btn-sm" data-a="newBundle">+ สร้างชุด</button></span>
   </div>
-  <div class="pfilter" role="group" aria-label="แสดงสินค้า">${[['all','ทั้งหมด',D.products.length],['single','เล่มเดี่ยว',D.products.filter(x=>!isBundle(x)).length],['bundle','ชุด',D.products.filter(isBundle).length]].map(f=>`<button class="chip" data-a="pfilter" data-v="${f[0]}" aria-pressed="${(S.pkind||'all')===f[0]}">${f[1]} ${f[2]}</button>`).join('')}</div>
-  ${D.products.length?D.products.filter(x=>(S.pkind||'all')==='all'||((S.pkind==='bundle')===isBundle(x))).map(productRow).join(''):`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าแรก แล้วระบบจะสร้างเซลเพจและลิงก์สำหรับแอดให้</p><button class="btn btn-dark btn-sm" data-a="newProduct">เพิ่มสินค้าใหม่</button></div>`}
+  ${reviewBox()}
+  <input class="input psearch" type="search" data-psearch="1" placeholder="🔎 ค้นหาสินค้า เช่น Notion, IELTS, คำศัพท์" aria-label="ค้นหาสินค้า" value="${esc(S.pq||'')}">
+  <div class="pfilter" role="group" aria-label="แสดงสินค้า">${[['all','ทั้งหมด',D.products.length],['pdf','📄 PDF',D.products.filter(x=>pfmt(x)==='pdf').length],['notion','📒 Notion',D.products.filter(x=>pfmt(x)==='notion').length],['bundle','📦 ชุด',D.products.filter(isBundle).length]].filter(f=>f[0]==='all'||f[2]).map(f=>`<button class="chip" data-a="pfilter" data-v="${f[0]}" aria-pressed="${(S.pkind||'all')===f[0]}">${f[1]} ${f[2]}</button>`).join('')}</div>
+  <p class="fine" id="pnone" hidden>ไม่พบสินค้าที่ค้นหา</p>
+  ${D.products.length?D.products.filter(x=>{const k=S.pkind||'all';return k==='all'||(k==='single'?!isBundle(x):pfmt(x)===k);}).filter(x=>!S.pq||pq(x).includes(S.pq.toLowerCase().trim())).map(productRow).join(''):`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าแรก แล้วระบบจะสร้างเซลเพจและลิงก์สำหรับแอดให้</p><button class="btn btn-dark btn-sm" data-a="newProduct">เพิ่มสินค้าใหม่</button></div>`}
   <div class="card" style="margin-top:18px">
     <h3 class="h3">ข้อมูลร้าน</h3>
     <p class="muted" style="margin-bottom:12px">ข้อมูลทั้งหมดเก็บบน Supabase แก้ที่นี่แล้วลูกค้าทุกคนเห็นเหมือนกัน</p>
@@ -3743,6 +3775,8 @@ function act(a,el){
       S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');checkAllLinks();break;}
     case 'newProduct':S.draft=initDraft(blankProduct());S.edit='new';S.err='';render(false);break;
     case 'newBundle':S.draft=bundleDraft(null);S.edit='new';S.err='';render(false);break;
+    case 'rvopen':S.rvopen=!S.rvopen;break;
+    case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนรีวิวแล้ว ไม่แสดงบนหน้าร้าน':'แสดงรีวิวบนหน้าร้านแล้ว');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
     case 'bxItem':{const d=S.draft;const i=d.items.indexOf(id);if(i>=0){d.items.splice(i,1);if(d.freeItem===id)d.freeItem='';}else d.items.push(id);render(true);break;}
     case 'bxMove':{const d=S.draft,i=d.items.indexOf(id),j=i+Number(el.dataset.v);if(i>=0&&j>=0&&j<d.items.length){[d.items[i],d.items[j]]=[d.items[j],d.items[i]];}render(true);break;}
@@ -3841,6 +3875,7 @@ document.addEventListener('input',e=>{
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
+  if(ds.psearch){S.pq=t.value;const q=t.value.toLowerCase().trim();let n=0;document.querySelectorAll('.prod[data-q]').forEach(e=>{const ok=!q||e.dataset.q.includes(q);e.hidden=!ok;if(ok)n++;});const z=document.getElementById('pnone');if(z)z.hidden=n>0;}
   if(ds.fpub){FAC.pub=Object.assign(FAC.pub||{},{[ds.fpub]:t.value});}
   if(ds.gl){const [gid,gf]=ds.gl.split('|');FAC.gl=FAC.gl||{};FAC.gl[gid]=Object.assign(FAC.gl[gid]||{},{[gf]:t.value.trim()});}
   if(ds.cp){S.coverPrompt=t.value;}
