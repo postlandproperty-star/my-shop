@@ -241,6 +241,20 @@ async function saveDocs(links) { await sb('shop_state?on_conflict=id', { method:
 // เช็คลิสต์ของคุณแดน: งานที่ทีมขอให้เจ้าของทำเอง เก็บใน shop_state id=todo (data.items)
 async function loadTodo() { const rows = await sb('shop_state?id=eq.todo&select=data'); return rows?.[0]?.data?.items || []; }
 async function saveTodo(items) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'todo', data: { items: items.slice(0, 300) }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+// หมวดที่ฟีด Google (/feed.xml ใน api/page.js) จัดหมวดไว้แล้ว: notion → ซอฟต์แวร์ (5032) · หมวดชีท/หนังสือด้านล่าง → หนังสือ (784)
+const FEED_CATS = ['notion', 'grammar', 'vocab', 'listening', 'reading', 'mock', 'ielts', 'tgat', 'kp', 'speak', 'work', 'general', ''];
+async function checkFeedCategories() {
+  const shop = await loadShop();
+  const rows = await sb('shop_state?id=eq.feedcats&select=data'); const seen = new Set(rows?.[0]?.data?.seen || []);
+  const fresh = [...new Set(shop.products.filter((p) => p.status === 'published' && Number(p.price) >= 1).map((p) => String(p.cat || '')).filter((c) => !FEED_CATS.includes(c) && !seen.has(c)))];
+  for (const c of fresh) {
+    const names = shop.products.filter((p) => p.cat === c).map((p) => p.name).slice(0, 3).join(', ');
+    await addTodo({ text: `มีสินค้าหมวดใหม่ "${c}" (${names}) ขึ้น Google Shopping แล้วแต่ถูกจัดเป็นหมวด "หนังสือ" ไปก่อน บอก Claude ให้จัดหมวด Google ให้ตรง (เช่น คอร์สเรียน)`, type: 'do', from: 'manager' });
+    seen.add(c);
+  }
+  if (fresh.length) await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'feedcats', data: { seen: [...seen] }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  return { ok: true, fresh };
+}
 async function addTodo({ text, type = 'do', from = 'manager', link = null }) {
   const items = await loadTodo();
   const norm = (t) => String(t).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -595,7 +609,9 @@ export default async function handler(req, res) {
       if (cronOk(req)) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
       let reviewmail = null;
       if (cronOk(req)) { try { const { sendReviewRequests } = await import('../lib/reviews.js'); reviewmail = await sendReviewRequests(); } catch (e) { reviewmail = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail });
+      let feedcats = null; // หมวดสินค้าใหม่ที่ฟีด Google ยังจัดหมวดไม่ตรง → แจ้งคุณแดนในเช็คลิสต์ครั้งเดียวต่อหมวด
+      if (cronOk(req)) { try { feedcats = await checkFeedCategories(); } catch (e) { feedcats = { ok: false, error: String(e.message || e) }; } }
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
