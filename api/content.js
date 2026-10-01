@@ -2161,6 +2161,47 @@ export default async function handler(req, res) {
       const rid = await ownerReply(to, text);
       return res.status(200).json({ ok: true, to, name: MEMBER_TH[to], id: rid });
     }
+    if (action.startsWith('set_')) {
+      // ชุดขายที่ผลิตจากคิวหนังสือบนคอมคุณแดน (Cowork) → อัปไฟล์ขึ้นคลัง แล้วขึ้นการ์ด "📦 ชุดพร้อมลงขาย" ในแท็บสินค้า คุณแดนกดลงขายทั้งชุดครั้งเดียว
+      // shop_state id=set_imports · ทีม/สคริปต์ (key) อัปไฟล์และส่งข้อมูลได้ · ลงขาย/ปัดตกเฉพาะแอดมิน
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
+      const load = async () => { const r = await sb('shop_state?id=eq.set_imports&select=data'); return r?.[0]?.data?.items || []; };
+      const save = (items) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'set_imports', data: { items: items.slice(0, 30) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (action === 'set_list') return res.status(200).json({ ok: true, items: await load() });
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      const body = await readBody(req);
+      const sid = String(body.set || body.id || '').replace(/[^a-z0-9-]/gi, '').slice(0, 40);
+      if (action === 'set_uploadurl') {
+        if (!sid) return res.status(400).json({ ok: false, error: 'ต้องมี set' });
+        const safe = String(body.filename || 'file.pdf').replace(/[^A-Za-z0-9._/-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120) || 'file.pdf';
+        const path = `sets/${sid}/${safe}`;
+        const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', 'x-upsert': 'true' }, body: '{}' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status}` });
+        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
+      }
+      if (action === 'set_import') {
+        if (!sid || !Array.isArray(body.books) || !body.books.length) return res.status(400).json({ ok: false, error: 'ต้องมี id และ books' });
+        const own = `${SB_URL}/storage/v1/object/public/product-images/sets/${sid}/`;
+        const T = (v, n) => String(v || '').slice(0, n);
+        const books = body.books.slice(0, 15).map((b) => ({ key: T(b.key, 40), title: T(b.title, 160), name: T(b.name, 160), price: Math.max(0, Number(b.price) || 0), pages: Number(b.pages) || null, cat: T(b.cat, 20), match: T(b.match, 60),
+          file_url: String(b.file_url || '').startsWith(own) ? String(b.file_url) : '', cover: String(b.cover || '').startsWith(own) ? String(b.cover) : '', previews: (Array.isArray(b.previews) ? b.previews : []).map(String).filter((u) => u.startsWith(own)).slice(0, 6),
+          desc: T(b.desc, 600), features: T(b.features, 1500), forwho: T(b.forwho, 600), specs: T(b.specs, 600), audio: !!b.audio, drive: /^https:\/\/drive\.google\.com\//.test(String(b.drive || '')) ? T(b.drive, 200) : '' }));
+        const items = await load(); const prev = items.find((x) => x.id === sid);
+        const item = { id: sid, name: T(body.name, 160), emoji: T(body.emoji, 4) || '📦', headline: T(body.headline, 200), desc: T(body.desc, 600), features: T(body.features, 1500), forwho: T(body.forwho, 600), price: Number(body.price) || 0, fullPrice: Number(body.fullPrice) || 0,
+          note: T(body.note, 600), notion: /^https:\/\/(app\.)?notion\.(so|com)\//.test(String(body.notion || '')) ? T(body.notion, 300) : '', books, status: prev && prev.status === 'listed' ? 'listed' : 'pending', created_at: prev?.created_at || new Date().toISOString(), updated_at: new Date().toISOString() };
+        const rest = items.filter((x) => x.id !== sid); rest.unshift(item); await save(rest);
+        if (!prev) await addTodo({ text: `ชุดใหม่พร้อมลงขาย "${item.name}" (${books.length} เล่ม) เปิดแท็บสินค้าและเซลเพจ → 📦 ชุดพร้อมลงขาย ตรวจราคาแล้วกด "ลงขายทั้งชุด"`, type: 'decide', from: 'factory', link: item.notion || null });
+        return res.status(200).json({ ok: true, item });
+      }
+      if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน' });
+      const items = await load(); const x = items.find((y) => y.id === sid);
+      if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบชุดนี้' });
+      if (action === 'set_done') { x.status = 'listed'; x.bundle_id = String(body.bundle_id || '').replace(/[^a-z0-9]/gi, '').slice(0, 40); x.listed_at = new Date().toISOString(); await save(items); await logNote('factory', `คุณแดนลงขายชุดแล้ว: ${x.name}`); return res.status(200).json({ ok: true, item: x }); }
+      if (action === 'set_reject') { x.status = 'rejected'; await save(items); return res.status(200).json({ ok: true }); }
+      return res.status(400).json({ ok: false, error: 'unknown action' });
+    }
     if (action === 'capi_check') { // เช็คว่าใส่ FB_CAPI_TOKEN แล้วและใช้กับ Pixel ของร้านได้ (ไม่ส่งเหตุการณ์ซื้อปลอม)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
