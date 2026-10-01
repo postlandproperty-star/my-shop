@@ -53,6 +53,34 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
     return res.status(200).send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /draft/\n\nSitemap: ${NEW_SITE}/sitemap.xml\n`);
   }
+  if (seo === 'feed') { // ฟีดสินค้า Google Merchant Center: ทุกสินค้าที่เผยแพร่และมีราคา (สินค้าใหม่เข้าเองอัตโนมัติ) Google ดึงวันละครั้ง
+    const shop = await loadShop().catch(() => ({ products: [] }));
+    const x = (v) => String(v ?? '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const live = shop.products.filter((q) => q.status === 'published' && /^[a-z0-9-]+$/.test(q.slug || '') && Number(q.price) >= 1 && (q.images || []).length);
+    const notion = (q) => q.cat === 'notion' || /^notion-/.test(q.slug || '') || /Notion Template/i.test(q.specs || '');
+    const items = live.map((q) => {
+      const price = Number(q.price), full = Number(q.fullPrice) || 0, imgs = (q.images || []).filter((u) => /^https:\/\//.test(u));
+      const bundle = q.type === 'bundle';
+      const desc = [q.headline, q.desc].filter(Boolean).join(' · ').replace(/\s+/g, ' ').slice(0, 4900) || q.name;
+      return `  <item>
+    <g:id>${x(q.id)}</g:id>
+    <title>${x(String(q.name).slice(0, 150))}</title>
+    <description>${x(desc)}</description>
+    <link>${NEW_SITE}/p/${x(q.slug)}</link>
+    <g:image_link>${x(imgs[0])}</g:image_link>
+${imgs.slice(1, 10).map((u) => `    <g:additional_image_link>${x(u)}</g:additional_image_link>\n`).join('')}    <g:availability>in_stock</g:availability>
+    <g:price>${(full > price ? full : price).toFixed(2)} THB</g:price>
+${full > price ? `    <g:sale_price>${price.toFixed(2)} THB</g:sale_price>\n` : ''}    <g:condition>new</g:condition>
+    <g:brand>SheetLab</g:brand>
+    <g:identifier_exists>no</g:identifier_exists>
+    <g:product_type>${x(notion(q) ? 'Notion Template' : bundle ? 'ชุดชีทสรุป PDF' : 'ชีทสรุป PDF / หนังสือ TOEIC')}</g:product_type>
+    <g:google_product_category>${notion(q) ? '5032' : '784'}</g:google_product_category>
+${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:country>TH</g:country><g:service>ดาวน์โหลดทันที</g:service><g:price>0.00 THB</g:price></g:shipping>
+  </item>`;
+    });
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=600');
+    return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n<channel>\n  <title>SheetLab</title>\n  <link>${NEW_SITE}</link>\n  <description>ชีทสรุป TOEIC และ Notion Template</description>\n${items.join('\n')}\n</channel>\n</rss>\n`);
+  }
   if (seo === 'sitemap') { // รายการหน้าที่ลูกค้าเปิดได้ (เฉพาะสินค้าที่เผยแพร่แล้ว)
     const shop = await loadShop().catch(() => ({ products: [] }));
     const today = new Date().toISOString().slice(0, 10);

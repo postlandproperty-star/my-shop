@@ -13,6 +13,10 @@
       "destination": "/api/page?seo=sitemap"
     },
     {
+      "source": "/feed.xml",
+      "destination": "/api/page?seo=feed"
+    },
+    {
       "source": "/privacy",
       "destination": "/api/page?doc=privacy"
     },
