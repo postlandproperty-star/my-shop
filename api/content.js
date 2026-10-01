@@ -2195,15 +2195,17 @@ export default async function handler(req, res) {
         if (daily < 50 || daily > 2000) return res.status(400).json({ ok: false, error: 'งบต่อวันต้องอยู่ระหว่าง ฿50 - ฿2,000' });
         if (days < 1 || days > 30) return res.status(400).json({ ok: false, error: 'จำนวนวันต้อง 1-30 วัน' });
         const text = String(body.text || x.text).trim().slice(0, 1500), headline = String(body.headline || x.headline).trim().slice(0, 60);
+        const image = /^https:\/\/\S+$/.test(String(body.image || '')) ? String(body.image).slice(0, 500) : x.image;
+        const platforms = Array.isArray(body.platforms) ? body.platforms.filter((p) => ['facebook', 'instagram', 'threads'].includes(p)) : [];
         if (text.length < 20) return res.status(400).json({ ok: false, error: 'ข้อความแอดสั้นเกินไป' });
         const acc = await adsAccess(fb);
         if (!acc.ok) return res.status(400).json({ ok: false, error: acc.error, reason: acc.reason });
         const shop = await loadShop();
-        Object.assign(x, { text, headline, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() }); await saveAdsAuto(items);
+        Object.assign(x, { text, headline, image, platforms, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() }); await saveAdsAuto(items);
         try {
           const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency });
           const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
-          Object.assign(y, { text, headline, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad }, objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
+          Object.assign(y, { text, headline, image, platforms: r.platforms, note: r.note || null, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad }, objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
           await saveAdsAuto(cur);
           // แคมเปญในหลังบ้านร้าน (ชื่อเดียวกับ utm_campaign) ให้ตารางแคมเปญ/ยอดขายนับตรง
           try { const pr = await sb('shop_state?id=eq.private&select=data'); const data = pr?.[0]?.data || {}; data.campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
