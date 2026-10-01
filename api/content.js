@@ -175,6 +175,8 @@ async function crossToIg(fb, p, resume = '') {
   catch (e) { return `IG ไม่ผ่าน: ${String(e.message || e).slice(0, 200)}`; }
 }
 const IG_LINE = /^IG (✓|รอประมวลผล|ไม่ผ่าน).*$/m;
+const igOk = (notes) => /^IG ✓/m.test(String(notes || ''));
+async function igFollowers(fb) { if (!fb || !fb.igUserId) return null; try { const j = await fbGet(fb.igUserId, { fields: 'followers_count', access_token: fb.token }); return j.followers_count ?? null; } catch (e) { return null; } }
 const withIg = (notes, line) => (IG_LINE.test(notes || '') ? String(notes).replace(IG_LINE, line) : [notes, line].filter(Boolean).join('\n')).slice(0, 1500);
 // ReadLab: โพสต์ที่คุณแดนอนุมัติขึ้นเพจ/Threads ของ ReadLab เอง (บัญชีแยกจาก SheetLab ไม่เติมแฮชแท็ก SheetLab)
 // รอบอัตโนมัติไม่เกิน 2 ชิ้นต่อช่องทาง เรียงตามเวลาที่กำหนด (ไม่กำหนด = รอบถัดไป) · onlyId = คุณแดนกดโพสต์ตอนนี้
@@ -666,7 +668,7 @@ export default async function handler(req, res) {
         url: `${SITE}/p/${p.slug}`,
       }));
       const trend = await sb('posts?status=eq.note&kind=eq.trend&select=text,created_at&order=created_at.desc&limit=1');
-      return res.status(200).json({ ok: true, shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '', products }, recentPosts: recent, trendBrief: trend?.[0] || null, threadsReady: hasCh && thConn, threadsConnected: thConn });
+      return res.status(200).json({ ok: true, shop: { name: shop.settings.shopName || 'SheetLab', chatLink: shop.settings.chatLink || '', products }, recentPosts: recent, trendBrief: trend?.[0] || null, threadsReady: hasCh && thConn, threadsConnected: thConn, instagramConnected: !!(await loadFb().catch(() => null))?.igUserId });
     }
     if (action === 'drafts') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -811,7 +813,8 @@ export default async function handler(req, res) {
       const prev = new Date(Date.now() - 14 * 864e5).toISOString();
       const all = await sb(`orders?select=created_at,paid_at,product_id,product_name,amount,status,campaign,emailed_at,session_id,email&created_at=gte.${prev}&order=created_at.desc`);
       const hasCh = await channelCol();
-      const posts = await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,fb_post_id${hasCh ? ',channel,th_post_id' : ''}&created_at=gte.${prev}&order=created_at.desc`);
+      const posts = (await sb(`posts?select=id,status,kind,text,scheduled_at,published_at,fb_post_id,notes${hasCh ? ',channel,th_post_id' : ''}&created_at=gte.${prev}&order=created_at.desc`))
+        .map(({ notes, ...p }) => ({ ...p, ...(IG_LINE.test(notes || '') ? { instagram: igOk(notes) ? 'published' : String(notes).match(IG_LINE)[0].slice(0, 160) } : {}) })); // คลิปที่ลง IG Reels ด้วย
       const shop = await loadShop();
       const priv = await sb('shop_state?id=eq.private&select=data');
       const isTest = testOrder(shop.products || [], priv?.[0]?.data?.testEmails);
@@ -1009,7 +1012,8 @@ export default async function handler(req, res) {
             const dk = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); const cur = { ...(D.followers[dk] || {}) }; let changed = false;
             if (fbR) { try { const pg = await fbGet(fbR.pageId, { fields: 'followers_count,fan_count', access_token: fbR.token }); const n = pg.followers_count ?? pg.fan_count; if (n != null && n !== cur.fb) { cur.fb = n; changed = true; } } catch (e) { conn.fbErr = String(e.message || e).slice(0, 120); } }
             if (thR) { try { const u = await thGet(`${thR.userId}/threads_insights`, { metric: 'followers_count', access_token: thR.token }); const n = u.data?.[0]?.total_value?.value ?? u.data?.[0]?.values?.[0]?.value; if (n != null && n !== cur.th) { cur.th = n; changed = true; } } catch (e) { conn.thErr = String(e.message || e).slice(0, 120); } }
-            if (changed) { D.followers[dk] = { fb: cur.fb || 0, th: cur.th || 0 }; await save(); out.followers = Object.keys(D.followers).sort().slice(-30).map((d) => ({ date: d, ...D.followers[d] })); }
+            if (fbR && fbR.igUserId) { const n = await igFollowers(fbR); if (n != null && n !== cur.ig) { cur.ig = n; changed = true; } }
+            if (changed) { D.followers[dk] = { fb: cur.fb || 0, th: cur.th || 0, ...(cur.ig != null ? { ig: cur.ig } : {}) }; await save(); out.followers = Object.keys(D.followers).sort().slice(-30).map((d) => ({ date: d, ...D.followers[d] })); }
           }
           return res.status(200).json({ ...out, posts, connect: conn });
         }
@@ -1839,8 +1843,8 @@ export default async function handler(req, res) {
       brief3.forEach((b) => lines.push(`คุณแดนส่งโจทย์ใหม่ในห้องประชุม (${String(b.created_at).slice(0, 10)}): "${String(b.text || '').split('\n')[0].slice(0, 120)}" (ทีมพูดถึงได้ว่าใครจะรับไปทำ แต่ห้ามคุยรายละเอียดงานยาว)`));
       const health = notes.find((n) => n.kind === 'health');
       if (health) lines.push(`ผลตรวจระบบล่าสุด: ${String(health.text).split('\n')[0].slice(0, 100)}`);
-      const pub = await sb(`posts?status=eq.published&published_at=gte.${since}&select=channel,kind,text`);
-      if (pub.length) lines.push(`โพสต์ที่ขึ้นเพจ 24 ชม.: Facebook ${pub.filter((p) => (p.channel || 'facebook') === 'facebook').length} Threads ${pub.filter((p) => p.channel === 'threads').length} เช่น "${String(pub[0].text || '').slice(0, 50)}"`);
+      const pub = await sb(`posts?status=eq.published&published_at=gte.${since}&select=channel,kind,text,notes`);
+      if (pub.length) lines.push(`โพสต์ที่ขึ้นเพจ 24 ชม.: Facebook ${pub.filter((p) => (p.channel || 'facebook') === 'facebook').length} Threads ${pub.filter((p) => p.channel === 'threads').length}${pub.some((p) => igOk(p.notes)) ? ` Instagram Reels ${pub.filter((p) => igOk(p.notes)).length}` : ''} เช่น "${String(pub[0].text || '').slice(0, 50)}"`);
       const stuck = await sb(`posts?status=in.(needs_owner,failed)&select=status`);
       if (stuck.length) lines.push(`โพสต์ค้าง: รอคุณแดนอนุมัติ ${stuck.filter((p) => p.status === 'needs_owner').length} ล้มเหลว ${stuck.filter((p) => p.status === 'failed').length}`);
       const today = await sb(`posts?status=eq.approved&scheduled_at=gte.${new Date().toISOString()}&scheduled_at=lte.${new Date(now + 36e5 * 24).toISOString()}&select=channel,text,scheduled_at&order=scheduled_at.asc&limit=5`);
@@ -1922,9 +1926,10 @@ export default async function handler(req, res) {
       const queued = posts.filter((p) => p.status === 'approved' && p.scheduled_at >= nowIso && p.scheduled_at <= ahead);
       const campaigns = (priv?.[0]?.data?.campaigns || []).map((c) => ({ name: c.name, spend: Number(c.spend) || 0 }));
       // ผู้ติดตาม + เก็บประวัติรายวันไว้คำนวณเพิ่มขึ้นเทียบ 7 วันก่อน
-      let thF = null, fbF = null;
+      let thF = null, fbF = null, igF = null;
       try { let th = await loadThreads(); if (threadsConnected(th)) { th = await refreshIfNeeded(th); const u = await thGet(`${th.userId}/threads_insights`, { metric: 'followers_count', access_token: th.token }); thF = u.data?.[0]?.total_value?.value ?? u.data?.[0]?.values?.[0]?.value ?? null; } } catch (e) {}
-      try { const fb = await loadFb(); if (fb) { const pg = await fbGet(fb.pageId, { fields: 'followers_count,fan_count', access_token: fb.token }); fbF = pg.followers_count ?? pg.fan_count ?? null; } } catch (e) {}
+      let igOn = false;
+      try { const fb = await loadFb(); if (fb) { igOn = !!fb.igUserId; igF = await igFollowers(fb); const pg = await fbGet(fb.pageId, { fields: 'followers_count,fan_count', access_token: fb.token }); fbF = pg.followers_count ?? pg.fan_count ?? null; } } catch (e) {}
       const today = new Date(now + 7 * 3600e3).toISOString().slice(0, 10);
       const histRow = await sb('shop_state?id=eq.dash_hist&select=data'); const hist = histRow?.[0]?.data?.days || {};
       const weekAgo = Object.keys(hist).sort().filter((k) => k <= new Date(now + 7 * 3600e3 - 7 * 864e5).toISOString().slice(0, 10)).pop();
@@ -1952,16 +1957,16 @@ export default async function handler(req, res) {
       // ภาพถ่ายตัวเลขรายวัน (วันที่ไทย): เก็บค่าที่คำนวณย้อนหลังไม่ได้ ไว้เทียบกับเมื่อวาน
       const spendNow = campaigns.reduce((a, c) => a + c.spend, 0), queuedNow = queued.length;
       const yKey = Object.keys(hist).sort().filter((k) => k < today).pop(); const yd = yKey ? hist[yKey] : null;
-      hist[today] = { ...(hist[today] || {}), ...(thF != null ? { th: thF } : {}), ...(fbF != null ? { fb: fbF } : {}), spend: spendNow, queued: queuedNow, todo: openTodo.length };
+      hist[today] = { ...(hist[today] || {}), ...(thF != null ? { th: thF } : {}), ...(fbF != null ? { fb: fbF } : {}), ...(igF != null ? { ig: igF } : {}), spend: spendNow, queued: queuedNow, todo: openTodo.length };
       { const keep = Object.keys(hist).sort().slice(-40); const h2 = {}; keep.forEach((k) => { h2[k] = hist[k]; }); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'dash_hist', data: { days: h2 }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {}); }
       const dif = (cur, old) => (cur == null || old == null ? null : Math.round((cur - old) * 100) / 100);
       const vsY = { revenue: dif(sum(wk), sum(wkY)), orders: dif(wk.length, wkY.length), published: dif(pub.length, pubY), unpaid: dif(real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, unpaidY),
-        spend: dif(spendNow, yd?.spend), queued: dif(queuedNow, yd?.queued), todo: dif(openTodo.length, yd?.todo), threads: dif(thF, yd?.th), facebook: dif(fbF, yd?.fb), since: yKey || null };
+        spend: dif(spendNow, yd?.spend), queued: dif(queuedNow, yd?.queued), todo: dif(openTodo.length, yd?.todo), threads: dif(thF, yd?.th), facebook: dif(fbF, yd?.fb), instagram: dif(igF, yd?.ig), since: yKey || null };
       return res.status(200).json({ ok: true, at: nowIso, vsY, visits,
         sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, store: { orders: wk.filter((o) => o.campaign === 'store').length, revenue: sum(wk.filter((o) => o.campaign === 'store')) } },
         ads: { spend: campaigns.reduce((a, c) => a + c.spend, 0), campaigns },
-        followers: { threads: thF, facebook: fbF, threadsDelta: base && thF != null && base.th != null ? thF - base.th : null, facebookDelta: base && fbF != null && base.fb != null ? fbF - base.fb : null, since: weekAgo || null },
-        posts: { published: { facebook: pub.filter((p) => ch(p) === 'facebook').length, threads: pub.filter((p) => ch(p) === 'threads').length }, queued: { facebook: queued.filter((p) => ch(p) === 'facebook').length, threads: queued.filter((p) => ch(p) === 'threads').length }, held: posts.filter((p) => p.status === 'needs_owner').length, failed: posts.filter((p) => p.status === 'failed').length, policy: posts.filter((p) => p.status !== 'published' && (policyState(p.notes)?.level || 'ok') !== 'ok').length },
+        followers: { threads: thF, facebook: fbF, threadsDelta: base && thF != null && base.th != null ? thF - base.th : null, facebookDelta: base && fbF != null && base.fb != null ? fbF - base.fb : null, instagram: igF, instagramOn: igOn, instagramDelta: base && igF != null && base.ig != null ? igF - base.ig : null, since: weekAgo || null },
+        posts: { published: { facebook: pub.filter((p) => ch(p) === 'facebook').length, threads: pub.filter((p) => ch(p) === 'threads').length, instagram: pub.filter((p) => igOk(p.notes)).length }, queued: { facebook: queued.filter((p) => ch(p) === 'facebook').length, threads: queued.filter((p) => ch(p) === 'threads').length, instagram: igOn ? queued.filter((p) => ch(p) === 'facebook' && p.kind === 'reel').length : 0 }, held: posts.filter((p) => p.status === 'needs_owner').length, failed: posts.filter((p) => p.status === 'failed').length, policy: posts.filter((p) => p.status !== 'published' && (policyState(p.notes)?.level || 'ok') !== 'ok').length },
         todo: { open: openTodo.length, delegated: openTodo.filter((i) => i.delegated_at).length },
         factory: { active: jobs.filter((j) => ['queued', 'producing'].includes(j.status)).length, doneWeek: jobs.filter((j) => j.status === 'done' && (j.done_at || '') >= since).length },
         team: { quiet: Object.keys(MEMBER_TH).filter((k) => !['care', 'factory'].includes(k) && !reported[k]) },

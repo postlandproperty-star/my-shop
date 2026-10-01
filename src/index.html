@@ -2981,8 +2981,10 @@ function dashBox(){
       ${tile('ค่าแอดรวม',baht2(d.ads.spend),d.ads.campaigns.length?`${d.ads.campaigns.length} แคมเปญ`:'ยังไม่มีแคมเปญ',false,vs('spend','',1))}
       ${tile('ผู้ติดตาม Threads',num(d.followers.threads),d.followers.threadsDelta!=null?delta(d.followers.threadsDelta,'ใน 7 วัน'):'เริ่มเก็บสถิติวันนี้',false,vs('threads','up'))}
       ${tile('ผู้ติดตาม Facebook',num(d.followers.facebook),d.followers.facebookDelta!=null?delta(d.followers.facebookDelta,'ใน 7 วัน'):(d.followers.facebook==null?'ยังดึงตัวเลขไม่ได้':'เริ่มเก็บสถิติวันนี้'),false,vs('facebook','up'))}
-      ${tile('โพสต์ขึ้นแล้ว',`${d.posts.published.facebook+d.posts.published.threads}`,`Facebook ${d.posts.published.facebook} · Threads ${d.posts.published.threads}`,false,vs('published','up'))}
-      ${tile('คิวโพสต์ 7 วันข้างหน้า',`${d.posts.queued.facebook+d.posts.queued.threads}`,`Facebook ${d.posts.queued.facebook} · Threads ${d.posts.queued.threads}`,d.posts.queued.facebook+d.posts.queued.threads===0,vs('queued','up'))}
+      ${d.followers.instagramOn||d.followers.instagram!=null?tile('ผู้ติดตาม Instagram',num(d.followers.instagram),d.followers.instagramDelta!=null?delta(d.followers.instagramDelta,'ใน 7 วัน'):(d.followers.instagram==null?'ยังดึงตัวเลขไม่ได้':'เริ่มเก็บสถิติวันนี้'),false,vs('instagram','up')):''}
+      ${(()=>{const P=d.posts.published,Q=d.posts.queued,ig=d.followers.instagramOn,pi=P.instagram||0,qi=Q.instagram||0;
+        return tile('โพสต์ขึ้นแล้ว',`${P.facebook+P.threads+pi}`,`Facebook ${P.facebook}${ig||pi?` · IG Reels ${pi}`:''} · Threads ${P.threads}`,false,vs('published','up'))
+          +tile('คิวโพสต์ 7 วันข้างหน้า',`${Q.facebook+Q.threads+qi}`,`Facebook ${Q.facebook}${ig?` · IG Reels ${qi}`:''} · Threads ${Q.threads}`,Q.facebook+Q.threads===0,vs('queued','up'));})()}
       ${tile('checkout ค้างไม่จ่าย',num(d.sales.unpaid),'คนที่กดซื้อแต่ยังไม่จ่าย',d.sales.unpaid>0,vs('unpaid','down'))}
       ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0,vs('todo','down'))}
     </div>
@@ -3071,7 +3073,7 @@ function readlabView(){
     <details class="rl-teamd"><summary><span class="rl-avs">${Object.values(RL_TEAM).map(m=>`<img src="${m.img}" alt="" width="32" height="32">`).join('')}</span><span>ทีม ReadLab ${Object.keys(RL_TEAM).length} คน · ${Object.values(RL_TEAM).map(m=>esc(m.name)).join(' ')}</span></summary>
       <div class="rl-team">${Object.entries(RL_TEAM).map(([k,m])=>`<div class="rl-mem"><img src="${m.img}" alt="" width="44" height="44"><span><b>${esc(m.name)}</b><small>${esc(m.role)}</small><small class="fine">🕘 ${esc(m.sched)}</small></span></div>`).join('')}</div></details>
     <div class="rl-fol">
-      <span>👥 ผู้ติดตาม ${last?`Facebook <b>${num(last.fb)}</b> ${dlt(last.fb,prev&&prev.fb)} · Threads <b>${num(last.th)}</b> ${dlt(last.th,prev&&prev.th)} <span class="fine">(${esc(last.date)})</span>`:'<span class="fine">ยังไม่มีข้อมูล</span>'}</span>
+      <span>👥 ผู้ติดตาม ${last?`Facebook <b>${num(last.fb)}</b> ${dlt(last.fb,prev&&prev.fb)} · Threads <b>${num(last.th)}</b> ${dlt(last.th,prev&&prev.th)}${last.ig!=null?` · Instagram <b>${num(last.ig)}</b> ${dlt(last.ig,prev&&prev.ig)}`:''} <span class="fine">(${esc(last.date)})</span>`:'<span class="fine">ยังไม่มีข้อมูล</span>'}</span>
       <button class="btn btn-line btn-sm" data-a="rlcfgOpen">${S.rlcfg?'ปิด':'อัปเดตยอด / ตั้งค่าเพจ'}</button>
     </div>
     ${S.rlcfg?`<div class="rl-cfg">
@@ -3700,6 +3702,8 @@ function docsTab(){
       {title:'Meta Business Suite',url:pid?'https://business.facebook.com/latest/home?asset_id='+pid:'https://business.facebook.com/latest/',note:'กล่องข้อความ คอมเมนต์ สถิติเพจ'},
       {title:'Ads Manager',url:'https://adsmanager.facebook.com/adsmanager/manage/campaigns',note:'แคมเปญโฆษณา (น้องบูสต์เสนอ คุณแดนกด)'},
       {title:'Threads'+(thu?' · @'+thu:''),url:thu?'https://www.threads.com/@'+thu:'https://www.threads.com/',note:thu?'โปรไฟล์ Threads ของร้าน':'ยังไม่ได้เชื่อม Threads'},
+      {title:'Instagram'+(FB.ig&&FB.ig.username?' · @'+FB.ig.username:''),url:FB.ig&&FB.ig.username?'https://www.instagram.com/'+FB.ig.username+'/':'https://www.instagram.com/',note:FB.ig?'คลิป Reels ที่ขึ้นเพจลง IG Reels ด้วยอัตโนมัติ':'ยังไม่ได้เชื่อม Instagram (แท็บคอนเทนต์ → ตั้งค่า)'},
+      {title:'สถิติเพจ + Instagram (Meta Business Suite)',url:pid?'https://business.facebook.com/latest/insights/?asset_id='+pid:'https://business.facebook.com/latest/insights/',note:'ยอดวิว Reels ผู้ติดตาม คนที่เข้าถึง ทั้ง FB และ IG'},
       {title:'Meta for Developers (แอป)',url:'https://developers.facebook.com/apps/',note:'แอป SheetLab Threads และ Publisher · ต่ออายุสิทธิ์/redirect'},
       {title:'Meta Pixel / Events Manager',url:'https://business.facebook.com/events_manager2/',note:'ตรวจว่า Pixel ยิงถูกไหม'},
     ]],
