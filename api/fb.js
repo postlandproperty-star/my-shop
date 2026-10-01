@@ -3,8 +3,9 @@
 //   ?action=connect  POST {token, pageId?}  แลกโทเค็น เลือกเพจ บันทึก
 //   ?action=test                ลองอ่านข้อมูลเพจด้วยโทเค็นที่เก็บไว้
 //   ?action=disconnect POST     ลบโทเค็น
+//   ?action=ig                  หา Instagram ที่ผูกกับเพจอีกครั้ง (คลิป Reels ลง IG ด้วย)
 import { verifyAdmin } from '../lib/shop.js';
-import { loadFb, saveFb, clearFb, fbGet, exchangeForPages, appConfigured } from '../lib/fb.js';
+import { loadFb, saveFb, clearFb, fbGet, exchangeForPages, appConfigured, findIg } from '../lib/fb.js';
 
 async function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
   try {
     if (action === 'status') {
       const fb = await loadFb(brand);
-      return res.status(200).json({ ok: true, app: appConfigured(), connected: !!fb, page: fb ? { id: fb.pageId, name: fb.pageName || '', connectedAt: fb.connectedAt || null, by: fb.userName || '' } : null });
+      return res.status(200).json({ ok: true, app: appConfigured(), connected: !!fb, page: fb ? { id: fb.pageId, name: fb.pageName || '', connectedAt: fb.connectedAt || null, by: fb.userName || '' } : null, ig: fb && fb.igUserId ? { id: fb.igUserId, username: fb.igUsername || '' } : null });
     }
     if (action === 'connect') {
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -34,14 +35,25 @@ export default async function handler(req, res) {
       if (!page) return res.status(200).json({ ok: true, choose: pages.map((p) => ({ id: p.id, name: p.name, followers: p.followers_count || 0 })) });
       const info = await fbGet(page.id, { access_token: page.access_token, fields: 'id,name,followers_count,link' });
       if (brand === 'readlab') { const other = await loadFb(); if (other && other.pageId === page.id) return res.status(400).json({ ok: false, error: `เพจ "${info.name}" เป็นเพจของ SheetLab เลือกเพจ ReadLab แทน` }); }
-      await saveFb({ pageId: page.id, pageName: info.name, token: page.access_token, userToken, userName: user.name, connectedAt: new Date().toISOString(), brand });
-      return res.status(200).json({ ok: true, page: { id: page.id, name: info.name, followers: info.followers_count || 0, link: info.link } });
+      const row = { pageId: page.id, pageName: info.name, token: page.access_token, userToken, userName: user.name, connectedAt: new Date().toISOString(), brand };
+      let ig = null; try { ig = await findIg(row); } catch (e) { console.error('ig', e.message); }
+      await saveFb({ ...row, ...(ig || {}), igCheckedAt: new Date().toISOString() });
+      return res.status(200).json({ ok: true, page: { id: page.id, name: info.name, followers: info.followers_count || 0, link: info.link }, ig: ig ? { id: ig.igUserId, username: ig.igUsername, followers: ig.igFollowers } : null });
     }
     if (action === 'test') {
       const fb = await loadFb(brand);
       if (!fb) return res.status(200).json({ ok: false, error: 'ยังไม่ได้เชื่อมเพจ' });
       const info = await fbGet(fb.pageId, { access_token: fb.token, fields: 'id,name,followers_count,link' });
       return res.status(200).json({ ok: true, page: { id: info.id, name: info.name, followers: info.followers_count || 0, link: info.link } });
+    }
+    if (action === 'ig') {
+      const fb = await loadFb(brand);
+      if (!fb || fb.source === 'env') return res.status(200).json({ ok: false, error: 'ยังไม่ได้เชื่อมเพจ' });
+      let ig = null, err = '';
+      try { ig = await findIg(fb); } catch (e) { err = String(e.message || e); }
+      if (!err) await saveFb({ ...fb, igUserId: ig ? ig.igUserId : '', igUsername: ig ? ig.igUsername : '', igCheckedAt: new Date().toISOString() });
+      if (!ig) return res.status(200).json({ ok: false, error: err || 'ยังไม่พบ Instagram ที่ผูกกับเพจนี้ (ต้องเป็นบัญชี Business/Creator ที่ผูกกับเพจ และโทเค็นต้องมีสิทธิ์ instagram_basic)' });
+      return res.status(200).json({ ok: true, ig: { id: ig.igUserId, username: ig.igUsername, followers: ig.igFollowers } });
     }
     if (action === 'disconnect') {
       if (req.method !== 'POST') return res.status(405).json({ ok: false });

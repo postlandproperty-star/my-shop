@@ -16,7 +16,7 @@
 import { loadShop, verifyAdmin, sbPatch, stripe, piToSession, loadTestEmails } from '../lib/shop.js';
 import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
-import { loadFb, publishToPage, fbGet } from '../lib/fb.js';
+import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
 import { sendRecoveries } from '../lib/recover.js';
@@ -167,15 +167,31 @@ function cleanGlobal(g) {
 }
 // ข้อความหน้าขายที่ Claude เขียนมาพร้อมไฟล์ (ใช้กรอกตัวแก้สินค้าตอนอนุมัติ) ห้ามราคา
 function cleanListing(l) { const t = (k, n) => String(l[k] || '').trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
+// คลิป Reels ที่ขึ้นเพจแล้ว ส่งขึ้น Instagram ที่ผูกกับเพจด้วย (ไม่ทำให้โพสต์เพจล้มเหลวถ้า IG ไม่ผ่าน)
+// คืนบรรทัดบันทึก: "IG ✓ <id>" / "IG รอประมวลผล ig_container:<id>" (รอบถัดไปเผยแพร่ต่อ) / "IG ไม่ผ่าน: ..."
+async function crossToIg(fb, p, resume = '') {
+  if (!fb || !fb.igUserId || !isVideoUrl(p.image_url)) return '';
+  try { const r = await publishToInstagram(fb, p, resume); return r.id ? `IG ✓ ${r.id}` : `IG รอประมวลผล ig_container:${r.pending}`; }
+  catch (e) { return `IG ไม่ผ่าน: ${String(e.message || e).slice(0, 200)}`; }
+}
+const IG_LINE = /^IG (✓|รอประมวลผล|ไม่ผ่าน).*$/m;
+const withIg = (notes, line) => (IG_LINE.test(notes || '') ? String(notes).replace(IG_LINE, line) : [notes, line].filter(Boolean).join('\n')).slice(0, 1500);
 // ReadLab: โพสต์ที่คุณแดนอนุมัติขึ้นเพจ/Threads ของ ReadLab เอง (บัญชีแยกจาก SheetLab ไม่เติมแฮชแท็ก SheetLab)
 // รอบอัตโนมัติไม่เกิน 2 ชิ้นต่อช่องทาง เรียงตามเวลาที่กำหนด (ไม่กำหนด = รอบถัดไป) · onlyId = คุณแดนกดโพสต์ตอนนี้
 async function publishReadlab(onlyId = '') {
-  const fb = await loadFb('readlab'); let th = await loadThreads('readlab'); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
+  const fb = await ensureIg(await loadFb('readlab')); let th = await loadThreads('readlab'); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
   if (!fb && !th) return { ok: false, skipped: 'ยังไม่ได้เชื่อมบัญชี ReadLab' };
   const load = async () => { const rows = await sb('shop_state?id=eq.readlab&select=data'); const D = rows?.[0]?.data || {}; D.posts = D.posts || []; return D; };
   const save = (D) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'readlab', data: D, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
   const nowIso = new Date().toISOString();
   let D = await load();
+  // คลิปที่ IG ยังประมวลผลไม่เสร็จรอบก่อน: เผยแพร่ต่อ (ไม่เกิน 2 ชิ้นต่อรอบ)
+  if (!onlyId && fb && fb.igUserId) {
+    for (const x of D.posts.filter((z) => /ig_container:\d+/.test(z.ig || '') && z.status === 'published').slice(0, 2)) {
+      const line = await crossToIg(fb, { text: x.text, image_url: x.video_url || x.image_url, raw: true }, x.ig.match(/ig_container:(\d+)/)[1]);
+      D = await load(); const y = D.posts.find((z) => z.id === x.id); if (y) y.ig = line; await save(D);
+    }
+  }
   // ค้าง publishing เกิน 15 นาที (ฟังก์ชันหมดเวลา) = ล้มเหลว ให้คุณแดนเช็คเพจก่อนกดซ้ำ ไม่โพสต์ซ้ำเอง
   let fixed = false; for (const x of D.posts) if (x.status === 'publishing' && Date.now() - Date.parse(x.updated_at || 0) > 15 * 60e3) { x.status = 'failed'; x.error = 'ค้างระหว่างโพสต์ ดูในเพจก่อนว่าขึ้นแล้วหรือยัง ถ้ายังให้กดโพสต์ตอนนี้'; fixed = true; }
   const per = { facebook: 0, threads: 0 };
@@ -190,7 +206,8 @@ async function publishReadlab(onlyId = '') {
     const ch = x.channel === 'threads' ? 'threads' : 'facebook';
     const p = { text: x.text, image_url: x.video_url || x.image_url || null, kind: x.kind, raw: true, brand: 'readlab' };
     let patchX;
-    try { const pid = ch === 'threads' ? await publishToThreads(th, p) : await publishToPage(fb, p); patchX = { status: 'published', published_at: new Date().toISOString(), post_id: String(pid), error: null, auto: true }; results.push({ id: x.id, ok: true, channel: ch }); }
+    try { const pid = ch === 'threads' ? await publishToThreads(th, p) : await publishToPage(fb, p); patchX = { status: 'published', published_at: new Date().toISOString(), post_id: String(pid), error: null, auto: true }; results.push({ id: x.id, ok: true, channel: ch });
+      if (ch === 'facebook') { const ig = await crossToIg(fb, p); if (ig) patchX.ig = ig; } }
     catch (e) { patchX = { status: 'failed', error: String(e.message || e).slice(0, 400) }; results.push({ id: x.id, ok: false, channel: ch, error: patchX.error }); }
     D = await load(); const y = D.posts.find((z) => z.id === x.id); if (y) Object.assign(y, patchX, { updated_at: new Date().toISOString() }); await save(D);
   }
@@ -987,7 +1004,7 @@ export default async function handler(req, res) {
           if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
           // เชื่อมบัญชีแล้ว: ดึงยอดผู้ติดตามจริงมาบันทึกวันนี้แทนการกรอกเอง
           const fbR = await loadFb('readlab').catch(() => null); let thR = await loadThreads('readlab').catch(() => ({})); thR = threadsConnected(thR) ? thR : null;
-          const conn = { fb: fbR ? { id: fbR.pageId, name: fbR.pageName || '' } : null, th: thR ? { username: thR.username || '' } : null };
+          const conn = { fb: fbR ? { id: fbR.pageId, name: fbR.pageName || '', ig: fbR.igUserId ? fbR.igUsername || 'instagram' : '' } : null, th: thR ? { username: thR.username || '' } : null };
           if (fbR || thR) {
             const dk = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); const cur = { ...(D.followers[dk] || {}) }; let changed = false;
             if (fbR) { try { const pg = await fbGet(fbR.pageId, { fields: 'followers_count,fan_count', access_token: fbR.token }); const n = pg.followers_count ?? pg.fan_count; if (n != null && n !== cur.fb) { cur.fb = n; changed = true; } } catch (e) { conn.fbErr = String(e.message || e).slice(0, 120); } }
@@ -2095,9 +2112,15 @@ export default async function handler(req, res) {
       if (!admin && !cronOk(req) && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       let readlab = null; // เพจ/Threads ReadLab (บัญชีแยก) รอบเดียวกัน
       if (!req.query.id) { try { readlab = await publishReadlab(); } catch (e) { readlab = { ok: false, error: String(e.message || e) }; } }
-      const fb = await loadFb();
+      const fb = await ensureIg(await loadFb());
       let th = await loadThreads(); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
       if (!fb && !th) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)', readlab });
+      // คลิปที่ขึ้นเพจแล้วแต่ IG ยังประมวลผลไม่เสร็จรอบก่อน: เผยแพร่ IG ต่อ
+      const igDone = [];
+      if (!req.query.id && fb && fb.igUserId) {
+        const pend = await sb(`posts?status=eq.published&notes=ilike.*${encodeURIComponent('ig_container:')}*&published_at=gte.${new Date(Date.now() - 864e5).toISOString()}&select=id,notes,text,image_url&limit=2`).catch(() => []);
+        for (const x of pend) { const m = String(x.notes).match(/ig_container:(\d+)/); if (!m) continue; const line = await crossToIg(fb, x, m[1]); await sbPatch(`posts?id=eq.${x.id}`, { notes: withIg(x.notes, line) }); igDone.push({ id: x.id, ig: line }); }
+      }
       const id = String(req.query.id || '');
       const due = id
         ? await sb(`posts?id=eq.${encodeURIComponent(id)}&status=in.(approved,draft,failed,needs_owner)&select=*`)
@@ -2134,8 +2157,10 @@ export default async function handler(req, res) {
           } else {
             const fbId = await publishToPage(fb, p);
             await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), fb_post_id: String(fbId), error: null });
+            const ig = await crossToIg(fb, p); // คลิป Reels ลง Instagram ด้วย
+            if (ig) { await sbPatch(`posts?id=eq.${p.id}`, { notes: withIg(p.notes, ig) }); if (ig.startsWith('IG ✓')) await chatEvent('clip', pick(['คลิปลง Instagram Reels ด้วยแล้วครับ 📸', 'IG Reels ขึ้นแล้วครับ ลูกค้าสาย IG ก็เห็นแล้ว']), 'published'); }
             await chatEvent(p.kind === 'reel' ? 'clip' : 'writer', p.kind === 'reel' ? pick(['Reels ขึ้นเพจแล้วครับ ใครว่างไปกดหัวใจให้หน่อย 🎬', 'คลิปขึ้นเพจแล้วครับ ลุ้นยอดวิวกัน 👀', 'ปล่อยคลิปแล้วครับ ถ้าคอมเมนต์เยอะเลี้ยงชานม']) : pick(['โพสต์ขึ้นเพจแล้วค่ะ ✨', 'โพสต์ขึ้นแล้วน้า ไปกดไลก์ให้กำลังใจกันหน่อยค่ะ 🙏', 'ส่งขึ้นเพจแล้วค่ะ วันนี้ขอยอดแชร์เยอะๆ']), 'published');
-            results.push({ id: p.id, ok: true, fb_post_id: fbId });
+            results.push({ id: p.id, ok: true, fb_post_id: fbId, ...(ig ? { ig } : {}) });
           }
         } catch (e) {
           await sbPatch(`posts?id=eq.${p.id}`, { status: 'failed', error: ((p._retry ? '[ลองซ้ำแล้ว] ' : '') + String(e.message || e)).slice(0, 500) });
@@ -2150,7 +2175,7 @@ export default async function handler(req, res) {
       if (!id) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
       let leadmail = null; // รอบเดียวกัน: น้องคอมส่งอีเมลเตือนคนค้างจ่าย
       if (!id) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
-      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, recover, qr, leadmail, readlab });
+      return res.status(200).json({ ok: true, published: results.filter((r) => r.ok).length, results, ig: igDone, recover, qr, leadmail, readlab });
     }
     res.status(400).json({ ok: false, error: 'unknown action' });
   } catch (e) {

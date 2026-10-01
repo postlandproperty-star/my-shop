@@ -191,6 +191,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rl-conn{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.rl-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}.rl-howto{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px}.rl-howto ol{padding-left:20px;line-height:1.7;margin:6px 0 8px}
 .thumb .mv{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between;pointer-events:none}.thumb .mv button{pointer-events:auto;width:26px;height:26px;border-radius:50%;border:0;background:rgba(15,27,51,.75);color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0}.thumb .mv button:only-child{margin-left:auto}.thumb .mv button[data-d="-1"]:only-child{margin-left:0;margin-right:auto}.th-cover{position:absolute;left:4px;top:4px;background:#2440E8;color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
 .facai{display:flex;gap:6px;align-items:center;margin:8px 0;cursor:pointer}.facai input{width:18px;height:18px}.facai-imgs{display:flex;gap:6px;flex-wrap:wrap}.facai-imgs img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#fff}.facai .btn{align-self:flex-start}
+.prod-dl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px}.prod-dl .btn{padding:4px 10px;font-size:12px}
 .pexport{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
 .rvt-link{background:none;border:0;padding:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer}.rvt-list{display:grid;gap:10px}.rvt-card{padding:14px 16px}.rvt-card.off{opacity:.55}.rvt-st{font-size:17px}.rvt-text{margin:8px 0 6px;white-space:pre-wrap}.empty-rv{padding:18px}
 .so{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.so>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.so>summary::-webkit-details-marker{display:none}.so>summary::after{content:'▾';color:var(--muted)}.so[open]>summary{margin-bottom:10px}.so[open]>summary::after{content:'▴'}
@@ -2138,6 +2139,7 @@ function productRow(p){
       <button class="btn btn-dark btn-sm" data-a="viewPage" data-id="${p.id}">ดูเซลเพจ</button>
       <button class="btn btn-line btn-sm" data-a="editProduct" data-id="${p.id}">แก้ไขทั้งหมด</button>
     </div>
+    <div class="prod-dl"><button class="btn btn-line btn-sm" data-a="exportOne" data-id="${p.id}" title="ไฟล์ CSV เปิดใน Excel ได้">⬇ ข้อมูล</button><button class="btn btn-line btn-sm" data-a="exportOneImgs" data-id="${p.id}" ${S.zipBusy||!(p.images||[]).length?'disabled':''} title="${(p.images||[]).length?'รูปสินค้า '+Math.min(9,(p.images||[]).length)+' รูป (ZIP)':'ยังไม่มีรูป'}">${S.zipBusy===p.id?'กำลังรวมรูป...':'⬇ รูป'}</button><span class="fine">โหลดไปลง Shopee</span></div>
     <details class="prod-more" ${cf?'open':''}><summary>เพิ่มเติม</summary><div class="prod-acts">
       <button class="btn btn-line btn-sm" data-a="dupProduct" data-id="${p.id}">ทำสำเนา</button>
       <button class="btn btn-line btn-sm" data-a="togglePub" data-id="${p.id}">${pub?'เป็นฉบับร่าง':'เผยแพร่'}</button>
@@ -2579,29 +2581,29 @@ function exportDesc(p){
     notion?'วิธีรับสินค้า\nได้ลิงก์เทมเพลต Notion กด Duplicate เข้า Notion ของตัวเอง ใช้ได้กับ Notion ฟรี ทั้งมือถือและคอม':'วิธีรับสินค้า\nเป็นไฟล์ PDF (สินค้าดิจิทัล) ไม่มีการจัดส่งสินค้าจริง'];
   return parts.filter(Boolean).join('\n\n').slice(0,3000);
 }
-function exportCsv(){
-  const list=exportList();if(!list.length){toast('ยังไม่มีสินค้าที่เผยแพร่');return;}
+function exportCsv(one){
+  const list=one?[one]:exportList();if(!list.length){toast('ยังไม่มีสินค้าที่เผยแพร่');return;}
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const head=['SKU','ชื่อสินค้า','ราคาขาย','ราคาปกติ (ก่อนลด)','ประเภท','หมวด','คำอธิบายสินค้า','รูปที่ 1 (ปก)','รูปที่ 2','รูปที่ 3','รูปที่ 4','รูปที่ 5','ลิงก์หน้าขายบนเว็บ'];
   const rows=list.map(p=>{const im=(p.images||[]).slice(0,5);while(im.length<5)im.push('');
     return [p.slug,String(p.name||'').slice(0,120),Number(p.price)||0,Number(p.fullPrice)>Number(p.price)?Number(p.fullPrice):'',PFMT[pfmt(p)][1],CATS[p.cat]||'',exportDesc(p),...im,location.origin+'/p/'+p.slug];});
   const csv='﻿'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n'); // BOM ให้ Excel อ่านภาษาไทยถูก
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='sheetlab-products-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
-  toast('ดาวน์โหลดข้อมูลสินค้า '+list.length+' รายการแล้ว');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=(one?'sheetlab-'+one.slug:'sheetlab-products-'+new Date().toISOString().slice(0,10))+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+  toast(one?'ดาวน์โหลดข้อมูล "'+String(one.name||'').slice(0,30)+'" แล้ว':'ดาวน์โหลดข้อมูลสินค้า '+list.length+' รายการแล้ว');
 }
-async function exportImgs(){
-  const list=exportList().filter(p=>(p.images||[]).length);if(!list.length){toast('ยังไม่มีรูปสินค้า');return;}
-  S.zipBusy=true;render(true);
+async function exportImgs(one){
+  const list=(one?[one]:exportList()).filter(p=>(p.images||[]).length);if(!list.length){toast(one?'สินค้านี้ยังไม่มีรูป':'ยังไม่มีรูปสินค้า');return;}
+  S.zipBusy=one?one.id:true;render(true);
   try{
     if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
     const zip=new window.JSZip();let n=0;
-    for(const p of list){const dir=zip.folder(p.slug);
+    for(const p of list){const dir=one?zip:zip.folder(p.slug);
       for(const [i,u] of (p.images||[]).slice(0,9).entries()){
         try{const b=await fetch(u).then(r=>{if(!r.ok)throw 0;return r.blob();});const ext=(b.type.split('/')[1]||'jpg').replace('jpeg','jpg');dir.file(`${i+1}${i===0?'-cover':''}.${ext}`,b);n++;toast('กำลังรวมรูป '+n+' รูป...');}catch(e){}
       }}
     const blob=await zip.generateAsync({type:'blob'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sheetlab-product-images-'+new Date().toISOString().slice(0,10)+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
-    toast('ดาวน์โหลดรูป '+n+' รูปแล้ว (แยกโฟลเดอร์ตามสินค้า)');
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=one?'sheetlab-'+one.slug+'-images.zip':'sheetlab-product-images-'+new Date().toISOString().slice(0,10)+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast('ดาวน์โหลดรูป '+n+' รูปแล้ว'+(one?'':' (แยกโฟลเดอร์ตามสินค้า)'));
   }catch(e){console.error(e);toast('รวมรูปไม่สำเร็จ ลองใหม่อีกครั้ง');}
   S.zipBusy=false;render(true);
 }
@@ -2616,7 +2618,7 @@ function productsTab(){
     <span class="row" style="gap:6px"><button class="btn btn-dark btn-sm" data-a="newProduct">+ เล่มเดี่ยว</button><button class="btn btn-dark btn-sm" data-a="newBundle">+ สร้างชุด</button></span>
   </div>
   ${reviewBox()}
-  <div class="pexport"><button class="btn btn-line btn-sm" data-a="exportCsv">⬇ ดาวน์โหลดข้อมูลสินค้า (Excel)</button><button class="btn btn-line btn-sm" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy?'กำลังรวมรูป...':'⬇ ดาวน์โหลดรูปสินค้าทั้งหมด (ZIP)'}</button><span class="fine">ไว้ลงขายใน Shopee / Lazada เอง · เฉพาะสินค้าที่เผยแพร่แล้ว</span></div>
+  <div class="pexport"><button class="btn btn-line btn-sm" data-a="exportCsv">⬇ ดาวน์โหลดข้อมูลสินค้า (Excel)</button><button class="btn btn-line btn-sm" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy===true?'กำลังรวมรูป...':'⬇ ดาวน์โหลดรูปสินค้าทั้งหมด (ZIP)'}</button><span class="fine">ไว้ลงขายใน Shopee / Lazada เอง · ทั้งหมด = เฉพาะที่เผยแพร่แล้ว · โหลดทีละรายการได้ที่ปุ่ม ⬇ ของแต่ละสินค้า</span></div>
   <input class="input psearch" type="search" data-psearch="1" placeholder="🔎 ค้นหาสินค้า เช่น Notion, IELTS, คำศัพท์" aria-label="ค้นหาสินค้า" value="${esc(S.pq||'')}">
   <div class="pfilter" role="group" aria-label="แสดงสินค้า">${[['all','ทั้งหมด',D.products.length],['pdf','📄 PDF',D.products.filter(x=>pfmt(x)==='pdf').length],['notion','📒 Notion',D.products.filter(x=>pfmt(x)==='notion').length],['bundle','📦 ชุด',D.products.filter(isBundle).length]].filter(f=>f[0]==='all'||f[2]).map(f=>`<button class="chip" data-a="pfilter" data-v="${f[0]}" aria-pressed="${(S.pkind||'all')===f[0]}">${f[1]} ${f[2]}</button>`).join('')}</div>
   <p class="fine" id="pnone" hidden>ไม่พบสินค้าที่ค้นหา</p>
@@ -2699,7 +2701,7 @@ const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_own
 let FB={},TH={};
 (function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){const rl=q.get('brand')==='readlab';if(rl){S.tab='content';S.cbrand='readlab';}setTimeout(()=>{toast(q.get('threads')==='ok'?(rl?'เชื่อม Threads ReadLab เรียบร้อย โพสต์ที่อนุมัติจะขึ้นเอง':'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ'):'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
 async function loadThStatus(){try{const j=await adminApi('/api/threads?action=status');if(j.ok)TH=Object.assign(TH,{connected:j.connected,user:j.user,app:j.app,redirect:j.redirect});}catch(e){}}
-async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app});}catch(e){}}
+async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app,ig:j.ig||null});}catch(e){}}
 async function adminPost(path,body){return authFetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});}
 let postsLoading=false;
 function needPosts(){ // โหลดโพสต์ครั้งเดียวต่อการเปิดแท็บ: ไม่ยิงซ้ำระหว่างรอ และถ้าพลาดไม่วนโหลด+วาดใหม่ไม่รู้จบ (ทำให้กดอะไรไม่ติด)
@@ -2960,7 +2962,7 @@ function readlabView(){
   const card=x=>{const open=!!exp[x.id],st=ST[x.status]||[x.status,'gray'],m=RL_TEAM[x.source]||{name:x.source,img:AV+'seed='+x.source},ed=x.status!=='published';
     const media=x.video_url?`<video class="${open?'':'thumb'}" src="${esc(x.video_url)}${open?'':'#t=0.5'}" ${open?'controls':'muted'} playsinline preload="metadata" style="${open?'width:100%;max-height:420px;border-radius:12px;background:#000':''}"></video>`:x.image_url?`<img class="${open?'':'thumb'}" src="${esc(x.image_url)}" alt="" loading="lazy" style="${open?'width:100%;border-radius:12px':''}">`:(x.channel==='facebook'&&x.kind!=='reel'?'<span class="noimg" title="น้องพิกเซลจะทำรูปให้รอบถัดไป">🖼️<br>รอรูป</span>':'<span class="noimg" title="โพสต์ข้อความล้วน">💬<br>ข้อความ</span>');
     return `<div class="post ${open?'':'compact'}">${media}<div>
-      <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="badge gray">${x.channel==='threads'?'Threads':'Facebook'}</span> <span class="fine">${esc(RL_KIND[x.kind]||x.kind)}</span></span><span class="fine row" style="gap:6px"><img class="rl-by" src="${m.img}" alt="" width="22" height="22">${esc(m.name)}</span></div>
+      <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="badge gray">${x.channel==='threads'?'Threads':'Facebook'}</span> ${igBadge(x.ig)}<span class="fine">${esc(RL_KIND[x.kind]||x.kind)}</span></span><span class="fine row" style="gap:6px"><img class="rl-by" src="${m.img}" alt="" width="22" height="22">${esc(m.name)}</span></div>
       ${x.book?`<p class="fine" style="margin:4px 0 0">📖 ${esc(x.book)}</p>`:''}
       ${open&&ed?`<textarea class="input" id="rlt-${x.id}" style="margin-top:8px;min-height:180px">${esc(x.text)}</textarea><input class="input" id="rln-${x.id}" placeholder="คำติชมถึงทีม (ไม่บังคับ) เช่น สั้นกว่านี้ได้" value="${esc(x.owner_note||'')}" style="margin-top:6px">`:open?`<p style="white-space:pre-wrap;margin-top:8px">${esc(x.text)}</p>`:`<p class="ptxt" data-a="rlexp" data-id="${x.id}">${esc(x.text)}</p>`}
       ${open&&x.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจาก ${esc(m.name)}: ${esc(x.notes)}</p>`:''}
@@ -3002,11 +3004,23 @@ function readlabView(){
   ${list.length?list.map(card).join(''):`<p class="card fine">${f==='queue'?'ยังไม่มีโพสต์ในคิว ทีม ReadLab จะเริ่มส่งร่างในรอบถัดไป (น้องมิว จันทร์ พุธ ศุกร์ 09:00)':'ยังไม่มีโพสต์'}</p>`}`;
 }
 const RLC={choose:null,msg:''};
+/* Instagram: ใช้โทเค็นเพจเดิม + สิทธิ์ IG · คลิป Reels ที่ขึ้นเพจจะลง IG Reels ด้วย */
+const IG_PERMS='<code>pages_show_list</code> <code>pages_manage_posts</code> <code>pages_read_engagement</code> <code>publish_video</code> <code>read_insights</code> <code>business_management</code> <b><code>instagram_basic</code> <code>instagram_content_publish</code></b>';
+function igSteps(page,tid,act,msg){return `<div class="rl-howto"><b>เชื่อม Instagram ให้คลิป Reels ลง IG ด้วย (ทำครั้งเดียว ~5 นาที)</b><ol>
+  <li>ในแอป Instagram ของ${esc(page)}: <b>Settings → Account type and tools → Switch to professional account</b> เลือก Business หรือ Creator (ฟรี ไม่ต้องเปิดร้าน)</li>
+  <li>ผูก IG กับเพจ ${esc(page)}: เปิดเพจบน Facebook → <b>Settings → Linked accounts → Instagram → Connect</b> แล้วล็อกอิน IG</li>
+  <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → Meta App เลือกแอปเดิม → Permissions ใส่ ${IG_PERMS} → กด <b>Generate Access Token</b> → ตอนถามสิทธิ์ ติ๊กทั้งเพจ ${esc(page)} และบัญชี IG → อนุญาต<br><span class="fine">ถ้าในรายการไม่มี instagram_content_publish: <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps</a> → แอปเดิม → Add use case → เลือกเรื่อง Instagram แล้วกลับมากดใหม่</span></li>
+  <li>คัดลอกโทเค็นมาวางด้านล่าง กดเชื่อม (เป็นการเชื่อมเพจเดิมซ้ำพร้อมสิทธิ์ IG ไม่ต้องกดยกเลิกเพจก่อน)</li></ol>
+  <textarea class="input" id="${tid}" rows="3" placeholder="วางโทเค็นที่นี่"></textarea>
+  <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="${act}">เชื่อม Instagram</button></div>${msg?`<p class="fine" style="margin-top:8px">${esc(msg)}</p>`:''}</div>`;}
+const igBadge=line=>{const m=String(line||'').match(/^IG (✓|รอประมวลผล|ไม่ผ่าน).*$/m);if(!m)return '';const k=m[1];return `<span class="badge ${k==='✓'?'ok':k==='ไม่ผ่าน'?'bad':'warn'}" title="${esc(m[0])}">${k==='✓'?'+ IG Reels':k==='ไม่ผ่าน'?'IG ไม่ผ่าน':'IG กำลังขึ้น'}</span> `;};
 function rlConnBox(C){
   const fbOk=!!C.fb,thOk=!!C.th,o=S.rlConn||'';
   return `<div class="rl-conn">
     <div class="rl-ch"><span><b>Facebook</b> ${fbOk?`✅ ${esc(C.fb.name||'เพจ ReadLab')}`:'○ ยังไม่เชื่อม'}</span>${fbOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="fb">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="fb">ยกเลิก</button></span>`:`<button class="btn ${o==='fb'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="fb">${o==='fb'?'ปิด':'เชื่อมเพจ ReadLab'}</button>`}</div>
     <div class="rl-ch"><span><b>Threads</b> ${thOk?`✅ @${esc(C.th.username||'')}`:'○ ยังไม่เชื่อม'}</span>${thOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="th">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="th">ยกเลิก</button></span>`:`<button class="btn ${o==='th'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="th">${o==='th'?'ปิด':'เชื่อม Threads ReadLab'}</button>`}</div>
+    <div class="rl-ch"><span><b>Instagram</b> ${fbOk&&C.fb.ig?`✅ @${esc(C.fb.ig)} · คลิปที่ขึ้นเพจลง IG Reels ด้วย`:'○ ยังไม่เชื่อม'}</span>${fbOk&&C.fb.ig?`<button class="btn btn-line btn-sm" data-a="igCheck" data-v="readlab">ตรวจอีกครั้ง</button>`:fbOk?`<button class="btn ${o==='ig'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="ig">${o==='ig'?'ปิด':'เชื่อม IG ReadLab'}</button>`:'<span class="fine">เชื่อมเพจก่อน</span>'}</div>
+    ${o==='ig'&&fbOk&&!C.fb.ig?igSteps('เพจ ReadLab','rl-ig-token','rlIgConnect',RLC.msg):''}
     ${fbOk||thOk?`<p class="fine" style="margin:6px 0 0">ช่องที่เชื่อมแล้ว: โพสต์ที่อนุมัติจะขึ้นเองวันละ 2 รอบ (10:00 และ 19:05 น.) รอบละไม่เกิน 2 ชิ้นต่อช่อง ยอดผู้ติดตามดึงจริงทุกครั้งที่เปิดหน้านี้ · ไม่เติมแฮชแท็ก SheetLab</p>`:`<p class="fine" style="margin:6px 0 0">ยังไม่เชื่อม: อนุมัติแล้วกด "คัดลอกข้อความ" ไปโพสต์เอง แล้วกด "โพสต์เองแล้ว ✓"</p>`}
     ${o==='fb'&&!fbOk?`<div class="rl-howto"><b>เชื่อมเพจ Facebook ReadLab (ทำครั้งเดียว ~3 นาที)</b><ol>
       <li>สร้างเพจ ReadLab ด้วยบัญชี Facebook เดียวกับที่เป็นแอดมินเพจ SheetLab</li>
@@ -3053,7 +3067,7 @@ function sheetlabContent(){
     return `<div class="post ${open?'':'compact'}" data-pid="${p.id}">
       ${thumb}
       <div>
-        <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> ${p.channel==='threads'?'<span class="badge gray" title="โพสต์ช่อง Threads">Threads</span> ':''}<span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
+        <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> ${p.channel==='threads'?'<span class="badge gray" title="โพสต์ช่อง Threads">Threads</span> ':''}${igBadge(p.notes)}<span class="fine">${esc(KIND_TH[p.kind]||p.kind||'')}</span> ${p.source?byLine(p.source):''}</span>
           <span class="fine">${p.published_at?'โพสต์เมื่อ '+fdt(Date.parse(p.published_at)):p.scheduled_at?'กำหนด '+fdt(Date.parse(p.scheduled_at)):'ยังไม่กำหนดเวลา'}</span></div>
         ${open&&editable?`<textarea class="input" id="pt-${p.id}" style="margin-top:8px">${esc(p.text||'')}</textarea>`:open?`<p style="white-space:pre-wrap;margin-top:8px">${esc(p.text||'')}</p>`:`<p class="ptxt" data-a="pexp" data-id="${p.id}" title="กดเพื่อดูเต็ม/แก้ไข">${esc(p.text||'(ไม่มีข้อความ)')}</p>`}
         ${p.error?`<p class="err" style="margin-top:6px">${esc(p.error)}</p>`:''}
@@ -3077,16 +3091,18 @@ function sheetlabContent(){
       </div></div>`;};
   let lastDay=null;
   const rows=list.map(p=>{const t=p.status==='published'?when(p):(p.scheduled_at?Date.parse(p.scheduled_at):0);const k=(f==='queue'&&rank(p)<2)?'urgent':(t?dayKey(t):'none');let sep='';if(k!==lastDay){lastDay=k;sep=`<div class="daysep${k==='urgent'?' urgent':''}">${k==='urgent'?'⚠️ ต้องจัดการก่อน':dayLabel(t)}</div>`;}return sep+card(p);}).join('');
-  const setupOpen=!!S.csetup||(!fb&&!th)||S.fbOpen||S.thOpen;
+  const setupOpen=!!S.csetup||(!fb&&!th)||S.fbOpen||S.thOpen||S.igOpen;
   return `
   <div class="cbar">
-    <span class="cstat"><span><i class="dot ${fb?'on':'off'}"></i>เพจ ${fb?'<b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${th?'on':'off'}"></i>Threads ${th?'<b>@'+esc(TH.user&&TH.user.username||'')+'</b>':'ยังไม่เชื่อม'}</span><button class="btn btn-line btn-sm" data-a="csetup" aria-expanded="${setupOpen}">${setupOpen?'ซ่อนการตั้งค่า':'ตั้งค่า / ทดสอบ'}</button></span>
+    <span class="cstat"><span><i class="dot ${fb?'on':'off'}"></i>เพจ ${fb?'<b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${th?'on':'off'}"></i>Threads ${th?'<b>@'+esc(TH.user&&TH.user.username||'')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${FB.ig?'on':'off'}"></i>Instagram ${FB.ig?'<b>@'+esc(FB.ig.username||'')+'</b>':'ยังไม่เชื่อม'}</span><button class="btn btn-line btn-sm" data-a="csetup" aria-expanded="${setupOpen}">${setupOpen?'ซ่อนการตั้งค่า':'ตั้งค่า / ทดสอบ'}</button></span>
     <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="postRefresh">รีเฟรช</button><button class="btn btn-dark btn-sm" data-a="postNew">+ เพิ่มโพสต์เอง</button></span>
   </div>
   ${setupOpen?`<div class="card" style="padding:12px 14px;margin-bottom:10px">
     <span class="fine">${fb?'✅ เชื่อมเพจ <b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b> แล้ว โพสต์ที่อนุมัติจะขึ้นเพจอัตโนมัติวันละ 2 รอบ 10:00 และ 19:05 น. <button class="btn btn-line btn-sm" data-a="fbTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="fbDisconnect">ยกเลิกการเชื่อม</button>':'⚠️ ยังไม่ได้เชื่อมเพจ Facebook — โพสต์ที่อนุมัติต้องคัดลอกไปโพสต์เอง <button class="btn btn-cta btn-sm" data-a="fbOpen">เชื่อมเพจ Facebook</button>'}</span>
     <span class="fine" style="display:block;margin-top:6px">${TH.connected?'✅ เชื่อม Threads <b>@'+esc(TH.user&&TH.user.username||'')+'</b> แล้ว โพสต์ช่อง Threads ที่อนุมัติจะขึ้นอัตโนมัติวันละ 2 รอบ 10:00 และ 19:05 น. <button class="btn btn-line btn-sm" data-a="thTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="thDisconnect">ยกเลิก</button>':'○ ยังไม่ได้เชื่อม Threads (ทำการตลาดคู่กับเพจ) <button class="btn btn-line btn-sm" data-a="thOpen">เชื่อม Threads</button>'}</span>
+    ${fb?`<span class="fine" style="display:block;margin-top:6px">${FB.ig?'✅ เชื่อม Instagram <b>@'+esc(FB.ig.username||'')+'</b> แล้ว คลิป Reels ที่ขึ้นเพจจะลง Instagram Reels ด้วยอัตโนมัติ <button class="btn btn-line btn-sm" data-a="igCheck">ตรวจอีกครั้ง</button>':'○ ยังไม่ได้เชื่อม Instagram (คลิป Reels ลง IG ด้วย ได้ลูกค้าเพิ่ม) <button class="btn '+(S.igOpen?'btn-line':'btn-cta')+' btn-sm" data-a="igOpen">'+(S.igOpen?'ปิด':'เชื่อม Instagram')+'</button>'}</span>`:''}
   </div>
+  ${S.igOpen&&fb&&!FB.ig?`<div class="card" style="padding:4px 14px 14px;margin-bottom:12px">${igSteps('เพจ '+(FB.page&&FB.page.name||'SheetLab'),'ig-token','igConnect',FB.igMsg)}</div>`:''}
   ${S.fbOpen&&!fb?`<div class="card" style="padding:16px;margin-bottom:12px">
     <h3 class="h3" style="margin-top:0">เชื่อมเพจ Facebook (ทำครั้งเดียว)</h3>
     ${FB.app===false?`<p class="err">ยังไม่ได้ใส่ FB_APP_ID / FB_APP_SECRET บน Vercel — ทำข้อ 1 ก่อน</p>`:''}
@@ -3869,6 +3885,15 @@ function act(a,el){
     case 'rlexp':{S.rlexp=S.rlexp||{};if(S.rlexp[id])delete S.rlexp[id];else S.rlexp[id]=1;render(true);break;}
     case 'rlRefresh':RL.data=null;loadRL();render(true);break;
     case 'rlcfgOpen':S.rlcfg=!S.rlcfg;render(true);break;
+    case 'igOpen':S.igOpen=!S.igOpen;FB.igMsg='';render(true);break;
+    case 'igConnect':case 'rlIgConnect':{const rl=a==='rlIgConnect',tid=rl?'#rl-ig-token':'#ig-token',ta=$(tid),token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}
+      const pageId=rl?(RL.data&&RL.data.connect&&RL.data.connect.fb&&RL.data.connect.fb.id)||'':(FB.page&&FB.page.id)||'';
+      const setMsg=m=>{if(rl)RLC.msg=m;else FB.igMsg=m;render(true);const t=$(tid);if(t)t.value=token;};setMsg('กำลังเชื่อม...');
+      adminPost('/api/fb?action=connect'+(rl?'&brand=readlab':''),{token,pageId}).then(async j=>{if(!j.ok){setMsg('ไม่สำเร็จ: '+(j.error||''));return;}
+        if(!j.ig){setMsg('เชื่อมเพจใหม่แล้ว แต่ยังไม่พบ Instagram ที่ผูกกับเพจ "'+j.page.name+'" — เช็คข้อ 1-2 และตอนกด Generate ต้องติ๊กบัญชี IG ด้วย แล้วลองใหม่');return;}
+        if(rl){RLC.msg='';S.rlConn='';RL.data=null;loadRL();}else{FB.igMsg='';S.igOpen=false;await loadFbStatus();render(true);}
+        toast('เชื่อม Instagram @'+j.ig.username+' แล้ว คลิป Reels จะลง IG ด้วย');}).catch(()=>setMsg('เชื่อมต่อไม่ได้'));break;}
+    case 'igCheck':{const rl=el.dataset.v==='readlab';adminApi('/api/fb?action=ig'+(rl?'&brand=readlab':'')).then(async j=>{toast(j&&j.ok?'Instagram @'+j.ig.username+' ใช้งานได้ · ผู้ติดตาม '+j.ig.followers:'ใช้ไม่ได้: '+((j&&j.error)||''));if(rl){RL.data=null;loadRL();}else{await loadFbStatus();render(true);}}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'rlConnOpen':S.rlConn=S.rlConn===el.dataset.v?'':el.dataset.v;RLC.choose=null;RLC.msg='';render(true);break;
     case 'rlFbConnect':{const ta=$('#rl-fb-token');const token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}RLC.msg='กำลังเชื่อม...';render(true);const t2=$('#rl-fb-token');if(t2)t2.value=token;
       adminPost('/api/fb?action=connect&brand=readlab',{token,pageId:el.dataset.page||''}).then(j=>{if(!j.ok){RLC.msg='ไม่สำเร็จ: '+(j.error||'');render(true);const t3=$('#rl-fb-token');if(t3)t3.value=token;return;}
@@ -3980,6 +4005,8 @@ function act(a,el){
     case 'toCheckout':glideTo('checkout');break;
     case 'exportCsv':exportCsv();break;
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
+    case 'exportOne':{const p=getProduct(el.dataset.id);if(p)exportCsv(p);break;}
+    case 'exportOneImgs':{const p=getProduct(el.dataset.id);if(p&&!S.zipBusy)exportImgs(p);break;}
     case 'facAiToggle':FAC.aiOff=Object.assign(FAC.aiOff||{},{[el.dataset.id]:!el.checked});break;
     case 'cartAdd':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
       toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);render(true);break;}
