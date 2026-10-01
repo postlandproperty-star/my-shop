@@ -190,7 +190,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rvt-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.rvt-sel{width:auto;min-width:0;max-width:100%;padding:6px 10px;font-size:14px}
 .rl-conn{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.rl-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}.rl-howto{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px}.rl-howto ol{padding-left:20px;line-height:1.7;margin:6px 0 8px}
 .thumb .mv{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between;pointer-events:none}.thumb .mv button{pointer-events:auto;width:26px;height:26px;border-radius:50%;border:0;background:rgba(15,27,51,.75);color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0}.thumb .mv button:only-child{margin-left:auto}.thumb .mv button[data-d="-1"]:only-child{margin-left:0;margin-right:auto}.th-cover{position:absolute;left:4px;top:4px;background:#2440E8;color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
-.facai{display:flex;flex-direction:column;gap:6px;margin:8px 0}.facai-imgs{display:flex;gap:6px;flex-wrap:wrap}.facai-imgs img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#fff}.facai .btn{align-self:flex-start}
+.facai{display:flex;gap:6px;align-items:center;margin:8px 0;cursor:pointer}.facai input{width:18px;height:18px}.facai-imgs{display:flex;gap:6px;flex-wrap:wrap}.facai-imgs img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#fff}.facai .btn{align-self:flex-start}
 .rvt-link{background:none;border:0;padding:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer}.rvt-list{display:grid;gap:10px}.rvt-card{padding:14px 16px}.rvt-card.off{opacity:.55}.rvt-st{font-size:17px}.rvt-text{margin:8px 0 6px;white-space:pre-wrap}.empty-rv{padding:18px}
 .so{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.so>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.so>summary::-webkit-details-marker{display:none}.so>summary::after{content:'▾';color:var(--muted)}.so[open]>summary{margin-bottom:10px}.so[open]>summary::after{content:'▴'}
 .dtile.wide{grid-column:span 2}.dtile .so-live{margin-left:4px}.srcbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 6px;background:var(--line);gap:2px}.srcbar i,.srcleg i{display:block}.srcbar i.ads,.srcleg .ads i{background:#2440E8}.srcbar i.organic,.srcleg .organic i{background:#0F9D6B}.srcbar i.direct,.srcleg .direct i{background:#9AA6BC}
@@ -2261,8 +2261,7 @@ function facBox(inFactory){
     ${FAC.jobs.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.kind==='notion'?'Notion Template · ':j.pages?j.pages+' หน้า · ':''}ราคาที่เสนอ ${baht(j.price)}${j.done_at?' · เสร็จ '+fdt(Date.parse(j.done_at)):''}</span></div>
       ${j.kind==='notion'?`<div class="facnotion"><span class="fine">📒 Notion Template · <b>ขั้นตอนเดียวที่ต้องกดเอง:</b> เปิดหน้าใน Notion → Share → Publish → เปิด Allow duplicate → คัดลอกลิงก์มาวางด้านล่าง</span>
         <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><a class="btn btn-dark btn-sm" href="${esc(j.notion_url||'#')}" target="_blank" rel="noopener noreferrer">เปิดใน Notion</a><input class="input" id="fpub-${esc(j.id)}" data-fpub="${esc(j.id)}" inputmode="url" placeholder="วางลิงก์ที่ Publish แล้ว เช่น https://xxx.notion.site/..." value="${esc((FAC.pub||{})[j.id]||'')}" style="flex:1;min-width:220px"></div></div>`:''}
-      <div class="facai">${(j.ai_images||[]).length?`<div class="facai-imgs">${j.ai_images.map((u,i)=>`<img src="${esc(u)}" alt="รูปขายที่ AI ทำ ${i+1}" width="72" height="72" loading="lazy">`).join('')}</div><span class="fine">รูปขายจาก AI ${j.ai_images.length} รูป จะใส่เป็นภาพแรกของสินค้าตอนอนุมัติ (เลื่อนลำดับหรือลบได้ในหน้าแก้สินค้า)</span>`:''}
-        <button class="btn btn-line btn-sm" data-a="facAiImgs" data-id="${esc(j.id)}" ${FAC.aiBusy?'disabled':''}>${FAC.aiBusy===j.id?'กำลังทำรูป 5 รูปพร้อมกัน (1-3 นาที)...':(j.ai_images||[]).length?'✨ ทำรูปขายชุดใหม่':'✨ ทำรูปขาย 5 รูปด้วย AI (กดครั้งเดียว)'}</button></div>
+      <label class="facai fine"><input type="checkbox" data-a="facAiToggle" data-id="${esc(j.id)}" ${(FAC.aiOff||{})[j.id]?'':'checked'}> ✨ ทำรูปขายด้วย AI 5 รูปตอนกดอนุมัติ (~${imgQuality()==='high'?30:imgQuality()==='low'?2:7.5} บาท จ่ายเฉพาะสินค้าที่อนุมัติ)${FAC.aiBusy===j.id?' · <b>กำลังทำรูป 1-3 นาที...</b>':''}</label>
       <div class="row" style="gap:6px;flex-wrap:wrap">${j.kind==='notion'?'':`<a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a>`}<button class="btn btn-cta btn-sm" data-a="facQuick" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${FAC.busy===j.id&&FAC.quick?'กำลังเตรียมและลงขาย...':S.confirm==='fq:'+j.id?'กดอีกครั้ง: ลงขาย '+baht(j.price):'อนุมัติเลย'}</button><button class="btn btn-line btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจก่อนอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
   </section>`;
 }
@@ -2280,6 +2279,7 @@ async function facAiImages(id){
 }
 async function facApprove(id,quick){
   const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;
+  if(!(FAC.aiOff||{})[id]&&!(j.ai_images||[]).length&&!FAC.aiBusy)await facAiImages(id); // ทำรูปขายตอนอนุมัติเท่านั้น (เสียเงินเฉพาะสินค้าที่ลงขาย)
   if(j.kind==='notion'){ // Notion template: ต้องมีลิงก์ที่คุณแดน Publish แล้ว (notion.site) รูปปก/ตัวอย่างโรงงานทำมาให้แล้ว
     const inp=document.getElementById('fpub-'+id);const pub=String(inp?inp.value:(FAC.pub||{})[id]||'').trim();FAC.pub=Object.assign(FAC.pub||{},{[id]:pub});
     if(!/^https:\/\/([a-z0-9-]+\.)?notion\.(site|so)\//i.test(pub)||/app\.notion\.com/i.test(pub)){FAC.quick=false;toast('วางลิงก์ที่ Publish แล้วก่อน (ขึ้นต้น https://…notion.site/…) ในการ์ดนี้');render(true);return;}
@@ -3938,7 +3938,7 @@ function act(a,el){
       if(S.confirm==='import'){const l=loadLegacy();if(l){D=normalize(l);S.confirm='';S.productId=null;pushAll().then(()=>{render(true);toast('นำเข้าข้อมูลเก่าแล้ว');});}}
       else{S.confirm='import';render(true);}break;}
     case 'toCheckout':glideTo('checkout');break;
-    case 'facAiImgs':if(!FAC.aiBusy)facAiImages(el.dataset.id);break;
+    case 'facAiToggle':FAC.aiOff=Object.assign(FAC.aiOff||{},{[el.dataset.id]:!el.checked});break;
     case 'cartAdd':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
       toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);render(true);break;}
     case 'cartOpen':S.cart=true;drawCart._f=false;drawCart();break;
