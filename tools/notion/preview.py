@@ -63,6 +63,19 @@ def doodle(d, kind, x, y, s=90, col=INK, w=5):  # ไอคอนลายเส
         d.line([x + s * .7, y, x + s * .7, y + s * .3, x + s, y + s * .3], fill=col, width=w)
         for i in range(3): d.line([x + 14, y + s * .45 + i * 16, x + s - 14, y + s * .45 + i * 16], fill=col, width=4)
 
+def notion_logo(d, x, y, s=64):  # สัญลักษณ์ Notion (กล่องขาวขอบดำ ตัว N มีเชิง) บอกลูกค้าว่าเป็นเทมเพลต Notion
+    w = max(3, s // 14); sh = max(3, s // 12)
+    d.polygon([(x + sh, y + sh * 2), (x + s - sh, y), (x + s, y + sh), (x + s, y + s - sh), (x + sh * 2, y + s), (x, y + s - sh), (x, y + sh * 2)], fill=INK)
+    d.polygon([(x, y + sh), (x + s - sh * 2, y), (x + s - sh, y + sh // 2 + w), (x + s - sh, y + s - sh * 2), (x + sh, y + s - sh), (x, y + s - sh * 2)], fill=PAPER, outline=INK, width=w)
+    # ตัว N แบบมีเชิง
+    l, r, t, b = x + s * .22, x + s * .70, y + s * .22, y + s * .74
+    st = max(3, s * .085); sw = s * .12
+    d.rectangle([l, t, l + st * .8, b], fill=INK)                     # ขาซ้าย (บาง)
+    d.rectangle([r - st * .8, t, r, b], fill=INK)                     # ขาขวา (บาง)
+    d.polygon([(l, t), (l + st * 1.9, t), (r, b), (r - st * 1.9, b)], fill=INK)  # เส้นทแยง (หนา)
+    for cx in (l + st * .4, r - st * .4): d.rectangle([cx - sw, t - st * .1, cx + sw, t + st * .6], fill=INK)  # เชิงบน
+    d.rectangle([l + st * .4 - sw, b - st * .6, l + st * .4 + sw, b + st * .1], fill=INK)  # เชิงล่างซ้าย
+
 def dots3(d, x, y, col=INK):  # ปุ่มหน้าต่าง 3 จุด แบบโปร่ง
     for i in range(3): d.ellipse([x + i * 26, y, x + 14 + i * 26, y + 14], outline=col, width=3)
 
@@ -102,10 +115,11 @@ def cover(spec, out):
     card = card.rotate(-3, expand=True, resample=Image.BICUBIC)
     im.paste(card, (70, 560), card)
     d = ImageDraw.Draw(im)
-    doodle(d, 'chart', 1040, 470, 100); doodle(d, 'check', 60, 470, 90)
+    doodle(d, 'chart', 1050, 482, 92); doodle(d, 'check', 62, 498, 78)
     # ป้าย + ชื่อในกล่องขาวขอบดำ (เหมือนหัวข้อในเทมเพลต)
     pf = font('sb', 28); pw = d.textlength('NOTION TEMPLATE', font=pf)
-    d.rounded_rectangle([70, 70, 70 + pw + 40, 116], radius=23, fill=PAPER, outline=INK, width=3); d.text((90, 75), 'NOTION TEMPLATE', font=pf, fill=INK)
+    notion_logo(d, 70, 50, 112)
+    d.rounded_rectangle([204, 82, 204 + pw + 40, 128], radius=23, fill=PAPER, outline=INK, width=3); d.text((224, 87), 'NOTION TEMPLATE', font=pf, fill=INK)
     d.text((W - 70 - d.textlength('SheetLab', font=font('xb', 40)), 70), 'SheetLab', font=font('xb', 40), fill=INK)
     f1 = font('xb', 80); lines = []
     t = str(spec.get('title', ''))
@@ -114,7 +128,7 @@ def cover(spec, out):
         while d.textlength(t[:cut], font=f1) > 960 and cut > 1: cut = t.rfind(' ', 0, cut) if ' ' in t[:cut] else cut - 1
         lines.append(t[:cut].strip()); t = t[cut:].strip()
     tw = max(d.textlength(l, font=f1) for l in lines) if lines else 0
-    y = 150; bh = 40 + 96 * len(lines)
+    y = 196; bh = 40 + 96 * len(lines)
     box(d, [70, y, 70 + tw + 70, y + bh], r=14, w=6, sh=12)
     for i, l in enumerate(lines): d.text((105, y + 14 + i * 96), l, font=f1, fill=INK)
     y += bh + 34
@@ -134,10 +148,11 @@ def section(spec, sec, out, idx, n):
     W, H = 1200, 900
     im = Image.new('RGB', (W, H), BG); d = ImageDraw.Draw(im)
     halftone(d, 1110, 120, 130, step=15, dot=5)
-    d.text((44, 26), fit(d, f"{spec.get('title', '')}  /  {sec.get('name', '')}", font('md', 24), 900), font=font('md', 24), fill=MUTED)
+    notion_logo(d, 44, 16, 44)
+    d.text((100, 24), fit(d, f"Notion  /  {spec.get('title', '')}  /  {sec.get('name', '')}", font('md', 24), 860), font=font('md', 24), fill=MUTED)
     tf = font('xb', 54); tt = fit(d, sec.get('name', ''), tf, 1000)
-    box(d, [44, 76, 44 + d.textlength(tt, font=tf) + 52, 168], r=12, w=5, sh=10)
-    d.text((70, 86), tt, font=tf, fill=INK)
+    box(d, [44, 80, 44 + d.textlength(tt, font=tf) + 52, 172], r=12, w=5, sh=10)
+    d.text((70, 90), tt, font=tf, fill=INK)
     box(d, [44, 200, 1146, 812], r=18, w=5, sh=12)
     cols = (sec.get('columns') or [])[:5]; rows = (sec.get('rows') or [])[:8]
     if cols:
@@ -187,7 +202,8 @@ def pin(spec, pn, out, idx):
     im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im)
     halftone(d, 900, 110, 150, col=(70, 70, 70) if dark else INK)
     pf = font('sb', 28); pw = d.textlength('NOTION TEMPLATE', font=pf)
-    d.rounded_rectangle([60, 70, 60 + pw + 40, 116], radius=23, fill=PAPER, outline=INK if not dark else PAPER, width=3); d.text((80, 75), 'NOTION TEMPLATE', font=pf, fill=INK)
+    notion_logo(d, 60, 60, 66)
+    d.rounded_rectangle([142, 70, 142 + pw + 40, 116], radius=23, fill=PAPER, outline=INK if not dark else PAPER, width=3); d.text((162, 75), 'NOTION TEMPLATE', font=pf, fill=INK)
     f = font('xb', 76); L = wrap_lines(d, pn.get('headline', spec.get('title', '')), f, 820, 4)
     y = 160
     if not dark:
