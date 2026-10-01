@@ -191,6 +191,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rl-conn{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.rl-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0}.rl-howto{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:14px}.rl-howto ol{padding-left:20px;line-height:1.7;margin:6px 0 8px}
 .thumb .mv{position:absolute;left:4px;right:4px;bottom:4px;display:flex;justify-content:space-between;pointer-events:none}.thumb .mv button{pointer-events:auto;width:26px;height:26px;border-radius:50%;border:0;background:rgba(15,27,51,.75);color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:0}.thumb .mv button:only-child{margin-left:auto}.thumb .mv button[data-d="-1"]:only-child{margin-left:0;margin-right:auto}.th-cover{position:absolute;left:4px;top:4px;background:#2440E8;color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px}
 .facai{display:flex;gap:6px;align-items:center;margin:8px 0;cursor:pointer}.facai input{width:18px;height:18px}.facai-imgs{display:flex;gap:6px;flex-wrap:wrap}.facai-imgs img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#fff}.facai .btn{align-self:flex-start}
+.pexport{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
 .rvt-link{background:none;border:0;padding:0;font:inherit;color:var(--brand);text-decoration:underline;cursor:pointer}.rvt-list{display:grid;gap:10px}.rvt-card{padding:14px 16px}.rvt-card.off{opacity:.55}.rvt-st{font-size:17px}.rvt-text{margin:8px 0 6px;white-space:pre-wrap}.empty-rv{padding:18px}
 .so{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.so>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.so>summary::-webkit-details-marker{display:none}.so>summary::after{content:'▾';color:var(--muted)}.so[open]>summary{margin-bottom:10px}.so[open]>summary::after{content:'▴'}
 .dtile.wide{grid-column:span 2}.dtile .so-live{margin-left:4px}.srcbar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:8px 0 6px;background:var(--line);gap:2px}.srcbar i,.srcleg i{display:block}.srcbar i.ads,.srcleg .ads i{background:#2440E8}.srcbar i.organic,.srcleg .organic i{background:#0F9D6B}.srcbar i.direct,.srcleg .direct i{background:#9AA6BC}
@@ -2566,6 +2567,44 @@ function reviewsTab(){
       ${x.text?`<p class="rvt-text">${esc(x.text)}</p>`:'<p class="fine rvt-text">(ให้ดาวอย่างเดียว ไม่มีความเห็น)</p>'}
       <span class="fine">${new Date(x.created_at).toLocaleString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}${x.updated_at?' · ลูกค้าแก้ไขล่าสุด '+new Date(x.updated_at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></article>`).join('')}</div>`}`;
 }
+/* ส่งออกสินค้าไปลง Shopee/Lazada เอง: CSV (เปิดใน Excel ภาษาไทยได้) + ZIP รูปแยกโฟลเดอร์ตามสินค้า */
+const exportList=()=>D.products.filter(p=>p.status==='published');
+function exportDesc(p){
+  const L=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean),pairs=t=>L(t).map(x=>x.replace(/\s*\|\s*/,': '));
+  const notion=pfmt(p)==='notion';
+  const parts=[p.headline&&p.headline!==p.name?p.headline:'',p.desc||'',
+    L(p.features).length?'สิ่งที่ได้รับ\n'+L(p.features).map(x=>'✅ '+x).join('\n'):'',
+    L(p.forwho).length?'เหมาะกับ\n'+L(p.forwho).map(x=>'• '+x).join('\n'):'',
+    L(p.specs).length?'รายละเอียด\n'+pairs(p.specs).join('\n'):'',
+    notion?'วิธีรับสินค้า\nได้ลิงก์เทมเพลต Notion กด Duplicate เข้า Notion ของตัวเอง ใช้ได้กับ Notion ฟรี ทั้งมือถือและคอม':'วิธีรับสินค้า\nเป็นไฟล์ PDF (สินค้าดิจิทัล) ไม่มีการจัดส่งสินค้าจริง'];
+  return parts.filter(Boolean).join('\n\n').slice(0,3000);
+}
+function exportCsv(){
+  const list=exportList();if(!list.length){toast('ยังไม่มีสินค้าที่เผยแพร่');return;}
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const head=['SKU','ชื่อสินค้า','ราคาขาย','ราคาปกติ (ก่อนลด)','ประเภท','หมวด','คำอธิบายสินค้า','รูปที่ 1 (ปก)','รูปที่ 2','รูปที่ 3','รูปที่ 4','รูปที่ 5','ลิงก์หน้าขายบนเว็บ'];
+  const rows=list.map(p=>{const im=(p.images||[]).slice(0,5);while(im.length<5)im.push('');
+    return [p.slug,String(p.name||'').slice(0,120),Number(p.price)||0,Number(p.fullPrice)>Number(p.price)?Number(p.fullPrice):'',PFMT[pfmt(p)][1],CATS[p.cat]||'',exportDesc(p),...im,location.origin+'/p/'+p.slug];});
+  const csv='﻿'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n'); // BOM ให้ Excel อ่านภาษาไทยถูก
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='sheetlab-products-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+  toast('ดาวน์โหลดข้อมูลสินค้า '+list.length+' รายการแล้ว');
+}
+async function exportImgs(){
+  const list=exportList().filter(p=>(p.images||[]).length);if(!list.length){toast('ยังไม่มีรูปสินค้า');return;}
+  S.zipBusy=true;render(true);
+  try{
+    if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const zip=new window.JSZip();let n=0;
+    for(const p of list){const dir=zip.folder(p.slug);
+      for(const [i,u] of (p.images||[]).slice(0,9).entries()){
+        try{const b=await fetch(u).then(r=>{if(!r.ok)throw 0;return r.blob();});const ext=(b.type.split('/')[1]||'jpg').replace('jpeg','jpg');dir.file(`${i+1}${i===0?'-cover':''}.${ext}`,b);n++;toast('กำลังรวมรูป '+n+' รูป...');}catch(e){}
+      }}
+    const blob=await zip.generateAsync({type:'blob'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sheetlab-product-images-'+new Date().toISOString().slice(0,10)+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast('ดาวน์โหลดรูป '+n+' รูปแล้ว (แยกโฟลเดอร์ตามสินค้า)');
+  }catch(e){console.error(e);toast('รวมรูปไม่สำเร็จ ลองใหม่อีกครั้ง');}
+  S.zipBusy=false;render(true);
+}
 function productsTab(){
   if(S.edit)return productForm();
   return `
@@ -2577,6 +2616,7 @@ function productsTab(){
     <span class="row" style="gap:6px"><button class="btn btn-dark btn-sm" data-a="newProduct">+ เล่มเดี่ยว</button><button class="btn btn-dark btn-sm" data-a="newBundle">+ สร้างชุด</button></span>
   </div>
   ${reviewBox()}
+  <div class="pexport"><button class="btn btn-line btn-sm" data-a="exportCsv">⬇ ดาวน์โหลดข้อมูลสินค้า (Excel)</button><button class="btn btn-line btn-sm" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy?'กำลังรวมรูป...':'⬇ ดาวน์โหลดรูปสินค้าทั้งหมด (ZIP)'}</button><span class="fine">ไว้ลงขายใน Shopee / Lazada เอง · เฉพาะสินค้าที่เผยแพร่แล้ว</span></div>
   <input class="input psearch" type="search" data-psearch="1" placeholder="🔎 ค้นหาสินค้า เช่น Notion, IELTS, คำศัพท์" aria-label="ค้นหาสินค้า" value="${esc(S.pq||'')}">
   <div class="pfilter" role="group" aria-label="แสดงสินค้า">${[['all','ทั้งหมด',D.products.length],['pdf','📄 PDF',D.products.filter(x=>pfmt(x)==='pdf').length],['notion','📒 Notion',D.products.filter(x=>pfmt(x)==='notion').length],['bundle','📦 ชุด',D.products.filter(isBundle).length]].filter(f=>f[0]==='all'||f[2]).map(f=>`<button class="chip" data-a="pfilter" data-v="${f[0]}" aria-pressed="${(S.pkind||'all')===f[0]}">${f[1]} ${f[2]}</button>`).join('')}</div>
   <p class="fine" id="pnone" hidden>ไม่พบสินค้าที่ค้นหา</p>
@@ -3938,6 +3978,8 @@ function act(a,el){
       if(S.confirm==='import'){const l=loadLegacy();if(l){D=normalize(l);S.confirm='';S.productId=null;pushAll().then(()=>{render(true);toast('นำเข้าข้อมูลเก่าแล้ว');});}}
       else{S.confirm='import';render(true);}break;}
     case 'toCheckout':glideTo('checkout');break;
+    case 'exportCsv':exportCsv();break;
+    case 'exportImgs':if(!S.zipBusy)exportImgs();break;
     case 'facAiToggle':FAC.aiOff=Object.assign(FAC.aiOff||{},{[el.dataset.id]:!el.checked});break;
     case 'cartAdd':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
       toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);render(true);break;}
