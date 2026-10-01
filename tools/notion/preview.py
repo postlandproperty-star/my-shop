@@ -63,7 +63,7 @@ def doodle(d, kind, x, y, s=90, col=INK, w=5):  # ไอคอนลายเส
         d.line([x + s * .7, y, x + s * .7, y + s * .3, x + s, y + s * .3], fill=col, width=w)
         for i in range(3): d.line([x + 14, y + s * .45 + i * 16, x + s - 14, y + s * .45 + i * 16], fill=col, width=4)
 
-def notion_logo(d, x, y, s=64):  # สัญลักษณ์ Notion (กล่องขาวขอบดำ ตัว N มีเชิง) บอกลูกค้าว่าเป็นเทมเพลต Notion
+def notion_logo(d, x, y, s=64):  # สัญลักษณ์ Notion (กล่องขาวขอบดำ ตัว N มีเชิง) บอกลูกค้าว่าเป็นเทมเพลต Notion · ใส่เฉพาะรูปปก (thumbnail) ตามที่คุณแดนกำหนด
     w = max(3, s // 14); sh = max(3, s // 12)
     d.polygon([(x + sh, y + sh * 2), (x + s - sh, y), (x + s, y + sh), (x + s, y + s - sh), (x + sh * 2, y + s), (x, y + s - sh), (x, y + sh * 2)], fill=INK)
     d.polygon([(x, y + sh), (x + s - sh * 2, y), (x + s - sh, y + sh // 2 + w), (x + s - sh, y + s - sh * 2), (x + sh, y + s - sh), (x, y + s - sh * 2)], fill=PAPER, outline=INK, width=w)
@@ -148,8 +148,7 @@ def section(spec, sec, out, idx, n):
     W, H = 1200, 900
     im = Image.new('RGB', (W, H), BG); d = ImageDraw.Draw(im)
     halftone(d, 1110, 120, 130, step=15, dot=5)
-    notion_logo(d, 44, 16, 44)
-    d.text((100, 24), fit(d, f"Notion  /  {spec.get('title', '')}  /  {sec.get('name', '')}", font('md', 24), 860), font=font('md', 24), fill=MUTED)
+    d.text((44, 26), fit(d, f"{spec.get('title', '')}  /  {sec.get('name', '')}", font('md', 24), 900), font=font('md', 24), fill=MUTED)
     tf = font('xb', 54); tt = fit(d, sec.get('name', ''), tf, 1000)
     box(d, [44, 80, 44 + d.textlength(tt, font=tf) + 52, 172], r=12, w=5, sh=10)
     d.text((70, 90), tt, font=tf, fill=INK)
@@ -202,8 +201,7 @@ def pin(spec, pn, out, idx):
     im = Image.new('RGB', (W, H), bg); d = ImageDraw.Draw(im)
     halftone(d, 900, 110, 150, col=(70, 70, 70) if dark else INK)
     pf = font('sb', 28); pw = d.textlength('NOTION TEMPLATE', font=pf)
-    notion_logo(d, 60, 60, 66)
-    d.rounded_rectangle([142, 70, 142 + pw + 40, 116], radius=23, fill=PAPER, outline=INK if not dark else PAPER, width=3); d.text((162, 75), 'NOTION TEMPLATE', font=pf, fill=INK)
+    d.rounded_rectangle([60, 70, 60 + pw + 40, 116], radius=23, fill=PAPER, outline=INK if not dark else PAPER, width=3); d.text((80, 75), 'NOTION TEMPLATE', font=pf, fill=INK)
     f = font('xb', 76); L = wrap_lines(d, pn.get('headline', spec.get('title', '')), f, 820, 4)
     y = 160
     if not dark:
