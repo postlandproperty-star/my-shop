@@ -2202,6 +2202,16 @@ export default async function handler(req, res) {
       if (action === 'set_reject') { x.status = 'rejected'; await save(items); return res.status(200).json({ ok: true }); }
       return res.status(400).json({ ok: false, error: 'unknown action' });
     }
+    if (action === 'storage_usage') { // ขนาดไฟล์ใน bucket product-images แยกตามโฟลเดอร์บนสุด (ดูว่าใกล้เต็มโควตาไหม)
+      if (!keyOk(req) && !(req.headers.authorization && await verifyAdmin(req.headers.authorization))) return res.status(401).json({ ok: false });
+      const H = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
+      const list = async (prefix, offset = 0) => { const r = await fetch(`${SB_URL}/storage/v1/object/list/product-images`, { method: 'POST', headers: H, body: JSON.stringify({ prefix, limit: 1000, offset }) }); return r.ok ? r.json() : []; };
+      const out = {}; let files = 0, calls = 0;
+      const walk = async (prefix, top) => { for (let off = 0; calls < 400; off += 1000) { calls++; const rows = await list(prefix, off); for (const x of rows) { if (x.id === null || !x.metadata) await walk(prefix ? `${prefix}/${x.name}` : x.name, top || x.name); else { out[top || '(root)'] = (out[top || '(root)'] || 0) + (Number(x.metadata.size) || 0); files++; } } if (rows.length < 1000) break; } };
+      await walk('', '');
+      const mb = (n) => Math.round(n / 1048576 * 10) / 10; const total = Object.values(out).reduce((a, b) => a + b, 0);
+      return res.status(200).json({ ok: true, total_mb: mb(total), files, folders: Object.fromEntries(Object.entries(out).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, mb(v)])), partial: calls >= 400 });
+    }
     if (action === 'capi_check') { // เช็คว่าใส่ FB_CAPI_TOKEN แล้วและใช้กับ Pixel ของร้านได้ (ไม่ส่งเหตุการณ์ซื้อปลอม)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
