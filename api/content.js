@@ -393,6 +393,16 @@ async function loadRefs(refs) {
   }
   return out;
 }
+// เงิน/เครดิตของผู้ให้บริการ AI หมด: แปลเป็นภาษาไทยพร้อมบอกว่าต้องไปเติมที่ไหน (คุณแดนเติมเอง)
+const AI_BILL = { google: 'Google AI (Nano Banana) ใช้เงินครบงบรายเดือนที่ตั้งไว้แล้ว: คุณแดนเพิ่มงบที่ aistudio.google.com/spend แล้วกดใหม่ หรือเลือกโมเดล OpenAI แทน',
+  openai: 'OpenAI (GPT Image) เครดิตหมด: คุณแดนเติมเครดิตที่ platform.openai.com/settings/organization/billing แล้วกดใหม่ หรือเลือกโมเดล Nano Banana แทน' };
+function aiErr(provider, msg, status) {
+  const m = String(msg || status || '');
+  if (status === 429 && /quota|billing|credit/i.test(m) || /spending cap|exceeded its monthly|no credits|insufficient_quota|billing_hard_limit|billing hard limit|exceeded your current quota/i.test(m)) {
+    const e = new Error(AI_BILL[provider]); e.billing = provider; return e;
+  }
+  return new Error(`${provider === 'google' ? 'Google' : 'OpenAI'}: ${m}`);
+}
 async function genImage({ model, prompt, quality, refs }) {
   model = IMG_MODEL_RE.test(String(model || '')) ? String(model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
   const ref = await loadRefs(refs);
@@ -401,7 +411,7 @@ async function genImage({ model, prompt, quality, refs }) {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [...ref.map((x) => ({ inlineData: { mimeType: x.mime, data: x.b64 } })), { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '1:1' } } }) });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(`Google: ${j?.error?.message || r.status}`);
+    if (!r.ok) throw aiErr('google', j?.error?.message, r.status);
     const part = (j?.candidates?.[0]?.content?.parts || []).find((x) => x.inlineData || x.inline_data);
     const d = part && (part.inlineData || part.inline_data);
     if (!d?.data) throw new Error('Google ไม่ส่งรูปกลับมา (อาจติดตัวกรองเนื้อหา) ลองแก้คำสั่งแล้วสร้างใหม่');
@@ -414,14 +424,14 @@ async function genImage({ model, prompt, quality, refs }) {
     ref.forEach((x, i) => fd.append('image[]', new Blob([x.buf], { type: x.mime }), `ref${i}.${/png/.test(x.mime) ? 'png' : 'jpg'}`));
     const re = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { Authorization: `Bearer ${KEY}` }, body: fd });
     const je = await re.json().catch(() => ({}));
-    if (!re.ok) throw new Error(`OpenAI: ${je?.error?.message || re.status}`);
+    if (!re.ok) throw aiErr('openai', je?.error?.message, re.status);
     if (!je?.data?.[0]?.b64_json) throw new Error('OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง');
     return { b64: je.data[0].b64_json, mime: 'image/png', model };
   }
   const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(quality) ? quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(`OpenAI: ${j?.error?.message || r.status}`);
+  if (!r.ok) throw aiErr('openai', j?.error?.message, r.status);
   if (!j?.data?.[0]?.b64_json) throw new Error('OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง');
   return { b64: j.data[0].b64_json, mime: 'image/jpeg', model };
 }
@@ -1116,7 +1126,7 @@ export default async function handler(req, res) {
         const g = await genImage({ model: body.model, prompt, quality: body.quality, refs: body.refs });
         if (diag) return res.status(200).json({ ok: true, model: g.model, ms: Date.now() - t0, kb: Math.round(g.b64.length * 0.75 / 1024), mime: g.mime });
         return res.status(200).json({ ok: true, image: `data:${g.mime};base64,${g.b64}` });
-      } catch (e) { return res.status(502).json({ ok: false, error: String(e.message || e).slice(0, 240) }); }
+      } catch (e) { return res.status(502).json({ ok: false, error: String(e.message || e).slice(0, 240), billing: e.billing || undefined }); }
     }
     if (action.startsWith('rl_')) {
       // ReadLab: เพจหนังสือ/การอ่านแยกจาก SheetLab (สร้างผู้ติดตามก่อน) · ข้อมูลอยู่แถว shop_state readlab แยกจากตาราง posts

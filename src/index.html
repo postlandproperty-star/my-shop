@@ -412,6 +412,8 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bxi-step{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:16px}.bxi-step span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:14px}
 .bxi-models{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:6px 0 12px}.bxi-model{display:grid;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13px;background:var(--surface)}
 .bxi-model input{display:none}.bxi-model.on{border-color:#EE4D2D;box-shadow:0 0 0 1px #EE4D2D}.bxi-model b{font-size:13.5px}.bxi-model span{color:var(--muted);line-height:1.4}.bxi-model em{font-style:normal;font-weight:700;color:#C2410C}
+.bxi-err{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#FFF1F2;border:1px solid #FECDD3;color:#9F1239;font-size:14px;line-height:1.5;word-break:break-word}
+.bxi-broke{display:block;font-style:normal;font-size:12px;font-weight:700;color:#BE123C;margin-top:4px}
 .bxi-hero{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}.bxi-big{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;background:var(--bg);text-align:center}.bxi-big img{width:100%;height:100%;object-fit:cover}
 .bxi-side{display:grid;gap:8px;align-content:start;justify-items:start}
 .bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
@@ -1284,6 +1286,7 @@ const IMG_MODELS=[['gemini-3-pro-image','Google Nano Banana Pro (ตัวหน
 /* จุดเด่น + ค่าใช้จ่ายประมาณต่อรูป (บาท รวมค่ารูปต้นแบบ คุณภาพปกติ) ใช้แสดงให้คุณแดนเลือกโมเดล */
 const IMG_INFO={'gemini-3-pro-image':['ตัวหนังสือไทยแม่นที่สุด ทำปกจากปกเดิมได้ใกล้เคียงที่สุด (แนะนำสำหรับปก)',4.5],'gemini-3.1-flash-image':['เร็วและถูก ตัวหนังสือไทยพอใช้ เหมาะลองหลายแบบก่อน',1.5],'gpt-image-2':['ภาพสวยสมจริง แต่ตัวหนังสือไทยเพี้ยนบ่อย',2.5],'gpt-image-2.5-sunburst':['รุ่นใหม่ของ OpenAI ภาพคมขึ้น ตัวหนังสือไทยยังไม่ชัวร์',3],'gpt-image-2.5-flare':['รุ่นใหม่ของ OpenAI ภาพสดใส ตัวหนังสือไทยยังไม่ชัวร์',3],'chatgpt-image-latest':['แบบเดียวกับในแอป ChatGPT',2.5]};
 const imgModel=()=>{try{return localStorage.getItem('sl_imgmodel')||'gpt-image-2';}catch(e){return 'gpt-image-2';}};
+const imgProv=m=>/^gemini-/.test(m)?'google':'openai';
 const imgQuality=()=>{try{return localStorage.getItem('sl_imgq')||'medium';}catch(e){return 'medium';}};
 async function coverGen(){
   const ta=document.getElementById('e-cover-prompt');const prompt=ta?ta.value:(S.coverPrompt||'');S.coverPrompt=prompt;
@@ -1577,7 +1580,8 @@ function bxBookPrompt(b,i,n){const t=String(b.headline&&b.headline.length<60?b.h
 ดีไซน์ปกเรียบ มินิมอล อ่านง่าย (ทุกเล่มในชุดใช้แบบเดียวกัน): พื้นปกสีน้ำเงินเข้ม (#1d2b53) แถบเฉียงสีเหลือง (#FFD23F) ด้านล่าง ชื่อเรื่องตัวใหญ่สีขาวกลางปก: "${t}"
 มุมบนซ้ายของปกมีป้ายเล็กสีเหลืองเขียนว่า "เล่ม ${i+1}/${n}" ห้ามมีป้ายราคา ไอคอน ภาพประกอบ หรือข้อความอื่นนอกจากที่กำหนด`+AI_NO_TEXT;}
 async function bxAiImage(prompt,refs){const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:imgModel(),quality:imgQuality(),refs:refs||[]})});
-  if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');const blob=await (await fetch(j.image)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
+  if(!j||!j.ok){const e=new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');if(j&&j.billing){e.billing=j.billing;S.aiBroke=Object.assign({},S.aiBroke,{[j.billing]:Date.now()});}throw e;}
+  if(S.aiBroke)delete S.aiBroke[imgProv(imgModel())];const blob=await (await fetch(j.image)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
 async function bxMakeBook(id,i,n){const b=getProduct(id);if(!b)return;const url=await bxAiImage(bxBookPrompt(b,i,n),(b.images||[]).slice(0,1));b.bookCover=url;save();}
 /* จัดรูปชุดจากปกจริงด้วย canvas (ไม่ใช้ AI): หัวข้อ ป้ายจำนวนเล่ม ปกทุกเล่ม 2 แถว ป้ายราคา แถบล่าง */
 async function bxCompose(d,books){
@@ -1593,7 +1597,7 @@ async function bxCompose(d,books){
   // ป้ายจำนวนเล่ม
   x.fillStyle='#E11D48';x.beginPath();x.arc(1085,118,82,0,Math.PI*2);x.fill();x.fillStyle='#fff';x.textAlign='center';x.font=F(800,74);x.fillText(String(books.length),1085,128);x.font=F(600,34);x.fillText('เล่ม',1085,170);x.textAlign='left';
   // ปกทุกเล่ม: ช่องสี่เหลี่ยมจัตุรัส แถวละไม่เกิน 4 เล่ม เต็มพื้นที่กลางภาพ
-  const urls=bxRefs(books);const imgs=(await Promise.all(urls.map(u=>new Promise(r=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>r(im);im.onerror=()=>r(null);im.src=u+(u.includes('?')?'&':'?')+'cv=1';})))).filter(Boolean);
+  const urls=bxRefs(books);const imgs=(await Promise.all(urls.map(u=>new Promise(r=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>r(im);im.onerror=()=>r(null);im.src=/^data:/.test(u)?u:u+(u.includes('?')?'&':'?')+'cv=1';})))).filter(Boolean);
   if(!imgs.length)throw new Error('ไม่มีปกให้จัด');
   const n=imgs.length,per=n<=4?n:n<=8?Math.ceil(n/2):4,rows=[];for(let k=0;k<n;k+=per)rows.push(imgs.slice(k,k+per));
   // แถวสุดท้ายสั้นกว่า: เกลี่ยให้แถวท้ายๆ ยาวพอกัน (10 เล่ม = 4/3/3)
@@ -1649,10 +1653,11 @@ function bundleForm(){
     <h3 class="h3">3. รูปชุด <span class="fine" style="font-weight:400">ทำ 2 ขั้น: ปกเล่มเดี่ยวก่อน แล้วรูปใหญ่ของชุดจะจัดจากปกชุดเดียวกัน ให้ดูเป็นสินค้าเดียวกัน</span></h3>
     <h4 class="bxi-step"><span>1</span> ปกเล่มเดี่ยว (ใช้ใน "ในชุดมีอะไรบ้าง")</h4>
     <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ไม่เปลี่ยนรูปสินค้าของแต่ละเล่ม</p>
-    <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em></label>`).join('')}</div>
+    <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?'<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน</i>':''}</label>`).join('')}</div>
     <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b"><div class="bxi-bc">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?'<span class="bxi-ok">✓ ปกเรียบ</span>':''}</div>
       <span class="fine">เล่ม ${i+1}</span><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button></div>`).join('')}</div>
     <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center"><button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${todo||n}...`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
+    ${S.bxImgErr?`<div class="bxi-err">⚠️ ${esc(S.bxImgErr)}</div>`:''}
     <h4 class="bxi-step" style="margin-top:20px"><span>2</span> รูปใหญ่ของชุด (หัวหน้าขาย · การ์ดหน้าร้าน · แอด)</h4>
     <div class="bxi-hero"><div class="bxi-big">${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
       <div class="bxi-side"><span class="fine">${todo?`ทำปกเรียบอีก ${todo} เล่มก่อน รูปชุดจะเป็นแบบเดียวกันทั้งหมด`:'ปกเรียบครบแล้ว จัดรูปชุดได้เลย'}</span>
@@ -1660,11 +1665,10 @@ function bundleForm(){
         <button class="btn btn-line btn-sm" data-a="bxAiCover" ${pend?'disabled':''}>${pend==='cover'?'กำลังสร้าง... (20-60 วินาที)':`✨ ให้ AI จัดเป็นภาพหนังสือวางเป็นเซ็ต (≈ ฿${mi[1]})`}</button>
         <label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-bxup="cover"></label>
         ${d.cover?'<button class="chip" data-a="bxCoverClear">ใช้ปกเล่มแรกแทน</button>':''}</div></div>
-    ${S.bxImgErr?`<p class="err" style="margin:8px 0 0">${esc(S.bxImgErr)}</p>`:''}
     <p class="fine" style="margin:10px 0 0">ได้รูปแล้วกด <b>บันทึกชุด</b> ด้านล่างด้วย</p>
   </div>`;})()}
   <div class="card" style="margin-top:14px">
-    <h3 class="h3">3. ราคาและแพ็กเกจ</h3>
+    <h3 class="h3">4. ราคาและแพ็กเกจ</h3>
     <p class="fine" style="margin:0 0 8px">กดปุ่มให้ระบบคิดราคาตามสูตรในแผน (5–6 เล่ม 60% · 7–8 เล่ม 55% · 9 เล่มขึ้นไป 50% ของราคาแยกรวม ลงท้าย 90 · Plus ≈ 1.65 เท่า · Pro ≈ 1.5 เท่าของ Plus · ราคาเปิดตัว −20%) แล้วแก้เองได้ทุกช่อง</p>
     <button class="btn btn-line btn-sm" data-a="bxCalc" ${chosen.length?'':'disabled'}>คำนวณราคาตามสูตร</button>
     <div class="bxe-plans">${d.plans.map(pl=>`<div class="bxe-plan ${pl.on?'':'off'}">
@@ -1681,7 +1685,7 @@ function bundleForm(){
   </div>
 
   <div class="card" style="margin-top:14px">
-    <h3 class="h3">4. ความน่าเชื่อถือ</h3>
+    <h3 class="h3">5. ความน่าเชื่อถือ</h3>
     <div class="field">${lb('b-guar','การันตี')}<input class="input" id="b-guar" data-d="guarantee" value="${esc(d.guarantee)}"></div>
     <div class="field">${lb('b-rev','รีวิวจริงจากลูกค้า (บรรทัดละ "ชื่อ | ข้อความ") เว้นว่างได้')}<textarea class="input" id="b-rev" data-d="reviews" rows="2">${esc(d.reviews)}</textarea></div>
     <div class="field">${lb('b-faq','คำถามที่พบบ่อย (บรรทัดละ "คำถาม | คำตอบ") เว้นว่างได้ ระบบใส่คำถามพื้นฐานให้')}<textarea class="input" id="b-faq" data-d="faq" rows="3">${esc(d.faq)}</textarea></div>
@@ -4640,10 +4644,16 @@ function act(a,el){
     case 'bxAiBooks':{const d=S.draft;if(!d)break;const ids=d.items.filter(i=>getProduct(i));const todo=ids.filter(i=>!getProduct(i).bookCover);const list=todo.length?todo:ids;
       if(!confirm(`ทำปกเรียบ ${list.length} รูป (เสียค่า AI ต่อรูปตามโมเดลที่เลือก) ใช้เวลาประมาณ ${Math.ceil(list.length*0.6)} นาที ทำเลยไหม?`))break;
       S.bxImg='all';S.bxImgErr='';S.bxImgN=1;render(true);
-      (async()=>{for(const id2 of list){try{await bxMakeBook(id2,ids.indexOf(id2),ids.length);}catch(e){S.bxImgErr='บางเล่มทำไม่สำเร็จ: '+(e.message||e);}S.bxImgN++;render(true);}
+      (async()=>{let ok=0,bad=0,stop='';
+        for(const id2 of list){try{await bxMakeBook(id2,ids.indexOf(id2),ids.length);ok++;}catch(e){bad++;S.bxImgErr=(e.message||String(e));if(e.billing){stop=e.message;break;}}S.bxImgN++;render(true);}
+        if(stop){S.bxImgErr=stop+(ok?` (ทำได้แล้ว ${ok} เล่ม ที่เหลือกดทำต่อได้หลังเติมเงิน)`:'');return 'stop';}
+        if(bad)S.bxImgErr=`ทำได้ ${ok} จาก ${list.length} เล่ม · เล่มที่ไม่สำเร็จ: ${S.bxImgErr} · กด "ทำปกเรียบเล่มที่เหลือ" อีกครั้ง`;
+        if(!ok)return 'none';
         // ขั้นที่ 2 อัตโนมัติ: จัดรูปใหญ่ของชุดจากปกเรียบที่เพิ่งทำ (ฟรี) ให้เป็นชุดเดียวกัน
-        S.bxImg='compose';render(true);try{const u=await uploadImage(await bxCompose(S.draft,S.draft.items.map(getProduct).filter(Boolean)));S.draft.cover=u;}catch(e){S.bxImgErr='จัดรูปชุดไม่สำเร็จ กด "จัดรูปชุด" อีกครั้ง';}})()
-        .then(()=>{S.bxImg='';toast('ทำปกเรียบครบ และจัดรูปชุดให้แล้ว กดบันทึกชุดด้วย');render(true);});break;}
+        S.bxImg='compose';render(true);try{const u=await uploadImage(await bxCompose(S.draft,S.draft.items.map(getProduct).filter(Boolean)));S.draft.cover=u;}catch(e){S.bxImgErr=(S.bxImgErr?S.bxImgErr+' · ':'')+'จัดรูปชุดไม่สำเร็จ กด "จัดรูปชุด" อีกครั้ง';}
+        return bad?'part':'all';})()
+        .catch(e=>{S.bxImgErr=String(e.message||e);return 'none';})
+        .then(r=>{S.bxImg='';toast(r==='all'?'ทำปกเรียบครบ และจัดรูปชุดให้แล้ว กดบันทึกชุดด้วย':r==='part'?'ทำได้บางเล่ม ดูรายละเอียดใต้ปุ่ม':'ยังทำปกไม่ได้ ดูสาเหตุใต้ปุ่ม');render(true);});break;}
     case 'dlAll':{const its=(S.order&&S.order.items||[]).filter(it=>it.link&&ownFile(it.link));if(!its.length)break;S.zipBusy=true;render(true);
       (async()=>{if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');const z=new window.JSZip();let n=0;
         for(const [i,it] of its.entries()){S.zipN=(i+1)+'/'+its.length;render(true);const b=await fetch(it.link.split('?')[0]).then(r=>{if(!r.ok)throw new Error('โหลดไม่ได้');return r.blob();});z.file(String(i+1).padStart(2,'0')+' '+String(it.name||'file').replace(/[\\/:*?"<>|]+/g,' ').slice(0,80).trim()+'.pdf',b);n++;}
