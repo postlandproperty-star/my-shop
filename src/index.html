@@ -212,6 +212,12 @@ footer{padding:28px 0 110px;text-align:center}
 .seti-warn{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
 .seti .tgl{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:14px;line-height:1.45;cursor:pointer}.seti .tgl input{width:18px;height:18px;margin-top:2px;flex:none}.seti>.btn{display:block}
 .seti-price{display:grid;grid-template-columns:1fr 1fr;gap:10px}.seti-price label{font-size:13px;color:var(--muted);display:grid;gap:4px}
+.waitbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:14px 0}
+.waitbar>b{margin-right:4px}.wchip{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 14px;font:inherit;font-size:14.5px;cursor:pointer;color:var(--ink)}
+.wchip span{display:inline-block;min-width:22px;padding:0 6px;border-radius:999px;background:var(--ink);color:var(--surface);font-size:12.5px;font-weight:700;margin-left:4px}
+.wchip.bad{border-color:var(--bad);color:var(--bad);background:var(--badbg)}.wchip.bad span{background:var(--bad)}.wchip.warn{border-color:#E8A23A;background:var(--warnbg)}.wchip.info{font-size:13.5px}
+.wchip .up{color:var(--ok)}.wchip .down{color:var(--bad)}
+.ads-more{margin-top:14px}.ads-more summary{cursor:pointer;list-style:none}.ads-more[open] summary{margin-bottom:10px}
 .adst{margin-bottom:14px}.adst-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.chip.warnchip:not([aria-pressed="true"]){border-color:var(--bad);color:var(--bad)}
 .ads-row{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}.ads-row.fix{background:var(--badbg);margin:0 -10px 6px;padding:12px 10px;border-radius:10px;border-top:0}
 .ads-img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--bg);display:block}
@@ -502,7 +508,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .tabs{padding:12px 0 6px;position:sticky;top:0;z-index:5;background:var(--bg)}
 .tabs button{border:1.5px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500;color:var(--ink);font-family:inherit}
 .tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.tabs-main{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tabs-main{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .tabs-main button{min-height:56px;border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:15px;font-weight:600;line-height:1.2;position:relative}
 .tabs-main button i{font-style:normal;font-size:20px;line-height:1}
 .tabs-main button .tcount{position:absolute;top:6px;right:8px;margin:0}
@@ -1367,7 +1373,7 @@ function drawLB(){
 }
 
 let D=normalize(load()||seed());
-const S={view:'shop',tab:'todo',filter:'paid',pfilter:'all',productId:null,edit:null,draft:null,zoom:null,ad:null,src:'',
+const S={view:'shop',tab:'home',filter:'paid',pfilter:'all',productId:null,edit:null,draft:null,zoom:null,ad:null,src:'',
   form:{name:'',email:'',coupon:'',bump:false},method:'promptpay',coupon:'',couponErr:'',err:'',currentId:null,open:{},confirm:'',toast:'',stripeReturn:false};
 
 /* ---------- logic ---------- */
@@ -2868,8 +2874,8 @@ function productsTab(){
     else if(so==='rev')list=list.slice().sort((a,b)=>prodStats(b).revenue-prodStats(a).revenue);
     else if(so==='hi'||so==='lo'){const pr=x=>isBundle(x)?Math.min(...bundlePlans(x).map(y=>y.price),1e9):Number(x.price)||0;list=list.slice().sort((a,b)=>so==='hi'?pr(b)-pr(a):pr(a)-pr(b));}
     const shown=list.filter(x=>!q||pq(x).includes(q));
-    const tabBar=`<div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='fix'&&t[2]?' warn':''}${t[0]==='new'&&t[2]?' newt':''}" data-a="pstat" data-v="${t[0]}" aria-selected="${st===t[0]}">${t[1]} (${t[2]})</button>`).join('')}<button role="tab" class="pt-tab${adWait||adFix?' warn':''}" data-a="pstat" data-v="ads" aria-selected="${st==='ads'}">📣 แอด${ADST.d&&ADST.d.ads?` (${ADST.d.ads.length+adWait})`:` (${adN})`}${adFix?` <span class="badge bad">ต้องแก้ ${adFix}</span>`:''}${adWait?` <span class="badge warn">รอตกลง ${adWait}</span>`:''}</button></div>`;
-    if(st==='ads')return `<div class="pt-card">${tabBar}<div style="padding:14px 0 6px">${adsStatusBox()}</div></div>`;
+    const tabBar=`<div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='fix'&&t[2]?' warn':''}${t[0]==='new'&&t[2]?' newt':''}" data-a="pstat" data-v="${t[0]}" aria-selected="${st===t[0]}">${t[1]} (${t[2]})</button>`).join('')}</div>`;
+    if(st==='ads'){S.pstat='all';}
     return `<div class="pt-card">
     ${tabBar}
     <div class="pt-tools">
@@ -2885,15 +2891,7 @@ function productsTab(){
       <p class="fine pt-none" id="pnone" ${shown.length?'hidden':''}>ไม่พบสินค้า${q?'ที่ค้นหา':'ในแท็บนี้'}</p>
     </div>`:`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าแรก แล้วระบบจะสร้างเซลเพจและลิงก์สำหรับแอดให้</p><button class="btn btn-dark btn-sm" data-a="newProduct">เพิ่มสินค้าใหม่</button></div>`}
   </div>`;})()}
-  <div class="card" style="margin-top:18px">
-    <h3 class="h3">ข้อมูลร้าน</h3>
-    <p class="muted" style="margin-bottom:12px">ข้อมูลทั้งหมดเก็บบน Supabase แก้ที่นี่แล้วลูกค้าทุกคนเห็นเหมือนกัน</p>
-    <div class="row" style="flex-wrap:wrap;gap:8px">
-      ${loadLegacy()?`<button class="btn ${S.confirm==='import'?'btn-danger':'btn-line'} btn-sm" data-a="importLegacy">${S.confirm==='import'?'กดอีกครั้ง: ทับข้อมูลบนระบบด้วยข้อมูลเก่าในเบราว์เซอร์นี้':'นำเข้าข้อมูลเก่าจากเบราว์เซอร์นี้'}</button>`:''}
-      <button class="btn ${S.confirm==='clearDemo'?'btn-danger':'btn-line'} btn-sm" data-a="clearDemo">${S.confirm==='clearDemo'?'กดอีกครั้ง: ลบออเดอร์/แคมเปญทั้งหมด (สินค้าอยู่ครบ)':'ล้างออเดอร์และแคมเปญตัวอย่าง'}</button>
-      <button class="btn ${S.confirm==='reset'?'btn-danger':'btn-line'} btn-sm" data-a="reset">${S.confirm==='reset'?'กดอีกครั้งเพื่อยืนยัน ลบทุกอย่างบนระบบ':'รีเซ็ตเป็นข้อมูลตัวอย่าง'}</button>
-    </div>
-  </div>`;
+`;
 }
 
 function couponsTab(){
@@ -2946,7 +2944,20 @@ function payTab(){
         <textarea class="input" id="s-bank" rows="2" placeholder="เช่น ธนาคารกสิกรไทย เลขบัญชี 123-4-56789-0 ชื่อบัญชี ...">${esc(D.settings.bankInfo||'')}</textarea></div>
     </details>
     <button class="btn btn-dark btn-sm" data-a="savePay">บันทึก</button>
-  </div>`;
+  </div>
+  <h3 class="h3" style="margin-top:22px">Facebook Pixel</h3>
+  ${pixelTab()}
+  <details class="card" style="margin-top:18px"><summary><b>ขั้นสูง: จัดการข้อมูลร้าน</b> <span class="fine">นำเข้า/ล้างข้อมูลตัวอย่าง (ไม่ค่อยได้ใช้)</span></summary>
+  <div style="margin-top:10px">
+    <h3 class="h3">ข้อมูลร้าน</h3>
+    <p class="muted" style="margin-bottom:12px">ข้อมูลทั้งหมดเก็บบน Supabase แก้ที่นี่แล้วลูกค้าทุกคนเห็นเหมือนกัน</p>
+    <div class="row" style="flex-wrap:wrap;gap:8px">
+      ${loadLegacy()?`<button class="btn ${S.confirm==='import'?'btn-danger':'btn-line'} btn-sm" data-a="importLegacy">${S.confirm==='import'?'กดอีกครั้ง: ทับข้อมูลบนระบบด้วยข้อมูลเก่าในเบราว์เซอร์นี้':'นำเข้าข้อมูลเก่าจากเบราว์เซอร์นี้'}</button>`:''}
+      <button class="btn ${S.confirm==='clearDemo'?'btn-danger':'btn-line'} btn-sm" data-a="clearDemo">${S.confirm==='clearDemo'?'กดอีกครั้ง: ลบออเดอร์/แคมเปญทั้งหมด (สินค้าอยู่ครบ)':'ล้างออเดอร์และแคมเปญตัวอย่าง'}</button>
+      <button class="btn ${S.confirm==='reset'?'btn-danger':'btn-line'} btn-sm" data-a="reset">${S.confirm==='reset'?'กดอีกครั้งเพื่อยืนยัน ลบทุกอย่างบนระบบ':'รีเซ็ตเป็นข้อมูลตัวอย่าง'}</button>
+    </div>
+  </div>
+  </details>`;
 }
 
 /* ---------- คอนเทนต์: คิวโพสต์ของเพจ (ตาราง posts) ---------- */
@@ -3185,7 +3196,7 @@ function meetingTab(){
   needPosts();
   const notes=teamNotes();
   const bf=S.briefFiles||[];
-  return `${dashBox()}<p class="fine" style="margin:12px 0 4px">ห้องประชุม (ห้อง "ลุมพินี" ชั้น 27): คุณแดนโยนโจทย์ ทีมมาประชุมแล้วรับไปทำ พี่ต้นสรุปแบ่งงานทุกเช้า 10:30 น. ถ้ามีโจทย์ใหม่ ด้านล่างคือรายงานจากทุกคน เรียงใหม่สุดก่อน <button class="chip" data-a="postRefresh">รีเฟรช</button></p>
+  return `<p class="fine" style="margin:12px 0 4px">ห้องประชุม (ห้อง "ลุมพินี" ชั้น 27): คุณแดนโยนโจทย์ ทีมมาประชุมแล้วรับไปทำ พี่ต้นสรุปแบ่งงานทุกเช้า 10:30 น. ถ้ามีโจทย์ใหม่ ด้านล่างคือรายงานจากทุกคน เรียงใหม่สุดก่อน <button class="chip" data-a="postRefresh">รีเฟรช</button></p>
   <div class="card brief-box">
     <div class="row" style="gap:10px;align-items:flex-start">${ava('manual')}<div style="flex:1;min-width:0">
       <textarea class="input" id="brief-text" rows="3" placeholder="โยนโจทย์ให้ทีม เช่น เจอเพจคู่แข่งทำคลิปแบบนี้ ลองทำบ้าง / อยากได้ชีทเรื่องนี้ / เปลี่ยนโทนโพสต์เป็นแบบนี้ (แนบรูปหรือไฟล์ประกอบได้)">${esc(S.briefDraft||'')}</textarea>
@@ -3601,8 +3612,8 @@ function adsStatusBox(){
     <div class="ads-acts">${a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`:a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:''}
       <a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${esc(a.id)}" target="_blank" rel="noopener noreferrer">Ads Manager</a></div></div>`;};
   return `<section class="card adst">
-    <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">สถานะแอดทั้งหมด</h3><button class="chip" data-a="adsStRefresh">${ADST.loading?'กำลังโหลด...':'รีเฟรช'}</button></div>
-    <p class="fine" style="margin:4px 0 10px">ดึงจาก Facebook จริงทุกครั้งที่เปิด รวมแอดที่ทำเองใน Ads Manager ด้วย · ตัวเลข 7 วันล่าสุด แปลงเป็นบาทตามเรทวันนี้ · ยอดขายคือที่ Facebook นับได้ (ต่อ Conversions API แล้ว ตัวเลขจะครบขึ้นเรื่อยๆ) · แอดที่ใช้เงินเกิน 2 เท่าของราคาสินค้าแล้วยังขายไม่ได้ จะขึ้นในกลุ่ม 🔴 ต้องแก้ไข และน้องบูสต์แจ้งในเช็คลิสต์ทุกวัน</p>
+    <h3 class="h3" style="margin:0">แอดทั้งหมด</h3>
+    <p class="fine" style="margin:4px 0 10px">สถานะจริงจาก Facebook · ตัวเลข 7 วัน · แอดที่ใช้เงินเกิน 2 เท่าของราคาแล้วยังขายไม่ได้จะอยู่ใน 🔴 ต้องแก้ไข</p>
     <div class="adst-chips">${chips.map(c=>`<button class="chip${c[0]==='fix'&&c[2]?' warnchip':''}" data-a="adsFilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>
     ${accBad&&(f==='all'||f==='fix')?`<div class="ads-row fix"><span class="ads-img" style="display:grid;place-items:center;font-size:24px">🏦</span><div class="ads-info"><b>บัญชีโฆษณา</b><span class="ads-st"><span class="badge bad">🔴 ${esc(A.error||'ใช้งานไม่ได้')}</span></span><span class="ads-todo">👉 แก้ที่หน้าการชำระเงิน แอดทุกตัวจะหยุดจนกว่าจะแก้</span></div><div class="ads-acts"><a class="btn btn-cta btn-sm" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">ไปหน้าชำระเงิน</a></div></div>`:''}
     ${d&&!d.ok&&!accBad?`<p class="fine" style="color:var(--bad)">ดึงสถานะไม่ได้: ${esc(d.error||'')}</p>`:''}
@@ -3672,6 +3683,27 @@ function adsAutoBox(compact,noLive){
   </section>`;
 }
 function adsTab(){
+  if(!ADST.d&&!ADST.loading)loadAdsStatus();
+  if(ADA.items===null&&!ADA.loading)loadAdsAuto();
+  const d=ADST.d||{},ads=d.ads||[],A=d.access||ADA.access,L=A&&A.limit;
+  const money=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');
+  const sum=k=>ads.reduce((a,x)=>a+(Number(x.week[k])||0),0),spend=sum('spendTHB'),val=sum('valueTHB'),buys=sum('purchases'),prof=val-spend;
+  const run=ads.filter(a=>a.group==='run').length,accBad=A&&!A.ok&&A.reason==='account';
+  const tile=(l,v,sub,cls)=>`<div class="dtile${cls?' '+cls:''}"><span>${l}</span><b>${v}</b>${sub?`<small>${sub}</small>`:''}</div>`;
+  return `<section class="card dash">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:8px"><h3 class="h3" style="margin:0">📣 โฆษณา 7 วันล่าสุด</h3><button class="chip" data-a="adsStRefresh">${ADST.loading?'กำลังโหลด...':'รีเฟรช'}</button></div>
+    <div class="dgrid">
+      ${tile('ค่าแอด',money(spend),`${run} แอดกำลังวิ่ง`)}
+      ${tile('ยอดขายจากแอด',money(val),`ซื้อ ${buys} ครั้ง (Facebook นับ)`)}
+      ${tile(prof>=0?'กำไร':'ขาดทุน',money(Math.abs(prof)),prof>=0?'ยอดขาย − ค่าแอด':'ค่าแอดมากกว่ายอดขาย',prof<0&&spend?'warn':'')}
+      ${tile('ต้นทุนต่อการซื้อ',buys?money(spend/buys):'–',buys?'ยิ่งต่ำยิ่งดี':'ยังไม่มีการซื้อ')}
+      ${tile('บัญชีโฆษณา',accBad?'⚠️ มีปัญหา':A&&A.ok?'✓ ปกติ':'–',accBad?esc(A.error||''):(A&&A.account&&A.account.payment?'จ่ายด้วย '+esc(A.account.payment):''),accBad?'warn':'')}
+      ${L?tile('วงเงินบัญชี',L.capTHB?money(L.leftTHB)+' เหลือ':'ยังไม่ได้ตั้ง',L.capTHB?`ใช้ไป ${money(L.spentTHB)} จาก ${money(L.capTHB)} · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">แก้วงเงิน ↗</a>`:`<a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">ตั้งวงเงินกันเงินหมด ↗</a>`,L.capTHB?(L.leftTHB<300?'warn':''):'warn'):''}
+    </div></section>
+  ${adsStatusBox()}
+  <details class="card ads-more"><summary><b>เครื่องมือเพิ่มเติม</b> <span class="fine">น้องบูสต์ · แคมเปญที่บันทึกในร้าน · เขียนข้อความแอดเอง</span></summary>${adsTools()}</details>`;
+}
+function adsTools(){
   const tot=D.campaigns.reduce((a,c)=>{const st=campStats(c);a.spend+=Number(c.spend)||0;a.rev+=st.rev;a.paid+=st.paid;return a;},{spend:0,rev:0,paid:0});
   const roasAll=tot.spend>0?(tot.rev/tot.spend).toFixed(2):'-';
   const a=ensureAd();
@@ -3714,9 +3746,8 @@ function adsTab(){
     </div>`;
   } else writer=`<div class="empty"><p>ยังไม่มีสินค้า เพิ่มสินค้าก่อนแล้วกลับมาเขียนโฆษณา</p></div>`;
   return `
-  ${adsAutoBox(false)}
   ${boostDesk()}
-  <h3 class="h3" style="margin-top:14px">ผลลัพธ์แต่ละแคมเปญ</h3>
+  <h3 class="h3" style="margin-top:14px">แคมเปญที่บันทึกในร้าน</h3>
   <div class="kpis">
     <div class="kpi"><div class="v">${baht(tot.spend)}</div><div class="l">ค่าโฆษณาที่ใช้ไป</div></div>
     <div class="kpi"><div class="v">${baht(tot.rev)}</div><div class="l">ยอดขายจากโฆษณา</div></div>
@@ -4113,13 +4144,29 @@ function teamTab(){
   </table></div>`;
 }
 
+/* 📊 ภาพรวม: หน้าแรกของหลังบ้าน เปิดมาเห็นตัวเลขเลย + เรื่องที่รอคุณแดน */
+function homeTab(){
+  if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
+  if(!ADST.d&&!ADST.loading)loadAdsStatus();
+  if(ADA.items===null&&!ADA.loading)loadAdsAuto();
+  if(SETI.items===null&&!SETI.loading)loadSets();
+  const ads=(ADST.d&&ADST.d.ads)||[],A=ADST.d&&ADST.d.access;
+  const accBad=A&&!A.ok&&A.reason==='account',adFix=ads.filter(a=>a.group==='fix').length+(accBad?1:0),adWait=(ADA.items||[]).filter(x=>['pending','failed'].includes(x.status)).length;
+  const fresh=D.products.filter(p=>p.fresh&&p.status!=='published').length,todo=todoOpenCount();
+  const waits=[[accBad?1:0,'🏦 บัญชีโฆษณาค้างชำระ แอดหยุดหมด','goAdsFix','bad'],[adFix-(accBad?1:0),'🔴 แอดใช้เงินแต่ยังขายไม่ได้','goAdsFix','bad'],[fresh,'✨ สินค้ามาใหม่ รอเผยแพร่','goNew','warn'],[adWait,'📣 แอดรอกดตกลง','goAds','warn'],[todo,'✅ เรื่องในเช็คลิสต์','goTodo','']].filter(w=>w[0]>0);
+  const sp=ads.reduce((a,x)=>a+(x.week.spendTHB||0),0),va=ads.reduce((a,x)=>a+(x.week.valueTHB||0),0);
+  return `<section class="waitbar">${waits.length?`<b>รอคุณแดน</b>${waits.map(w=>`<button class="wchip ${w[3]}" data-a="${w[2]}">${w[1]}${w[0]>1||w[2]!=='goAdsFix'?` <span>${w[0]}</span>`:''}</button>`).join('')}`:'<b>✓ ไม่มีเรื่องค้าง</b><span class="fine">ทีมดูแลอยู่ เปิดดูตัวเลขด้านล่างได้เลย</span>'}
+    ${ads.length?`<button class="wchip info" data-a="tab" data-v="ads">📣 แอด 7 วัน: ค่าแอด ฿${sp.toLocaleString('th-TH')} · ยอดขาย ฿${va.toLocaleString('th-TH')} · <b class="${va-sp>=0?'up':'down'}">${va-sp>=0?'กำไร':'ขาดทุน'} ฿${Math.abs(va-sp).toLocaleString('th-TH')}</b></button>`:''}</section>
+  ${dashBox()}`;
+}
 function adminView(){
   // เรียงตามความสำคัญ: 4 อันแรกใช้ทุกวัน (ปุ่มใหญ่) ที่เหลือเป็นแถวรองเลื่อนได้
-  const TABS_MAIN=[['todo','✅','เช็คลิสต์'],['meeting','📊','ห้องประชุม'],['orders','🧾','ออเดอร์'],['ads','📣','โฆษณา']];
-  const TABS_MORE=[['content','✍️','คอนเทนต์'],['team','👥','ทีม'],['products','🛍️','สินค้าและเซลเพจ'],['reviews','⭐','รีวิว'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['coupons','🏷️','โค้ดส่วนลด'],['pay','🏪','ข้อมูลร้าน'],['pixel','📡','Facebook Pixel']];
+  const TABS_MAIN=[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์'],['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา']];
+  const TABS_MORE=[['content','✍️','คอนเทนต์'],['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['reviews','⭐','รีวิว'],['coupons','🏷️','โค้ดส่วนลด'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['pay','⚙️','ตั้งค่าร้าน']];
+  if(S.tab==='pixel')S.tab='pay';
   const badge=k=>k==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:k==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:'';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
+  const body={home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <nav class="tabs" aria-label="เมนูหลังบ้าน"><div class="tabs-main">${TABS_MAIN.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}"><i aria-hidden="true">${t[1]}</i>${t[2]}${badge(t[0])}</button>`).join('')}</div>
       <div class="tabs-more">${TABS_MORE.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]} ${t[2]}${badge(t[0])}</button>`).join('')}</div></nav>
@@ -4543,7 +4590,10 @@ function act(a,el){
       if(!confirm(`ทำปกเรียบ ${list.length} รูป (เสียค่า AI ต่อรูปตามโมเดลที่เลือก) ใช้เวลาประมาณ ${Math.ceil(list.length*0.6)} นาที ทำเลยไหม?`))break;
       S.bxImg='all';S.bxImgErr='';S.bxImgN=1;render(true);
       (async()=>{for(const id2 of list){try{await bxMakeBook(id2,ids.indexOf(id2),ids.length);}catch(e){S.bxImgErr='บางเล่มทำไม่สำเร็จ: '+(e.message||e);}S.bxImgN++;render(true);}})().then(()=>{S.bxImg='';toast('ทำปกเรียบครบแล้ว');render(true);});break;}
-    case 'goAds':S.tab='products';S.pstat='ads';S.edit=null;render(false);break;
+    case 'goAds':S.tab='ads';ADST.f='all';S.edit=null;render(false);break;
+    case 'goAdsFix':S.tab='ads';ADST.f='fix';S.edit=null;render(false);break;
+    case 'goNew':S.tab='products';S.pstat='new';S.edit=null;render(false);break;
+    case 'goTodo':S.tab='todo';TODO.items=null;render(false);break;
     case 'adsRefresh':ADA.items=null;loadAdsAuto();render(true);break;
     case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'adsDismiss':{if(!confirm('ไม่ยิงแอดสินค้านี้?'))break;adminPost('/api/content?action=ads_auto_dismiss',{id}).then(j=>{if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status='dismissed';render(true);}else toast((j&&j.error)||'ไม่สำเร็จ');});break;}
@@ -4908,10 +4958,10 @@ function wireAuth(){
     const was=!!sbSession;sbSession=session||null;
     if(ev==='SIGNED_IN'){reloginShown=false;S.relogin=false;if(!was)afterLogin();}
     else if(ev==='TOKEN_REFRESHED'){reloginShown=false;}
-    else if(ev==='SIGNED_OUT'){if(S.relogin){S.relogin=false;S.view='login';render(false);return;}S.view='shop';S.tab='todo';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
+    else if(ev==='SIGNED_OUT'){if(S.relogin){S.relogin=false;S.view='login';render(false);return;}S.view='shop';S.tab='home';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
   });
 }
-setInterval(()=>{if(S.view==='admin'&&S.tab==='meeting'&&sbSession&&document.visibilityState==='visible'&&SO.d)loadSO();},30e3);
+setInterval(()=>{if(S.view==='admin'&&S.tab==='home'&&sbSession&&document.visibilityState==='visible'&&SO.d)loadSO();},30e3);
 setInterval(()=>{if(S.view==='admin'&&S.tab==='chat'&&sbSession&&document.visibilityState==='visible'&&!CHAT.loading){loadChat().then(()=>render(true));}},60e3);
 setInterval(()=>{if(CHAT.fastUntil>Date.now()&&S.view==='admin'&&S.tab==='chat'&&sbSession&&!CHAT.loading){const n=(CHAT.msgs||[]).length;loadChat().then(()=>{render(true);if((CHAT.msgs||[]).length>n){const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end',behavior:'smooth'});}});}},8e3);
 document.addEventListener('visibilitychange',async()=>{
