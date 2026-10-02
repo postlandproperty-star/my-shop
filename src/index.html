@@ -3243,7 +3243,7 @@ function dashBox(){
       ${(()=>{const P=d.posts.published,Q=d.posts.queued,ig=d.followers.instagramOn,pi=P.instagram||0,qi=Q.instagram||0;
         return tile('โพสต์ขึ้นแล้ว',`${P.facebook+P.threads+pi}`,`Facebook ${P.facebook}${ig||pi?` · IG Reels ${pi}`:''} · Threads ${P.threads}`,false,vs('published','up'))
           +tile('คิวโพสต์ 7 วันข้างหน้า',`${Q.facebook+Q.threads+qi}`,`Facebook ${Q.facebook}${ig?` · IG Reels ${qi}`:''} · Threads ${Q.threads}`,Q.facebook+Q.threads===0,vs('queued','up'));})()}
-      ${tile('checkout ค้างไม่จ่าย',num(d.sales.unpaid),'คนที่กดซื้อแต่ยังไม่จ่าย',d.sales.unpaid>0,vs('unpaid','down'))}
+      ${tile('ค้างจ่าย (กรอกอีเมลแล้ว)',num(d.sales.unpaid),`ระบบส่งอีเมลเตือนให้เอง${d.sales.peek!=null?` · เปิดหน้าจ่ายแล้วออกเฉยๆ ${num(d.sales.peek)} (ส่วนใหญ่บอท/ดูราคา)`:''}`,d.sales.unpaid>0,vs('unpaid','down'))}
       ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0,vs('todo','down'))}
     </div>
     ${stripeBox()}

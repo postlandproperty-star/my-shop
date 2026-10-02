@@ -2075,7 +2075,11 @@ export default async function handler(req, res) {
       const inY = (t) => t && t >= sinceY && t < untilY;
       const wkY = paid.filter((o) => inY(o.paid_at || o.created_at));
       const pubY = posts.filter((p) => p.status === 'published' && inY(p.published_at)).length;
-      const unpaidY = real.filter((o) => o.status !== 'paid' && inY(o.created_at)).length;
+      // ค้างจ่ายจริง = กรอกอีเมลแล้วแต่ยังไม่จ่าย (และยังไม่เคยจ่ายด้วยอีเมลนั้น) · เปิดหน้าจ่ายแล้วออกโดยไม่กรอกอะไร (ส่วนใหญ่บอทตรวจลิงก์/คนดูราคา) แยกนับ
+      const paidEm = new Set(paid.map((o) => String(o.email || '').toLowerCase()).filter(Boolean));
+      const isLead = (o) => o.status !== 'paid' && o.email && !paidEm.has(String(o.email).toLowerCase());
+      const isPeek = (o) => o.status !== 'paid' && !o.email;
+      const unpaidY = real.filter((o) => isLead(o) && inY(o.created_at)).length;
       const pub = posts.filter((p) => p.status === 'published' && p.published_at >= since);
       const queued = posts.filter((p) => p.status === 'approved' && p.scheduled_at >= nowIso && p.scheduled_at <= ahead);
       const campaigns = (priv?.[0]?.data?.campaigns || []).map((c) => ({ name: c.name, spend: Number(c.spend) || 0 }));
@@ -2114,10 +2118,10 @@ export default async function handler(req, res) {
       hist[today] = { ...(hist[today] || {}), ...(thF != null ? { th: thF } : {}), ...(fbF != null ? { fb: fbF } : {}), ...(igF != null ? { ig: igF } : {}), spend: spendNow, queued: queuedNow, todo: openTodo.length };
       { const keep = Object.keys(hist).sort().slice(-40); const h2 = {}; keep.forEach((k) => { h2[k] = hist[k]; }); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'dash_hist', data: { days: h2 }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {}); }
       const dif = (cur, old) => (cur == null || old == null ? null : Math.round((cur - old) * 100) / 100);
-      const vsY = { revenue: dif(sum(wk), sum(wkY)), orders: dif(wk.length, wkY.length), published: dif(pub.length, pubY), unpaid: dif(real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, unpaidY),
+      const vsY = { revenue: dif(sum(wk), sum(wkY)), orders: dif(wk.length, wkY.length), published: dif(pub.length, pubY), unpaid: dif(real.filter((o) => isLead(o) && o.created_at >= since).length, unpaidY),
         spend: dif(spendNow, yd?.spend), queued: dif(queuedNow, yd?.queued), todo: dif(openTodo.length, yd?.todo), threads: dif(thF, yd?.th), facebook: dif(fbF, yd?.fb), instagram: dif(igF, yd?.ig), since: yKey || null };
       return res.status(200).json({ ok: true, at: nowIso, vsY, visits,
-        sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => o.status !== 'paid' && o.created_at >= since).length, store: { orders: wk.filter((o) => o.campaign === 'store').length, revenue: sum(wk.filter((o) => o.campaign === 'store')) } },
+        sales: { revenue: sum(wk), orders: wk.length, lastRevenue: sum(lw), lastOrders: lw.length, unpaid: real.filter((o) => isLead(o) && o.created_at >= since).length, peek: real.filter((o) => isPeek(o) && o.created_at >= since).length, store: { orders: wk.filter((o) => o.campaign === 'store').length, revenue: sum(wk.filter((o) => o.campaign === 'store')) } },
         ads: { spend: campaigns.reduce((a, c) => a + c.spend, 0), campaigns },
         followers: { threads: thF, facebook: fbF, threadsDelta: base && thF != null && base.th != null ? thF - base.th : null, facebookDelta: base && fbF != null && base.fb != null ? fbF - base.fb : null, instagram: igF, instagramOn: igOn, instagramDelta: base && igF != null && base.ig != null ? igF - base.ig : null, since: weekAgo || null },
         posts: { published: { facebook: pub.filter((p) => ch(p) === 'facebook').length, threads: pub.filter((p) => ch(p) === 'threads').length, instagram: pub.filter((p) => igOk(p.notes)).length }, queued: { facebook: queued.filter((p) => ch(p) === 'facebook').length, threads: queued.filter((p) => ch(p) === 'threads').length, instagram: igOn ? queued.filter((p) => ch(p) === 'facebook' && p.kind === 'reel').length : 0 }, held: posts.filter((p) => p.status === 'needs_owner').length, failed: posts.filter((p) => p.status === 'failed').length, policy: posts.filter((p) => p.status !== 'published' && (policyState(p.notes)?.level || 'ok') !== 'ok').length },
