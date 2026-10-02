@@ -2544,7 +2544,8 @@ export default async function handler(req, res) {
             out.push({ label: v.label, image: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
           } catch (e) { errors.push(`${v.label}: ${String(e.message || e).slice(0, 160)}`); }
         }
-        if (out.length) { x.extra = [...(x.extra || []), ...out.map((o) => o.image)].slice(-12); x.labels = { ...(x.labels || {}), ...Object.fromEntries(out.map((o) => [o.image, o.label])) }; if (body.select) { x.multi = out.map((o) => o.image).concat(body.keepCurrent && x.image ? [x.image] : []).slice(0, 4); x.image = x.multi[0]; } }
+        if (out.length) { x.extra = [...(x.extra || []), ...out.map((o) => o.image)].slice(-12); x.labels = { ...(x.labels || {}), ...Object.fromEntries(out.map((o) => [o.image, o.label])) }; if (body.replace && (x.multi || []).includes(String(body.replace))) { x.multi = x.multi.map((u) => u === String(body.replace) ? out[0].image : u); x.image = x.multi[0]; } // ทำรูปแบบหนึ่งใหม่ แทนที่ตำแหน่งเดิม
+          else if (body.select) { x.multi = out.map((o) => o.image).concat(body.keepCurrent && x.image ? [x.image] : []).slice(0, 4); x.image = x.multi[0]; } }
         if (typeof body.text === 'string' && body.text.trim().length >= 20) { if (!x.textOld) x.textOld = x.text; x.text = body.text.trim().slice(0, 1500); x.textBy = admin ? 'owner' : 'team'; }
         if (typeof body.headline === 'string' && body.headline.trim()) x.headline = body.headline.trim().slice(0, 60);
         x.updated_at = new Date().toISOString(); await saveAdsAuto(items);
