@@ -395,6 +395,11 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-hero h1{font-family:var(--font-head);font-size:30px;line-height:1.3;margin:10px 0 6px;color:#fff}
 .bx-hero p{margin:0;opacity:.92}
 .bx-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
+.bxe-file{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-top:2px}.bxe-file a,.bxe-file label{color:#2563EB;cursor:pointer;text-decoration:underline}
+.dl-all{margin-bottom:0}
+.bxi-step{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:16px}.bxi-step span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:14px}
+.bxi-models{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:6px 0 12px}.bxi-model{display:grid;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13px;background:var(--surface)}
+.bxi-model input{display:none}.bxi-model.on{border-color:#EE4D2D;box-shadow:0 0 0 1px #EE4D2D}.bxi-model b{font-size:13.5px}.bxi-model span{color:var(--muted);line-height:1.4}.bxi-model em{font-style:normal;font-weight:700;color:#C2410C}
 .bxi-hero{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}.bxi-big{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;background:var(--bg);text-align:center}.bxi-big img{width:100%;height:100%;object-fit:cover}
 .bxi-side{display:grid;gap:8px;align-content:start;justify-items:start}
 .bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
@@ -1264,6 +1269,8 @@ ${sub?`คำโปรยรองบนปก: "${sub}"\n`:''}มุมล่�
 แถบล่างมีไอคอนเล็ก 3 อันพร้อมคำ: "ไฟล์ PDF" "อ่านได้ทุกอุปกรณ์" "ไม่ต้องรอจัดส่ง"`+AI_NO_TEXT;
 }
 const IMG_MODELS=[['gemini-3-pro-image','Google Nano Banana Pro (ตัวหนังสือแม่น ~4.5 บาท)'],['gemini-3.1-flash-image','Google Nano Banana (เร็ว ~1.5 บาท)'],['gpt-image-2','OpenAI gpt-image-2'],['gpt-image-2.5-sunburst','OpenAI gpt-image-2.5 sunburst'],['gpt-image-2.5-flare','OpenAI gpt-image-2.5 flare'],['chatgpt-image-latest','OpenAI แบบเดียวกับใน ChatGPT'],['gpt-image-1','OpenAI gpt-image-1 (ตัวเดิม)']];
+/* จุดเด่น + ค่าใช้จ่ายประมาณต่อรูป (บาท รวมค่ารูปต้นแบบ คุณภาพปกติ) ใช้แสดงให้คุณแดนเลือกโมเดล */
+const IMG_INFO={'gemini-3-pro-image':['ตัวหนังสือไทยแม่นที่สุด ทำปกจากปกเดิมได้ใกล้เคียงที่สุด (แนะนำสำหรับปก)',4.5],'gemini-3.1-flash-image':['เร็วและถูก ตัวหนังสือไทยพอใช้ เหมาะลองหลายแบบก่อน',1.5],'gpt-image-2':['ภาพสวยสมจริง แต่ตัวหนังสือไทยเพี้ยนบ่อย',2.5],'gpt-image-2.5-sunburst':['รุ่นใหม่ของ OpenAI ภาพคมขึ้น ตัวหนังสือไทยยังไม่ชัวร์',3],'gpt-image-2.5-flare':['รุ่นใหม่ของ OpenAI ภาพสดใส ตัวหนังสือไทยยังไม่ชัวร์',3],'chatgpt-image-latest':['แบบเดียวกับในแอป ChatGPT',2.5]};
 const imgModel=()=>{try{return localStorage.getItem('sl_imgmodel')||'gpt-image-2';}catch(e){return 'gpt-image-2';}};
 const imgQuality=()=>{try{return localStorage.getItem('sl_imgq')||'medium';}catch(e){return 'medium';}};
 async function coverGen(){
@@ -1396,7 +1403,10 @@ function track(name,data){
 const getProduct=id=>D.products.find(p=>p.id===id);
 const validLink=l=>l&&/^https?:\/\//.test(l)&&!l.includes('ใส่ลิงก์');
 const isNotion=l=>/^https:\/\/([a-z0-9-]+\.)?notion\.(site|so)\//i.test(l||''); // สินค้าเทมเพลต Notion: ลิงก์ Duplicate แทนไฟล์ดาวน์โหลด
-const dlBtn=(l,name)=>isNotion(l)?linkBtn(l,'เปิดเทมเพลต Notion'+(name?': '+name:''))+'<p class="fine" style="margin:4px 0 0">เปิดลิงก์แล้วกดปุ่ม <b>Duplicate</b> มุมขวาบน เทมเพลตจะถูกคัดลอกเข้า Notion ของคุณ (ใช้บัญชี Notion ฟรีได้)</p>':linkBtn(l,'ดาวน์โหลด'+(name?' '+name:'ไฟล์'));
+const dlBtn=(l,name)=>!isNotion(l)&&ownFile(l)?`<a class="btn btn-cta btn-block" href="${esc(dlHref(l,name))}" rel="noopener noreferrer">⬇ ดาวน์โหลด${name?' '+name:'ไฟล์'}</a>`:isNotion(l)?linkBtn(l,'เปิดเทมเพลต Notion'+(name?': '+name:''))+'<p class="fine" style="margin:4px 0 0">เปิดลิงก์แล้วกดปุ่ม <b>Duplicate</b> มุมขวาบน เทมเพลตจะถูกคัดลอกเข้า Notion ของคุณ (ใช้บัญชี Notion ฟรีได้)</p>':linkBtn(l,'ดาวน์โหลด'+(name?' '+name:'ไฟล์'));
+// ไฟล์ในคลังร้าน: ใส่ ?download= ให้มือถือ/คอมดาวน์โหลดเป็นไฟล์ชื่ออ่านรู้เรื่อง แทนการเปิดดูในแท็บ
+const ownFile=l=>/\/storage\/v1\/object\/public\/product-images\//.test(String(l||''));
+const dlHref=(l,name)=>ownFile(l)?l.split('?')[0]+'?download='+encodeURIComponent(String(name||'sheetlab').replace(/[\\/:*?"<>|]+/g,' ').slice(0,80).trim()+'.pdf'):l;
 const linkBtn=(l,label)=>validLink(l)?`<a class="btn btn-cta btn-block" href="${esc(l)}" target="_blank" rel="noopener noreferrer">${label}</a>`:`<p class="fine" style="color:var(--bad)">ลิงก์ดาวน์โหลดยังไม่ถูกตั้งค่า ทางร้านจะส่งไฟล์ให้ทางแชทโดยตรง</p>`;
 const getOrder=id=>D.orders.find(o=>o.id===id);
 function curProduct(){return getProduct(S.productId)||D.products.find(p=>p.status==='published')||D.products[0]||null;}
@@ -1436,7 +1446,8 @@ function paidCard(){return S.sessionId?`<div class="wrap section" style="padding
     ${!S.order?`<h2 style="margin-bottom:8px">กำลังตรวจสอบการชำระเงิน...</h2><p class="muted">รอสักครู่</p>`:
       S.order.paid?`<h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
         <p class="muted" style="margin-bottom:14px">${esc(S.order.productName||'')} · ${baht(S.order.amount)} · เลขออเดอร์ ${esc(S.order.orderId)}${S.order.email?`<br>ใบเสร็จส่งไปที่ ${esc(S.order.email)}`:''}</p>
-        ${(S.order.items&&S.order.items.length?S.order.items:[{name:S.order.productName,link:S.order.link}]).map(it=>it.link?`<div style="margin-bottom:8px">${dlBtn(it.link,esc(it.name||''))}</div>`:`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของ ${esc(it.name||'สินค้านี้')} กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`).join('')}
+        ${(()=>{const its=(S.order.items&&S.order.items.length?S.order.items:[]).filter(it=>it.link&&ownFile(it.link));return its.length>1?`<button class="btn btn-buy btn-block dl-all" data-a="dlAll" ${S.zipBusy?'disabled':''}>${S.zipBusy?'กำลังรวมไฟล์... '+(S.zipN||''):`⬇ ดาวน์โหลดทั้งหมด ${its.length} เล่ม (ไฟล์เดียว .zip)`}</button><p class="fine" style="margin:4px 0 12px">หรือกดโหลดทีละเล่มด้านล่าง · บนมือถือแนะนำโหลดทีละเล่ม</p>`:'';})()}
+        ${(S.order.items&&S.order.items.length?S.order.items:[{name:S.order.productName,link:S.order.link}]).map((it,i,arr)=>it.link?`<div style="margin-bottom:8px">${dlBtn(it.link,(arr.length>1?(i+1)+'. ':'')+esc(it.name||''))}</div>`:`<p class="fine" style="color:var(--bad)">ร้านยังไม่ได้ใส่ลิงก์ไฟล์ของ ${esc(it.name||'สินค้านี้')} กรุณาทักแชทแจ้งเลขออเดอร์ ทางร้านจะส่งไฟล์ให้ทันที</p>`).join('')}
         <p class="fine" style="margin-top:12px">${S.order.emailed&&S.order.email?'ส่งลิงก์ไปที่อีเมล '+esc(S.order.email)+' ให้แล้วด้วย · ':''}เก็บหน้านี้ไว้ กดลิงก์ดาวน์โหลดซ้ำได้ตลอด${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">มีปัญหา? ทักแชท</a>`:''}</p>`:
       S.order.error?`<h2 style="margin-bottom:8px">ตรวจสอบไม่สำเร็จ</h2><p class="muted">${esc(S.order.error)}</p><button class="btn btn-line btn-sm" data-a="recheckOrder">ลองใหม่</button>`:
       `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
@@ -1611,7 +1622,8 @@ function bundleForm(){
   <div class="card" style="margin-top:14px">
     <h3 class="h3">2. เล่มในชุด <span class="fine" style="font-weight:400">${chosen.length} เล่ม · ราคาแยกรวม ${baht(sum)}${pages?` · ${pages} หน้า`:''}</span></h3>
     <p class="fine" style="margin:0 0 8px">ติ๊กเล่มที่อยู่ในชุด ใช้ลูกศรเรียงลำดับ เล่มที่ใช้ในชุดอย่างเดียวตั้งเป็นฉบับร่างไว้ได้ ระบบยังส่งไฟล์ให้ครบ</p>
-    ${chosen.length?`<div class="bxe-list">${chosen.map((b,i)=>`<div class="bxe-row"><b>${i+1}</b><span>${esc(b.name)} <span class="fine">${baht(b.price)}${b.status==='draft'?' · ร่าง':''}${b.link?'':' · ⚠️ ยังไม่มีลิงก์ไฟล์'}</span></span>
+    ${chosen.length?`<div class="bxe-list">${chosen.map((b,i)=>`<div class="bxe-row"><b>${i+1}</b><span>${esc(b.name)} <span class="fine">${baht(b.price)}${b.status==='draft'?' · ร่าง':''}${b.link?'':' · ⚠️ ยังไม่มีลิงก์ไฟล์'}</span>
+      <span class="bxe-file">${b.link&&validLink(b.link)?`<a href="${esc(dlHref(b.link,b.name))}" target="_blank" rel="noopener noreferrer">📄 เปิด/โหลดไฟล์</a>`:''}<label>${S.bxFile===b.id?'กำลังอัปโหลด...':'⬆ เปลี่ยนไฟล์ PDF'}<input type="file" accept="application/pdf" hidden data-bxfile="${b.id}"></label></span></span>
       <label class="fine"><input type="radio" name="bfree" data-a="bxFree" data-id="${b.id}" ${d.freeItem===b.id?'checked':''}> แถมฟรี</label>
       <button class="chip" data-a="bxMove" data-id="${b.id}" data-v="-1" aria-label="เลื่อนขึ้น" ${i?'':'disabled'}>↑</button><button class="chip" data-a="bxMove" data-id="${b.id}" data-v="1" aria-label="เลื่อนลง" ${i<chosen.length-1?'':'disabled'}>↓</button>
       <button class="chip" data-a="bxItem" data-id="${b.id}">เอาออก</button></div>`).join('')}</div>`:''}
@@ -1620,22 +1632,24 @@ function bundleForm(){
     </details>
   </div>
 
-  ${(()=>{const pend=S.bxImg||'';const shortT=b=>String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);
+  ${(()=>{const pend=S.bxImg||'',n=chosen.length,todo=chosen.filter(b=>!b.bookCover).length,mi=IMG_INFO[imgModel()]||['',3],cost=(todo||n)*mi[1];
     return `<div class="card" style="margin-top:14px">
-    <h3 class="h3">3. รูปชุด</h3>
-    <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px"><label class="fine" for="bx-model">โมเดล AI</label><select class="input" id="bx-model" data-imgset="model" style="width:auto;margin:0">${IMG_MODELS.map(([k,l])=>`<option value="${k}" ${imgModel()===k?'selected':''}>${esc(l)}</option>`).join('')}</select><span class="fine">ตัวหนังสือไทยแม่นสุด: Google Nano Banana Pro</span></div>
-    <div class="bxi-hero"><div class="bxi-big">${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
-      <div class="bxi-side"><b>รูป thumbnail ใหญ่ของชุด</b><span class="fine">แสดงตัวใหญ่บนหัวหน้าขาย และเป็นรูปการ์ดสินค้าในหน้าร้าน/แอด</span>
-        <button class="btn btn-cta btn-sm" data-a="bxCompose" ${pend?'disabled':''}>${pend==='compose'?'กำลังจัดรูป...':'🧩 จัดรูปจากปกจริง (ฟรี ไม่เพี้ยน)'}</button>
-        <button class="btn btn-dark btn-sm" data-a="bxAiCover" ${pend?'disabled':''}>${pend==='cover'?'กำลังสร้าง... (20-60 วินาที)':'✨ สร้างด้วย AI (ใช้ปกจริงเป็นต้นแบบ)'}</button>
-        <label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-bxup="cover"></label>
-        ${d.cover?'<button class="chip" data-a="bxCoverClear">ใช้ปกเล่มแรกแทน</button>':''}</div></div>
-    <h4 style="margin:16px 0 4px">ปกเล่มเดี่ยวใน "ในชุดมีอะไรบ้าง"</h4>
-    <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ใช้เฉพาะในหน้าชุด ไม่เปลี่ยนรูปสินค้าของแต่ละเล่ม</p>
+    <h3 class="h3">3. รูปชุด <span class="fine" style="font-weight:400">ทำ 2 ขั้น: ปกเล่มเดี่ยวก่อน แล้วรูปใหญ่ของชุดจะจัดจากปกชุดเดียวกัน ให้ดูเป็นสินค้าเดียวกัน</span></h3>
+    <h4 class="bxi-step"><span>1</span> ปกเล่มเดี่ยว (ใช้ใน "ในชุดมีอะไรบ้าง")</h4>
+    <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ไม่เปลี่ยนรูปสินค้าของแต่ละเล่ม</p>
+    <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em></label>`).join('')}</div>
     <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b"><div class="bxi-bc">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?'<span class="bxi-ok">✓ ปกเรียบ</span>':''}</div>
       <span class="fine">เล่ม ${i+1}</span><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button></div>`).join('')}</div>
-    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!chosen.length?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${chosen.length}...`:`✨ ทำปกเรียบให้ทุกเล่ม (${chosen.filter(b=>!b.bookCover).length||chosen.length} รูป)`}</button><span class="fine">เสียค่า AI ต่อรูปตามโมเดล · ไม่ชอบเล่มไหนกด "ทำใหม่" ทีละเล่มได้</span></div>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center"><button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${todo||n}...`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
+    <h4 class="bxi-step" style="margin-top:20px"><span>2</span> รูปใหญ่ของชุด (หัวหน้าขาย · การ์ดหน้าร้าน · แอด)</h4>
+    <div class="bxi-hero"><div class="bxi-big">${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
+      <div class="bxi-side"><span class="fine">${todo?`ทำปกเรียบอีก ${todo} เล่มก่อน รูปชุดจะเป็นแบบเดียวกันทั้งหมด`:'ปกเรียบครบแล้ว จัดรูปชุดได้เลย'}</span>
+        <button class="btn btn-cta btn-sm" data-a="bxCompose" ${pend?'disabled':''}>${pend==='compose'?'กำลังจัดรูป...':'🧩 จัดรูปชุดจากปกเล่มเดี่ยว (ฟรี)'}</button>
+        <button class="btn btn-line btn-sm" data-a="bxAiCover" ${pend?'disabled':''}>${pend==='cover'?'กำลังสร้าง... (20-60 วินาที)':`✨ ให้ AI จัดเป็นภาพหนังสือวางเป็นเซ็ต (≈ ฿${mi[1]})`}</button>
+        <label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-bxup="cover"></label>
+        ${d.cover?'<button class="chip" data-a="bxCoverClear">ใช้ปกเล่มแรกแทน</button>':''}</div></div>
     ${S.bxImgErr?`<p class="err" style="margin:8px 0 0">${esc(S.bxImgErr)}</p>`:''}
+    <p class="fine" style="margin:10px 0 0">ได้รูปแล้วกด <b>บันทึกชุด</b> ด้านล่างด้วย</p>
   </div>`;})()}
   <div class="card" style="margin-top:14px">
     <h3 class="h3">3. ราคาและแพ็กเกจ</h3>
@@ -2381,7 +2395,7 @@ function productForm(){
     </div>
     ${ta('e-features','features','สิ่งที่ลูกค้าจะได้รับ (บรรทัดละข้อ)')}
     <div class="field">${lb('e-link','ลิงก์ไฟล์สินค้า (Google Drive) — สำคัญ')}<div class="row"><input class="input" id="e-link" data-d="link" value="${esc(d.link)}" placeholder="https://drive.google.com/..."><button class="btn btn-line btn-sm" data-a="checkLink" data-for="e-link">ตรวจลิงก์</button></div>
-      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><label class="btn btn-dark btn-sm" for="e-file" style="cursor:pointer">${S.fileBusy?'กำลังอัปโหลด...':'📄 อัปโหลดไฟล์ PDF (ไม่ต้องใช้ Google Drive)'}<input type="file" id="e-file" accept="application/pdf" class="vh" ${S.fileBusy?'disabled':''}></label><span class="fine">อัปโหลดแล้วใส่ลิงก์ ทำหน้าตัวอย่าง และนับจำนวนหน้าให้อัตโนมัติ</span></div>
+      <div class="row" style="gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">${d.link&&validLink(d.link)?`<a class="btn btn-line btn-sm" href="${esc(dlHref(d.link,d.name))}" target="_blank" rel="noopener noreferrer">⬇ โหลดไฟล์ปัจจุบันมาแก้</a>`:''}<label class="btn btn-dark btn-sm" for="e-file" style="cursor:pointer">${S.fileBusy?'กำลังอัปโหลด...':(d.link?'⬆ อัปโหลดไฟล์ที่แก้แล้วแทน':'📄 อัปโหลดไฟล์ PDF (ไม่ต้องใช้ Google Drive)')}<input type="file" id="e-file" accept="application/pdf" class="vh" ${S.fileBusy?'disabled':''}></label><span class="fine">อัปโหลดแล้วใส่ลิงก์ ทำหน้าตัวอย่าง และนับจำนวนหน้าให้อัตโนมัติ</span></div>
       ${linkCheckMsg('e-link')}
       <span class="fine">ลูกค้าจะได้ปุ่มดาวน์โหลดลิงก์นี้อัตโนมัติหลังจ่ายเงินสำเร็จ (ระบบตรวจกับ Stripe ก่อนทุกครั้ง) ตั้งค่าแชร์ไฟล์เป็น "ทุกคนที่มีลิงก์"</span></div>
     <p class="fine" style="margin:4px 0 12px">💳 ราคาขายด้านบนคือราคาที่เก็บเงินจริงผ่าน Stripe อัตโนมัติ ไม่ต้องตั้งค่าใน Stripe อีก</p>
@@ -4589,7 +4603,15 @@ function act(a,el){
     case 'bxAiBooks':{const d=S.draft;if(!d)break;const ids=d.items.filter(i=>getProduct(i));const todo=ids.filter(i=>!getProduct(i).bookCover);const list=todo.length?todo:ids;
       if(!confirm(`ทำปกเรียบ ${list.length} รูป (เสียค่า AI ต่อรูปตามโมเดลที่เลือก) ใช้เวลาประมาณ ${Math.ceil(list.length*0.6)} นาที ทำเลยไหม?`))break;
       S.bxImg='all';S.bxImgErr='';S.bxImgN=1;render(true);
-      (async()=>{for(const id2 of list){try{await bxMakeBook(id2,ids.indexOf(id2),ids.length);}catch(e){S.bxImgErr='บางเล่มทำไม่สำเร็จ: '+(e.message||e);}S.bxImgN++;render(true);}})().then(()=>{S.bxImg='';toast('ทำปกเรียบครบแล้ว');render(true);});break;}
+      (async()=>{for(const id2 of list){try{await bxMakeBook(id2,ids.indexOf(id2),ids.length);}catch(e){S.bxImgErr='บางเล่มทำไม่สำเร็จ: '+(e.message||e);}S.bxImgN++;render(true);}
+        // ขั้นที่ 2 อัตโนมัติ: จัดรูปใหญ่ของชุดจากปกเรียบที่เพิ่งทำ (ฟรี) ให้เป็นชุดเดียวกัน
+        S.bxImg='compose';render(true);try{const u=await uploadImage(await bxCompose(S.draft,S.draft.items.map(getProduct).filter(Boolean)));S.draft.cover=u;}catch(e){S.bxImgErr='จัดรูปชุดไม่สำเร็จ กด "จัดรูปชุด" อีกครั้ง';}})()
+        .then(()=>{S.bxImg='';toast('ทำปกเรียบครบ และจัดรูปชุดให้แล้ว กดบันทึกชุดด้วย');render(true);});break;}
+    case 'dlAll':{const its=(S.order&&S.order.items||[]).filter(it=>it.link&&ownFile(it.link));if(!its.length)break;S.zipBusy=true;render(true);
+      (async()=>{if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');const z=new window.JSZip();let n=0;
+        for(const [i,it] of its.entries()){S.zipN=(i+1)+'/'+its.length;render(true);const b=await fetch(it.link.split('?')[0]).then(r=>{if(!r.ok)throw new Error('โหลดไม่ได้');return r.blob();});z.file(String(i+1).padStart(2,'0')+' '+String(it.name||'file').replace(/[\\/:*?"<>|]+/g,' ').slice(0,80).trim()+'.pdf',b);n++;}
+        const blob=await z.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SheetLab-'+(S.order.orderId||'order')+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);toast('ดาวน์โหลด '+n+' เล่มแล้ว');})()
+        .catch(e=>toast('รวมไฟล์ไม่สำเร็จ กดโหลดทีละเล่มแทน')).then(()=>{S.zipBusy=false;S.zipN='';render(true);});break;}
     case 'goAds':S.tab='ads';ADST.f='all';S.edit=null;render(false);break;
     case 'goAdsFix':S.tab='ads';ADST.f='fix';S.edit=null;render(false);break;
     case 'goNew':S.tab='products';S.pstat='new';S.edit=null;render(false);break;
@@ -4731,6 +4753,10 @@ document.addEventListener('input',e=>{
 document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.id==='sp-car'){const c=document.getElementById('sp-count');if(c){const n=t.children.length;const i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));c.textContent='📷 '+(Math.min(n,i+1))+'/'+n;}const th=document.querySelectorAll('#sp-thumbs .sp-th');const ii=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));th.forEach((b,k)=>b.classList.toggle('on',k===ii));}},true);
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t.dataset&&t.dataset.bxfile){const id=t.dataset.bxfile,f=t.files&&t.files[0];t.value='';const b=getProduct(id);if(!f||!b)return;if(f.size>45*1024*1024){toast('ไฟล์ใหญ่เกิน 45 MB');return;}
+    if(!confirm(`เปลี่ยนไฟล์ของ "${b.name}" เป็น ${f.name}?\nลูกค้าที่ซื้อหลังจากนี้จะได้ไฟล์ใหม่`))return;S.bxFile=id;render(true);
+    authFetch('/api/content?action=file_uploadurl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:f.name})}).then(async u=>{if(!u||!u.ok)throw new Error((u&&u.error)||'ขอที่อัปโหลดไม่ได้');const put=await fetch(u.upload_url,{method:'PUT',headers:{'Content-Type':'application/pdf','x-upsert':'true'},body:f});if(!put.ok)throw new Error('อัปโหลดไม่สำเร็จ ('+put.status+')');b.link=u.file_url;save();toast('เปลี่ยนไฟล์แล้ว');})
+      .catch(e=>toast('เปลี่ยนไฟล์ไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxFile='';render(true);});return;}
   if(t.dataset&&t.dataset.bxup&&S.draft){const f=t.files&&t.files[0];if(!f)return;toast('กำลังอัปโหลดรูป...');square(f).then(r=>uploadImage(r.url)).then(u=>{S.draft.cover=u;render(true);toast('ใส่รูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e)));return;}
   if(t.dataset&&t.dataset.adsup){const x=(ADA.items||[]).find(y=>y.id===t.dataset.adsup),f=t.files&&t.files[0];if(!x||!f)return;adsKeep(x);toast('กำลังอัปโหลดรูป...');
     square(f).then(r=>uploadImage(r.url)).then(async url=>{x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;await adsSave(x);render(true);toast('ใช้รูปนี้ในแอดแล้ว');}).catch(err=>toast('อัปโหลดไม่สำเร็จ: '+(err.message||err)));return;}
@@ -4746,7 +4772,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='au-pw'){const a=Object.assign({on:false,per_week:1,sets:[]},(FCFG.cfg&&FCFG.cfg.auto)||{});a.per_week=Number(t.value)||1;saveFacCfg({auto:a},'บันทึกจำนวนต่อสัปดาห์แล้ว');}
   else if(t.id==='e-file'){const f=t.files&&t.files[0];t.value='';if(f)uploadPdf(f);}
   else if(t.id==='e-pvpages'){S.pvPages=t.value;}
-  else if(t.dataset&&t.dataset.imgset){try{localStorage.setItem(t.dataset.imgset==='model'?'sl_imgmodel':'sl_imgq',t.value);}catch(e){}}
+  else if(t.dataset&&t.dataset.imgset){try{localStorage.setItem(t.dataset.imgset==='model'?'sl_imgmodel':'sl_imgq',t.value);}catch(e){}if(t.type==='radio')render(true);}
   else if(t.id==='pf'){S.pfilter=t.value;render(true);}
   else if(t.id==='f-bump'){S.form.bump=t.checked;render(true);}
   else if(t.name==='sell'&&S.draft){render(true);}
