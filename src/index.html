@@ -3754,7 +3754,8 @@ function adsAutoBox(compact,noLive){
 const ADF={budget:1000,days:7};
 function adfModel(){
   const h=ADST.d&&ADST.d.history;if(!h)return null;
-  let sales=h.filter(x=>x.sales);if(!sales.length)sales=h.filter(x=>x.purchases>0);
+  // ใช้เฉพาะแคมเปญที่วัดยอดซื้อได้ (มีการซื้ออย่างน้อย 1) · แคมเปญที่ใช้เงินแต่วัดยอดซื้อไม่ได้แยกไว้ให้ดู
+  const sales=h.filter(x=>x.purchases>0);
   const clicks=h.filter(x=>!sales.includes(x));
   const spend=sales.reduce((a,x)=>a+x.spendTHB,0),n=sales.reduce((a,x)=>a+x.purchases,0),val=sales.reduce((a,x)=>a+x.valueTHB,0);
   const daily=sales.reduce((a,x)=>a+x.spendTHB/Math.max(1,x.days),0); // ที่แอดเคยใช้จริงต่อวัน (รวมทุกแคมเปญยอดขาย)
@@ -3787,7 +3788,7 @@ function adsForecast(){
   const m=adfModel(),money=n=>'฿'+Math.round(n).toLocaleString('th-TH');
   const head=`<div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">🔮 ประเมินรายได้จากงบแอด</h3>`;
   if(!m)return `<section class="card" style="margin-top:14px">${head}</div><p class="fine">ยังดึงประวัติแอดจาก Facebook ไม่ได้ กดรีเฟรชด้านบน</p></section>`;
-  if(!m.n)return `<section class="card" style="margin-top:14px">${head}</div><p class="fine">ยังไม่มีการซื้อจากแอดแบบยอดขาย (ใช้ไป ${money(m.spend)}) ประเมินไม่ได้ รอให้มีคนซื้อผ่านแอดก่อน</p></section>`;
+  if(!m.n)return `<section class="card" style="margin-top:14px">${head}</div><p class="fine">ยังไม่มีการซื้อที่วัดได้จากแอด (ใช้ไป ${money(m.clicks.reduce((a,x)=>a+x.spendTHB,0))}) ประเมินไม่ได้ รอให้มีคนซื้อผ่านแอดก่อน</p></section>`;
   const conf=m.n<20?['red','🔴 ข้อมูลน้อย','ช่วงที่ประเมินยังกว้าง']:m.n<50?['amber','🟡 พอใช้','']:['green','🟢 แม่น',''];
   const cl=m.clicks.reduce((a,x)=>({s:a.s+x.spendTHB,p:a.p+x.purchases}),{s:0,p:0});
   return `<section class="card adf" style="margin-top:14px">${head}<span class="adf-conf adf-${conf[0]}">${conf[1]} · จาก ${m.n} การซื้อ${conf[2]?' · '+conf[2]:''}</span></div>
@@ -3798,7 +3799,7 @@ function adsForecast(){
     <details class="adf-src"><summary>คิดจากอะไร</summary>
       <p class="fine">แอดแบบยอดขาย: ${m.sales.map(x=>`<b>${esc(x.name)}</b> ${x.days} วัน ใช้ ${money(x.spendTHB)} ซื้อ ${x.purchases} ครั้ง`).join(' · ')}</p>
       <p class="fine">Facebook นับการซื้อ ${m.n} ครั้ง ยอด ${money(m.val)} · ร้านนับออเดอร์จ่ายแล้วที่มาจากแคมเปญเหล่านี้ ${m.real.n} ออเดอร์ ${money(m.real.v)}${m.real.n<m.n?' (ร้านนับได้น้อยกว่าเพราะบางคนจ่ายทีหลังหรือกดผ่านหน้าอื่น ตัวเลขจริงน่าจะอยู่ระหว่างสองค่านี้)':''}</p>
-      ${m.clicks.length?`<p class="fine">ไม่นับแอดแบบคลิก (ใช้ ${money(cl.s)} ซื้อ ${cl.p} ครั้ง) เพราะไม่ได้หาคนซื้อ</p>`:''}
+      ${m.clicks.length?`<p class="fine">ไม่นับ: ${m.clicks.map(x=>`<b>${esc(x.name)}</b> ใช้ ${money(x.spendTHB)} ซื้อ 0`).join(' · ')} (วัดยอดซื้อไม่ได้ เช่น แอดแบบคลิก หรือลิงก์ที่พาไปจ่ายเงินตรงๆ ก่อนแก้) · ถ้านับรวม ต้นทุนต่อออเดอร์จะเป็น ${money((m.spend+cl.s)/m.n)}</p>`:''}
       <p class="fine">วิธีคิด: ต้นทุนต่อออเดอร์ที่ผ่านมา ปรับตามจำนวนข้อมูล (ข้อมูลน้อย ช่วงยิ่งกว้าง) และงบต่อวันที่มากกว่าที่เคยใช้ · ประเมินเท่านั้น ระบบไม่ตั้งงบหรือเปิดแอดให้</p>
     </details></section>`;
 }
