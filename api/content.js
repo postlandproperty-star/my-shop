@@ -132,6 +132,8 @@ const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audie
 // ประเภทงานโรงงาน: pdf (ชีท PDF ค่าเริ่มต้น) | notion (Notion template สร้างใน Notion ของคุณแดน คุณแดนกด Publish เอง)
 const jobKind = (b) => (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
 const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|app\.notion\.com)\//i.test(String(u || ''));
+// คอมคุณแดน (โรงงานหลัก) แวะมาเมื่อไหร่ล่าสุด → หน้าโรงงานบนเว็บแสดงสถานะ/เตือนถ้าหายไปนาน
+async function workerBeat({ note = '' } = {}) { try { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_worker', data: { last_seen: new Date().toISOString(), note }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {} }
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 // ชุดหนังสือและผลิตอัตโนมัติของโรงงาน (คุณแดนตั้งจากแท็บโรงงาน) · shop_state id=factory_cfg
 async function loadFacCfg() { const r = await sb('shop_state?id=eq.factory_cfg&select=data'); const d = r?.[0]?.data || {}; return { sets: Array.isArray(d.sets) ? d.sets : null, auto: { on: false, per_week: 1, sets: [], ...(d.auto || {}) }, updated_at: d.updated_at || null }; }
@@ -1556,7 +1558,9 @@ export default async function handler(req, res) {
       const all = await loadJobs();
       if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
       const jobs = all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-      return res.status(200).json({ ok: true, jobs });
+      if (keyOk(req) && req.query.by === 'mac') await workerBeat({ note: `เช็คคิว ${jobs.length} งาน` }); // คอมคุณแดนมาเช็คคิว
+      const w = (await sb('shop_state?id=eq.factory_worker&select=data').catch(() => []))?.[0]?.data || null;
+      return res.status(200).json({ ok: true, jobs, worker: w });
     }
     if (action === 'global_list' || action === 'gumroad' || action === 'pin_post' || action === 'pin_log') {
       // ขายต่างประเทศ: global_list (key/แอดมิน) สินค้าที่ลง Gumroad แล้ว + ข้อความ Pin · gumroad (แอดมิน) ยอดขายจาก Gumroad API (env GUMROAD_ACCESS_TOKEN)
@@ -1683,6 +1687,7 @@ export default async function handler(req, res) {
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
     }
+    if (action === 'factory_heartbeat') { if (!keyOk(req)) return res.status(401).json({ ok: false }); const b = await readBody(req); await workerBeat({ note: String(b.note || '').slice(0, 200) }); return res.status(200).json({ ok: true }); }
     if (action === 'factory_list') { // คุณแดนอนุมัติ (ลงขายแล้ว product_id) หรือไม่ลงขาย ชีทจากโรงงาน: แอดมินเท่านั้น
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
@@ -1718,7 +1723,7 @@ export default async function handler(req, res) {
       }
       if (action === 'factory_claim') {
         if (job.status !== 'queued') return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${job.status}` });
-        job.status = 'producing'; job.started_at = new Date().toISOString();
+        job.status = 'producing'; job.started_at = new Date().toISOString(); if (body.by === 'mac') { job.made_on = 'mac'; await workerBeat({ note: `เริ่มผลิต: ${String(job.title).slice(0, 60)}` }); }
       } else if (action === 'factory_uploadurl') {
         const safe = String(body.filename || 'sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'sheet.pdf';
         const ctype = /\.png$/i.test(safe) ? 'image/png' : /\.jpe?g$/i.test(safe) ? 'image/jpeg' : 'application/pdf';
@@ -1729,7 +1734,7 @@ export default async function handler(req, res) {
         if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status} ${JSON.stringify(j).slice(0, 200)}` });
         return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, headers: { 'Content-Type': ctype, 'x-upsert': 'true' } });
       } else if (action === 'factory_done') {
-        job.status = 'done'; job.done_at = new Date().toISOString();
+        job.status = 'done'; job.done_at = new Date().toISOString(); if (body.by === 'mac') { job.made_on = 'mac'; await workerBeat({ note: `ผลิตเสร็จ: ${String(job.title).slice(0, 60)}` }); }
         if (body.file_url) job.file_url = String(body.file_url).slice(0, 500);
         if (body.pages) job.pages = Number(body.pages);
         if (body.size) job.size = Number(body.size);

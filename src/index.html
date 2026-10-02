@@ -397,6 +397,8 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
 .bxe-file{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-top:2px}.bxe-file a,.bxe-file label{color:#2563EB;cursor:pointer;text-decoration:underline}
 .dl-all{margin-bottom:0}
+.fac-worker{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0 0 10px;font-size:14px}.fac-worker.stale{border-color:#E8A23A;background:var(--warnbg)}.fac-worker span{color:var(--warn);font-size:13px}
+.fac-guide{margin:0 0 14px}.fac-guide summary{cursor:pointer;list-style:none}.fac-guide ol{margin:10px 0 6px;padding-left:22px;line-height:1.75;font-size:14.5px}
 .bxi-step{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:16px}.bxi-step span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:14px}
 .bxi-models{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:6px 0 12px}.bxi-model{display:grid;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13px;background:var(--surface)}
 .bxi-model input{display:none}.bxi-model.on{border-color:#EE4D2D;box-shadow:0 0 0 1px #EE4D2D}.bxi-model b{font-size:13.5px}.bxi-model span{color:var(--muted);line-height:1.4}.bxi-model em{font-style:normal;font-weight:700;color:#C2410C}
@@ -2557,7 +2559,8 @@ async function facApprove(id,quick){
     const blob=await fetch(j.file_url).then(r=>{if(!r.ok)throw new Error('เปิดไฟล์ไม่ได้ ('+r.status+')');return r.blob();});
     const file=new File([blob],'sheet.pdf',{type:'application/pdf'});
     await makePreviews(file);
-    if(S.draft&&S.draft.fromJob===id){ // ปก = หน้าแรกของไฟล์ จัดเป็นจัตุรัส 1200×1200
+    if(S.draft&&S.draft.fromJob===id&&(j.images||[]).length){S.draft.images=[...(j.ai_images||[]),j.images[0]].slice(0,5);} // ปกที่คอมทำมาให้ (cover.png)
+    else if(S.draft&&S.draft.fromJob===id){ // ปก = หน้าแรกของไฟล์ จัดเป็นจัตุรัส 1200×1200
       const doc=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;const pg=await doc.getPage(1);const v0=pg.getViewport({scale:1});const vp=pg.getViewport({scale:1200/Math.max(v0.width,v0.height)});
       const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:vp}).promise;
       const cb=await new Promise(r=>c.toBlob(r,'image/png'));await addImages([new File([cb],'cover.png',{type:'image/png'})]);
@@ -2707,7 +2710,7 @@ async function factoryOrder(){
   S.fbusy=false;render(true);
 }
 function factoryView(){
-  if(FJOBS===null){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
+  if(FJOBS===null){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
   const f=S.fnew||(S.fnew={title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''});
   const nx=nextFactoryRun(),jobs=FJOBS||[];
   const cnt=k=>jobs.filter(j=>j.status===k).length;
@@ -2718,8 +2721,22 @@ function factoryView(){
   const chips=[['active','รอ/กำลังผลิต',cnt('queued')+cnt('producing')],['done','เสร็จแล้ว',cnt('done')],['failed','ไม่สำเร็จ',cnt('failed')],['all','ทั้งหมด',jobs.length]];
   const lb=(id,t)=>`<label for="${id}">${t}</label>`;
   return `${ceoBar('factory')}<div class="wrap wide fac" style="padding-bottom:60px">
-    <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">${nx?'ผลิตรอบถัดไป '+new Date(nx).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' เวลาไทย (ทุกอาทิตย์และจันทร์ 10:00 / 22:00)':'ผลิตทุกอาทิตย์และจันทร์'} · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
+    <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">ผลิตที่คอมคุณแดน (Cowork) · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
       <button class="chip" data-a="toFactory">รีเฟรช</button></div>
+    ${(()=>{const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>48*36e5;
+      const when=ago==null?'ยังไม่เคยมาเช็คคิว':h<1?'ไม่ถึงชั่วโมงที่แล้ว':h<48?h+' ชั่วโมงที่แล้ว':Math.round(h/24)+' วันที่แล้ว';
+      return `<div class="fac-worker ${stale&&cnt('queued')?'stale':''}">💻 <b>คอมคุณแดน</b> มาเช็คคิวล่าสุด: ${when}${w&&w.note?` · ${esc(w.note)}`:''}${stale&&cnt('queued')?'<br><span>มีงานรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกดรันงานคิวหนังสือใน Cowork</span>':''}</div>`;})()}
+    <details class="card fac-guide"><summary><b>📖 คู่มือโรงงาน (กดดู)</b> <span class="fine">ผลิตเสร็จแล้วคุณแดนต้องทำอะไร</span></summary>
+      <ol>
+        <li><b>สั่งผลิต</b> ที่กล่อง "สั่งผลิตชีทใหม่" ด้านล่าง (หรือทีมสั่งให้) ใบสั่งเข้าคิวบนเว็บ ยังไม่เสียอะไร</li>
+        <li><b>คอมผลิตให้เอง</b> ตามเวลาที่ตั้งไว้ใน Cowork (คอมต้องเปิดและเปิดแอป Claude ไว้) สถานะจะเปลี่ยนเป็น "กำลังผลิตในคอม" → "ผลิตเสร็จ" ไฟล์อยู่ในเครื่องที่ Documents/Academic ด้วย</li>
+        <li><b>เล่มเดี่ยวเสร็จ</b> → ขึ้นการ์ด <b>"จากโรงงาน รออนุมัติ"</b> ด้านบนนี้และในแท็บสินค้า + แจ้งในเช็คลิสต์ → กดเปิดไฟล์ดูหน้าแรก/หน้ากลาง/หน้าท้าย → ดูราคา → กด <b>อนุมัติ ลงขาย</b> (ระบบทำหน้าตัวอย่างและหน้าขายให้ ติ๊ก "สร้างรูปขายด้วย AI" ได้ถ้าต้องการ)</li>
+        <li><b>ชุดขายเสร็จ</b> → เข้าแท็บ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง → กด "ดูเซลเพจ" ตรวจ → (ถ้ามีไฟล์เสียง อัป mp3 ขึ้น Google Drive และแชร์ก่อน) → กด <b>✅ เผยแพร่</b></li>
+        <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า/แก้ไขชุด → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน" ลูกค้าคนต่อไปได้ไฟล์ใหม่ทันที</li>
+        <li><b>ไม่อยากขาย</b> → กด "ไม่ลงขาย" ที่การ์ด (ไฟล์ยังเก็บไว้)</li>
+      </ol>
+      <p class="fine">โรงงานบนคลาวด์หยุดไว้แล้ว (กันผลิตซ้ำ เปลือง token) ถ้าคอมเสียหรือไม่อยู่บ้านนาน บอก Claude ให้เปิดกลับชั่วคราวได้</p>
+    </details>
     ${facBox(1)||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
     ${globalBox()}
     ${facSets()}
@@ -2975,8 +2992,8 @@ function payTab(){
 }
 
 /* ---------- คอนเทนต์: คิวโพสต์ของเพจ (ตาราง posts) ---------- */
-let FJOBS=null;
-const FSTAT={queued:['รอผลิต','warn'],producing:['กำลังผลิต','warn'],done:['ผลิตเสร็จ','ok'],failed:['ไม่สำเร็จ','bad'],cancelled:['ยกเลิก','gray']};
+let FJOBS=null,FWORKER=null;
+const FSTAT={queued:['รอผลิต (รอคอมหยิบ)','warn'],producing:['กำลังผลิตในคอม','warn'],done:['ผลิตเสร็จ','ok'],failed:['ไม่สำเร็จ','bad'],cancelled:['ยกเลิก','gray']};
 function factoryBox(){
   if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
   if(!FJOBS.length)return '';
@@ -3022,7 +3039,7 @@ const TEAM={
   market:{name:'พี่มาร์เก็ต',role:'วิจัยตลาด · หัวหน้าฝ่ายการตลาด ดึงคำค้นจริงและกระแส ส่งข้อมูลให้ทุกฝ่ายทุกเช้า',bg:'#fde68a',sched:'ทุกวัน 07:00 · จันทร์มีสรุปสัปดาห์',img:AV+'accessoriesProbability=100&seed=market&top=bob&hairColor=4a312c&accessories=round&clothing=blazerAndSweater&clothesColor=e6e6e6&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fde68a'},
   clip:{name:'น้องคลิป',role:'ตัดต่อคลิป Reels · ทำคลิปสั้นทายศัพท์จากไอเดียทีม ตรวจเองแล้วตั้งเวลาโพสต์ Reels และ Threads ไม่ต้องรออนุมัติ',bg:'#c7f9cc',sched:'ทุกวัน 10:00',img:AV+'accessoriesProbability=100&seed=clip&top=shortWaved&hairColor=2c1b18&accessories=wayfarers&clothing=shirtVNeck&clothesColor=25557c&eyes=default&eyebrows=defaultNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=c7f9cc'},
   hr:{name:'พี่เอชอาร์',role:'ฝ่ายบุคคล · ดูภาพรวมคน ทะเบียนทักษะ คู่มือพนักงาน',bg:'#ffe4e6',sched:'ทุกจันทร์ 08:30',img:AV+'accessoriesProbability=0&seed=hr&top=bun&hairColor=2c1b18&clothing=blazerAndShirt&clothesColor=e11d48&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=f8d25c&backgroundColor=ffe4e6'},
-  factory:{name:'พี่เหล็ก',role:'CEO โรงงาน · ดูแลการผลิตชีททุกเล่ม',bg:'#fef3c7',sched:'ทำงานอาทิตย์และจันทร์ 10:00, 22:00 หรือเมื่อสั่ง',img:AV+'accessoriesProbability=100&seed=factory&top=shortFlat&hairColor=4a4a4a&accessories=prescription01&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=fef3c7'},
+  factory:{name:'พี่เหล็ก',role:'CEO โรงงาน · ดูแลการผลิตชีททุกเล่ม',bg:'#fef3c7',sched:'ผลิตในคอมคุณแดน (Cowork) ตามเวลาที่ตั้งไว้',img:AV+'accessoriesProbability=100&seed=factory&top=shortFlat&hairColor=4a4a4a&accessories=prescription01&clothing=blazerAndShirt&clothesColor=262e33&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=fef3c7'},
   ceo_sale:{name:'พี่พลอย',role:'CEO salepage · ดูแลหน้าขายและยอดจากแอด',bg:'#dbeafe',sched:'ทุกอังคาร 09:30',img:AV+'accessoriesProbability=0&seed=ploy&top=longButNotTooLong&hairColor=2c1b18&clothing=blazerAndShirt&clothesColor=2440e8&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=dbeafe'},
   ceo_store:{name:'พี่โอ๊ค',role:'CEO หน้าร้าน · ดูแลชั้นวางสินค้าและชีทจากโรงงาน',bg:'#dcfce7',sched:'ทุกพุธ 09:30',img:AV+'accessoriesProbability=0&seed=oak&top=theCaesarAndSidePart&hairColor=2c1b18&clothing=blazerAndSweater&clothesColor=0f7a55&eyes=default&eyebrows=default&mouth=smile&skinColor=edb98a&backgroundColor=dcfce7'},
   manual:{name:'คุณ',role:'President · เจ้าของร้าน ตัดสินเรื่องเงินและเรื่องสำคัญ',bg:'#b6e3f4',sched:'',img:AV+'accessoriesProbability=0&seed=boss&top=shortWaved&hairColor=2c1b18&clothing=collarAndSweater&clothesColor=ffffb1&eyes=default&eyebrows=raisedExcitedNatural&mouth=twinkle&skinColor=edb98a&backgroundColor=b6e3f4'},
