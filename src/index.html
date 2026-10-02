@@ -413,11 +413,19 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bxi-models{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:6px 0 12px}.bxi-model{display:grid;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;font-size:13px;background:var(--surface)}
 .bxi-model input{display:none}.bxi-model.on{border-color:#EE4D2D;box-shadow:0 0 0 1px #EE4D2D}.bxi-model b{font-size:13.5px}.bxi-model span{color:var(--muted);line-height:1.4}.bxi-model em{font-style:normal;font-weight:700;color:#C2410C}
 .bxi-err{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#FFF1F2;border:1px solid #FECDD3;color:#9F1239;font-size:14px;line-height:1.5;word-break:break-word}
+.ai-pay{margin:6px 0 0;display:inline-flex;text-decoration:none}.bxi-broke a{color:inherit}
 .bxi-broke{display:block;font-style:normal;font-size:12px;font-weight:700;color:#BE123C;margin-top:4px}
 .bxi-hero{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}.bxi-big{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;background:var(--bg);text-align:center}.bxi-big img{width:100%;height:100%;object-fit:cover}
 .bxi-side{display:grid;gap:8px;align-content:start;justify-items:start}
 .bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
 .bxi-bc{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--line);position:relative}.bxi-bc img{width:100%;height:100%;object-fit:cover}
+.bxi-bc{padding:0;cursor:zoom-in;display:block}.bxi-zoom{position:absolute;right:4px;top:4px;background:rgba(255,255,255,.9);border-radius:6px;font-size:12px;padding:1px 4px;opacity:.85}
+.bxi-apply{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--warnbg,#FFFBEB);border:1px solid #FDE68A;font-size:14px}
+.bxv{position:fixed;inset:0;z-index:80;background:rgba(10,14,20,.6);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:16px}
+.bxv-in{background:var(--surface,#fff);border-radius:14px;padding:14px;width:100%;max-width:820px;margin:auto 0}
+.bxv-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}.bxv-f{margin:0;border:2px solid var(--line);border-radius:10px;padding:8px;display:grid;gap:6px;justify-items:center;background:var(--bg)}
+.bxv-f.cur{border-color:var(--ok,#16a34a)}.bxv-f img{width:100%;max-height:62vh;object-fit:contain;border-radius:6px;background:#fff}.bxv-f figcaption{font-size:13px;text-align:center}
+@media (max-width:560px){.bxv-pair{grid-template-columns:1fr}.bxv{padding:8px}}
 .bxi-ok{position:absolute;left:4px;bottom:4px;background:var(--ok);color:#fff;font-size:10.5px;border-radius:999px;padding:1px 6px}
 .bx-heroimg{display:block;width:100%;max-width:420px;aspect-ratio:1/1;object-fit:cover;border-radius:14px;margin:18px auto 6px;box-shadow:0 12px 30px rgba(0,0,0,.28)}
 @media (max-width:600px){.bxi-hero{grid-template-columns:1fr}}
@@ -1299,6 +1307,10 @@ const IMG_MODELS=[['gemini-3-pro-image','Google Nano Banana Pro (ตัวหน
 /* จุดเด่น + ค่าใช้จ่ายประมาณต่อรูป (บาท รวมค่ารูปต้นแบบ คุณภาพปกติ) ใช้แสดงให้คุณแดนเลือกโมเดล */
 const IMG_INFO={'gemini-3-pro-image':['ตัวหนังสือไทยแม่นที่สุด ทำปกจากปกเดิมได้ใกล้เคียงที่สุด (แนะนำสำหรับปก)',4.5],'gemini-3.1-flash-image':['เร็วและถูก ตัวหนังสือไทยพอใช้ เหมาะลองหลายแบบก่อน',1.5],'gpt-image-2':['ภาพสวยสมจริง แต่ตัวหนังสือไทยเพี้ยนบ่อย',2.5],'gpt-image-2.5-sunburst':['รุ่นใหม่ของ OpenAI ภาพคมขึ้น ตัวหนังสือไทยยังไม่ชัวร์',3],'gpt-image-2.5-flare':['รุ่นใหม่ของ OpenAI ภาพสดใส ตัวหนังสือไทยยังไม่ชัวร์',3],'chatgpt-image-latest':['แบบเดียวกับในแอป ChatGPT',2.5]};
 const imgModel=()=>{try{return localStorage.getItem('sl_imgmodel')||'gpt-image-2';}catch(e){return 'gpt-image-2';}};
+// เงินค่า AI ทำรูปหมด: ปุ่มไปหน้าเติมเงินของเจ้านั้น (คุณแดนจ่ายเอง)
+const AI_PAY={google:['https://aistudio.google.com/spend','เพิ่มงบ Google AI'],openai:['https://platform.openai.com/settings/organization/billing/overview','เติมเงิน OpenAI']};
+function aiPay(msg,k){const m=String(msg||'');k=k||(/Nano Banana\) ใช้เงินครบ|spending cap/i.test(m)?'google':/OpenAI.{0,30}เครดิตหมด|no credits|insufficient_quota/i.test(m)?'openai':'');
+  return k&&AI_PAY[k]?` <a class="btn btn-cta btn-sm ai-pay" href="${AI_PAY[k][0]}" target="_blank" rel="noopener noreferrer">💳 ${AI_PAY[k][1]} ↗</a>`:'';}
 const imgProv=m=>/^gemini-/.test(m)?'google':'openai';
 const imgQuality=()=>{try{return localStorage.getItem('sl_imgq')||'medium';}catch(e){return 'medium';}};
 async function coverGen(){
@@ -1331,7 +1343,7 @@ async function imgSetGen(){
   if(!S.draft)return;const ps=imgSetPrompts(S.draft);S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
   for(let i=0;i<ps.length;i++){
     try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i],model:imgModel(),quality:imgQuality()})});
-      if(j&&j.ok)S.imgSet[i].url=j.image;else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
+      if(j&&j.ok)S.imgSet[i].url=j.image;else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY|GEMINI_API_KEY|เครดิตหมด|ใช้เงินครบ/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
     catch(e){S.imgSet[i].err='ไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองคุณภาพปกติ';S.imgSet[i].pick=false;}
     render(true);
   }
@@ -1595,7 +1607,25 @@ function bxBookPrompt(b,i,n){const t=String(b.headline&&b.headline.length<60?b.h
 async function bxAiImage(prompt,refs){const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:imgModel(),quality:imgQuality(),refs:refs||[]})});
   if(!j||!j.ok){const e=new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');if(j&&j.billing){e.billing=j.billing;S.aiBroke=Object.assign({},S.aiBroke,{[j.billing]:Date.now()});}throw e;}
   if(S.aiBroke)delete S.aiBroke[imgProv(imgModel())];const blob=await (await fetch(j.image)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
-async function bxMakeBook(id,i,n){const b=getProduct(id);if(!b)return;const url=await bxAiImage(bxBookPrompt(b,i,n),(b.images||[]).slice(0,1));b.bookCover=url;save();}
+const bxOrig=b=>b.origImg||(b.images||[]).find(u=>u!==b.bookCover)||'';
+function bxUseCover(b,on){if(!b.bookCover)return;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
+  const rest=(b.images||[]).filter(u=>u!==b.bookCover&&u!==b.origImg&&!(b.oldCovers||[]).includes(u));
+  b.images=on?[b.bookCover,...(b.origImg?[b.origImg]:[]),...rest]:[...(b.origImg?[b.origImg]:[]),...rest];}
+async function bxMakeBook(id,i,n){const b=getProduct(id);if(!b)return;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
+  const o=bxOrig(b),url=await bxAiImage(bxBookPrompt(Object.assign({},b,{images:o?[o]:[]}),i,n),o?[o]:[]);
+  if(b.bookCover)b.oldCovers=[...(b.oldCovers||[]),b.bookCover].slice(-5);b.bookCover=url;bxUseCover(b,true);save();}
+function bxViewer(){const b=S.bxView&&getProduct(S.bxView);if(!b)return '';const o=bxOrig(b),on=(b.images||[])[0]===b.bookCover&&!!b.bookCover,i=S.draft?S.draft.items.indexOf(b.id):-1;
+  const fig=(u,l,cur)=>`<figure class="bxv-f${cur?' cur':''}">${u?`<img src="${esc(u)}" alt="${esc(l)}">`:'<span class="fine">ไม่มีรูป</span>'}<figcaption>${l}${cur?' · ✓ ใช้เป็นรูปสินค้าอยู่':''}${u?` · <a href="${esc(u)}" target="_blank" rel="noopener noreferrer" download>เปิด/โหลด</a>`:''}</figcaption></figure>`;
+  return `<div class="bxv" data-a="bxView" role="dialog" aria-modal="true" aria-label="ดูปกเล่ม"><div class="bxv-in" data-a="noop">
+    <div class="row" style="justify-content:space-between;align-items:center;gap:8px"><b>เล่ม ${i+1}: ${esc(b.name)}</b><button class="chip" data-a="bxView">ปิด ✕</button></div>
+    <div class="bxv-pair">${fig(b.bookCover,'ปกเรียบจาก AI',on)}${fig(o,'รูปเดิม',!on&&(b.images||[])[0]===o)}</div>
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
+      ${b.bookCover?(on?`<button class="btn btn-line btn-sm" data-a="bxUse" data-id="${b.id}" data-v="0">↩ ใช้รูปเดิมเป็นรูปสินค้า</button>`:`<button class="btn btn-cta btn-sm" data-a="bxUse" data-id="${b.id}" data-v="1">✓ ใช้ปกเรียบเป็นรูปสินค้า</button>`):''}
+      <button class="btn btn-line btn-sm" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${S.bxImg?'disabled':''}>${S.bxImg===b.id?'กำลังสร้าง...':'✨ ทำปกใหม่'}</button>
+      ${i>0?`<button class="chip" data-a="bxViewGo" data-v="${i-1}">‹ เล่มก่อน</button>`:''}${S.draft&&i<S.draft.items.length-1?`<button class="chip" data-a="bxViewGo" data-v="${i+1}">เล่มถัดไป ›</button>`:''}
+    </div>
+    <p class="fine" style="margin:8px 0 0">รูปสินค้า = รูปแรกที่ลูกค้าเห็นในหน้าร้านและหน้าขายของเล่มนี้ · รูปเดิมไม่ได้ลบ สลับกลับได้ตลอด</p>
+  </div></div>`;}
 /* จัดรูปชุดจากปกจริงด้วย canvas (ไม่ใช้ AI): หัวข้อ ป้ายจำนวนเล่ม ปกทุกเล่ม 2 แถว ป้ายราคา แถบล่าง */
 async function bxCompose(d,books){
   const W=1200,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');
@@ -1665,21 +1695,22 @@ function bundleForm(){
     return `<div class="card" style="margin-top:14px">
     <h3 class="h3">3. รูปชุด <span class="fine" style="font-weight:400">ทำ 2 ขั้น: ปกเล่มเดี่ยวก่อน แล้วรูปใหญ่ของชุดจะจัดจากปกชุดเดียวกัน ให้ดูเป็นสินค้าเดียวกัน</span></h3>
     <h4 class="bxi-step"><span>1</span> ปกเล่มเดี่ยว (ใช้ใน "ในชุดมีอะไรบ้าง")</h4>
-    <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ไม่เปลี่ยนรูปสินค้าของแต่ละเล่ม</p>
-    <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?'<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน</i>':''}</label>`).join('')}</div>
-    <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b"><div class="bxi-bc">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?'<span class="bxi-ok">✓ ปกเรียบ</span>':''}</div>
+    <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ได้แล้ว<b>ใช้เป็นรูปสินค้าของเล่มนั้นด้วย</b> รูปเดิมเก็บไว้เป็นรูปที่ 2 · กดที่รูปเพื่อดูใหญ่ เทียบกับรูปเดิม หรือสลับกลับ</p>
+    ${(()=>{const left=chosen.filter(b=>b.bookCover&&(b.images||[])[0]!==b.bookCover);return left.length?`<div class="bxi-apply"><span>มีปกเรียบ ${left.length} เล่มที่ยังไม่ได้ใช้เป็นรูปสินค้า</span><button class="btn btn-cta btn-sm" data-a="bxUseAll">✓ ใช้ปกเรียบเป็นรูปสินค้าทั้ง ${left.length} เล่ม</button></div>`:'';})()}
+    <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`).join('')}</div>
+    <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b"><button class="bxi-bc" data-a="bxView" data-id="${b.id}" aria-label="ดูปกเล่ม ${i+1} ขนาดใหญ่">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?`<span class="bxi-ok">✓ ปกเรียบ${(b.images||[])[0]===b.bookCover?' · รูปสินค้า':''}</span>`:''}<span class="bxi-zoom" aria-hidden="true">🔍</span></button>
       <span class="fine">เล่ม ${i+1}</span><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button></div>`).join('')}</div>
     <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center"><button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${todo||n}...`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
-    ${S.bxImgErr?`<div class="bxi-err">⚠️ ${esc(S.bxImgErr)}</div>`:''}
+    ${S.bxImgErr?`<div class="bxi-err">⚠️ ${esc(S.bxImgErr)}${aiPay(S.bxImgErr)}</div>`:''}
     <h4 class="bxi-step" style="margin-top:20px"><span>2</span> รูปใหญ่ของชุด (หัวหน้าขาย · การ์ดหน้าร้าน · แอด)</h4>
-    <div class="bxi-hero"><div class="bxi-big">${d.cover?`<img src="${esc(d.cover)}" alt="">`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
+    <div class="bxi-hero"><div class="bxi-big">${d.cover?`<a href="${esc(d.cover)}" target="_blank" rel="noopener noreferrer" title="เปิดรูปใหญ่"><img src="${esc(d.cover)}" alt="รูปใหญ่ของชุด"></a>`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
       <div class="bxi-side"><span class="fine">${todo?`ทำปกเรียบอีก ${todo} เล่มก่อน รูปชุดจะเป็นแบบเดียวกันทั้งหมด`:'ปกเรียบครบแล้ว จัดรูปชุดได้เลย'}</span>
         <button class="btn btn-cta btn-sm" data-a="bxCompose" ${pend?'disabled':''}>${pend==='compose'?'กำลังจัดรูป...':'🧩 จัดรูปชุดจากปกเล่มเดี่ยว (ฟรี)'}</button>
         <button class="btn btn-line btn-sm" data-a="bxAiCover" ${pend?'disabled':''}>${pend==='cover'?'กำลังสร้าง... (20-60 วินาที)':`✨ ให้ AI จัดเป็นภาพหนังสือวางเป็นเซ็ต (≈ ฿${mi[1]})`}</button>
         <label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-bxup="cover"></label>
         ${d.cover?'<button class="chip" data-a="bxCoverClear">ใช้ปกเล่มแรกแทน</button>':''}</div></div>
-    <p class="fine" style="margin:10px 0 0">ได้รูปแล้วกด <b>บันทึกชุด</b> ด้านล่างด้วย</p>
-  </div>`;})()}
+    <p class="fine" style="margin:10px 0 0">ได้รูปแล้วกด <b>บันทึกชุด</b> ด้านล่างด้วย (รูปสินค้าของแต่ละเล่มบันทึกให้ทันที)</p>
+  </div>${bxViewer()}`;})()}
   <div class="card" style="margin-top:14px">
     <h3 class="h3">4. ราคาและแพ็กเกจ</h3>
     <p class="fine" style="margin:0 0 8px">กดปุ่มให้ระบบคิดราคาตามสูตรในแผน (5–6 เล่ม 60% · 7–8 เล่ม 55% · 9 เล่มขึ้นไป 50% ของราคาแยกรวม ลงท้าย 90 · Plus ≈ 1.65 เท่า · Pro ≈ 1.5 เท่าของ Plus · ราคาเปิดตัว −20%) แล้วแก้เองได้ทุกช่อง</p>
@@ -2435,7 +2466,7 @@ function productForm(){
         <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button><button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><label class="fine">โมเดล <select class="input" data-imgset="model" style="width:auto;display:inline-block;padding:6px 8px">${IMG_MODELS.map(m=>`<option value="${m[0]}" ${imgModel()===m[0]?'selected':''}>${esc(m[1])}</option>`).join('')}</select></label>
           <label class="fine">คุณภาพ <select class="input" data-imgset="q" style="width:auto;display:inline-block;padding:6px 8px">${[['medium','ปกติ (~1.5 บาท/รูป)'],['high','สูง (~6 บาท/รูป)'],['low','ร่าง (ถูกสุด)']].map(q=>`<option value="${q[0]}" ${imgQuality()===q[0]?'selected':''}>${q[1]}</option>`).join('')}</select></label></div>
-        ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}</p>`:''}
+        ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}${aiPay(S.coverErr)}</p>`:''}
         ${S.imgSet?`<div class="imgset">${S.imgSet.map((it,i)=>`<label class="imgset-it">${it.url?`<img src="${it.url}" alt="ภาพที่ ${i+1}">`:`<span class="imgset-ph">${it.err?esc(it.err):'กำลังสร้าง...'}</span>`}<span><input type="checkbox" data-a="imgPick" data-v="${i}" ${it.pick&&it.url?'checked':''} ${it.url?'':'disabled'}> ${['ปก','ภาพในเล่ม','มีอะไรบ้าง','เหมาะกับใคร','วิธีรับไฟล์'][i]}</span></label>`).join('')}</div>${!S.coverBusy&&S.imgSet.some(x=>x.url)?`<button class="btn btn-cta btn-sm" data-a="imgSetUse" style="margin-top:8px">ใช้รูปที่เลือก (แทนภาพเดิม)</button>`:''}<p class="fine" style="margin:6px 0 0">สร้างทีละรูป 5 รูปใช้เวลาประมาณ 2-4 นาที คิดเงิน OpenAI 5 รูป</p>`:''}
         ${S.coverImg?`<div class="aic-out"><img src="${S.coverImg}" alt="ปกที่สร้าง"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverUse" ${S.coverBusy?'disabled':''}>ใช้เป็นปก (ภาพแรก)</button><span class="fine">ตรวจตัวสะกดภาษาไทยบนปกก่อนใช้ · กดบันทึกสินค้าได้เลย ระบบใส่รูปนี้เป็นภาพแรกให้อัตโนมัติ</span></div></div>`:''}</div>`:''}</div>
     <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
@@ -2544,7 +2575,7 @@ function facBox(inFactory){
     ${FAC.jobs.map(j=>`<div class="facrow"><div><b>${esc(j.title)}</b><span class="fine">${j.kind==='notion'?'Notion Template · ':j.pages?j.pages+' หน้า · ':''}ราคาที่เสนอ ${baht(j.price)}${j.done_at?' · เสร็จ '+fdt(Date.parse(j.done_at)):''}</span></div>
       ${j.kind==='notion'?`<div class="facnotion"><span class="fine">📒 Notion Template · <b>ขั้นตอนเดียวที่ต้องกดเอง:</b> เปิดหน้าใน Notion → Share → Publish → เปิด Allow duplicate → คัดลอกลิงก์มาวางด้านล่าง</span>
         <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><a class="btn btn-dark btn-sm" href="${esc(j.notion_url||'#')}" target="_blank" rel="noopener noreferrer">เปิดใน Notion</a><input class="input" id="fpub-${esc(j.id)}" data-fpub="${esc(j.id)}" inputmode="url" placeholder="วางลิงก์ที่ Publish แล้ว เช่น https://xxx.notion.site/..." value="${esc((FAC.pub||{})[j.id]||'')}" style="flex:1;min-width:220px"></div></div>`:''}
-      <label class="facai fine"><input type="checkbox" data-a="facAiToggle" data-id="${esc(j.id)}" ${(FAC.aiOff||{})[j.id]?'':'checked'}> ✨ ทำรูปขายด้วย AI 5 รูปตอนกดอนุมัติ (~${imgQuality()==='high'?30:imgQuality()==='low'?2:7.5} บาท จ่ายเฉพาะสินค้าที่อนุมัติ)${FAC.aiBusy===j.id?' · <b>กำลังทำรูป 1-3 นาที...</b>':''}</label>
+      <label class="facai fine"><input type="checkbox" data-a="facAiToggle" data-id="${esc(j.id)}" ${(FAC.aiOff||{})[j.id]?'':'checked'}> ✨ ทำรูปขายด้วย AI 5 รูปตอนกดอนุมัติ (~${imgQuality()==='high'?30:imgQuality()==='low'?2:7.5} บาท จ่ายเฉพาะสินค้าที่อนุมัติ)${FAC.aiBusy===j.id?' · <b>กำลังทำรูป 1-3 นาที...</b>':''}</label>${FAC.aiErr&&FAC.aiErr.id===j.id?`<p class="err" style="margin:4px 0">${esc(FAC.aiErr.m)}${aiPay(FAC.aiErr.m)}</p>`:''}
       <div class="row" style="gap:6px;flex-wrap:wrap">${j.kind==='notion'?'':`<a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิด PDF</a>`}<button class="btn btn-cta btn-sm" data-a="facQuick" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${FAC.busy===j.id&&FAC.quick?'กำลังเตรียมและลงขาย...':S.confirm==='fq:'+j.id?'กดอีกครั้ง: ลงขาย '+baht(j.price):'อนุมัติเลย'}</button><button class="btn btn-line btn-sm" data-a="facApprove" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>ตรวจก่อนอนุมัติ</button><button class="btn btn-line btn-sm" data-a="facReject" data-id="${esc(j.id)}" ${FAC.busy?'disabled':''}>${S.confirm==='fr:'+j.id?'กดอีกครั้ง: ไม่ลงขาย':'ไม่ลงขาย'}</button></div></div>`).join('')}
   </section>`;
 }
@@ -2556,7 +2587,7 @@ async function facAiImages(id){
   FAC.aiBusy=id;render(true);toast('กำลังทำรูปขาย 5 รูปพร้อมกัน ใช้เวลา 1-3 นาที');
   try{const r=await authFetch('/api/content?action=ai_images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,prompts:imgSetPrompts(d),model:imgModel(),quality:imgQuality()})});
     if(r&&r.images&&r.images.length){j.ai_images=r.images;toast(`ได้รูปขาย ${r.images.length} รูป${r.errors&&r.errors.length?` (ไม่สำเร็จ ${r.errors.length} รูป)`:''} · ตอนอนุมัติจะใส่ให้อัตโนมัติ`);}
-    else toast('ทำรูปไม่สำเร็จ: '+((r&&(r.error||(r.errors||[])[0]))||'ลองใหม่อีกครั้ง'));}
+    else{const m=(r&&(r.error||(r.errors||[])[0]))||'ลองใหม่อีกครั้ง';FAC.aiErr={id,m};toast('ทำรูปไม่สำเร็จ: '+m);}}
   catch(e){toast('ทำรูปไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองคุณภาพปกติ');}
   FAC.aiBusy='';render(true);
 }
@@ -3721,7 +3752,7 @@ function adsAutoBox(compact,noLive){
             <label class="adq-lbl" for="adai-hook-${x.id}">ข้อความบนรูป (บรรทัดละท่อน · บรรทัดสุดท้ายเป็นสีเหลือง)</label><textarea class="input" id="adai-hook-${x.id}" rows="3">${esc(x.aiHook!=null?x.aiHook:adHook(p))}</textarea>
             <label class="adq-lbl" for="adai-model-${x.id}">โมเดล</label><select class="input" id="adai-model-${x.id}">${IMG_MODELS.map(([k,l])=>`<option value="${k}" ${(x.aiModel||imgModel())===k?'selected':''}>${esc(l)}</option>`).join('')}</select>
             <button class="btn btn-cta btn-sm" data-a="adsAiGen" data-id="${x.id}" ${busy?'disabled':''}>${busy?'กำลังสร้างรูป... (ประมาณ 20-60 วินาที)':'✨ สร้างรูป'}</button>
-            ${ADA.aiErr&&ADA.ai===x.id?`<p class="err" style="margin:0">${esc(ADA.aiErr)}</p>`:''}<span class="fine">ได้รูปแล้วจะถูกเลือกเป็นรูปแอดทันที ไม่ชอบกดสร้างใหม่ได้ (เสียค่า AI ต่อรูปตามโมเดล)</span></div>`:''}</div>`;})()}
+            ${ADA.aiErr&&ADA.ai===x.id?`<p class="err" style="margin:0">${esc(ADA.aiErr)}${aiPay(ADA.aiErr)}</p>`:''}<span class="fine">ได้รูปแล้วจะถูกเลือกเป็นรูปแอดทันที ไม่ชอบกดสร้างใหม่ได้ (เสียค่า AI ต่อรูปตามโมเดล)</span></div>`:''}</div>`;})()}
         ${(()=>{const pl=x.platforms||[],rec=adRecommend(x),isRec=rec.plats.join()===pl.slice().sort().join();return `<div><span class="adq-lbl">ลงแอดที่ไหน</span><div class="adq-plats">
           <button class="chip" data-a="adsPlat" data-id="${x.id}" data-v="auto" aria-pressed="${!pl.length}">อัตโนมัติ</button>${AD_PLATS.map(([k,l])=>`<button class="chip" data-a="adsPlat" data-id="${x.id}" data-v="${k}" aria-pressed="${pl.includes(k)}">${l}</button>`).join('')}</div>
           <details class="adq-rec"><summary>${ava('analyst',1)}<span><b>น้องบูสต์แนะนำ:</b> ${rec.plats.length?rec.plats.map(k=>(AD_PLATS.find(p=>p[0]===k)||[,k])[1]).join(' + '):'อัตโนมัติ'} ${isRec?'✓':''}</span><span class="fine">ทำไม?</span></summary><p>${esc(rec.why)}</p></details>${isRec?'':`<button class="pt-a" data-a="adsPlatRec" data-id="${x.id}">ใช้ตามคำแนะนำ</button>`}
@@ -4706,6 +4737,10 @@ function act(a,el){
       bxAiImage(bxCoverPrompt(d,books),bxRefs(books)).then(u=>{S.draft.cover=u;toast('ได้รูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxCompose':{const d=S.draft;if(!d)break;const books=d.items.map(getProduct).filter(Boolean);S.bxImg='compose';S.bxImgErr='';render(true);
       bxCompose(d,books).then(uploadImage).then(u=>{S.draft.cover=u;toast('จัดรูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>{S.bxImgErr='จัดรูปไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
+    case 'bxView':S.bxView=S.bxView===id||!id?null:id;render(true);break;
+    case 'bxViewGo':{const k=Number(el.dataset.v);if(S.draft&&S.draft.items[k])S.bxView=S.draft.items[k];render(true);break;}
+    case 'bxUse':{const b=getProduct(id);if(!b)break;bxUseCover(b,el.dataset.v==='1');save();toast(el.dataset.v==='1'?'ใช้ปกเรียบเป็นรูปสินค้าแล้ว':'กลับไปใช้รูปเดิมแล้ว');render(true);break;}
+    case 'bxUseAll':{const L=(S.draft?S.draft.items:[]).map(getProduct).filter(b=>b&&b.bookCover&&(b.images||[])[0]!==b.bookCover);L.forEach(b=>bxUseCover(b,true));save();toast(`ใช้ปกเรียบเป็นรูปสินค้าแล้ว ${L.length} เล่ม`);render(true);break;}
     case 'bxCoverClear':if(S.draft){S.draft.cover='';render(true);}break;
     case 'bxAiBook':{const n=(S.draft&&S.draft.items.length)||1;S.bxImg=id;S.bxImgErr='';render(true);
       bxMakeBook(id,Number(el.dataset.v)||0,n).then(()=>toast('ทำปกเล่มนี้แล้ว')).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
