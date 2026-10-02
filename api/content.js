@@ -18,7 +18,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
-import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus } from '../lib/ads.js';
+import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
 import { sendRecoveries } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
@@ -2342,7 +2342,9 @@ export default async function handler(req, res) {
         const fb = await loadFb().catch(() => null);
         const acc = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) }));
         if (!fb?.userToken || (acc.reason === 'token' || acc.reason === 'perm')) return res.status(200).json({ ok: false, access: acc, error: acc.error });
-        try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() }); return res.status(200).json({ ok: true, access: acc, ...r }); }
+        try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() });
+          const history = await adsHistory(fb, r.rate).catch(() => null); // ใช้ประเมินรายได้ ไม่มีก็ไม่เป็นไร
+          return res.status(200).json({ ok: true, access: acc, ...r, history }); }
         catch (e) { return res.status(200).json({ ok: false, access: acc, error: String(e.message || e) }); }
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });

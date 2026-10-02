@@ -655,6 +655,19 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .ost.done{color:#15803d;border-color:#86efac}.ost.cancel{color:var(--muted);text-decoration:line-through}.ost.wait{color:#b45309;border-color:#fcd34d}
 .order.cancel .otext{opacity:.55}
 .dash{margin:12px 0 14px}
+.adf-conf{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px}
+.adf-red{background:#FFF1F2;color:#BE123C}.adf-amber{background:#FFFBEB;color:#B45309}.adf-green{background:#ECFDF5;color:#047857}
+.adf-in{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:12px 0}.adf-in label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mut,#64748b)}
+.adf-in .input{width:140px}.adf-pre{display:flex;gap:6px;flex-wrap:wrap}
+.adf-sum{margin:0 0 10px;font-size:15px;line-height:1.6}
+.adf-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.adf-c{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0;background:var(--bg)}
+.adf-c span{font-size:12px;color:var(--mut,#64748b)}.adf-c b{font-size:20px}.adf-c small{font-size:12px;color:var(--mut,#64748b)}
+.adf-c em{font-style:normal;font-size:13px;font-weight:700}.adf-c em.up{color:#047857}.adf-c em.down{color:#BE123C}
+.adf-mid{border-color:#2440E8;box-shadow:0 0 0 1px #2440E8 inset}
+.adf-warn{margin:10px 0 0;padding:8px 12px;border-radius:10px;background:#FFFBEB;border:1px solid #FDE68A;font-size:13px;color:#92400E}
+.adf-src{margin-top:10px}.adf-src summary{cursor:pointer;font-size:13px}
+@media(max-width:560px){.adf-cols{grid-template-columns:1fr}.adf-c{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:4px 10px}}
 .dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 @media(min-width:720px){.dgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .dtile{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -3737,6 +3750,58 @@ function adsAutoBox(compact,noLive){
     ${!compact&&old.length?`<details style="margin-top:10px"><summary class="fine">ประวัติ (${old.length})</summary>${old.map(x=>`<p class="fine" style="margin:4px 0">${x.status==='ended'?'✓ จบแล้ว':'✖ ไม่เอา'} · ${esc(x.name)} · ฿${esc(x.dailyTHB)}/วัน × ${esc(x.days)} วัน</p>`).join('')}</details>`:''}
   </section>`;
 }
+/* 🔮 ประเมินรายได้จากงบแอด: ใช้ผลจริงของแอดแบบยอดขาย (ประวัติทั้งหมดจาก Facebook) + ออเดอร์จริงในร้าน · ประเมินอย่างเดียว ไม่ตั้งงบให้ */
+const ADF={budget:1000,days:7};
+function adfModel(){
+  const h=ADST.d&&ADST.d.history;if(!h)return null;
+  let sales=h.filter(x=>x.sales);if(!sales.length)sales=h.filter(x=>x.purchases>0);
+  const clicks=h.filter(x=>!sales.includes(x));
+  const spend=sales.reduce((a,x)=>a+x.spendTHB,0),n=sales.reduce((a,x)=>a+x.purchases,0),val=sales.reduce((a,x)=>a+x.valueTHB,0);
+  const daily=sales.reduce((a,x)=>a+x.spendTHB/Math.max(1,x.days),0); // ที่แอดเคยใช้จริงต่อวัน (รวมทุกแคมเปญยอดขาย)
+  const names=sales.map(x=>String(x.name).toLowerCase()),since=Math.min(...sales.map(x=>Date.parse(x.start)||Date.now()));
+  const real=(D.orders||[]).filter(o=>o.status==='paid'&&o.campaign&&names.includes(String(o.campaign).toLowerCase())&&o.created>=since-864e5);
+  const recent=(D.orders||[]).filter(o=>o.status==='paid'&&o.created>Date.now()-60*864e5&&o.amount>0);
+  const aov=recent.length>=5?recent.reduce((a,o)=>a+o.amount,0)/recent.length:n&&val?val/n:179;
+  return {sales,clicks,spend,n,val,daily,real:{n:real.length,v:real.reduce((a,o)=>a+o.amount,0)},aov,aovSrc:recent.length>=5?`ออเดอร์จริง ${recent.length} รายการ 60 วันล่าสุด`:'ที่ Facebook นับ'};
+}
+function adfCalc(m,budget,days){
+  const c=m.spend/m.n,z=1.645,lo=Math.max(.5,m.n-z*Math.sqrt(m.n)),extra=m.n<20?1.5:m.n<50?1.25:1.1;
+  const scale=Math.max(1,(budget/Math.max(1,days))/Math.max(1,m.daily)); // ใช้เงินต่อวันมากกว่าที่เคย ต้นทุนต่อการซื้อมักแพงขึ้น
+  const cpa={bad:m.spend/lo*extra*Math.sqrt(scale),mid:c*Math.pow(scale,.25)*(m.n<20?1.3:1.1),good:c};
+  cpa.mid=Math.min(Math.max(cpa.mid,cpa.good),cpa.bad);
+  const r={};for(const k in cpa){const o=budget/cpa[k];r[k]={cpa:cpa[k],orders:o,rev:o*m.aov,profit:o*m.aov-budget};}
+  return {r,scale,c};
+}
+function adfOut(){
+  const m=adfModel();if(!m||!m.n)return '';
+  const B=Math.max(0,Number(ADF.budget)||0),Dd=Math.max(1,Number(ADF.days)||7);if(!B)return '<p class="fine">ใส่งบก่อน</p>';
+  const {r,scale}=adfCalc(m,B,Dd),money=n=>'฿'+Math.round(n).toLocaleString('th-TH'),rng=(a,b)=>a===b?a:a+'–'+b;
+  const col=(k,l)=>{const x=r[k];return `<div class="adf-c adf-${k}"><span>${l}</span><b>${money(x.rev)}</b><small>${Math.round(x.orders)} ออเดอร์ · ต้นทุน ${money(x.cpa)}/ออเดอร์</small><em class="${x.profit>=0?'up':'down'}">${x.profit>=0?'กำไร':'ขาดทุน'} ${money(Math.abs(x.profit))}</em></div>`;};
+  return `<p class="adf-sum">ใส่ค่าแอด <b>${money(B)}</b> ใน ${Dd} วัน (วันละ ${money(B/Dd)}) → คาดว่าได้ <b>${rng(Math.round(r.bad.orders),Math.round(r.good.orders))} ออเดอร์</b> รายได้ประมาณ <b>${money(r.bad.rev)}–${money(r.good.rev)}</b></p>
+    <div class="adf-cols">${col('bad','แบบแย่')}${col('mid','แบบกลาง (น่าจะเป็น)')}${col('good','แบบดี (เท่าตอนนี้)')}</div>
+    ${scale>=1.5?`<p class="adf-warn">⚠️ งบวันละ ${money(B/Dd)} มากกว่าที่แอดเคยใช้จริง (วันละ ${money(m.daily)}) ประมาณ ${scale.toFixed(1)} เท่า ยิ่งเพิ่มงบเร็ว ต้นทุนต่อออเดอร์มักแพงขึ้น แนะนำเพิ่มทีละ 20-30% ทุก 3-4 วัน</p>`:''}
+    <p class="fine" style="margin:8px 0 0">จุดคุ้มทุน: ต้นทุนต่อออเดอร์ต้องไม่เกิน <b>${money(m.aov)}</b> (ยอดเฉลี่ยต่อออเดอร์ ${m.aovSrc}) ถ้าเกินนี้แอดเริ่มขาดทุน</p>`;
+}
+function adsForecast(){
+  if(!ADST.d||!ADST.d.ok)return '';
+  const m=adfModel(),money=n=>'฿'+Math.round(n).toLocaleString('th-TH');
+  const head=`<div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">🔮 ประเมินรายได้จากงบแอด</h3>`;
+  if(!m)return `<section class="card" style="margin-top:14px">${head}</div><p class="fine">ยังดึงประวัติแอดจาก Facebook ไม่ได้ กดรีเฟรชด้านบน</p></section>`;
+  if(!m.n)return `<section class="card" style="margin-top:14px">${head}</div><p class="fine">ยังไม่มีการซื้อจากแอดแบบยอดขาย (ใช้ไป ${money(m.spend)}) ประเมินไม่ได้ รอให้มีคนซื้อผ่านแอดก่อน</p></section>`;
+  const conf=m.n<20?['red','🔴 ข้อมูลน้อย','ช่วงที่ประเมินยังกว้าง']:m.n<50?['amber','🟡 พอใช้','']:['green','🟢 แม่น',''];
+  const cl=m.clicks.reduce((a,x)=>({s:a.s+x.spendTHB,p:a.p+x.purchases}),{s:0,p:0});
+  return `<section class="card adf" style="margin-top:14px">${head}<span class="adf-conf adf-${conf[0]}">${conf[1]} · จาก ${m.n} การซื้อ${conf[2]?' · '+conf[2]:''}</span></div>
+    <div class="adf-in"><label>ค่าแอด (บาท)<input class="input" type="number" inputmode="numeric" min="0" step="100" value="${esc(ADF.budget)}" data-adf="budget"></label>
+      <label>ใน<select class="input" data-adf="days">${[3,7,14,30].map(d=>`<option value="${d}" ${ADF.days==d?'selected':''}>${d} วัน</option>`).join('')}</select></label>
+      <div class="adf-pre">${[700,1000,3000,5000].map(v=>`<button class="chip" data-a="adfSet" data-v="${v}">${money(v)}</button>`).join('')}</div></div>
+    <div id="adf-out">${adfOut()}</div>
+    <details class="adf-src"><summary>คิดจากอะไร</summary>
+      <p class="fine">แอดแบบยอดขาย: ${m.sales.map(x=>`<b>${esc(x.name)}</b> ${x.days} วัน ใช้ ${money(x.spendTHB)} ซื้อ ${x.purchases} ครั้ง`).join(' · ')}</p>
+      <p class="fine">Facebook นับการซื้อ ${m.n} ครั้ง ยอด ${money(m.val)} · ร้านนับออเดอร์จ่ายแล้วที่มาจากแคมเปญเหล่านี้ ${m.real.n} ออเดอร์ ${money(m.real.v)}${m.real.n<m.n?' (ร้านนับได้น้อยกว่าเพราะบางคนจ่ายทีหลังหรือกดผ่านหน้าอื่น ตัวเลขจริงน่าจะอยู่ระหว่างสองค่านี้)':''}</p>
+      ${m.clicks.length?`<p class="fine">ไม่นับแอดแบบคลิก (ใช้ ${money(cl.s)} ซื้อ ${cl.p} ครั้ง) เพราะไม่ได้หาคนซื้อ</p>`:''}
+      <p class="fine">วิธีคิด: ต้นทุนต่อออเดอร์ที่ผ่านมา ปรับตามจำนวนข้อมูล (ข้อมูลน้อย ช่วงยิ่งกว้าง) และงบต่อวันที่มากกว่าที่เคยใช้ · ประเมินเท่านั้น ระบบไม่ตั้งงบหรือเปิดแอดให้</p>
+    </details></section>`;
+}
 function adsTab(){
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
   if(ADA.items===null&&!ADA.loading)loadAdsAuto();
@@ -3755,6 +3820,7 @@ function adsTab(){
       ${tile('บัญชีโฆษณา',accBad?'⚠️ มีปัญหา':A&&A.ok?'✓ ปกติ':'–',accBad?esc(A.error||''):(A&&A.account&&A.account.payment?'จ่ายด้วย '+esc(A.account.payment):''),accBad?'warn':'')}
       ${L?tile('วงเงินบัญชี',L.capTHB?money(L.leftTHB)+' เหลือ':'ยังไม่ได้ตั้ง',L.capTHB?`ใช้ไป ${money(L.spentTHB)} จาก ${money(L.capTHB)} · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">แก้วงเงิน ↗</a>`:`<a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">ตั้งวงเงินกันเงินหมด ↗</a>`,L.capTHB?(L.leftTHB<300?'warn':''):'warn'):''}
     </div></section>
+  ${adsForecast()}
   ${adsStatusBox()}
   <details class="card ads-more"><summary><b>เครื่องมือเพิ่มเติม</b> <span class="fine">น้องบูสต์ · แคมเปญที่บันทึกในร้าน · เขียนข้อความแอดเอง</span></summary>${adsTools()}</details>`;
 }
@@ -4625,6 +4691,7 @@ function act(a,el){
         .then(async j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');await adsUseImage(x,j.image);toast('ได้รูปแอดใหม่แล้ว ✨');})
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
     case 'adsFilter':ADST.f=el.dataset.v;render(true);break;
+    case 'adfSet':ADF.budget=Number(el.dataset.v)||0;render(true);break;
     case 'adsStRefresh':ADST.d=null;ADA.items=null;loadAdsStatus();loadAdsAuto();render(true);break;
     case 'adsSet':{const on=el.dataset.v==='ACTIVE';if(!confirm(on?'เปิดแอดนี้ต่อ? (จะเริ่มใช้งบอีกครั้ง)':'หยุดแอดนี้? (เปิดต่อได้ภายหลัง)'))break;ADST.busy=id;render(true);
       adminPost('/api/content?action=ads_auto_adset',{adId:id,status:el.dataset.v,campaignId:el.dataset.camp||''}).then(j=>{ADST.busy='';if(j&&j.ok){toast(on?'เปิดแอดต่อแล้ว':'หยุดแอดแล้ว');ADST.d=null;loadAdsStatus();}else{toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}}).catch(()=>{ADST.busy='';toast('เชื่อมต่อไม่ได้');render(true);});break;}
@@ -4779,6 +4846,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
+  if(ds.adf){ADF[ds.adf]=Number(t.value)||0;const o=document.getElementById('adf-out');if(o)o.innerHTML=adfOut();return;}
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
