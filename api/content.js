@@ -949,7 +949,14 @@ export default async function handler(req, res) {
         pm_types: (s.payment_method_types || []).join(','), locale: s.locale || '',
       }));
       const count = list.reduce((m, x) => { m[x.stage] = (m[x.stage] || 0) + 1; return m; }, {});
-      return res.status(200).json({ ok: true, days, total: list.length, count, sessions: list.slice(0, 80) });
+      // QR พร้อมเพย์บนหน้าร้าน (PaymentIntent flow=qr): สร้าง QR แล้วสแกนจ่ายกี่คน
+      const pis = []; let pa;
+      for (let i = 0; i < 5; i++) { const r = await stripe('GET', `payment_intents?limit=100&created[gte]=${since}${pa ? `&starting_after=${pa}` : ''}`); pis.push(...(r.data || [])); if (!r.has_more) break; pa = r.data[r.data.length - 1].id; }
+      const test = await loadTestEmails().catch(() => new Set());
+      const qrs = pis.filter((x) => x.metadata?.flow === 'qr' && !test.has(String(x.metadata?.email || '').toLowerCase())).map((x) => ({ created: new Date(x.created * 1000).toISOString(), status: x.status, amount: x.amount / 100, campaign: x.metadata?.campaign || '', email: String(x.metadata?.email || '').replace(/^(.{2}).*@/, '$1•••@') }));
+      const qrEmails = {}; for (const x of pis.filter((y) => y.metadata?.flow === 'qr')) { const e = String(x.metadata?.email || '').toLowerCase(); (qrEmails[e] = qrEmails[e] || []).push(x.status); }
+      const qr = { created: qrs.length, paid: qrs.filter((x) => x.status === 'succeeded').length, people: Object.keys(qrEmails).filter((e) => !test.has(e)).length, peoplePaid: Object.entries(qrEmails).filter(([e, v]) => !test.has(e) && v.includes('succeeded')).length, list: qrs.slice(0, 60) };
+      return res.status(200).json({ ok: true, days, total: list.length, count, sessions: list.slice(0, 80), qr });
     }
     if (action === 'report') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
