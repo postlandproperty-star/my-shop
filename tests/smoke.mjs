@@ -47,6 +47,7 @@ async function newPage(kind) {
     if (/fonts\.(googleapis|gstatic)\.com|connect\.facebook\.net|googletagmanager|facebook\.com\/tr/.test(url)) return route.fulfill({ status: 200, body: '' });
     if (/\/api\/checkout\?m=code/.test(url)) { const c = new URL(url).searchParams.get('code'); return route.fulfill({ json: c === CODE ? { ok: true, code: CODE, pct: 20 } : { ok: false, error: 'ไม่พบโค้ดนี้' } }); }
     if (/\/api\/checkout\?m=qr/.test(url)) return route.fulfill({ json: { ok: true, pi: 'pi_test', k: 'pi_test_secret', png: `${BASE}/qr.png`, amount: 1 } });
+    if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอดตัวอย่าง 2 รูป
     if (/action=dash(&|$)/.test(url)) return route.fulfill({ json: { ok: false, error: 'ทดสอบ: โหลดตัวเลขไม่ได้' } }); // หน้าต้องไม่พังตอน API มีปัญหา
     if (/\/api\//.test(url)) return route.fulfill({ json: { ok: true, jobs: [], items: [], list: [], ads: [], checks: [], problems: [], history: [], posts: [], logs: [] } });
     if (/cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|unpkg\.com/.test(url)) return route.continue();
@@ -84,6 +85,7 @@ const pub = SHOP.products.filter((p) => p.status === 'published');
 const bundle = pub.find((p) => p.type === 'bundle');
 const single = pub.find((p) => p.type !== 'bundle' && Number(p.price) >= 1);
 const inBundle = bundle && pub.find((p) => (bundle.items || []).includes(p.id) && p.type !== 'bundle');
+const AD = bundle ? { id: 'ad-test', productId: bundle.id, name: bundle.name, status: 'pending', price: 990, image: 'https://x.supabase.co/storage/v1/object/public/product-images/ads/a.jpg', extra: ['https://x.supabase.co/storage/v1/object/public/product-images/ads/a.jpg', 'https://x.supabase.co/storage/v1/object/public/product-images/ads/b.jpg'], multi: ['https://x.supabase.co/storage/v1/object/public/product-images/ads/a.jpg', 'https://x.supabase.co/storage/v1/object/public/product-images/ads/b.jpg'], labels: { 'https://x.supabase.co/storage/v1/object/public/product-images/ads/a.jpg': 'ก ความเจ็บปวด' }, text: 'ข้อความทดสอบแอดยาวพอสมควรสำหรับทดสอบ', headline: 'ทดสอบ', description: 'ชุด 10 เล่ม', link: 'https://sheetlabth.com/p/x', dailyTHB: 100, days: 7, platforms: [] } : null;
 const outside = bundle && pub.find((p) => p.type !== 'bundle' && Number(p.price) >= 1 && !(bundle.items || []).includes(p.id));
 
 try {
@@ -154,6 +156,7 @@ try {
       }, [v, bundle && bundle.id]);
       await page.waitForTimeout(400);
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
+      if (v === 'ads' && AD) { await page.waitForTimeout(400); pass(`[${kind}] โฆษณา: ร่างแอดเลือกไว้ 2 รูป`, await page.locator('.adq-pick.on').count() === 2); }
       if (v === 'products' && bundle) { // เมนู "ดูเพิ่มเติม" ของชุด: มีปุ่มเอาไปโฆษณา และทำหน้าตัวอย่างใหม่
         await page.evaluate((bid) => { S.pmore = bid; render(true); }, bundle.id);
         pass(`[${kind}] สินค้า: ชุดมีปุ่มเอาไปโฆษณา + หน้าตัวอย่างหน้า 3`, await page.locator(`[data-a="adsDraftOne"][data-id="${bundle.id}"]`).count() === 1 && await page.locator(`[data-a="pvRedoSet"][data-id="${bundle.id}"]`).count() === 1);

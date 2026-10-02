@@ -225,6 +225,7 @@ footer{padding:28px 0 110px;text-align:center}
 .ads-pl{font-size:13.5px}.ads-pl.up b{color:var(--ok)}.ads-pl.down b{color:var(--bad)}
 .ads-todo{font-size:13.5px;font-weight:600;color:var(--bad)}.ads-why{color:var(--bad)}.ads-acts{display:flex;flex-direction:column;gap:6px}
 @media (max-width:760px){.ads-row{grid-template-columns:48px minmax(0,1fr)}.ads-img{width:48px;height:48px}.ads-acts{grid-column:1/-1;flex-direction:row}}
+.adq-pick{position:relative;width:64px;height:80px}.adq-n{position:absolute;top:3px;left:3px;background:#EE4D2D;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:grid;place-items:center}.adq-tag{position:absolute;left:0;right:0;bottom:0;background:rgba(15,27,51,.75);color:#fff;font-size:9.5px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .adq-plats{display:flex;gap:6px;flex-wrap:wrap}
 .adq-ai{display:grid;gap:6px;margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}.adq-ai .adq-lbl{margin:4px 0 0}.adq-ai .input{margin:0}
 .adq-tl{padding:8px 12px 0;margin:0}.adq-text{border-top:0}
@@ -3818,15 +3819,18 @@ function adImgPrompt(p,style,hook){
   const L=String(hook||'').split('\n').map(x=>x.trim()).filter(Boolean),last=L.length>1?L.pop():'';
   const scene=pfmt(p)==='notion'?'แล็ปท็อปวางบนโต๊ะไม้ในห้องนอน หน้าจอเปิดหน้า Notion แผนอ่านหนังสือที่มีตารางรายวันและเช็คบ็อกซ์ที่ติ๊กแล้วบางช่อง มีแก้วกาแฟและสมุดจดวางข้างๆ'
     :`แท็บเล็ต (iPad) วางบนโต๊ะ หน้าจอเปิดไฟล์ข้อสอบภาษาอังกฤษแบบเลือกตอบ (A) (B) (C) (D) มีวงกลมคำตอบด้วยปากกาสีแดงบางข้อ ปากกาสไตลัสวางข้างๆ ${CAT_SCENE[p.cat]||'มีของใช้บนโต๊ะเล็กน้อย'}`;
-  return `ภาพโฆษณาแนว "ugly ad" ที่จงใจให้ดูไม่โปร เหมือนโพสต์ของคนธรรมดา ไม่ใช่งานกราฟิก: ภาพสี่เหลี่ยมจัตุรัส 1:1 ถ่ายด้วยมือถือมือเดียวแบบลวกๆ เหมือนนักเรียนถ่ายเก็บไว้เอง ไม่จัดแสง ใช้ไฟในห้องธรรมดา มีแสงสะท้อนบนจอเล็กน้อย มุมกล้องเฉียง โต๊ะรกนิดหน่อยแบบชีวิตจริง ไม่มีกรอบ ไม่มีกราฟิกตกแต่ง ไม่มีโลโก้ ไม่มีป้ายราคาแบบโฆษณา: ${scene}
+  return `ภาพโฆษณาแนว "ugly ad" ที่จงใจให้ดูไม่โปร เหมือนโพสต์ของคนธรรมดา ไม่ใช่งานกราฟิก: ภาพแนวตั้ง 4:5 (ข้อความทั้งหมดอยู่ช่วงกลางภาพ ไม่ชิดขอบบนล่าง) ถ่ายด้วยมือถือมือเดียวแบบลวกๆ เหมือนนักเรียนถ่ายเก็บไว้เอง ไม่จัดแสง ใช้ไฟในห้องธรรมดา มีแสงสะท้อนบนจอเล็กน้อย มุมกล้องเฉียง โต๊ะรกนิดหน่อยแบบชีวิตจริง ไม่มีกรอบ ไม่มีกราฟิกตกแต่ง ไม่มีโลโก้ ไม่มีป้ายราคาแบบโฆษณา: ${scene}
 ข้อความภาษาไทยเหมือนเขียนด้วยนิ้วในแอปแต่งรูป/IG Story ลายมือหวัดเล็กน้อย สีขาวตัวใหญ่ ซ้อนอยู่ครึ่งบนของภาพ มีเงาดำบางๆ ให้อ่านออก แบ่งบรรทัดตามนี้: ${L.map(x=>'"'+x+'"').join(' / ')}${last?`
 บรรทัดสุดท้ายเขียนด้วยลายมือสีเหลืองสด: "${last}"`:''}`+AI_NO_TEXT;}
 /* เก็บค่าที่คุณแดนพิมพ์ในการ์ดแอดไว้ก่อนวาดหน้าใหม่ */
 function adsKeep(x){const v=k=>{const e=$('#'+k+x.id);return e?e.value:null;};const t=v('adt-'),h=v('adh-'),d=v('add-'),n=v('adn-'),k=v('adai-hook-'),st=v('adai-style-'),m=v('adai-model-');
   if(t!=null)x.text=t;if(h!=null)x.headline=h;if(d!=null)x.dailyTHB=Number(d)||x.dailyTHB;if(n!=null)x.days=Number(n)||x.days;if(k!=null)x.aiHook=k;if(st)x.aiStyle=st;if(m)x.aiModel=m;}
-function adsSave(x){return adminPost('/api/content?action=ads_auto_update',{id:x.id,image:x.image,extra:x.extra||[],text:x.text,headline:x.headline}).catch(()=>{});}
-async function adsUseImage(x,dataUrl){const blob=await (await fetch(dataUrl)).blob();const r=await square(new File([blob],'ad.jpg',{type:blob.type||'image/jpeg'}));const url=await uploadImage(r.url);
-  x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;await adsSave(x);return url;}
+function adsSave(x){return adminPost('/api/content?action=ads_auto_update',{id:x.id,image:x.image,extra:x.extra||[],multi:x.multi||[],text:x.text,headline:x.headline}).catch(()=>{});}
+// รูปแอด: แนวตั้งตัดเป็น 4:5 (เต็มจอมือถือในฟีด) · แนวนอน/จัตุรัสใช้แบบจัตุรัสตามเดิม
+async function crop45(src){const im=await new Promise((ok,no)=>{const e=new Image();e.onload=()=>ok(e);e.onerror=no;e.src=src;});const W=Math.min(1080,im.width),H=Math.round(W*5/4),k=W/im.width,sh=Math.round(H/k),sy=Math.max(0,Math.round((im.height-sh)/2));const c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(im,0,sy,im.width,Math.min(sh,im.height),0,0,W,H);return c.toDataURL('image/jpeg',.9);}
+async function adsUseImage(x,dataUrl){const blob=await (await fetch(dataUrl)).blob();const im=await new Promise(ok=>{const e=new Image();e.onload=()=>ok(e);e.onerror=()=>ok(null);e.src=dataUrl;});
+  const url=await uploadImage(im&&im.height>im.width*1.1?await crop45(dataUrl):(await square(new File([blob],'ad.jpg',{type:blob.type||'image/jpeg'}))).url);
+  x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;x.multi=[url].concat((x.multi||[]).filter(u=>u!==url)).slice(0,4);await adsSave(x);return url;}
 const AD_PLATS=[['facebook','Facebook'],['instagram','Instagram'],['threads','Threads']];
 function adRecommend(x){const p=getProduct(x.productId),notion=p&&pfmt(p)==='notion';
   return notion?{plats:['facebook','instagram'],why:'Notion template ขายด้วยภาพสวย คนบน Instagram ตัดสินใจจากรูปได้ไว แนะนำ Facebook + Instagram (หรือปล่อยอัตโนมัติก็ได้)'}
@@ -3889,7 +3893,9 @@ function adsAutoBox(compact,noLive){
         <b class="adq-name">${esc(x.name)}</b>
         <span class="fine adq-desc">แคมเปญยอดขาย · คนไทย (Facebook หาคนที่น่าจะซื้อเอง) · หยุดเองเมื่อครบวัน</span>
         ${(()=>{const p=getProduct(x.productId)||{},imgs=[...new Set([...(x.extra||[]).slice().reverse(),...(p.images||[]).slice(0,9)])],busy=ADA.aiBusy===x.id;
-          return `<div><span class="adq-lbl">รูปที่ใช้ในแอด (ไม่กระทบรูปสินค้า)</span><div class="adq-imgs">${imgs.map(u=>`<button class="adq-pick${u===x.image?' on':''}" data-a="adsImg" data-id="${x.id}" data-v="${esc(u)}" aria-pressed="${u===x.image}"><img src="${esc(u)}" alt="" loading="lazy"></button>`).join('')}</div>
+          const sel=(x.multi&&x.multi.length?x.multi:[x.image]).filter(Boolean);
+          return `<div><span class="adq-lbl">รูปที่ใช้ในแอด (ไม่กระทบรูปสินค้า) · เลือกได้ถึง 4 รูป Facebook จะส่งงบให้รูปที่ขายได้ดีกว่าเอง</span><div class="adq-imgs">${imgs.map(u=>{const k=sel.indexOf(u);return `<button class="adq-pick${k>=0?' on':''}" data-a="adsImg" data-id="${x.id}" data-v="${esc(u)}" aria-pressed="${k>=0}" title="${esc((x.labels||{})[u]||'')}"><img src="${esc(u)}" alt="" loading="lazy">${k>=0?`<b class="adq-n">${k+1}</b>`:''}${(x.labels||{})[u]?`<span class="adq-tag">${esc(x.labels[u])}</span>`:''}</button>`;}).join('')}</div>
+          ${sel.length>1?`<p class="fine" style="margin:4px 0 0">ยิงเป็น ${sel.length} แอดในชุดเดียว งบรวมเท่าเดิม</p>`:''}
           <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sm ${ADA.ai===x.id?'btn-line':'btn-dark'}" data-a="adsAiOpen" data-id="${x.id}">✨ ${ADA.ai===x.id?'ปิด':'สร้างรูปใหม่ด้วย AI'}</button><label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-adsup="${x.id}"></label></div>
           ${ADA.ai===x.id?`<div class="adq-ai">
             <label class="adq-lbl" for="adai-style-${x.id}">แนวรูป</label><select class="input" id="adai-style-${x.id}">${AD_STYLES.map(([k,l])=>`<option value="${k}" ${(x.aiStyle||'ugc')===k?'selected':''}>${l}</option>`).join('')}</select>
@@ -4901,14 +4907,15 @@ function act(a,el){
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
     case 'adsImg':case 'adsPlat':case 'adsPlatRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;
       adsKeep(x);
-      if(a==='adsImg'){x.image=el.dataset.v;adsSave(x);}
+      if(a==='adsImg'){const u=el.dataset.v,m=(x.multi&&x.multi.length?x.multi:[x.image]).filter(Boolean);const on=m.includes(u);
+        if(on&&m.length===1){toast('ต้องมีอย่างน้อย 1 รูป');break;}x.multi=on?m.filter(v=>v!==u):m.concat(u).slice(-4);x.image=x.multi[0];adsSave(x);}
       else if(a==='adsPlatRec')x.platforms=adRecommend(x).plats.slice();
       else{const v=el.dataset.v;let pl=(x.platforms||[]).slice();if(v==='auto')pl=[];else{pl=pl.includes(v)?pl.filter(k=>k!==v):pl.concat(v);if(v==='threads'&&pl.includes('threads')&&!pl.includes('instagram'))pl.push('instagram');if(v==='instagram'&&!pl.includes('instagram'))pl=pl.filter(k=>k!=='threads');}x.platforms=pl;}
       render(true);break;}
     case 'adsAiOpen':{const x=(ADA.items||[]).find(y=>y.id===id);if(x)adsKeep(x);ADA.ai=ADA.ai===id?null:id;ADA.aiErr='';render(true);break;}
     case 'adsAiGen':{const x=(ADA.items||[]).find(y=>y.id===id),p=x&&getProduct(x.productId);if(!x||!p)break;adsKeep(x);
       const prompt=adImgPrompt(p,x.aiStyle||'ugc',x.aiHook!=null?x.aiHook:adHook(p));ADA.aiBusy=id;ADA.aiErr='';render(true);
-      authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:x.aiModel||imgModel(),quality:imgQuality()})})
+      authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:x.aiModel||imgModel(),quality:imgQuality(),aspect:(x.aiStyle||'ugc')==='clean'?'':'4:5'})})
         .then(async j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');await adsUseImage(x,j.image);toast('ได้รูปแอดใหม่แล้ว ✨');})
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
     case 'adsFilter':ADST.f=el.dataset.v;render(true);break;
@@ -4977,7 +4984,7 @@ function act(a,el){
       if(!(daily>=50&&daily<=2000)){toast('งบต่อวัน ฿50 - ฿2,000');break;}if(!(days>=1&&days<=30)){toast('จำนวนวัน 1-30 วัน');break;}
       if(!confirm(`ยืนยันยิงแอด "${x.name}"\nลงที่: ${(x.platforms||[]).length?x.platforms.map(k=>(AD_PLATS.find(p=>p[0]===k)||[,k])[1]).join(' + '):'อัตโนมัติ (Facebook เลือกเอง)'}\nงบ ฿${daily}/วัน × ${days} วัน = รวมไม่เกิน ฿${(daily*days).toLocaleString('th-TH')}\nเงินจะตัดจากบัญชีโฆษณา Facebook ของคุณแดน`))break;
       Object.assign(x,{dailyTHB:daily,days,text,headline});ADA.busy=id;render(true);
-      adminPost('/api/content?action=ads_auto_launch',{id,dailyTHB:daily,days,text,headline,image:x.image,platforms:x.platforms||[]}).then(j=>{ADA.busy='';if(j&&j.ok){Object.assign(x,j.item);toast('🚀 ยิงแอดแล้ว รอ Facebook รีวิว (ปกติไม่เกิน 1 วัน)');ADST.d=null;}else{if(j&&j.item)Object.assign(x,j.item);toast('ยิงแอดไม่สำเร็จ: '+((j&&j.error)||''));}render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้ กดรีเฟรชดูสถานะก่อนกดซ้ำ');render(true);});break;}
+      adminPost('/api/content?action=ads_auto_launch',{id,dailyTHB:daily,days,text,headline,image:x.image,multi:x.multi||[],platforms:x.platforms||[]}).then(j=>{ADA.busy='';if(j&&j.ok){Object.assign(x,j.item);toast('🚀 ยิงแอดแล้ว รอ Facebook รีวิว (ปกติไม่เกิน 1 วัน)');ADST.d=null;}else{if(j&&j.item)Object.assign(x,j.item);toast('ยิงแอดไม่สำเร็จ: '+((j&&j.error)||''));}render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้ กดรีเฟรชดูสถานะก่อนกดซ้ำ');render(true);});break;}
     case 'adsConnect':{const ta=$('#ads-token'),token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}ADA.tokMsg='กำลังอัปเดต...';render(true);const t1=$('#ads-token');if(t1)t1.value=token;
       adminPost('/api/fb?action=connect',{token,pageId:(FB.page&&FB.page.id)||''}).then(async j=>{if(!j||!j.ok){ADA.tokMsg='ไม่สำเร็จ: '+((j&&j.error)||'');render(true);const t2=$('#ads-token');if(t2)t2.value=token;return;}
         ADA.tokMsg='';await loadFbStatus();ADA.items=null;await loadAdsAuto();toast(ADA.access&&ADA.access.ok?'อัปเดตสิทธิ์แล้ว ยิงแอดจากหลังบ้านได้แล้ว':'อัปเดตโทเค็นแล้ว แต่ยังขาด: '+((ADA.access&&ADA.access.error)||''));if(!j.ig)toast('⚠️ โทเค็นนี้ไม่มีสิทธิ์ IG คลิปจะไม่ลง IG ใส่ instagram_basic/instagram_content_publish แล้ววางใหม่');}).catch(()=>{ADA.tokMsg='เชื่อมต่อไม่ได้';render(true);});break;}

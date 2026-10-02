@@ -417,13 +417,13 @@ async function genImage(opts) {
   catch (e) { if (e.billing) await aiMark(e.billing, false, e.message); else if (/KEY/.test(e.message)) await aiMark(prov, false, e.message); throw e; }
 }
 async function genImageRaw({ model, prompt, quality, refs, aspect }) {
-  const tall = aspect === '3:4'; // ปกแนวตั้งสำหรับหน้าแรกของไฟล์ PDF
+  const tall = aspect === '3:4' || aspect === '4:5'; // แนวตั้ง: ปกหน้าแรก PDF (3:4) · รูปแอดฟีด (4:5 · OpenAI ได้ 2:3 แล้วตัดเป็น 4:5)
   model = IMG_MODEL_RE.test(String(model || '')) ? String(model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
   const ref = await loadRefs(refs);
   if (model.startsWith('gemini-')) {
     const G = process.env.GEMINI_API_KEY || ''; if (!G) throw new Error('ยังไม่ได้ใส่ GEMINI_API_KEY ใน Vercel');
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [...ref.map((x) => ({ inlineData: { mimeType: x.mime, data: x.b64 } })), { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: tall ? '3:4' : '1:1' } } }) });
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [...ref.map((x) => ({ inlineData: { mimeType: x.mime, data: x.b64 } })), { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: aspect === '4:5' ? '4:5' : tall ? '3:4' : '1:1' } } }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw aiErr('google', j?.error?.message, r.status);
     const part = (j?.candidates?.[0]?.content?.parts || []).find((x) => x.inlineData || x.inline_data);
@@ -2526,6 +2526,30 @@ export default async function handler(req, res) {
         try { const fb = await loadFb(); await setAdStatus(fb, adId, st); if (st === 'ACTIVE' && body.campaignId && /^\d{6,30}$/.test(String(body.campaignId))) await setCampaignStatus(fb, String(body.campaignId), 'ACTIVE').catch(() => {}); return res.status(200).json({ ok: true }); }
         catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
       }
+      if (action === 'ads_auto_creatives') { // ทีม/คุณแดน: ทำรูปแอดแนวตั้ง 4:5 หลายแบบใส่ร่าง (เสียแค่ค่า AI) + เสนอข้อความ · ยิงแอดยังเป็นของคุณแดน
+        const items = await loadAdsAuto(); const x = items.find((y) => y.id === String(body.id || ''));
+        if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบร่างแอด' });
+        if (!['pending', 'failed'].includes(x.status)) return res.status(400).json({ ok: false, error: 'แอดนี้ยิงไปแล้ว' });
+        const vs = (Array.isArray(body.variants) ? body.variants : []).slice(0, 4).map((v) => ({ label: String(v.label || '').slice(0, 40), prompt: String(v.prompt || '').slice(0, 3000) })).filter((v) => v.prompt.length > 30);
+        const out = [], errors = [];
+        for (const v of vs) {
+          try {
+            const g = await genImage({ model: body.model, prompt: v.prompt, quality: body.quality || 'medium', aspect: '4:5' });
+            let buf = Buffer.from(g.b64, 'base64'), mime = g.mime;
+            if (/jpe?g/.test(mime)) { const jpeg = (await import('jpeg-js')).default; const im = jpeg.decode(buf, { useTArray: true }); const H = Math.round(im.width * 5 / 4);
+              if (im.height > H + 4) { const top = Math.round((im.height - H) / 2); const data = im.data.subarray(top * im.width * 4, (top + H) * im.width * 4); buf = Buffer.from(jpeg.encode({ data, width: im.width, height: H }, 90).data); } }
+            const path = `ads/${x.id.slice(0, 8)}-${Date.now().toString(36)}-${out.length + 1}.${/png/.test(mime) ? 'png' : 'jpg'}`;
+            const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': /png/.test(mime) ? 'image/png' : 'image/jpeg', 'x-upsert': 'true' }, body: buf });
+            if (!up.ok) throw new Error(`อัปโหลดไม่ได้ (${up.status})`);
+            out.push({ label: v.label, image: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
+          } catch (e) { errors.push(`${v.label}: ${String(e.message || e).slice(0, 160)}`); }
+        }
+        if (out.length) { x.extra = [...(x.extra || []), ...out.map((o) => o.image)].slice(-12); x.labels = { ...(x.labels || {}), ...Object.fromEntries(out.map((o) => [o.image, o.label])) }; if (body.select) { x.multi = out.map((o) => o.image).concat(body.keepCurrent && x.image ? [x.image] : []).slice(0, 4); x.image = x.multi[0]; } }
+        if (typeof body.text === 'string' && body.text.trim().length >= 20) { if (!x.textOld) x.textOld = x.text; x.text = body.text.trim().slice(0, 1500); x.textBy = admin ? 'owner' : 'team'; }
+        if (typeof body.headline === 'string' && body.headline.trim()) x.headline = body.headline.trim().slice(0, 60);
+        x.updated_at = new Date().toISOString(); await saveAdsAuto(items);
+        return res.status(200).json({ ok: out.length > 0 || !vs.length, images: out, errors, item: x });
+      }
       if (action === 'ads_auto_draft') { // ร่างแอด (ไม่เสียเงิน) ทีมขอได้
         try { const r = await draftAd(String(body.productId || ''), { by: admin ? 'owner' : 'team', force: !!body.force && !!admin }); return res.status(200).json({ ok: true, ...r }); }
         catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
@@ -2538,6 +2562,7 @@ export default async function handler(req, res) {
         const url = (u) => /^https:\/\/\S+$/.test(String(u || '')) ? String(u).slice(0, 500) : null;
         if (url(body.image)) x.image = url(body.image);
         if (Array.isArray(body.extra)) x.extra = body.extra.map(url).filter(Boolean).slice(-12);
+        if (Array.isArray(body.multi)) x.multi = body.multi.map(url).filter(Boolean).slice(0, 4);
         if (typeof body.text === 'string' && body.text.trim().length >= 20) x.text = body.text.trim().slice(0, 1500);
         if (typeof body.headline === 'string' && body.headline.trim()) x.headline = body.headline.trim().slice(0, 60);
         x.updated_at = new Date().toISOString(); await saveAdsAuto(items); return res.status(200).json({ ok: true, item: x });
@@ -2557,12 +2582,13 @@ export default async function handler(req, res) {
         if (days < 1 || days > 30) return res.status(400).json({ ok: false, error: 'จำนวนวันต้อง 1-30 วัน' });
         const text = String(body.text || x.text).trim().slice(0, 1500), headline = String(body.headline || x.headline).trim().slice(0, 60);
         const image = /^https:\/\/\S+$/.test(String(body.image || '')) ? String(body.image).slice(0, 500) : x.image;
+        const multi = Array.isArray(body.multi) ? body.multi.filter((u) => /^https:\/\/\S+$/.test(String(u))).map((u) => String(u).slice(0, 500)).slice(0, 4) : (x.multi || []);
         const platforms = Array.isArray(body.platforms) ? body.platforms.filter((p) => ['facebook', 'instagram', 'threads'].includes(p)) : [];
         if (text.length < 20) return res.status(400).json({ ok: false, error: 'ข้อความแอดสั้นเกินไป' });
         const acc = await adsAccess(fb);
         if (!acc.ok) return res.status(400).json({ ok: false, error: acc.error, reason: acc.reason });
         const shop = await loadShop();
-        Object.assign(x, { text, headline, image, platforms, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() }); await saveAdsAuto(items);
+        Object.assign(x, { text, headline, image, multi, platforms, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() }); await saveAdsAuto(items);
         try {
           const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency });
           const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
