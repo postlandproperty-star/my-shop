@@ -397,6 +397,33 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
 .bxe-file{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-top:2px}.bxe-file a,.bxe-file label{color:#2563EB;cursor:pointer;text-decoration:underline}
 .dl-all{margin-bottom:0}
+.fq-h{margin:16px 0 10px}.fq-h .fine{font-weight:400;display:block;margin-top:2px}
+.fq-bar{position:sticky;top:0;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;display:grid;gap:8px;box-shadow:0 4px 14px rgba(15,27,51,.06)}
+.fq-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.fq-stats span{font-size:12.5px;color:var(--muted);display:grid}.fq-stats b{font-size:20px;color:var(--ink);line-height:1.2}.fq-stats .hot b{color:#EE4D2D}
+.fq-ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fq-pc{font-size:13px;border-radius:999px;padding:4px 10px;border:1.5px solid #86d0ad;background:var(--okbg)}.fq-pc.warn{border-color:#E8A23A;background:var(--warnbg)}
+.fq-run{font:inherit;font-size:13.5px;font-weight:600;border-radius:999px;padding:5px 12px;cursor:pointer;border:1.5px solid #2e7d4f;color:#2e7d4f;background:none}.fq-run.off{border-color:var(--bad);color:var(--bad)}
+.fq-review{margin:0 0 12px}.fq-review>summary{cursor:pointer;background:#FFF1EE;border:2px solid #EE4D2D;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.fq-add{margin:0 0 14px}.fq-addrow{display:grid;grid-template-columns:minmax(0,1fr) 92px auto;gap:8px}.fq-airow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}
+.fq-dice{font:inherit;font-size:14.5px;background:var(--surface);color:var(--ink);border:1.5px dashed var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}.fq-dice:disabled{opacity:.6}
+.fq-idea{margin-top:10px;border:1.5px solid var(--accent,#2440E8);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.fq-sec{font-size:17px;margin:6px 0 8px}.fq-sec .fine{font-weight:400}
+.fq-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
+.fq-item{display:grid;grid-template-columns:8px minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:4px 12px 12px 4px;overflow:hidden}
+.fq-item::before{content:"";background:var(--c,#999)}.fq-item.paused .fq-mid{opacity:.5}.fq-item.prod{box-shadow:0 0 0 1.5px #2e7d4f}
+.fq-top{display:flex;align-items:center;min-width:0}
+.fq-main{flex:1;min-width:0;display:flex;gap:10px;align-items:center;padding:11px 10px 11px 12px;background:none;border:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.fq-n{font-weight:600;color:var(--muted);min-width:18px;font-variant-numeric:tabular-nums}.fq-mid{flex:1;min-width:0;display:grid}
+.fq-t{font-weight:600;font-size:15.5px;line-height:1.4;word-break:break-word}.fq-m{font-size:12.5px;color:var(--muted)}
+.fq-b{font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap;border:1px solid}.fq-b.go{color:#2e7d4f}.fq-b.pz{color:var(--muted)}.fq-b.nx{color:var(--accent,#2440E8)}
+.fq-ord{display:flex;gap:4px;padding-right:8px}.fq-ib{font:inherit;width:34px;height:34px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;cursor:pointer}.fq-ib:disabled{opacity:.3}
+.fq-detail{grid-column:2;border-top:1px solid var(--line);padding:12px;background:var(--bg)}
+.fq-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fq-fields .full{grid-column:1/-1}.fq-fields label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.fq-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.fq-del{margin-left:auto}
+.fq-empty{border:1px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted);padding:22px 14px}
+.fq-done{margin:0 0 10px}.fq-done>summary{cursor:pointer;padding:8px 2px;color:var(--muted)}.fq-done>summary b{color:var(--ink)}
+.fq-dl{list-style:none;margin:0;padding:0;display:grid;gap:6px}.fq-dl li{display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px}.fq-dl li>span{display:grid;min-width:0}
+@media (max-width:560px){.fq-bar{padding:8px 10px;gap:6px;border-radius:12px}.fq-ctl{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.fq-ctl>*{flex:0 0 auto}.fq-ctl .chip,.fq-run,.fq-pc{font-size:12.5px;padding:4px 9px}.fq-stats span{font-size:11.5px}.fq-addrow{grid-template-columns:minmax(0,1fr) 80px}.fq-addrow .btn{grid-column:1/-1}.fq-fields{grid-template-columns:1fr}.fq-stats b{font-size:18px}.fq .fac-more{padding:12px}}
 .fac-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:16px 0 12px}
 .fac-pill{display:inline-flex;align-items:center;border-radius:999px;padding:6px 12px;font-size:13.5px;border:1.5px solid var(--line);background:var(--surface)}.fac-pill.ok{border-color:#86d0ad;background:var(--okbg)}.fac-pill.warn{border-color:#E8A23A;background:var(--warnbg)}
 .fac-steps{display:flex;align-items:stretch;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 12px;padding:2px}
@@ -2788,53 +2815,92 @@ function facOrderForm(f,lb){return `
       <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-dark" data-a="forder" ${S.fbusy?'disabled':''}>${S.fbusy?'กำลังส่ง...':'ส่งเข้าคิวโรงงาน'}</button>
       <span class="fine">ผลิตเสร็จแล้วจะขึ้นในช่อง "👀 รอคุณแดนตรวจ" ยังไม่ขายจนกว่าคุณแดนกดอนุมัติ</span></div>
     </section>`;}
+/* โรงงาน (มือถือก่อน): แถบสถานะ · เพิ่มเล่มบรรทัดเดียว + ให้ AI คิด · คิวที่จัดลำดับ/พัก/แก้ได้ · รอตรวจ · เสร็จแล้ว */
+const FQ_CATS=['TOEIC','IELTS','TGAT / A-Level','สอบ ก.พ. / ราชการ','คลังคำศัพท์','ไวยากรณ์','ฝึกอ่าน / เรื่องสั้น','ฝึกพูด / สนทนา','อังกฤษใช้งาน (ทำงาน / เที่ยว)','แพลนเนอร์ / สมุดจดศัพท์','Notion Template'];
+const FQ_LEVELS=['ทุกระดับ','ผู้เริ่มต้น (A1–A2)','กลาง (B1)','กลาง-สูง (B2)','สูง (C1 ขึ้นไป)'];
+const FQ_FORMATS=['ศัพท์ + ความหมาย + ตัวอย่างประโยค + ช่องทวนรอบ 1/2','บทเรียน + แบบฝึกหัด + เฉลย','ข้อสอบเสมือนจริง + เฉลยละเอียด','เรื่องสั้น + คำศัพท์ท้ายเรื่อง + เสียงอ่าน','ตัวอย่างคำถาม-คำตอบ / เรียงความตัวอย่าง','แบบฟอร์มให้เขียนเอง (printable)'];
+function fqColor(t){t=String(t||'').toLowerCase();return /toeic/.test(t)?'#c9a227':/ielts/.test(t)?'#8b5e3c':/tgat|a-level|มหาลัย/.test(t)?'#2f6fd0':/ก\.พ|ราชการ/.test(t)?'#3f9a5a':/ศัพท์|vocab/.test(t)?'#9aa0a8':/grammar|ไวยากรณ์/.test(t)?'#d0534a':/อ่าน|reading|เรื่องสั้น/.test(t)?'#8e5bc4':/พูด|สนทนา|speaking/.test(t)?'#d9822b':/ทำงาน|เที่ยว|business|travel/.test(t)?'#d4679a':/notion/.test(t)?'#111827':'#6b7280';}
+const FQ_CMD='ทำเล่มบนสุดในคิวโรงงาน SheetLab ตอนนี้: รัน python3 ~/Projects/my-shop/tools/factory/worker.py queue แล้วผลิตเล่มแรกตามขั้นตอนเดิม (claim → ผลิต PDF → done) ไม่ต้องรอรอบ';
+let FPAUSED=false,FORDER=[];
+function loadFactoryJobs(){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
+function fqRow(j,n,qLen){
+  const open=S.fqOpen===j.id,prod=j.status==='producing',e=open?(S.fqe||{}):{};const v=k=>esc(e[k]!=null?e[k]:(j[k]==null?'':j[k]));
+  const meta=[j.category,j.pages?j.pages+' หน้า':'',Number(j.price)>=1?baht(j.price):'แจกฟรี',j.ordered_by==='owner'?'':'สั่งโดย '+(j.ordered_by==='auto'?'ระบบอัตโนมัติ':member(j.ordered_by||'manager').name)].filter(Boolean).join(' · ');
+  const badge=prod?'<span class="fq-b go">⚙️ กำลังผลิตในคอม</span>':j.paused?'<span class="fq-b pz">⏸ พักไว้</span>':n===1&&!FPAUSED?'<span class="fq-b nx">ถัดไป</span>':'';
+  const sel=(k,list)=>`<select class="input" data-fqe="${k}"><option value="">-</option>${list.map(o=>`<option ${String(e[k]!=null?e[k]:j[k]||'')===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  return `<li class="fq-item${j.paused?' paused':''}${open?' open':''}${prod?' prod':''}" style="--c:${fqColor((j.category||'')+' '+j.title)}">
+    <div class="fq-top"><button class="fq-main" data-a="fqOpen" data-id="${esc(j.id)}" aria-expanded="${open}"><span class="fq-n">${prod?'⚙️':n}</span><span class="fq-mid"><span class="fq-t">${esc(j.title)}</span><span class="fq-m">${esc(meta)}</span></span>${badge}</button>
+      ${prod?'':`<span class="fq-ord"><button class="fq-ib" data-a="fqMove" data-id="${esc(j.id)}" data-v="-1" aria-label="เลื่อนขึ้น" ${n>1?'':'disabled'}>↑</button><button class="fq-ib" data-a="fqMove" data-id="${esc(j.id)}" data-v="1" aria-label="เลื่อนลง" ${n<qLen?'':'disabled'}>↓</button></span>`}</div>
+    ${open?`<div class="fq-detail">${prod?`<p class="fine" style="margin:0 0 8px">คอมกำลังผลิตเล่มนี้ แก้รายละเอียดไม่ได้แล้ว${j.started_at?' · เริ่ม '+fdt(Date.parse(j.started_at)):''}</p>`:`
+      <div class="fq-fields">
+        <div class="full"><label>ชื่อเรื่อง</label><input class="input" data-fqe="title" value="${v('title')}"></div>
+        <div><label>หมวด</label><input class="input" data-fqe="category" list="fq-cats" value="${v('category')}"></div>
+        <div><label>ระดับ</label>${sel('level',FQ_LEVELS)}</div>
+        <div class="full"><label>รูปแบบ</label>${sel('format',FQ_FORMATS)}</div>
+        <div><label>ปริมาณ</label><input class="input" data-fqe="amount" value="${v('amount')}" placeholder="เช่น 500 ข้อ"></div>
+        <div><label>จำนวนหน้า</label><input class="input" type="number" inputmode="numeric" data-fqe="pages" value="${v('pages')}" placeholder="ให้โรงงานกำหนด"></div>
+        <div><label>ราคาเสนอ (บาท) 0 = แจกฟรี</label><input class="input" type="number" inputmode="numeric" data-fqe="price" value="${v('price')}"></div>
+        <div><label>เหมาะกับใคร</label><input class="input" data-fqe="audience" value="${v('audience')}"></div>
+        <div class="full"><label>รายละเอียดเพิ่ม</label><textarea class="input" rows="3" data-fqe="notes">${v('notes')}</textarea></div>
+      </div>`}
+      <div class="fq-acts">${prod?'':`<button class="btn btn-dark btn-sm" data-a="fqSave" data-id="${esc(j.id)}" ${S.fqBusy?'disabled':''}>บันทึก</button>
+        <button class="btn btn-line btn-sm" data-a="fqPause" data-id="${esc(j.id)}">${j.paused?'▶ ใช้ต่อ':'⏸ พักไว้ก่อน'}</button>
+        ${n>1?`<button class="btn btn-line btn-sm" data-a="fqMove" data-id="${esc(j.id)}" data-v="top">⤒ ขึ้นบนสุด</button>`:''}`}
+        <button class="btn ${S.confirm==='fc:'+j.id?'btn-danger':'btn-line'} btn-sm fq-del" data-a="fcancel" data-id="${esc(j.id)}">${S.confirm==='fc:'+j.id?'กดอีกครั้งเพื่อยกเลิก':'🗑 ยกเลิก'}</button></div>
+    </div>`:''}
+  </li>`;
+}
 function factoryView(){
-  if(FJOBS===null){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
+  if(FJOBS===null)loadFactoryJobs();
   const f=S.fnew||(S.fnew={title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''});
-  const jobs=FJOBS||[];
-  const cnt=k=>jobs.filter(j=>j.status===k).length;
+  const jobs=FJOBS||[],lb=(id,t)=>`<label for="${id}">${t}</label>`;
   const LIST={pending:['รออนุมัติลงขาย','warn'],listed:['ลงขายแล้ว','ok'],rejected:['ไม่ลงขาย','gray'],global_pending:['รอลงขายต่างประเทศ','warn'],global:['ลงต่างประเทศแล้ว','ok']};
-  const who=k=>k==='owner'?'คุณแดน':k==='auto'?'ระบบอัตโนมัติ':member(k||'manager').name;
-  const lb=(id,t)=>`<label for="${id}">${t}</label>`;
-  // ขั้นตอนงาน: รอผลิต → กำลังผลิต → รอคุณแดนตรวจ → เสร็จแล้ว (+ ไม่สำเร็จ)
-  const review=jobs.filter(j=>j.status==='done'&&['pending','global_pending'].includes(j.listing)).length;
-  const STEPS=[['queued','รอผลิต','🕒',cnt('queued')],['producing','กำลังผลิตในคอม','⚙️',cnt('producing')],['review','รอคุณแดนตรวจ','👀',review],['finished','เสร็จแล้ว','✅',jobs.filter(j=>j.status==='done'&&!['pending','global_pending'].includes(j.listing)).length]];
-  if(cnt('failed'))STEPS.push(['failed','ไม่สำเร็จ','⚠️',cnt('failed')]);
-  const flt=S.ffilter&&STEPS.some(x=>x[0]===S.ffilter)?S.ffilter:(review?'review':cnt('producing')?'producing':'queued');
-  const shown=jobs.filter(j=>flt==='finished'?(j.status==='done'&&!['pending','global_pending'].includes(j.listing)):flt==='review'?false:j.status===flt);
+  const pos=id=>{const i=FORDER.indexOf(id);return i<0?1e9:i;};
+  const queued=jobs.filter(j=>j.status==='queued').sort((a,b)=>pos(a.id)-pos(b.id)||String(a.created_at).localeCompare(String(b.created_at)));
+  const producing=jobs.filter(j=>j.status==='producing');
+  const review=jobs.filter(j=>j.status==='done'&&['pending','global_pending'].includes(j.listing));
+  const done=jobs.filter(j=>j.status==='done'&&!['pending','global_pending'].includes(j.listing)).sort((a,b)=>String(b.done_at||'').localeCompare(String(a.done_at||'')));
+  const failed=jobs.filter(j=>j.status==='failed');
   const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>48*36e5;
-  const when=ago==null?'ยังไม่เคยมาเช็คคิว':h<1?'ไม่ถึงชั่วโมงที่แล้ว':h<48?h+' ชม.ที่แล้ว':Math.round(h/24)+' วันที่แล้ว';
-  return `<div class="wrap wide fac" style="padding-bottom:60px">
-    <div class="fac-top">
-      <div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">สั่งผลิตที่นี่ · คอมคุณแดนผลิตให้ · คุณแดนตรวจแล้วกดลงขาย</span></div>
-      <span class="row" style="gap:8px;flex-wrap:wrap"><span class="fac-pill ${stale&&cnt('queued')?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 คอม: เช็คคิวล่าสุด ${when}</span><button class="btn btn-sm pt-new" data-a="fOrderToggle">➕ สั่งผลิตใหม่</button><button class="chip" data-a="toFactory">รีเฟรช</button></span>
+  const when=ago==null?'ยังไม่เคยมา':h<1?'ไม่ถึงชม.':h<48?h+' ชม.ที่แล้ว':Math.round(h/24)+' วันที่แล้ว';
+  const active=queued.filter(j=>!j.paused);
+  const idea=S.fqIdea;
+  return `<div class="wrap wide fac fq" style="padding-bottom:60px">
+    <h2 class="h3 fq-h">🏭 โรงงาน <span class="fine">สั่งที่นี่ · คอมคุณแดนผลิต · คุณแดนตรวจแล้วกดลงขาย</span></h2>
+    <div class="fq-bar" role="status">
+      <div class="fq-stats"><span><b>${active.length}</b> ในคิว</span><span><b>${producing.length}</b> กำลังผลิต</span><span class="${review.length?'hot':''}"><b>${review.length}</b> รอตรวจ</span><span><b>${done.length}</b> เสร็จ</span></div>
+      <div class="fq-ctl"><span class="fq-pc ${stale&&active.length?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 ${when}</span>
+        <button class="fq-run ${FPAUSED?'off':''}" data-a="fqRun" ${S.fqBusy?'disabled':''}>${FPAUSED?'⏸ หยุดอยู่ · กดเปิด':'▶ เปิดผลิตอยู่'}</button>
+        <button class="chip" data-a="fqCmd">📋 คำสั่ง “ทำเล่มบนสุด”</button><button class="chip" data-a="toFactory" aria-label="รีเฟรช">↻</button></div>
     </div>
-    ${stale&&cnt('queued')?'<div class="fac-worker stale">มีงานรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกดรันงานคิวหนังสือใน Cowork</div>':''}
+    ${FPAUSED?'<div class="fac-worker stale">หยุดโรงงานไว้: คอมจะไม่หยิบเล่มใหม่ (เล่มที่กำลังผลิตทำต่อจนเสร็จ) กด "หยุดอยู่ · กดเปิด" เพื่อผลิตต่อ</div>':stale&&active.length?'<div class="fac-worker stale">มีเล่มรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกด 📋 คัดลอกคำสั่งไปวางในแชต Claude</div>':''}
+    ${review.length?`<details class="fq-review" data-keep="fqRev" ${S.fqRev!==false?'open':''}><summary><b>👀 รอคุณแดนตรวจ ${review.length} เล่ม</b> <span class="fine">ผลิตเสร็จแล้ว ตรวจไฟล์แล้วกดอนุมัติลงขาย</span></summary>${facBox(1)||''}${globalBox()}</details>`:''}
+    <section class="card fq-add">
+      <div class="fq-addrow"><input class="input" id="fq-title" data-fqn="title" value="${esc(S.fqTitle||'')}" placeholder="พิมพ์ชื่อเล่ม เช่น IELTS Listening 10 ชุด พร้อมเฉลย" autocomplete="off"><input class="input fq-price" id="fq-price" data-fqn="price" type="number" inputmode="numeric" min="0" value="${esc(S.fqPrice||'')}" placeholder="ราคา ฿" aria-label="ราคาเสนอ"><button class="btn btn-dark" data-a="fqAdd" ${S.fqBusy?'disabled':''}>เพิ่มเข้าคิว</button></div>
+      <div class="fq-airow"><select class="input" data-fqn="cat" aria-label="หมวดที่ให้ AI คิด"><option value="">ทุกหมวด</option>${FQ_CATS.map(c=>`<option ${S.fqCat===c?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="fq-dice" data-a="fqIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 ให้ AI คิดเล่มใหม่'}</button></div>
+      ${idea?`<div class="fq-idea"><b>💡 ${esc(idea.title)}</b><span class="fine">${[idea.category,idea.pages?idea.pages+' หน้า':'',idea.price!=null&&idea.price!==''?baht(idea.price):''].filter(Boolean).map(esc).join(' · ')}${idea.why?'<br>'+esc(idea.why):''}</span><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn btn-cta btn-sm" data-a="fqIdeaAdd">+ เพิ่มเล่มนี้เข้าคิว</button><button class="chip" data-a="fqIdea">🎲 สุ่มใหม่</button><button class="chip" data-a="fqIdeaX">ไม่เอา</button></div></div>`:''}
+      ${S.fqErr?`<p class="err" style="margin:6px 0 0">${esc(S.fqErr)}</p>`:''}
+      <p class="fine" style="margin:8px 0 0">ใส่แค่ชื่อกับราคาก็พอ กดที่เล่มในคิวเพื่อแก้หมวด ระดับ รูปแบบ หน้า ทีหลังได้ · <a href="#" data-a="fOrderToggle">ฟอร์มเต็ม / Notion Template</a></p>
+    </section>
     ${S.fOrder?facOrderForm(f,lb):''}
-    <div class="fac-steps" role="tablist">${STEPS.map((x,i)=>`<button role="tab" class="fac-step${x[0]==='review'&&x[3]?' hot':''}${x[0]==='failed'?' bad':''}" data-a="ffilter" data-v="${x[0]}" aria-selected="${flt===x[0]}"><i>${x[2]}</i><span>${x[1]}</span><b>${x[3]}</b></button>${i<STEPS.length-1&&x[0]!=='finished'?'<em aria-hidden="true">›</em>':''}`).join('')}</div>
-    <div class="fac-panel">
-      ${flt==='review'?`${facBox(1)||''}${globalBox()}${!review?'<p class="fine fac-empty">ไม่มีงานรอตรวจ 🎉</p>':''}`:
-      `${S.floading?'<p class="fine">กำลังโหลด...</p>':shown.length?shown.map(j=>{const st=FSTAT[j.status]||[j.status,'gray'],ls=LIST[j.listing];const can=['queued','producing'].includes(j.status);
-        return `<div class="note-card"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(j.title)}</b><span><span class="badge ${st[1]}">${st[0]}</span>${ls?` <span class="badge ${ls[1]}">${ls[0]}</span>`:''}</span></div>
-          <div class="fine">สั่งโดย ${esc(who(j.ordered_by))} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${Number(j.price)>=1?baht(j.price):'แจกฟรี'}${j.category?' · '+esc(j.category):''}</div>
-          ${j.error?`<div class="fine" style="color:var(--bad)">${esc(j.error)}</div>`:''}
-          ${j.file_url||can?`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${j.file_url?`<a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิดไฟล์ PDF</a>`:''}${can?`<button class="btn ${S.confirm==='fc:'+j.id?'btn-danger':'btn-line'} btn-sm" data-a="fcancel" data-id="${esc(j.id)}">${S.confirm==='fc:'+j.id?'กดอีกครั้งเพื่อยกเลิก':'ยกเลิกงาน'}</button>`:''}</div>`:''}
-        </div>`;}).join(''):'<p class="fine">ไม่มีงานในหมวดนี้</p>'}`}
-    </div>
-    <details class="card fac-more"><summary><b>📦 ชุดขาย · 💡 ไอเดียจากทีม · 📖 คู่มือ · 👷 พี่เหล็ก</b> <span class="fine">กดเปิด</span></summary>
+    <h3 class="fq-sec">คิวผลิต <span class="fine">บนสุดผลิตก่อน · กดที่เล่มเพื่อแก้/พัก</span></h3>
+    ${S.floading&&!jobs.length?'<p class="fine">กำลังโหลด...</p>':producing.length||queued.length?`<ul class="fq-list">${producing.map(j=>fqRow(j,0,0)).join('')}${queued.map((j,i)=>fqRow(j,i+1,queued.length)).join('')}</ul>`:'<p class="fq-empty">คิวว่าง พิมพ์ชื่อเล่มด้านบน หรือกด 🎲 ให้ AI คิด</p>'}
+    <datalist id="fq-cats">${FQ_CATS.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+    ${failed.length?`<details class="fq-done"><summary>⚠️ ไม่สำเร็จ <b>${failed.length}</b></summary><ul class="fq-dl">${failed.map(j=>`<li><span><b>${esc(j.title)}</b><span class="fine">${esc(j.error||'')}</span></span></li>`).join('')}</ul></details>`:''}
+    <details class="fq-done" data-keep="fqDone" ${S.fqDone?'open':''}><summary>✅ เสร็จแล้ว <b>${done.length}</b> เล่ม</summary>
+      <ul class="fq-dl">${done.slice(0,40).map(j=>{const ls=LIST[j.listing];return `<li><span><b>${esc(j.title)}</b><span class="fine">${j.done_at?fdt(Date.parse(j.done_at)):''}${j.pages?' · '+j.pages+' หน้า':''}${ls?` · <span class="badge ${ls[1]}">${ls[0]}</span>`:''}</span></span>${j.file_url?`<a class="chip" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">PDF</a>`:''}</li>`;}).join('')||'<li class="fine">ยังไม่มี</li>'}</ul></details>
+    <details class="card fac-more"><summary><b>📦 ชุดขาย · 💡 ไอเดียจากทีม · 📚 เล่มที่ร้านมีแล้ว · 📖 คู่มือ</b> <span class="fine">กดเปิด</span></summary>
       ${facSets()}
       ${facIdeas()}
-    <details class="fac-guide" open><summary><b>📖 คู่มือโรงงาน</b> <span class="fine">ผลิตเสร็จแล้วคุณแดนต้องทำอะไร</span></summary>
+      <details class="fac-guide"><summary><b>📚 เล่มที่ร้านมีแล้ว</b> <span class="fine">AI จะไม่เสนอซ้ำ</span></summary><p class="fine" style="line-height:1.8">${D.products.filter(p=>!isBundle(p)).map(p=>esc(p.name)).join(' · ')}</p></details>
+      <details class="fac-guide"><summary><b>📖 คู่มือโรงงาน</b> <span class="fine">ผลิตเสร็จแล้วคุณแดนต้องทำอะไร</span></summary>
       <ol>
-        <li><b>สั่งผลิต</b> กดปุ่ม <b>➕ สั่งผลิตใหม่</b> มุมขวาบน (หรือทีมสั่งให้) ใบสั่งเข้าคิวบนเว็บ ยังไม่เสียอะไร</li>
-        <li><b>คอมผลิตให้เอง</b> ตามเวลาที่ตั้งไว้ใน Cowork (คอมต้องเปิดและเปิดแอป Claude ไว้) สถานะจะเปลี่ยนเป็น "กำลังผลิตในคอม" → "ผลิตเสร็จ" ไฟล์อยู่ในเครื่องที่ Documents/Academic ด้วย</li>
-        <li><b>เล่มเดี่ยวเสร็จ</b> → ขึ้นในช่อง <b>👀 รอคุณแดนตรวจ</b> ด้านบน (และในแท็บสินค้า) + แจ้งในเช็คลิสต์ → กดเปิดไฟล์ดูหน้าแรก/หน้ากลาง/หน้าท้าย → ดูราคา → กด <b>อนุมัติ ลงขาย</b> (ระบบทำหน้าตัวอย่างและหน้าขายให้ ติ๊ก "สร้างรูปขายด้วย AI" ได้ถ้าต้องการ)</li>
-        <li><b>ชุดขายเสร็จ</b> → เข้าแท็บ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง → กด "ดูเซลเพจ" ตรวจ → (ถ้ามีไฟล์เสียง อัป mp3 ขึ้น Google Drive และแชร์ก่อน) → กด <b>✅ เผยแพร่</b></li>
-        <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า/แก้ไขชุด → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน" ลูกค้าคนต่อไปได้ไฟล์ใหม่ทันที</li>
-        <li><b>ไม่อยากขาย</b> → กด "ไม่ลงขาย" ที่การ์ด (ไฟล์ยังเก็บไว้)</li>
-      </ol>
-      <p class="fine">โรงงานบนคลาวด์หยุดไว้แล้ว (กันผลิตซ้ำ เปลือง token) ถ้าคอมเสียหรือไม่อยู่บ้านนาน บอก Claude ให้เปิดกลับชั่วคราวได้</p>
-    </details>
+        <li><b>เพิ่มเล่ม</b> พิมพ์ชื่อ + ราคา แล้วกด <b>เพิ่มเข้าคิว</b> (หรือ 🎲 ให้ AI คิด) จัดลำดับด้วย ↑↓ เล่มบนสุดผลิตก่อน พักเล่มที่ยังไม่อยากทำได้</li>
+        <li><b>คอมผลิตให้เอง</b> ตามเวลาที่ตั้งไว้ใน Cowork (คอมต้องเปิดและเปิดแอป Claude ไว้) อยากให้ทำเดี๋ยวนี้กด <b>📋 คำสั่ง “ทำเล่มบนสุด”</b> แล้ววางในแชต Claude · ไม่อยากให้ผลิตช่วงนี้กด <b>▶ เปิดผลิตอยู่</b> ให้เป็นหยุด</li>
+        <li><b>เล่มเดี่ยวเสร็จ</b> → ขึ้นที่ <b>👀 รอคุณแดนตรวจ</b> → เปิดไฟล์ดู → ดูราคา → กด <b>อนุมัติ ลงขาย</b></li>
+        <li><b>ชุดขายเสร็จ</b> → แท็บ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง → ตรวจ → (ถ้ามีไฟล์เสียง อัป mp3 ขึ้น Google Drive และแชร์ก่อน) → กด <b>✅ เผยแพร่</b></li>
+        <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน"</li>
+      </ol></details>
       ${ceoBar('factory')}
     </details>
   </div>`;
@@ -3063,7 +3129,7 @@ function payTab(){
 let FJOBS=null,FWORKER=null;
 const FSTAT={queued:['รอผลิต (รอคอมหยิบ)','warn'],producing:['กำลังผลิตในคอม','warn'],done:['ผลิตเสร็จ','ok'],failed:['ไม่สำเร็จ','bad'],cancelled:['ยกเลิก','gray']};
 function factoryBox(){
-  if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
+  if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];render(true);}).catch(()=>{});}
   if(!FJOBS.length)return '';
   return `<h3 class="h3">คิวโรงงานผลิตชีท</h3>${FJOBS.slice(0,6).map(j=>{const st=FSTAT[j.status]||[j.status,'gray'];return `<div class="note-card"><div class="row" style="gap:8px;align-items:center;margin-bottom:6px">${ava('factory')}<span><b>${esc(j.title)}</b> <span class="badge ${st[1]}">${st[0]}</span><span class="fine">สั่งโดย ${esc(member(j.ordered_by||'manager').name)} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${j.price?j.price+' บาท':'แจกฟรี'}</span></span></div>${j.purpose?`<div class="fine">${esc(j.purpose)}</div>`:''}${j.file_url?`<a class="btn btn-line btn-sm" href="${j.file_url}" target="_blank" rel="noopener noreferrer" style="margin-top:6px">เปิดไฟล์ PDF</a>`:''}${j.error?`<div class="fine" style="color:#B42318">${esc(j.error)}</div>`:''}</div>`;}).join('')}`;
 }
@@ -4232,7 +4298,7 @@ function docsTab(){
 }
 function teamTab(){
   needPosts();
-  if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];render(true);}).catch(()=>{});}
+  if(FJOBS===null){FJOBS=[];adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];render(true);}).catch(()=>{});}
   return `${memberDesk('hr')}<p class="fine" style="margin:12px 0 4px">ทีมดูแลเพจและร้าน SheetLab · ออฟฟิศ One Bangkok ชั้น 27 ถนนพระราม 4 กรุงเทพฯ: คุณแดน (President) และผู้ช่วย AI 15 ตำแหน่ง ทุกตำแหน่งขึ้นกับพี่ต้น (Vice President) โดยมี CEO 3 ฝ่าย: salepage หน้าร้าน และโรงงาน ทำงานตามตารางอัตโนมัติ ทุกคนอ่านกระดานทีม (แผนสัปดาห์ของพี่ต้น + รายงานของเพื่อนร่วมทีม) ก่อนเริ่มงาน รายงานเข้า Slack #sheetlab-team และห้องประชุม ตั้งค่าตารางได้ที่ <a href="https://claude.ai/code/routines" target="_blank" rel="noopener noreferrer">claude.ai/code/routines</a></p>
   <h3 class="h3">อารมณ์ทีมวันนี้ <span class="fine" style="font-weight:400">(คำนวณจากผลงานจริง 7 วันล่าสุด เหตุผลอยู่ใต้ชื่อ)</span></h3>
   ${moodStrip()}
@@ -4406,6 +4472,29 @@ function go(v){
   render(false);
 }
 
+/* ปุ่มของหน้าโรงงาน */
+async function fqPost(action,body){const j=await authFetch('/api/content?action='+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');return j;}
+function fqJob(id){return (FJOBS||[]).find(x=>x.id===id);}
+async function fqAct(a,el){const id=el.dataset.id;S.fqErr='';
+  try{
+    if(a==='fqOpen'){S.fqOpen=S.fqOpen===id?null:id;S.fqe={};render(true);return;}
+    if(a==='fqMove'){const r=await fqPost('factory_move',{id,dir:el.dataset.v==='top'?'top':Number(el.dataset.v)});FORDER=r.order||FORDER;render(true);return;}
+    if(a==='fqSave'){S.fqBusy=true;render(true);const r=await fqPost('factory_edit',{id,fields:S.fqe||{}});Object.assign(fqJob(id)||{},r.job);S.fqe={};S.fqOpen=null;toast('บันทึกแล้ว');return;}
+    if(a==='fqPause'){const j=fqJob(id);const r=await fqPost('factory_edit',{id,fields:{},paused:!(j&&j.paused)});Object.assign(j||{},r.job);toast(r.job.paused?'พักเล่มนี้ไว้ คอมจะข้ามไปเล่มถัดไป':'เอาเล่มนี้กลับเข้าคิวแล้ว');return;}
+    if(a==='fqRun'){S.fqBusy=true;render(true);const r=await fqPost('factory_cfg',{paused:!FPAUSED});FPAUSED=!!(r.cfg&&r.cfg.paused);toast(FPAUSED?'หยุดโรงงานแล้ว คอมจะไม่หยิบเล่มใหม่':'เปิดผลิตต่อแล้ว');return;}
+    if(a==='fqCmd'){copyText(FQ_CMD,'คัดลอกคำสั่งแล้ว วางในแชต Claude บนคอมได้เลย');return;}
+    if(a==='fqIdeaX'){S.fqIdea=null;render(true);return;}
+    if(a==='fqIdea'){S.fideaBusy=true;render(true);const j=await fqPost('idea',{hint:S.fqCat||''});const d=j.idea||{};S.fqIdea={title:d.title,category:d.category||S.fqCat||'',pages:d.pages||'',price:d.price,audience:d.audience||'',notes:d.notes||'',why:d.why||''};return;}
+    if(a==='fqAdd'||a==='fqIdeaAdd'){const d=a==='fqIdeaAdd'?S.fqIdea:{title:String(S.fqTitle||'').trim(),price:S.fqPrice,category:S.fqCat||''};
+      if(!d||String(d.title||'').trim().length<4){S.fqErr='พิมพ์ชื่อเล่มก่อน';render(true);return;}
+      if(d.price===''||d.price==null||!(Number(d.price)>=0)){S.fqErr='ใส่ราคาเสนอด้วย (0 = แจกฟรี) แก้ได้ตอนอนุมัติ';render(true);return;}
+      S.fqBusy=true;render(true);
+      const body={title:String(d.title).trim(),price:Number(d.price)||0,category:d.category||'',audience:d.audience||'',notes:d.notes||'',kind:/notion/i.test(d.category||'')?'notion':'pdf',purpose:Number(d.price)>=1?'ขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'แจกฟรี'};if(Number(d.pages))body.pages=Number(d.pages);
+      const r=await fqPost('factory_order',body);FJOBS=(FJOBS||[]).concat(r.job);FORDER=FORDER.concat(r.job.id);
+      if(a==='fqIdeaAdd')S.fqIdea=null;else{S.fqTitle='';S.fqPrice='';}toast('เพิ่มเข้าคิวแล้ว');return;}
+  }catch(e){S.fqErr=String(e.message||e);toast(S.fqErr);}
+  finally{S.fqBusy=false;S.fideaBusy=false;render(true);}
+}
 /* ---------- actions ---------- */
 function copyText(t,msg){
   try{navigator.clipboard.writeText(t).then(()=>toast(msg||'คัดลอกลิงก์แล้ว'),()=>toast('คัดลอกไม่ได้ ให้กดค้างที่ลิงก์แล้วคัดลอกเอง'));}
@@ -4420,6 +4509,7 @@ function act(a,el){
     case 'artHide':authFetch('/api/content?action=article_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนบทความแล้ว':'เปิดบทความแล้ว');QZ.arts=undefined;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'quizHide':authFetch('/api/content?action=quiz_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนแบบทดสอบแล้ว':'เปิดแบบทดสอบแล้ว');QZ.list=null;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
+    case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
     case 'forder':factoryOrder();break;
@@ -4880,12 +4970,16 @@ document.addEventListener('click',e=>{
     if(href&&pixelReady&&!tr.target&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey){e.preventDefault();setTimeout(()=>{location.href=href;},350);}}
   const el=e.target.closest('[data-a]');if(el){if(el.dataset.a==='payGo'||el.dataset.a==='cartPay')e.preventDefault();act(el.dataset.a,el);}
 });
+document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.keep)S[t.dataset.keep]=t.open;},true);
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.dataset&&e.target.dataset.fqn==='title'){e.preventDefault();fqAct('fqAdd',e.target);}});
 document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
   if(ds.adf){ADF[ds.adf]=Number(t.value)||0;const o=document.getElementById('adf-out');if(o)o.innerHTML=adfOut();return;}
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
+  if(ds.fqe){S.fqe=S.fqe||{};S.fqe[ds.fqe]=t.value;return;}
+  if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
   if(ds.rvp){S.rvp=t.value;render(true);return;}
   if(ds.adsum){const id=ds.adsum,d=Number(($('#add-'+id)||{}).value)||0,n=Number(($('#adn-'+id)||{}).value)||0,e=document.getElementById('ads-sum-'+id);if(e)e.textContent='฿'+(d*n).toLocaleString('th-TH');}
   if(ds.psearch){S.pq=t.value;const q=t.value.toLowerCase().trim();let n=0;document.querySelectorAll('#plist [data-q]').forEach(e=>{const ok=!q||e.dataset.q.includes(q);e.hidden=!ok;if(ok)n++;});const z=document.getElementById('pnone');if(z)z.hidden=n>0;const c=document.getElementById('pcount');if(c)c.textContent=n;}

@@ -136,11 +136,14 @@ const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|a
 async function workerBeat({ note = '' } = {}) { try { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_worker', data: { last_seen: new Date().toISOString(), note }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {} }
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 // ชุดหนังสือและผลิตอัตโนมัติของโรงงาน (คุณแดนตั้งจากแท็บโรงงาน) · shop_state id=factory_cfg
-async function loadFacCfg() { const r = await sb('shop_state?id=eq.factory_cfg&select=data'); const d = r?.[0]?.data || {}; return { sets: Array.isArray(d.sets) ? d.sets : null, auto: { on: false, per_week: 1, sets: [], ...(d.auto || {}) }, updated_at: d.updated_at || null }; }
+async function loadFacCfg() { const r = await sb('shop_state?id=eq.factory_cfg&select=data'); const d = r?.[0]?.data || {}; return { sets: Array.isArray(d.sets) ? d.sets : null, auto: { on: false, per_week: 1, sets: [], ...(d.auto || {}) }, paused: !!d.paused, updated_at: d.updated_at || null }; }
+// ลำดับคิวที่คุณแดนจัด (บนสุด = ผลิตก่อน): prio น้อยก่อน ไม่มี prio ใช้เวลาสั่ง
+const qPrio = (j) => Number.isFinite(Number(j.prio)) ? Number(j.prio) : Date.parse(j.created_at || 0) || 0;
+const queueOrder = (jobs) => jobs.filter((j) => j.status === 'queued').sort((a, b) => qPrio(a) - qPrio(b));
 // ผลิตอัตโนมัติ: ถ้าเปิดไว้และคิวว่าง หยิบเล่มถัดไปในชุดที่เลือก (ยังไม่มีในร้าน ยังไม่เคยสั่ง) เข้าคิว ไม่ใช้ AI
 async function autoFillFactory(jobs) {
   const cfg = await loadFacCfg();
-  if (!cfg.auto.on || !cfg.sets) return null;
+  if (cfg.paused || !cfg.auto.on || !cfg.sets) return null;
   if (jobs.some((j) => ['queued', 'producing'].includes(j.status))) return null;
   const week = Date.now() - 7 * 864e5;
   if (jobs.filter((j) => j.ordered_by === 'auto' && Date.parse(j.created_at || 0) >= week).length >= Math.min(4, Math.max(1, Number(cfg.auto.per_week) || 1))) return null;
@@ -1573,11 +1576,14 @@ export default async function handler(req, res) {
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const st = String(req.query.status || '');
       const all = await loadJobs();
+      const cfg = await loadFacCfg().catch(() => ({ paused: false }));
       if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
-      const jobs = all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-      if (keyOk(req) && req.query.by === 'mac') await workerBeat({ note: `เช็คคิว ${jobs.length} งาน` }); // คอมคุณแดนมาเช็คคิว
+      let jobs = st === 'queued' ? queueOrder(all) : all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      if (!admin && st === 'queued') jobs = cfg.paused ? [] : jobs.filter((j) => !j.paused); // คอม/ทีม: ข้ามเล่มที่พักไว้ และไม่ได้งานเลยตอนคุณแดนหยุดโรงงาน
+      if (keyOk(req) && req.query.by === 'mac') await workerBeat({ note: cfg.paused ? 'เช็คคิว: คุณแดนหยุดโรงงานไว้' : `เช็คคิว ${jobs.length} งาน` }); // คอมคุณแดนมาเช็คคิว
       const w = (await sb('shop_state?id=eq.factory_worker&select=data').catch(() => []))?.[0]?.data || null;
-      return res.status(200).json({ ok: true, jobs, worker: w });
+      const order = queueOrder(all).map((j) => j.id);
+      return res.status(200).json({ ok: true, jobs, worker: w, paused: !!cfg.paused, order });
     }
     if (action === 'global_list' || action === 'gumroad' || action === 'pin_post' || action === 'pin_log') {
       // ขายต่างประเทศ: global_list (key/แอดมิน) สินค้าที่ลง Gumroad แล้ว + ข้อความ Pin · gumroad (แอดมิน) ยอดขายจาก Gumroad API (env GUMROAD_ACCESS_TOKEN)
@@ -1686,9 +1692,11 @@ export default async function handler(req, res) {
       const sets = Array.isArray(body.sets) ? body.sets.slice(0, 20).map((x, i) => ({ id: /^[a-z0-9_-]{2,40}$/i.test(String(x.id || '')) ? String(x.id) : 'set' + Date.now().toString(36) + i, name: String(x.name || 'ชุดใหม่').slice(0, 80), emoji: String(x.emoji || '📚').slice(0, 4), goal: String(x.goal || '').slice(0, 200),
         books: (Array.isArray(x.books) ? x.books : []).slice(0, 30).map((b) => ({ t: String(b.t || '').trim().slice(0, 200), cat: String(b.cat || '').slice(0, 60), pages: Math.min(400, Math.max(0, Number(b.pages) || 0)), price: Math.max(0, Number(b.price) || 0), notes: String(b.notes || '').slice(0, 600), match: String(b.match || '').slice(0, 60) })).filter((b) => b.t) })) : old.sets;
       const a = body.auto || {}; const auto = { on: a.on != null ? !!a.on : old.auto.on, per_week: Math.min(4, Math.max(1, Number(a.per_week ?? old.auto.per_week) || 1)), sets: Array.isArray(a.sets) ? a.sets.map(String).slice(0, 20) : old.auto.sets };
-      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_cfg', data: { sets, auto, updated_at: new Date().toISOString() }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      const paused = body.paused != null ? !!body.paused : old.paused;
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_cfg', data: { sets, auto, paused, updated_at: new Date().toISOString() }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (paused !== old.paused) await logNote('factory', paused ? 'คุณแดนกดหยุดโรงงาน (คอมจะไม่หยิบงานใหม่)' : 'คุณแดนเปิดโรงงานผลิตต่อ');
       if (auto.on !== old.auto.on) await logNote('factory', auto.on ? `คุณแดนเปิดผลิตอัตโนมัติ สัปดาห์ละ ${auto.per_week} เล่ม` : 'คุณแดนปิดผลิตอัตโนมัติ');
-      return res.status(200).json({ ok: true, cfg: { sets, auto } });
+      return res.status(200).json({ ok: true, cfg: { sets, auto, paused } });
     }
     if (action === 'factory_order') { // พี่ต้นสั่ง (key) หรือคุณแดนสั่งเองจากช่องโรงงาน (แอดมิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -1703,6 +1711,29 @@ export default async function handler(req, res) {
       const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
+    }
+    if (action === 'factory_edit' || action === 'factory_move') { // คุณแดนจัดคิว: แก้รายละเอียด/พักเล่มที่ยังไม่เริ่มผลิต · เลื่อนลำดับ (dir -1 ขึ้น, 1 ลง, 'top' บนสุด)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req); const jobs = await loadJobs();
+      const job = jobs.find((j) => j.id === String(body.id || ''));
+      if (!job) return res.status(404).json({ ok: false, error: 'ไม่พบใบสั่ง' });
+      if (job.status !== 'queued') return res.status(400).json({ ok: false, error: 'เล่มนี้เริ่มผลิตแล้ว แก้ไม่ได้' });
+      if (action === 'factory_edit') {
+        const f = body.fields && typeof body.fields === 'object' ? body.fields : {};
+        for (const k of ['title', 'category', 'level', 'format', 'amount', 'audience', 'notes']) if (f[k] != null) job[k] = String(f[k]).trim().slice(0, k === 'notes' ? 2000 : 300);
+        if (f.pages != null) { const n = Number(f.pages) || 0; if (n && (n < 4 || n > 400)) return res.status(400).json({ ok: false, error: 'จำนวนหน้า 4-400' }); if (n) job.pages = n; else delete job.pages; }
+        if (f.price != null) job.price = Math.max(0, Number(f.price) || 0);
+        if (!String(job.title || '').trim()) return res.status(400).json({ ok: false, error: 'ต้องมีชื่อเรื่อง' });
+        if (body.paused != null) job.paused = !!body.paused;
+        job.edited_at = new Date().toISOString();
+      } else {
+        const q = queueOrder(jobs); q.forEach((j, i) => { j.prio = i; }); // ทำให้ลำดับเป็นเลขเรียงกันก่อน
+        const i = q.indexOf(job), to = body.dir === 'top' ? 0 : Math.min(q.length - 1, Math.max(0, i + (Number(body.dir) < 0 ? -1 : 1)));
+        q.splice(i, 1); q.splice(to, 0, job); q.forEach((j, k) => { j.prio = k; });
+      }
+      await saveJobs(jobs);
+      return res.status(200).json({ ok: true, job, order: queueOrder(jobs).map((j) => j.id) });
     }
     if (action === 'factory_heartbeat') { if (!keyOk(req)) return res.status(401).json({ ok: false }); const b = await readBody(req); await workerBeat({ note: String(b.note || '').slice(0, 200) }); return res.status(200).json({ ok: true }); }
     if (action === 'factory_list') { // คุณแดนอนุมัติ (ลงขายแล้ว product_id) หรือไม่ลงขาย ชีทจากโรงงาน: แอดมินเท่านั้น
@@ -1740,6 +1771,8 @@ export default async function handler(req, res) {
       }
       if (action === 'factory_claim') {
         if (job.status !== 'queued') return res.status(200).json({ ok: false, error: `สถานะตอนนี้คือ ${job.status}` });
+        if (job.paused) return res.status(200).json({ ok: false, error: 'คุณแดนพักเล่มนี้ไว้ ข้ามไปก่อน' });
+        if ((await loadFacCfg().catch(() => ({}))).paused) return res.status(200).json({ ok: false, error: 'คุณแดนหยุดโรงงานไว้ ยังไม่ต้องผลิต' });
         job.status = 'producing'; job.started_at = new Date().toISOString(); if (body.by === 'mac') { job.made_on = 'mac'; await workerBeat({ note: `เริ่มผลิต: ${String(job.title).slice(0, 60)}` }); }
       } else if (action === 'factory_uploadurl') {
         const safe = String(body.filename || 'sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'sheet.pdf';

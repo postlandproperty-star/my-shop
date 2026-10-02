@@ -1,7 +1,7 @@
 # โรงงานบนคอมคุณแดน (Cowork): ดึงใบสั่งจากหน้าโรงงานบนเว็บ → ผลิตในคอม → ส่งไฟล์ขึ้นร้าน → แจ้งเสร็จ
 # เว็บเป็นแผงควบคุม (คิว/สถานะ/อนุมัติ) คอมเป็นที่ผลิตที่เดียว (โรงงานบนคลาวด์หยุดไว้ 2 ต.ค. 69 กันผลิตซ้ำ)
 #
-#   CONTENT_KEY=... python3 tools/factory/worker.py queue                 ใบสั่งที่รอผลิต (เก่าสุดก่อน) + บันทึกว่าคอมมาเช็คแล้ว
+#   CONTENT_KEY=... python3 tools/factory/worker.py queue                 ใบสั่งที่รอผลิต (ตามลำดับที่คุณแดนจัดบนเว็บ บนสุดก่อน) + บันทึกว่าคอมมาเช็คแล้ว
 #   CONTENT_KEY=... python3 tools/factory/worker.py claim <job_id>        จองงานก่อนเริ่มผลิต (ok=false = มีคนทำแล้ว ข้าม)
 #   CONTENT_KEY=... python3 tools/factory/worker.py done <job_id> <ไฟล์.pdf> [--cover cover.png] [--listing listing.json] [--summary "..."]
 #        อัป PDF + ปก แล้วแจ้งเสร็จ (หน้าตัวอย่าง 3-6 เว็บทำเองตอนคุณแดนกดอนุมัติ) → เว็บขึ้นการ์ด "จากโรงงาน รออนุมัติ" ให้คุณแดน
@@ -71,7 +71,8 @@ def main():
     a = ap.parse_args()
     if a.cmd == 'queue':
         j = api('factory', query='&status=queued&by=mac')
-        jobs = sorted(j.get('jobs', []), key=lambda x: x.get('created_at', ''))
+        if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
+        jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
         print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
         print(json.dumps(api('factory_claim', {'id': a.args[0], 'by': 'mac'}), ensure_ascii=False)[:300])
