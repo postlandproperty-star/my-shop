@@ -724,6 +724,17 @@ async function shopChecks(add, host) {
   try {
     const st = (await sb('shop_state?id=eq.ai_status&select=data'))?.[0]?.data || {};
     const G = !!process.env.GEMINI_API_KEY, O = !!process.env.OPENAI_API_KEY;
+    // ลองเรียกสั้นที่สุด (ข้อความ 1 คำ ไม่ถึง 1 สตางค์) ให้รู้จริงว่าเงิน/เครดิตยังเหลือไหม ถ้าคำตอบชัดเจนใช้แทนผลล่าสุด
+    const probe = async (k) => { try {
+      const r = k === 'google'
+        ? await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'hi' }] }], generationConfig: { maxOutputTokens: 1 } }) })
+        : await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }) });
+      const j = await r.json().catch(() => ({})); const m = String(j?.error?.message || '');
+      if (r.ok) return { ok: true, at: new Date().toISOString() };
+      if (/spending cap|exceeded its monthly|no credits|insufficient_quota|exceeded your current quota|billing/i.test(m + ' ' + (j?.error?.code || ''))) return { ok: false, at: new Date().toISOString(), msg: m };
+    } catch (e) {} return null; };
+    if (G) { const x = await probe('google'); if (x) st.google = x; }
+    if (O) { const x = await probe('openai'); if (x) st.openai = x; }
     const one = (k, has, name, url) => { const x = st[k]; if (!has) return add(`ai_${k}`, false, 'warn', `${name}: ยังไม่ได้ใส่คีย์`, 'ใส่คีย์ใน Vercel', null);
       add(`ai_${k}`, !x || x.ok, 'warn', !x ? `${name}: ยังไม่เคยใช้ทำรูป` : x.ok ? `${name}: ทำรูปได้ (ล่าสุด ${x.at.slice(5, 16).replace('T', ' ')})` : `${name}: เงินหมด/ใช้ไม่ได้ (${x.at.slice(5, 10)})`, `เติมเงินแล้วลองทำรูปใหม่ 1 รูป สถานะจะเขียวเอง`, url); };
     one('google', G, 'AI ทำรูป Google (Nano Banana)', 'https://aistudio.google.com/spend');
