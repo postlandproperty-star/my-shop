@@ -1305,17 +1305,16 @@ let SOLD=null;
 function loadSold(){if(SOLD!==null)return;SOLD={};fetch('/api/content?action=sold').then(r=>r.json()).then(j=>{if(j&&j.ok){SOLD=j.counts||{};if(S.view==='shop'||!S.view)render(true);}}).catch(()=>{});}
 function loadScript(src){return new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('โหลดตัวแปลง PDF ไม่ได้'));document.head.appendChild(e);});}
 function parsePages(spec,max){const out=[];String(spec||'3-6').split(',').forEach(part=>{const m=part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)return;const a=+m[1],b=m[2]?+m[2]:a;for(let i=Math.min(a,b);i<=Math.max(a,b);i++)if(i>=1&&i<=max&&!out.includes(i))out.push(i);});return out.slice(0,6);}
-async function makePreviews(file){
-  if(!S.draft)return;const inp=document.getElementById('e-pvpages');if(inp)S.pvPages=inp.value;
-  S.pvBusy=true;render(true);toast('กำลังเปิดไฟล์ PDF ในเครื่อง...');
-  try{
+// แปลงหน้า PDF เป็นรูปตัวอย่าง (ลายน้ำ + แถบเลขหน้า) อัปขึ้นคลัง คืนลิงก์รูป · ค่าตั้งต้นหน้า 3-6 (ไฟล์สั้นใช้ 1-4)
+async function pdfPreviewUrls(buf,spec,quiet){
     if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
-    const doc=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
-    let pages=parsePages(S.pvPages,doc.numPages);if(!pages.length&&!String(S.pvPages||'').trim())pages=parsePages('1-4',doc.numPages); // ไฟล์สั้นไม่ถึงหน้า 3
+    const doc=await window.pdfjsLib.getDocument({data:buf}).promise;
+    let pages=parsePages(spec,doc.numPages);if(!pages.length&&!String(spec||'').trim())pages=parsePages('1-4',doc.numPages);
+    if(pages.length<2&&doc.numPages<3)pages=parsePages('1-4',doc.numPages); // ไฟล์สั้นไม่ถึงหน้า 3
     if(!pages.length)throw new Error('เลขหน้าไม่ถูกต้อง ไฟล์นี้มี '+doc.numPages+' หน้า');
     const urls=[];
     for(const n of pages){
-      toast('กำลังแปลงหน้า '+n+' ('+(urls.length+1)+'/'+pages.length+')');
+      if(!quiet)toast('กำลังแปลงหน้า '+n+' ('+(urls.length+1)+'/'+pages.length+')');
       const pg=await doc.getPage(n);const v0=pg.getViewport({scale:1});const vp=pg.getViewport({scale:1100/v0.width});
       const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');
       x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:vp}).promise;
@@ -1324,6 +1323,13 @@ async function makePreviews(file){
       x.fillStyle='rgba(15,27,51,.78)';x.fillRect(0,c.height-56,c.width,56);x.fillStyle='#fff';x.font='600 26px sans-serif';x.textAlign='center';x.fillText('ตัวอย่างหน้า '+n+' จาก '+doc.numPages+' หน้า · SheetLab',c.width/2,c.height-19);
       urls.push(await uploadImage(c.toDataURL('image/jpeg',.82)));
     }
+    return {urls,from:pages[0]};
+}
+async function makePreviews(file){
+  if(!S.draft)return;const inp=document.getElementById('e-pvpages');if(inp)S.pvPages=inp.value;
+  S.pvBusy=true;render(true);toast('กำลังเปิดไฟล์ PDF ในเครื่อง...');
+  try{
+    const {urls}=await pdfPreviewUrls(await file.arrayBuffer(),S.pvPages);
     S.draft.previews=urls;toast('สร้างหน้าตัวอย่าง '+urls.length+' หน้าแล้ว อย่าลืมกดบันทึกสินค้า');
   }catch(e){console.error(e);toast('สร้างหน้าตัวอย่างไม่สำเร็จ: '+(e.message||e));}
   S.pvBusy=false;render(true);
@@ -2493,7 +2499,8 @@ function productRow(p){
         ${(acts.find((x,i)=>x[0]==='editProduct'&&i>0))?`<button class="pt-a mo" data-a="editProduct" data-id="${p.id}">${bun?'แก้ไขชุด':'แก้ไขทั้งหมด'}</button>`:''}
         ${bun?'':`<button class="pt-a" data-a="copyLink" data-id="${p.id}">คัดลอกลิงก์เซลเพจ</button><button class="pt-a" data-a="dupProduct" data-id="${p.id}">ทำสำเนา</button>`}
         <button class="pt-a" data-a="togglePub" data-id="${p.id}">${pub?'เปลี่ยนเป็นฉบับร่าง':'เผยแพร่'}</button>
-        ${!bun&&pub?`<button class="pt-a" data-a="adsDraftOne" data-id="${p.id}">📣 ทำแอดสินค้านี้</button>`:''}
+        ${pub?`<button class="pt-a" data-a="adsDraftOne" data-id="${p.id}">📣 เอาไปโฆษณา${bun?' (ทั้งชุด)':''}</button>`:''}
+        ${bun?`<button class="pt-a" data-a="pvRedoSet" data-id="${p.id}" ${S.pvRedo?'disabled':''}>${S.pvRedo===p.id?'กำลังทำหน้าตัวอย่าง... '+(S.pvRedoN||''):'🔄 หน้าตัวอย่างทุกเล่มเริ่มหน้า 3'}</button>`:p.link?`<button class="pt-a" data-a="pvRedo" data-id="${p.id}" ${S.pvRedo?'disabled':''}>${S.pvRedo===p.id?'กำลังทำหน้าตัวอย่าง...':'🔄 ทำหน้าตัวอย่างใหม่ (หน้า 3–6)'}</button>`:''}
         ${bun?'':`<button class="pt-a" data-a="exportOne" data-id="${p.id}">⬇ โหลดข้อมูล (Excel)</button><button class="pt-a" data-a="exportOneImgs" data-id="${p.id}" ${S.zipBusy||!(p.images||[]).length?'disabled':''}>${S.zipBusy===p.id?'กำลังรวมรูป...':'⬇ โหลดรูป (ZIP)'}</button>
         <button class="pt-a del" data-a="delProduct" data-id="${p.id}">${cf?'กดอีกครั้งเพื่อลบ':'ลบสินค้า'}</button>`}
       </div>`:''}
@@ -4954,6 +4961,15 @@ function act(a,el){
     case 'goNew':S.tab='products';S.pstat='new';S.edit=null;render(false);break;
     case 'goTodo':S.tab='todo';TODO.items=null;render(false);break;
     case 'adsRefresh':ADA.items=null;loadAdsAuto();render(true);break;
+    case 'pvRedo':case 'pvRedoSet':{const p=getProduct(id);if(!p)break;
+      const L=a==='pvRedoSet'?(p.items||[]).map(getProduct).filter(b=>b&&b.link&&!/\/pv-[3-9]\.jpg/.test(String((b.previews||[])[0]||''))&&b.pvFrom!==3):[p];
+      if(!L.length){toast('ทุกเล่มในชุดเริ่มหน้า 3 อยู่แล้ว');break;}
+      if(a==='pvRedoSet'&&!confirm(`ทำหน้าตัวอย่างใหม่ให้ ${L.length} เล่มที่ยังเริ่มหน้า 1 (${L.map(b=>b.name.slice(0,24)).join(', ')})\nใช้หน้า 3–6 จากไฟล์ของแต่ละเล่ม ใช้เวลาเล่มละราว 20 วินาที`))break;
+      S.pvRedo=id;render(true);
+      (async()=>{let ok=0;for(const [i,b] of L.entries()){S.pvRedoN=(i+1)+'/'+L.length;render(true);
+        try{const r=await fetch(String(b.link).split('?')[0]);if(!r.ok)throw new Error('เปิดไฟล์ไม่ได้ ('+r.status+')');const {urls,from}=await pdfPreviewUrls(await r.arrayBuffer(),'3-6',true);b.previews=urls;b.pvFrom=from;save();ok++;}
+        catch(e){toast(`"${b.name.slice(0,24)}" ทำไม่สำเร็จ: ${e.message||e}`);}}
+        toast(ok?`ทำหน้าตัวอย่างใหม่แล้ว ${ok} เล่ม (เริ่มหน้า 3)`:'ทำหน้าตัวอย่างไม่สำเร็จ');})().then(()=>{S.pvRedo='';S.pvRedoN='';render(true);});break;}
     case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'adsDismiss':{if(!confirm('ไม่ยิงแอดสินค้านี้?'))break;adminPost('/api/content?action=ads_auto_dismiss',{id}).then(j=>{if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status='dismissed';render(true);}else toast((j&&j.error)||'ไม่สำเร็จ');});break;}
     case 'adsStop':case 'adsResume':{const on=a==='adsResume';if(!on&&!confirm('หยุดแอดนี้? (เปิดต่อได้ภายหลัง)'))break;ADA.busy=id;render(true);adminPost('/api/content?action='+(on?'ads_auto_resume':'ads_auto_stop'),{id}).then(j=>{ADA.busy='';if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status=j.item.status;toast(on?'เปิดแอดต่อแล้ว':'หยุดแอดแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้');render(true);});break;}
