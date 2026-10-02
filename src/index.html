@@ -396,6 +396,10 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-hero p{margin:0;opacity:.92}
 .bx-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
 .bxe-file{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-top:2px}.bxe-file a,.bxe-file label{color:#2563EB;cursor:pointer;text-decoration:underline}
+.st-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;flex-wrap:nowrap}.st-chips .chip{flex:0 0 auto}
+.st-bimg{position:relative;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#fff}.st-bimg img{width:100%;height:100%;object-fit:cover;display:block}.st-bimg .st-badge{left:6px;top:6px}
+.st-bhead{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.st-bundles{margin-bottom:12px}
 .code-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.code-row .input{flex:1;min-width:140px;text-transform:uppercase}.code-row.ok{background:var(--okbg);border-radius:10px;padding:8px 12px;font-size:14px}
 .linkbtn{background:none;border:0;padding:0;font:inherit;color:#2563EB;text-decoration:underline;cursor:pointer}.code-open{display:block;margin:8px auto 0;font-size:14px}
 .rv-note{margin:4px 0 10px}
@@ -1969,6 +1973,13 @@ function sellPicker(d){const v=SELL[d.sell]?d.sell:'both';return `<div class="fi
 function storeItems(){return D.products.filter(p=>p.status==='published'&&p.sell!=='salepage'&&/^[a-z0-9-]+$/.test(p.slug||''));}
 function storeMode(){return storeItems().length>=STORE_MIN;}
 function fromPrice(p){if(isBundle(p)){const pl=bundlePlans(p);return pl.length?Math.min(...pl.map(x=>x.price)):Number(p.price)||0;}return Number(p.price)||0;}
+/* หมวดบนหน้าร้าน (ชั้นวาง): เดาจากชื่อสินค้า + หมวดในหลังบ้าน สินค้าอยู่ได้หลายหมวด หมวดโผล่เองเมื่อมีสินค้า */
+const SHELVES=[['bundle','📦 ชุดสุดคุ้ม'],['toeic','TOEIC'],['ielts','IELTS'],['tgat','TGAT / A-Level'],['kp','สอบ ก.พ.'],['notion','Notion Template'],['work','ทำงาน / เที่ยว'],['other','อื่นๆ']];
+function shelves(p){const t=(p.name+' '+(p.headline||'')).toLowerCase(),o=[];
+  if(isBundle(p))o.push('bundle');
+  if(/toeic/.test(t))o.push('toeic');if(/ielts/.test(t)||p.cat==='ielts')o.push('ielts');if(/tgat|a-level/.test(t)||p.cat==='tgat')o.push('tgat');if(/ก\.พ|ราชการ/.test(t)||p.cat==='kp')o.push('kp');
+  if(/notion/.test(t)||p.cat==='notion')o.push('notion');if(['work','speak'].includes(p.cat)||/business|travel|ทำงาน|เที่ยว/.test(t)&&!o.includes('toeic'))o.push('work');
+  if(!o.filter(k=>k!=='bundle').length)o.push('other');return o;}
 function storeView(){
   loadSold();
   const all=storeItems(),sold=id=>(SOLD&&SOLD[id])||0;
@@ -1977,10 +1988,11 @@ function storeView(){
   const hot=singles.filter(p=>sold(p.id)>=SOLD_MIN).slice(0,2).map(p=>p.id); // ขายดี = อันดับต้นของร้าน และขายจริงตั้งแต่ 10 ชิ้น
   const fresh=p=>p.publishedAt&&Date.now()-p.publishedAt<14*864e5;
   const free=p=>!(Number(p.price)>=1);
-  const cats=Object.keys(CATS).filter(k=>singles.filter(p=>p.cat===k).length>=2);
-  const chips=[['all','ทั้งหมด'],...cats.map(k=>[k,CATS[k]]),...(singles.some(free)?[['free','ฟรี']]:[])];
+  const used=new Set(all.flatMap(shelves));
+  const chips=[['all','ทั้งหมด'],...SHELVES.filter(([k])=>used.has(k)&&!(k==='other'&&used.size<=2)),...(singles.some(free)?[['free','ฟรี']]:[])];
   const f=chips.some(c=>c[0]===S.scat)?S.scat:'all';
-  const shown=singles.filter(p=>f==='all'||(f==='free'?free(p):p.cat===f));
+  const inF=p=>f==='all'||(f==='free'?free(p):shelves(p).includes(f));
+  const shownB=bundles.filter(inF),shown=f==='bundle'?[]:singles.filter(inF);
   const chat=D.settings.chatLink||CHAT_URL;
   const inBundle=id=>bundles.find(b=>(b.items||[]).includes(id));
   const card=p=>{const pr=Number(p.price)||0,full=Number(p.fullPrice)||0,off=full>pr&&pr>=1?Math.round((1-pr/full)*100):0,n=sold(p.id),b=inBundle(p.id),img=(p.images||[])[0];
@@ -1994,10 +2006,10 @@ function storeView(){
       ${b?`<span class="st-inb">มีในชุด ${esc(String(b.name).replace(/^ชุด\s*/,''))}</span>`:''}
     </a></div>`;};
   const bcard=b=>{const books=bundleBooks(b),sum=books.reduce((a,x)=>a+(Number(x.price)||0),0),from=fromPrice(b),off=sum>from?Math.round((1-from/sum)*100):0,live=b.promoEnd&&b.promoEnd>Date.now();
-    const imgs=books.map(x=>(x.images||[])[0]).filter(Boolean).slice(0,3);
+    const imgs=books.map(x=>(x.images||[])[0]).filter(Boolean).slice(0,3),main=(b.images||[])[0]||b.cover;
     return `<a class="st-bundle" href="/p/${esc(b.slug)}" data-go="${esc(b.id)}">
-      <span class="st-stack">${imgs.length?imgs.map((src,i)=>`<img src="${esc(src)}" alt="" loading="lazy" style="--i:${i}">`).join(''):cover(b.color,'book')}</span>
-      <span class="st-binfo"><span class="st-kicker">ชุด ${books.length} เล่ม · คุ้มกว่าซื้อแยก</span><b>${esc(b.headline||b.name)}</b>
+      ${main?`<span class="st-bimg"><img src="${esc(main)}" alt="" loading="lazy" width="600" height="600"></span>`:`<span class="st-stack">${imgs.length?imgs.map((src,i)=>`<img src="${esc(src)}" alt="" loading="lazy" style="--i:${i}">`).join(''):cover(b.color,'book')}</span>`}
+      <span class="st-binfo"><span class="st-kicker">📦 ชุด ${books.length} เล่ม · คุ้มกว่าซื้อแยก</span><b>${esc(b.name)}</b>${b.headline&&b.headline!==b.name?`<span class="fine st-bhead">${esc(b.headline)}</span>`:''}
       <span class="st-price">เริ่มต้น <strong>${baht(from)}</strong>${sum>from?` <s>${baht(sum)}</s>`:''}${off?` <span class="st-off">ประหยัด ${off}%</span>`:''}</span>
       ${live?`<span class="st-promo">ราคาเปิดตัวเหลืออีก ${Math.max(1,Math.ceil((b.promoEnd-Date.now())/864e5))} วัน</span>`:''}
       <span class="st-go">ดูชุดนี้ →</span></span></a>`;};
@@ -2009,11 +2021,11 @@ function storeView(){
     <ul class="st-why"><li>รับไฟล์ทันทีหลังจ่าย</li><li>สแกนจ่าย QR ได้</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></div></section>
   <main class="wrap wide st-main">
     ${LEVELQ?`<a class="st-level" href="/quiz/${esc(LEVELQ.slug)}"><span><b>วัดระดับ TOEIC ฟรี ${LEVELQ.n} ข้อ</b><span class="fine">รู้ผลทันที พร้อมคำแนะนำว่าควรเริ่มฝึกตรงไหน</span></span><span class="st-go">เริ่มเลย →</span></a>`:''}
-    ${bundles.length?`<section class="st-sec" aria-labelledby="st-b"><h2 id="st-b" class="st-h2">ชุดแนะนำ</h2><div class="st-bundles">${bundles.map(bcard).join('')}</div></section>`:''}
-    <section class="st-sec" aria-labelledby="st-s"><h2 id="st-s" class="st-h2">${bundles.length?'เล่มเดี่ยว':'สินค้าทั้งหมด'}</h2>
+    <section class="st-sec" aria-labelledby="st-s"><h2 id="st-s" class="st-h2">สินค้าทั้งหมด</h2>
       ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
+      ${shownB.length?`<div class="st-bundles">${shownB.map(bcard).join('')}</div>`:''}
       ${shown.some(cartOk)&&!PV?`<p class="st-pickhint">ซื้อหลายเล่ม: กด + เพิ่ม ใต้ราคา แล้วกดชำระเงินครั้งเดียว</p>`:''}
-      ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
+      ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
     </section>
     ${DAILY?(()=>{const a=S.dailyAns,L='ABCD';return `<section class="st-sec st-daily" aria-labelledby="st-d"><h2 id="st-d" class="st-h2">ข้อสอบประจำวัน</h2>
       <div class="card"><div style="font-weight:600;white-space:pre-line">${esc(DAILY.q)}</div>
