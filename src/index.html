@@ -447,6 +447,10 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
 .bxi-bc{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--line);position:relative}.bxi-bc img{width:100%;height:100%;object-fit:cover}
 .bxi-bc{padding:0;cursor:zoom-in;display:block}.bxi-zoom{position:absolute;right:4px;top:4px;background:rgba(255,255,255,.9);border-radius:6px;font-size:12px;padding:1px 4px;opacity:.85}
+.bxi-style{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0 8px}.bxi-lab{font-weight:600;font-size:14px}
+.bxi-pal{display:flex;gap:6px;flex-wrap:wrap}.bxi-pal .chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.bxi-pdf{margin:4px 0 10px;font-size:14px;align-items:flex-start}
+.bxv-pdf{display:flex;gap:12px;align-items:flex-start;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}.bxv-pdf img{width:70px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}.bxv-pdf>div{display:grid;gap:2px;min-width:0}
 .bxi-apply{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--warnbg,#FFFBEB);border:1px solid #FDE68A;font-size:14px}
 .bxv{position:fixed;inset:0;z-index:80;background:rgba(10,14,20,.6);display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:16px}
 .bxv-in{background:var(--surface,#fff);border-radius:14px;padding:14px;width:100%;max-width:820px;margin:auto 0}
@@ -1625,22 +1629,45 @@ function bxCoverPrompt(d,books){const n=books.length,price=bxPrice(d);
 ป้ายวงกลมสีแดงมุมขวาบนเขียนว่า "${n} เล่ม"${price?`
 ป้ายราคาสีเหลืองขอบดำมุมล่างขวาเขียนว่า "${price} บาท"`:''}
 แถบล่างตัวเล็กเขียนว่า "ไฟล์ PDF · ได้ทันทีหลังจ่าย"`+AI_NO_TEXT;}
-function bxBookPrompt(b,i,n){const t=String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);
+/* แบบปกเล่มเดี่ยว: ตามปกเดิม หรือออกแบบใหม่ (โทนเดียวกันทั้งชุด) · ใส่ปกใหม่ในไฟล์ PDF ด้วยไหม · จำไว้ในเครื่อง */
+const BX_PAL={brand:['น้ำเงิน-เหลือง (สีร้าน)','พื้นปกสีน้ำเงินเข้ม (#1d2b53) แถบเฉียงสีเหลือง (#FFD23F) ด้านล่าง ชื่อเรื่องตัวใหญ่สีขาว'],pastel:['พาสเทลนุ่ม','พื้นปกสีพาสเทลอ่อน (ฟ้าอ่อน มิ้นต์ หรือครีม) ตัวอักษรสีน้ำเงินเข้ม ภาพประกอบลายเส้นเล็กๆ แบบมินิมอล'],premium:['ดำ-ทอง พรีเมียม','พื้นปกสีดำด้าน ตัวอักษรสีทอง เส้นกรอบบางสีทอง ดูหรูหราน่าเชื่อถือ'],bold:['สีสดต่างกันทุกเล่ม','พื้นปกสีสดหนึ่งสี (แต่ละเล่มในชุดใช้สีต่างกัน) ตัวอักษรสีขาวตัวหนาใหญ่มาก เลย์เอาต์เหมือนกันทุกเล่ม']};
+function bxStyle(){let v={};try{v=JSON.parse(localStorage.getItem('sl_bxstyle')||'{}')||{};}catch(e){}return Object.assign({mode:'orig',pal:'brand',note:'',pdf:true},v);}
+function bxStyleSet(k,v){const st=Object.assign(bxStyle(),{[k]:v});try{localStorage.setItem('sl_bxstyle',JSON.stringify(st));}catch(e){}S.bxStyleV=st;}
+const bxNeeds=(b,st)=>st.mode==='new'?!(b.bookCover&&b.coverMode==='new'&&b.coverPal===st.pal):!b.bookCover;
+function bxBookPrompt(b,i,n,st,sameAsRef){const t=String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);st=st||{mode:'orig'};
+  if(st.mode==='new')return `หน้าปกหนังสือ e-book 1 เล่ม ออกแบบใหม่ทั้งหมด (ไม่ต้องเหมือนปกเดิม) มองจากด้านหน้าตรงๆ ตั้งอยู่กลางภาพ บนพื้นหลังสีขาวล้วนเรียบสะอาด มีเงาบางๆ ใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 หนังสือสูงประมาณ 85% ของภาพ กว้างไม่เกิน 60% ของภาพ
+${sameAsRef?'ใช้สไตล์ เลย์เอาต์ ฟอนต์ และการจัดวางเดียวกับปกในรูปที่แนบทุกอย่าง (เป็นเล่มในชุดเดียวกัน) เปลี่ยนแค่ชื่อเรื่องและเลขเล่ม':'ดีไซน์ปกเรียบ อ่านง่าย ทุกเล่มในชุดจะใช้แบบเดียวกัน'}: ${(BX_PAL[st.pal]||BX_PAL.brand)[1]}
+ชื่อเรื่องตัวใหญ่กลางปก: "${t}"
+มุมบนซ้ายของปกมีป้ายเล็กเขียนว่า "เล่ม ${i+1}/${n}" ห้ามมีป้ายราคา ไอคอนโซเชียล หรือข้อความอื่นนอกจากที่กำหนด${st.note?'\nความต้องการเพิ่มของเจ้าของร้าน: '+String(st.note).slice(0,200):''}`+AI_NO_TEXT;
   if((b.images||[])[0])return `จากรูปปกหนังสือที่แนบมา ทำเป็นภาพหน้าปกหนังสือ 1 เล่ม มองจากด้านหน้าตรงๆ ตั้งอยู่กลางภาพ บนพื้นหลังสีขาวล้วนเรียบสะอาด มีเงาบางๆ ใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 หนังสือสูงประมาณ 85% ของภาพ กว้างไม่เกิน 60% ของภาพ
 คงชื่อเรื่อง สี และดีไซน์หลักของปกเดิมไว้ ตัดสิ่งที่ไม่ใช่ปกหนังสือออกทั้งหมด เช่น ป้ายราคา ไอคอน กล่องข้อความโฆษณา มือถือ แล็ปท็อป ฉากหลัง ห้ามเพิ่มตัวหนังสือใหม่`+AI_NO_TEXT;
   return `หน้าปกหนังสือ e-book 1 เล่ม มองจากด้านหน้าตรงๆ ตั้งอยู่กลางภาพ บนพื้นหลังสีขาวล้วนเรียบสะอาด มีเงาบางๆ ใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 หนังสือสูงประมาณ 85% ของภาพ กว้างไม่เกิน 60% ของภาพ
 ดีไซน์ปกเรียบ มินิมอล อ่านง่าย (ทุกเล่มในชุดใช้แบบเดียวกัน): พื้นปกสีน้ำเงินเข้ม (#1d2b53) แถบเฉียงสีเหลือง (#FFD23F) ด้านล่าง ชื่อเรื่องตัวใหญ่สีขาวกลางปก: "${t}"
 มุมบนซ้ายของปกมีป้ายเล็กสีเหลืองเขียนว่า "เล่ม ${i+1}/${n}" ห้ามมีป้ายราคา ไอคอน ภาพประกอบ หรือข้อความอื่นนอกจากที่กำหนด`+AI_NO_TEXT;}
-async function bxAiImage(prompt,refs){const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:imgModel(),quality:imgQuality(),refs:refs||[]})});
+async function bxAiRaw(prompt,refs,aspect){const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:imgModel(),quality:imgQuality(),refs:refs||[],aspect:aspect||''})});
   if(!j||!j.ok){const e=new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');if(j&&j.billing){e.billing=j.billing;S.aiBroke=Object.assign({},S.aiBroke,{[j.billing]:Date.now()});}throw e;}
-  if(S.aiBroke)delete S.aiBroke[imgProv(imgModel())];const blob=await (await fetch(j.image)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
+  if(S.aiBroke)delete S.aiBroke[imgProv(imgModel())];return j.image;}
+// ปกแนวตั้งแบบแบน (ไม่ใช่ภาพหนังสือ 3 มิติ) จากปกเรียบ → แทนหน้าแรกของไฟล์ PDF (ไฟล์เดิมเก็บไว้ใน linkOrig กลับได้)
+const BX_FLAT=`จากปกหนังสือในรูปที่แนบ ทำเป็นอาร์ตเวิร์กหน้าปกแบบแบนเต็มภาพ (flat cover artwork) สำหรับใช้เป็นหน้าแรกของไฟล์ PDF ภาพแนวตั้ง 3:4 ตัวปกเต็มกรอบภาพพอดี ไม่มีพื้นหลังรอบนอก ไม่มีเงา ไม่ใช่ภาพหนังสือ 3 มิติ ไม่เห็นสันหรือขอบกระดาษ เว้นขอบด้านซ้ายขวาไว้เล็กน้อยไม่ให้ตัวหนังสือชิดขอบ คงข้อความ สี และดีไซน์ทุกอย่างของปกในรูปให้เหมือนเดิม ตัวหนังสือคมชัด`;
+async function toJpeg(src,maxW){const im=await new Promise((ok,no)=>{const x=new Image();x.onload=()=>ok(x);x.onerror=no;x.src=src;});const k=Math.min(1,maxW/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(im,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.92);}
+async function bxPdfCover(b){if(!b.bookCover)throw new Error('ยังไม่มีปกใหม่');const src=b.linkOrig||b.link;
+  if(!src||!/\/storage\/v1\/object\/public\/product-images\//.test(src))throw new Error('ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน ใส่ปกให้อัตโนมัติไม่ได้');
+  const flat=await uploadImage(await toJpeg(await bxAiRaw(BX_FLAT,[b.bookCover],'3:4'),1400));
+  const r=await authFetch('/api/content?action=pdf_cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdf:src,image:flat,name:b.slug||'',title:b.name||''})});
+  if(!r||!r.ok)throw new Error((r&&r.error)||'ใส่ปกในไฟล์ไม่สำเร็จ');
+  if(!b.linkOrig)b.linkOrig=b.link;b.link=r.url;b.pdfCover=flat;b.pdfFrom=b.bookCover;save();return r;}
+async function bxAiImage(prompt,refs){const img=await bxAiRaw(prompt,refs);const blob=await (await fetch(img)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
 const bxOrig=b=>b.origImg||(b.images||[]).find(u=>u!==b.bookCover)||'';
 function bxUseCover(b,on){if(!b.bookCover)return;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
   const rest=(b.images||[]).filter(u=>u!==b.bookCover&&u!==b.origImg&&!(b.oldCovers||[]).includes(u));
   b.images=on?[b.bookCover,...(b.origImg?[b.origImg]:[]),...rest]:[...(b.origImg?[b.origImg]:[]),...rest];}
 async function bxMakeBook(id,i,n){const b=getProduct(id);if(!b)return;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
-  const o=bxOrig(b),url=await bxAiImage(bxBookPrompt(Object.assign({},b,{images:o?[o]:[]}),i,n),o?[o]:[]);
-  if(b.bookCover)b.oldCovers=[...(b.oldCovers||[]),b.bookCover].slice(-5);b.bookCover=url;bxUseCover(b,true);save();}
+  const st=bxStyle(),o=bxOrig(b);let url;
+  if(st.mode==='new'){const sib=(S.draft?S.draft.items:[]).map(getProduct).find(x=>x&&x.id!==b.id&&x.bookCover&&x.coverMode==='new'&&x.coverPal===st.pal);
+    url=await bxAiImage(bxBookPrompt(b,i,n,st,!!sib),sib?[sib.bookCover]:[]);}
+  else url=await bxAiImage(bxBookPrompt(Object.assign({},b,{images:o?[o]:[]}),i,n,st),o?[o]:[]);
+  if(b.bookCover)b.oldCovers=[...(b.oldCovers||[]),b.bookCover].slice(-5);b.bookCover=url;b.coverMode=st.mode;b.coverPal=st.mode==='new'?st.pal:'';bxUseCover(b,true);save();
+  if(st.pdf&&(b.linkOrig||b.link)){try{await bxPdfCover(b);}catch(e){if(e.billing)throw e;S.bxImgErr=`ได้ปกใหม่แล้ว แต่ใส่ในไฟล์ PDF ของ "${b.name.slice(0,30)}" ไม่สำเร็จ: ${e.message||e}`;}}}
 function bxViewer(){const b=S.bxView&&getProduct(S.bxView);if(!b)return '';const o=bxOrig(b),on=(b.images||[])[0]===b.bookCover&&!!b.bookCover,i=S.draft?S.draft.items.indexOf(b.id):-1;
   const fig=(u,l,cur)=>`<figure class="bxv-f${cur?' cur':''}">${u?`<img src="${esc(u)}" alt="${esc(l)}">`:'<span class="fine">ไม่มีรูป</span>'}<figcaption>${l}${cur?' · ✓ ใช้เป็นรูปสินค้าอยู่':''}${u?` · <a href="${esc(u)}" target="_blank" rel="noopener noreferrer" download>เปิด/โหลด</a>`:''}</figcaption></figure>`;
   return `<div class="bxv" data-a="bxView" role="dialog" aria-modal="true" aria-label="ดูปกเล่ม"><div class="bxv-in" data-a="noop">
@@ -1651,6 +1678,10 @@ function bxViewer(){const b=S.bxView&&getProduct(S.bxView);if(!b)return '';const
       <button class="btn btn-line btn-sm" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${S.bxImg?'disabled':''}>${S.bxImg===b.id?'กำลังสร้าง...':'✨ ทำปกใหม่'}</button>
       ${i>0?`<button class="chip" data-a="bxViewGo" data-v="${i-1}">‹ เล่มก่อน</button>`:''}${S.draft&&i<S.draft.items.length-1?`<button class="chip" data-a="bxViewGo" data-v="${i+1}">เล่มถัดไป ›</button>`:''}
     </div>
+    <div class="bxv-pdf">${b.pdfCover?`<img src="${esc(b.pdfCover)}" alt="ปกในไฟล์ PDF">`:''}<div><b>📄 ไฟล์ PDF</b><span class="fine">${!b.link?'ยังไม่มีไฟล์':b.pdfCover?(b.pdfFrom===b.bookCover?'หน้าแรกเป็นปกใหม่นี้แล้ว':'หน้าแรกเป็นปกใหม่รุ่นก่อน (ยังไม่ใช่ปกที่เห็นด้านบน)'):'หน้าแรกยังเป็นปกเดิม'}</span>
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">${b.link?`<a class="chip" href="${esc(dlHref(b.link,b.name))}" target="_blank" rel="noopener noreferrer">เปิดไฟล์ปัจจุบัน</a>`:''}
+        ${b.bookCover&&b.link&&b.pdfFrom!==b.bookCover?`<button class="btn btn-cta btn-sm" data-a="bxPdf" data-id="${b.id}" ${S.bxImg?'disabled':''}>${S.bxImg==='pdf:'+b.id?'กำลังใส่ปก... (ราว 1 นาที)':'📄 ใส่ปกนี้ในไฟล์ PDF'}</button>`:''}
+        ${b.linkOrig&&b.linkOrig!==b.link?`<button class="chip" data-a="bxPdfUndo" data-id="${b.id}">↩ ใช้ไฟล์เดิม</button>`:''}</div></div></div>
     <p class="fine" style="margin:8px 0 0">รูปสินค้า = รูปแรกที่ลูกค้าเห็นในหน้าร้านและหน้าขายของเล่มนี้ · รูปเดิมไม่ได้ลบ สลับกลับได้ตลอด</p>
   </div></div>`;}
 /* จัดรูปชุดจากปกจริงด้วย canvas (ไม่ใช้ AI): หัวข้อ ป้ายจำนวนเล่ม ปกทุกเล่ม 2 แถว ป้ายราคา แถบล่าง */
@@ -1718,16 +1749,21 @@ function bundleForm(){
     </details>
   </div>
 
-  ${(()=>{const pend=S.bxImg||'',n=chosen.length,todo=chosen.filter(b=>!b.bookCover).length,mi=IMG_INFO[imgModel()]||['',3],cost=(todo||n)*mi[1];
+  ${(()=>{const st=bxStyle(),pend=S.bxImg||'',n=chosen.length,todo=chosen.filter(b=>bxNeeds(b,st)).length,mi=IMG_INFO[imgModel()]||['',3],per=mi[1]*(st.pdf?2:1),cost=(todo||n)*per,noFile=chosen.filter(b=>!b.link).length;
     return `<div class="card" style="margin-top:14px">
     <h3 class="h3">3. รูปชุด <span class="fine" style="font-weight:400">ทำ 2 ขั้น: ปกเล่มเดี่ยวก่อน แล้วรูปใหญ่ของชุดจะจัดจากปกชุดเดียวกัน ให้ดูเป็นสินค้าเดียวกัน</span></h3>
     <h4 class="bxi-step"><span>1</span> ปกเล่มเดี่ยว (ใช้ใน "ในชุดมีอะไรบ้าง")</h4>
     <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ได้แล้ว<b>ใช้เป็นรูปสินค้าของเล่มนั้นด้วย</b> รูปเดิมเก็บไว้เป็นรูปที่ 2 · กดที่รูปเพื่อดูใหญ่ เทียบกับรูปเดิม หรือสลับกลับ</p>
     ${(()=>{const left=chosen.filter(b=>b.bookCover&&(b.images||[])[0]!==b.bookCover);return left.length?`<div class="bxi-apply"><span>มีปกเรียบ ${left.length} เล่มที่ยังไม่ได้ใช้เป็นรูปสินค้า</span><button class="btn btn-cta btn-sm" data-a="bxUseAll">✓ ใช้ปกเรียบเป็นรูปสินค้าทั้ง ${left.length} เล่ม</button></div>`:'';})()}
+    <div class="bxi-style"><span class="bxi-lab">แบบปก</span><div class="kind-seg" role="group" aria-label="แบบปก"><button data-a="bxStyle" data-v="mode:orig" aria-pressed="${st.mode!=='new'}">📘 ตามปกเดิม</button><button data-a="bxStyle" data-v="mode:new" aria-pressed="${st.mode==='new'}">✨ ออกแบบใหม่</button></div></div>
+    ${st.mode==='new'?`<div class="bxi-pal">${Object.entries(BX_PAL).map(([k,v])=>`<button class="chip${st.pal===k?' on':''}" data-a="bxStyle" data-v="pal:${k}" aria-pressed="${st.pal===k}">${esc(v[0])}</button>`).join('')}</div>
+      <input class="input" data-bxs="note" value="${esc(st.note)}" placeholder="อยากได้แนวไหนเพิ่ม (ไม่ใส่ก็ได้) เช่น มีรูปไอคอนหูฟังสำหรับเล่ม Listening" style="margin:6px 0 4px">
+      <p class="fine" style="margin:0 0 8px">ยังเป็นรูปหนังสือเล่มเดียวบนพื้นขาวเหมือนเดิม แต่ดีไซน์ปกใหม่ทั้งชุด เล่มแรกที่ทำจะเป็นต้นแบบให้เล่มที่เหลือใช้สไตล์เดียวกัน</p>`:''}
+    <label class="tgl bxi-pdf"><input type="checkbox" data-a="bxStyle" data-v="pdf:${st.pdf?'0':'1'}" ${st.pdf?'checked':''}> <span>📄 <b>ใส่ปกใหม่ในไฟล์ PDF ด้วย</b> หน้าแรกของไฟล์เปลี่ยนเป็นปกใหม่ (ลูกค้าที่ซื้อหลังจากนี้ได้ไฟล์ใหม่ · ไฟล์เดิมเก็บไว้ สลับกลับได้) ใช้รูปเพิ่มเล่มละ 1 รูป${noFile?` · ${noFile} เล่มยังไม่มีไฟล์ ข้ามไป`:''}</span></label>
     <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`).join('')}</div>
     <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b"><button class="bxi-bc" data-a="bxView" data-id="${b.id}" aria-label="ดูปกเล่ม ${i+1} ขนาดใหญ่">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?`<span class="bxi-ok">✓ ปกเรียบ${(b.images||[])[0]===b.bookCover?' · รูปสินค้า':''}</span>`:''}<span class="bxi-zoom" aria-hidden="true">🔍</span></button>
       <span class="fine">เล่ม ${i+1}</span><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button></div>`).join('')}</div>
-    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center"><button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${todo||n}...`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center"><button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${todo||n}...`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก${st.pdf?' (รวมปกในไฟล์ PDF)':''} · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
     ${S.bxImgErr?`<div class="bxi-err">⚠️ ${esc(S.bxImgErr)}${aiPay(S.bxImgErr)}</div>`:''}
     <h4 class="bxi-step" style="margin-top:20px"><span>2</span> รูปใหญ่ของชุด (หัวหน้าขาย · การ์ดหน้าร้าน · แอด)</h4>
     <div class="bxi-hero"><div class="bxi-big">${d.cover?`<a href="${esc(d.cover)}" target="_blank" rel="noopener noreferrer" title="เปิดรูปใหญ่"><img src="${esc(d.cover)}" alt="รูปใหญ่ของชุด"></a>`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
@@ -4828,13 +4864,16 @@ function act(a,el){
     case 'bxCompose':{const d=S.draft;if(!d)break;const books=d.items.map(getProduct).filter(Boolean);S.bxImg='compose';S.bxImgErr='';render(true);
       bxCompose(d,books).then(uploadImage).then(u=>{S.draft.cover=u;toast('จัดรูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>{S.bxImgErr='จัดรูปไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxView':S.bxView=S.bxView===id||!id?null:id;render(true);break;
+    case 'bxStyle':{const [k,v]=String(el.dataset.v).split(':');bxStyleSet(k,k==='pdf'?v==='1':v);render(true);break;}
+    case 'bxPdf':{const b=getProduct(id);if(!b)break;S.bxImg='pdf:'+id;S.bxImgErr='';render(true);bxPdfCover(b).then(r=>toast(`ใส่ปกในไฟล์แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ใหม่`)).catch(e=>{S.bxImgErr=String(e.message||e);toast(S.bxImgErr);}).then(()=>{S.bxImg='';render(true);});break;}
+    case 'bxPdfUndo':{const b=getProduct(id);if(!b||!b.linkOrig)break;b.link=b.linkOrig;b.pdfFrom='';b.pdfCover='';save();toast('กลับไปใช้ไฟล์เดิมแล้ว');render(true);break;}
     case 'bxViewGo':{const k=Number(el.dataset.v);if(S.draft&&S.draft.items[k])S.bxView=S.draft.items[k];render(true);break;}
     case 'bxUse':{const b=getProduct(id);if(!b)break;bxUseCover(b,el.dataset.v==='1');save();toast(el.dataset.v==='1'?'ใช้ปกเรียบเป็นรูปสินค้าแล้ว':'กลับไปใช้รูปเดิมแล้ว');render(true);break;}
     case 'bxUseAll':{const L=(S.draft?S.draft.items:[]).map(getProduct).filter(b=>b&&b.bookCover&&(b.images||[])[0]!==b.bookCover);L.forEach(b=>bxUseCover(b,true));save();toast(`ใช้ปกเรียบเป็นรูปสินค้าแล้ว ${L.length} เล่ม`);render(true);break;}
     case 'bxCoverClear':if(S.draft){S.draft.cover='';render(true);}break;
     case 'bxAiBook':{const n=(S.draft&&S.draft.items.length)||1;S.bxImg=id;S.bxImgErr='';render(true);
       bxMakeBook(id,Number(el.dataset.v)||0,n).then(()=>toast('ทำปกเล่มนี้แล้ว')).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
-    case 'bxAiBooks':{const d=S.draft;if(!d)break;const ids=d.items.filter(i=>getProduct(i));const todo=ids.filter(i=>!getProduct(i).bookCover);const list=todo.length?todo:ids;
+    case 'bxAiBooks':{const d=S.draft;if(!d)break;const ids=d.items.filter(i=>getProduct(i));const st=bxStyle();const todo=ids.filter(i=>bxNeeds(getProduct(i),st));const list=todo.length?todo:ids;
       if(!confirm(`ทำปกเรียบ ${list.length} รูป (เสียค่า AI ต่อรูปตามโมเดลที่เลือก) ใช้เวลาประมาณ ${Math.ceil(list.length*0.6)} นาที ทำเลยไหม?`))break;
       S.bxImg='all';S.bxImgErr='';S.bxImgN=1;render(true);
       (async()=>{let ok=0,bad=0,stop='';
@@ -4979,6 +5018,7 @@ document.addEventListener('input',e=>{
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
   if(ds.fqe){S.fqe=S.fqe||{};S.fqe[ds.fqe]=t.value;return;}
+  if(ds.bxs){bxStyleSet(ds.bxs,t.value);return;}
   if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
   if(ds.rvp){S.rvp=t.value;render(true);return;}
   if(ds.adsum){const id=ds.adsum,d=Number(($('#add-'+id)||{}).value)||0,n=Number(($('#adn-'+id)||{}).value)||0,e=document.getElementById('ads-sum-'+id);if(e)e.textContent='฿'+(d*n).toLocaleString('th-TH');}

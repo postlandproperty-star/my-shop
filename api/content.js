@@ -406,13 +406,14 @@ function aiErr(provider, msg, status) {
   }
   return new Error(`${provider === 'google' ? 'Google' : 'OpenAI'}: ${m}`);
 }
-async function genImage({ model, prompt, quality, refs }) {
+async function genImage({ model, prompt, quality, refs, aspect }) {
+  const tall = aspect === '3:4'; // ปกแนวตั้งสำหรับหน้าแรกของไฟล์ PDF
   model = IMG_MODEL_RE.test(String(model || '')) ? String(model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
   const ref = await loadRefs(refs);
   if (model.startsWith('gemini-')) {
     const G = process.env.GEMINI_API_KEY || ''; if (!G) throw new Error('ยังไม่ได้ใส่ GEMINI_API_KEY ใน Vercel');
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [...ref.map((x) => ({ inlineData: { mimeType: x.mime, data: x.b64 } })), { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '1:1' } } }) });
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [...ref.map((x) => ({ inlineData: { mimeType: x.mime, data: x.b64 } })), { text: prompt }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: tall ? '3:4' : '1:1' } } }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw aiErr('google', j?.error?.message, r.status);
     const part = (j?.candidates?.[0]?.content?.parts || []).find((x) => x.inlineData || x.inline_data);
@@ -422,7 +423,7 @@ async function genImage({ model, prompt, quality, refs }) {
   }
   const KEY = process.env.OPENAI_API_KEY || ''; if (!KEY) throw new Error('ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel');
   if (ref.length) { // มีรูปต้นแบบ: ใช้ images/edits (รับหลายรูป)
-    const fd = new FormData(); fd.append('model', model); fd.append('prompt', prompt); fd.append('size', '1024x1024'); fd.append('n', '1');
+    const fd = new FormData(); fd.append('model', model); fd.append('prompt', prompt); fd.append('size', tall ? '1024x1536' : '1024x1024'); fd.append('n', '1');
     fd.append('quality', ['low', 'medium', 'high'].includes(quality) ? quality : 'medium');
     ref.forEach((x, i) => fd.append('image[]', new Blob([x.buf], { type: x.mime }), `ref${i}.${/png/.test(x.mime) ? 'png' : 'jpg'}`));
     const re = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { Authorization: `Bearer ${KEY}` }, body: fd });
@@ -432,7 +433,7 @@ async function genImage({ model, prompt, quality, refs }) {
     return { b64: je.data[0].b64_json, mime: 'image/png', model };
   }
   const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, prompt, size: '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(quality) ? quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
+    body: JSON.stringify({ model, prompt, size: tall ? '1024x1536' : '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(quality) ? quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) throw aiErr('openai', j?.error?.message, r.status);
   if (!j?.data?.[0]?.b64_json) throw new Error('OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง');
@@ -1133,7 +1134,7 @@ export default async function handler(req, res) {
       const prompt = String(body.prompt || '').trim().slice(0, 3000);
       if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'คำสั่งสั้นเกินไป' });
       try {
-        const g = await genImage({ model: body.model, prompt, quality: body.quality, refs: body.refs });
+        const g = await genImage({ model: body.model, prompt, quality: body.quality, refs: body.refs, aspect: body.aspect });
         if (diag) return res.status(200).json({ ok: true, model: g.model, ms: Date.now() - t0, kb: Math.round(g.b64.length * 0.75 / 1024), mime: g.mime });
         return res.status(200).json({ ok: true, image: `data:${g.mime};base64,${g.b64}` });
       } catch (e) { return res.status(502).json({ ok: false, error: String(e.message || e).slice(0, 240), billing: e.billing || undefined }); }
@@ -1711,6 +1712,37 @@ export default async function handler(req, res) {
       const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
+    }
+    if (action === 'pdf_cover') { // คุณแดน: ทำไฟล์ PDF ใหม่ที่หน้าแรกเป็นปกใหม่ (รูปในคลังร้าน) ไฟล์เดิมไม่แตะ คืนลิงก์ไฟล์ใหม่
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req);
+      const own = `${SB_URL}/storage/v1/object/public/product-images/`;
+      const pdfUrl = String(body.pdf || '').split('?')[0], imgUrl = String(body.image || '').split('?')[0];
+      if (!pdfUrl.startsWith(own) || !imgUrl.startsWith(own)) return res.status(400).json({ ok: false, error: 'ไฟล์ต้องอยู่ในคลังของร้าน' });
+      try {
+        const { PDFDocument } = await import('pdf-lib');
+        const [pr, ir] = await Promise.all([fetch(pdfUrl), fetch(imgUrl)]);
+        if (!pr.ok || !ir.ok) throw new Error('โหลดไฟล์ไม่ได้');
+        const src = await PDFDocument.load(Buffer.from(await pr.arrayBuffer()), { ignoreEncryption: true });
+        const imgBuf = Buffer.from(await ir.arrayBuffer());
+        const out = await PDFDocument.create();
+        const p0 = src.getPage(0), { width: W, height: H } = p0.getSize();
+        const isPng = imgBuf[0] === 0x89 && imgBuf[1] === 0x50;
+        const img = isPng ? await out.embedPng(imgBuf) : await out.embedJpg(imgBuf);
+        const sc = Math.max(W / img.width, H / img.height), w = img.width * sc, h = img.height * sc; // เต็มหน้า ตัดขอบส่วนเกินเท่ากัน
+        out.addPage([W, H]).drawImage(img, { x: (W - w) / 2, y: (H - h) / 2, width: w, height: h });
+        const keep = src.getPageIndices().slice(body.insert ? 0 : 1); // ปกติแทนหน้าแรกเดิม · insert = เพิ่มหน้าปกไว้หน้าสุด
+        for (const pg of await out.copyPages(src, keep)) out.addPage(pg);
+        out.setTitle(String(body.title || '').slice(0, 200) || src.getTitle() || 'SheetLab');
+        const bytes = await out.save();
+        const { randomUUID } = await import('node:crypto');
+        const name = String(body.name || pdfUrl.split('/').pop() || 'sheet').replace(/\.pdf$/i, '').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'sheet';
+        const path = `files/${randomUUID()}/${name}.pdf`;
+        const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/pdf', 'x-upsert': 'true' }, body: Buffer.from(bytes) });
+        if (!up.ok) throw new Error(`อัปโหลดไม่ได้ (${up.status})`);
+        return res.status(200).json({ ok: true, url: own + path, pages: out.getPageCount(), size: bytes.length });
+      } catch (e) { return res.status(200).json({ ok: false, error: 'ใส่ปกในไฟล์ไม่สำเร็จ: ' + String(e.message || e).slice(0, 200) }); }
     }
     if (action === 'factory_edit' || action === 'factory_move') { // คุณแดนจัดคิว: แก้รายละเอียด/พักเล่มที่ยังไม่เริ่มผลิต · เลื่อนลำดับ (dir -1 ขึ้น, 1 ลง, 'top' บนสุด)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
