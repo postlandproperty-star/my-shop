@@ -1,0 +1,6 @@
+#!/bin/sh
+# ทดสอบก่อนขึ้นเว็บ: push ไป GitHub = Vercel เอาขึ้นเว็บจริง ถ้าไม่ผ่านจะไม่ push (ภาพหน้าจออยู่ใน tests/out/)
+# ข้ามได้ในกรณีจำเป็นจริงๆ เท่านั้น: git push --no-verify
+cd "$(git rev-parse --show-toplevel)" || exit 1
+echo "🧪 ทดสอบก่อนขึ้นเว็บ..."
+npm test --silent || { echo "✗ ไม่ผ่าน ยังไม่ขึ้นเว็บ ดูรายละเอียดด้านบนและภาพใน tests/out/"; exit 1; }

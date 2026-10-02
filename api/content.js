@@ -406,7 +406,13 @@ function aiErr(provider, msg, status) {
   }
   return new Error(`${provider === 'google' ? 'Google' : 'OpenAI'}: ${m}`);
 }
-async function genImage({ model, prompt, quality, refs, aspect }) {
+async function aiMark(provider, ok, msg) { try { const r = await sb('shop_state?id=eq.ai_status&select=data'); const d = r?.[0]?.data || {}; d[provider] = { ok, at: new Date().toISOString(), msg: String(msg || '').slice(0, 200) }; await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ai_status', data: d, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {} }
+async function genImage(opts) {
+  const prov = /^gemini-/.test(String(opts.model || '')) ? 'google' : 'openai';
+  try { const g = await genImageRaw(opts); await aiMark(/^gemini-/.test(g.model) ? 'google' : 'openai', true, ''); return g; }
+  catch (e) { if (e.billing) await aiMark(e.billing, false, e.message); else if (/KEY/.test(e.message)) await aiMark(prov, false, e.message); throw e; }
+}
+async function genImageRaw({ model, prompt, quality, refs, aspect }) {
   const tall = aspect === '3:4'; // ปกแนวตั้งสำหรับหน้าแรกของไฟล์ PDF
   model = IMG_MODEL_RE.test(String(model || '')) ? String(model) : (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2');
   const ref = await loadRefs(refs);
@@ -650,7 +656,7 @@ async function ownerReply(to, text) {
 // ฝ่ายดูแลระบบ "พี่การ์ด": ตรวจสุขภาพระบบด้วยกฎตายตัว (ไม่ใช้ AI) รันทุกเช้าจาก cron keepalive และเรียกเองได้
 async function runHealth(host) {
   const checks = [];
-  const add = (id, ok, level, msg, fix) => checks.push({ id, ok, level: ok ? 'ok' : level, msg, fix: ok ? null : fix });
+  const add = (id, ok, level, msg, fix, url) => checks.push({ id, ok, level: ok ? 'ok' : level, msg, fix: ok ? null : fix, url: ok ? null : url || null });
   const t0 = Date.now();
   let hasCh = false;
   try { hasCh = await channelCol(); const ms = Date.now() - t0; add('db', ms < 4000, 'bad', `ฐานข้อมูลตอบใน ${ms} ms`, 'Supabase ตอบช้าหรือไม่ตอบ เปิด supabase.com ดูว่าโปรเจกต์ถูกพักไหม'); }
@@ -699,10 +705,64 @@ async function runHealth(host) {
       add('secrets', !leak, 'bad', leak ? 'พบคีย์ลับในหน้าเว็บสาธารณะ' : 'หน้าเว็บสาธารณะไม่มีคีย์ลับหลุด', 'หมุนคีย์ทันที (Vercel env + Supabase) และแจ้งพี่การ์ดตรวจโค้ด');
     } catch (e) { add('auth', false, 'warn', 'ทดสอบช่องทางแอดมินไม่ได้: ' + String(e.message).slice(0, 60), ''); }
   }
+  try { await shopChecks(add, host); } catch (e) { add('shop', false, 'warn', 'ตรวจส่วนร้านไม่ครบ: ' + String(e.message).slice(0, 60), '', null); }
   const problems = checks.filter((c) => !c.ok);
   return { ok: problems.filter((c) => c.level === 'bad').length === 0, at: new Date().toISOString(), checks, problems };
 }
+async function storageUsage() {
+  const H = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
+  const list = async (prefix, offset = 0) => { const r = await fetch(`${SB_URL}/storage/v1/object/list/product-images`, { method: 'POST', headers: H, body: JSON.stringify({ prefix, limit: 1000, offset }) }); return r.ok ? r.json() : []; };
+  const out = {}; let files = 0, calls = 0;
+  const walk = async (prefix, top) => { for (let off = 0; calls < 400; off += 1000) { calls++; const rows = await list(prefix, off); for (const x of rows) { if (x.id === null || !x.metadata) await walk(prefix ? `${prefix}/${x.name}` : x.name, top || x.name); else { out[top || '(root)'] = (out[top || '(root)'] || 0) + (Number(x.metadata.size) || 0); files++; } } if (rows.length < 1000) break; } };
+  await walk('', '');
+  const mb = (n) => Math.round(n / 1048576 * 10) / 10; const total = Object.values(out).reduce((a, b) => a + b, 0);
+  return { ok: true, total_mb: mb(total), files, folders: Object.fromEntries(Object.entries(out).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, mb(v)])), partial: calls >= 400 };
+}
+// เช็คเพิ่มของร้าน: เงิน AI, รับเงิน Stripe/PromptPay, อีเมล, IG, บัญชีโฆษณา, พื้นที่เก็บไฟล์, คอมโรงงาน, หน้าเว็บหลัก
+async function shopChecks(add, host) {
+  const link = (u) => u; // fix_url ให้หน้าเว็บทำปุ่ม
+  try {
+    const st = (await sb('shop_state?id=eq.ai_status&select=data'))?.[0]?.data || {};
+    const G = !!process.env.GEMINI_API_KEY, O = !!process.env.OPENAI_API_KEY;
+    const one = (k, has, name, url) => { const x = st[k]; if (!has) return add(`ai_${k}`, false, 'warn', `${name}: ยังไม่ได้ใส่คีย์`, 'ใส่คีย์ใน Vercel', null);
+      add(`ai_${k}`, !x || x.ok, 'warn', !x ? `${name}: ยังไม่เคยใช้ทำรูป` : x.ok ? `${name}: ทำรูปได้ (ล่าสุด ${x.at.slice(5, 16).replace('T', ' ')})` : `${name}: เงินหมด/ใช้ไม่ได้ (${x.at.slice(5, 10)})`, `เติมเงินแล้วลองทำรูปใหม่ 1 รูป สถานะจะเขียวเอง`, url); };
+    one('google', G, 'AI ทำรูป Google (Nano Banana)', 'https://aistudio.google.com/spend');
+    one('openai', O, 'AI ทำรูป OpenAI', 'https://platform.openai.com/settings/organization/billing/overview');
+  } catch (e) {}
+  try {
+    const [bal, acct] = await Promise.all([stripe('GET', 'balance'), stripe('GET', 'account')]);
+    const pp = acct?.capabilities?.promptpay_payments, card = acct?.capabilities?.card_payments;
+    add('stripe', pp === 'active' && card === 'active' && acct?.charges_enabled !== false, 'bad', `Stripe รับเงินได้ · PromptPay ${pp || '-'} · บัตร ${card || '-'}${bal?.available ? ` · ยอดรอโอน ฿${Math.round((bal.pending || []).reduce((a, x) => a + (x.currency === 'thb' ? x.amount : 0), 0) / 100).toLocaleString('th-TH')}` : ''}`, 'เข้า Stripe Dashboard ดูว่ามีอะไรให้ยืนยันตัวตนหรือบัญชีถูกระงับ', 'https://dashboard.stripe.com/');
+  } catch (e) { add('stripe', false, 'bad', 'เชื่อม Stripe ไม่ได้: ' + String(e.message).slice(0, 80), 'เช็ค STRIPE_SECRET_KEY ใน Vercel', 'https://dashboard.stripe.com/'); }
+  try {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) add('mail', false, 'bad', 'ยังไม่ได้ตั้งค่าอีเมลส่งไฟล์ (Gmail)', 'ใส่ GMAIL_USER / GMAIL_APP_PASSWORD ใน Vercel', null);
+    else { const t = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: String(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g, '') } }); await t.verify(); add('mail', true, 'bad', 'อีเมลส่งไฟล์ให้ลูกค้าใช้งานได้', '', null); }
+  } catch (e) { add('mail', false, 'bad', 'อีเมลส่งไฟล์ล็อกอิน Gmail ไม่ได้: ' + String(e.message).slice(0, 60), 'สร้าง App Password ใหม่ใน Google แล้วใส่ใน Vercel', 'https://myaccount.google.com/apppasswords'); }
+  try {
+    const fb = await loadFb();
+    if (fb) add('ig', !!fb.igUserId, 'warn', fb.igUserId ? `เชื่อม Instagram แล้ว (@${fb.igUsername || ''})` : 'ยังไม่ได้เชื่อม Instagram กับเพจ', 'แท็บคอนเทนต์ → เชื่อม Instagram', null);
+    if (fb?.userToken) {
+      const acc = await adsAccess(fb);
+      add('ads', !!acc.ok, 'bad', acc.ok ? `บัญชีโฆษณาปกติ${acc.limit?.capTHB ? ` · วงเงินเหลือ ฿${Math.round(acc.limit.leftTHB).toLocaleString('th-TH')}` : ''}` : 'บัญชีโฆษณามีปัญหา: ' + String(acc.error || acc.reason || '').slice(0, 80), 'เปิดหน้าโฆษณาดูรายละเอียด หรือจ่ายยอดค้างใน Facebook', acc.billing || 'https://business.facebook.com/billing_hub/');
+      if (acc.ok && acc.limit?.capTHB) add('ads_limit', acc.limit.leftTHB >= 300, 'warn', `วงเงินบัญชีโฆษณาเหลือ ฿${Math.round(acc.limit.leftTHB).toLocaleString('th-TH')}`, 'เพิ่มวงเงิน ไม่งั้นแอดจะหยุดเอง', acc.limit.page);
+    }
+  } catch (e) { add('ads', false, 'warn', 'ตรวจบัญชีโฆษณาไม่ได้: ' + String(e.message).slice(0, 60), '', null); }
+  try { const u = await storageUsage(); const pct = Math.round(u.total_mb / 1024 * 100); add('storage', pct < 80, pct < 95 ? 'warn' : 'bad', `พื้นที่เก็บไฟล์ใช้ ${u.total_mb} MB จาก 1 GB (${pct}%)`, 'ลบไฟล์ที่ไม่ใช้ หรืออัปเกรด Supabase', 'https://supabase.com/dashboard'); } catch (e) {}
+  try {
+    const w = (await sb('shop_state?id=eq.factory_worker&select=data'))?.[0]?.data; const jobs = await loadJobs(); const q = jobs.filter((j) => j.status === 'queued' && !j.paused).length;
+    const h = w?.last_seen ? Math.round((Date.now() - Date.parse(w.last_seen)) / 36e5) : null;
+    add('mac', !q || (h != null && h <= 48), 'warn', h == null ? 'คอมโรงงานยังไม่เคยมาเช็คคิว' : `คอมโรงงานเช็คคิวล่าสุด ${h < 1 ? 'ไม่ถึงชั่วโมง' : h + ' ชม.'}ที่แล้ว${q ? ` · มี ${q} เล่มรอ` : ''}`, 'เปิดคอมและแอป Claude ไว้ หรือกดคัดลอกคำสั่งในหน้าโรงงานไปวางในแชต Claude', null);
+  } catch (e) {}
+  if (host) {
+    try {
+      const [home, pg, code] = await Promise.all([fetch(`https://${host}/`), fetch(`https://${host}/sitemap.xml`), fetch(`https://${host}/api/checkout?m=code&code=HEALTHCHECK`)]);
+      const okAll = home.ok && pg.ok && code.ok; const t = okAll ? await home.text() : '';
+      add('site', okAll && t.includes('__SHOP__'), 'bad', okAll ? 'หน้าร้าน แผนผังเว็บ และระบบโค้ดส่วนลดตอบปกติ' : `หน้าเว็บตอบผิดปกติ ${home.status}/${pg.status}/${code.status}`, 'แจ้ง Claude ให้ดู log บน Vercel', null);
+    } catch (e) { add('site', false, 'bad', 'เปิดหน้าเว็บไม่ได้: ' + String(e.message).slice(0, 60), 'แจ้ง Claude ให้ดู Vercel', null); }
+  }
+}
 async function recordHealth(h) {
+  try { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'health_last', data: h, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {}
   const line = h.problems.length ? `ตรวจระบบ ${h.at.slice(0, 10)}: พบ ${h.problems.length} จุด\n` + h.problems.map((c) => `- [${c.level === 'bad' ? 'ด่วน' : 'เตือน'}] ${c.msg} → ${c.fix || ''}`).join('\n') : `ตรวจระบบ ${h.at.slice(0, 10)}: ปกติทั้ง ${h.checks.length} จุด`;
   await logNote('guard', line, 'health');
   for (const c of h.problems) {
@@ -1885,6 +1945,7 @@ export default async function handler(req, res) {
         const rows = await sb(`posts?status=in.(note,log)&source=eq.guard&created_at=gte.${new Date(Date.now() - days * 864e5).toISOString()}&select=kind,text,created_at&order=created_at.desc&limit=60`);
         return res.status(200).json({ ok: true, logs: rows });
       }
+      if (req.query.last) { const r = await sb('shop_state?id=eq.health_last&select=data'); return res.status(200).json(r?.[0]?.data || { ok: null, checks: [], problems: [] }); }
       const h = await runHealth(req.headers.host);
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
@@ -2404,13 +2465,7 @@ export default async function handler(req, res) {
     if (action === 'reel_cleanup') { if (!keyOk(req)) return res.status(401).json({ ok: false }); return res.status(200).json(await cleanupReels()); }
     if (action === 'storage_usage') { // ขนาดไฟล์ใน bucket product-images แยกตามโฟลเดอร์บนสุด (ดูว่าใกล้เต็มโควตาไหม)
       if (!keyOk(req) && !(req.headers.authorization && await verifyAdmin(req.headers.authorization))) return res.status(401).json({ ok: false });
-      const H = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
-      const list = async (prefix, offset = 0) => { const r = await fetch(`${SB_URL}/storage/v1/object/list/product-images`, { method: 'POST', headers: H, body: JSON.stringify({ prefix, limit: 1000, offset }) }); return r.ok ? r.json() : []; };
-      const out = {}; let files = 0, calls = 0;
-      const walk = async (prefix, top) => { for (let off = 0; calls < 400; off += 1000) { calls++; const rows = await list(prefix, off); for (const x of rows) { if (x.id === null || !x.metadata) await walk(prefix ? `${prefix}/${x.name}` : x.name, top || x.name); else { out[top || '(root)'] = (out[top || '(root)'] || 0) + (Number(x.metadata.size) || 0); files++; } } if (rows.length < 1000) break; } };
-      await walk('', '');
-      const mb = (n) => Math.round(n / 1048576 * 10) / 10; const total = Object.values(out).reduce((a, b) => a + b, 0);
-      return res.status(200).json({ ok: true, total_mb: mb(total), files, folders: Object.fromEntries(Object.entries(out).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, mb(v)])), partial: calls >= 400 });
+      return res.status(200).json(await storageUsage());
     }
     if (action === 'capi_check') { // เช็คว่าใส่ FB_CAPI_TOKEN แล้วและใช้กับ Pixel ของร้านได้ (ไม่ส่งเหตุการณ์ซื้อปลอม)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

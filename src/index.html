@@ -403,6 +403,10 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .code-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.code-row .input{flex:1;min-width:140px;text-transform:uppercase}.code-row.ok{background:var(--okbg);border-radius:10px;padding:8px 12px;font-size:14px}
 .linkbtn{background:none;border:0;padding:0;font:inherit;color:#2563EB;text-decoration:underline;cursor:pointer}.code-open{display:block;margin:8px auto 0;font-size:14px}
 .rv-note{margin:4px 0 10px}
+.hcard{margin:0 0 14px}.hc-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.hc-row{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}.hc-row.bad{background:#FFF1F2;border-color:#FECDD3}.hc-row.warn{background:#FFFBEB;border-color:#FDE68A}
+.hc-dot{flex:none;width:10px;height:10px;border-radius:50%;background:#16a34a}.hc-row.bad .hc-dot{background:#dc2626}.hc-row.warn .hc-dot{background:#d97706}
+.hc-msg{flex:1;min-width:0;display:grid;font-size:14px;word-break:break-word}.hc-ok{margin-top:8px}.hc-ok summary{cursor:pointer}
 .dl-all{margin-bottom:0}
 .fq-h{margin:16px 0 10px}.fq-h .fine{font-weight:400;display:block;margin-top:2px}
 .fq-bar{position:sticky;top:0;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;display:grid;gap:8px;box-shadow:0 4px 14px rgba(15,27,51,.06)}
@@ -4431,6 +4435,19 @@ function teamTab(){
 }
 
 /* 📊 ภาพรวม: หน้าแรกของหลังบ้าน เปิดมาเห็นตัวเลขเลย + เรื่องที่รอคุณแดน */
+/* 🩺 สุขภาพร้าน: ผลตรวจล่าสุด (cron ทุกเช้า 10:00 หรือกดตรวจตอนนี้) ไฟเขียว/เหลือง/แดง + ปุ่มแก้ */
+const HEALTH={d:null,loading:false,busy:false};
+function loadHealth(){if(HEALTH.loading)return;HEALTH.loading=true;adminApi('/api/content?action=health&last=1').then(j=>{HEALTH.d=j||{};}).catch(()=>{HEALTH.d={};}).then(()=>{HEALTH.loading=false;render(true);});}
+function healthCard(){if(HEALTH.d===null&&!HEALTH.loading)loadHealth();const h=HEALTH.d||{},C=h.checks||[];
+  const bad=C.filter(c=>c.level==='bad'),warn=C.filter(c=>c.level==='warn'),ok=C.filter(c=>c.ok);
+  const when=h.at?new Date(h.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+  const row=c=>`<li class="hc-row ${c.level}"><span class="hc-dot" aria-hidden="true"></span><span class="hc-msg">${esc(c.msg)}${c.fix?`<span class="fine">${esc(c.fix)}</span>`:''}</span>${c.url?`<a class="btn btn-sm ${c.level==='bad'?'btn-cta':'btn-line'}" href="${esc(c.url)}" target="_blank" rel="noopener noreferrer">แก้ ↗</a>`:''}</li>`;
+  return `<section class="card hcard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+    <h3 class="h3" style="margin:0">🩺 สุขภาพร้าน ${!C.length?'':bad.length?'<span class="badge bad">มีเรื่องด่วน '+bad.length+'</span>':warn.length?'<span class="badge warn">เตือน '+warn.length+'</span>':'<span class="badge ok">ปกติทุกจุด</span>'}</h3>
+    <span class="row" style="gap:6px;align-items:center"><span class="fine">${when?'ตรวจล่าสุด '+when:'ยังไม่เคยตรวจ'}</span><button class="chip" data-a="healthRun" ${HEALTH.busy?'disabled':''}>${HEALTH.busy?'กำลังตรวจ... (~20 วิ)':'ตรวจตอนนี้'}</button></span></div>
+    ${bad.length||warn.length?`<ul class="hc-list">${bad.concat(warn).map(row).join('')}</ul>`:''}
+    ${ok.length?`<details class="hc-ok"><summary class="fine">✓ ปกติ ${ok.length} จุด</summary><ul class="hc-list">${ok.map(row).join('')}</ul></details>`:''}
+    <p class="fine" style="margin:6px 0 0">ระบบตรวจเองทุกเช้า 10:00 · เขียวหมด = ไม่ต้องทำอะไร</p></section>`;}
 function homeTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
@@ -4439,10 +4456,12 @@ function homeTab(){
   const ads=(ADST.d&&ADST.d.ads)||[],A=ADST.d&&ADST.d.access;
   const accBad=A&&!A.ok&&A.reason==='account',adFix=ads.filter(a=>a.group==='fix').length+(accBad?1:0),adWait=(ADA.items||[]).filter(x=>['pending','failed'].includes(x.status)).length;
   const fresh=D.products.filter(p=>p.fresh&&p.status!=='published').length,todo=todoOpenCount();
-  const waits=[[accBad?1:0,'🏦 บัญชีโฆษณาค้างชำระ แอดหยุดหมด','goAdsFix','bad'],[adFix-(accBad?1:0),'🔴 แอดใช้เงินแต่ยังขายไม่ได้','goAdsFix','bad'],[fresh,'✨ สินค้ามาใหม่ รอเผยแพร่','goNew','warn'],[adWait,'📣 แอดรอกดตกลง','goAds','warn'],[todo,'✅ เรื่องในเช็คลิสต์','goTodo','']].filter(w=>w[0]>0);
+  const hBad=((HEALTH.d&&HEALTH.d.checks)||[]).filter(c=>c.level==='bad').length;
+  const waits=[[hBad,'🩺 ระบบมีเรื่องด่วน','goHealth','bad'],[accBad?1:0,'🏦 บัญชีโฆษณาค้างชำระ แอดหยุดหมด','goAdsFix','bad'],[adFix-(accBad?1:0),'🔴 แอดใช้เงินแต่ยังขายไม่ได้','goAdsFix','bad'],[fresh,'✨ สินค้ามาใหม่ รอเผยแพร่','goNew','warn'],[adWait,'📣 แอดรอกดตกลง','goAds','warn'],[todo,'✅ เรื่องในเช็คลิสต์','goTodo','']].filter(w=>w[0]>0);
   const sp=ads.reduce((a,x)=>a+(x.week.spendTHB||0),0),va=ads.reduce((a,x)=>a+(x.week.valueTHB||0),0);
   return `<section class="waitbar">${waits.length?`<b>รอคุณแดน</b>${waits.map(w=>`<button class="wchip ${w[3]}" data-a="${w[2]}">${w[1]}${w[0]>1||w[2]!=='goAdsFix'?` <span>${w[0]}</span>`:''}</button>`).join('')}`:'<b>✓ ไม่มีเรื่องค้าง</b><span class="fine">ทีมดูแลอยู่ เปิดดูตัวเลขด้านล่างได้เลย</span>'}
     ${ads.length?`<button class="wchip info" data-a="tab" data-v="ads">📣 แอด 7 วัน: ค่าแอด ฿${sp.toLocaleString('th-TH')} · ยอดขาย ฿${va.toLocaleString('th-TH')} · <b class="${va-sp>=0?'up':'down'}">${va-sp>=0?'กำไร':'ขาดทุน'} ฿${Math.abs(va-sp).toLocaleString('th-TH')}</b></button>`:''}</section>
+  ${healthCard()}
   ${dashBox()}`;
 }
 function adminView(){
@@ -4720,6 +4739,8 @@ function act(a,el){
     case 'dashRefresh':DASH.d=null;DASH.err='';render(true);break;
     case 'chatPhoto':S.chatPhoto=el.dataset.u;render(true);break;
     case 'chatPhotoClose':S.chatPhoto=null;render(true);break;
+    case 'healthRun':HEALTH.busy=true;render(true);adminApi('/api/content?action=health&record=1').then(j=>{if(!j||!j.checks)throw new Error((j&&j.error)||'ตรวจไม่ได้');HEALTH.d=j;toast(j.problems.length?'พบ '+j.problems.length+' จุดที่ต้องดู':'ปกติทุกจุด ✓');}).catch(e=>toast('ตรวจไม่ได้: '+e.message)).then(()=>{HEALTH.busy=false;render(true);});break;
+    case 'goHealth':{const e=document.querySelector('.hcard');if(e)e.scrollIntoView({behavior:'smooth',block:'start'});break;}
     case 'healthNow':{el.disabled=true;toast('กำลังตรวจระบบ...');adminApi('/api/content?action=health&record=1').then(h=>{if(!h.checks)throw new Error(h.error||'ตรวจไม่ได้');postsLoaded=false;TODO.items=null;return loadPosts().then(()=>{render(true);toast(h.problems.length?'พบ '+h.problems.length+' จุดที่ต้องดู เพิ่มเข้าเช็คลิสต์แล้ว':'ระบบปกติทั้ง '+h.checks.length+' จุด');});}).catch(e=>{toast(e.message);el.disabled=false;});break;}
     case 'todoAnsOpen':{S.todoAns=id;render(true);setTimeout(()=>{const t=document.getElementById('todo-ans-'+id);if(t)t.focus();},0);break;}
     case 'todoAnsCancel':{S.todoAns=null;render(true);break;}

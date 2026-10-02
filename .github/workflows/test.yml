@@ -1,0 +1,17 @@
+# ทดสอบหน้าเว็บทุกครั้งที่มีโค้ดขึ้น GitHub (กันงานที่ push มาจากที่อื่นนอกคอมคุณแดน) · ผลดูได้ที่แท็บ Actions
+name: test
+on: [push]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+        env: { CHROME_PATH: /usr/bin/google-chrome }
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: screenshots, path: tests/out }
