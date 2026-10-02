@@ -105,6 +105,13 @@ export default async function handler(req, res) {
   }
   const slug = String(req.query.p || '');
   const campaign = String(req.query.c || '').slice(0, 60);
+  // ลิงก์จากแอด/ภายนอกที่ชี้มาหน้าบัตร Stripe ตรงๆ (และบอทตรวจลิงก์ของ Facebook) → พาไปส่วนชำระเงินบนหน้าขายของร้าน (QR พร้อมเพย์ขึ้นก่อน)
+  // ปุ่ม "จ่ายด้วยบัตร" บนเว็บร้านส่ง card=1 มาเสมอ จึงไปหน้าบัตรได้ตามเดิม
+  const sameSite = /^https?:\/\/([^/]*\.)?(sheetlabth\.com|my-shop-lake-ten\.vercel\.app)\//i.test(String(req.headers.referer || '')) || req.headers['sec-fetch-site'] === 'same-origin';
+  if (/^[a-z0-9-]{1,80}$/i.test(slug) && req.query.card !== '1' && !sameSite) {
+    const q = new URLSearchParams({ buy: '1', ...(campaign ? { utm_source: 'facebook', utm_medium: 'paid', utm_campaign: campaign } : {}), ...(req.query.plan ? { plan: String(req.query.plan).slice(0, 20) } : {}) });
+    res.setHeader('Cache-Control', 'no-store'); res.setHeader('Location', `/p/${encodeURIComponent(slug)}?${q}`); return res.status(302).end();
+  }
   // อีเมลที่ลูกค้ากรอกในหน้าร้าน: ใช้ส่งไฟล์ และเตือน 1 ครั้งถ้าจ่ายไม่เสร็จ
   const email = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
   if (!configured().stripe) return htmlError(res, 'ร้านยังไม่พร้อมรับชำระเงิน', 'ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY บน Vercel');

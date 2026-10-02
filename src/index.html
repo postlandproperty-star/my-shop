@@ -216,6 +216,7 @@ footer{padding:28px 0 110px;text-align:center}
 .ads-row{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}.ads-row.fix{background:var(--badbg);margin:0 -10px 6px;padding:12px 10px;border-radius:10px;border-top:0}
 .ads-img{width:56px;height:56px;border-radius:8px;object-fit:cover;background:var(--bg);display:block}
 .ads-info{display:grid;gap:4px;min-width:0}.ads-info>b{font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ads-st{display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center}
+.ads-pl{font-size:13.5px}.ads-pl.up b{color:var(--ok)}.ads-pl.down b{color:var(--bad)}
 .ads-todo{font-size:13.5px;font-weight:600;color:var(--bad)}.ads-why{color:var(--bad)}.ads-acts{display:flex;flex-direction:column;gap:6px}
 @media (max-width:760px){.ads-row{grid-template-columns:48px minmax(0,1fr)}.ads-img{width:48px;height:48px}.ads-acts{grid-column:1/-1;flex-direction:row}}
 .adq-plats{display:flex;gap:6px;flex-wrap:wrap}
@@ -1435,7 +1436,7 @@ function paidCard(){return S.sessionId?`<div class="wrap section" style="padding
       `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
   </div></div>`:'';}
 const cartHref=()=>'/checkout';
-const cartCardHref=()=>`/api/checkout?cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}`;
+const cartCardHref=()=>`/api/checkout?card=1&cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}`;
 function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เพิ่มไว้ ${n} เล่ม">✓ เพิ่มแล้ว ${n} เล่ม · ${baht(cartTotal())}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
 function cartBtn(p){if(!cartOk(p)||PV)return '';const n=cartItems().length;
   return CART.includes(p.id)?`<button class="btn btn-line btn-block cart-btn in" data-a="cartOpen">✓ เพิ่มแล้ว · ดูที่เพิ่มไว้ (${n} เล่ม)</button>`
@@ -1738,7 +1739,7 @@ function bundleView(p){
       <div class="card" style="margin-top:14px">
         <div class="bx-sum"><span>ยอดชำระ <span class="fine">· แพ็กเกจ ${esc(sel?sel.name:'')}</span></span><b>${baht(payTotal)}</b></div>
         ${qrBox(p,false,payTotal)}
-        <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?p=${encodeURIComponent(p.slug)}&plan=${encodeURIComponent(sel?sel.key:'')}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>
+        <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}&plan=${encodeURIComponent(sel?sel.key:'')}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>
         ${payLogos(1)}${paySafe()}
         <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทุกเล่มทันทีบนหน้านี้และทางอีเมล</p>
       </div>
@@ -2036,7 +2037,7 @@ function shopView(){
       ${bp2?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${on?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>ซื้อคู่กับ ${esc(bp2.name)} <span class="was">${baht(bp2.price)}</span> ${baht(p.bumpPrice)}${pct>0?` <span class="badge ok">ลด ${pct}%</span>`:''}</b><p>ติ๊กเพิ่มแล้วจ่ายรวมครั้งเดียว ได้ไฟล์ทั้งสองทันทีหลังชำระเงิน</p></label></div>`:''}
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(total)}${on?` <span class="fine">(${baht(p.price)} + ${baht(p.bumpPrice)})</span>`:''}</p>
       ${qrBox(p,on,total)}
-      <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>`;})()}
+      <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>`;})()}
       ${cartBtn(p)}
       ${payLogos(1)}${paySafe()}
       <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
@@ -3595,12 +3596,13 @@ function adsStatusBox(){
     <div class="ads-info"><b>${esc(au?au.name:a.campaign||a.name)}</b>
       <span class="ads-st"><span class="badge ${g[2]}">${g[0]} ${esc(a.label)}</span>${a.dailyTHB?`<span class="fine">≈${money(a.dailyTHB)}/วัน</span>`:''}${a.end&&a.group!=='ended'?`<span class="fine">ถึง ${new Date(a.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}</span>
       ${a.todo?`<span class="ads-todo">👉 ${esc(a.todo)}</span>`:''}${a.reasons.length?`<span class="fine ads-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</span>`:''}
-      <span class="fine">7 วัน: ใช้ไป ${money(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · ซื้อ ${a.week.purchases}${a.week.purchases?` · ต้นทุน/ซื้อ ${money(a.week.spendTHB/a.week.purchases)}`:''}</span></div>
+      <span class="fine">7 วัน: ใช้ไป ${money(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · ซื้อ ${a.week.purchases}${a.week.purchases?` · ต้นทุน/ซื้อ ${money(a.week.spendTHB/a.week.purchases)}`:''}</span>
+      ${a.week.spendTHB?`<span class="ads-pl ${a.week.profitTHB>=0?'up':'down'}">ยอดขายจากแอด ${money(a.week.valueTHB||0)} − ค่าแอด ${money(a.week.spendTHB)} = <b>${a.week.profitTHB>=0?'กำไร':'ขาดทุน'} ${money(Math.abs(a.week.profitTHB||0))}</b></span>`:''}</div>
     <div class="ads-acts">${a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`:a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:''}
       <a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${esc(a.id)}" target="_blank" rel="noopener noreferrer">Ads Manager</a></div></div>`;};
   return `<section class="card adst">
     <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">สถานะแอดทั้งหมด</h3><button class="chip" data-a="adsStRefresh">${ADST.loading?'กำลังโหลด...':'รีเฟรช'}</button></div>
-    <p class="fine" style="margin:4px 0 10px">ดึงจาก Facebook จริงทุกครั้งที่เปิด รวมแอดที่ทำเองใน Ads Manager ด้วย · ตัวเลข 7 วันล่าสุด แปลงเป็นบาทตามเรทวันนี้</p>
+    <p class="fine" style="margin:4px 0 10px">ดึงจาก Facebook จริงทุกครั้งที่เปิด รวมแอดที่ทำเองใน Ads Manager ด้วย · ตัวเลข 7 วันล่าสุด แปลงเป็นบาทตามเรทวันนี้ · ยอดขายคือที่ Facebook นับได้ (ต่อ Conversions API แล้ว ตัวเลขจะครบขึ้นเรื่อยๆ) · แอดที่ใช้เงินเกิน 2 เท่าของราคาสินค้าแล้วยังขายไม่ได้ จะขึ้นในกลุ่ม 🔴 ต้องแก้ไข และน้องบูสต์แจ้งในเช็คลิสต์ทุกวัน</p>
     <div class="adst-chips">${chips.map(c=>`<button class="chip${c[0]==='fix'&&c[2]?' warnchip':''}" data-a="adsFilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>
     ${accBad&&(f==='all'||f==='fix')?`<div class="ads-row fix"><span class="ads-img" style="display:grid;place-items:center;font-size:24px">🏦</span><div class="ads-info"><b>บัญชีโฆษณา</b><span class="ads-st"><span class="badge bad">🔴 ${esc(A.error||'ใช้งานไม่ได้')}</span></span><span class="ads-todo">👉 แก้ที่หน้าการชำระเงิน แอดทุกตัวจะหยุดจนกว่าจะแก้</span></div><div class="ads-acts"><a class="btn btn-cta btn-sm" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">ไปหน้าชำระเงิน</a></div></div>`:''}
     ${d&&!d.ok&&!accBad?`<p class="fine" style="color:var(--bad)">ดึงสถานะไม่ได้: ${esc(d.error||'')}</p>`:''}
@@ -4892,6 +4894,8 @@ function applyUrl(){
     }
     try{if(S.src)sessionStorage.setItem('sl_src',S.src);else S.src=sessionStorage.getItem('sl_src')||'';}catch(e){}
     const sid=q.get('session_id');if(sid&&/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid))S.sessionId=sid;
+    // มาจากแอดที่เคยลิงก์ไปหน้าบัตรตรงๆ (?buy=1): เลื่อนไปส่วนชำระเงิน (QR พร้อมเพย์อยู่บนสุด) ให้เลย
+    if(q.get('buy')==='1'&&m){const pl=q.get('plan');if(pl){S.bplan=S.bplan||{};S.bplan[m[1]]=pl;}setTimeout(()=>{try{glideTo('checkout');}catch(e){}},700);}
     if(q.get('cart')==='open'&&CART.length){S.cart=true;setTimeout(drawCart,50);history.replaceState(null,'',location.pathname);}
     const pi=q.get('pi'),pk=q.get('k');if(pi&&/^pi_[A-Za-z0-9]+$/.test(pi)&&pk){S.sessionId=pi;S.piKey=pk;}
     if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';

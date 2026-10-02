@@ -321,6 +321,34 @@ async function ensureAdDrafts() {
   if (ended) { const cur = await loadAdsAuto(); for (const x of cur) { const y = items.find((z) => z.id === x.id); if (y && y.status === 'ended') x.status = 'ended'; } await saveAdsAuto(cur); }
   return { ok: true, drafted: made };
 }
+// ราคาสินค้าที่แต่ละแคมเปญขาย: แอดอัตโนมัติ (auto-<slug>) · แคมเปญในหลังบ้านที่ผูกสินค้า (ชื่อหรือ fbCampaign ตรงกัน) · ไม่รู้ = ราคาเฉลี่ยสินค้าที่ขายอยู่
+async function adPriceOf() {
+  const [shop, pr, auto] = await Promise.all([loadShop().catch(() => ({ products: [] })), sb('shop_state?id=eq.private&select=data').catch(() => []), loadAdsAuto().catch(() => [])]);
+  const live = shop.products.filter((p) => p.status === 'published' && Number(p.price) >= 1);
+  const avg = live.length ? Math.round(live.reduce((a, p) => a + Number(p.price), 0) / live.length) : 179;
+  const norm = (x) => String(x || '').toLowerCase().replace(/^fb[-_ ]?/, '').replace(/[^a-z0-9ก-๙]/g, '');
+  const camps = pr?.[0]?.data?.campaigns || [];
+  return (name) => {
+    const a = auto.find((x) => x.campaign === name); if (a) return a.price || avg;
+    const c = camps.find((x) => norm(x.name) === norm(name) || norm(x.fbCampaign) === norm(name));
+    const p = c && shop.products.find((x) => x.id === c.productId); return p ? Number(p.price) || avg : avg;
+  };
+}
+// cron วันละครั้ง: แอดที่ใช้เงินเกิน 2 เท่าของราคาแล้วยังขายไม่ได้ → ขึ้นเช็คลิสต์ให้คุณแดนตัดสิน (ไม่หยุดเอง) เตือนซ้ำแอดเดิมทุก 3 วัน
+async function adWatch() {
+  const fb = await loadFb().catch(() => null); if (!fb?.userToken) return { ok: false, skipped: 'no token' };
+  const acc = await adsAccess(fb).catch(() => ({ ok: false }));
+  if (!acc.ok) { if (acc.reason === 'account') await addTodo({ text: `บัญชีโฆษณา Facebook ใช้งานไม่ได้: ${acc.error} แอดทุกตัวหยุดอยู่ เปิดแท็บสินค้าและเซลเพจ → 📣 แอด → ไปหน้าชำระเงิน`, type: 'do', from: 'analyst', link: acc.billing || null }); return { ok: false, account: acc.error }; }
+  const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() });
+  const st = (await sb('shop_state?id=eq.ads_watch&select=data'))?.[0]?.data || {}; const now = Date.now(); const warned = [];
+  for (const a of r.ads.filter((x) => x.burn)) {
+    if (st[a.id] && now - st[a.id] < 3 * 864e5) continue;
+    await addTodo({ text: `แอด "${a.campaign || a.name}" ใช้ไป ฿${a.week.spendTHB} ใน 7 วัน (เกิน 2 เท่าของราคาสินค้า ฿${a.price}) แต่ยังไม่มีคนซื้อ แนะนำหยุดแล้วเปลี่ยนรูป/ข้อความ เปิดแท็บสินค้าและเซลเพจ → 📣 แอด → 🔴 ต้องแก้ไข → ⏸ หยุด`, type: 'decide', from: 'analyst' });
+    st[a.id] = now; warned.push(a.campaign);
+  }
+  if (warned.length) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ads_watch', data: st, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); await chatEvent('analyst', `เจอแอดใช้เงินแต่ยังขายไม่ได้ ${warned.length} ตัวครับ ขึ้นเช็คลิสต์ให้คุณแดนตัดสินแล้ว`, 'ads'); }
+  return { ok: true, warned };
+}
 // คลิป Reels ที่โพสต์ครบทุกช่องแล้ว (เพจ/IG/Threads เก็บคลิปไว้เองแล้ว) ลบไฟล์ออกจากคลังร้าน ไม่ให้พื้นที่เต็ม (คุณแดนสั่ง 1 ต.ค. 69)
 // ลบเมื่อ: ทุกโพสต์ที่ใช้คลิปนั้นโพสต์แล้วหรือถูกปัดตก · โพสต์ล่าสุดผ่านมาแล้ว 3 วัน (เผื่อโพสต์ซ้ำ) · ไม่มี IG ที่ยังประมวลผลค้าง · คลิปที่ถูกปัดตกทั้งหมดลบหลัง 14 วัน
 async function cleanupReels() {
@@ -753,9 +781,11 @@ export default async function handler(req, res) {
       if (cronOk(req)) { try { feedcats = await checkFeedCategories(); } catch (e) { feedcats = { ok: false, error: String(e.message || e) }; } }
       let reelclean = null; // คลิปที่โพสต์แล้ว ลบออกจากคลังร้าน
       if (cronOk(req)) { try { reelclean = await cleanupReels(); } catch (e) { reelclean = { ok: false, error: String(e.message || e) }; } }
+      let adwatch = null; // เฝ้าเงินค่าแอด
+      if (cronOk(req)) { try { adwatch = await adWatch(); } catch (e) { adwatch = { ok: false, error: String(e.message || e) }; } }
       let adsdraft = null; // สินค้าเผยแพร่ใหม่ → ร่างแอดรอคุณแดนกดตกลง
       if (cronOk(req)) { try { adsdraft = await ensureAdDrafts(); } catch (e) { adsdraft = { ok: false, error: String(e.message || e) }; } }
-      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft, reelclean });
+      return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft, reelclean, adwatch });
     }
     if (action === 'shop') {
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -2255,6 +2285,7 @@ export default async function handler(req, res) {
       if (action === 'set_reject') { x.status = 'rejected'; await save(items); return res.status(200).json({ ok: true }); }
       return res.status(400).json({ ok: false, error: 'unknown action' });
     }
+    if (action === 'ad_watch') { if (!keyOk(req)) return res.status(401).json({ ok: false }); return res.status(200).json(await adWatch()); }
     if (action === 'reel_cleanup') { if (!keyOk(req)) return res.status(401).json({ ok: false }); return res.status(200).json(await cleanupReels()); }
     if (action === 'storage_usage') { // ขนาดไฟล์ใน bucket product-images แยกตามโฟลเดอร์บนสุด (ดูว่าใกล้เต็มโควตาไหม)
       if (!keyOk(req) && !(req.headers.authorization && await verifyAdmin(req.headers.authorization))) return res.status(401).json({ ok: false });
@@ -2296,7 +2327,7 @@ export default async function handler(req, res) {
         const fb = await loadFb().catch(() => null);
         const acc = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) }));
         if (!fb?.userToken || (acc.reason === 'token' || acc.reason === 'perm')) return res.status(200).json({ ok: false, access: acc, error: acc.error });
-        try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD' }); return res.status(200).json({ ok: true, access: acc, ...r }); }
+        try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() }); return res.status(200).json({ ok: true, access: acc, ...r }); }
         catch (e) { return res.status(200).json({ ok: false, access: acc, error: String(e.message || e) }); }
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
