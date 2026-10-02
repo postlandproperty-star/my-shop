@@ -399,7 +399,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .st-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;flex-wrap:nowrap}.st-chips .chip{flex:0 0 auto}
 .st-bimg{position:relative;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#fff}.st-bimg img{width:100%;height:100%;object-fit:cover;display:block}.st-bimg .st-badge{left:6px;top:6px}
 .st-bhead{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
-.st-bundles{margin-bottom:12px}
+.st-bundles{margin-bottom:12px;display:grid;gap:10px}.st-bwrap{display:grid;gap:6px}.st-badd{position:static;width:100%}.ct-was{font-weight:400;font-size:.7em;color:var(--muted)}.ct-sheet .code-row{margin:6px 0 10px}.ct-sheet .code-open{margin:2px 0 10px}
 .code-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.code-row .input{flex:1;min-width:140px;text-transform:uppercase}.code-row.ok{background:var(--okbg);border-radius:10px;padding:8px 12px;font-size:14px}
 .linkbtn{background:none;border:0;padding:0;font:inherit;color:#2563EB;text-decoration:underline;cursor:pointer}.code-open{display:block;margin:8px auto 0;font-size:14px}
 .rv-note{margin:4px 0 10px}
@@ -1519,10 +1519,14 @@ function toast(msg){
 /* ตะกร้า: เก็บรหัสสินค้าในเครื่องลูกค้า จ่ายครั้งเดียวผ่าน Stripe (QR พร้อมเพย์/บัตร) ได้ลิงก์ทุกเล่มในออเดอร์เดียว
    เฉพาะเล่มเดี่ยวราคา ≥ 1 · ชุดซื้อจากหน้าชุด (มีแพ็กเกจ) · ปุ่มซื้อทันทีเดิมยังเป็นทางหลัก ตะกร้าเป็นทางเลือกสำหรับคนซื้อหลายเล่ม */
 let CART=(()=>{try{const a=JSON.parse(localStorage.getItem('sl_cart')||'[]');return Array.isArray(a)?a.filter(x=>typeof x==='string').slice(0,20):[];}catch(e){return [];}})();
-const cartOk=p=>!!p&&p.status==='published'&&!isBundle(p)&&Number(p.price)>=1;
+// ตะกร้ารับทั้งเล่มเดี่ยวและชุด (ชุดใช้แพ็กเกจหลัก) · เล่มที่อยู่ในชุดที่ใส่ไว้แล้วถูกเอาออกเอง ไม่จ่ายซ้ำ
+const cartPlan=p=>{if(!isBundle(p))return null;const pl=(p.plans||[]).filter(x=>x.on!==false&&Number(x.price)>=1);return pl.find(x=>x.key===p.planDefault)||pl[0]||null;};
+const cartPrice=p=>isBundle(p)?Number((cartPlan(p)||{}).price)||0:Number(p.price)||0;
+const cartOk=p=>!!p&&p.status==='published'&&(isBundle(p)?!!cartPlan(p):Number(p.price)>=1);
 const cartItems=()=>CART.map(id=>D.products.find(p=>p.id===id)).filter(cartOk);
-const cartTotal=()=>cartItems().reduce((a,p)=>a+Number(p.price),0);
-function cartSave(){try{localStorage.setItem('sl_cart',JSON.stringify(CART));}catch(e){}}
+const cartTotal=()=>cartItems().reduce((a,p)=>a+cartPrice(p),0);
+const cartCovered=id=>CART.map(x=>D.products.find(p=>p.id===x)).some(b=>b&&isBundle(b)&&(b.items||[]).includes(id));
+function cartSave(){const before=CART.length;CART=CART.filter(id=>!cartCovered(id));const dropped=before-CART.length;try{localStorage.setItem('sl_cart',JSON.stringify(CART));}catch(e){}if(dropped)toast(`เอา ${dropped} เล่มที่อยู่ในชุดแล้วออกให้ ไม่ต้องจ่ายซ้ำ`);return dropped;}
 function paidCard(){return S.sessionId?`<div class="wrap section" style="padding-top:20px;padding-bottom:0"><div class="card center" id="paid-card">
     ${!S.order?`<h2 style="margin-bottom:8px">กำลังตรวจสอบการชำระเงิน...</h2><p class="muted">รอสักครู่</p>`:
       S.order.paid?`<h2 style="margin-bottom:8px">ชำระเงินสำเร็จ ขอบคุณครับ</h2>
@@ -1535,10 +1539,10 @@ function paidCard(){return S.sessionId?`<div class="wrap section" style="padding
   </div></div>`:'';}
 const cartHref=()=>'/checkout';
 const cartCardHref=()=>`/api/checkout?card=1&cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}`;
-function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เพิ่มไว้ ${n} เล่ม">✓ เพิ่มแล้ว ${n} เล่ม · ${baht(cartTotal())}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
+function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เพิ่มไว้ ${n} รายการ">✓ เพิ่มแล้ว ${n} รายการ · ${baht(codeOff(cartTotal()))}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
 function cartBtn(p){if(!cartOk(p)||PV)return '';const n=cartItems().length;
   return CART.includes(p.id)?`<button class="btn btn-line btn-block cart-btn in" data-a="cartOpen">✓ เพิ่มแล้ว · ดูที่เพิ่มไว้ (${n} เล่ม)</button>`
-    :`<button class="btn btn-line btn-block cart-btn" data-a="cartAdd" data-id="${esc(p.id)}"><b>+ เพิ่ม</b> <span class="cb-hook">จัดชุดเอง เลือกกี่เล่มก็จ่ายครั้งเดียว</span></button>`;}
+    :`<button class="btn btn-line btn-block cart-btn" data-a="cartAdd" data-id="${esc(p.id)}"><b>+ เพิ่ม</b> <span class="cb-hook">${isBundle(p)?'รวมกับเล่มอื่น เลือกกี่เล่มก็จ่ายครั้งเดียว':'จัดชุดเอง เลือกกี่เล่มก็จ่ายครั้งเดียว'}</span></button>`;}
 function drawCart(){
   const root=$('#cart-root');if(!root)return;
   document.body.style.overflow=S.cart?'hidden':'';
@@ -1546,16 +1550,17 @@ function drawCart(){
   const L=cartItems(),n=L.length,tot=cartTotal();
   // แนะนำเล่มอื่นให้กดเพิ่มต่อได้ในหน้าต่างนี้เลย (หมวดเดียวกับเล่มล่าสุดก่อน) ไม่พาออกจากหน้าที่ดูอยู่
   const last=L[L.length-1],sold=id=>D.orders.filter(o=>o.productId===id&&o.status==='paid').length;
-  const recs=n?D.products.filter(x=>x.status==='published'&&!isBundle(x)&&cartOk(x)&&!CART.includes(x.id)).map(x=>({x,s:(last&&x.cat&&x.cat===last.cat?4:0)+(last&&pfmt(x)===pfmt(last)?2:0)+Math.min(1,sold(x.id)/10)})).sort((a,b)=>b.s-a.s).slice(0,4).map(o=>o.x):[];
-  const bh=n>=2?D.products.filter(b=>isBundle(b)&&b.status==='published').map(b=>({b,k:(b.items||[]).filter(i=>CART.includes(i)).length})).filter(x=>x.k>=2).sort((a,b)=>b.k-a.k)[0]:null;
+  const recs=n?D.products.filter(x=>x.status==='published'&&!isBundle(x)&&cartOk(x)&&!CART.includes(x.id)&&!cartCovered(x.id)).map(x=>({x,s:(last&&x.cat&&x.cat===last.cat?4:0)+(last&&pfmt(x)===pfmt(last)?2:0)+Math.min(1,sold(x.id)/10)})).sort((a,b)=>b.s-a.s).slice(0,4).map(o=>o.x):[];
+  const bh=n>=2&&!L.some(isBundle)?D.products.filter(b=>isBundle(b)&&b.status==='published').map(b=>({b,k:(b.items||[]).filter(i=>CART.includes(i)).length})).filter(x=>x.k>=2).sort((a,b)=>b.k-a.k)[0]:null;
   const justAdded=S.cartJust&&CART.includes(S.cartJust)?getProduct(S.cartJust):null;
   root.innerHTML=`<div class="ct-back" data-a="cartClose"></div>
   <div class="ct-sheet" role="dialog" aria-modal="true" aria-labelledby="ct-h">
-    <div class="ct-head"><h2 id="ct-h">${justAdded?'✓ เพิ่มแล้ว':'เล่มที่เพิ่มไว้'}${n?` (${n} เล่ม)`:''}</h2><button class="ct-x" data-a="cartClose" aria-label="ปิด">×</button></div>
-    ${n?`<ul class="ct-list">${L.map(p=>{const img=(p.images||[])[0];return `<li><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56">`:cover(p.color,p.kind||'other')}</span><span class="ct-nm"><b>${esc(p.name)}</b><span>${baht(p.price)}</span></span><button class="ct-rm" data-a="cartRemove" data-id="${esc(p.id)}" aria-label="เอา ${esc(p.name)} ออก">เอาออก</button></li>`;}).join('')}</ul>
+    <div class="ct-head"><h2 id="ct-h">${justAdded?'✓ เพิ่มแล้ว':'เล่มที่เพิ่มไว้'}${n?` (${n} รายการ)`:''}</h2><button class="ct-x" data-a="cartClose" aria-label="ปิด">×</button></div>
+    ${n?`<ul class="ct-list">${L.map(p=>{const img=(p.images||[])[0];return `<li><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56">`:cover(p.color,p.kind||'other')}</span><span class="ct-nm"><b>${isBundle(p)?'📦 ':''}${esc(p.name)}</b><span>${baht(cartPrice(p))}${isBundle(p)?` · ชุด ${(p.items||[]).length} เล่ม`:''}</span></span><button class="ct-rm" data-a="cartRemove" data-id="${esc(p.id)}" aria-label="เอา ${esc(p.name)} ออก">เอาออก</button></li>`;}).join('')}</ul>
       ${bh?`<a class="ct-hint" href="/p/${esc(bh.b.slug)}" data-go="${esc(bh.b.id)}">💡 ${bh.k} เล่มนี้อยู่ใน${esc(bh.b.name)} ซื้อเป็นชุดอาจคุ้มกว่า (เริ่มต้น ${baht(fromPrice(bh.b))}) ดูชุด →</a>`:''}
-      <div class="ct-sum"><span>รวม ${n} รายการ</span><b>${baht(tot)}</b></div>
-      <a class="btn btn-buy btn-block ct-pay" href="${cartHref()}" data-a="cartPay">ชำระเงิน ${baht(tot)}</a>
+      <div class="ct-sum"><span>รวม ${n} รายการ</span><b>${S.code?`<s class="ct-was">${baht(tot)}</s> `:''}${baht(codeOff(tot))}</b></div>
+      ${codeRow()}
+      <a class="btn btn-buy btn-block ct-pay" href="${cartHref()}" data-a="cartPay">ชำระเงิน ${baht(codeOff(tot))}</a>
       <p class="fine ct-note">จ่ายครั้งเดียวด้วย QR พร้อมเพย์ หรือบัตร · ได้ลิงก์ดาวน์โหลดทุกเล่มทันทีหลังจ่าย และส่งเข้าอีเมลด้วย</p>
       ${recs.length?`<div class="ct-recs"><b class="ct-rh">ซื้อเพิ่มอีกเล่ม จ่ายครั้งเดียว</b><ul>${recs.map(x=>{const img=(x.images||[])[0];return `<li><a class="ct-rl" href="/p/${esc(x.slug)}" data-go="${esc(x.id)}"><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56" loading="lazy">`:cover(x.color,x.kind||'other')}</span><span class="ct-nm"><b>${esc(x.name)}</b><span>${baht(x.price)}</span></span></a><button class="ct-add" data-a="cartAddIn" data-id="${esc(x.id)}" aria-label="เพิ่ม ${esc(x.name)}">+ เพิ่ม</button></li>`;}).join('')}</ul></div>`:''}`
       :`<p class="ct-empty">ยังไม่ได้เพิ่มเล่มไหน</p>`}
@@ -1898,6 +1903,7 @@ function bundleView(p){
       <div class="card" style="margin-top:14px">
         <div class="bx-sum"><span>ยอดชำระ <span class="fine">· แพ็กเกจ ${esc(sel?sel.name:'')}</span></span><b>${baht(payTotal)}</b></div>
         ${qrBox(p,false,payTotal)}
+        ${cartBtn(p)}
         <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}&plan=${encodeURIComponent(sel?sel.key:'')}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>
         ${payLogos(1)}${paySafe()}
         <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทุกเล่มทันทีบนหน้านี้และทางอีเมล</p>
@@ -2023,7 +2029,7 @@ function storeView(){
     ${LEVELQ?`<a class="st-level" href="/quiz/${esc(LEVELQ.slug)}"><span><b>วัดระดับ TOEIC ฟรี ${LEVELQ.n} ข้อ</b><span class="fine">รู้ผลทันที พร้อมคำแนะนำว่าควรเริ่มฝึกตรงไหน</span></span><span class="st-go">เริ่มเลย →</span></a>`:''}
     <section class="st-sec" aria-labelledby="st-s"><h2 id="st-s" class="st-h2">สินค้าทั้งหมด</h2>
       ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
-      ${shownB.length?`<div class="st-bundles">${shownB.map(bcard).join('')}</div>`:''}
+      ${shownB.length?`<div class="st-bundles">${shownB.map(b=>{const on=CART.includes(b.id);return `<div class="st-bwrap">${bcard(b)}${cartOk(b)&&!PV?`<button class="st-add st-badd${on?' on':''}" data-a="cartTick" data-id="${esc(b.id)}" aria-pressed="${on}" aria-label="${on?'เอาออก':'เพิ่ม'} ${esc(b.name)}">${on?'✓ เพิ่มแล้ว':'+ เพิ่มชุดนี้'}</button>`:''}</div>`;}).join('')}</div>`:''}
       ${shown.some(cartOk)&&!PV?`<p class="st-pickhint">ซื้อหลายเล่ม: กด + เพิ่ม ใต้ราคา แล้วกดชำระเงินครั้งเดียว</p>`:''}
       ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
     </section>
@@ -2049,10 +2055,11 @@ function cartView(){
   if(S.sessionId)return `${top}${paidCard()}<div class="wrap" style="max-width:560px;padding:12px 16px 40px"><button class="btn btn-line btn-block" data-a="coDone">กลับหน้าร้าน</button></div>`;
   if(!L.length)return `${top}<div class="wrap" style="max-width:560px;padding:24px 16px 40px"><div class="card center"><h2 style="margin:0 0 8px">ยังไม่ได้เพิ่มเล่มไหน</h2><p class="muted" style="margin:0 0 14px">กด + เพิ่ม ใต้ราคาในหน้าร้านเพื่อซื้อหลายเล่ม แล้วจ่ายครั้งเดียว</p><a class="btn btn-buy" href="/" data-go="">ไปหน้าร้าน</a></div></div>`;
   return `${top}<div class="wrap co" style="max-width:560px;padding:18px 16px 40px">
-    <h1 class="co-h">ชำระเงิน ${L.length} เล่ม</h1>
+    <h1 class="co-h">ชำระเงิน ${L.length} รายการ</h1>
     <div class="card">
-      <ul class="ct-list">${L.map(p=>{const img=(p.images||[])[0];return `<li><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56">`:cover(p.color,p.kind||'other')}</span><span class="ct-nm"><b>${esc(p.name)}</b><span>${baht(p.price)}</span></span><button class="ct-rm" data-a="cartRemove" data-id="${esc(p.id)}" aria-label="เอา ${esc(p.name)} ออก">เอาออก</button></li>`;}).join('')}</ul>
-      <div class="ct-sum"><span>รวม ${L.length} เล่ม</span><b>${baht(tot)}</b></div>
+      <ul class="ct-list">${L.map(p=>{const img=(p.images||[])[0];return `<li><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56">`:cover(p.color,p.kind||'other')}</span><span class="ct-nm"><b>${isBundle(p)?'📦 ':''}${esc(p.name)}</b><span>${baht(cartPrice(p))}${isBundle(p)?` · ชุด ${(p.items||[]).length} เล่ม`:''}</span></span><button class="ct-rm" data-a="cartRemove" data-id="${esc(p.id)}" aria-label="เอา ${esc(p.name)} ออก">เอาออก</button></li>`;}).join('')}</ul>
+      <div class="ct-sum"><span>รวม ${L.length} รายการ</span><b>${S.code?`<s class="ct-was">${baht(tot)}</s> `:''}${baht(codeOff(tot))}</b></div>
+      ${codeRow()}
       ${qrBox({slug:'__cart__'},false,tot)}
       <a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(cartCardHref())}">จ่ายด้วยบัตรเครดิต / เดบิต</a>
       ${payLogos(1)}${paySafe()}
@@ -4614,9 +4621,9 @@ function act(a,el){
     case 'recheckOrder':verifyOrder();break;
     case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
-    case 'codeOpen':S.codeOpen=true;render(true);setTimeout(()=>{const i=document.getElementById('code-in');if(i)i.focus();},30);break;
+    case 'codeOpen':S.codeOpen=true;render(true);if(S.cart)drawCart();setTimeout(()=>{const i=document.getElementById('code-in');if(i)i.focus();},30);break;
     case 'codeApply':codeApply(S.form.codeIn||(document.getElementById('code-in')||{}).value);break;
-    case 'codeDel':S.code=null;S.codeOpen=false;try{sessionStorage.removeItem('sl_code');}catch(e){}render(true);break;
+    case 'codeDel':S.code=null;S.codeOpen=false;try{sessionStorage.removeItem('sl_code');}catch(e){}render(true);if(S.cart)drawCart();break;
     case 'leadAuto':{const v=!LEADS.auto;authFetch('/api/content?action=leads',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:v})}).then(j=>{if(j&&j.ok){LEADS.auto=j.auto;toast(j.auto?'เปิดให้น้องคอมส่งเตือนอัตโนมัติแล้ว':'ปิดการส่งอัตโนมัติแล้ว');render(true);}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
     case 'leadTestsSave':{const em=String(LEADS.tests||'').split(/[\s,]+/).filter(Boolean);authFetch('/api/content?action=test_emails',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails:em})}).then(j=>{if(j&&j.ok){LEADS.tests=j.testEmails.join('\n');toast('บันทึกแล้ว '+j.testEmails.length+' อีเมล');LEADS.list=null;render(true);}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
     case 'leadsRefresh':LEADS.list=null;LEADS.msg='';render(true);break;
@@ -4758,14 +4765,15 @@ function act(a,el){
     case 'exportOne':{const p=getProduct(el.dataset.id);if(p)exportCsv(p);break;}
     case 'exportOneImgs':{const p=getProduct(el.dataset.id);if(p&&!S.zipBusy)exportImgs(p);break;}
     case 'facAiToggle':FAC.aiOff=Object.assign(FAC.aiOff||{},{[el.dataset.id]:!el.checked});break;
-    case 'cartAdd':case 'cartAddIn':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));}
+    case 'cartAdd':case 'cartAddIn':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){if(cartCovered(id)){toast('เล่มนี้อยู่ในชุดที่เพิ่มไว้แล้ว');S.cart=true;drawCart._f=false;drawCart();break;}CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:cartPrice(p),currency:'THB'},S.src?{campaign:S.src}:{}));}
       // กดเพิ่มแล้วเปิดหน้าต่าง "✓ เพิ่มแล้ว" + แนะนำเล่มอื่น + ปุ่มชำระเงิน (แบบ Shopee) อยู่หน้าเดิม ไม่พาไปไหน
       S.cartJust=id;S.cart=true;if(a==='cartAdd')drawCart._f=false;render(true);drawCart();break;}
     case 'cartOpen':S.cart=true;S.cartJust=null;drawCart._f=false;drawCart();break;
     case 'cartTick':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;
       if(CART.includes(id)){CART=CART.filter(x=>x!==id);toast('เอาออกแล้ว');}
-      else{CART.push(id);CART=CART.slice(-20);track('AddToCart',Object.assign({content_name:p.name,value:Number(p.price),currency:'THB'},S.src?{campaign:S.src}:{}));toast(`เพิ่มแล้ว ${cartItems().length} เล่ม`);}
-      cartSave();render(true);break;}
+      else if(cartCovered(id)){toast('เล่มนี้อยู่ในชุดที่เพิ่มไว้แล้ว');break;}
+      else{CART.push(id);CART=CART.slice(-20);track('AddToCart',Object.assign({content_name:p.name,value:cartPrice(p),currency:'THB'},S.src?{campaign:S.src}:{}));if(!cartSave())toast(`เพิ่มแล้ว ${cartItems().length} รายการ`);}
+      render(true);break;}
     case 'cartClose':S.cart=false;S.cartJust=null;drawCart();break;
     case 'cartRemove':CART=CART.filter(x=>x!==id);cartSave();drawCart();render(true);break;
     case 'cartMore':S.cart=false;drawCart();if(S.view!=='store')navTo('/');break;
@@ -5108,7 +5116,7 @@ function codeRow(){return S.code?`<div class="code-row ok">🎟 โค้ด <b>
   :`<button class="linkbtn code-open" data-a="codeOpen">🎟 มีโค้ดส่วนลด?</button>`;}
 async function codeApply(c,quiet){c=String(c||'').trim();if(!c)return;S.codeBusy=true;S.codeErr='';if(!quiet)render(true);
   try{const j=await fetch('/api/checkout?m=code&code='+encodeURIComponent(c)).then(r=>r.json());if(j.ok){S.code={code:j.code,pct:j.pct};try{sessionStorage.setItem('sl_code',j.code);}catch(e){}if(!quiet)toast('ใช้โค้ดแล้ว ลด '+j.pct+'%');}else S.codeErr=j.error||'ใช้โค้ดไม่ได้';}
-  catch(e){S.codeErr='ตรวจโค้ดไม่ได้ ลองใหม่';}S.codeBusy=false;render(true);}
+  catch(e){S.codeErr='ตรวจโค้ดไม่ได้ ลองใหม่';}S.codeBusy=false;render(true);if(S.cart)drawCart();}
 function qrBox(p,on,total){return `<div id="qrslot" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">${qrInner(p.slug,on,total)}</div>`;}
 function qrPaint(focus){ // วาดใหม่เฉพาะกล่อง QR ไม่แตะส่วนอื่นของหน้า
   const el=document.getElementById('qrslot');if(!el)return render(true);
@@ -5126,9 +5134,9 @@ function qrInner(slug,on,total){
       <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(S.form.qrEmail||q.email||'')}" data-f="qrEmail">
       <p class="fine" style="margin:6px 0 10px">ธนาคารต้องใช้อีเมลนี้ยืนยันการจ่ายผ่าน PromptPay ระบบจะส่งลิงก์ดาวน์โหลดไปที่อีเมลนี้ และแสดงบนหน้านี้ทันทีหลังจ่าย</p>
       ${q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:0 0 8px">${esc(q.err)}</p>`:''}
-      ${codeRow()}
+      ${slug==='__cart__'?'':codeRow()}
       <button class="btn btn-buy btn-block" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}">แสดง QR ชำระเงิน ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>
-    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>${codeRow()}`;
+    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>`;
   }
   if(q.step==='loading')return `<div class="qpay center"><p class="muted">กำลังสร้าง QR…</p></div>`;
   return `<div class="qpay center" id="qrbox">

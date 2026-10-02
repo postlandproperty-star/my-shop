@@ -6,6 +6,15 @@ import { loadShop, stripe, configured, htmlError, createQrPayment, bundlePlan } 
 import { checkReward, stripeRewardCoupon } from '../lib/rewards.js';
 // โค้ดส่วนลด (โค้ดขอบคุณคนรีวิว): ลดยอด QR หรือใส่คูปองในหน้าบัตร · โค้ดผิด/หมดอายุ = ไม่ลด
 const offAmt = (amount, rw) => rw ? Math.max(1, Math.round(amount * (100 - rw.pct) / 100)) : amount;
+// ตะกร้า: เล่มเดี่ยว + ชุด (ชุดคิดราคาแพ็กเกจหลัก) · เล่มที่อยู่ในชุดที่ใส่มาด้วยตัดออก ไม่เก็บเงินซ้ำ
+function cartPick(shop, ids) {
+  const ok = (x) => x && x.status === 'published' && (x.type === 'bundle' ? !!bundlePlan(x, '') : Number(x.price) >= 1);
+  let ps = ids.map((id) => shop.products.find((x) => x.id === id)).filter(ok);
+  const inB = new Set(ps.filter((x) => x.type === 'bundle').flatMap((b) => b.items || []));
+  ps = ps.filter((x) => x.type === 'bundle' || !inB.has(x.id));
+  return ps.map((x) => { const pl = x.type === 'bundle' ? bundlePlan(x, '') : null; return Object.assign(Object.create(x), { id: x.id, slug: x.slug, images: x.images, headline: x.headline, price: pl ? Number(pl.price) : Number(x.price), name: pl ? `${x.name} · แพ็กเกจ ${pl.name}` : x.name, planKey: pl ? pl.key : '' }); });
+}
+const cartPlans = (ps) => ps.filter((x) => x.planKey).map((x) => `${x.id}:${x.planKey}`).join(',');
 async function rewardOf(code) { if (!code) return null; try { const r = await checkReward(code); return r.ok ? r : null; } catch (e) { return null; } }
 async function cardDiscount(base, rw) { if (!rw) return base; const coupon = await stripeRewardCoupon(rw.pct); const { allow_promotion_codes, ...rest } = base; return { ...rest, discounts: [{ coupon }], metadata: { ...rest.metadata, reward: rw.code } }; }
 
@@ -20,12 +29,12 @@ async function qr(req, res) {
   if (b.code && !rw) return res.status(400).json({ ok: false, error: 'โค้ดส่วนลดใช้ไม่ได้ (ไม่พบ ใช้แล้ว หรือหมดอายุ)' });
   if (b.cart) { // หลายเล่มที่ลูกค้าติ๊กเลือก: QR เดียวยอดรวม ได้ลิงก์ทุกเล่มหลังจ่าย
     const ids = [...new Set((Array.isArray(b.cart) ? b.cart : String(b.cart).split(',')).map((s) => String(s).trim()).filter((s) => /^[A-Za-z0-9_-]{1,60}$/.test(s)))].slice(0, 20);
-    const ps = ids.map((id) => shop.products.find((x) => x.id === id && x.status === 'published' && x.type !== 'bundle' && Number(x.price) >= 1)).filter(Boolean);
+    const ps = cartPick(shop, ids);
     if (!ps.length) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้าที่เลือก กลับไปเลือกใหม่ที่หน้าร้าน' });
     let pname = ps.map((p) => p.name).join(' + '); if (pname.length > 400) pname = `${ps[0].name.slice(0, 200)} + อีก ${ps.length - 1} รายการ`;
     try {
       const r = await createQrPayment({ amount: offAmt(ps.reduce((a, p) => a + Number(p.price), 0), rw), email, description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) + (rw ? ` (โค้ด ${rw.code} -${rw.pct}%)` : '') + ' QR',
-        metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '', ...(rw ? { reward: rw.code } : {}), ...capiMeta(req) } });
+        metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), cartPlans: cartPlans(ps), plan: '', bumpProductId: '', bumpProductName: '', ...(rw ? { reward: rw.code } : {}), ...capiMeta(req) } });
       if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' });
       return res.status(200).json({ ok: true, ...r });
     } catch (e) { console.error(e); return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' }); }
@@ -74,7 +83,7 @@ async function cartCheckout(req, res) {
   const campaign = String(req.query.c || '').slice(0, 60);
   const email = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
   const shop = await loadShop();
-  const ps = ids.map((id) => shop.products.find((x) => x.id === id && x.status === 'published' && x.type !== 'bundle' && Number(x.price) >= 1)).filter(Boolean);
+  const ps = cartPick(shop, ids);
   if (!ps.length) return htmlError(res, 'ตะกร้าว่าง', 'สินค้าในตะกร้าอาจถูกปิดการขายแล้ว กลับไปเลือกใหม่ที่หน้าร้าน');
   const origin = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
   let pname = ps.map((p) => p.name).join(' + ');
@@ -87,7 +96,7 @@ async function cartCheckout(req, res) {
     allow_promotion_codes: true,
     success_url: `${origin}/checkout?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/checkout`,
-    metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign, cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '', ...capiMeta(req) },
+    metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign, cart: ps.map((p) => p.id).join(','), cartPlans: cartPlans(ps), plan: '', bumpProductId: '', bumpProductName: '', ...capiMeta(req) },
     payment_intent_data: { description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) },
   };
   if (email) { base.customer_email = email; base.metadata.remind = '1'; base.expires_at = Math.floor(Date.now() / 1000) + 2 * 3600; }
