@@ -396,6 +396,9 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-hero p{margin:0;opacity:.92}
 .bx-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
 .bxe-file{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-top:2px}.bxe-file a,.bxe-file label{color:#2563EB;cursor:pointer;text-decoration:underline}
+.code-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.code-row .input{flex:1;min-width:140px;text-transform:uppercase}.code-row.ok{background:var(--okbg);border-radius:10px;padding:8px 12px;font-size:14px}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:#2563EB;text-decoration:underline;cursor:pointer}.code-open{display:block;margin:8px auto 0;font-size:14px}
+.rv-note{margin:4px 0 10px}
 .dl-all{margin-bottom:0}
 .fq-h{margin:16px 0 10px}.fq-h .fine{font-weight:400;display:block;margin-top:2px}
 .fq-bar{position:sticky;top:0;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;display:grid;gap:8px;box-shadow:0 4px 14px rgba(15,27,51,.06)}
@@ -1527,7 +1530,7 @@ function paidCard(){return S.sessionId?`<div class="wrap section" style="padding
       `<h2 style="margin-bottom:8px">ยังไม่พบการชำระเงิน</h2><p class="muted" style="margin-bottom:12px">ถ้าเพิ่งจ่ายผ่าน PromptPay ระบบอาจใช้เวลาสักครู่ กดตรวจสอบอีกครั้ง</p><button class="btn btn-dark btn-sm" data-a="recheckOrder">ตรวจสอบอีกครั้ง</button>`}
   </div></div>`:'';}
 const cartHref=()=>'/checkout';
-const cartCardHref=()=>`/api/checkout?card=1&cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}`;
+const cartCardHref=()=>`/api/checkout?card=1&cart=${encodeURIComponent(cartItems().map(p=>p.id).join(','))}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}`;
 function cartFab(){const n=cartItems().length;return n&&!PV?`<div class="cartfab"><button class="cf-l" data-a="cartOpen" aria-label="ดูเล่มที่เพิ่มไว้ ${n} เล่ม">✓ เพิ่มแล้ว ${n} เล่ม · ${baht(cartTotal())}</button><a class="cf-r" href="${cartHref()}" data-a="cartPay">ชำระเงิน →</a></div>`:'';}
 function cartBtn(p){if(!cartOk(p)||PV)return '';const n=cartItems().length;
   return CART.includes(p.id)?`<button class="btn btn-line btn-block cart-btn in" data-a="cartOpen">✓ เพิ่มแล้ว · ดูที่เพิ่มไว้ (${n} เล่ม)</button>`
@@ -1659,7 +1662,11 @@ async function bxPdfCover(b){if(!b.bookCover)throw new Error('ยังไม่
   const flat=await uploadImage(await toJpeg(await bxAiRaw(BX_FLAT,[b.bookCover],'3:4'),1400));
   const r=await authFetch('/api/content?action=pdf_cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdf:src,image:flat,name:b.slug||'',title:b.name||''})});
   if(!r||!r.ok)throw new Error((r&&r.error)||'ใส่ปกในไฟล์ไม่สำเร็จ');
-  if(!b.linkOrig)b.linkOrig=b.link;b.link=r.url;b.pdfCover=flat;b.pdfFrom=b.bookCover;save();return r;}
+  const prev=b.linkOrig&&b.link!==b.linkOrig?b.link:'';
+  if(!b.linkOrig)b.linkOrig=b.link;b.link=r.url;b.pdfCover=flat;b.pdfFrom=b.bookCover;save();
+  if(prev)bxDropFile(prev);return r;}
+// เก็บแค่ไฟล์ต้นฉบับ + รุ่นที่ใช้อยู่ รุ่นก่อนหน้าลบทิ้งหลังบันทึกแล้ว (ไม่เปลือง storage)
+async function bxDropFile(url){try{clearTimeout(saveTimer);if(!(await flushRemote()))return;await authFetch('/api/content?action=file_remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});}catch(e){}}
 async function bxAiImage(prompt,refs){const img=await bxAiRaw(prompt,refs);const blob=await (await fetch(img)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
 const bxOrig=b=>b.origImg||(b.images||[]).find(u=>u!==b.bookCover)||'';
 function bxUseCover(b,on){if(!b.bookCover)return;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
@@ -1764,7 +1771,7 @@ function bundleForm(){
       <div class="bxi-refs"><span class="fine">รูปตัวอย่างปกที่ชอบ (ไม่บังคับ สูงสุด 3 รูป · ใช้แทนโทนสีด้านบน ไม่ใช้ปกเดิมของเล่ม)</span><div class="bxi-refrow">${(st.refs||[]).map((u,k)=>`<span class="bxi-ref"><img src="${esc(u)}" alt="รูปตัวอย่าง ${k+1}"><button data-a="bxRefDel" data-v="${k}" aria-label="เอารูปนี้ออก">×</button></span>`).join('')}${(st.refs||[]).length<3?`<label class="bxi-refadd">${S.bxRefUp?'กำลังอัป...':'+ เพิ่มรูปตัวอย่าง'}<input type="file" accept="image/*" hidden data-bxref="1"></label>`:''}</div></div>
       <input class="input" data-bxs="note" value="${esc(st.note)}" placeholder="อยากได้แนวไหนเพิ่ม (ไม่ใส่ก็ได้) เช่น มีรูปไอคอนหูฟังสำหรับเล่ม Listening" style="margin:6px 0 4px">
       <p class="fine" style="margin:0 0 8px">ยังเป็นรูปหนังสือเล่มเดียวบนพื้นขาวเหมือนเดิม แต่ดีไซน์ปกใหม่ทั้งชุด เล่มแรกที่ทำจะเป็นต้นแบบให้เล่มที่เหลือใช้สไตล์เดียวกัน</p>`:''}
-    <label class="tgl bxi-pdf"><input type="checkbox" data-a="bxStyle" data-v="pdf:${st.pdf?'0':'1'}" ${st.pdf?'checked':''}> <span>📄 <b>ใส่ปกใหม่ในไฟล์ PDF ด้วย</b> หน้าแรกของไฟล์เปลี่ยนเป็นปกใหม่ (ลูกค้าที่ซื้อหลังจากนี้ได้ไฟล์ใหม่ · ไฟล์เดิมเก็บไว้ สลับกลับได้) ใช้รูปเพิ่มเล่มละ 1 รูป${noFile?` · ${noFile} เล่มยังไม่มีไฟล์ ข้ามไป`:''}</span></label>
+    <label class="tgl bxi-pdf"><input type="checkbox" data-a="bxStyle" data-v="pdf:${st.pdf?'0':'1'}" ${st.pdf?'checked':''}> <span>📄 <b>ใส่ปกใหม่ในไฟล์ PDF ด้วย</b> หน้าแรกของไฟล์เปลี่ยนเป็นปกใหม่ (ลูกค้าที่ซื้อหลังจากนี้ได้ไฟล์ใหม่ · ไฟล์เดิมเก็บไว้ สลับกลับได้) ใช้รูปเพิ่มเล่มละ 1 รูป · เก็บไว้แค่ไฟล์เดิม + ไฟล์ล่าสุด รุ่นก่อนหน้าลบให้อัตโนมัติ${noFile?` · ${noFile} เล่มยังไม่มีไฟล์ ข้ามไป`:''}</span></label>
     <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`).join('')}</div>
     <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b"><button class="bxi-bc" data-a="bxView" data-id="${b.id}" aria-label="ดูปกเล่ม ${i+1} ขนาดใหญ่">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?`<span class="bxi-ok">✓ ปกเรียบ${(b.images||[])[0]===b.bookCover?' · รูปสินค้า':''}</span>`:''}<span class="bxi-zoom" aria-hidden="true">🔍</span></button>
       <span class="fine">เล่ม ${i+1}</span><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button></div>`).join('')}</div>
@@ -1887,7 +1894,7 @@ function bundleView(p){
       <div class="card" style="margin-top:14px">
         <div class="bx-sum"><span>ยอดชำระ <span class="fine">· แพ็กเกจ ${esc(sel?sel.name:'')}</span></span><b>${baht(payTotal)}</b></div>
         ${qrBox(p,false,payTotal)}
-        <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}&plan=${encodeURIComponent(sel?sel.key:'')}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>
+        <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}&plan=${encodeURIComponent(sel?sel.key:'')}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>
         ${payLogos(1)}${paySafe()}
         <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทุกเล่มทันทีบนหน้านี้และทางอีเมล</p>
       </div>
@@ -1950,7 +1957,7 @@ const starStr=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
 const rvLine=p=>{const r=REVIEWS[p.id];return r&&r.count?`<span class="st-rv" aria-label="คะแนน ${r.avg} จาก 5 จาก ${r.count} รีวิว"><b>★ ${r.avg.toFixed(1)}</b> (${r.count})</span>`:'';};
 function rvSection(p,cls){const r=REVIEWS[p.id];if(!r||!r.count)return '';
   return `<section class="${cls}"><div class="${cls==='section'?'wrap':''}"><h2>รีวิวจากผู้ซื้อจริง</h2>
-    <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ทุกรีวิวมาจากคนที่ซื้อจริง</span></div>
+    <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ทุกรีวิวมาจากคนที่ซื้อจริง</span></div><p class="fine rv-note">ผู้รีวิวได้รับโค้ดส่วนลดเล่มถัดไปเป็นการขอบคุณ ไม่ว่าจะให้กี่ดาว</p>
     <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div><span class="rv-ver">✓ ผู้ซื้อจริง${x.em?` · ${esc(x.em)}`:''}</span>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
 const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
@@ -2185,7 +2192,7 @@ function shopView(){
       ${bp2?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${on?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>ซื้อคู่กับ ${esc(bp2.name)} <span class="was">${baht(bp2.price)}</span> ${baht(p.bumpPrice)}${pct>0?` <span class="badge ok">ลด ${pct}%</span>`:''}</b><p>ติ๊กเพิ่มแล้วจ่ายรวมครั้งเดียว ได้ไฟล์ทั้งสองทันทีหลังชำระเงิน</p></label></div>`:''}
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(total)}${on?` <span class="fine">(${baht(p.price)} + ${baht(p.bumpPrice)})</span>`:''}</p>
       ${qrBox(p,on,total)}
-      <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>`;})()}
+      <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>`;})()}
       ${cartBtn(p)}
       ${payLogos(1)}${paySafe()}
       <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
@@ -2973,7 +2980,7 @@ const RVA={list:null,loading:false};
 function loadRVA(){if(RVA.list===null&&!RVA.loading){RVA.loading=true;adminApi('/api/content?action=reviews').then(j=>{RVA.list=j&&j.ok?j.list:[];RVA.sent=j&&j.sent||0;RVA.sentAt=j&&j.sentAt||{};}).catch(()=>{RVA.list=[];RVA.sentAt={};}).then(()=>{RVA.loading=false;render(true);});}}
 function rvReqRow(o){loadRVA();const rv=(RVA.list||[]).find(x=>x.order===o.sid),at=(RVA.sentAt||{})[o.sid];
   return `<div class="rvreq"><button class="btn btn-line btn-sm" data-a="rvReq" data-sid="${esc(o.sid)}" data-to="customer" ${o.email&&!rv?'':'disabled'}>⭐ ${at?'ขอรีวิวอีกครั้ง':'ขอรีวิวตอนนี้'}</button><button class="btn btn-line btn-sm" data-a="rvReq" data-sid="${esc(o.sid)}" data-to="me">ส่งทดสอบถึงอีเมลฉัน</button>
-    <span class="fine">${rv?`รีวิวแล้ว ${starStr(rv.stars)}`:at?'ขอรีวิวแล้ว '+fdt(Date.parse(at)):'ระบบจะขอรีวิวเองหลังซื้อ 3 วัน'}</span></div>`;}
+    <span class="fine">${rv?`รีวิวแล้ว ${starStr(rv.stars)}`:at?'ขอรีวิวแล้ว '+fdt(Date.parse(at)):'ระบบจะขอรีวิวเองหลังซื้อ 1 วัน'}</span></div>`;}
 function reviewBox(){
   loadRVA();
   const L=RVA.list||[];const live=L.filter(x=>x.status!=='hidden');const avg=live.length?(live.reduce((a,x)=>a+x.stars,0)/live.length).toFixed(1):'-';
@@ -4595,6 +4602,9 @@ function act(a,el){
     case 'recheckOrder':verifyOrder();break;
     case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
+    case 'codeOpen':S.codeOpen=true;render(true);setTimeout(()=>{const i=document.getElementById('code-in');if(i)i.focus();},30);break;
+    case 'codeApply':codeApply(S.form.codeIn||(document.getElementById('code-in')||{}).value);break;
+    case 'codeDel':S.code=null;S.codeOpen=false;try{sessionStorage.removeItem('sl_code');}catch(e){}render(true);break;
     case 'leadAuto':{const v=!LEADS.auto;authFetch('/api/content?action=leads',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:v})}).then(j=>{if(j&&j.ok){LEADS.auto=j.auto;toast(j.auto?'เปิดให้น้องคอมส่งเตือนอัตโนมัติแล้ว':'ปิดการส่งอัตโนมัติแล้ว');render(true);}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
     case 'leadTestsSave':{const em=String(LEADS.tests||'').split(/[\s,]+/).filter(Boolean);authFetch('/api/content?action=test_emails',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emails:em})}).then(j=>{if(j&&j.ok){LEADS.tests=j.testEmails.join('\n');toast('บันทึกแล้ว '+j.testEmails.length+' อีเมล');LEADS.list=null;render(true);}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');});break;}
     case 'leadsRefresh':LEADS.list=null;LEADS.msg='';render(true);break;
@@ -4872,7 +4882,7 @@ function act(a,el){
     case 'bxRefDel':{const st=bxStyle();st.refs=(st.refs||[]).filter((u,k)=>k!==Number(el.dataset.v));bxStyleSet('refs',st.refs);render(true);break;}
     case 'bxStyle':{const [k,v]=String(el.dataset.v).split(':');bxStyleSet(k,k==='pdf'?v==='1':v);render(true);break;}
     case 'bxPdf':{const b=getProduct(id);if(!b)break;S.bxImg='pdf:'+id;S.bxImgErr='';render(true);bxPdfCover(b).then(r=>toast(`ใส่ปกในไฟล์แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ใหม่`)).catch(e=>{S.bxImgErr=String(e.message||e);toast(S.bxImgErr);}).then(()=>{S.bxImg='';render(true);});break;}
-    case 'bxPdfUndo':{const b=getProduct(id);if(!b||!b.linkOrig)break;b.link=b.linkOrig;b.pdfFrom='';b.pdfCover='';save();toast('กลับไปใช้ไฟล์เดิมแล้ว');render(true);break;}
+    case 'bxPdfUndo':{const b=getProduct(id);if(!b||!b.linkOrig)break;const gen=b.link;b.link=b.linkOrig;b.pdfFrom='';b.pdfCover='';save();if(gen&&gen!==b.linkOrig)bxDropFile(gen);toast('กลับไปใช้ไฟล์เดิมแล้ว (ไฟล์ปกใหม่ลบทิ้งเพื่อประหยัดพื้นที่)');render(true);break;}
     case 'bxViewGo':{const k=Number(el.dataset.v);if(S.draft&&S.draft.items[k])S.bxView=S.draft.items[k];render(true);break;}
     case 'bxUse':{const b=getProduct(id);if(!b)break;bxUseCover(b,el.dataset.v==='1');save();toast(el.dataset.v==='1'?'ใช้ปกเรียบเป็นรูปสินค้าแล้ว':'กลับไปใช้รูปเดิมแล้ว');render(true);break;}
     case 'bxUseAll':{const L=(S.draft?S.draft.items:[]).map(getProduct).filter(b=>b&&b.bookCover&&(b.images||[])[0]!==b.bookCover);L.forEach(b=>bxUseCover(b,true));save();toast(`ใช้ปกเรียบเป็นรูปสินค้าแล้ว ${L.length} เล่ม`);render(true);break;}
@@ -5078,6 +5088,15 @@ document.addEventListener('submit',e=>{
 });
 
 /* จ่ายด้วย QR PromptPay บนหน้าร้าน: ลูกค้าไม่ต้องออกไปหน้า Stripe (ข้อมูลรอบแรก: ทุกคนที่ถูกพาไปหน้า Stripe ออกโดยไม่กดจ่ายเลย) */
+/* โค้ดส่วนลด (โค้ดขอบคุณคนรีวิว): ใช้กับ QR และบัตร · เซิร์ฟเวอร์ตรวจและคิดยอดจริงเอง */
+const codeOff=t=>S.code?Math.max(1,Math.round(t*(100-S.code.pct)/100)):t;
+const codeQ=()=>S.code?'&code='+encodeURIComponent(S.code.code):'';
+function codeRow(){return S.code?`<div class="code-row ok">🎟 โค้ด <b>${esc(S.code.code)}</b> ลด ${S.code.pct}% แล้ว <button class="linkbtn" data-a="codeDel">เอาออก</button></div>`
+  :S.codeOpen?`<div class="code-row"><input class="input" id="code-in" data-f="codeIn" value="${esc(S.form.codeIn||'')}" placeholder="ใส่โค้ด เช่น TY12AB34" autocapitalize="characters" autocomplete="off"><button class="btn btn-line btn-sm" data-a="codeApply" ${S.codeBusy?'disabled':''}>${S.codeBusy?'กำลังตรวจ...':'ใช้โค้ด'}</button>${S.codeErr?`<span class="fine" role="alert" style="color:var(--bad);width:100%">${esc(S.codeErr)}</span>`:''}</div>`
+  :`<button class="linkbtn code-open" data-a="codeOpen">🎟 มีโค้ดส่วนลด?</button>`;}
+async function codeApply(c,quiet){c=String(c||'').trim();if(!c)return;S.codeBusy=true;S.codeErr='';if(!quiet)render(true);
+  try{const j=await fetch('/api/checkout?m=code&code='+encodeURIComponent(c)).then(r=>r.json());if(j.ok){S.code={code:j.code,pct:j.pct};try{sessionStorage.setItem('sl_code',j.code);}catch(e){}if(!quiet)toast('ใช้โค้ดแล้ว ลด '+j.pct+'%');}else S.codeErr=j.error||'ใช้โค้ดไม่ได้';}
+  catch(e){S.codeErr='ตรวจโค้ดไม่ได้ ลองใหม่';}S.codeBusy=false;render(true);}
 function qrBox(p,on,total){return `<div id="qrslot" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">${qrInner(p.slug,on,total)}</div>`;}
 function qrPaint(focus){ // วาดใหม่เฉพาะกล่อง QR ไม่แตะส่วนอื่นของหน้า
   const el=document.getElementById('qrslot');if(!el)return render(true);
@@ -5095,8 +5114,9 @@ function qrInner(slug,on,total){
       <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(S.form.qrEmail||q.email||'')}" data-f="qrEmail">
       <p class="fine" style="margin:6px 0 10px">ธนาคารต้องใช้อีเมลนี้ยืนยันการจ่ายผ่าน PromptPay ระบบจะส่งลิงก์ดาวน์โหลดไปที่อีเมลนี้ และแสดงบนหน้านี้ทันทีหลังจ่าย</p>
       ${q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:0 0 8px">${esc(q.err)}</p>`:''}
-      <button class="btn btn-buy btn-block" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}">แสดง QR ชำระเงิน ${baht(total)}</button>
-    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${baht(total)}</button>`;
+      ${codeRow()}
+      <button class="btn btn-buy btn-block" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}">แสดง QR ชำระเงิน ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>
+    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>${codeRow()}`;
   }
   if(q.step==='loading')return `<div class="qpay center"><p class="muted">กำลังสร้าง QR…</p></div>`;
   return `<div class="qpay center" id="qrbox">
@@ -5166,7 +5186,7 @@ async function qrMake(el){
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur(); // ปิดคีย์บอร์ดก่อน หน้าจะได้ไม่กระโดด
   S.qr={slug,total,email,step:'loading'};qrPaint();
   try{
-    const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(slug==='__cart__'?{cart:cartItems().map(p=>p.id),c:S.src||'',e:email}:{p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email,plan:(S.bplan||{})[slug]||''})}).then(r=>r.json());
+    const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(slug==='__cart__'?{cart:cartItems().map(p=>p.id),c:S.src||'',e:email,code:S.code?S.code.code:''}:{p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email,plan:(S.bplan||{})[slug]||'',code:S.code?S.code.code:''})}).then(r=>r.json());
     if(!j.ok)throw new Error(j.error||'สร้าง QR ไม่สำเร็จ');
     S.qr={slug,total,email,step:'show',pi:j.pi,k:j.k,png:j.png,hosted:j.hosted};
     qrPaint();qrStop();qrTimer=setInterval(qrPoll,3000);qrPrefetch();
@@ -5266,6 +5286,7 @@ function applyUrl(){
     const sid=q.get('session_id');if(sid&&/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid))S.sessionId=sid;
     // มาจากแอดที่เคยลิงก์ไปหน้าบัตรตรงๆ (?buy=1): เลื่อนไปส่วนชำระเงิน (QR พร้อมเพย์อยู่บนสุด) ให้เลย
     if(q.get('buy')==='1'&&m){const pl=q.get('plan');if(pl){S.bplan=S.bplan||{};S.bplan[m[1]]=pl;}setTimeout(()=>{try{glideTo('checkout');}catch(e){}},700);}
+    {const qc=q.get('code')||(()=>{try{return sessionStorage.getItem('sl_code');}catch(e){return '';}})();if(qc)setTimeout(()=>codeApply(qc,true),300);}
     if(q.get('cart')==='open'&&CART.length){S.cart=true;setTimeout(drawCart,50);history.replaceState(null,'',location.pathname);}
     const pi=q.get('pi'),pk=q.get('k');if(pi&&/^pi_[A-Za-z0-9]+$/.test(pi)&&pk){S.sessionId=pi;S.piKey=pk;}
     if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';

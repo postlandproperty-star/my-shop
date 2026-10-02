@@ -1657,7 +1657,20 @@ export default async function handler(req, res) {
         });
         await RV.saveReviews(d);
         for (const x of low) { try { await addTodo({ text: `รีวิว ${x.stars} ดาว "${x.pname}": ${x.text.slice(0, 120) || '(ไม่มีความเห็น)'} อ่านแล้วถ้าไม่เหมาะซ่อนได้ในแท็บ ⭐ รีวิว หรือทักลูกค้าช่วยแก้ปัญหา`, type: 'decide', from: 'care' }); } catch (e) {} }
-        return res.status(200).json({ ok: true, saved: items.length });
+        // ขอบคุณที่รีวิว (ให้กี่ดาวก็ได้): โค้ดลดเล่มถัดไป ออเดอร์ละ 1 โค้ด + ส่งอีเมลให้เก็บไว้
+        let reward = null;
+        try {
+          const RW = await import('../lib/rewards.js');
+          reward = await RW.issueReward(o, rows[0].email);
+          if (reward && !reward.mailed && rows[0].email && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+            const site = await siteUrl(), until = new Date(reward.expires).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+            const transport = nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: String(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g, '') } });
+            await transport.sendMail({ from: `"SheetLab" <${process.env.GMAIL_USER}>`, to: rows[0].email, subject: `ขอบคุณที่รีวิวครับ 🎁 โค้ดลด ${reward.pct}% เล่มถัดไป`,
+              text: `ขอบคุณที่สละเวลารีวิวครับ\n\nโค้ดส่วนลด ${reward.pct}% สำหรับเล่มถัดไป: ${reward.code}\nใช้ได้ 1 ครั้ง ถึง ${until}\nวิธีใช้: ตอนจ่ายเงินกด "มีโค้ดส่วนลด" แล้วใส่โค้ดนี้ (ใช้ได้ทั้งสแกน QR และบัตร)\n\nเลือกเล่มต่อไปได้ที่ ${site}/?code=${reward.code}` });
+            const d2 = await sb('shop_state?id=eq.rewards&select=data'); const dd = d2?.[0]?.data; if (dd?.codes?.[reward.code]) { dd.codes[reward.code].mailed = new Date().toISOString(); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'rewards', data: dd, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
+          }
+        } catch (e) { console.error('reward', e.message); }
+        return res.status(200).json({ ok: true, saved: items.length, reward: reward ? { code: reward.code, pct: reward.pct, expires: reward.expires } : null });
       }
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (action === 'review_mail') {
@@ -1712,6 +1725,17 @@ export default async function handler(req, res) {
       const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
+    }
+    if (action === 'file_remove') { // คุณแดน: ลบไฟล์ PDF รุ่นที่ไม่ใช้แล้ว (ใน files/ เท่านั้น และต้องไม่มีสินค้าไหนใช้อยู่) ประหยัดพื้นที่
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req);
+      const own = `${SB_URL}/storage/v1/object/public/product-images/`, url = String(body.url || '').split('?')[0];
+      if (!url.startsWith(own + 'files/') || !/\.pdf$/i.test(url)) return res.status(400).json({ ok: false, error: 'ลบได้เฉพาะไฟล์ PDF ในคลังร้าน' });
+      const [main, priv] = await Promise.all([sb('shop_state?id=eq.main&select=data'), sb('shop_state?id=eq.private&select=data')]);
+      if ((JSON.stringify(main?.[0]?.data || {}) + JSON.stringify(priv?.[0]?.data || {})).includes(url)) return res.status(200).json({ ok: false, error: 'ยังมีสินค้าใช้ไฟล์นี้อยู่ ไม่ลบ' });
+      const r = await fetch(`${SB_URL}/storage/v1/object/product-images`, { method: 'DELETE', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [url.slice(own.length)] }) });
+      return res.status(200).json({ ok: r.ok });
     }
     if (action === 'pdf_cover') { // คุณแดน: ทำไฟล์ PDF ใหม่ที่หน้าแรกเป็นปกใหม่ (รูปในคลังร้าน) ไฟล์เดิมไม่แตะ คืนลิงก์ไฟล์ใหม่
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

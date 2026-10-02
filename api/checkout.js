@@ -3,6 +3,11 @@
 // GET /api/checkout?cart=<id,id,...>&c=<campaign>  ตะกร้า: หลายเล่มจ่ายครั้งเดียว (ออเดอร์เดียว ได้ลิงก์ทุกเล่ม)
 import { capiMeta } from '../lib/capi.js';
 import { loadShop, stripe, configured, htmlError, createQrPayment, bundlePlan } from '../lib/shop.js';
+import { checkReward, stripeRewardCoupon } from '../lib/rewards.js';
+// โค้ดส่วนลด (โค้ดขอบคุณคนรีวิว): ลดยอด QR หรือใส่คูปองในหน้าบัตร · โค้ดผิด/หมดอายุ = ไม่ลด
+const offAmt = (amount, rw) => rw ? Math.max(1, Math.round(amount * (100 - rw.pct) / 100)) : amount;
+async function rewardOf(code) { if (!code) return null; try { const r = await checkReward(code); return r.ok ? r : null; } catch (e) { return null; } }
+async function cardDiscount(base, rw) { if (!rw) return base; const coupon = await stripeRewardCoupon(rw.pct); const { allow_promotion_codes, ...rest } = base; return { ...rest, discounts: [{ coupon }], metadata: { ...rest.metadata, reward: rw.code } }; }
 
 // POST /api/checkout?m=qr  JSON {p, bump, c, e} → สร้าง QR PromptPay ให้แสดงบนหน้าร้านเลย (ลูกค้าไม่ต้องออกไปหน้า Stripe)
 async function qr(req, res) {
@@ -11,14 +16,16 @@ async function qr(req, res) {
   const email = String(b.e || '').trim().toLowerCase();
   if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง (ใช้ส่งไฟล์)' });
   const shop = await loadShop();
+  const rw = await rewardOf(b.code);
+  if (b.code && !rw) return res.status(400).json({ ok: false, error: 'โค้ดส่วนลดใช้ไม่ได้ (ไม่พบ ใช้แล้ว หรือหมดอายุ)' });
   if (b.cart) { // หลายเล่มที่ลูกค้าติ๊กเลือก: QR เดียวยอดรวม ได้ลิงก์ทุกเล่มหลังจ่าย
     const ids = [...new Set((Array.isArray(b.cart) ? b.cart : String(b.cart).split(',')).map((s) => String(s).trim()).filter((s) => /^[A-Za-z0-9_-]{1,60}$/.test(s)))].slice(0, 20);
     const ps = ids.map((id) => shop.products.find((x) => x.id === id && x.status === 'published' && x.type !== 'bundle' && Number(x.price) >= 1)).filter(Boolean);
     if (!ps.length) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้าที่เลือก กลับไปเลือกใหม่ที่หน้าร้าน' });
     let pname = ps.map((p) => p.name).join(' + '); if (pname.length > 400) pname = `${ps[0].name.slice(0, 200)} + อีก ${ps.length - 1} รายการ`;
     try {
-      const r = await createQrPayment({ amount: ps.reduce((a, p) => a + Number(p.price), 0), email, description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) + ' QR',
-        metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '', ...capiMeta(req) } });
+      const r = await createQrPayment({ amount: offAmt(ps.reduce((a, p) => a + Number(p.price), 0), rw), email, description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) + (rw ? ` (โค้ด ${rw.code} -${rw.pct}%)` : '') + ' QR',
+        metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), plan: '', bumpProductId: '', bumpProductName: '', ...(rw ? { reward: rw.code } : {}), ...capiMeta(req) } });
       if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' });
       return res.status(200).json({ ok: true, ...r });
     } catch (e) { console.error(e); return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' }); }
@@ -33,9 +40,9 @@ async function qr(req, res) {
   const pname = plan ? `${p.name} · แพ็กเกจ ${plan.name}` : p.name;
   try {
     const r = await createQrPayment({
-      amount: plan ? Number(plan.price) : Number(p.price) + bumpPrice, email,
-      description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug}) QR`,
-      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '', ...capiMeta(req) },
+      amount: offAmt(plan ? Number(plan.price) : Number(p.price) + bumpPrice, rw), email,
+      description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})${rw ? ` (โค้ด ${rw.code} -${rw.pct}%)` : ''} QR`,
+      metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '', ...(rw ? { reward: rw.code } : {}), ...capiMeta(req) },
     });
     if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายผ่านหน้า Stripe แทน' });
     return res.status(200).json({ ok: true, ...r });
@@ -84,15 +91,17 @@ async function cartCheckout(req, res) {
     payment_intent_data: { description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) },
   };
   if (email) { base.customer_email = email; base.metadata.remind = '1'; base.expires_at = Math.floor(Date.now() / 1000) + 2 * 3600; }
+  const cbase = await cardDiscount(base, await rewardOf(req.query.code));
   let session;
-  try { session = await stripe('POST', 'checkout/sessions', email ? { ...base, after_expiration: { recovery: { enabled: true } } } : base); }
-  catch (e) { if (!email) throw e; session = await stripe('POST', 'checkout/sessions', base); }
+  try { session = await stripe('POST', 'checkout/sessions', email ? { ...cbase, after_expiration: { recovery: { enabled: true } } } : cbase); }
+  catch (e) { if (!email) throw e; session = await stripe('POST', 'checkout/sessions', cbase); }
   res.setHeader('Cache-Control', 'no-store');
   res.redirect(303, session.url);
 }
 
 export default async function handler(req, res) {
   if (req.query.m === 'qrimg') { try { return await qrImage(req, res); } catch (e) { console.error(e); return res.status(500).end(); } }
+  if (req.query.m === 'code') { res.setHeader('Cache-Control', 'no-store'); const r = await checkReward(req.query.code).catch(() => ({ ok: false, error: 'ตรวจโค้ดไม่ได้' })); return res.status(200).json(r.ok ? { ok: true, code: r.code, pct: r.pct } : r); }
   if (req.query.m === 'qr') {
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!configured().stripe) return res.status(500).json({ ok: false, error: 'ร้านยังไม่พร้อมรับชำระเงิน' });
@@ -159,9 +168,10 @@ export default async function handler(req, res) {
       base.metadata.remind = '1';
       base.expires_at = Math.floor(Date.now() / 1000) + 2 * 3600; // หมดอายุใน 2 ชม. ระบบจะเตือนรอบถัดไป
     }
+    const cbase = await cardDiscount(base, await rewardOf(req.query.code));
     let session;
-    try { session = await stripe('POST', 'checkout/sessions', email ? { ...base, after_expiration: { recovery: { enabled: true } } } : base); }
-    catch (e) { if (!email) throw e; session = await stripe('POST', 'checkout/sessions', base); } // บางบัญชีเปิดลิงก์กู้ตะกร้าไม่ได้ ใช้ลิงก์หน้าสินค้าแทน
+    try { session = await stripe('POST', 'checkout/sessions', email ? { ...cbase, after_expiration: { recovery: { enabled: true } } } : cbase); }
+    catch (e) { if (!email) throw e; session = await stripe('POST', 'checkout/sessions', cbase); } // บางบัญชีเปิดลิงก์กู้ตะกร้าไม่ได้ ใช้ลิงก์หน้าสินค้าแทน
     res.setHeader('Cache-Control', 'no-store');
     res.redirect(303, session.url);
   } catch (e) {
