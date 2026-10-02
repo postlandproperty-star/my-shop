@@ -62,16 +62,14 @@ async function layout(page, label) {
     const floating = (el) => { for (let x = el; x && x !== document.body; x = x.parentElement) { const p = getComputedStyle(x).position; if (p === 'fixed' || p === 'sticky') return true; } return false; };
     const els = [...document.querySelectorAll('button, a[href], input:not([type=hidden]):not([type=radio]):not([type=checkbox]), select, textarea')]
       .filter((e) => { const b = e.getBoundingClientRect(), s = getComputedStyle(e); if (e.checkVisibility && !e.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false; return b.width > 4 && b.height > 4 && s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0.05 && !floating(e) && !e.closest('[hidden]'); })
-      .map((e) => ({ e, b: e.getBoundingClientRect() }));
+      .map((e) => ({ e, b: e.getBoundingClientRect(), r: [...e.getClientRects()].filter((x) => x.width > 2 && x.height > 2) })); // ลิงก์ที่ขึ้นบรรทัดใหม่: เทียบทีละบรรทัด
     const hits = [];
     for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
       const A = els[i], B = els[j]; if (A.e.contains(B.e) || B.e.contains(A.e)) continue;
       // ปุ่มที่วางทับการ์ดของตัวเองโดยตั้งใจ (absolute อยู่ในกล่องเดียวกัน เช่น + เพิ่ม บนการ์ดสินค้า) ไม่นับ
       if (A.e.parentElement === B.e.parentElement && [A.e, B.e].some((x) => getComputedStyle(x).position === 'absolute')) continue;
-      const w = Math.min(A.b.right, B.b.right) - Math.max(A.b.left, B.b.left), h = Math.min(A.b.bottom, B.b.bottom) - Math.max(A.b.top, B.b.top);
-      if (w <= 2 || h <= 2) continue;
-      const small = Math.min(A.b.width * A.b.height, B.b.width * B.b.height);
-      if ((w * h) / small > 0.3) hits.push(`${(A.e.textContent || A.e.name || A.e.tagName).trim().slice(0, 24)} ⟂ ${(B.e.textContent || B.e.name || B.e.tagName).trim().slice(0, 24)}`);
+      const over = A.r.some((a) => B.r.some((b) => { const w = Math.min(a.right, b.right) - Math.max(a.left, b.left), h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top); return w > 2 && h > 2 && (w * h) / Math.min(a.width * a.height, b.width * b.height) > 0.3; }));
+      if (over) hits.push(`${(A.e.textContent || A.e.name || A.e.tagName).trim().slice(0, 24)} ⟂ ${(B.e.textContent || B.e.name || B.e.tagName).trim().slice(0, 24)}`);
     }
     return { overflow: sw > vw + 2 ? `${sw}px > ${vw}px` : '', hits: hits.slice(0, 5) };
   });
