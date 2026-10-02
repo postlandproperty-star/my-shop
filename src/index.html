@@ -397,6 +397,16 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-tag{display:inline-block;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:999px;padding:3px 12px;font-size:14px}
 .bxe-file{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-top:2px}.bxe-file a,.bxe-file label{color:#2563EB;cursor:pointer;text-decoration:underline}
 .dl-all{margin-bottom:0}
+.fac-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:16px 0 12px}
+.fac-pill{display:inline-flex;align-items:center;border-radius:999px;padding:6px 12px;font-size:13.5px;border:1.5px solid var(--line);background:var(--surface)}.fac-pill.ok{border-color:#86d0ad;background:var(--okbg)}.fac-pill.warn{border-color:#E8A23A;background:var(--warnbg)}
+.fac-steps{display:flex;align-items:stretch;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 12px;padding:2px}
+.fac-step{flex:1 1 0;min-width:120px;display:grid;justify-items:center;gap:2px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:10px 6px;cursor:pointer;font:inherit;color:var(--ink)}
+.fac-step i{font-style:normal;font-size:20px}.fac-step span{font-size:13.5px;font-weight:600;text-align:center}.fac-step b{font-size:22px;line-height:1.1}
+.fac-step[aria-selected="true"]{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}.fac-step.hot{border-color:#EE4D2D;background:#FFF1EE}.fac-step.hot b{color:#EE4D2D}.fac-step.bad b{color:var(--bad)}
+.fac-steps em{align-self:center;color:var(--muted);font-style:normal;font-size:20px}
+.fac-panel{min-height:80px}.fac-empty{padding:20px;text-align:center}
+.fac-order{margin:0 0 14px;border:2px solid #EE4D2D}.fac-more{margin-top:18px}.fac-more>summary{cursor:pointer;list-style:none}.fac-more[open]>summary{margin-bottom:12px}
+@media (max-width:640px){.fac-steps em{display:none}.fac-step{min-width:96px}}
 .fac-worker{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0 0 10px;font-size:14px}.fac-worker.stale{border-color:#E8A23A;background:var(--warnbg)}.fac-worker span{color:var(--warn);font-size:13px}
 .fac-guide{margin:0 0 14px}.fac-guide summary{cursor:pointer;list-style:none}.fac-guide ol{margin:10px 0 6px;padding-left:22px;line-height:1.75;font-size:14.5px}
 .bxi-step{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:16px}.bxi-step span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:14px}
@@ -2705,43 +2715,13 @@ async function factoryOrder(){
   const body={title,lang:f.kind==='notion'&&f.lang==='en'?'en':'th',kind:f.kind==='notion'?'notion':'pdf',category:f.cat,price,audience:String(f.audience||'').trim(),notes:String(f.notes||'').trim(),purpose:(f.kind==='notion'?'Notion template ':'')+(price>=1?'ขาย ผลิตเสร็จแล้วขึ้นรออนุมัติลงหน้าร้าน':'แจกฟรี')};
   if(pages)body.pages=pages;
   try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(j&&j.ok){S.fnew={title:'',cat:f.cat,kind:f.kind,lang:f.lang,pages:'',price:'',audience:'',notes:'',hint:f.hint||''};S.fidea=null;FJOBS=null;toast('ส่งใบสั่งเข้าคิวโรงงานแล้ว');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
+    if(j&&j.ok){S.fnew={title:'',cat:f.cat,kind:f.kind,lang:f.lang,pages:'',price:'',audience:'',notes:'',hint:f.hint||''};S.fidea=null;FJOBS=null;S.fOrder=false;S.ffilter='queued';toast('ส่งใบสั่งเข้าคิวแล้ว คอมจะหยิบไปผลิตรอบถัดไป');}else S.ferr=(j&&j.error)||'สั่งไม่สำเร็จ';}
   catch(e){S.ferr='เชื่อมต่อไม่ได้';}
   S.fbusy=false;render(true);
 }
-function factoryView(){
-  if(FJOBS===null){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
-  const f=S.fnew||(S.fnew={title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''});
-  const nx=nextFactoryRun(),jobs=FJOBS||[];
-  const cnt=k=>jobs.filter(j=>j.status===k).length;
-  const flt=S.ffilter||'active';
-  const shown=jobs.filter(j=>flt==='all'?true:flt==='active'?['queued','producing'].includes(j.status):j.status===flt);
-  const LIST={pending:['รออนุมัติลงขาย','warn'],listed:['ลงขายแล้ว','ok'],rejected:['ไม่ลงขาย','gray']};
-  const who=k=>k==='owner'?'คุณแดน':member(k||'manager').name;
-  const chips=[['active','รอ/กำลังผลิต',cnt('queued')+cnt('producing')],['done','เสร็จแล้ว',cnt('done')],['failed','ไม่สำเร็จ',cnt('failed')],['all','ทั้งหมด',jobs.length]];
-  const lb=(id,t)=>`<label for="${id}">${t}</label>`;
-  return `${ceoBar('factory')}<div class="wrap wide fac" style="padding-bottom:60px">
-    <div class="fac-head"><div class="row" style="gap:10px;align-items:center">${ava('factory')}<div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">ผลิตที่คอมคุณแดน (Cowork) · ในคิว ${cnt('queued')} งาน${cnt('producing')?` · กำลังผลิต ${cnt('producing')}`:''}</span></div></div>
-      <button class="chip" data-a="toFactory">รีเฟรช</button></div>
-    ${(()=>{const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>48*36e5;
-      const when=ago==null?'ยังไม่เคยมาเช็คคิว':h<1?'ไม่ถึงชั่วโมงที่แล้ว':h<48?h+' ชั่วโมงที่แล้ว':Math.round(h/24)+' วันที่แล้ว';
-      return `<div class="fac-worker ${stale&&cnt('queued')?'stale':''}">💻 <b>คอมคุณแดน</b> มาเช็คคิวล่าสุด: ${when}${w&&w.note?` · ${esc(w.note)}`:''}${stale&&cnt('queued')?'<br><span>มีงานรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกดรันงานคิวหนังสือใน Cowork</span>':''}</div>`;})()}
-    <details class="card fac-guide"><summary><b>📖 คู่มือโรงงาน (กดดู)</b> <span class="fine">ผลิตเสร็จแล้วคุณแดนต้องทำอะไร</span></summary>
-      <ol>
-        <li><b>สั่งผลิต</b> ที่กล่อง "สั่งผลิตชีทใหม่" ด้านล่าง (หรือทีมสั่งให้) ใบสั่งเข้าคิวบนเว็บ ยังไม่เสียอะไร</li>
-        <li><b>คอมผลิตให้เอง</b> ตามเวลาที่ตั้งไว้ใน Cowork (คอมต้องเปิดและเปิดแอป Claude ไว้) สถานะจะเปลี่ยนเป็น "กำลังผลิตในคอม" → "ผลิตเสร็จ" ไฟล์อยู่ในเครื่องที่ Documents/Academic ด้วย</li>
-        <li><b>เล่มเดี่ยวเสร็จ</b> → ขึ้นการ์ด <b>"จากโรงงาน รออนุมัติ"</b> ด้านบนนี้และในแท็บสินค้า + แจ้งในเช็คลิสต์ → กดเปิดไฟล์ดูหน้าแรก/หน้ากลาง/หน้าท้าย → ดูราคา → กด <b>อนุมัติ ลงขาย</b> (ระบบทำหน้าตัวอย่างและหน้าขายให้ ติ๊ก "สร้างรูปขายด้วย AI" ได้ถ้าต้องการ)</li>
-        <li><b>ชุดขายเสร็จ</b> → เข้าแท็บ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง → กด "ดูเซลเพจ" ตรวจ → (ถ้ามีไฟล์เสียง อัป mp3 ขึ้น Google Drive และแชร์ก่อน) → กด <b>✅ เผยแพร่</b></li>
-        <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า/แก้ไขชุด → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน" ลูกค้าคนต่อไปได้ไฟล์ใหม่ทันที</li>
-        <li><b>ไม่อยากขาย</b> → กด "ไม่ลงขาย" ที่การ์ด (ไฟล์ยังเก็บไว้)</li>
-      </ol>
-      <p class="fine">โรงงานบนคลาวด์หยุดไว้แล้ว (กันผลิตซ้ำ เปลือง token) ถ้าคอมเสียหรือไม่อยู่บ้านนาน บอก Claude ให้เปิดกลับชั่วคราวได้</p>
-    </details>
-    ${facBox(1)||'<p class="fine" style="margin:4px 0 16px">ไม่มีชีทรออนุมัติลงขาย</p>'}
-    ${globalBox()}
-    ${facSets()}
-    ${facIdeas()}
-    <section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">สั่งผลิตชีทใหม่</h3>
+/* ฟอร์มสั่งผลิต (เปิดจากปุ่ม ➕ สั่งผลิตใหม่) */
+function facOrderForm(f,lb){return `
+    <section class="card fac-order" id="fac-order"><div class="row" style="justify-content:space-between;align-items:center"><h3 class="h3" style="margin:0">➕ สั่งผลิตใหม่</h3><button class="chip" data-a="fOrderToggle">ปิด</button></div>
       <div class="idea-bar"><input class="input" id="fn-hint" data-fn="hint" value="${esc(f.hint||'')}" placeholder="อยากได้แนวไหน (ไม่ใส่ก็ได้) เช่น IELTS, ทำงาน"><button class="btn btn-cta btn-sm" data-a="fIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 สุ่มหัวข้อให้'}</button></div>
       ${S.fidea?`<p class="fine idea-note">${S.fidea.source==='claude'?`🤖 ไอเดียจาก${esc(S.fidea.by)} (Claude) · เหลือในคลัง ${S.fidea.left} ไอเดีย`:'🎲 สุ่มจากคลังหัวข้อสำเร็จรูป (คลังไอเดียของทีมว่าง พี่โปรเติมทุกจันทร์ พี่โอ๊คทุกพุธ)'}${S.fidea.why?' · '+esc(S.fidea.why):''} · ตรวจ แก้ แล้วกดส่งเข้าคิว หรือกดสุ่มใหม่</p>`:''}
       <div class="kind-seg" role="group" aria-label="ประเภทงาน"><button data-a="fkind" data-v="pdf" aria-pressed="${f.kind!=='notion'}">📄 ชีท PDF</button><button data-a="fkind" data-v="notion" aria-pressed="${f.kind==='notion'}">📒 Notion Template</button></div>
@@ -2758,17 +2738,57 @@ function factoryView(){
       <div class="field">${lb('fn-notes','รายละเอียดเพิ่ม (เนื้อหาที่ต้องมี สไตล์ ฯลฯ)')}<textarea class="input" id="fn-notes" data-fn="notes" rows="3">${esc(f.notes)}</textarea></div>
       ${S.ferr?`<p class="err" style="margin:0 0 8px">${esc(S.ferr)}</p>`:''}
       <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-dark" data-a="forder" ${S.fbusy?'disabled':''}>${S.fbusy?'กำลังส่ง...':'ส่งเข้าคิวโรงงาน'}</button>
-      <span class="fine">ชีทขายผลิตเสร็จแล้วจะขึ้น "รออนุมัติ" ด้านบน ยังไม่ขายจนกว่าคุณแดนกดอนุมัติ</span></div>
-    </section>
-    <section><h3 class="h3">คิวงาน</h3>
-      <div class="st-chips" role="group" aria-label="กรองงาน" style="margin-bottom:10px">${chips.map(c=>`<button class="chip" data-a="ffilter" data-v="${c[0]}" aria-pressed="${flt===c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>
-      ${S.floading?'<p class="fine">กำลังโหลด...</p>':shown.length?shown.map(j=>{const st=FSTAT[j.status]||[j.status,'gray'],ls=LIST[j.listing];const can=['queued','producing'].includes(j.status);
+      <span class="fine">ผลิตเสร็จแล้วจะขึ้นในช่อง "👀 รอคุณแดนตรวจ" ยังไม่ขายจนกว่าคุณแดนกดอนุมัติ</span></div>
+    </section>`;}
+function factoryView(){
+  if(FJOBS===null){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
+  const f=S.fnew||(S.fnew={title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''});
+  const jobs=FJOBS||[];
+  const cnt=k=>jobs.filter(j=>j.status===k).length;
+  const LIST={pending:['รออนุมัติลงขาย','warn'],listed:['ลงขายแล้ว','ok'],rejected:['ไม่ลงขาย','gray'],global_pending:['รอลงขายต่างประเทศ','warn'],global:['ลงต่างประเทศแล้ว','ok']};
+  const who=k=>k==='owner'?'คุณแดน':k==='auto'?'ระบบอัตโนมัติ':member(k||'manager').name;
+  const lb=(id,t)=>`<label for="${id}">${t}</label>`;
+  // ขั้นตอนงาน: รอผลิต → กำลังผลิต → รอคุณแดนตรวจ → เสร็จแล้ว (+ ไม่สำเร็จ)
+  const review=jobs.filter(j=>j.status==='done'&&['pending','global_pending'].includes(j.listing)).length;
+  const STEPS=[['queued','รอผลิต','🕒',cnt('queued')],['producing','กำลังผลิตในคอม','⚙️',cnt('producing')],['review','รอคุณแดนตรวจ','👀',review],['finished','เสร็จแล้ว','✅',jobs.filter(j=>j.status==='done'&&!['pending','global_pending'].includes(j.listing)).length]];
+  if(cnt('failed'))STEPS.push(['failed','ไม่สำเร็จ','⚠️',cnt('failed')]);
+  const flt=S.ffilter&&STEPS.some(x=>x[0]===S.ffilter)?S.ffilter:(review?'review':cnt('producing')?'producing':'queued');
+  const shown=jobs.filter(j=>flt==='finished'?(j.status==='done'&&!['pending','global_pending'].includes(j.listing)):flt==='review'?false:j.status===flt);
+  const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>48*36e5;
+  const when=ago==null?'ยังไม่เคยมาเช็คคิว':h<1?'ไม่ถึงชั่วโมงที่แล้ว':h<48?h+' ชม.ที่แล้ว':Math.round(h/24)+' วันที่แล้ว';
+  return `<div class="wrap wide fac" style="padding-bottom:60px">
+    <div class="fac-top">
+      <div><h2 class="h3" style="margin:0">🏭 โรงงาน</h2><span class="fine">สั่งผลิตที่นี่ · คอมคุณแดนผลิตให้ · คุณแดนตรวจแล้วกดลงขาย</span></div>
+      <span class="row" style="gap:8px;flex-wrap:wrap"><span class="fac-pill ${stale&&cnt('queued')?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 คอม: เช็คคิวล่าสุด ${when}</span><button class="btn btn-sm pt-new" data-a="fOrderToggle">➕ สั่งผลิตใหม่</button><button class="chip" data-a="toFactory">รีเฟรช</button></span>
+    </div>
+    ${stale&&cnt('queued')?'<div class="fac-worker stale">มีงานรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกดรันงานคิวหนังสือใน Cowork</div>':''}
+    ${S.fOrder?facOrderForm(f,lb):''}
+    <div class="fac-steps" role="tablist">${STEPS.map((x,i)=>`<button role="tab" class="fac-step${x[0]==='review'&&x[3]?' hot':''}${x[0]==='failed'?' bad':''}" data-a="ffilter" data-v="${x[0]}" aria-selected="${flt===x[0]}"><i>${x[2]}</i><span>${x[1]}</span><b>${x[3]}</b></button>${i<STEPS.length-1&&x[0]!=='finished'?'<em aria-hidden="true">›</em>':''}`).join('')}</div>
+    <div class="fac-panel">
+      ${flt==='review'?`${facBox(1)||''}${globalBox()}${!review?'<p class="fine fac-empty">ไม่มีงานรอตรวจ 🎉</p>':''}`:
+      `${S.floading?'<p class="fine">กำลังโหลด...</p>':shown.length?shown.map(j=>{const st=FSTAT[j.status]||[j.status,'gray'],ls=LIST[j.listing];const can=['queued','producing'].includes(j.status);
         return `<div class="note-card"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><b>${esc(j.title)}</b><span><span class="badge ${st[1]}">${st[0]}</span>${ls?` <span class="badge ${ls[1]}">${ls[0]}</span>`:''}</span></div>
           <div class="fine">สั่งโดย ${esc(who(j.ordered_by))} · ${fdt(Date.parse(j.created_at))}${j.pages?' · '+j.pages+' หน้า':''} · ${Number(j.price)>=1?baht(j.price):'แจกฟรี'}${j.category?' · '+esc(j.category):''}</div>
           ${j.error?`<div class="fine" style="color:var(--bad)">${esc(j.error)}</div>`:''}
           ${j.file_url||can?`<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${j.file_url?`<a class="btn btn-line btn-sm" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">เปิดไฟล์ PDF</a>`:''}${can?`<button class="btn ${S.confirm==='fc:'+j.id?'btn-danger':'btn-line'} btn-sm" data-a="fcancel" data-id="${esc(j.id)}">${S.confirm==='fc:'+j.id?'กดอีกครั้งเพื่อยกเลิก':'ยกเลิกงาน'}</button>`:''}</div>`:''}
-        </div>`;}).join(''):'<p class="fine">ไม่มีงานในหมวดนี้</p>'}
-    </section>
+        </div>`;}).join(''):'<p class="fine">ไม่มีงานในหมวดนี้</p>'}`}
+    </div>
+    <details class="card fac-more"><summary><b>📦 ชุดขาย · 💡 ไอเดียจากทีม · 📖 คู่มือ · 👷 พี่เหล็ก</b> <span class="fine">กดเปิด</span></summary>
+      ${facSets()}
+      ${facIdeas()}
+    <details class="fac-guide" open><summary><b>📖 คู่มือโรงงาน</b> <span class="fine">ผลิตเสร็จแล้วคุณแดนต้องทำอะไร</span></summary>
+      <ol>
+        <li><b>สั่งผลิต</b> กดปุ่ม <b>➕ สั่งผลิตใหม่</b> มุมขวาบน (หรือทีมสั่งให้) ใบสั่งเข้าคิวบนเว็บ ยังไม่เสียอะไร</li>
+        <li><b>คอมผลิตให้เอง</b> ตามเวลาที่ตั้งไว้ใน Cowork (คอมต้องเปิดและเปิดแอป Claude ไว้) สถานะจะเปลี่ยนเป็น "กำลังผลิตในคอม" → "ผลิตเสร็จ" ไฟล์อยู่ในเครื่องที่ Documents/Academic ด้วย</li>
+        <li><b>เล่มเดี่ยวเสร็จ</b> → ขึ้นในช่อง <b>👀 รอคุณแดนตรวจ</b> ด้านบน (และในแท็บสินค้า) + แจ้งในเช็คลิสต์ → กดเปิดไฟล์ดูหน้าแรก/หน้ากลาง/หน้าท้าย → ดูราคา → กด <b>อนุมัติ ลงขาย</b> (ระบบทำหน้าตัวอย่างและหน้าขายให้ ติ๊ก "สร้างรูปขายด้วย AI" ได้ถ้าต้องการ)</li>
+        <li><b>ชุดขายเสร็จ</b> → เข้าแท็บ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง → กด "ดูเซลเพจ" ตรวจ → (ถ้ามีไฟล์เสียง อัป mp3 ขึ้น Google Drive และแชร์ก่อน) → กด <b>✅ เผยแพร่</b></li>
+        <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า/แก้ไขชุด → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน" ลูกค้าคนต่อไปได้ไฟล์ใหม่ทันที</li>
+        <li><b>ไม่อยากขาย</b> → กด "ไม่ลงขาย" ที่การ์ด (ไฟล์ยังเก็บไว้)</li>
+      </ol>
+      <p class="fine">โรงงานบนคลาวด์หยุดไว้แล้ว (กันผลิตซ้ำ เปลือง token) ถ้าคอมเสียหรือไม่อยู่บ้านนาน บอก Claude ให้เปิดกลับชั่วคราวได้</p>
+    </details>
+      ${ceoBar('factory')}
+    </details>
   </div>`;
 }
 /* ข้อเสนอแก้ข้อความสินค้าจาก CEO: เปิดในตัวแก้ไขพร้อมตัวอย่างสด คุณแดนกดบันทึกเอง */
@@ -4629,6 +4649,7 @@ function act(a,el){
         for(const [i,it] of its.entries()){S.zipN=(i+1)+'/'+its.length;render(true);const b=await fetch(it.link.split('?')[0]).then(r=>{if(!r.ok)throw new Error('โหลดไม่ได้');return r.blob();});z.file(String(i+1).padStart(2,'0')+' '+String(it.name||'file').replace(/[\\/:*?"<>|]+/g,' ').slice(0,80).trim()+'.pdf',b);n++;}
         const blob=await z.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SheetLab-'+(S.order.orderId||'order')+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);toast('ดาวน์โหลด '+n+' เล่มแล้ว');})()
         .catch(e=>toast('รวมไฟล์ไม่สำเร็จ กดโหลดทีละเล่มแทน')).then(()=>{S.zipBusy=false;S.zipN='';render(true);});break;}
+    case 'fOrderToggle':S.fOrder=!S.fOrder;render(true);if(S.fOrder)setTimeout(()=>{const e=document.getElementById('fac-order');if(e)e.scrollIntoView({behavior:'smooth',block:'start'});},50);break;
     case 'goAds':S.tab='ads';ADST.f='all';S.edit=null;render(false);break;
     case 'goAdsFix':S.tab='ads';ADST.f='fix';S.edit=null;render(false);break;
     case 'goNew':S.tab='products';S.pstat='new';S.edit=null;render(false);break;
