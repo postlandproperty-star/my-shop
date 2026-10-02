@@ -448,6 +448,9 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bxi-bc{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--line);position:relative}.bxi-bc img{width:100%;height:100%;object-fit:cover}
 .bxi-bc{padding:0;cursor:zoom-in;display:block}.bxi-zoom{position:absolute;right:4px;top:4px;background:rgba(255,255,255,.9);border-radius:6px;font-size:12px;padding:1px 4px;opacity:.85}
 .bxi-style{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0 8px}.bxi-lab{font-weight:600;font-size:14px}
+.bxi-refs{display:grid;gap:4px;margin:8px 0 4px}.bxi-refrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bxi-ref{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}.bxi-ref img{width:100%;height:100%;object-fit:cover}.bxi-ref button{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;line-height:1}
+.bxi-refadd{display:grid;place-items:center;width:64px;height:64px;border:1.5px dashed var(--line);border-radius:8px;font-size:11.5px;text-align:center;cursor:pointer;padding:4px;color:var(--muted)}
 .bxi-pal{display:flex;gap:6px;flex-wrap:wrap}.bxi-pal .chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .bxi-pdf{margin:4px 0 10px;font-size:14px;align-items:flex-start}
 .bxv-pdf{display:flex;gap:12px;align-items:flex-start;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}.bxv-pdf img{width:70px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}.bxv-pdf>div{display:grid;gap:2px;min-width:0}
@@ -1631,12 +1634,13 @@ function bxCoverPrompt(d,books){const n=books.length,price=bxPrice(d);
 แถบล่างตัวเล็กเขียนว่า "ไฟล์ PDF · ได้ทันทีหลังจ่าย"`+AI_NO_TEXT;}
 /* แบบปกเล่มเดี่ยว: ตามปกเดิม หรือออกแบบใหม่ (โทนเดียวกันทั้งชุด) · ใส่ปกใหม่ในไฟล์ PDF ด้วยไหม · จำไว้ในเครื่อง */
 const BX_PAL={brand:['น้ำเงิน-เหลือง (สีร้าน)','พื้นปกสีน้ำเงินเข้ม (#1d2b53) แถบเฉียงสีเหลือง (#FFD23F) ด้านล่าง ชื่อเรื่องตัวใหญ่สีขาว'],pastel:['พาสเทลนุ่ม','พื้นปกสีพาสเทลอ่อน (ฟ้าอ่อน มิ้นต์ หรือครีม) ตัวอักษรสีน้ำเงินเข้ม ภาพประกอบลายเส้นเล็กๆ แบบมินิมอล'],premium:['ดำ-ทอง พรีเมียม','พื้นปกสีดำด้าน ตัวอักษรสีทอง เส้นกรอบบางสีทอง ดูหรูหราน่าเชื่อถือ'],bold:['สีสดต่างกันทุกเล่ม','พื้นปกสีสดหนึ่งสี (แต่ละเล่มในชุดใช้สีต่างกัน) ตัวอักษรสีขาวตัวหนาใหญ่มาก เลย์เอาต์เหมือนกันทุกเล่ม']};
-function bxStyle(){let v={};try{v=JSON.parse(localStorage.getItem('sl_bxstyle')||'{}')||{};}catch(e){}return Object.assign({mode:'orig',pal:'brand',note:'',pdf:true},v);}
+function bxStyle(){let v={};try{v=JSON.parse(localStorage.getItem('sl_bxstyle')||'{}')||{};}catch(e){}return Object.assign({mode:'orig',pal:'brand',note:'',pdf:true,refs:[]},v);}
+const bxKey=st=>st.pal+'|'+(st.refs||[]).join(',');
 function bxStyleSet(k,v){const st=Object.assign(bxStyle(),{[k]:v});try{localStorage.setItem('sl_bxstyle',JSON.stringify(st));}catch(e){}S.bxStyleV=st;}
-const bxNeeds=(b,st)=>st.mode==='new'?!(b.bookCover&&b.coverMode==='new'&&b.coverPal===st.pal):!b.bookCover;
-function bxBookPrompt(b,i,n,st,sameAsRef){const t=String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);st=st||{mode:'orig'};
+const bxNeeds=(b,st)=>st.mode==='new'?!(b.bookCover&&b.coverMode==='new'&&(b.coverKey||b.coverPal)===bxKey(st)):!b.bookCover;
+function bxBookPrompt(b,i,n,st,sameAsRef,styleRefs){const t=String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);st=st||{mode:'orig'};
   if(st.mode==='new')return `หน้าปกหนังสือ e-book 1 เล่ม ออกแบบใหม่ทั้งหมด (ไม่ต้องเหมือนปกเดิม) มองจากด้านหน้าตรงๆ ตั้งอยู่กลางภาพ บนพื้นหลังสีขาวล้วนเรียบสะอาด มีเงาบางๆ ใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 หนังสือสูงประมาณ 85% ของภาพ กว้างไม่เกิน 60% ของภาพ
-${sameAsRef?'ใช้สไตล์ เลย์เอาต์ ฟอนต์ และการจัดวางเดียวกับปกในรูปที่แนบทุกอย่าง (เป็นเล่มในชุดเดียวกัน) เปลี่ยนแค่ชื่อเรื่องและเลขเล่ม':'ดีไซน์ปกเรียบ อ่านง่าย ทุกเล่มในชุดจะใช้แบบเดียวกัน'}: ${(BX_PAL[st.pal]||BX_PAL.brand)[1]}
+${sameAsRef?'ใช้สไตล์ เลย์เอาต์ ฟอนต์ และการจัดวางเดียวกับปกในรูปที่แนบทุกอย่าง (เป็นเล่มในชุดเดียวกัน) เปลี่ยนแค่ชื่อเรื่องและเลขเล่ม':styleRefs?'รูปที่แนบเป็นตัวอย่างสไตล์ที่เจ้าของร้านชอบ ใช้เป็นแรงบันดาลใจด้านโทนสี เลย์เอาต์ ฟอนต์ และอารมณ์ของภาพเท่านั้น ห้ามคัดลอกข้อความ ชื่อแบรนด์ หรือโลโก้จากรูปตัวอย่าง ทุกเล่มในชุดจะใช้แบบเดียวกัน':'ดีไซน์ปกเรียบ อ่านง่าย ทุกเล่มในชุดจะใช้แบบเดียวกัน'}${(st.refs||[]).length&&!sameAsRef?'':': '+(BX_PAL[st.pal]||BX_PAL.brand)[1]}
 ชื่อเรื่องตัวใหญ่กลางปก: "${t}"
 มุมบนซ้ายของปกมีป้ายเล็กเขียนว่า "เล่ม ${i+1}/${n}" ห้ามมีป้ายราคา ไอคอนโซเชียล หรือข้อความอื่นนอกจากที่กำหนด${st.note?'\nความต้องการเพิ่มของเจ้าของร้าน: '+String(st.note).slice(0,200):''}`+AI_NO_TEXT;
   if((b.images||[])[0])return `จากรูปปกหนังสือที่แนบมา ทำเป็นภาพหน้าปกหนังสือ 1 เล่ม มองจากด้านหน้าตรงๆ ตั้งอยู่กลางภาพ บนพื้นหลังสีขาวล้วนเรียบสะอาด มีเงาบางๆ ใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 หนังสือสูงประมาณ 85% ของภาพ กว้างไม่เกิน 60% ของภาพ
@@ -1663,10 +1667,10 @@ function bxUseCover(b,on){if(!b.bookCover)return;if(!('origImg' in b))b.origImg=
   b.images=on?[b.bookCover,...(b.origImg?[b.origImg]:[]),...rest]:[...(b.origImg?[b.origImg]:[]),...rest];}
 async function bxMakeBook(id,i,n){const b=getProduct(id);if(!b)return;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
   const st=bxStyle(),o=bxOrig(b);let url;
-  if(st.mode==='new'){const sib=(S.draft?S.draft.items:[]).map(getProduct).find(x=>x&&x.id!==b.id&&x.bookCover&&x.coverMode==='new'&&x.coverPal===st.pal);
-    url=await bxAiImage(bxBookPrompt(b,i,n,st,!!sib),sib?[sib.bookCover]:[]);}
+  if(st.mode==='new'){const key=bxKey(st),refs=st.refs||[],sib=(S.draft?S.draft.items:[]).map(getProduct).find(x=>x&&x.id!==b.id&&x.bookCover&&x.coverMode==='new'&&(x.coverKey||x.coverPal)===key);
+    url=await bxAiImage(bxBookPrompt(b,i,n,st,!!sib,!sib&&refs.length>0),sib?[sib.bookCover]:refs.slice(0,3));}
   else url=await bxAiImage(bxBookPrompt(Object.assign({},b,{images:o?[o]:[]}),i,n,st),o?[o]:[]);
-  if(b.bookCover)b.oldCovers=[...(b.oldCovers||[]),b.bookCover].slice(-5);b.bookCover=url;b.coverMode=st.mode;b.coverPal=st.mode==='new'?st.pal:'';bxUseCover(b,true);save();
+  if(b.bookCover)b.oldCovers=[...(b.oldCovers||[]),b.bookCover].slice(-5);b.bookCover=url;b.coverMode=st.mode;b.coverPal=st.mode==='new'?st.pal:'';b.coverKey=st.mode==='new'?bxKey(st):'';bxUseCover(b,true);save();
   if(st.pdf&&(b.linkOrig||b.link)){try{await bxPdfCover(b);}catch(e){if(e.billing)throw e;S.bxImgErr=`ได้ปกใหม่แล้ว แต่ใส่ในไฟล์ PDF ของ "${b.name.slice(0,30)}" ไม่สำเร็จ: ${e.message||e}`;}}}
 function bxViewer(){const b=S.bxView&&getProduct(S.bxView);if(!b)return '';const o=bxOrig(b),on=(b.images||[])[0]===b.bookCover&&!!b.bookCover,i=S.draft?S.draft.items.indexOf(b.id):-1;
   const fig=(u,l,cur)=>`<figure class="bxv-f${cur?' cur':''}">${u?`<img src="${esc(u)}" alt="${esc(l)}">`:'<span class="fine">ไม่มีรูป</span>'}<figcaption>${l}${cur?' · ✓ ใช้เป็นรูปสินค้าอยู่':''}${u?` · <a href="${esc(u)}" target="_blank" rel="noopener noreferrer" download>เปิด/โหลด</a>`:''}</figcaption></figure>`;
@@ -1675,7 +1679,7 @@ function bxViewer(){const b=S.bxView&&getProduct(S.bxView);if(!b)return '';const
     <div class="bxv-pair">${fig(b.bookCover,'ปกเรียบจาก AI',on)}${fig(o,'รูปเดิม',!on&&(b.images||[])[0]===o)}</div>
     <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:10px">
       ${b.bookCover?(on?`<button class="btn btn-line btn-sm" data-a="bxUse" data-id="${b.id}" data-v="0">↩ ใช้รูปเดิมเป็นรูปสินค้า</button>`:`<button class="btn btn-cta btn-sm" data-a="bxUse" data-id="${b.id}" data-v="1">✓ ใช้ปกเรียบเป็นรูปสินค้า</button>`):''}
-      <button class="btn btn-line btn-sm" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${S.bxImg?'disabled':''}>${S.bxImg===b.id?'กำลังสร้าง...':'✨ ทำปกใหม่'}</button>
+      <button class="btn btn-line btn-sm" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${S.bxImg?'disabled':''}>${S.bxImg===b.id?'กำลังสร้าง...':'✨ ทำปกใหม่ ('+(bxStyle().mode==='new'?'แบบออกแบบใหม่':'ตามปกเดิม')+')'}</button>
       ${i>0?`<button class="chip" data-a="bxViewGo" data-v="${i-1}">‹ เล่มก่อน</button>`:''}${S.draft&&i<S.draft.items.length-1?`<button class="chip" data-a="bxViewGo" data-v="${i+1}">เล่มถัดไป ›</button>`:''}
     </div>
     <div class="bxv-pdf">${b.pdfCover?`<img src="${esc(b.pdfCover)}" alt="ปกในไฟล์ PDF">`:''}<div><b>📄 ไฟล์ PDF</b><span class="fine">${!b.link?'ยังไม่มีไฟล์':b.pdfCover?(b.pdfFrom===b.bookCover?'หน้าแรกเป็นปกใหม่นี้แล้ว':'หน้าแรกเป็นปกใหม่รุ่นก่อน (ยังไม่ใช่ปกที่เห็นด้านบน)'):'หน้าแรกยังเป็นปกเดิม'}</span>
@@ -1757,6 +1761,7 @@ function bundleForm(){
     ${(()=>{const left=chosen.filter(b=>b.bookCover&&(b.images||[])[0]!==b.bookCover);return left.length?`<div class="bxi-apply"><span>มีปกเรียบ ${left.length} เล่มที่ยังไม่ได้ใช้เป็นรูปสินค้า</span><button class="btn btn-cta btn-sm" data-a="bxUseAll">✓ ใช้ปกเรียบเป็นรูปสินค้าทั้ง ${left.length} เล่ม</button></div>`:'';})()}
     <div class="bxi-style"><span class="bxi-lab">แบบปก</span><div class="kind-seg" role="group" aria-label="แบบปก"><button data-a="bxStyle" data-v="mode:orig" aria-pressed="${st.mode!=='new'}">📘 ตามปกเดิม</button><button data-a="bxStyle" data-v="mode:new" aria-pressed="${st.mode==='new'}">✨ ออกแบบใหม่</button></div></div>
     ${st.mode==='new'?`<div class="bxi-pal">${Object.entries(BX_PAL).map(([k,v])=>`<button class="chip${st.pal===k?' on':''}" data-a="bxStyle" data-v="pal:${k}" aria-pressed="${st.pal===k}">${esc(v[0])}</button>`).join('')}</div>
+      <div class="bxi-refs"><span class="fine">รูปตัวอย่างปกที่ชอบ (ไม่บังคับ สูงสุด 3 รูป · ใช้แทนโทนสีด้านบน ไม่ใช้ปกเดิมของเล่ม)</span><div class="bxi-refrow">${(st.refs||[]).map((u,k)=>`<span class="bxi-ref"><img src="${esc(u)}" alt="รูปตัวอย่าง ${k+1}"><button data-a="bxRefDel" data-v="${k}" aria-label="เอารูปนี้ออก">×</button></span>`).join('')}${(st.refs||[]).length<3?`<label class="bxi-refadd">${S.bxRefUp?'กำลังอัป...':'+ เพิ่มรูปตัวอย่าง'}<input type="file" accept="image/*" hidden data-bxref="1"></label>`:''}</div></div>
       <input class="input" data-bxs="note" value="${esc(st.note)}" placeholder="อยากได้แนวไหนเพิ่ม (ไม่ใส่ก็ได้) เช่น มีรูปไอคอนหูฟังสำหรับเล่ม Listening" style="margin:6px 0 4px">
       <p class="fine" style="margin:0 0 8px">ยังเป็นรูปหนังสือเล่มเดียวบนพื้นขาวเหมือนเดิม แต่ดีไซน์ปกใหม่ทั้งชุด เล่มแรกที่ทำจะเป็นต้นแบบให้เล่มที่เหลือใช้สไตล์เดียวกัน</p>`:''}
     <label class="tgl bxi-pdf"><input type="checkbox" data-a="bxStyle" data-v="pdf:${st.pdf?'0':'1'}" ${st.pdf?'checked':''}> <span>📄 <b>ใส่ปกใหม่ในไฟล์ PDF ด้วย</b> หน้าแรกของไฟล์เปลี่ยนเป็นปกใหม่ (ลูกค้าที่ซื้อหลังจากนี้ได้ไฟล์ใหม่ · ไฟล์เดิมเก็บไว้ สลับกลับได้) ใช้รูปเพิ่มเล่มละ 1 รูป${noFile?` · ${noFile} เล่มยังไม่มีไฟล์ ข้ามไป`:''}</span></label>
@@ -4864,6 +4869,7 @@ function act(a,el){
     case 'bxCompose':{const d=S.draft;if(!d)break;const books=d.items.map(getProduct).filter(Boolean);S.bxImg='compose';S.bxImgErr='';render(true);
       bxCompose(d,books).then(uploadImage).then(u=>{S.draft.cover=u;toast('จัดรูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>{S.bxImgErr='จัดรูปไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxView':S.bxView=S.bxView===id||!id?null:id;render(true);break;
+    case 'bxRefDel':{const st=bxStyle();st.refs=(st.refs||[]).filter((u,k)=>k!==Number(el.dataset.v));bxStyleSet('refs',st.refs);render(true);break;}
     case 'bxStyle':{const [k,v]=String(el.dataset.v).split(':');bxStyleSet(k,k==='pdf'?v==='1':v);render(true);break;}
     case 'bxPdf':{const b=getProduct(id);if(!b)break;S.bxImg='pdf:'+id;S.bxImgErr='';render(true);bxPdfCover(b).then(r=>toast(`ใส่ปกในไฟล์แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ใหม่`)).catch(e=>{S.bxImgErr=String(e.message||e);toast(S.bxImgErr);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxPdfUndo':{const b=getProduct(id);if(!b||!b.linkOrig)break;b.link=b.linkOrig;b.pdfFrom='';b.pdfCover='';save();toast('กลับไปใช้ไฟล์เดิมแล้ว');render(true);break;}
@@ -5043,6 +5049,8 @@ document.addEventListener('change',e=>{
     if(!confirm(`เปลี่ยนไฟล์ของ "${b.name}" เป็น ${f.name}?\nลูกค้าที่ซื้อหลังจากนี้จะได้ไฟล์ใหม่`))return;S.bxFile=id;render(true);
     authFetch('/api/content?action=file_uploadurl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:f.name})}).then(async u=>{if(!u||!u.ok)throw new Error((u&&u.error)||'ขอที่อัปโหลดไม่ได้');const put=await fetch(u.upload_url,{method:'PUT',headers:{'Content-Type':'application/pdf','x-upsert':'true'},body:f});if(!put.ok)throw new Error('อัปโหลดไม่สำเร็จ ('+put.status+')');b.link=u.file_url;save();toast('เปลี่ยนไฟล์แล้ว');})
       .catch(e=>toast('เปลี่ยนไฟล์ไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxFile='';render(true);});return;}
+  if(t.dataset&&t.dataset.bxref){const f=t.files&&t.files[0];t.value='';if(!f)return;S.bxRefUp=true;render(true);
+    new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f);}).then(d=>toJpeg(d,1200)).then(uploadImage).then(u=>{const st=bxStyle();bxStyleSet('refs',(st.refs||[]).concat(u).slice(0,3));toast('เพิ่มรูปตัวอย่างแล้ว ปกที่ทำต่อจากนี้จะใช้สไตล์นี้');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxRefUp=false;render(true);});return;}
   if(t.dataset&&t.dataset.bxup&&S.draft){const f=t.files&&t.files[0];if(!f)return;toast('กำลังอัปโหลดรูป...');square(f).then(r=>uploadImage(r.url)).then(u=>{S.draft.cover=u;render(true);toast('ใส่รูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e)));return;}
   if(t.dataset&&t.dataset.adsup){const x=(ADA.items||[]).find(y=>y.id===t.dataset.adsup),f=t.files&&t.files[0];if(!x||!f)return;adsKeep(x);toast('กำลังอัปโหลดรูป...');
     square(f).then(r=>uploadImage(r.url)).then(async url=>{x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;await adsSave(x);render(true);toast('ใช้รูปนี้ในแอดแล้ว');}).catch(err=>toast('อัปโหลดไม่สำเร็จ: '+(err.message||err)));return;}
