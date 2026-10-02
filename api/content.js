@@ -146,7 +146,7 @@ async function autoFillFactory(jobs) {
   if (jobs.filter((j) => j.ordered_by === 'auto' && Date.parse(j.created_at || 0) >= week).length >= Math.min(4, Math.max(1, Number(cfg.auto.per_week) || 1))) return null;
   const shop = await loadShop().catch(() => ({ products: [] }));
   const names = shop.products.map((p) => String(p.name || '').toLowerCase());
-  const used = (t) => jobs.some((j) => !['cancelled', 'failed'].includes(j.status) && String(j.title || '').slice(0, 24) === String(t).slice(0, 24));
+  const used = (t) => jobs.some((j) => (!['cancelled', 'failed'].includes(j.status) || j.dup) && String(j.title || '').slice(0, 24) === String(t).slice(0, 24)); // dup = ยกเลิกเพราะผลิตที่อื่นแล้ว ห้ามหยิบซ้ำ
   for (const set of cfg.sets.filter((x) => (cfg.auto.sets || []).includes(x.id))) {
     for (const b of set.books || []) {
       const key = String(b.match || String(b.t).slice(0, 18)).toLowerCase();
@@ -1766,7 +1766,7 @@ export default async function handler(req, res) {
         job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
         await logNote('factory', `ผลิตไม่สำเร็จ: ${job.title} เหตุผล: ${job.error}`);
       } else if (action === 'factory_cancel') {
-        job.status = 'cancelled'; job.cancelled_at = new Date().toISOString();
+        job.status = 'cancelled'; job.cancelled_at = new Date().toISOString(); if (body.dup) { job.dup = true; job.cancel_note = String(body.note || 'ผลิตแล้วที่อื่น').slice(0, 200); }
       }
       await saveJobs(jobs);
       return res.status(200).json({ ok: true, job });
