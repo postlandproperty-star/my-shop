@@ -355,6 +355,19 @@ async function adWatch() {
     await addTodo({ text: `แอด "${a.campaign || a.name}" ใช้ไป ฿${a.week.spendTHB} ใน 7 วัน (เกิน 2 เท่าของราคาสินค้า ฿${a.price}) แต่ยังไม่มีคนซื้อ แนะนำหยุดแล้วเปลี่ยนรูป/ข้อความ เปิดแท็บสินค้าและเซลเพจ → 📣 แอด → 🔴 ต้องแก้ไข → ⏸ หยุด`, type: 'decide', from: 'analyst' });
     st[a.id] = now; warned.push(a.campaign);
   }
+  try { // ทดสอบหลายรูป: ครบ 5 วัน สรุปผู้ชนะเข้าเช็คลิสต์ครั้งเดียว (หยุดรูปที่แพ้ คุณแดนกดเองที่หน้าโฆษณา)
+    const items = await loadAdsAuto(); let dirty = false;
+    for (const x of items.filter((y) => y.fb?.ads?.length > 1 && !y.testNotified && y.launched_at && now - Date.parse(y.launched_at) >= 5 * 864e5)) {
+      const rows = x.fb.ads.map((id, k) => ({ k, a: r.ads.find((z) => z.id === id) })).filter((o) => o.a);
+      if (rows.length < 2) continue;
+      const cpa = (o) => o.a.week.purchases ? o.a.week.spendTHB / o.a.week.purchases : Infinity, ctr = (o) => o.a.week.impressions ? o.a.week.clicks / o.a.week.impressions : 0;
+      rows.sort((p, q) => q.a.week.purchases - p.a.week.purchases || cpa(p) - cpa(q) || ctr(q) - ctr(p));
+      const w = rows[0], lab = (o) => (x.labels || {})[(x.launchImages || [])[o.k]] || `รูป ${o.k + 1}`;
+      await addTodo({ text: `ผลทดสอบรูปแอด "${String(x.name).slice(0, 40)}" ครบ 5 วัน: ${lab(w)} ${w.a.week.purchases ? `ขายได้ ${w.a.week.purchases} ครั้ง ต้นทุน ฿${Math.round(cpa(w))}/ออเดอร์` : 'นำเรื่องคนคลิก (ยังไม่มีใครซื้อ)'} · เปิดหน้าโฆษณา → การ์ด 🏆 ผลทดสอบรูป กด "หยุดรูปที่แพ้" และ "ทำรูปใหม่แนวเดียวกับผู้ชนะ"`, type: 'do', from: 'analyst' });
+      x.testNotified = new Date().toISOString(); dirty = true;
+    }
+    if (dirty) await saveAdsAuto(items);
+  } catch (e) { console.error('ad test', e.message); }
   if (warned.length) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ads_watch', data: st, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); await chatEvent('analyst', `เจอแอดใช้เงินแต่ยังขายไม่ได้ ${warned.length} ตัวครับ ขึ้นเช็คลิสต์ให้คุณแดนตัดสินแล้ว`, 'ads'); }
   return { ok: true, warned };
 }
@@ -2534,7 +2547,7 @@ export default async function handler(req, res) {
         const out = [], errors = [];
         for (const v of vs) {
           try {
-            const g = await genImage({ model: body.model, prompt: v.prompt, quality: body.quality || 'medium', aspect: '4:5' });
+            const g = await genImage({ model: body.model, prompt: v.prompt, quality: body.quality || 'medium', aspect: '4:5', refs: Array.isArray(body.refs) ? body.refs.slice(0, 2) : [] });
             let buf = Buffer.from(g.b64, 'base64'), mime = g.mime;
             if (/jpe?g/.test(mime)) { const jpeg = (await import('jpeg-js')).default; const im = jpeg.decode(buf, { useTArray: true }); const H = Math.round(im.width * 5 / 4);
               if (im.height > H + 4) { const top = Math.round((im.height - H) / 2); const data = im.data.subarray(top * im.width * 4, (top + H) * im.width * 4); buf = Buffer.from(jpeg.encode({ data, width: im.width, height: H }, 90).data); } }
@@ -2545,7 +2558,9 @@ export default async function handler(req, res) {
           } catch (e) { errors.push(`${v.label}: ${String(e.message || e).slice(0, 160)}`); }
         }
         if (out.length) { x.extra = [...(x.extra || []), ...out.map((o) => o.image)].slice(-12); x.labels = { ...(x.labels || {}), ...Object.fromEntries(out.map((o) => [o.image, o.label])) }; if (body.replace && (x.multi || []).includes(String(body.replace))) { x.multi = x.multi.map((u) => u === String(body.replace) ? out[0].image : u); x.image = x.multi[0]; } // ทำรูปแบบหนึ่งใหม่ แทนที่ตำแหน่งเดิม
-          else if (body.select) { x.multi = out.map((o) => o.image).concat(body.keepCurrent && x.image ? [x.image] : []).slice(0, 4); x.image = x.multi[0]; } }
+          else if (body.select) { const also = (Array.isArray(body.also) ? body.also : []).map(String).filter((u) => /^https:\/\/\S+$/.test(u)).slice(0, 2);
+            if (also.length) { x.extra = [...new Set([...(x.extra || []), ...also])].slice(-12); if (body.alsoLabel) x.labels = { ...(x.labels || {}), [also[0]]: String(body.alsoLabel).slice(0, 40) }; }
+            x.multi = also.concat(out.map((o) => o.image)).concat(body.keepCurrent && x.image ? [x.image] : []).slice(0, 4); x.image = x.multi[0]; } }
         if (typeof body.text === 'string' && body.text.trim().length >= 20) { if (!x.textOld) x.textOld = x.text; x.text = body.text.trim().slice(0, 1500); x.textBy = admin ? 'owner' : 'team'; }
         if (typeof body.headline === 'string' && body.headline.trim()) x.headline = body.headline.trim().slice(0, 60);
         x.updated_at = new Date().toISOString(); await saveAdsAuto(items);
@@ -2593,7 +2608,7 @@ export default async function handler(req, res) {
         try {
           const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency });
           const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
-          Object.assign(y, { text, headline, image, platforms: r.platforms, note: r.note || null, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad }, objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
+          Object.assign(y, { text, headline, image, platforms: r.platforms, note: r.note || null, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad, ads: r.ads || [r.ad] }, launchImages: r.images || [image], objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
           await saveAdsAuto(cur);
           // แคมเปญในหลังบ้านร้าน (ชื่อเดียวกับ utm_campaign) ให้ตารางแคมเปญ/ยอดขายนับตรง
           try { const pr = await sb('shop_state?id=eq.private&select=data'); const data = pr?.[0]?.data || {}; data.campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
