@@ -21,10 +21,12 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 // เซิร์ฟเวอร์หน้าเว็บในเครื่อง: ไฟล์ใน src/ ทุกเส้นทางที่ไม่ใช่ไฟล์ = index.html (เหมือน /p/slug บนเว็บจริง)
 // หน้ารวมหัวข้อ SEO (เซิร์ฟเวอร์สร้าง): สร้างจาก lib/topics.js + ข้อมูลชุดทดสอบ ให้ตรวจหน้าตาเหมือนหน้าอื่น
 const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'lib/topics.js'));
+const { vipPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
 const T_QZ = [{ slug: 'toeic-level-test', title: 'วัดระดับ TOEIC ฟรี 20 ข้อ', cat: 'grammar', mode: 'level', questions: [1] }, { slug: 'toeic-tense-quiz', title: 'ข้อสอบ TOEIC Tense 10 ข้อ พร้อมเฉลย', desc: 'ลองทำข้อสอบ TOEIC Part 5 เรื่อง Tense 10 ข้อ พร้อมเฉลยและคำอธิบายภาษาไทยครบทุกข้อ', cat: 'grammar', questions: Array(10).fill(1) }, { slug: 'toeic-ctm', title: 'จับผิดประโยค TOEIC 10 ข้อ พิมพ์แก้เอง ตรวจใจดี', desc: 'แบบฝึกจับผิดประโยคภาษาอังกฤษแนว TOEIC 10 ข้อ พิมพ์ประโยคที่ถูกเอง', cat: 'grammar', questions: Array(10).fill(1) }];
 const server = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split('?')[0]);
+  const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
   if (tp) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(topicPage(tp, topicItems(tp, { articles: T_ART, quizzes: T_QZ, products: SHOP.products }), { site: BASE, all: TOPICS })); }
   const ti = u.match(/^\/topic-img\/([a-z-]+)\.jpg$/); if (ti) { const f = path.join(SRC, 'topics', ti[1] + '.jpg'); if (fs.existsSync(f)) { res.setHeader('Content-Type', 'image/jpeg'); return res.end(fs.readFileSync(f)); } res.statusCode = 404; return res.end(); }
@@ -56,6 +58,8 @@ async function newPage(kind) {
     if (/\/api\/checkout\?m=qr/.test(url)) return route.fulfill({ json: { ok: true, pi: 'pi_test', k: 'pi_test_secret', png: `${BASE}/qr.png`, amount: 1 } });
     if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD, LIVE], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอด 2 รูป + แอดทดสอบ 3 รูปที่วิ่งมา 6 วัน
     if (/action=ads_auto_status/.test(url) && AD) return route.fulfill({ json: { ok: true, access: { ok: true }, currency: 'AUD', rate: 0.04, history: [], ads: LIVE_ADS } });
+    if (/action=vip_admin/.test(url)) return route.fulfill({ json: { ok: true, ready: false, sql: 'create table members (...);', settings: { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, stats: null } });
+    if (/m=vip_me/.test(url)) return route.fulfill({ json: { ok: true, email: null, active: false, settings: { open: true } } });
     if (/action=dash(&|$)/.test(url)) return route.fulfill({ json: { ok: false, error: 'ทดสอบ: โหลดตัวเลขไม่ได้' } }); // หน้าต้องไม่พังตอน API มีปัญหา
     if (/\/api\//.test(url)) return route.fulfill({ json: { ok: true, jobs: [], items: [], list: [], ads: [], checks: [], problems: [], history: [], posts: [], logs: [] } });
     if (/cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|unpkg\.com/.test(url)) return route.continue();
@@ -183,6 +187,17 @@ try {
       await page.context().close();
     } catch (e) { pass(`[${kind}] หัวข้อ ${slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
+    // 3.6) หน้าสมาชิก VIP: ยังไม่เปิด = "เร็วๆ นี้" · เปิดแล้ว = ราคาจากหลังบ้าน + ปุ่มสมัคร + ฟอร์มเข้าระบบด้วยอีเมล
+    for (const mode of ['closed', 'open']) try {
+      page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.goto(`${BASE}/__vip/${mode}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(500);
+      const v = await page.evaluate(() => ({ soon: document.body.innerText.includes('เร็วๆ นี้'), buy: document.querySelectorAll('.vp-buy').length, packs: document.querySelectorAll('.vp-pack').length, login: !!document.querySelector('#vp-login') }));
+      pass(`[${kind}] VIP ${mode === 'open' ? 'เปิดรับ: ราคา 2 แบบบัตร + PromptPay 2 แบบ + ฟอร์มเข้าระบบ' : 'ยังไม่เปิด: ขึ้นเร็วๆ นี้ ไม่มีปุ่มสมัคร'}`, mode === 'open' ? v.buy === 2 && v.packs === 2 && v.login && !v.soon : v.soon && !v.buy && !v.packs, JSON.stringify(v));
+      await layout(page, `[${kind}] หน้า VIP ${mode}`);
+      if (mode === 'open') await page.screenshot({ path: path.join(OUT, `vip-${kind}.png`), fullPage: true });
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] หน้า VIP ${mode}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
     // 4) หลังบ้าน (จำลองล็อกอิน ข้อมูลจาก /api ปลอม): ทุกแท็บหลัก + โรงงาน + ตัวแก้ชุด ต้องเปิดได้ไม่พัง
     page = await newPage(kind);
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid');
@@ -203,6 +218,7 @@ try {
       }, [v, bundle && bundle.id]);
       await page.waitForTimeout(400);
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
+      if (v === 'seo') { await page.waitForTimeout(400); pass(`[${kind}] SEO: การ์ดสมาชิก VIP (ยังไม่มีตาราง → ขึ้น SQL ให้คัดลอก + ช่องราคา)`, await page.locator('.vipa .vipsql').count() === 1 && await page.locator('#vip-m').count() === 1); }
       if (v === 'ads' && AD) { await page.waitForTimeout(400); pass(`[${kind}] โฆษณา: ร่างแอดเลือกไว้ 2 รูป`, await page.locator('.adq-pick.on').count() === 2);
         const t = await page.evaluate(() => { const c = document.querySelector('.adtest'); return c ? { win: (c.querySelector('.adt-cell.win b') || {}).textContent || '', lose: c.querySelectorAll('.adt-cell.lose').length, pause: !!c.querySelector('[data-a="adTestPause"]'), remake: !!c.querySelector('[data-a="adTestRemake"]') } : null; });
         pass(`[${kind}] โฆษณา: ผลทดสอบรูป รูป ข ชนะ + แนะนำหยุด ก และ ค (แพงกว่า 1.5 เท่า)`, !!t && /ข เป้าหมาย/.test(t.win) && t.lose === 2 && t.pause && t.remake, JSON.stringify(t)); if (t) await page.locator('.adtest').first().screenshot({ path: path.join(OUT, `adtest-${kind}.png`) });

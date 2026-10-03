@@ -128,6 +128,7 @@ footer{padding:28px 0 110px;text-align:center}
 @media(max-width:640px){.st-topics{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:16px;gap:10px;margin:0 -16px;padding:0 16px 6px;scrollbar-width:none}.st-topics::-webkit-scrollbar{display:none}.st-tcard{flex:0 0 46%;scroll-snap-align:start}}
 .st-faq details{border-bottom:1px solid var(--line);padding:10px 0}.st-faq details:last-child{border-bottom:0}.st-faq summary{cursor:pointer;font-weight:600}.st-faq details p{margin:6px 0 0;color:var(--muted);font-size:15px}
 .st-ftop{display:inline-block;margin:4px 0 6px}
+.vipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.vipf{display:grid;gap:4px;font-size:13px;color:var(--muted)}.vipsql{white-space:pre-wrap;word-break:break-word;font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0;max-height:160px;overflow:auto}.vipstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}.vipstats div{display:flex;flex-direction:column;background:var(--bg);border-radius:10px;padding:8px 10px}.vipstats b{font-size:20px}.vipstats span{font-size:12.5px;color:var(--muted)}
 .st-h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5vw,30px);margin:0}.st-cathead .fine{margin:4px 0 0}.st-cat{gap:16px}.st-cat .st-bundles{margin-bottom:0}
 /* ร้านค้า /store แบบ Shopee (clean): หัวร้าน · แท็บติดบนจอ · การ์ดรูปเต็มขอบ ราคาส้ม */
 .st-main.st-cat{gap:14px;padding-top:16px}.st-cat .st-how{margin-top:16px}
@@ -4686,6 +4687,21 @@ function seoCard(){if(SEO.d===null&&!SEO.loading)loadSeo();const d=SEO.d||{},n=v
       <div class="seo-tbl" style="margin-top:6px">${(d.pages||[]).slice(0,10).map(x=>`<div><a href="${esc(x.key)}" target="_blank" rel="noopener noreferrer">${esc(x.key)}</a><span>คลิก ${n(x.clicks)} · อันดับ ${x.position}</span></div>`).join('')}</div></details></section>`;}
 /* แท็บ 🔎 SEO: คำค้นจาก Google · หน้ารวมหัวข้อ (ขึ้น Google แล้วหรือยัง) · งานล่าสุดของน้องปากกา */
 const SEOT={d:null,loading:false};
+/* 👑 สมาชิก VIP: ราคาและการเปิดรับเป็นของคุณแดน (0 = ไม่ขายแบบนั้น) · ตารางสมาชิกต้องสร้างครั้งแรกด้วย SQL */
+const VIPA={d:null,loading:false,busy:false};
+function loadVipAdmin(){if(VIPA.loading)return;VIPA.loading=true;adminApi('/api/content?action=vip_admin').then(j=>{VIPA.d=j||{};}).catch(()=>{VIPA.d={};}).then(()=>{VIPA.loading=false;render(true);});}
+function vipCard(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d;
+  if(!d)return '<section class="card" style="margin-top:14px"><p class="fine">กำลังโหลดสมาชิก VIP...</p></section>';
+  const v=d.settings||{packs:{}},st=d.stats,num=(id,val,l)=>`<label class="vipf">${l}<input class="input" type="number" min="0" step="1" id="${id}" value="${Number(val)||0}"></label>`;
+  return `<section class="card vipa" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">👑 สมาชิก VIP ${v.open?'<span class="badge ok">เปิดรับอยู่</span>':'<span class="badge gray">ยังไม่เปิด</span>'}</h3><a class="chip" href="/vip" target="_blank" rel="noopener">ดูหน้า /vip ↗</a></div>
+    <p class="fine" style="margin:4px 0 10px">สมัครด้วยอีเมล (ไม่มีรหัสผ่าน) · บัตรตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้ · PromptPay จ่ายล่วงหน้าเป็นก้อน · ตอนนี้ VIP ได้ "สมุดจุดพลาด" เก็บข้อที่ผิดจากคลังข้อสอบให้ทวน</p>
+    ${!d.ready?`<div class="adt-msg"><b>ขั้นแรก (ครั้งเดียว):</b> สร้างตารางสมาชิก เปิด Supabase → SQL Editor → วาง SQL นี้แล้วกด Run แล้วกดรีเฟรชการ์ดนี้<pre class="vipsql">${esc(d.sql||'')}</pre><div class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="vipSqlCopy">📋 คัดลอก SQL</button><button class="btn btn-line btn-sm" data-a="vipReload">รีเฟรช</button></div></div>`:''}
+    <div class="vipgrid">${num('vip-m',v.monthly,'บัตร รายเดือน (บาท/เดือน)')}${num('vip-y',v.yearly,'บัตร รายปี (บาท/ปี)')}${num('vip-p1',v.packs[1],'PromptPay 1 เดือน')}${num('vip-p3',v.packs[3],'PromptPay 3 เดือน')}${num('vip-p12',v.packs[12],'PromptPay 12 เดือน')}</div>
+    <label class="row" style="gap:8px;margin:10px 0"><input type="checkbox" id="vip-open" ${v.open?'checked':''} ${d.ready?'':'disabled'}> <span>เปิดรับสมาชิก (หน้า /vip แสดงราคาและให้สมัครได้)</span></label>
+    <div class="row" style="gap:8px;align-items:center"><button class="btn btn-sm pt-new" data-a="vipSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึก'}</button><span class="fine">ใส่ 0 = ไม่ขายแบบนั้น · ตลาดไทยแนวนี้ประมาณ ฿99–299/เดือน</span></div>
+    ${st?`<div class="vipstats"><div><b>${st.active}</b><span>สมาชิกที่ใช้งานอยู่</span></div><div><b>${st.card}</b><span>ต่ออายุบัตรอัตโนมัติ</span></div><div><b>${st.leaving}</b><span>ยกเลิกการต่ออายุแล้ว</span></div><div><b>${st.total}</b><span>เคยเป็นสมาชิกทั้งหมด</span></div></div>
+      ${st.recent.length?`<details style="margin-top:8px"><summary class="fine">สมาชิกล่าสุด (${st.recent.length})</summary>${st.recent.map(m=>`<p class="fine" style="margin:4px 0">${esc(m.email)} · ${esc(m.plan||'')} · ถึง ${new Date(m.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}${m.cancel?' · ยกเลิกต่ออายุ':''}</p>`).join('')}</details>`:''}`:''}
+  </section>`;}
 function loadSeoTopics(){if(SEOT.loading)return;SEOT.loading=true;adminApi('/api/content?action=seo_topics').then(j=>{SEOT.d=j||{};}).catch(()=>{SEOT.d={};}).then(()=>{SEOT.loading=false;render(true);});}
 function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d||{},T=d.topics||[],R=d.recent||[],tt=d.totals||{};
   const wk=R.filter(x=>Date.now()-Date.parse(x.at)<7*864e5);
@@ -4696,7 +4712,7 @@ function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d
   <section class="card" style="margin-top:14px"><h3 class="h3" style="margin:0">✍️ เนื้อหาฟรีบนเว็บ <span class="fine" style="font-weight:400">บทความ ${tt.articles||0} · แบบทดสอบ ${tt.quizzes||0} · 7 วันล่าสุดเพิ่ม ${wk.length} ชิ้น</span></h3>
     <p class="fine" style="margin:4px 0 10px">น้องปากกาเขียนบทความ + แบบทดสอบคู่กัน จันทร์ พุธ พฤหัส เสาร์ 10:00 · ทุกบทความมีคำถามที่พบบ่อยและลิงก์ภายใน · ซ่อนชิ้นไหนได้ที่แท็บคอนเทนต์</p>
     <div class="seo-tbl">${R.slice(0,15).map(x=>`<div><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${x.type==='quiz'?'📝':'📄'} ${esc(x.title)}</a><span>${x.at?new Date(x.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}${x.type==='article'?(x.faq?' · มีคำถามที่พบบ่อย':' · ยังไม่มีคำถามที่พบบ่อย')+(x.image?'':' · ยังไม่มีรูปปก'):` · ${x.n} ข้อ`}</span></div>`).join('')}</div></section>
-  <section class="card fine" style="margin-top:14px">👑 สมาชิก VIP รายเดือน: จะเพิ่มในแท็บนี้เมื่อเริ่มทำระบบสมาชิก (แผนอยู่ในแชท)</section>`;}
+  ${vipCard()}`;}
 function homeTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
@@ -4883,6 +4899,11 @@ function act(a,el){
     case 'propReject':if(S.confirm!=='pr:'+id){S.confirm='pr:'+id;render(true);break;}S.confirm='';propDone(id,false);toast('ไม่ใช้ข้อเสนอนี้แล้ว');break;
     case 'facReject':if(S.confirm!=='fr:'+id){S.confirm='fr:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reject:true})}).then(j=>{if(j&&j.ok){FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==id);toast('ไม่ลงขายชีทนี้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;
     case 'scat':S.scat=el.dataset.v;render(true);break;
+    case 'vipSqlCopy':copyText((VIPA.d||{}).sql||'','คัดลอก SQL แล้ว ไปวางใน Supabase → SQL Editor');break;
+    case 'vipReload':VIPA.d=null;loadVipAdmin();render(true);break;
+    case 'vipSave':{const g=k=>Math.max(0,Math.round(Number(($('#'+k)||{}).value)||0)),body={monthly:g('vip-m'),yearly:g('vip-y'),packs:{1:g('vip-p1'),3:g('vip-p3'),12:g('vip-p12')},open:!!($('#vip-open')||{}).checked};
+      if(body.open&&!body.monthly&&!body.yearly&&!body.packs[1]&&!body.packs[3]&&!body.packs[12]){toast('ใส่ราคาอย่างน้อย 1 แบบก่อนเปิดรับ');break;}
+      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',body).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});toast(j.settings.open?'บันทึกแล้ว เปิดรับสมาชิก VIP':'บันทึกแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'ssort':S.ssort=el.dataset.v;render(true);break;
     case 'dailyAns':if(S.dailyAns==null){S.dailyAns=Number(el.dataset.v);render(true);}break;
     case 'findAgain':S.find={email:'',busy:false,done:false,err:''};render(false);break;

@@ -17,6 +17,14 @@
       "destination": "/api/page?timg=:slug"
     },
     {
+      "source": "/vip",
+      "destination": "/api/page?vip=home"
+    },
+    {
+      "source": "/vip/review",
+      "destination": "/api/page?vip=review"
+    },
+    {
       "source": "/topic/:slug",
       "destination": "/api/page?topic=:slug"
     },

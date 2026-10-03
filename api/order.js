@@ -2,6 +2,81 @@
 // GET /api/order?session_id=cs_...  หรือ  ?pi=pi_...&k=<client_secret> (จ่ายด้วย QR บนหน้าร้าน)
 import { stripe, sessionToOrder, upsertOrders, configured, piToSession, sbSelect } from '../lib/shop.js';
 import { fulfill } from '../lib/fulfill.js';
+import { createQrPayment } from '../lib/shop.js';
+import * as V from '../lib/members.js';
+
+// ---------- สมาชิก VIP (/vip) ?m=vip_* ----------
+const json = (req) => { let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } } return b || {}; };
+const originOf = (req) => `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
+async function vip(req, res, m) {
+  const origin = originOf(req), me = V.sessionEmail(req);
+  if (m === 'vip_auth') { // ลิงก์จากอีเมล → ตั้งคุกกี้ แล้วกลับหน้า /vip
+    const email = V.readToken(req.query.t, 'login');
+    if (!email) { res.writeHead(302, { Location: '/vip?e=link' }); return res.end(); }
+    res.writeHead(302, { 'Set-Cookie': V.sessionCookie(email), Location: '/vip?in=1' }); return res.end();
+  }
+  if (m === 'vip_sync') { // กลับจากหน้าจ่ายบัตรของ Stripe: เปิดสิทธิ์ทันที (ไม่ต้องรอ webhook) แล้วเข้าระบบให้เลย
+    const id = String(req.query.session_id || '');
+    if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(id)) { res.writeHead(302, { Location: '/vip' }); return res.end(); }
+    try { const s = await stripe('GET', `checkout/sessions/${id}`); if (s.payment_status === 'paid' && s.metadata?.vip) { const r = await fulfill(s, { origin }); const email = r.email || String(s.customer_details?.email || s.customer_email || '').toLowerCase(); if (V.okEmail(email)) { res.writeHead(302, { 'Set-Cookie': V.sessionCookie(email), Location: '/vip?welcome=1' }); return res.end(); } } } catch (e) { console.error('vip sync', e); }
+    res.writeHead(302, { Location: '/vip?welcome=1' }); return res.end();
+  }
+  const settings = await V.loadVip();
+  const pub = { open: V.vipSellable(settings), monthly: settings.monthly, yearly: settings.yearly, packs: settings.packs };
+  if (m === 'vip_me') {
+    if (!me) return res.status(200).json({ ok: true, email: null, active: false, settings: pub });
+    let mem = await V.getMember(me).catch(() => null); mem = await V.refreshMember(mem);
+    return res.status(200).json({ ok: true, email: me, active: V.isActive(mem), until: mem?.paid_until || null, plan: mem?.plan || null, card: !!mem?.stripe_sub, cancelAt: mem?.cancel_at || null, settings: pub });
+  }
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
+  const b = json(req);
+  if (m === 'vip_login') { // ส่งลิงก์เข้าระบบ (ไม่บอกว่ามีบัญชีหรือไม่ · ส่งได้ทุก 1 นาที)
+    const email = String(b.email || '').trim().toLowerCase();
+    if (!V.okEmail(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง' });
+    try {
+      const cur = await V.getMember(email);
+      if (cur?.login_sent_at && Date.now() - Date.parse(cur.login_sent_at) < 60e3) return res.status(200).json({ ok: true });
+      await V.putMember({ email, login_sent_at: new Date().toISOString() });
+      await V.sendLoginLink(email, origin);
+    } catch (e) { console.error('vip login', e); return res.status(500).json({ ok: false, error: 'ส่งอีเมลไม่สำเร็จ ลองใหม่อีกครั้ง' }); }
+    return res.status(200).json({ ok: true });
+  }
+  if (m === 'vip_logout') { res.setHeader('Set-Cookie', V.clearCookie); return res.status(200).json({ ok: true }); }
+  if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบก่อน' });
+  if (m === 'vip_buy') { // บัตร: ตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้
+    const plan = b.plan === 'yearly' ? 'yearly' : 'monthly', price = settings[plan];
+    if (!settings.open || !(price > 0)) return res.status(400).json({ ok: false, error: 'ยังไม่เปิดรับสมาชิกแบบนี้' });
+    const name = plan === 'yearly' ? 'SheetLab VIP รายปี' : 'SheetLab VIP รายเดือน', md = { vip: '1', plan, email: me, productId: 'vip', productName: name };
+    const s = await stripe('POST', 'checkout/sessions', { mode: 'subscription', customer_email: me, locale: 'th', line_items: [{ quantity: 1, price_data: { currency: 'thb', unit_amount: price * 100, recurring: { interval: plan === 'yearly' ? 'year' : 'month' }, product_data: { name } } }], metadata: md, subscription_data: { metadata: md }, success_url: `${origin}/api/order?m=vip_sync&session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${origin}/vip` });
+    return res.status(200).json({ ok: true, url: s.url });
+  }
+  if (m === 'vip_qr') { // PromptPay: จ่ายล่วงหน้าเป็นก้อน (ตัดอัตโนมัติไม่ได้)
+    const months = [1, 3, 12].includes(Number(b.months)) ? Number(b.months) : 0, price = settings.packs[months] || 0;
+    if (!settings.open || !months || !(price > 0)) return res.status(400).json({ ok: false, error: 'ยังไม่เปิดรับสมาชิกแบบนี้' });
+    const q = await createQrPayment({ amount: price, email: me, description: `SheetLab VIP ${months} เดือน`, metadata: { vip: '1', months: String(months), productId: 'vip', productName: `SheetLab VIP ${months} เดือน` } });
+    return res.status(200).json({ ok: true, ...q });
+  }
+  if (m === 'vip_cancel') { // ยกเลิกการตัดบัตรรอบถัดไป ใช้ได้จนหมดรอบที่จ่ายแล้ว
+    const mem = await V.getMember(me);
+    if (!mem?.stripe_sub) return res.status(400).json({ ok: false, error: 'ไม่มีการตัดบัตรอัตโนมัติ' });
+    const sub = await stripe('POST', `subscriptions/${mem.stripe_sub}`, { cancel_at_period_end: 'true' });
+    const at = sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : mem.paid_until;
+    await V.putMember({ email: me, cancel_at: at }); return res.status(200).json({ ok: true, cancelAt: at });
+  }
+  if (m === 'vip_mark' || m === 'vip_mistakes') {
+    const mem = await V.refreshMember(await V.getMember(me).catch(() => null));
+    if (!V.isActive(mem)) return res.status(403).json({ ok: false, error: 'สำหรับสมาชิก VIP' });
+    if (m === 'vip_mark') {
+      const quiz = String(b.quiz || ''), q = Number(b.q);
+      if (!/^[a-z0-9-]{3,80}$/.test(quiz) || !(q >= 0 && q < 50)) return res.status(400).json({ ok: false });
+      await V.markAnswer(me, quiz, q, !!b.ok); return res.status(200).json({ ok: true });
+    }
+    const qz = (await sbSelect('shop_state?id=eq.quizzes&select=data'))?.[0]?.data?.list || [];
+    return res.status(200).json({ ok: true, ...(await V.listMistakes(me, qz.filter((x) => x.status !== 'hidden'))) });
+  }
+  return res.status(400).json({ ok: false, error: 'unknown' });
+}
+
 
 // หน้า /order "หาออเดอร์ของฉัน": POST ?m=resend {email} ส่งลิงก์ไฟล์ของออเดอร์ที่จ่ายแล้วไปที่อีเมลนั้นอีกรอบ
 // ไม่บอกว่าอีเมลนี้มีออเดอร์หรือไม่ (ตอบเหมือนกันทุกกรณี) และส่งซ้ำได้ทุก 10 นาที กันคนอื่นใช้ยิงอีเมลใส่ลูกค้า
@@ -30,6 +105,7 @@ async function resend(req, res) {
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.query.m === 'resend') return req.method === 'POST' ? resend(req, res) : res.status(405).json({ ok: false, error: 'POST only' });
+  if (/^vip_[a-z]+$/.test(String(req.query.m || ''))) { try { return await vip(req, res, req.query.m); } catch (e) { console.error('vip', e); return res.status(e.missing ? 503 : 500).json({ ok: false, error: e.missing ? 'ระบบสมาชิกยังไม่ได้ตั้งค่าฐานข้อมูล' : 'ระบบขัดข้อง ลองใหม่อีกครั้ง' }); } }
   const id = String(req.query.session_id || '');
   const piId = String(req.query.pi || '');
   const isPi = /^pi_[A-Za-z0-9]+$/.test(piId);

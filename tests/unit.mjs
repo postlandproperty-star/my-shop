@@ -20,4 +20,8 @@ ok('ลิงก์ภายในเว็บในบทความใช้�
 const ap = articlePage({ slug: 'a', title: 'T', desc: 'D', cat: 'grammar', body: '## เนื้อหา\nข้อความ\n## คำถามที่พบบ่อย\n### ใช้ Present Perfect เมื่อไหร่\nใช้กับเหตุการณ์ที่ต่อเนื่องถึงปัจจุบัน\n### ข้อสองคือ\nคำตอบสอง\n## สรุป\nจบ', created_at: '2026-10-01' }, { products: shop.products, site: 'https://sheetlabth.com' });
 const faq = lds(ap).find((x) => x['@type'] === 'FAQPage');
 ok('บทความที่มี "คำถามที่พบบ่อย" ได้ข้อมูล FAQ ให้ Google', !!faq && faq.mainEntity.length === 2 && faq.mainEntity[0].name === 'ใช้ Present Perfect เมื่อไหร่');
+const V = await import(path.join(root, 'lib/members.js'));
+const tk = V.signToken('a@b.co', 60e3, 'login');
+ok('VIP: ลิงก์เข้าระบบอ่านได้เฉพาะจุดประสงค์เดียวกัน และแก้ไขไม่ได้', V.readToken(tk, 'login') === 'a@b.co' && V.readToken(tk, 'session') === null && V.readToken(tk.slice(0, -2) + 'xx', 'login') === null && V.readToken(V.signToken('a@b.co', -1, 'login'), 'login') === null);
+ok('VIP: ราคาเป็นจำนวนเต็มไม่ติดลบ ยังไม่เปิด = ขายไม่ได้', V.normVip({ monthly: '149.6', yearly: -5, packs: { 3: '399' } }).monthly === 150 && V.normVip({ yearly: -5 }).yearly === 0 && !V.vipSellable(V.normVip({ open: false, monthly: 149 })) && V.vipSellable(V.normVip({ open: true, packs: { 1: 99 } })));
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);

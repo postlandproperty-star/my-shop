@@ -8,6 +8,8 @@ import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } 
 import { sbSelect } from '../lib/shop.js';
 import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/topics.js';
 import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
+import { vipPage, vipReviewPage } from '../lib/vipPage.js';
+import { loadVip } from '../lib/members.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
 async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
@@ -125,6 +127,13 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     if (!buf) return res.status(404).end();
     res.setHeader('Content-Type', brand.endsWith('.ico') ? 'image/x-icon' : 'image/png'); res.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=2592000');
     return res.status(200).end(buf);
+  }
+  const vipQ = String(req.query.vip || '');
+  if (vipQ === 'home' || vipQ === 'review') { // สมาชิก VIP (/vip) และสมุดจุดพลาด (/vip/review)
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
+    const shop = await loadShop().catch(() => ({ settings: {} }));
+    if (vipQ === 'review') return res.status(200).send(vipReviewPage({ settings: shop.settings, site: NEW_SITE }));
+    return res.status(200).send(vipPage(await loadVip(), { settings: shop.settings, site: NEW_SITE }));
   }
   const timg = String(req.query.timg || '');
   if (timg) { // รูปหัวข้อจาก Canva /topic-img/<slug>.jpg (ไฟล์อยู่ใน src/topics)

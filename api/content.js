@@ -1844,6 +1844,15 @@ export default async function handler(req, res) {
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
     }
+    if (action === 'vip_admin') { // สมาชิก VIP: ราคา/เปิดรับ (คุณแดนเท่านั้น) + ตัวเลขสมาชิก (ทีมอ่านได้)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const V = await import('../lib/members.js');
+      if (req.method === 'POST') { if (!admin) return res.status(403).json({ ok: false, error: 'ราคาเป็นของคุณแดน' }); const v = await V.saveVip(await readBody(req)); return res.status(200).json({ ok: true, settings: v }); }
+      const [settings, ready] = await Promise.all([V.loadVip(), V.tablesReady()]);
+      let stats = null; if (ready) { try { stats = await V.memberStats(); } catch (e) {} }
+      return res.status(200).json({ ok: true, settings, ready, sql: ready ? '' : V.VIP_SQL, stats });
+    }
     if (action === 'seo_topics') { // แท็บ SEO: หน้ารวมหัวข้อแต่ละหน้ามีของเท่าไหร่ ขึ้น Google แล้วไหม + บทความ/แบบทดสอบล่าสุด
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
