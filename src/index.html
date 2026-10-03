@@ -128,6 +128,7 @@ footer{padding:28px 0 110px;text-align:center}
 @media(max-width:640px){.st-topics{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:16px;gap:10px;margin:0 -16px;padding:0 16px 6px;scrollbar-width:none}.st-topics::-webkit-scrollbar{display:none}.st-tcard{flex:0 0 46%;scroll-snap-align:start}}
 .st-faq details{border-bottom:1px solid var(--line);padding:10px 0}.st-faq details:last-child{border-bottom:0}.st-faq summary{cursor:pointer;font-weight:600}.st-faq details p{margin:6px 0 0;color:var(--muted);font-size:15px}
 .st-ftop{display:inline-block;margin:4px 0 6px}
+.live-pill{display:inline-block;margin-top:4px;font-size:11.5px;opacity:.85}
 .vipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.vipf{display:grid;gap:4px;font-size:13px;color:var(--muted)}.vipsql{white-space:pre-wrap;word-break:break-word;font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0;max-height:160px;overflow:auto}.vipstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}.vipstats div{display:flex;flex-direction:column;background:var(--bg);border-radius:10px;padding:8px 10px}.vipstats b{font-size:20px}.vipstats span{font-size:12.5px;color:var(--muted)}
 .st-h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5vw,30px);margin:0}.st-cathead .fine{margin:4px 0 0}.st-cat{gap:16px}.st-cat .st-bundles{margin-bottom:0}
 /* ร้านค้า /store แบบ Shopee (clean): หัวร้าน · แท็บติดบนจอ · การ์ดรูปเต็มขอบ ราคาส้ม */
@@ -467,6 +468,17 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fq-add{margin:0 0 14px}.fq-addrow{display:grid;grid-template-columns:minmax(0,1fr) 92px auto;gap:8px}.fq-airow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}
 .fq-dice{font:inherit;font-size:14.5px;background:var(--surface);color:var(--ink);border:1.5px dashed var(--line);border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}.fq-dice:disabled{opacity:.6}
 .fq-idea{margin-top:10px;border:1.5px solid var(--accent,#2440E8);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.ffl{margin:0 0 14px;padding:14px}.ffl-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.ffl-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.ffl-steps li{position:relative;display:flex;flex-direction:column;gap:4px;border-radius:12px;padding:10px;background:var(--bg);border:1.5px solid transparent;min-width:0}
+.ffl-steps li i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff;background:#94A3B8}
+.ffl-steps .ffl-you i{background:#2440E8}.ffl-steps .ffl-pc i{background:#7048E8}.ffl-steps .ffl-bot i{background:#16A34A}
+.ffl-t{display:flex;flex-direction:column}.ffl-t b{font-size:15px}.ffl-t small{font-size:12px;color:var(--muted)}.ffl-d{font-size:12.5px;color:var(--muted);line-height:1.45}.ffl-steps em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--ink);margin-top:auto}
+.ffl-steps li.cur{border-color:#EE4D2D;background:#FFF5F1;box-shadow:0 0 0 3px rgba(238,77,45,.12)}
+.ffl-steps li:not(:last-child)::after{content:'›';position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--muted)}
+.ffl-now{margin:10px 0 0;padding:9px 12px;border-radius:10px;background:#FFF7D6;font-size:14px}
+@media(max-width:760px){.ffl-steps{grid-template-columns:1fr}.ffl-steps li{display:grid;grid-template-columns:26px minmax(0,1fr) auto;column-gap:10px;align-items:center;padding:9px 10px}.ffl-steps li i{grid-row:1/3}.ffl-d{grid-column:2}.ffl-steps em{grid-column:3;grid-row:1/3;margin:0}.ffl-steps li:not(:last-child)::after{content:'↓';right:auto;left:16px;top:auto;bottom:-13px;transform:none;font-size:13px}}
+.fac-global{margin-top:12px}
 .fq-sec{font-size:17px;margin:6px 0 8px}.fq-sec .fine{font-weight:400}
 .fq-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
 .fq-item{display:grid;grid-template-columns:8px minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:4px 12px 12px 4px;overflow:hidden}
@@ -1422,18 +1434,26 @@ async function coverGen(){
   S.coverBusy=false;render(true);
 }
 /* ชุดภาพสินค้า 5 รูป (OpenAI): ปก + ภาพในเล่ม + สิ่งที่ได้ + เหมาะกับใคร + วิธีรับไฟล์ สร้างทีละรูป เลือกเฉพาะรูปที่ชอบ */
+/* ชุดภาพสินค้า 5 รูป: รูปแรก = สินค้าเดี่ยวๆ (หนังสือเล่มเดียว/ชุดเดียว พื้นเรียบ ไม่มีของประกอบ) รูป 2-5 ทำทีหลังโดยใช้รูปแรกเป็นต้นแบบ หน้าปกจึงเหมือนกันทุกรูป */
+const SAME_AS_REF=' หนังสือ/หน้าจอสินค้าในภาพต้องเหมือนรูปอ้างอิงที่แนบทุกอย่าง (ชื่อบนปก สี ลาย ตำแหน่งตัวหนังสือ) ห้ามออกแบบปกใหม่';
+function imgSetCover(d){
+  if(isNotionDraft(d))return coverPrompt(d);
+  const bundle=d.type==='bundle',price=Number(d.price)>=1?'฿'+Number(d.price).toLocaleString('th-TH'):'',sub=String(d.headline||'').trim()&&String(d.headline).trim()!==String(d.name).trim()?String(d.headline).trim():'';
+  return `ภาพสินค้า${bundle?'ชุดหนังสือ e-book หลายเล่มวางเรียงซ้อนกันเป็นชุดเดียว':'หนังสือ e-book เล่มเดียว'} แบบสามมิติ ตั้งเอียงเล็กน้อยอยู่กลางภาพ บนพื้นหลังสีเรียบสว่าง (ฟ้าอ่อนไล่เป็นขาว) มีเงานุ่มใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 ไม่มีของประกอบอื่น ไม่มีโต๊ะ ไม่มีคน ไม่มีมือถือ สินค้าเด่นเพียงอย่างเดียว ปกโทนสีน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab
+ชื่อบนปกตัวใหญ่ หนา อ่านง่าย: "${aiTitle(d)}"
+${sub?`คำโปรยรองบนปก: "${sub}"\n`:''}${price?`มุมล่างของภาพมีป้ายวงกลมสีแดงเขียนว่า "ไฟล์ PDF ${price}"\n`:''}ถ้ามีรูปอ้างอิงที่แนบ ให้ใช้เป็นหน้าปกจริงของเล่ม ใส่ลงบนหนังสือให้ตรงทุกรายละเอียด`+AI_NO_TEXT;}
 function imgSetPrompts(d){
   const n=aiTitle(d),feats=String(d.features||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,4),q=f=>f.map(x=>'"'+x+'"').join(' ');
   if(isNotionDraft(d)){
-    const base=' ภาพสี่เหลี่ยมจัตุรัส 1:1 สไตล์ "Broken White Notion": พื้นหลังสีขาวหม่น (#EEEDE9) ตัวหนังสือสีดำ กล่องสีขาวขอบดำหนาพร้อมเงาดำทึบ จุดฮาล์ฟโทนที่มุม ภาพประกอบลายเส้นดำแบบมินิมอล ขาวดำทั้งภาพ'+AI_NO_TEXT;
-    return [coverPrompt(d),
+    const base=' ภาพสี่เหลี่ยมจัตุรัส 1:1 สไตล์ "Broken White Notion": พื้นหลังสีขาวหม่น (#EEEDE9) ตัวหนังสือสีดำ กล่องสีขาวขอบดำหนาพร้อมเงาดำทึบ จุดฮาล์ฟโทนที่มุม ภาพประกอบลายเส้นดำแบบมินิมอล ขาวดำทั้งภาพ'+SAME_AS_REF+AI_NO_TEXT;
+    return [imgSetCover(d),
       `ภาพ mockup แล็ปท็อปบนโต๊ะทำงานมินิมอล หน้าจอแสดงเทมเพลต Notion "${n}" มีตารางแผนรายวัน เช็คบ็อกซ์ที่ติ๊กแล้วบางช่อง และแถบความคืบหน้า มีป้ายมุมบนเขียนว่า "หน้าตาจริงในเทมเพลต"`+base,
       `อินโฟกราฟิกหัวข้อ "ในเทมเพลตมีอะไรบ้าง" แสดงเป็นการ์ดขอบดำเรียงกัน พร้อมไอคอนลายเส้น ${feats.length?q(feats):'"แผนอ่านรายวัน" "ตารางติดตามคะแนน" "คลังคำศัพท์" "สมุดจดจุดผิด"'}`+base,
       `ภาพคนไทยวัยทำงานใช้มือถือเปิด Notion ติ๊กงานที่ทำเสร็จ ยิ้มอย่างมั่นใจ วาดเป็นภาพลายเส้นดำ ข้อความบนภาพ: "เหมาะกับคนที่อยากวางแผนเตรียมสอบให้เป็นระบบ"`+base,
       `อินโฟกราฟิก 3 ขั้นตอนในกล่องขอบดำ "สั่งซื้อ → สแกนจ่าย QR → กด Duplicate เข้า Notion ของคุณ" มีไอคอนลายเส้นมือถือ QR code และปุ่ม Duplicate`+base];
   }
-  const base=' ภาพสี่เหลี่ยมจัตุรัส 1:1 ภาพถ่ายสินค้าสมจริง แสงธรรมชาติ สะอาด โทนน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab'+AI_NO_TEXT;
-  return [coverPrompt(d),
+  const base=' ภาพสี่เหลี่ยมจัตุรัส 1:1 ภาพถ่ายสินค้าสมจริง แสงธรรมชาติ สะอาด โทนน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab'+SAME_AS_REF+AI_NO_TEXT;
+  return [imgSetCover(d),
     `ภาพ mockup หนังสือ "${n}" เปิดกางบนโต๊ะทำงาน ${CAT_SCENE[d.cat]||CAT_SCENE.general} เห็นหน้าด้านในเป็นเนื้อหาและแบบฝึกหัดแบบเบลอเล็กน้อย มีป้ายมุมบนเขียนว่า "ดูตัวอย่างข้างใน"`+base,
     `อินโฟกราฟิกหัวข้อ "ในเล่มนี้มีอะไรบ้าง" แสดงเป็นรายการพร้อมไอคอน ${feats.length?q(feats):'"เนื้อหาสรุปครบ" "แบบฝึกหัดพร้อมเฉลย" "อ่านได้ทุกอุปกรณ์"'}`+base,
     `ภาพถ่ายคนไทยวัยทำงานนั่งอ่านไฟล์ PDF บนแท็บเล็ตอย่างมั่นใจ ในคาเฟ่ แสงธรรมชาติ ข้อความบนภาพ: "เหมาะกับคนเตรียมสอบที่อยากทำคะแนนเพิ่ม"`+base,
@@ -1441,9 +1461,11 @@ function imgSetPrompts(d){
 }
 async function imgSetGen(){
   if(!S.draft)return;const ps=imgSetPrompts(S.draft);S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
+  const real=(S.draft.images||[]).find(u=>/\/cover\.(png|jpe?g)/i.test(u))||S.draft.cover||'';let ref='';
   for(let i=0;i<ps.length;i++){
-    try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i],model:imgModel(),quality:imgQuality()})});
-      if(j&&j.ok)S.imgSet[i].url=j.image;else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY|GEMINI_API_KEY|เครดิตหมด|ใช้เงินครบ/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
+    if(i>0&&!ref){S.imgSet[i].err='ข้ามเพราะรูปแรกไม่สำเร็จ (รูปอื่นต้องใช้รูปแรกเป็นต้นแบบ)';S.imgSet[i].pick=false;continue;}
+    try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i],model:imgModel(),quality:imgQuality(),refs:i?[ref]:real?[real]:[]})});
+      if(j&&j.ok){S.imgSet[i].url=j.image;if(!i){try{const r=await square(new File([await (await fetch(j.image)).blob()],'img.png',{type:'image/png'}));ref=await uploadImage(r.url);S.imgSet[0].url=ref;}catch(e){console.error(e);}}}else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY|GEMINI_API_KEY|เครดิตหมด|ใช้เงินครบ/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
     catch(e){S.imgSet[i].err='ไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองคุณภาพปกติ';S.imgSet[i].pick=false;}
     render(true);
   }
@@ -2774,7 +2796,7 @@ function facBox(inFactory){
 function guessCat(t){t=String(t||'').toLowerCase();return /notion|โนชั่น/.test(t)?'notion':/ielts/.test(t)?'ielts':/tgat|a-level|มหาลัย/.test(t)?'tgat':/ก\.พ|ราชการ/.test(t)?'kp':/สนทนา|พูด|speaking|conversation/.test(t)?'speak':/ทำงาน|เที่ยว|business|travel|office/.test(t)&&!/toeic/.test(t)?'work':/grammar|ไวยากรณ์|tense/.test(t)?'grammar':/vocab|คำศัพท์|ศัพท์/.test(t)?'vocab':/listening|ฟัง/.test(t)?'listening':/reading|อ่าน/.test(t)?'reading':/mock|ข้อสอบเสมือน|full test/.test(t)?'mock':'';}
 /* ทำรูปขายทั้งชุดจากการ์ดโรงงาน: ใช้คำสั่งตามหมวดเดียวกับหน้าแก้สินค้า โมเดล/คุณภาพตามที่เลือกไว้ล่าสุด */
 async function facAiImages(id){
-  const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;const lc=j.listing_copy||{};
+  const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;const lc=j.listing_copy||{}; // เซิร์ฟเวอร์ทำรูปแรก (ใช้ปกจากโรงงานเป็นต้นแบบ) ก่อน แล้วรูป 2-5 ใช้รูปแรกเป็นต้นแบบ
   const d={name:lc.name||j.title,headline:lc.headline||'',price:Number(j.price)||0,features:lc.features||'',specs:lc.specs||'',cat:j.kind==='notion'?'notion':guessCat(j.title+' '+(j.category||'')),slug:j.kind==='notion'?'notion-x':'sheet-x',type:''};
   FAC.aiBusy=id;render(true);toast('กำลังทำรูปขาย 5 รูปพร้อมกัน ใช้เวลา 1-3 นาที');
   try{const r=await authFetch('/api/content?action=ai_images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,prompts:imgSetPrompts(d),model:imgModel(),quality:imgQuality()})});
@@ -2989,7 +3011,7 @@ const FQ_FORMATS=['ศัพท์ + ความหมาย + ตัวอย�
 function fqColor(t){t=String(t||'').toLowerCase();return /toeic/.test(t)?'#c9a227':/ielts/.test(t)?'#8b5e3c':/tgat|a-level|มหาลัย/.test(t)?'#2f6fd0':/ก\.พ|ราชการ/.test(t)?'#3f9a5a':/ศัพท์|vocab/.test(t)?'#9aa0a8':/grammar|ไวยากรณ์/.test(t)?'#d0534a':/อ่าน|reading|เรื่องสั้น/.test(t)?'#8e5bc4':/พูด|สนทนา|speaking/.test(t)?'#d9822b':/ทำงาน|เที่ยว|business|travel/.test(t)?'#d4679a':/notion/.test(t)?'#111827':'#6b7280';}
 const FQ_CMD='ทำเล่มบนสุดในคิวโรงงาน SheetLab ตอนนี้: รัน python3 ~/Projects/my-shop/tools/factory/worker.py queue แล้วผลิตเล่มแรกตามขั้นตอนเดิม (claim → ผลิต PDF → done) ไม่ต้องรอรอบ';
 let FPAUSED=false,FORDER=[];
-function loadFactoryJobs(){FJOBS=[];S.floading=true;adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
+function loadFactoryJobs(silent){if(!silent){FJOBS=[];S.floading=true;}adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
 function fqRow(j,n,qLen){
   const open=S.fqOpen===j.id,prod=j.status==='producing',e=open?(S.fqe||{}):{};const v=k=>esc(e[k]!=null?e[k]:(j[k]==null?'':j[k]));
   const meta=[j.category,j.pages?j.pages+' หน้า':'',Number(j.price)>=1?baht(j.price):'แจกฟรี',j.ordered_by==='owner'?'':'สั่งโดย '+(j.ordered_by==='auto'?'ระบบอัตโนมัติ':member(j.ordered_by||'manager').name)].filter(Boolean).join(' · ');
@@ -3040,8 +3062,9 @@ function factoryView(){
         <button class="fq-run ${FPAUSED?'off':''}" data-a="fqRun" ${S.fqBusy?'disabled':''}>${FPAUSED?'⏸ หยุดอยู่ · กดเปิด':'▶ เปิดผลิตอยู่'}</button>
         <button class="chip" data-a="fqCmd">📋 คำสั่ง “ทำเล่มบนสุด”</button><button class="chip" data-a="toFactory" aria-label="รีเฟรช">↻</button></div>
     </div>
+    ${facFlow({active,producing,review,done,stale})}
     ${FPAUSED?'<div class="fac-worker stale">หยุดโรงงานไว้: คอมจะไม่หยิบเล่มใหม่ (เล่มที่กำลังผลิตทำต่อจนเสร็จ) กด "หยุดอยู่ · กดเปิด" เพื่อผลิตต่อ</div>':stale&&active.length?'<div class="fac-worker stale">มีเล่มรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกด 📋 คัดลอกคำสั่งไปวางในแชต Claude</div>':''}
-    ${review.length?`<details class="fq-review" data-keep="fqRev" ${S.fqRev!==false?'open':''}><summary><b>👀 รอคุณแดนตรวจ ${review.length} เล่ม</b> <span class="fine">ผลิตเสร็จแล้ว ตรวจไฟล์แล้วกดอนุมัติลงขาย</span></summary>${facBox(1)||''}${globalBox()}</details>`:''}
+    ${review.length?`<details class="fq-review" data-keep="fqRev" ${S.fqRev!==false?'open':''}><summary><b>👀 รอคุณแดนตรวจ ${review.length} เล่ม</b> <span class="fine">ผลิตเสร็จแล้ว ตรวจไฟล์แล้วกดอนุมัติลงขาย</span></summary>${facBox(1)||''}</details>`:''}
     <section class="card fq-add">
       <div class="fq-addrow"><input class="input" id="fq-title" data-fqn="title" value="${esc(S.fqTitle||'')}" placeholder="พิมพ์ชื่อเล่ม เช่น IELTS Listening 10 ชุด พร้อมเฉลย" autocomplete="off"><input class="input fq-price" id="fq-price" data-fqn="price" type="number" inputmode="numeric" min="0" value="${esc(S.fqPrice||'')}" placeholder="ราคา ฿" aria-label="ราคาเสนอ"><button class="btn btn-dark" data-a="fqAdd" ${S.fqBusy?'disabled':''}>เพิ่มเข้าคิว</button></div>
       <div class="fq-airow"><select class="input" data-fqn="cat" aria-label="หมวดที่ให้ AI คิด"><option value="">ทุกหมวด</option>${FQ_CATS.map(c=>`<option ${S.fqCat===c?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="fq-dice" data-a="fqIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 ให้ AI คิดเล่มใหม่'}</button></div>
@@ -3070,7 +3093,26 @@ function factoryView(){
       </ol></details>
       ${ceoBar('factory')}
     </details>
+    ${(()=>{if(FAC.jobs===null&&!FAC.loading)loadFacJobs();const G=FAC.global||[],pend=G.filter(j=>j.listing==='global_pending').length;
+      return `<details class="card fac-more fac-global" data-keep="fqGlobal" ${S.fqGlobal?'open':''}><summary><b>🌏 ขายต่างประเทศ (Notion EN)</b> <span class="fine">${pend?`<span class="badge warn">รอลง ${pend}</span> `:''}Gumroad · Notion Gallery · Pinterest · กดเปิด</span></summary>${globalBox()}</details>`;})()}
   </div>`;
+}
+/* คู่มือแบบภาพ: 5 ขั้นของโรงงาน ใครทำ (👤 คุณแดน · 💻 คอม · 🤖 ระบบ) ตัวเลขสด และบอกว่า "ตอนนี้ต้องทำอะไร" */
+function facFlow({active,producing,review,done,stale}){
+  const listed=done.filter(j=>j.listing==='listed').length;
+  const [cur,now]=review.length?[3,`ถึงตาคุณแดน: ตรวจไฟล์และกดอนุมัติ <b>${review.length} เล่ม</b> ในกล่อง 👀 รอคุณแดนตรวจ ด้านล่าง`]
+    :producing.length?[2,`คอมกำลังผลิต <b>${producing.length} เล่ม</b> รอได้เลย เสร็จแล้วจะขึ้นที่ 👀 รอคุณแดนตรวจ`]
+    :active.length&&FPAUSED?[2,'โรงงานหยุดอยู่ กด <b>▶</b> ที่แถบด้านบนเพื่อเปิดผลิต']
+    :active.length&&stale?[2,`คิวมี <b>${active.length} เล่ม</b> แต่คอมไม่ได้มาเช็คนาน: เปิดคอมและแอป Claude แล้วกด <b>📋 คำสั่ง “ทำเล่มบนสุด”</b> ไปวางในแชต`]
+    :active.length?[2,`คอมจะหยิบเล่มบนสุดในรอบถัดไป อยากได้เร็วกด <b>📋 คำสั่ง “ทำเล่มบนสุด”</b> แล้ววางในแชต Claude`]
+    :[1,'คิวว่าง: พิมพ์ชื่อเล่ม + ราคาในช่องด้านล่างแล้วกดเพิ่ม หรือกด 🎲 ให้ AI คิดหัวข้อ'];
+  const st=[[1,'you','สั่งเล่ม','พิมพ์ชื่อ + ราคา แล้วเพิ่มเข้าคิว',active.length+' ในคิว'],[2,'pc','ผลิต','คอมทำ PDF + ปก + ข้อความขาย',producing.length+' กำลังทำ'],
+    [3,'you','ตรวจไฟล์','เปิด PDF ดูว่าถูกต้อง แก้ราคาได้',review.length+' รอตรวจ'],[4,'you','อนุมัติลงขาย','กดปุ่มเดียว',''],
+    [5,'bot','ระบบทำต่อเอง','รูปขาย 5 รูป · หน้าตัวอย่าง 3-6 · ขึ้นร้าน + Google · ร่างแอด · ลูกค้าจ่ายแล้วได้ไฟล์เอง',listed+' ลงขายแล้ว']];
+  const W={you:'👤 คุณแดน',pc:'💻 คอม',bot:'🤖 ระบบ'};
+  return `<section class="card ffl" aria-label="ขั้นตอนโรงงาน"><div class="ffl-head"><b>วงจรโรงงาน</b><span class="fine">👤 คุณแดนทำ · 💻 คอมทำ · 🤖 ระบบทำเอง</span></div>
+    <ol class="ffl-steps">${st.map(([n,w,t,d,c])=>`<li class="ffl-${w}${n===cur||(cur===3&&n===4)?' cur':''}"><i>${n}</i><span class="ffl-t"><b>${t}</b><small>${W[w]}</small></span><span class="ffl-d">${d}</span>${c?`<em>${c}</em>`:''}</li>`).join('')}</ol>
+    <p class="ffl-now">👉 <b>ตอนนี้:</b> ${now}</p></section>`;
 }
 /* ข้อเสนอแก้ข้อความสินค้าจาก CEO: เปิดในตัวแก้ไขพร้อมตัวอย่างสด คุณแดนกดบันทึกเอง */
 const PROP={list:null,loading:false};
@@ -4797,7 +4839,7 @@ function render(keep){
   const y=window.scrollY,v=S.view;
   const isAdmin=hasAdminAccess();
   $('#bar').style.display=isAdmin?'':'none';
-  $('#bar-note').innerHTML=isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a>`:'';
+  $('#bar-note').innerHTML=isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a><br><span id="live-pill" class="live-pill">${livePillText()}</span>`:'';
   $('#seg').innerHTML=isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button>`:'';
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
@@ -5126,7 +5168,7 @@ function act(a,el){
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว จะตอบรับภายใน 1-3 นาที และทำตามในรอบงานถัดไป');setTimeout(()=>{postsLoaded=false;loadPosts().then(()=>render(true));},200000);S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
-    case 'tab':if(el.dataset.goadmin&&S.view!=='admin'){S.view='admin';}S.tab=el.dataset.v;S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='meeting')postsLoaded=false;if(S.tab==='docs'){DOCS.links=null;LEADS.list=null;postsLoaded=false;}render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
+    case 'tab':if(el.dataset.goadmin&&S.view!=='admin'){S.view='admin';}S.tab=el.dataset.v;setTimeout(()=>liveTick(true),50);S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='meeting')postsLoaded=false;if(S.tab==='docs'){DOCS.links=null;LEADS.list=null;postsLoaded=false;}render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
@@ -5192,7 +5234,7 @@ function act(a,el){
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
     case 'adsFilter':ADST.f=el.dataset.v;render(true);break;
     case 'adfSet':ADF.budget=Number(el.dataset.v)||0;render(true);break;
-    case 'adsStRefresh':ADST.d=null;ADA.items=null;loadAdsStatus();loadAdsAuto();render(true);break;
+    case 'adsStRefresh':LIVEAT.ads=LIVEAT.adsdraft=Date.now();loadAdsStatus();loadAdsAuto();render(true);break;
     case 'adsSet':{const on=el.dataset.v==='ACTIVE';if(!confirm(on?'เปิดแอดนี้ต่อ? (จะเริ่มใช้งบอีกครั้ง)':'หยุดแอดนี้? (เปิดต่อได้ภายหลัง)'))break;ADST.busy=id;render(true);
       adminPost('/api/content?action=ads_auto_adset',{adId:id,status:el.dataset.v,campaignId:el.dataset.camp||''}).then(j=>{ADST.busy='';if(j&&j.ok){toast(on?'เปิดแอดต่อแล้ว':'หยุดแอดแล้ว');ADST.d=null;loadAdsStatus();}else{toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}}).catch(()=>{ADST.busy='';toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'setReject':{if(!confirm('ไม่ลงขายชุดนี้? (ไฟล์ยังอยู่ในคลัง)'))break;adminPost('/api/content?action=set_reject',{id}).then(()=>{SETI.items=null;loadSets();});break;}
@@ -5654,7 +5696,38 @@ function wireAuth(){
     else if(ev==='SIGNED_OUT'){if(S.relogin){S.relogin=false;S.view='login';render(false);return;}S.view='shop';S.tab='home';S.edit=null;S.draft=null;loadRemote().then(()=>render(false));render(false);}
   });
 }
-setInterval(()=>{if(S.view==='admin'&&S.tab==='home'&&sbSession&&document.visibilityState==='visible'&&SO.d)loadSO();},30e3);
+/* ===== ข้อมูลสด (LIVE): ทุกการ์ด dashboard ใช้ข้อมูลชุดเดียวกัน และรีเฟรชเองตามรอบ =====
+   - แต่ละแหล่งข้อมูลลงทะเบียนที่นี่ครั้งเดียว: ใช้ในแท็บไหน (tabs) และรีเฟรชทุกกี่วินาที (every)
+   - การ์ดในแท็บต่างกันอ่านตัวแปรเดียวกัน (เช่น ADST ทั้งภาพรวมและแท็บโฆษณา) ตัวเลขจึงตรงกันเสมอ
+   - เปลี่ยนแท็บ/กลับมาที่หน้าจอ: ข้อมูลเก่ากว่า 20 วินาทีโหลดใหม่ทันที · กำลังพิมพ์อยู่ = ยังไม่รีเฟรช (ไม่ให้ข้อความที่พิมพ์หาย)
+   - ของใหม่ในอนาคต: เพิ่มแถวใน LIVE แล้วการ์ดจะสดและตรงกับที่อื่นเอง · หลังกดปุ่มที่เปลี่ยนข้อมูล เรียก liveBump('ชื่อ') */
+const LIVE=[
+  {k:'ads',tabs:['home','ads'],every:60,run:()=>loadAdsStatus()},
+  {k:'adsdraft',tabs:['home','ads'],every:60,run:()=>loadAdsAuto()},
+  {k:'sales',tabs:['home'],every:30,run:()=>loadSO()},
+  {k:'dash',tabs:['home','orders'],every:60,run:()=>{if(!DASH.loading)loadDash().then(()=>render(true));}},
+  {k:'health',tabs:['home','todo'],every:300,run:()=>loadHealth()},
+  {k:'todo',tabs:['home','todo'],every:120,run:()=>{if(!TODO.loading)loadTodo().then(()=>render(true));}},
+  {k:'orders',tabs:['orders'],every:60,run:()=>autoSync()},
+  {k:'seo',tabs:['seo','home'],every:900,run:()=>loadSeo()},
+  {k:'seotopics',tabs:['seo'],every:300,run:()=>loadSeoTopics()},
+  {k:'vip',tabs:['seo'],every:120,run:()=>loadVipAdmin()},
+  {k:'factory',views:['factory'],every:30,run:()=>loadFactoryJobs(true)},
+];
+const LIVEAT={};let liveAt=0;
+function liveBump(k){LIVEAT[k]=0;liveTick(true);}
+function liveBusy(){const a=document.activeElement;return !!(a&&a.closest&&a.closest('#app')&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.type!=='checkbox'&&a.type!=='radio');}
+function liveTick(soon){
+  if(!sbSession||document.visibilityState!=='visible'||!['admin','factory'].includes(S.view)||liveBusy()||S.edit)return;
+  const now=Date.now();let any=false;
+  for(const L of LIVE){const here=L.views?L.views.includes(S.view):S.view==='admin'&&L.tabs.includes(S.tab);if(!here)continue;
+    const age=now-(LIVEAT[L.k]||0);if(age<(soon?Math.min(20e3,L.every*1e3):L.every*1e3))continue;
+    LIVEAT[L.k]=now;any=true;try{L.run();}catch(e){console.error('live',L.k,e);}}
+  if(any){liveAt=now;const p=document.getElementById('live-pill');if(p)p.textContent=livePillText();}
+}
+function livePillText(){return liveAt?'🟢 อัปเดตอัตโนมัติ · ล่าสุด '+new Date(liveAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'🟢 อัปเดตอัตโนมัติ';}
+setInterval(()=>liveTick(false),10e3);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')liveTick(true);});
 setInterval(()=>{if(S.view==='admin'&&S.tab==='chat'&&sbSession&&document.visibilityState==='visible'&&!CHAT.loading){loadChat().then(()=>render(true));}},60e3);
 setInterval(()=>{if(CHAT.fastUntil>Date.now()&&S.view==='admin'&&S.tab==='chat'&&sbSession&&!CHAT.loading){const n=(CHAT.msgs||[]).length;loadChat().then(()=>{render(true);if((CHAT.msgs||[]).length>n){const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end',behavior:'smooth'});}});}},8e3);
 document.addEventListener('visibilitychange',async()=>{

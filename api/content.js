@@ -1189,17 +1189,21 @@ export default async function handler(req, res) {
       const prompts = (Array.isArray(body.prompts) ? body.prompts : []).map((p) => String(p || '').trim().slice(0, 3000)).filter((p) => p.length >= 20).slice(0, 5);
       if (!prompts.length) return res.status(400).json({ ok: false, error: 'ไม่มีคำสั่งทำรูป' });
       const stamp = Date.now().toString(36);
-      const one = async (prompt, i) => {
-        const g = await genImage({ model: body.model, prompt, quality: body.quality, refs: body.refs });
+      const one = async (prompt, i, refs) => {
+        const g = await genImage({ model: body.model, prompt, quality: body.quality, refs });
         const ext = /png/.test(g.mime) ? 'png' : /webp/.test(g.mime) ? 'webp' : 'jpg';
         const path = `factory/${job.id}/ai-${stamp}-${i + 1}.${ext}`;
         const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': g.mime, 'x-upsert': 'true' }, body: Buffer.from(g.b64, 'base64') });
         if (!up.ok) throw new Error(`อัปโหลดรูปไม่ได้ (${up.status})`);
         return `${SB_URL}/storage/v1/object/public/product-images/${path}`;
       };
-      const out = await Promise.allSettled(prompts.map(one)); // ทำพร้อมกันทุกรูป ไม่ต้องรอทีละรูป
+      // รูปแรก = สินค้าเดี่ยวๆ ใช้ปกจริงจากโรงงานเป็นต้นแบบ · รูป 2-5 ทำพร้อมกันโดยใช้รูปแรกเป็นต้นแบบ ปกจึงเหมือนกันทุกรูป
+      const realCover = (job.images || []).find((u) => /\/cover\.(png|jpe?g)/i.test(u)) || (job.images || [])[0];
+      const first = await Promise.allSettled([one(prompts[0], 0, realCover ? [realCover] : (body.refs || []))]);
+      const rest = first[0].status === 'fulfilled' ? await Promise.allSettled(prompts.slice(1).map((p, k) => one(p, k + 1, [first[0].value]))) : [];
+      const out = [...first, ...rest];
       const urls = out.filter((x) => x.status === 'fulfilled').map((x) => x.value);
-      const errors = out.filter((x) => x.status === 'rejected').map((x) => String(x.reason?.message || x.reason).slice(0, 160));
+      const errors = out.filter((x) => x.status === 'rejected').map((x) => String(x.reason?.message || x.reason).slice(0, 160)).concat(first[0].status === 'rejected' && prompts.length > 1 ? ['รูป 2-5 ข้ามไปเพราะรูปแรกไม่สำเร็จ'] : []);
       if (urls.length) { const all = await loadJobs(); const jj = all.find((x) => x.id === job.id); if (jj) { jj.ai_images = urls; await saveJobs(all); } }
       return res.status(200).json({ ok: urls.length > 0, images: urls, errors });
     }

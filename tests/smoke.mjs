@@ -218,6 +218,10 @@ try {
       }, [v, bundle && bundle.id]);
       await page.waitForTimeout(400);
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
+      if (v === 'factory') { await page.waitForTimeout(300); const f = await page.evaluate(() => ({ steps: document.querySelectorAll('.ffl-steps li').length, cur: document.querySelectorAll('.ffl-steps li.cur').length, now: (document.querySelector('.ffl-now') || {}).textContent || '', global: !!document.querySelector('details.fac-global'), globalLast: (() => { const g = document.querySelector('details.fac-global'); return !!g && !g.nextElementSibling; })() }));
+        await page.locator('.ffl').screenshot({ path: path.join(OUT, `factory-flow-${kind}.png`) }).catch(() => {});
+        pass(`[${kind}] โรงงาน: คู่มือภาพ 5 ขั้น + บอกว่าตอนนี้ต้องทำอะไร · ขายต่างประเทศพับไว้ล่างสุด`, f.steps === 5 && f.cur >= 1 && /ตอนนี้/.test(f.now) && f.global && f.globalLast, JSON.stringify(f).slice(0, 160)); }
+      if (v === 'home') { const lv = await page.evaluate(() => ({ n: LIVE.length, ok: LIVE.every((L) => typeof L.run === 'function' && L.every > 0 && (L.tabs || L.views)), pill: !!document.getElementById('live-pill') })); pass(`[${kind}] ข้อมูลสด: ทุกแหล่งข้อมูลลงทะเบียนรอบรีเฟรช + ป้ายอัปเดตอัตโนมัติ`, lv.n >= 10 && lv.ok, JSON.stringify(lv)); }
       if (v === 'seo') { await page.waitForTimeout(400); pass(`[${kind}] SEO: การ์ดสมาชิก VIP (ยังไม่มีตาราง → ขึ้น SQL ให้คัดลอก + ช่องราคา)`, await page.locator('.vipa .vipsql').count() === 1 && await page.locator('#vip-m').count() === 1); }
       if (v === 'ads' && AD) { await page.waitForTimeout(400); pass(`[${kind}] โฆษณา: ร่างแอดเลือกไว้ 2 รูป`, await page.locator('.adq-pick.on').count() === 2);
         const t = await page.evaluate(() => { const c = document.querySelector('.adtest'); return c ? { win: (c.querySelector('.adt-cell.win b') || {}).textContent || '', lose: c.querySelectorAll('.adt-cell.lose').length, pause: !!c.querySelector('[data-a="adTestPause"]'), remake: !!c.querySelector('[data-a="adTestRemake"]') } : null; });
