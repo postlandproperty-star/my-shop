@@ -6,7 +6,8 @@ import { newSiteLive, NEW_SITE } from '../lib/site.js';
 import { policyPage, POLICY_DOCS } from '../lib/policies.js';
 import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } from '../lib/quiz.js';
 import { sbSelect } from '../lib/shop.js';
-import { TOPICS, topicItems, topicReady, topicPage } from '../lib/topics.js';
+import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/topics.js';
+import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
 async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
@@ -177,12 +178,13 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const dp = dailyPick(qz); const daily = dp ? { q: dp.x.q, choices: dp.x.choices, answer: dp.x.answer, explain: dp.x.explain, slug: dp.quiz.slug, title: dp.quiz.title } : null;
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
-    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll }).replace(/<\//g, '<\\/');
+    const topics = TOPICS.map((t) => { const it = topicItems(t, { articles: ar, quizzes: qz, products: shop.products }); return topicReady(it) ? { slug: t.slug, name: t.name, n: topicCount(it) } : null; }).filter(Boolean); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว (หน้าร้านโชว์เป็นทางลัด)
+    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';
     out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(shopName)}</title>`)
-      .replace('<meta property="og:title" content="ร้านหนังสือ/ชีทเรียน">', `<meta property="og:title" content="${esc(shopName)}"><meta name="description" content="ชีทสรุป Grammar และคำศัพท์ TOEIC ภาษาไทย พร้อมแบบฝึกหัดและเฉลยละเอียด สแกนจ่ายแล้วดาวน์โหลดได้ทันที"><link rel="canonical" href="${NEW_SITE}/">`);
+      .replace('<meta property="og:title" content="ร้านหนังสือ/ชีทเรียน">', `<meta property="og:title" content="${esc(shopName)}"><meta name="description" content="ชีทสรุป TOEIC ภาษาไทย Grammar คำศัพท์ Reading Listening และ IELTS พร้อมข้อสอบฟรีมีเฉลย ดูหน้าตัวอย่างก่อนซื้อ สแกนจ่ายแล้วดาวน์โหลดได้ทันที"><link rel="canonical" href="${NEW_SITE}/">`);
     const view = String(req.query.view || '');
     if (view === 'order' || view === 'checkout') { // หน้าหาออเดอร์ / หน้าชำระเงินหลายเล่ม: ไม่ต้องให้ Google เก็บ
       out = out.replace(/<title>[^<]*<\/title>/, view === 'checkout' ? '<title>ชำระเงิน · SheetLab</title>' : '<title>หาออเดอร์ของฉัน · SheetLab</title>')
@@ -191,7 +193,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const live = shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || ''));
     if (!slug && !view && live.length >= 2) { // หน้าแรกเป็นหน้าร้าน: บอก Google ว่ามีสินค้าอะไรบ้าง
       const ld = { '@context': 'https://schema.org', '@type': 'ItemList', name: shopName, itemListElement: live.map((x, i) => ({ '@type': 'ListItem', position: i + 1, url: `${NEW_SITE}/p/${x.slug}`, name: x.name })) };
-      out = out.replace('<!--OG-END-->', `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script><!--OG-END-->`);
+      out = out.replace('<!--OG-END-->', `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script><script type="application/ld+json">${JSON.stringify(storeFaqLd()).replace(/</g, '\\u003c')}</script><!--OG-END-->`);
     }
     const p = /^[a-z0-9-]+$/.test(slug) ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
     if (p) {

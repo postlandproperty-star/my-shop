@@ -109,6 +109,9 @@ try {
     let page = await newPage(kind);
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid', { timeout: 15000 });
     pass(`[${kind}] หน้าร้าน: มีปุ่มหมวด`, await page.locator('.st-chips .chip').count() >= 2);
+    const hs = await page.evaluate(async () => { const im = document.querySelector('.st-tcard img'); if (im) { im.loading = 'eager'; await new Promise((r) => { if (im.complete) r(); else { im.onload = r; im.onerror = r; setTimeout(r, 3000); } }); }
+      return { tiles: document.querySelectorAll('.st-topics .st-tcard').length, img: im ? im.naturalWidth : 0, faq: document.querySelectorAll('.st-faq details').length, cta: document.querySelectorAll('.st-hcta a').length, nav: !!document.querySelector('.st-nav a[href="/topic/toeic"]'), foot: document.querySelectorAll('.st-ftop a').length }; });
+    pass(`[${kind}] หน้าร้าน: ทางลัดหัวข้อพร้อมรูป + ปุ่มในหัวหน้า + คำถามที่พบบ่อย + ลิงก์หัวข้อท้ายหน้า`, hs.tiles === 3 && hs.img > 0 && hs.faq === 2 && hs.cta >= 1 && hs.nav && hs.foot === 3, JSON.stringify(hs));
     if (bundle) {
       const pos = await page.evaluate(() => { const c = document.querySelector('.st-bundle'), b = document.querySelector('.st-badd'); if (!c || !b) return null; return { below: b.getBoundingClientRect().top >= c.getBoundingClientRect().bottom - 1 }; });
       pass(`[${kind}] หน้าร้าน: ชุดมีปุ่ม + เพิ่ม อยู่ใต้การ์ด`, !!pos && pos.below);
