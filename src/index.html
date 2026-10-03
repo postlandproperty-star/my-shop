@@ -237,6 +237,7 @@ footer{padding:28px 0 110px;text-align:center}
 .adt-cell img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:6px}.adt-cell span{color:var(--muted)}.adt-cell em{font-style:normal;font-weight:700;font-size:12px}
 .adt-cell.win{border-color:#16a34a;box-shadow:0 0 0 1px #16a34a}.adt-cell.win em{color:#16a34a}.adt-cell.lose em{color:#BE123C}.adt-cell.off{opacity:.55}
 .adq-models{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.adq-extp{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.45;background:var(--bg)}.adq-steps{margin:2px 0 0;padding-left:18px}.adq-steps li{margin:2px 0}
 .adq-plats{display:flex;gap:6px;flex-wrap:wrap}
 .adq-ai{display:grid;gap:6px;margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}.adq-ai .adq-lbl{margin:4px 0 0}.adq-ai .input{margin:0}
 .adq-tl{padding:8px 12px 0;margin:0}.adq-text{border-top:0}
@@ -3878,6 +3879,29 @@ function adImgPrompt(p,style,hook){
   return `ภาพโฆษณาแนว "ugly ad" ที่จงใจให้ดูไม่โปร เหมือนโพสต์ของคนธรรมดา ไม่ใช่งานกราฟิก: ภาพแนวตั้ง 4:5 (ข้อความทั้งหมดอยู่ช่วงกลางภาพ ไม่ชิดขอบบนล่าง) ถ่ายด้วยมือถือมือเดียวแบบลวกๆ เหมือนนักเรียนถ่ายเก็บไว้เอง ไม่จัดแสง ใช้ไฟในห้องธรรมดา มีแสงสะท้อนบนจอเล็กน้อย มุมกล้องเฉียง โต๊ะรกนิดหน่อยแบบชีวิตจริง ไม่มีกรอบ ไม่มีกราฟิกตกแต่ง ไม่มีโลโก้ ไม่มีป้ายราคาแบบโฆษณา: ${scene}
 ข้อความภาษาไทยเหมือนเขียนด้วยนิ้วในแอปแต่งรูป/IG Story ลายมือหวัดเล็กน้อย สีขาวตัวใหญ่ ซ้อนอยู่ครึ่งบนของภาพ มีเงาดำบางๆ ให้อ่านออก แบ่งบรรทัดตามนี้: ${L.map(x=>'"'+x+'"').join(' / ')}${last?`
 บรรทัดสุดท้ายเขียนด้วยลายมือสีเหลืองสด: "${last}"`:''}`+AI_NO_TEXT;}
+/* prompt สำหรับเอาไปสร้างรูปแอดเองข้างนอก (ChatGPT / Gemini): ภาษาอังกฤษ (โมเดลเข้าใจดีกว่า) + ข้อความไทยที่ต้องขึ้นบนรูปตรงตัว + ข้อมูลสินค้าจริง · ไม่เสียค่า AI ของร้าน */
+const EXT_ANGLES=[['ugc','📱 ภาพมือถือบ้านๆ + ลายมือ (Ugly ad)'],['cover','🎨 ปกสินค้าเด่น + หัวข้อใหญ่'],['flat','🗂 ชีทวางบนโต๊ะ มองจากด้านบน'],['pain','😵 ก่อน/หลัง (โน้ตรก → ชีทสรุปเป็นระเบียบ)']];
+const EXT_AI=[['ChatGPT','https://chatgpt.com/'],['Gemini','https://gemini.google.com/app']];
+function adExtPrompt(p,angle,hook){
+  const L=lines(hook),last=L.length>1?L.pop():'',f=pfmt(p),ex=(String(p.name||'').match(/TOEIC|IELTS|TGAT|ก\.พ\.|CU-TEP|TU-GET/i)||[''])[0],feat=lines(p.features).slice(0,3);
+  const kind=f==='notion'?'a Notion study-planner template (digital, used on laptop/iPad)':f==='bundle'?'a bundle of downloadable PDF study sheets (several books in one set)':'a downloadable PDF study sheet / summary book';
+  const prop=f==='notion'?'a laptop on a wooden desk showing a Notion study plan with a daily table and some ticked checkboxes':'an iPad on a desk showing an English multiple-choice exam page (A) (B) (C) (D) with a few answers circled in red, a stylus next to it';
+  const sc={ugc:`Style: deliberately "ugly ad" / UGC look, NOT a polished graphic. A casual one-handed smartphone photo taken by a Thai student: ${prop}, slightly messy real desk, normal room light, small screen glare, tilted angle. No frames, no graphic badges, no stock-photo feel.`,
+    cover:`Style: clean, bright product ad. The product cover (attached image) shown large as a slightly angled ${f==='notion'?'laptop screen mockup':f==='bundle'?'stack of books/sheets fanned out':'tablet + printed book mockup'} on a soft royal-blue (#2440E8) to light-blue gradient background, soft shadow, a few small yellow sparkles. Big bold Thai headline above it.`,
+    flat:`Style: top-down flat-lay photo of printed study sheets spread on a light desk (the attached cover on top), highlighter pens, sticky notes, a coffee cup, phone. Natural daylight, real-photo look.`,
+    pain:`Style: vertical split before/after. Top half: messy handwritten notes, crumpled paper, a tired hand holding a pen (hands only, no face). Bottom half: the same desk tidy with the attached sheet open, clean highlighted summary pages. Real-photo look, phone camera.`}[angle]||'';
+  return `Create a vertical 4:5 image (1080×1350) for a Facebook / Instagram feed ad of a Thai online shop called SheetLab.
+
+Product: "${p.name}" — ${kind}${ex?` for the ${ex} exam`:''}.${feat.length?`\nWhat buyers get:\n${feat.map(x=>'- '+x).join('\n')}`:''}
+Price: ${Number(p.price)||0} THB.
+${(p.images||[])[0]?'I attached the real product cover image. Show it accurately (same colours and title). Do not invent a different cover or a different product name.\n':''}
+${sc}
+
+Thai text on the image — render EXACTLY as written, correct Thai spelling, large and easy to read on a phone, placed in the middle 80% of the frame (nothing near the top/bottom edges):
+${L.map(x=>`"${x}"`).join('\n')}${last?`\n"${last}" (this last line in bright yellow)`:''}
+${angle==='ugc'?'The Thai text should look handwritten with a finger in an Instagram-story editor: white, slightly messy, thin dark shadow.\n':''}
+Rules: no logos of TOEIC / ETS / IELTS / British Council or any other brand; no fake reviews, star ratings or score guarantees; no extra text besides the lines above; no watermark; no real person's face.
+If you cannot write the Thai text correctly, leave a clean empty area in the upper half for the text instead of writing wrong letters.`;}
 /* เก็บค่าที่คุณแดนพิมพ์ในการ์ดแอดไว้ก่อนวาดหน้าใหม่ */
 function adsKeep(x){const v=k=>{const e=$('#'+k+x.id);return e?e.value:null;};const t=v('adt-'),h=v('adh-'),d=v('add-'),n=v('adn-'),k=v('adai-hook-'),st=v('adai-style-'),m=(document.querySelector(`input[name="adai-model-${x.id}"]:checked`)||{}).value;
   if(t!=null)x.text=t;if(h!=null)x.headline=h;if(d!=null)x.dailyTHB=Number(d)||x.dailyTHB;if(n!=null)x.days=Number(n)||x.days;if(k!=null)x.aiHook=k;if(st)x.aiStyle=st;if(m)x.aiModel=m;}
@@ -3953,7 +3977,14 @@ function adsAutoBox(compact,noLive){
           const sel=(x.multi&&x.multi.length?x.multi:[x.image]).filter(Boolean);
           return `<div><span class="adq-lbl">รูปที่ใช้ในแอด (ไม่กระทบรูปสินค้า) · เลือกได้ถึง 4 รูป Facebook จะส่งงบให้รูปที่ขายได้ดีกว่าเอง</span><div class="adq-imgs">${imgs.map(u=>{const k=sel.indexOf(u);return `<span class="adq-pw"><button class="adq-pick${k>=0?' on':''}" data-a="adsImg" data-id="${x.id}" data-v="${esc(u)}" aria-pressed="${k>=0}" title="${esc((x.labels||{})[u]||'')}"><img src="${esc(u)}" alt="" loading="lazy">${k>=0?`<b class="adq-n">${k+1}</b>`:''}${(x.labels||{})[u]?`<span class="adq-tag">${esc(x.labels[u])}</span>`:''}</button>${(x.extra||[]).includes(u)&&k<0?`<button class="adq-del" data-a="adsImgDel" data-id="${x.id}" data-v="${esc(u)}" aria-label="เอารูปนี้ออกจากรายการ">×</button>`:''}</span>`;}).join('')}</div>
           ${sel.length>1?`<p class="fine" style="margin:4px 0 0">ยิงเป็น ${sel.length} แอดในชุดเดียว งบรวมเท่าเดิม</p>`:''}
-          <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sm ${ADA.ai===x.id?'btn-line':'btn-dark'}" data-a="adsAiOpen" data-id="${x.id}">✨ ${ADA.ai===x.id?'ปิด':'สร้างรูปใหม่ด้วย AI'}</button><label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-adsup="${x.id}"></label></div>
+          <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sm ${ADA.ai===x.id?'btn-line':'btn-dark'}" data-a="adsAiOpen" data-id="${x.id}">✨ ${ADA.ai===x.id?'ปิด':'สร้างรูปใหม่ด้วย AI'}</button><button class="btn btn-line btn-sm" data-a="adsExtOpen" data-id="${x.id}" aria-expanded="${ADA.ext===x.id}">📋 ${ADA.ext===x.id?'ปิด prompt':'สร้าง prompt ไปทำรูปเอง'}</button><label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-adsup="${x.id}"></label></div>
+          ${ADA.ext===x.id?(()=>{const ang=x.extAngle||'ugc',pr=adExtPrompt(p,ang,x.aiHook!=null?x.aiHook:adHook(p)),cov=(p.images||[])[0];return `<div class="adq-ai adq-ext">
+            <span class="adq-lbl">แนวรูป</span><div class="adq-plats">${EXT_ANGLES.map(([k,l])=>`<button class="chip" data-a="adsExtAngle" data-id="${x.id}" data-v="${k}" aria-pressed="${ang===k}">${l}</button>`).join('')}</div>
+            <label class="adq-lbl" for="adext-hook-${x.id}">ข้อความบนรูป (บรรทัดละท่อน · บรรทัดสุดท้ายสีเหลือง) แก้แล้วกด "อัปเดต prompt"</label><textarea class="input" id="adext-hook-${x.id}" rows="3">${esc(x.aiHook!=null?x.aiHook:adHook(p))}</textarea>
+            <label class="adq-lbl" for="adext-${x.id}">Prompt (ภาษาอังกฤษ ใส่ข้อมูลสินค้านี้ให้แล้ว)</label><textarea class="input adq-extp" id="adext-${x.id}" rows="9" readonly>${esc(pr)}</textarea>
+            <div class="row" style="gap:6px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="adsExtCopy" data-id="${x.id}">📋 คัดลอก prompt</button><button class="btn btn-line btn-sm" data-a="adsExtHook" data-id="${x.id}">↻ อัปเดต prompt</button>${cov?`<a class="btn btn-line btn-sm" href="${esc(cov)}" download target="_blank" rel="noopener">⬇ รูปปกไว้แนบ</a>`:''}${EXT_AI.map(([n,u])=>`<a class="btn btn-line btn-sm" href="${u}" target="_blank" rel="noopener noreferrer">เปิด ${n} ↗</a>`).join('')}</div>
+            <ol class="fine adq-steps"><li>คัดลอก prompt${cov?' + โหลดรูปปก':''}</li><li>เปิด ChatGPT หรือ Gemini ${cov?'แนบรูปปก ':''}แล้ววาง prompt</li><li>ได้รูปที่ชอบ บันทึกลงเครื่อง แล้วกด "⬆ อัปโหลดรูปเอง" ด้านบน รูปจะถูกเลือกเป็นรูปแอดทันที</li></ol>
+            <span class="fine">ตัวหนังสือไทยบนรูปที่ AI ทำอาจเพี้ยน ตรวจทุกคำก่อนใช้ · ไม่เสียค่า AI ของร้าน</span></div>`;})():''}
           ${ADA.ai===x.id?`<div class="adq-ai">
             <label class="adq-lbl" for="adai-style-${x.id}">แนวรูป</label><select class="input" id="adai-style-${x.id}">${AD_STYLES.map(([k,l])=>`<option value="${k}" ${(x.aiStyle||'ugc')===k?'selected':''}>${l}</option>`).join('')}</select>
             <label class="adq-lbl" for="adai-hook-${x.id}">ข้อความบนรูป (บรรทัดละท่อน · บรรทัดสุดท้ายเป็นสีเหลือง)</label><textarea class="input" id="adai-hook-${x.id}" rows="3">${esc(x.aiHook!=null?x.aiHook:adHook(p))}</textarea>
@@ -5039,6 +5070,10 @@ function act(a,el){
       else if(a==='adsPlatRec')x.platforms=adRecommend(x).plats.slice();
       else{const v=el.dataset.v;let pl=(x.platforms||[]).slice();if(v==='auto')pl=[];else{pl=pl.includes(v)?pl.filter(k=>k!==v):pl.concat(v);if(v==='threads'&&pl.includes('threads')&&!pl.includes('instagram'))pl.push('instagram');if(v==='instagram'&&!pl.includes('instagram'))pl=pl.filter(k=>k!=='threads');}x.platforms=pl;}
       render(true);break;}
+    case 'adsExtOpen':{const x=(ADA.items||[]).find(y=>y.id===id);if(x)adsKeep(x);ADA.ext=ADA.ext===id?null:id;render(true);break;}
+    case 'adsExtAngle':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;adsKeep(x);const h=$('#adext-hook-'+id);if(h)x.aiHook=h.value;x.extAngle=el.dataset.v;render(true);break;}
+    case 'adsExtHook':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;adsKeep(x);const h=$('#adext-hook-'+id);if(h)x.aiHook=h.value;render(true);toast('อัปเดต prompt แล้ว');break;}
+    case 'adsExtCopy':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;const h=$('#adext-hook-'+id);if(h&&h.value!==(x.aiHook!=null?x.aiHook:'')){x.aiHook=h.value;render(true);}copyText(($('#adext-'+id)||{}).value||'','คัดลอก prompt แล้ว ไปวางใน ChatGPT / Gemini ได้เลย');break;}
     case 'adsAiOpen':{const x=(ADA.items||[]).find(y=>y.id===id);if(x)adsKeep(x);ADA.ai=ADA.ai===id?null:id;ADA.aiErr='';render(true);break;}
     case 'adsAiGen':{const x=(ADA.items||[]).find(y=>y.id===id),p=x&&getProduct(x.productId);if(!x||!p)break;adsKeep(x);
       const prompt=adImgPrompt(p,x.aiStyle||'ugc',x.aiHook!=null?x.aiHook:adHook(p));ADA.aiBusy=id;ADA.aiErr='';render(true);
