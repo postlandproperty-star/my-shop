@@ -209,6 +209,8 @@ try {
         const tap = (sel) => page.evaluate((q) => document.querySelector(q)?.click(), sel);
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(200); await tap('[data-a="adsExtAngle"][data-v="cover"]'); await page.waitForTimeout(200);
         await tap('[data-a="adsExtSize"][data-v="916"]'); await page.waitForTimeout(200);
+        const hk = await page.evaluate(() => (document.querySelector('[id^="adext-hook-"]') || {}).value || '');
+        pass(`[${kind}] โฆษณา: ข้อความบนรูปของชุดไม่พูดว่า "เล่มเดียว" และบอกจำนวนเล่ม`, !/เล่มเดียว/.test(hk) && /ครบ \d+ เล่ม/.test(hk), hk.replace(/\n/g, ' / '));
         const ep = await page.evaluate(() => { const t = document.querySelector('.adq-extp'); return t ? t.value : ''; });
         pass(`[${kind}] โฆษณา: ปุ่มสร้าง prompt ไปทำรูปเอง (มีชื่อสินค้า ข้อความไทย แนวปกเด่น ขนาด 9:16)`, /9:16/.test(ep) && /250px/.test(ep) && /SheetLab/.test(ep) && /[\u0E00-\u0E7F]/.test(ep) && /royal-blue/.test(ep), ep.slice(0, 80));
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(150);

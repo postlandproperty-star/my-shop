@@ -3922,11 +3922,12 @@ const AD_STYLES=[['ugc','📱 Ugly Ads: ภาพถ่ายมือถือ�
 function adHook(p){const n=String(p.name||''),ex=(n.match(/TOEIC|IELTS|TGAT|ก\.พ\.|CU-TEP|TU-GET/i)||[''])[0].toUpperCase();
   const h=String(p.headline||'').trim(),l2=h&&h.length<=30&&h!==n?h:(n.match(/(\d+)\s*(จุด|เรื่อง)/)?`อ่านแค่ ${n.match(/(\d+)\s*(จุด|เรื่อง)/)[1]} เรื่องนี้พอ`:'อ่านเล่มนี้เล่มเดียวพอ');
   const items=(n.match(/([\d,]+)\s*ข้อ/)||[])[1];
+  if(pfmt(p)==='bundle'){const k=bundleBooks(p).length||(String(p.name).match(/(\d+)\s*เล่ม/)||[])[1]||'';return `${ex?'ถ้าจะสอบ '+ex+' เดือนหน้า':'ถ้าจะสอบเร็วๆ นี้'}\nชุดนี้ชุดเดียว ครบ ${k} เล่ม\n${fromPrice(p)} บาท (ทั้งชุด)`;} // ชุด: ห้ามพูดว่า "เล่มเดียว"
   return pfmt(p)==='notion'?`จัดแผนอ่านทั้งเดือน\nในหน้าเดียว\n${Number(p.price)} บาท`:`${ex?'ถ้าจะสอบ '+ex+' เดือนหน้า':'ถ้าจะสอบเร็วๆ นี้'}\n${l2}\n${Number(p.price)} บาท${items?'/'+items+' ข้อ':''}`;}
 function adImgPrompt(p,style,hook){
   if(style==='clean')return coverPrompt(p);
   const L=String(hook||'').split('\n').map(x=>x.trim()).filter(Boolean),last=L.length>1?L.pop():'';
-  const scene=pfmt(p)==='notion'?'แล็ปท็อปวางบนโต๊ะไม้ในห้องนอน หน้าจอเปิดหน้า Notion แผนอ่านหนังสือที่มีตารางรายวันและเช็คบ็อกซ์ที่ติ๊กแล้วบางช่อง มีแก้วกาแฟและสมุดจดวางข้างๆ'
+  const scene=pfmt(p)==='bundle'?`แท็บเล็ต (iPad) วางบนโต๊ะ หน้าจอเปิดไฟล์ชีทข้อสอบภาษาอังกฤษแบบเลือกตอบ (A) (B) (C) (D) ข้างๆ มีชีทที่พิมพ์ออกมาหลายเล่มวางซ้อนกันเป็นตั้ง (สื่อว่าเป็นชุดหลายเล่ม) ปากกาไฮไลต์และโพสต์อิทแปะอยู่`:pfmt(p)==='notion'?'แล็ปท็อปวางบนโต๊ะไม้ในห้องนอน หน้าจอเปิดหน้า Notion แผนอ่านหนังสือที่มีตารางรายวันและเช็คบ็อกซ์ที่ติ๊กแล้วบางช่อง มีแก้วกาแฟและสมุดจดวางข้างๆ'
     :`แท็บเล็ต (iPad) วางบนโต๊ะ หน้าจอเปิดไฟล์ข้อสอบภาษาอังกฤษแบบเลือกตอบ (A) (B) (C) (D) มีวงกลมคำตอบด้วยปากกาสีแดงบางข้อ ปากกาสไตลัสวางข้างๆ ${CAT_SCENE[p.cat]||'มีของใช้บนโต๊ะเล็กน้อย'}`;
   return `ภาพโฆษณาแนว "ugly ad" ที่จงใจให้ดูไม่โปร เหมือนโพสต์ของคนธรรมดา ไม่ใช่งานกราฟิก: ภาพแนวตั้ง 4:5 (ข้อความทั้งหมดอยู่ช่วงกลางภาพ ไม่ชิดขอบบนล่าง) ถ่ายด้วยมือถือมือเดียวแบบลวกๆ เหมือนนักเรียนถ่ายเก็บไว้เอง ไม่จัดแสง ใช้ไฟในห้องธรรมดา มีแสงสะท้อนบนจอเล็กน้อย มุมกล้องเฉียง โต๊ะรกนิดหน่อยแบบชีวิตจริง ไม่มีกรอบ ไม่มีกราฟิกตกแต่ง ไม่มีโลโก้ ไม่มีป้ายราคาแบบโฆษณา: ${scene}
 ข้อความภาษาไทยเหมือนเขียนด้วยนิ้วในแอปแต่งรูป/IG Story ลายมือหวัดเล็กน้อย สีขาวตัวใหญ่ ซ้อนอยู่ครึ่งบนของภาพ มีเงาดำบางๆ ให้อ่านออก แบ่งบรรทัดตามนี้: ${L.map(x=>'"'+x+'"').join(' / ')}${last?`
@@ -3938,7 +3939,7 @@ const EXT_SIZES=[['45','4:5 ฟีด (แนะนำ)','vertical 4:5 image (10
 function adExtPrompt(p,angle,hook,size){const Z=EXT_SIZES.find(z=>z[0]===size)||EXT_SIZES[0];
   const L=lines(hook),last=L.length>1?L.pop():'',f=pfmt(p),ex=(String(p.name||'').match(/TOEIC|IELTS|TGAT|ก\.พ\.|CU-TEP|TU-GET/i)||[''])[0],feat=lines(p.features).slice(0,3);
   const kind=f==='notion'?'a Notion study-planner template (digital, used on laptop/iPad)':f==='bundle'?'a bundle of downloadable PDF study sheets (several books in one set)':'a downloadable PDF study sheet / summary book';
-  const prop=f==='notion'?'a laptop on a wooden desk showing a Notion study plan with a daily table and some ticked checkboxes':'an iPad on a desk showing an English multiple-choice exam page (A) (B) (C) (D) with a few answers circled in red, a stylus next to it';
+  const prop=f==='bundle'?'an iPad on a desk showing an English multiple-choice exam page, next to a tall stack of several printed study books/sheets (it is a multi-book set, not one book), highlighters and sticky notes':f==='notion'?'a laptop on a wooden desk showing a Notion study plan with a daily table and some ticked checkboxes':'an iPad on a desk showing an English multiple-choice exam page (A) (B) (C) (D) with a few answers circled in red, a stylus next to it';
   const sc={ugc:`Style: deliberately "ugly ad" / UGC look, NOT a polished graphic. A casual one-handed smartphone photo taken by a Thai student: ${prop}, slightly messy real desk, normal room light, small screen glare, tilted angle. No frames, no graphic badges, no stock-photo feel.`,
     cover:`Style: clean, bright product ad. The product cover (attached image) shown large as a slightly angled ${f==='notion'?'laptop screen mockup':f==='bundle'?'stack of books/sheets fanned out':'tablet + printed book mockup'} on a soft royal-blue (#2440E8) to light-blue gradient background, soft shadow, a few small yellow sparkles. Big bold Thai headline above it.`,
     flat:`Style: top-down flat-lay photo of printed study sheets spread on a light desk (the attached cover on top), highlighter pens, sticky notes, a coffee cup, phone. Natural daylight, real-photo look.`,
@@ -3946,7 +3947,7 @@ function adExtPrompt(p,angle,hook,size){const Z=EXT_SIZES.find(z=>z[0]===size)||
   return `Create a ${Z[2]} of a Thai online shop called SheetLab.
 
 Product: "${p.name}" — ${kind}${ex?` for the ${ex} exam`:''}.${feat.length?`\nWhat buyers get:\n${feat.map(x=>'- '+x).join('\n')}`:''}
-Price: ${Number(p.price)||0} THB.
+Price: ${f==='bundle'?fromPrice(p)+' THB for the whole set of '+(bundleBooks(p).length||'')+' books':(Number(p.price)||0)+' THB'}.${f==='bundle'?'\nIt is a SET of several books — never say or imply "one book is enough".':''}
 ${(p.images||[])[0]?'I attached the real product cover image. Show it accurately (same colours and title). Do not invent a different cover or a different product name.\n':''}
 ${sc}
 
