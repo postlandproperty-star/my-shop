@@ -423,6 +423,23 @@ function aiErr(provider, msg, status) {
   }
   return new Error(`${provider === 'google' ? 'Google' : 'OpenAI'}: ${m}`);
 }
+// ทำภาพให้เป็น 4:5 โดยไม่ตัดอะไรทิ้ง: ภาพหลักย่อให้สูงพอดี ตรงกลาง · ขอบซ้ายขวาเป็นภาพเดิมขยายเต็มกรอบ เบลอและมืดลง
+async function fit45(buf) {
+  const jpeg = (await import('jpeg-js')).default; const im = jpeg.decode(buf, { useTArray: true });
+  const W = im.width, H = Math.round(W * 5 / 4); if (im.height <= H + 4) return buf;
+  const out = new Uint8Array(W * H * 4), sw = im.width, sh = im.height, src = im.data;
+  // พื้นหลัง: ย่อเล็กมากแล้วขยาย (เบลอแบบเร็ว) + มืด 45%
+  const bw = 24, bh = 30, small = new Float32Array(bw * bh * 3);
+  for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) { let r = 0, g = 0, b = 0, n = 0; const x0 = Math.floor(x * sw / bw), x1 = Math.floor((x + 1) * sw / bw), y0 = Math.floor(y * sh / bh), y1 = Math.floor((y + 1) * sh / bh);
+    for (let yy = y0; yy < y1; yy += 3) for (let xx = x0; xx < x1; xx += 3) { const i = (yy * sw + xx) * 4; r += src[i]; g += src[i + 1]; b += src[i + 2]; n++; } const k = (y * bw + x) * 3; small[k] = r / n; small[k + 1] = g / n; small[k + 2] = b / n; }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const fx = Math.min(bw - 1.001, Math.max(0, x / W * bw - .5)), fy = Math.min(bh - 1.001, Math.max(0, y / H * bh - .5)), x0 = Math.floor(fx), y0 = Math.floor(fy), ax = fx - x0, ay = fy - y0, o = (y * W + x) * 4;
+    for (let c = 0; c < 3; c++) { const v = (small[(y0 * bw + x0) * 3 + c] * (1 - ax) + small[(y0 * bw + x0 + 1) * 3 + c] * ax) * (1 - ay) + (small[((y0 + 1) * bw + x0) * 3 + c] * (1 - ax) + small[((y0 + 1) * bw + x0 + 1) * 3 + c] * ax) * ay; out[o + c] = v * .55; } out[o + 3] = 255; }
+  // ภาพหลัก: ย่อแบบเฉลี่ยพิกเซล (bilinear) ให้สูง H วางกลาง
+  const mw = Math.round(sw * H / sh), ox = Math.floor((W - mw) / 2), k = sh / H;
+  for (let y = 0; y < H; y++) for (let x = 0; x < mw; x++) { const fx = Math.min(sw - 1.001, x * k), fy = Math.min(sh - 1.001, y * k), x0 = Math.floor(fx), y0 = Math.floor(fy), ax = fx - x0, ay = fy - y0, o = (y * W + x + ox) * 4;
+    for (let c = 0; c < 3; c++) { const p = (yy, xx) => src[(yy * sw + xx) * 4 + c]; out[o + c] = (p(y0, x0) * (1 - ax) + p(y0, x0 + 1) * ax) * (1 - ay) + (p(y0 + 1, x0) * (1 - ax) + p(y0 + 1, x0 + 1) * ax) * ay; } }
+  return Buffer.from(jpeg.encode({ data: out, width: W, height: H }, 90).data);
+}
 async function aiMark(provider, ok, msg) { try { const r = await sb('shop_state?id=eq.ai_status&select=data'); const d = r?.[0]?.data || {}; d[provider] = { ok, at: new Date().toISOString(), msg: String(msg || '').slice(0, 200) }; await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ai_status', data: d, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {} }
 async function genImage(opts) {
   const prov = /^gemini-/.test(String(opts.model || '')) ? 'google' : 'openai';
@@ -445,7 +462,7 @@ async function genImageRaw({ model, prompt, quality, refs, aspect }) {
     return { b64: d.data, mime: d.mimeType || d.mime_type || 'image/png', model };
   }
   const KEY = process.env.OPENAI_API_KEY || ''; if (!KEY) throw new Error('ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel');
-  if (aspect === '4:5') prompt += '\nสำคัญ: ภาพจะถูกตัดขอบบนและล่างให้เหลือสัดส่วน 4:5 ข้อความ ตัวเลข และสิ่งสำคัญทั้งหมดต้องอยู่ห่างขอบบนและขอบล่างอย่างน้อย 12% ของความสูง และห่างขอบซ้ายขวาอย่างน้อย 7% ของความกว้าง ห้ามมีตัวหนังสือถูกตัดขอบ';
+  if (aspect === '4:5') prompt += '\nสำคัญ: ข้อความ ตัวเลข และสิ่งสำคัญทั้งหมดต้องอยู่ในกรอบภาพครบ ห่างขอบทุกด้านอย่างน้อย 6% ห้ามมีตัวหนังสือถูกตัดขอบ';
   if (ref.length) { // มีรูปต้นแบบ: ใช้ images/edits (รับหลายรูป)
     const fd = new FormData(); fd.append('model', model); fd.append('prompt', prompt); fd.append('size', tall ? '1024x1536' : '1024x1024'); fd.append('n', '1'); fd.append('output_format', 'jpeg');
     fd.append('quality', ['low', 'medium', 'high'].includes(quality) ? quality : 'medium');
@@ -2561,8 +2578,7 @@ export default async function handler(req, res) {
           try {
             const g = await genImage({ model: body.model, prompt: v.prompt, quality: body.quality || 'medium', aspect: '4:5', refs: Array.isArray(body.refs) ? body.refs.slice(0, 2) : [] });
             let buf = Buffer.from(g.b64, 'base64'), mime = g.mime;
-            if (/jpe?g/.test(mime)) { const jpeg = (await import('jpeg-js')).default; const im = jpeg.decode(buf, { useTArray: true }); const H = Math.round(im.width * 5 / 4);
-              if (im.height > H + 4) { const top = Math.round((im.height - H) / 2); const data = im.data.subarray(top * im.width * 4, (top + H) * im.width * 4); buf = Buffer.from(jpeg.encode({ data, width: im.width, height: H }, 90).data); } }
+            if (/jpe?g/.test(mime)) buf = await fit45(buf); // ภาพสูงกว่า 4:5: ย่อให้พอดีความสูง เติมขอบข้างด้วยภาพเดิมแบบเบลอ (ไม่ตัดข้อความทิ้ง)
             const path = `ads/${x.id.slice(0, 8)}-${Date.now().toString(36)}-${out.length + 1}.${/png/.test(mime) ? 'png' : 'jpg'}`;
             const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': /png/.test(mime) ? 'image/png' : 'image/jpeg', 'x-upsert': 'true' }, body: buf });
             if (!up.ok) throw new Error(`อัปโหลดไม่ได้ (${up.status})`);
