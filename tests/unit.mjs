@@ -23,6 +23,9 @@ ok('บทความที่มี "คำถามที่พบบ่อ�
 const V = await import(path.join(root, 'lib/members.js'));
 const tk = V.signToken('a@b.co', 60e3, 'login');
 ok('VIP: ลิงก์เข้าระบบอ่านได้เฉพาะจุดประสงค์เดียวกัน และแก้ไขไม่ได้', V.readToken(tk, 'login') === 'a@b.co' && V.readToken(tk, 'session') === null && V.readToken(tk.slice(0, -2) + 'xx', 'login') === null && V.readToken(V.signToken('a@b.co', -1, 'login'), 'login') === null);
+{ const P = await import('../lib/vipPage.js'); const v = V.normVip({ monthly: 149, page: { title: 'VIP <b>', perks: [{ t: 'ข้อสอบจับเวลา', vip: 'soon' }, { t: '' }], faq: [{ q: 'ถาม', a: '' }] } });
+  const pv = P.vipPage(v, { preview: true }), live = P.vipPage(v, {});
+  ok('VIP: ข้อความหน้าแก้ได้ (กรองช่องว่าง/HTML) · ตัวอย่างโชว์ราคาแม้ยังไม่เปิด แต่สมัครไม่ได้และไม่ให้ Google เก็บ', v.page.perks.length === 1 && v.page.faq.length === 0 && pv.includes('VIP &lt;b&gt;') && pv.includes('ข้อสอบจับเวลา') && pv.includes('data-plan="monthly"') && pv.includes('noindex') && pv.includes('vp-pv') && !live.includes('data-plan="monthly"') && !live.includes('noindex') && V.normVip({}).page.perks.length === 5); }
 ok('VIP: ราคาเป็นจำนวนเต็มไม่ติดลบ ยังไม่เปิด = ขายไม่ได้', V.normVip({ monthly: '149.6', yearly: -5, packs: { 3: '399' } }).monthly === 150 && V.normVip({ yearly: -5 }).yearly === 0 && !V.vipSellable(V.normVip({ open: false, monthly: 149 })) && V.vipSellable(V.normVip({ open: true, packs: { 1: 99 } })));
 const I = await import(path.join(root, 'lib/insights.js'));
 const ce = I.cleanEvents({ sid: 'abc123xyz', src: 'google', dev: 'm', evs: [{ e: 'view', p: '/learn/a' }, { e: 'hack', p: '/x' }, { e: 'click', p: 'javascript:alert(1)', k: 'x' }, { e: 'read', p: '/learn/a', k: 100, v: 95 }] });

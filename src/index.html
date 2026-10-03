@@ -135,6 +135,11 @@ footer{padding:28px 0 110px;text-align:center}
 .ins-fun{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.ins-fun>div{display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg);border-radius:10px;padding:10px 4px}.ins-fun b{font-size:20px}.ins-fun span{font-size:12.5px}.ins-fun em{font-style:normal;font-size:12px;color:#C2410C;font-weight:600}
 @media(max-width:640px){.ins-fun{grid-template-columns:1fr 1fr}.ins-2{grid-template-columns:1fr}}
 .ins-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.ins-spark{display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:10px}.ins-spark span{flex:1;background:var(--brand);border-radius:3px 3px 0 0;opacity:.75}
+.vip-2{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}.vip-pv{position:sticky;top:12px}@media(max-width:900px){.vip-2{grid-template-columns:1fr}.vip-pv{position:static}}
+.vip-frame{margin:10px auto 0;max-width:390px;border:6px solid #0F1B33;border-radius:28px;overflow:hidden;background:#EDF1F7}.vip-frame iframe{display:block;width:100%;height:min(720px,75vh);border:0}
+.vp-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto;gap:6px;align-items:center;margin-bottom:6px}.vp-chk{display:flex;gap:4px;align-items:center;white-space:nowrap}.vp-row select.input{width:auto}
+@media(max-width:640px){.vp-row{grid-template-columns:auto 1fr auto auto}.vp-row>input.input{grid-column:1/-1}}
+.vp-faq{display:grid;gap:6px;border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px}
 .vipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.vipf{display:grid;gap:4px;font-size:13px;color:var(--muted)}.vipsql{white-space:pre-wrap;word-break:break-word;font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0;max-height:160px;overflow:auto}.vipstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}.vipstats div{display:flex;flex-direction:column;background:var(--bg);border-radius:10px;padding:8px 10px}.vipstats b{font-size:20px}.vipstats span{font-size:12.5px;color:var(--muted)}
 .st-h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5vw,30px);margin:0}.st-cathead .fine{margin:4px 0 0}.st-cat{gap:16px}.st-cat .st-bundles{margin-bottom:0}
 /* ร้านค้า /store แบบ Shopee (clean): หัวร้าน · แท็บติดบนจอ · การ์ดรูปเต็มขอบ ราคาส้ม */
@@ -1836,7 +1841,7 @@ function bundleForm(){
     <div class="field">${lb('b-desc','คำโปรย 1–2 ประโยค')}<textarea class="input" id="b-desc" data-d="desc" rows="2">${esc(d.desc)}</textarea></div>
     <div class="grid2">
       <div class="field">${lb('b-slug','ชื่อในลิงก์ (sheetlabth.com/p/...)')}<div class="row"><code style="align-self:center">/p/</code><input class="input" id="b-slug" data-d="slug" value="${esc(d.slug)}" placeholder="toeic-750" autocapitalize="none"></div></div>
-      <div class="field">${lb('b-status','สถานะ')}<select class="input" id="b-status" data-d="status"><option value="draft" ${d.status==='draft'?'selected':''}>ฉบับร่าง (ลูกค้ายังเข้าไม่ได้)</option><option value="published" ${d.status==='published'?'selected':''}>เผยแพร่</option></select></div>
+      <div class="field"><label>สถานะตอนนี้</label><p style="margin:6px 0 0">${d.status==='published'?'<span class="badge ok">ขายอยู่</span>':'<span class="badge gray">ฉบับร่าง</span>'} <span class="fine">เลือกด้วยปุ่มบันทึกด้านล่าง</span></p></div>
     </div>
     ${sellPicker(d)}
     <div class="field">${lb('b-color','สีประจำชุด')}<select class="input" id="b-color" data-d="color">${COLORS.map(c=>`<option value="${c[0]}" ${d.color===c[0]?'selected':''}>${esc(c[1])}</option>`).join('')}</select></div>
@@ -1853,6 +1858,9 @@ function bundleForm(){
     <details style="margin-top:8px" ${chosen.length?'':'open'}><summary>เพิ่มเล่มเข้าชุด (${books.filter(b=>!d.items.includes(b.id)).length} เล่ม)</summary>
       ${books.filter(b=>!d.items.includes(b.id)).map(b=>`<div class="bxe-row"><span>${esc(b.name)} <span class="fine">${baht(b.price)}${b.status==='draft'?' · ร่าง':''}</span></span><button class="chip" data-a="bxItem" data-id="${b.id}">+ ใส่ในชุด</button></div>`).join('')||'<p class="fine">ไม่มีเล่มเหลือให้เพิ่ม</p>'}
     </details>
+    ${(()=>{const sets=D.products.filter(x=>isBundle(x)&&x.id!==S.edit&&bundleBooks(x).length);if(!sets.length)return '';
+      return `<details class="bxe-sets" style="margin-top:8px" ${chosen.length?'':'open'}><summary>📦 รวมชุดที่มีอยู่เข้ามา (${sets.length} ชุด)</summary><p class="fine" style="margin:4px 0 6px">กดแล้วเล่มทั้งหมดในชุดนั้นเข้ามาในชุดนี้ (เล่มที่มีแล้วไม่ซ้ำ) ลูกค้าได้ไฟล์ครบทุกเล่ม · ชุดเดิมยังขายต่อได้ตามปกติ</p>
+      ${sets.map(x=>{const bk=bundleBooks(x),left=bk.filter(b=>!d.items.includes(b.id)).length;return `<div class="bxe-row"><span>📦 ${esc(x.name)} <span class="fine">${bk.length} เล่ม · ${baht(bk.reduce((a,b)=>a+(Number(b.price)||0),0))}${x.status==='published'?'':' · ร่าง'}${left<bk.length?` · อยู่ในชุดนี้แล้ว ${bk.length-left} เล่ม`:''}</span></span><button class="chip" data-a="bxAddSet" data-id="${x.id}" ${left?'':'disabled'}>${left?`+ ใส่ทั้งชุด (${left} เล่ม)`:'ใส่ครบแล้ว'}</button></div>`;}).join('')}</details>`;})()}
   </div>
 
   ${(()=>{const st=bxStyle(),pend=S.bxImg||'',n=chosen.length,todo=chosen.filter(b=>bxNeeds(b,st)).length,mi=IMG_INFO[imgModel()]||['',3],per=mi[1]*(st.pdf?2:1),cost=(todo||n)*per,noFile=chosen.filter(b=>!b.link).length;
@@ -1879,7 +1887,7 @@ function bundleForm(){
         <button class="btn btn-line btn-sm" data-a="bxAiCover" ${pend?'disabled':''}>${pend==='cover'?'กำลังสร้าง... (20-60 วินาที)':`✨ ให้ AI จัดเป็นภาพหนังสือวางเป็นเซ็ต (≈ ฿${mi[1]})`}</button>
         <label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-bxup="cover"></label>
         ${d.cover?'<button class="chip" data-a="bxCoverClear">ใช้ปกเล่มแรกแทน</button>':''}</div></div>
-    <p class="fine" style="margin:10px 0 0">ได้รูปแล้วกด <b>บันทึกชุด</b> ด้านล่างด้วย (รูปสินค้าของแต่ละเล่มบันทึกให้ทันที)</p>
+    <p class="fine" style="margin:10px 0 0">ได้รูปแล้วกดบันทึกด้านล่างด้วย (รูปสินค้าของแต่ละเล่มบันทึกให้ทันที) · ถ้ายังไม่มีรูปชุด ตอนกดบันทึกระบบจัดรูปจากปกเล่มในชุดให้เอง และจัดใหม่ทุกครั้งที่เปลี่ยนเล่มในชุด (ยกเว้นรูปที่ AI ทำหรืออัปโหลดเอง)</p>
   </div>${bxViewer()}`;})()}
   <div class="card" style="margin-top:14px">
     <h3 class="h3">4. ราคาและแพ็กเกจ</h3>
@@ -1905,12 +1913,12 @@ function bundleForm(){
     <div class="field">${lb('b-faq','คำถามที่พบบ่อย (บรรทัดละ "คำถาม | คำตอบ") เว้นว่างได้ ระบบใส่คำถามพื้นฐานให้')}<textarea class="input" id="b-faq" data-d="faq" rows="3">${esc(d.faq)}</textarea></div>
   </div>
   ${S.err?`<p class="err" style="margin:10px 0">${esc(S.err)}</p>`:''}
-  <div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap">
-    <button class="btn btn-dark" data-a="saveBundle">${d.fromProp?'ใช้ข้อเสนอนี้ บันทึก':'บันทึกชุด'}</button>
-    <button class="btn btn-line" data-a="saveBundle" data-then="view">บันทึกแล้วดูหน้า</button>
-    <button class="btn btn-line" data-a="cancelEdit">ยกเลิก</button>
-  </div>`;
+  ${saveActs('saveBundle',d)}`;
 }
+/* ปุ่มบันทึกของหน้าแก้สินค้า/ชุด: ฉบับร่าง (ลูกค้ายังไม่เห็น) หรือ เผยแพร่แล้วพาไปเซลเพจที่ขายอยู่จริง */
+function saveActs(a,d){const live=d.status==='published';
+  return `<div class="acts"><button class="btn btn-dark" data-a="${a}" data-status="draft">${live?'บันทึกเป็นฉบับร่าง (ปิดขาย)':'บันทึกฉบับร่าง'}</button><button class="btn btn-cta" data-a="${a}" data-status="published" data-then="view">${d.fromJob?'อนุมัติและเผยแพร่':'บันทึกและเผยแพร่'}</button><button class="btn btn-line" data-a="cancelEdit">ยกเลิก</button></div>
+  <p class="fine" style="margin:6px 0 0">${live?'สินค้านี้ขายอยู่ แก้แล้วกด <b>บันทึกและเผยแพร่</b> เพื่อให้ขายต่อ':'<b>ฉบับร่าง</b> = ลูกค้ายังไม่เห็น · <b>เผยแพร่</b> = ขึ้นหน้าร้านทันที แล้วพาไปดูเซลเพจ'}</p>`;}
 function bundleData(d){ // ชุดจากช่องที่กรอกอยู่ (ยังไม่ตรวจ) ใช้ทั้งตอนบันทึกและหน้าตัวอย่างสด
   const name=String(d.name||'').trim(),slug=String(d.slug||'').trim().toLowerCase();
   const items=d.items.filter(id=>getProduct(id)&&!isBundle(getProduct(id)));
@@ -1919,10 +1927,9 @@ function bundleData(d){ // ชุดจากช่องที่กรอก�
   const first=getProduct(items[0]);
   return {type:'bundle',sell:SELL[d.sell]?d.sell:'both',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
     plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
-    cover:d.cover||'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
+    cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
 }
-function saveBundleDraft(el){
-  const d=S.draft,isNew=S.edit==='new',selfId=isNew?null:S.edit;
+function bundleErr(d,selfId){
   const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase();
   if(!name)return 'กรอกชื่อชุด';
   if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug))return 'ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น toeic-750';
@@ -1932,14 +1939,20 @@ function saveBundleDraft(el){
   const plans=bundleData(d).plans;
   for(const x of plans)if(x.on&&!(x.price>=1))return `ใส่ราคาขายของแพ็กเกจ ${x.name}`;
   for(const k of Object.keys(d.planLinks))for(const line of String(d.planLinks[k]||'').split('\n').filter(l=>l.trim())){const i=line.lastIndexOf('|');if(i<1||!/^https:\/\//.test(line.slice(i+1).trim()))return `ไฟล์เพิ่มของแพ็กเกจ ${k}: ใช้รูปแบบ "ชื่อไฟล์ | https://ลิงก์" บรรทัดละไฟล์`;}
+  return '';
+}
+function saveBundleDraft(el){
+  const d=S.draft,isNew=S.edit==='new',selfId=isNew?null:S.edit;
+  if(el.dataset.status)d.status=el.dataset.status;
+  const bad=bundleErr(d,selfId);if(bad)return bad;
   const data=bundleData(d);
   let saved;
   if(isNew){saved=Object.assign({id:'b'+Date.now().toString(36)},data);D.products.push(saved);}
   else{saved=getProduct(selfId);Object.assign(saved,data);}
-  if(saved.status==='published'&&!saved.publishedAt)saved.publishedAt=Date.now();
+  if(saved.status==='published'){delete saved.fresh;if(!saved.publishedAt)saved.publishedAt=Date.now();}
   if(d.fromProp)propDone(d.fromProp,true);
-  S.edit=null;S.draft=null;S.err='';save();
-  if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');}else{render(false);toast('บันทึกชุดแล้ว');}
+  S.edit=null;S.draft=null;S.err='';S.bxAuto='';save();
+  if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');window.scrollTo(0,0);toast('เผยแพร่ชุดแล้ว นี่คือเซลเพจที่ลูกค้าเห็น');}else{render(false);toast('บันทึกชุดเป็นฉบับร่างแล้ว ลูกค้ายังไม่เห็น');}
   return '';
 }
 
@@ -2657,8 +2670,7 @@ function productForm(){
       <div class="field">${lb('e-kind','ประเภทสินค้า')}
         <select class="input" id="e-kind" data-d="kind">${Object.entries(KIND_LIST()).map(([k,v])=>`<option value="${esc(k)}" ${d.kind===k?'selected':''}>${esc(v)}</option>`).join('')}${d.kind&&!KIND_LIST()[d.kind]?`<option value="${esc(d.kind)}" selected>${esc(kindName(d.kind))}</option>`:''}}</select>
         <span class="fine">หนังสือและชีทเรียนจะได้ภาพปกและรูปแบบหน้าที่เหมาะกับงานอ่าน</span></div>
-      <div class="field">${lb('e-status','สถานะ')}
-        <select class="input" id="e-status" data-d="status"><option value="draft" ${d.status==='draft'?'selected':''}>ฉบับร่าง (ลูกค้ายังเข้าไม่ได้)</option><option value="published" ${d.status==='published'?'selected':''}>เผยแพร่</option></select></div>
+      <div class="field"><label>สถานะตอนนี้</label><p style="margin:6px 0 0">${d.status==='published'?'<span class="badge ok">ขายอยู่</span>':'<span class="badge gray">ฉบับร่าง</span>'} <span class="fine">เลือกด้วยปุ่มบันทึกด้านล่าง</span></p></div>
     </div>
     <div class="field">${lb('e-slug','ชื่อในลิงก์ (ภาษาอังกฤษพิมพ์เล็ก ตัวเลข และ -)')}
       <div class="row"><code style="align-self:center">${DOMAIN}</code><input class="input" id="e-slug" data-d="slug" value="${esc(d.slug)}" placeholder="เช่น calculus-1-summary" autocapitalize="none"></div></div>
@@ -2734,7 +2746,7 @@ function productForm(){
     </div>
 
     ${S.err?`<p class="err" style="margin-bottom:10px">${esc(S.err)}</p>`:''}
-    <div class="acts"><button class="btn btn-dark" data-a="saveProduct">${d.fromJob?(d.status==='published'?'อนุมัติ ลงขาย':'บันทึกเป็นฉบับร่าง'):d.fromProp?'ใช้ข้อเสนอนี้ บันทึก':'บันทึกสินค้า'}</button><button class="btn btn-cta" data-a="saveProduct" data-then="view">บันทึกและดูเซลเพจ</button><button class="btn btn-line" data-a="cancelEdit">ยกเลิก</button></div>
+    ${saveActs('saveProduct',d)}
   </div>`;
 }
 
@@ -3260,7 +3272,7 @@ function productsTab(){
         <button class="pt-a" data-a="exportShopee">🛒 ไฟล์ลง Shopee (เล่มพิมพ์)</button>
         <button class="pt-a" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy===true?'กำลังรวมรูป...':'รูปสินค้าทั้งหมด (ZIP)'}</button>
         <span class="fine" style="padding:4px 10px;display:block">เฉพาะที่ขายอยู่ · ไว้ลง Shopee / Lazada · ทีละรายการกด "ดูเพิ่มเติม" ที่สินค้า</span></div></details>
-      <button class="btn btn-line btn-sm" data-a="newBundle">+ สร้างชุด</button>
+      <button class="btn btn-line btn-sm" data-a="newBundle">📦 สร้างชุดขาย</button>
       <button class="btn btn-sm pt-new" data-a="newProduct">+ เพิ่มสินค้าใหม่</button>
     </span>
   </div>
@@ -4759,9 +4771,29 @@ function insightsTab(){if(INS.d===null&&!INS.loading)loadInsights();const d=INS.
 /* แท็บ 🔎 SEO: คำค้นจาก Google · หน้ารวมหัวข้อ (ขึ้น Google แล้วหรือยัง) · งานล่าสุดของน้องปากกา */
 const SEOT={d:null,loading:false};
 /* 👑 สมาชิก VIP: ราคาและการเปิดรับเป็นของคุณแดน (0 = ไม่ขายแบบนั้น) · ตารางสมาชิกต้องสร้างครั้งแรกด้วย SQL */
-const VIPA={d:null,loading:false,busy:false};
+const VIPA={d:null,loading:false,busy:false,pg:null,pv:Date.now(),gBusy:false};
 function loadVipAdmin(){if(VIPA.loading)return;VIPA.loading=true;adminApi('/api/content?action=vip_admin').then(j=>{VIPA.d=j||{};}).catch(()=>{VIPA.d={};}).then(()=>{VIPA.loading=false;render(true);});}
-function vipView(){return `<div class="wrap wide vipv" style="padding:16px 16px 60px"><h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งราคา เปิด/ปิดรับสมาชิก และดูว่าใครเป็นสมาชิกอยู่ · หน้าลูกค้า <a href="/vip" target="_blank" rel="noopener">sheetlabth.com/vip ↗</a></p>${vipCard()}</div>`;}
+/* แท็บ 👑 สมาชิก: ตั้งค่าทุกอย่างของ VIP ที่เดียว (ราคา เปิดรับ ข้อความหน้า ให้สิทธิ์เอง) + หน้าที่ลูกค้าเห็นอยู่ข้างๆ */
+function vipView(){return `<div class="wrap wide vipv" style="padding:16px 16px 60px"><h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งค่าทุกอย่างของสมาชิกในหน้านี้ · ${innerWidth>900?'ด้านขวา':'ด้านล่าง'}คือหน้าที่ลูกค้าเห็น เปลี่ยนตามทุกครั้งที่กดบันทึก</p>
+  <div class="vip-2"><div>${vipCard()}${vipPageCard()}${vipGrantCard()}</div><aside class="vip-pv">${vipPreview()}</aside></div></div>`;}
+function vipPg(){const s=VIPA.d&&VIPA.d.settings;if(!VIPA.pg&&s)VIPA.pg=JSON.parse(JSON.stringify(s.page||{title:'',sub:'',perks:[],faq:[]}));return VIPA.pg;}
+function vipPageCard(){if(!VIPA.d||!VIPA.d.settings)return '';const p=vipPg(),sel=(v,x)=>v===x?'selected':'';
+  return `<section class="card vipa" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">📝 ข้อความบนหน้า /vip</h3><p class="fine" style="margin:0 0 10px">แก้ได้อิสระ กดบันทึกแล้วหน้าลูกค้าเปลี่ยนทันที</p>
+    <label class="vipf">หัวข้อใหญ่<input class="input" data-vp="title" maxlength="60" value="${esc(p.title)}"></label>
+    <label class="vipf" style="margin-top:8px">คำโปรยใต้หัวข้อ<textarea class="input" data-vp="sub" rows="2" maxlength="220">${esc(p.sub)}</textarea></label>
+    <h4 style="margin:16px 0 6px">ได้อะไรบ้าง <span class="fine" style="font-weight:400">(ตารางเทียบ ฟรี / VIP)</span></h4>
+    ${p.perks.map((x,i)=>`<div class="vp-row"><input class="input" data-vp="perks.${i}.t" maxlength="120" value="${esc(x.t)}" placeholder="เช่น ข้อสอบเสมือนจริงจับเวลา" aria-label="สิทธิ์ข้อ ${i+1}"><label class="fine vp-chk"><input type="checkbox" data-vp="perks.${i}.free" ${x.free?'checked':''}> ฟรีก็ได้</label><select class="input" data-vp="perks.${i}.vip" aria-label="สมาชิก VIP ได้ไหม"><option value="yes" ${sel(x.vip,'yes')}>VIP ✅</option><option value="soon" ${sel(x.vip,'soon')}>VIP 🔜 เร็วๆ นี้</option><option value="no" ${sel(x.vip,'no')}>VIP –</option></select><button class="chip" data-a="vpRow" data-v="perks:${i}:up" aria-label="เลื่อนขึ้น" ${i?'':'disabled'}>↑</button><button class="chip" data-a="vpRow" data-v="perks:${i}:del">ลบ</button></div>`).join('')}
+    ${p.perks.length<12?'<button class="chip" data-a="vpAdd" data-v="perks">+ เพิ่มสิทธิ์</button>':''}
+    <h4 style="margin:16px 0 6px">คำถามที่พบบ่อย</h4>
+    ${p.faq.map((x,i)=>`<div class="vp-faq"><input class="input" data-vp="faq.${i}.q" maxlength="150" value="${esc(x.q)}" placeholder="คำถาม" aria-label="คำถามข้อ ${i+1}"><textarea class="input" data-vp="faq.${i}.a" rows="2" maxlength="600" placeholder="คำตอบ" aria-label="คำตอบข้อ ${i+1}">${esc(x.a)}</textarea><span class="row" style="gap:6px"><button class="chip" data-a="vpRow" data-v="faq:${i}:up" aria-label="เลื่อนขึ้น" ${i?'':'disabled'}>↑</button><button class="chip" data-a="vpRow" data-v="faq:${i}:del">ลบ</button></span></div>`).join('')}
+    ${p.faq.length<10?'<button class="chip" data-a="vpAdd" data-v="faq">+ เพิ่มคำถาม</button>':''}
+    <div class="row" style="gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="vpSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึกข้อความหน้า'}</button><button class="chip" data-a="vpReset">${S.confirm==='vpReset'?'กดอีกครั้งเพื่อใช้ข้อความตั้งต้น':'ใช้ข้อความตั้งต้น'}</button></div>
+  </section>`;}
+function vipGrantCard(){const d=VIPA.d;if(!d||!d.ready)return '';
+  return `<section class="card vipa" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">🎁 ให้สิทธิ์ VIP เอง</h3><p class="fine" style="margin:0 0 10px">ลองระบบเองโดยไม่ต้องจ่าย หรือให้เป็นของขวัญ/ชดเชยลูกค้า · ต่อจากวันหมดอายุเดิม · ระบบส่งอีเมลต้อนรับพร้อมลิงก์เข้าระบบให้</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><input class="input" type="email" data-f="vgEmail" value="${esc(S.form.vgEmail||'')}" placeholder="อีเมลคนที่จะให้สิทธิ์" aria-label="อีเมลคนที่จะให้สิทธิ์" style="flex:1;min-width:200px"><select class="input" data-f="vgDays" aria-label="จำนวนวัน" style="width:auto">${[[7,'7 วัน'],[30,'30 วัน'],[90,'90 วัน'],[365,'1 ปี']].map(([n,l])=>`<option value="${n}" ${String(S.form.vgDays||30)===String(n)?'selected':''}>${l}</option>`).join('')}</select><button class="btn btn-sm pt-new" data-a="vipGrant" ${VIPA.gBusy?'disabled':''}>${VIPA.gBusy?'กำลังให้สิทธิ์...':'ให้สิทธิ์'}</button></div></section>`;}
+function vipPreview(){return `<div class="card vip-pvc"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>👀 หน้าที่ลูกค้าเห็น</b><span class="row" style="gap:6px"><button class="chip" data-a="vpReload" aria-label="โหลดตัวอย่างใหม่">↻ รีเฟรช</button><a class="chip" href="/vip" target="_blank" rel="noopener">เปิดหน้าจริง ↗</a></span></div>
+  <div class="vip-frame"><iframe title="ตัวอย่างหน้า /vip ที่ลูกค้าเห็น" src="/vip?preview=1&v=${VIPA.pv}" loading="lazy"></iframe></div></div>`;}
 function vipCard(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d;
   if(!d)return '<section class="card" style="margin-top:14px"><p class="fine">กำลังโหลดสมาชิก VIP...</p></section>';
   const v=d.settings||{packs:{}},st=d.stats,num=(id,val,l)=>`<label class="vipf">${l}<input class="input" type="number" min="0" step="1" id="${id}" value="${Number(val)||0}"></label>`;
@@ -4772,7 +4804,7 @@ function vipCard(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d
     <label class="row" style="gap:8px;margin:10px 0"><input type="checkbox" id="vip-open" ${v.open?'checked':''} ${d.ready?'':'disabled'}> <span>เปิดรับสมาชิก (หน้า /vip แสดงราคาและให้สมัครได้)</span></label>
     <div class="row" style="gap:8px;align-items:center"><button class="btn btn-sm pt-new" data-a="vipSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึก'}</button><span class="fine">ใส่ 0 = ไม่ขายแบบนั้น · ตลาดไทยแนวนี้ประมาณ ฿99–299/เดือน</span></div>
     ${st?`<div class="vipstats"><div><b>${st.active}</b><span>สมาชิกที่ใช้งานอยู่</span></div><div><b>${st.card}</b><span>ต่ออายุบัตรอัตโนมัติ</span></div><div><b>${st.leaving}</b><span>ยกเลิกการต่ออายุแล้ว</span></div><div><b>${st.total}</b><span>เคยเป็นสมาชิกทั้งหมด</span></div></div>
-      <h4 style="margin:14px 0 6px">สมาชิกที่ใช้งานอยู่ ${st.recent.length?`(${st.recent.length})`:''}</h4>${st.recent.length?`<div class="seo-tbl">${st.recent.map(m=>`<div><span>${esc(m.email)}</span><span class="fine">${m.plan&&String(m.plan).startsWith('prepaid')?'PromptPay '+String(m.plan).split('-')[1]+' เดือน':m.plan==='yearly'?'บัตร รายปี':'บัตร รายเดือน'} · ถึง ${new Date(m.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}${m.cancel?' · <b>ยกเลิกต่ออายุ</b>':''}</span></div>`).join('')}</div>`:'<p class="fine">ยังไม่มีสมาชิก</p>'}`:''}
+      <h4 style="margin:14px 0 6px">สมาชิกที่ใช้งานอยู่ ${st.recent.length?`(${st.recent.length})`:''}</h4>${st.recent.length?`<div class="seo-tbl">${st.recent.map(m=>`<div><span>${esc(m.email)}</span><span class="fine">${m.plan==='gift'?'🎁 ให้สิทธิ์เอง':m.plan&&String(m.plan).startsWith('prepaid')?'PromptPay '+String(m.plan).split('-')[1]+' เดือน':m.plan==='yearly'?'บัตร รายปี':'บัตร รายเดือน'} · ถึง ${new Date(m.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}${m.cancel?' · <b>ยกเลิกต่ออายุ</b>':''}</span></div>`).join('')}</div>`:'<p class="fine">ยังไม่มีสมาชิก</p>'}`:''}
   </section>`;}
 function loadSeoTopics(){if(SEOT.loading)return;SEOT.loading=true;adminApi('/api/content?action=seo_topics').then(j=>{SEOT.d=j||{};}).catch(()=>{SEOT.d={};}).then(()=>{SEOT.loading=false;render(true);});}
 function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d||{},T=d.topics||[],R=d.recent||[],tt=d.totals||{};
@@ -4983,11 +5015,22 @@ function act(a,el){
     case 'insDays':INS.days=Number(el.dataset.v)||7;INS.d=null;loadInsights();render(true);break;
     case 'insSql':copyText((INS.d||{}).sql||'','คัดลอก SQL แล้ว ไปวางใน Supabase → SQL Editor');break;
     case 'insReload':INS.d=null;loadInsights();render(true);break;
+    case 'vpAdd':{const p=vipPg();if(!p)break;p[el.dataset.v].push(el.dataset.v==='faq'?{q:'',a:''}:{t:'',free:false,vip:'yes'});render(true);break;}
+    case 'vpRow':{const p=vipPg(),[k,i0,op]=String(el.dataset.v).split(':'),i=Number(i0),L=p&&p[k];if(!L)break;if(op==='del')L.splice(i,1);else if(i>0)[L[i-1],L[i]]=[L[i],L[i-1]];render(true);break;}
+    case 'vpReload':VIPA.pv=Date.now();render(true);break;
+    case 'vpReset':if(S.confirm!=='vpReset'){S.confirm='vpReset';render(true);break;}S.confirm='';/* fallthrough */
+    case 'vpSave':{if(VIPA.busy)break;const reset=a==='vpReset',p=vipPg();if(!reset&&!p)break;
+      if(!reset&&p.perks.some(x=>!String(x.t).trim())){toast('มีช่องสิทธิ์ว่าง กรอกหรือกดลบก่อน');break;}
+      if(!reset&&p.faq.some(x=>!String(x.q).trim()||!String(x.a).trim())){toast('คำถามที่พบบ่อยต้องมีทั้งคำถามและคำตอบ');break;}
+      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',reset?{resetPage:true}:{page:p}).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});VIPA.pg=null;VIPA.pv=Date.now();toast(reset?'กลับเป็นข้อความตั้งต้นแล้ว':'บันทึกข้อความหน้าแล้ว หน้าลูกค้าเปลี่ยนแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
+    case 'vipGrant':{const email=String(S.form.vgEmail||'').trim().toLowerCase(),days=Number(S.form.vgDays||30);
+      if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)){toast('ใส่อีเมลให้ถูกต้อง');break;}
+      VIPA.gBusy=true;render(true);adminPost('/api/content?action=vip_admin',{grant:{email,days}}).then(j=>{VIPA.gBusy=false;if(j&&j.ok){S.form.vgEmail='';if(j.stats)VIPA.d=Object.assign(VIPA.d||{},{stats:j.stats});toast(`🎁 ให้สิทธิ์ ${email} ถึง ${new Date(j.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})} แล้ว${j.mailed?' ส่งอีเมลต้อนรับแล้ว':' (ส่งอีเมลไม่สำเร็จ ให้เขาขอลิงก์เข้าระบบที่หน้า /vip เอง)'}`);}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.gBusy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'vipSqlCopy':copyText((VIPA.d||{}).sql||'','คัดลอก SQL แล้ว ไปวางใน Supabase → SQL Editor');break;
     case 'vipReload':VIPA.d=null;loadVipAdmin();render(true);break;
     case 'vipSave':{const g=k=>Math.max(0,Math.round(Number(($('#'+k)||{}).value)||0)),body={monthly:g('vip-m'),yearly:g('vip-y'),packs:{1:g('vip-p1'),3:g('vip-p3'),12:g('vip-p12')},open:!!($('#vip-open')||{}).checked};
       if(body.open&&!body.monthly&&!body.yearly&&!body.packs[1]&&!body.packs[3]&&!body.packs[12]){toast('ใส่ราคาอย่างน้อย 1 แบบก่อนเปิดรับ');break;}
-      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',body).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});toast(j.settings.open?'บันทึกแล้ว เปิดรับสมาชิก VIP':'บันทึกแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
+      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',body).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});VIPA.pv=Date.now();toast(j.settings.open?'บันทึกแล้ว เปิดรับสมาชิก VIP':'บันทึกแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'ssort':S.ssort=el.dataset.v;render(true);break;
     case 'dailyAns':if(S.dailyAns==null){S.dailyAns=Number(el.dataset.v);render(true);}break;
     case 'findAgain':S.find={email:'',busy:false,done:false,err:''};render(false);break;
@@ -5286,9 +5329,9 @@ function act(a,el){
       SETI.busy=id;render(true);
       setListRun(x,{price,full,solo,pub}).then(()=>{toast(pub?'📦 ลงขายชุดแล้ว':'📦 ชุดอยู่ในแท็บ "มาใหม่" แล้ว ตรวจแล้วกดเผยแพร่');S.pstat=pub?'all':'new';}).catch(e=>toast('ไม่สำเร็จ: '+(e.message||e)+' ลองกดใหม่')).then(()=>{SETI.busy='';render(true);});break;}
     case 'bxAiCover':{const d=S.draft;if(!d)break;const books=d.items.map(getProduct).filter(Boolean);S.bxImg='cover';S.bxImgErr='';render(true);
-      bxAiImage(bxCoverPrompt(d,books),bxRefs(books)).then(u=>{S.draft.cover=u;toast('ได้รูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
+      bxAiImage(bxCoverPrompt(d,books),bxRefs(books)).then(u=>{S.draft.cover=u;S.draft.coverAuto='';toast('ได้รูปชุดแล้ว อย่าลืมกดบันทึก');}).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxCompose':{const d=S.draft;if(!d)break;const books=d.items.map(getProduct).filter(Boolean);S.bxImg='compose';S.bxImgErr='';render(true);
-      bxCompose(d,books).then(uploadImage).then(u=>{S.draft.cover=u;toast('จัดรูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>{S.bxImgErr='จัดรูปไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
+      bxCompose(d,books).then(uploadImage).then(u=>{S.draft.cover=u;S.draft.coverAuto=d.items.join(',');toast('จัดรูปชุดแล้ว อย่าลืมกดบันทึก');}).catch(e=>{S.bxImgErr='จัดรูปไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxView':S.bxView=S.bxView===id||!id?null:id;render(true);break;
     case 'bxRefDel':{const st=bxStyle();st.refs=(st.refs||[]).filter((u,k)=>k!==Number(el.dataset.v));bxStyleSet('refs',st.refs);render(true);break;}
     case 'bxStyle':{const [k,v]=String(el.dataset.v).split(':');bxStyleSet(k,k==='pdf'?v==='1':v);render(true);break;}
@@ -5297,7 +5340,7 @@ function act(a,el){
     case 'bxViewGo':{const k=Number(el.dataset.v);if(S.draft&&S.draft.items[k])S.bxView=S.draft.items[k];render(true);break;}
     case 'bxUse':{const b=getProduct(id);if(!b)break;bxUseCover(b,el.dataset.v==='1');save();toast(el.dataset.v==='1'?'ใช้ปกเรียบเป็นรูปสินค้าแล้ว':'กลับไปใช้รูปเดิมแล้ว');render(true);break;}
     case 'bxUseAll':{const L=(S.draft?S.draft.items:[]).map(getProduct).filter(b=>b&&b.bookCover&&(b.images||[])[0]!==b.bookCover);L.forEach(b=>bxUseCover(b,true));save();toast(`ใช้ปกเรียบเป็นรูปสินค้าแล้ว ${L.length} เล่ม`);render(true);break;}
-    case 'bxCoverClear':if(S.draft){S.draft.cover='';render(true);}break;
+    case 'bxCoverClear':if(S.draft){S.draft.cover='';S.draft.coverAuto='';S.bxAuto=S.draft.items.join(',');render(true);}break;
     case 'bxAiBook':{const n=(S.draft&&S.draft.items.length)||1;S.bxImg=id;S.bxImgErr='';render(true);
       bxMakeBook(id,Number(el.dataset.v)||0,n).then(()=>toast('ทำปกเล่มนี้แล้ว')).catch(e=>{S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxAiBooks':{const d=S.draft;if(!d)break;const ids=d.items.filter(i=>getProduct(i));const st=bxStyle();const todo=ids.filter(i=>bxNeeds(getProduct(i),st));const list=todo.length?todo:ids;
@@ -5309,7 +5352,7 @@ function act(a,el){
         if(bad)S.bxImgErr=`ทำได้ ${ok} จาก ${list.length} เล่ม · เล่มที่ไม่สำเร็จ: ${S.bxImgErr} · กด "ทำปกเรียบเล่มที่เหลือ" อีกครั้ง`;
         if(!ok)return 'none';
         // ขั้นที่ 2 อัตโนมัติ: จัดรูปใหญ่ของชุดจากปกเรียบที่เพิ่งทำ (ฟรี) ให้เป็นชุดเดียวกัน
-        S.bxImg='compose';render(true);try{const u=await uploadImage(await bxCompose(S.draft,S.draft.items.map(getProduct).filter(Boolean)));S.draft.cover=u;}catch(e){S.bxImgErr=(S.bxImgErr?S.bxImgErr+' · ':'')+'จัดรูปชุดไม่สำเร็จ กด "จัดรูปชุด" อีกครั้ง';}
+        S.bxImg='compose';render(true);try{const u=await uploadImage(await bxCompose(S.draft,S.draft.items.map(getProduct).filter(Boolean)));S.draft.cover=u;S.draft.coverAuto=S.draft.items.join(',');}catch(e){S.bxImgErr=(S.bxImgErr?S.bxImgErr+' · ':'')+'จัดรูปชุดไม่สำเร็จ กด "จัดรูปชุด" อีกครั้ง';}
         return bad?'part':'all';})()
         .catch(e=>{S.bxImgErr=String(e.message||e);return 'none';})
         .then(r=>{S.bxImg='';toast(r==='all'?'ทำปกเรียบครบ และจัดรูปชุดให้แล้ว กดบันทึกชุดด้วย':r==='part'?'ทำได้บางเล่ม ดูรายละเอียดใต้ปุ่ม':'ยังทำปกไม่ได้ ดูสาเหตุใต้ปุ่ม');render(true);});break;}
@@ -5369,7 +5412,15 @@ function act(a,el){
       d.plans.forEach(x=>{x.fullPrice=full[x.key];x.price=end90(full[x.key]*0.8);});
       if(!d.promoEndStr)d.promoEndStr=toLocalInput(Date.now()+7*864e5);
       render(true);toast('คำนวณแล้ว: ราคาเปิดตัว −20% นับถอยหลัง 7 วัน แก้เองได้');break;}
-    case 'saveBundle':{const err=saveBundleDraft(el);if(err){S.err=err;render(true);}break;}
+    case 'saveBundle':{const d=S.draft;if(!d||S.bxImg)break;{const bad=bundleErr(d,S.edit==='new'?null:S.edit);if(bad){S.err=bad;render(true);break;}}
+      const items=d.items.filter(i=>getProduct(i)&&!isBundle(getProduct(i))),key=items.join(','),books=items.map(getProduct);
+      // รูปชุดตามเล่มในชุด: ยังไม่มีรูปชุด หรือรูปที่ระบบจัดให้ไม่ตรงกับเล่มตอนนี้ → จัดจากปกเล่มเดี่ยวให้ก่อนบันทึก (ฟรี)
+      if(items.length>=2&&books.some(b=>b.bookCover||(b.images||[])[0])&&(!d.cover||(d.coverAuto&&d.coverAuto!==key))&&S.bxAuto!==key){
+        S.bxAuto=key;S.bxImg='compose';render(true);toast('กำลังจัดรูปชุดจากปกเล่มในชุด...');
+        bxCompose(d,books).then(uploadImage).then(u=>{d.cover=u;d.coverAuto=key;}).catch(e=>{console.error(e);toast('จัดรูปชุดไม่สำเร็จ ใช้ปกเล่มแรกไปก่อน');}).then(()=>{S.bxImg='';act('saveBundle',el);});break;}
+      const err=saveBundleDraft(el);if(err){S.err=err;render(true);}break;}
+    case 'bxAddSet':{const d=S.draft,src=getProduct(id);if(!d||!src)break;const add=(src.items||[]).filter(i=>getProduct(i)&&!isBundle(getProduct(i))&&!d.items.includes(i));
+      d.items.push(...add);render(true);toast(add.length?`ใส่ ${add.length} เล่มจาก "${src.name}" แล้ว`:'เล่มในชุดนี้อยู่ในชุดใหม่ครบแล้ว');break;}
     case 'bxPlan':{S.bplan=S.bplan||{};S.bplan[el.dataset.slug]=el.dataset.v;S.qr=null;qrStop();render(true);break;}
     case 'bxPv':{S.bxPv=Number(el.dataset.v)||0;render(true);const t=document.getElementById('bx-preview');if(t)t.scrollIntoView({block:'start',behavior:'smooth'});break;}
     case 'editProduct':S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
@@ -5393,6 +5444,7 @@ function act(a,el){
         (async()=>{try{if(S.coverImg)await coverUse();else await imgSetUse();}finally{S.autoUsing=false;}
           if(!S.coverImg&&!(S.imgSet&&S.imgSet.some(x=>x.pick&&x.url)))act('saveProduct',el);else toast('ใส่รูปที่สร้างไม่สำเร็จ ลองกด "ใช้เป็นปก" อีกครั้ง');})();break;}
       const d=S.draft,isNew=S.edit==='new',selfId=isNew?null:S.edit;
+      if(el.dataset.status)d.status=el.dataset.status;
       const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase(),price=Number(d.price),full=Number(d.fullPrice)||0,link=String(d.link).trim(),sample=String(d.sampleLink).trim();
       if(!name){S.err='กรอกชื่อสินค้า';render(true);break;}
       if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)){S.err='ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น calculus-1-summary';render(true);break;}
@@ -5410,14 +5462,14 @@ function act(a,el){
       let saved;
       if(isNew){saved=Object.assign({id:'p'+Date.now().toString(36)},data);D.products.push(saved);}
       else{saved=getProduct(selfId);Object.assign(saved,data);}
-      if(saved.status==='published'&&!saved.publishedAt){saved.publishedAt=Date.now();adDraftSoon(saved.id);}
+      if(saved.status==='published'){delete saved.fresh;if(!saved.publishedAt){saved.publishedAt=Date.now();adDraftSoon(saved.id);}}
       if(d.fromProp)propDone(d.fromProp,true);
       S.edit=null;S.draft=null;S.err='';save();
       if(d.fromJob){const jid=d.fromJob,pid=saved.id;clearTimeout(saveTimer);
         flushRemote().then(ok=>{if(!ok||!getProduct(pid)){toast('ลงขายไม่สำเร็จ การ์ดโรงงานยังอยู่ กดอนุมัติใหม่อีกครั้ง');FAC.jobs=null;render(true);return;}
           authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:jid,product_id:pid})}).then(j=>{if(j&&j.ok)FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==jid);render(true);}).catch(()=>{});});}
-      if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');}
-      else{render(false);toast('บันทึกสินค้าแล้ว');checkAllLinks();}
+      if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');window.scrollTo(0,0);toast('เผยแพร่แล้ว นี่คือเซลเพจที่ลูกค้าเห็น');}
+      else{render(false);toast('บันทึกฉบับร่างแล้ว ลูกค้ายังไม่เห็น');checkAllLinks();}
       break;}
 
     /* coupons */
@@ -5466,6 +5518,7 @@ document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
   if(ds.adf){ADF[ds.adf]=Number(t.value)||0;const o=document.getElementById('adf-out');if(o)o.innerHTML=adfOut();return;}
   if(ds.f)S.form[ds.f]=t.value;
+  if(ds.vp&&VIPA.pg){const [k,i,f]=ds.vp.split('.'),v=t.type==='checkbox'?t.checked:t.value;if(i===undefined)VIPA.pg[k]=v;else if(VIPA.pg[k]&&VIPA.pg[k][i])VIPA.pg[k][i][f]=v;return;}
   if(ds.ld){LEADS[ds.ld]=t.value;}
   if(ds.fn&&S.fnew){S.fnew[ds.fn]=t.value;}
   if(ds.fqe){S.fqe=S.fqe||{};S.fqe[ds.fqe]=t.value;return;}
@@ -5496,7 +5549,7 @@ document.addEventListener('change',e=>{
       .catch(e=>toast('เปลี่ยนไฟล์ไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxFile='';render(true);});return;}
   if(t.dataset&&t.dataset.bxref){const f=t.files&&t.files[0];t.value='';if(!f)return;S.bxRefUp=true;render(true);
     new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f);}).then(d=>toJpeg(d,1200)).then(uploadImage).then(u=>{const st=bxStyle();bxStyleSet('refs',(st.refs||[]).concat(u).slice(0,3));toast('เพิ่มรูปตัวอย่างแล้ว ปกที่ทำต่อจากนี้จะใช้สไตล์นี้');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxRefUp=false;render(true);});return;}
-  if(t.dataset&&t.dataset.bxup&&S.draft){const f=t.files&&t.files[0];if(!f)return;toast('กำลังอัปโหลดรูป...');square(f).then(r=>uploadImage(r.url)).then(u=>{S.draft.cover=u;render(true);toast('ใส่รูปชุดแล้ว อย่าลืมกดบันทึกชุด');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e)));return;}
+  if(t.dataset&&t.dataset.bxup&&S.draft){const f=t.files&&t.files[0];if(!f)return;toast('กำลังอัปโหลดรูป...');square(f).then(r=>uploadImage(r.url)).then(u=>{S.draft.cover=u;S.draft.coverAuto='';render(true);toast('ใส่รูปชุดแล้ว อย่าลืมกดบันทึก');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e)));return;}
   if(t.dataset&&t.dataset.adsup){const x=(ADA.items||[]).find(y=>y.id===t.dataset.adsup),f=t.files&&t.files[0];if(!x||!f)return;adsKeep(x);toast('กำลังอัปโหลดรูป...');
     square(f).then(r=>uploadImage(r.url)).then(async url=>{x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;await adsSave(x);render(true);toast('ใช้รูปนี้ในแอดแล้ว');}).catch(err=>toast('อัปโหลดไม่สำเร็จ: '+(err.message||err)));return;}
   if(t.name==='method'){S.method=t.value;render(true);}

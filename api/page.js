@@ -154,7 +154,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));
     if (vipQ === 'review') return res.status(200).send(vipReviewPage({ settings: shop.settings, site: NEW_SITE }));
-    return res.status(200).send(vipPage(await loadVip(), { settings: shop.settings, site: NEW_SITE }));
+    return res.status(200).send(vipPage(await loadVip(), { settings: shop.settings, site: NEW_SITE, preview: req.query.preview === '1' }));
   }
   const timg = String(req.query.timg || '');
   if (timg) { // รูปหัวข้อจาก Canva /topic-img/<slug>.jpg (ไฟล์อยู่ใน src/topics)
