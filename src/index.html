@@ -2056,7 +2056,6 @@ function ceoBar(k){
 function shopHead(p){
   const opts=D.products.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(x.name)}${x.status==='draft'?' (ฉบับร่าง)':''}</option>`).join('');
   return `
-  ${ceoBar('ceo_sale')}
   ${hasAdminAccess()?`<div class="urlbar"><div class="wrap wide urlbar-in">
     <span class="fine">เซลเพจ</span>
     <select id="pick" aria-label="เลือกเซลเพจที่จะดู">${opts}</select>
@@ -4401,7 +4400,7 @@ function mood(k){
   }
   return M('🙂','ปกติ','');
 }
-function moodStrip(){const ks=['manager','ceo_sale','factory','writer','designer','trend','community','analyst','guard','market','clip','product','finance','hr','manual'];
+function moodStrip(){const ks=['manager','factory','writer','designer','trend','community','analyst','guard','market','clip','product','finance','hr','manual'];
   return `<div class="moods">${ks.map(k=>{const m=mood(k),t=TEAM[k];return `<div class="md${TEAM_KEYS.includes(k)?' cfgable':''}" title="${esc(m.why)}"${TEAM_KEYS.includes(k)?` data-a="cfgOpen" data-v="${k}"`:''}><span class="e"><img class="ava" src="${t.img}" alt="" style="background:${t.bg}" loading="lazy"><span>${m.e}</span></span><b>${esc(t.name)}</b><small>${esc(m.t)}</small>${m.why?`<em>${esc(m.why)}</em>`:''}</div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];const cf=TEAM_KEYS.includes(k);const cs=cf?cfgSummary(k):'';return `<article class="ocard${o.vacant?' vacant':''}${cf?' cfgable':''}" style="--obg:${m.bg}"${cf?` data-a="cfgOpen" data-v="${k}" role="button" tabindex="0" aria-label="ตั้งค่า${esc(m.name)}"`:''}>${cs==='พักงาน'?`<span class="ocfg">พักงาน</span>`:''}
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
@@ -4509,7 +4508,7 @@ let CHAT={msgs:null,loading:false,err:'',next_at:null,next_source:null,pending:0
 async function loadChat(){CHAT.loading=true;try{await loadChat0();}finally{if(CHAT.msgs===null)CHAT.msgs=[];CHAT.loading=false;}}
 async function loadChat0(){try{const j=await adminApi('/api/content?action=chat&days=7');if(j.ok){CHAT.msgs=j.messages||[];CHAT.next_at=j.next_at||null;CHAT.next_source=j.next_source||null;CHAT.pending=j.pending||0;CHAT.engine=j.engine||'Claude';CHAT.err='';}else CHAT.err=j.error||'โหลดไม่ได้';}catch(e){CHAT.err='เชื่อมต่อไม่ได้';}CHAT.loading=false;}
 function onDutyNow(k){const sc=SCHED[k];if(!sc)return false;const b=new Date(Date.now()+BKK);const ok=sc.dow?sc.dow.includes(b.getUTCDay()):b.getUTCDate()===sc.dom;if(!ok)return false;const mins=b.getUTCHours()*60+b.getUTCMinutes();return sc.times.some(([h,mi])=>mins>=h*60+mi&&mins<h*60+mi+(sc.dur||15));}
-function onlineStrip(){const ks=['manager','ceo_sale','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
+function onlineStrip(){const ks=['manager','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
 function chatTab(){
   if(CHAT.msgs===null&&!CHAT.loading){loadChat().then(()=>{render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);});}
   const msgs=CHAT.msgs||[];let lastDay='';
@@ -4646,7 +4645,7 @@ function teamTab(){
   <div class="org">
     <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
     <div class="tier one">${orgCard('manager')}</div><div class="conn"></div><div class="bar"></div><div class="conn"></div>
-    <div class="tier many">${orgCard('ceo_sale')}${orgCard('factory')}</div>
+    <div class="tier many">${orgCard('factory')}</div>
   </div>
   <h3 class="h3" style="margin-top:20px">ทีมที่ขึ้นกับพี่ต้นโดยตรง</h3>
   <div class="org"><div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div></div>
