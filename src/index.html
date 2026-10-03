@@ -1463,7 +1463,8 @@ function imgSetPrompts(d){
     `อินโฟกราฟิก 3 ขั้นตอน "สั่งซื้อ → สแกนจ่าย QR → รับไฟล์ PDF ทันที" มีไอคอนมือถือ QR code และไฟล์ PDF`+base];
 }
 async function imgSetGen(){
-  if(!S.draft)return;const ps=imgSetPrompts(S.draft);{const ta=document.getElementById('e-cover-prompt');if(ta&&ta.value.trim().length>=20)ps[0]=ta.value.trim();} // รูปแรกใช้คำสั่งในกล่อง (แก้ได้)S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
+  if(!S.draft)return;const ps=imgSetPrompts(S.draft);{const ta=document.getElementById('e-cover-prompt');if(ta&&ta.value.trim().length>=20)ps[0]=ta.value.trim();} /* รูปแรกใช้คำสั่งในกล่อง (แก้ได้) */
+  S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
   const real=imgSetReal(S.draft),useReal=S.imgFirst==='real'&&real;let ref=useReal?real:'';
   if(useReal){S.imgSet[0].url=real;S.imgSet[0].real=true;render(true);} // รูปแรก = ปกจริงจากโรงงาน ไม่ต้องสร้าง รูป 2-5 ใช้ปกนี้เป็นต้นแบบ
   for(let i=useReal?1:0;i<ps.length;i++){

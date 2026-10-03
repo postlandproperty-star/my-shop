@@ -37,6 +37,7 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(0, r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
+const COVER_CALLS = [];
 const results = []; let failed = 0;
 const pass = (name, ok, detail = '') => { results.push({ name, ok, detail }); if (!ok) failed++; console.log(`${ok ? '✓' : '✗'} ${name}${detail ? ' — ' + detail : ''}`); };
 
@@ -58,6 +59,7 @@ async function newPage(kind) {
     if (/\/api\/checkout\?m=qr/.test(url)) return route.fulfill({ json: { ok: true, pi: 'pi_test', k: 'pi_test_secret', png: `${BASE}/qr.png`, amount: 1 } });
     if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD, LIVE], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอด 2 รูป + แอดทดสอบ 3 รูปที่วิ่งมา 6 วัน
     if (/action=ads_auto_status/.test(url) && AD) return route.fulfill({ json: { ok: true, access: { ok: true }, currency: 'AUD', rate: 0.04, history: [], ads: LIVE_ADS } });
+    if (/action=cover/.test(url)) { try { COVER_CALLS.push(JSON.parse(route.request().postData() || '{}')); } catch (e) {} return route.fulfill({ json: { ok: true, image: 'data:image/png;base64,' + PNG.toString('base64') } }); }
     if (/action=insights/.test(url)) return route.fulfill({ json: { ok: true, ready: true, events: 120, totals: { sessions: 40, views: 90, bounce: 55, perSession: 2.3, mobile: 80 }, daily: [{ d: '2026-10-01', n: 12 }, { d: '2026-10-02', n: 28 }], funnel: { product: 30, add: 8, buy: 6, pay: 4, paid: 2 }, pages: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct75: 40, pct100: 25, exitRate: 50, exits: 10 }], articles: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct100: 25 }], exits: [{ p: '/p/x', exits: 6, exitRate: 60 }], clicks: [{ k: 'cartAdd', n: 9 }, { k: 'link:/p/toeic-750', n: 5 }, { k: 'out:m.me', n: 2 }], sources: [{ k: 'google', n: 20 }, { k: 'ad:toeic-checkout', n: 10 }], orderSources: [{ k: 'fb-toeic-test', n: 2 }], quizzes: [{ slug: 'toeic-tense-quiz', starts: 10, done: 6, avg: 70 }], hardest: [{ slug: 'toeic-tense-quiz', i: 3, rate: 20, n: 10 }] } });
     if (/action=vip_admin/.test(url)) return route.fulfill({ json: { ok: true, ready: false, sql: 'create table members (...);', settings: { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, stats: null } });
     if (/m=vip_me/.test(url)) return route.fulfill({ json: { ok: true, email: null, active: false, settings: { open: true } } });
@@ -235,6 +237,9 @@ try {
       if (v === 'factory') { await page.waitForTimeout(300); const f = await page.evaluate(() => ({ steps: document.querySelectorAll('.ffl-steps li').length, cur: document.querySelectorAll('.ffl-steps li.cur').length, now: (document.querySelector('.ffl-now') || {}).textContent || '', global: !!document.querySelector('details.fac-global'), globalLast: (() => { const g = document.querySelector('details.fac-global'); return !!g && !g.nextElementSibling; })() }));
         await page.locator('.ffl').screenshot({ path: path.join(OUT, `factory-flow-${kind}.png`) }).catch(() => {});
         pass(`[${kind}] โรงงาน: คู่มือภาพ 5 ขั้น + บอกว่าตอนนี้ต้องทำอะไร · ขายต่างประเทศพับไว้ล่างสุด`, f.steps === 5 && f.cur >= 1 && /ตอนนี้/.test(f.now) && f.global && f.globalLast, JSON.stringify(f).slice(0, 160)); }
+      if (v === 'home' && kind === 'desktop') { COVER_CALLS.length = 0; const g = await page.evaluate(async () => { const REF = 'https://x.supabase.co/storage/v1/object/public/product-images/t.png'; window.uploadImage = async () => REF; S.draft = { name: 'TOEIC Mock Test', price: 249, cat: 'mock', type: '', images: [] }; S.imgFirst = 'ai'; await imgSetGen(); const r = { made: (S.imgSet || []).filter((x) => x.url).length, errs: (S.imgSet || []).map((x) => x.err).filter(Boolean) }; S.draft = null; S.imgSet = null; return r; });
+        const refsOk = COVER_CALLS.length === 5 && !(COVER_CALLS[0].refs || []).length && COVER_CALLS.slice(1).every((c) => (c.refs || [])[0] === 'https://x.supabase.co/storage/v1/object/public/product-images/t.png');
+        pass('ปุ่ม ✨ สร้างชุดภาพสินค้า 5 รูป: สร้างได้ครบ 5 รูป รูป 2-5 ใช้รูปแรกเป็นต้นแบบ', g.made === 5 && refsOk, JSON.stringify({ ...g, calls: COVER_CALLS.length })); }
       if (v === 'home') { const cp = await page.evaluate(() => { const d = { name: 'TOEIC Mock Test', price: 149, cat: 'mock', type: '' }, p = coverPrompt(d), set = imgSetPrompts(d); return { alone: /ไม่มีของประกอบ/.test(p) && !/โต๊ะไม้/.test(p), same: set[0] === p, follow: set.slice(1).every((x) => /เหมือนรูปอ้างอิง/.test(x)) }; });
         pass(`[${kind}] ปกสินค้า: คำสั่งทำปก = สินค้าเดี่ยวๆ (ตรงกับรูปแรกของชุด) รูป 2-5 ตามรูปแรก`, cp.alone && cp.same && cp.follow, JSON.stringify(cp)); }
       if (v === 'home') { const lv = await page.evaluate(() => ({ n: LIVE.length, ok: LIVE.every((L) => typeof L.run === 'function' && L.every > 0 && (L.tabs || L.views)), pill: !!document.getElementById('live-pill') })); pass(`[${kind}] ข้อมูลสด: ทุกแหล่งข้อมูลลงทะเบียนรอบรีเฟรช + ป้ายอัปเดตอัตโนมัติ`, lv.n >= 10 && lv.ok, JSON.stringify(lv)); }
