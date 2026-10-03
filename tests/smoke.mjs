@@ -22,10 +22,13 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 // หน้ารวมหัวข้อ SEO (เซิร์ฟเวอร์สร้าง): สร้างจาก lib/topics.js + ข้อมูลชุดทดสอบ ให้ตรวจหน้าตาเหมือนหน้าอื่น
 const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'lib/topics.js'));
 const { vipPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
+const { freePage, FREEBIES } = await import(path.join(ROOT, '..', 'lib/free.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
 const T_QZ = [{ slug: 'toeic-level-test', title: 'วัดระดับ TOEIC ฟรี 20 ข้อ', cat: 'grammar', mode: 'level', questions: [1] }, { slug: 'toeic-tense-quiz', title: 'ข้อสอบ TOEIC Tense 10 ข้อ พร้อมเฉลย', desc: 'ลองทำข้อสอบ TOEIC Part 5 เรื่อง Tense 10 ข้อ พร้อมเฉลยและคำอธิบายภาษาไทยครบทุกข้อ', cat: 'grammar', questions: Array(10).fill(1) }, { slug: 'toeic-ctm', title: 'จับผิดประโยค TOEIC 10 ข้อ พิมพ์แก้เอง ตรวจใจดี', desc: 'แบบฝึกจับผิดประโยคภาษาอังกฤษแนว TOEIC 10 ข้อ พิมพ์ประโยคที่ถูกเอง', cat: 'grammar', questions: Array(10).fill(1) }];
 const server = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split('?')[0]);
+  if (u === '/__free') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(freePage(FREEBIES[0], { site: BASE, upsell: SHOP.products.find((p) => p.status === 'published' && p.type !== 'bundle') })); }
+  const fi = u.match(/^\/free-(img|file)\/([\w.-]+)$/); if (fi) { const f = path.join(SRC, 'free', fi[2]); if (fs.existsSync(f)) return res.end(fs.readFileSync(f)); res.statusCode = 404; return res.end(); }
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
   if (tp) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(topicPage(tp, topicItems(tp, { articles: T_ART, quizzes: T_QZ, products: SHOP.products }), { site: BASE, all: TOPICS })); }
@@ -60,6 +63,7 @@ async function newPage(kind) {
     if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD, LIVE], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอด 2 รูป + แอดทดสอบ 3 รูปที่วิ่งมา 6 วัน
     if (/action=ads_auto_status/.test(url) && AD) return route.fulfill({ json: { ok: true, access: { ok: true }, currency: 'AUD', rate: 0.04, history: [], ads: LIVE_ADS } });
     if (/action=cover/.test(url)) { try { COVER_CALLS.push(JSON.parse(route.request().postData() || '{}')); } catch (e) {} return route.fulfill({ json: { ok: true, image: 'data:image/png;base64,' + PNG.toString('base64') } }); }
+    if (/\/api\/order\?m=free/.test(url)) return route.fulfill({ json: { ok: true, file: `${BASE}/free-file/toeic-confusing-50.pdf` } });
     if (/action=insights/.test(url)) return route.fulfill({ json: { ok: true, ready: true, events: 120, totals: { sessions: 40, views: 90, bounce: 55, perSession: 2.3, mobile: 80 }, daily: [{ d: '2026-10-01', n: 12 }, { d: '2026-10-02', n: 28 }], funnel: { product: 30, add: 8, buy: 6, pay: 4, paid: 2 }, pages: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct75: 40, pct100: 25, exitRate: 50, exits: 10 }], articles: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct100: 25 }], exits: [{ p: '/p/x', exits: 6, exitRate: 60 }], clicks: [{ k: 'cartAdd', n: 9 }, { k: 'link:/p/toeic-750', n: 5 }, { k: 'out:m.me', n: 2 }], sources: [{ k: 'google', n: 20 }, { k: 'ad:toeic-checkout', n: 10 }], orderSources: [{ k: 'fb-toeic-test', n: 2 }], quizzes: [{ slug: 'toeic-tense-quiz', starts: 10, done: 6, avg: 70 }], hardest: [{ slug: 'toeic-tense-quiz', i: 3, rate: 20, n: 10 }] } });
     if (/action=vip_admin/.test(url)) return route.fulfill({ json: { ok: true, ready: false, sql: 'create table members (...);', settings: { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, stats: null } });
     if (/m=vip_me/.test(url)) return route.fulfill({ json: { ok: true, email: null, active: false, settings: { open: true } } });
@@ -198,6 +202,16 @@ try {
         await page.evaluate(() => localStorage.removeItem('sb-lpeqaorswhwzlplsaqpe-auth-token')); } await page.screenshot({ path: path.join(OUT, `topic-${slug}-${kind}.png`), fullPage: true });
       await page.context().close();
     } catch (e) { pass(`[${kind}] หัวข้อ ${slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
+    // 3.55) ชีทแจกฟรี: กรอกอีเมล → ปุ่มดาวน์โหลด + ชวนติดตามเพจ (ไม่บังคับไลก์)
+    try { page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.goto(`${BASE}/__free`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(300);
+      await page.fill('#fr-email', 'tester@example.com'); await page.click('#fr-form button'); await page.waitForSelector('#fr-done:not([hidden])', { timeout: 4000 });
+      const fr = await page.evaluate(() => ({ dl: !!document.querySelector('#fr-done a[download]'), fb: /facebook\.com/.test((document.querySelector('#fr-done .fr-fb') || {}).href || ''), cover: (document.querySelector('.fr-cover') || {}).naturalWidth || 0 }));
+      pass(`[${kind}] ชีทแจกฟรี: กรอกอีเมลแล้วได้ปุ่มดาวน์โหลด + ปุ่มติดตามเพจ`, fr.dl && fr.fb && fr.cover > 0, JSON.stringify(fr));
+      await layout(page, `[${kind}] ชีทแจกฟรี`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'free-mobile.png'), fullPage: true });
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] ชีทแจกฟรี: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
     // 3.6) หน้าสมาชิก VIP: ยังไม่เปิด = "เร็วๆ นี้" · เปิดแล้ว = ราคาจากหลังบ้าน + ปุ่มสมัคร + ฟอร์มเข้าระบบด้วยอีเมล
     for (const mode of ['closed', 'open']) try {

@@ -11,6 +11,7 @@ import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
 import { vipPage, vipReviewPage } from '../lib/vipPage.js';
 import { loadVip } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
+import { FREEBIES, freeBySlug, freePage } from '../lib/free.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
 async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
@@ -91,7 +92,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const today = new Date().toISOString().slice(0, 10);
     const [quizzes, articles] = await Promise.all([loadQuizzes(), loadArticles()]);
     const topics = TOPICS.filter((t) => topicReady(topicItems(t, { articles, quizzes, products: shop.products }))).map((t) => `/topic/${t.slug}`);
-    const urls = ['/', '/store', ...topics, ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
+    const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
     res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
@@ -128,6 +129,25 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     if (!buf) return res.status(404).end();
     res.setHeader('Content-Type', brand.endsWith('.ico') ? 'image/x-icon' : 'image/png'); res.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=2592000');
     return res.status(200).end(buf);
+  }
+  const ff = String(req.query.freefile || req.query.freeimg || '');
+  if (ff) { // ไฟล์/รูปของชีทแจกฟรี (เฉพาะไฟล์ที่ลงทะเบียนใน FREEBIES)
+    const ok = FREEBIES.some((f) => [f.file, f.cover, ...f.previews].includes(ff));
+    let buf = null; if (ok) try { buf = readFileSync(join(process.cwd(), 'src', 'free', ff)); } catch (e) {}
+    if (!buf) return res.status(404).end();
+    const pdf = ff.endsWith('.pdf');
+    res.setHeader('Content-Type', pdf ? 'application/pdf' : 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=2592000');
+    if (pdf) res.setHeader('Content-Disposition', `inline; filename="SheetLab-${ff}"`);
+    return res.status(200).end(buf);
+  }
+  const freeQ = String(req.query.free || '');
+  if (freeQ) { // หน้าแจกชีทฟรี /free และ /free/<slug>
+    const f = freeQ === '_' ? FREEBIES[0] : freeBySlug(freeQ);
+    if (!f) { res.writeHead(302, { Location: '/free' }); return res.end(); }
+    const shop = await loadShop().catch(() => ({ settings: {}, products: [] }));
+    const up = (shop.products || []).find((p) => p.id === f.upsell && p.status === 'published') || null;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300');
+    return res.status(200).send(freePage(f, { settings: shop.settings || {}, site: NEW_SITE, upsell: up }));
   }
   const vipQ = String(req.query.vip || '');
   if (vipQ === 'home' || vipQ === 'review') { // สมาชิก VIP (/vip) และสมุดจุดพลาด (/vip/review)

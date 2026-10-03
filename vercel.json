@@ -17,6 +17,22 @@
       "destination": "/api/page?timg=:slug"
     },
     {
+      "source": "/free",
+      "destination": "/api/page?free=_"
+    },
+    {
+      "source": "/free/:slug",
+      "destination": "/api/page?free=:slug"
+    },
+    {
+      "source": "/free-file/:f",
+      "destination": "/api/page?freefile=:f"
+    },
+    {
+      "source": "/free-img/:f",
+      "destination": "/api/page?freeimg=:f"
+    },
+    {
       "source": "/vip",
       "destination": "/api/page?vip=home"
     },

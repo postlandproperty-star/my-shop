@@ -105,6 +105,15 @@ async function resend(req, res) {
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.query.m === 'resend') return req.method === 'POST' ? resend(req, res) : res.status(405).json({ ok: false, error: 'POST only' });
+  if (req.query.m === 'free') { // ขอชีทแจกฟรี: บันทึกอีเมล + ส่งลิงก์เข้าอีเมล + คืนลิงก์ให้ดาวน์โหลดทันที
+    if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    const F = await import('../lib/free.js'); const b = json(req), f = F.freeBySlug(String(b.slug || '')), email = String(b.email || '').trim().toLowerCase();
+    if (!f) return res.status(404).json({ ok: false, error: 'ไม่พบชีทนี้' });
+    if (!F.okEmail(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง' });
+    const origin = originOf(req);
+    try { await F.claimFree(f, email, { src: b.src, origin }); } catch (e) { console.error('free', e); }
+    return res.status(200).json({ ok: true, file: `${origin}/free-file/${f.file}` });
+  }
   if (/^vip_[a-z]+$/.test(String(req.query.m || ''))) { try { return await vip(req, res, req.query.m); } catch (e) { console.error('vip', e); return res.status(e.missing ? 503 : 500).json({ ok: false, error: e.missing ? 'ระบบสมาชิกยังไม่ได้ตั้งค่าฐานข้อมูล' : 'ระบบขัดข้อง ลองใหม่อีกครั้ง' }); } }
   const id = String(req.query.session_id || '');
   const piId = String(req.query.pi || '');
