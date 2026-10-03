@@ -195,9 +195,9 @@ footer{padding:28px 0 110px;text-align:center}
 /* แอดสินค้าใหม่รอกดตกลง */
 .adq-box{margin-bottom:14px}
 .adq{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:18px;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--bg)}
-.adq-prev{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:grid}
+.adq-prev{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:grid;align-self:start;align-content:start;position:sticky;top:12px}
 .adq-h{display:flex;flex-direction:column;padding:10px 12px 4px}.adq-text{border:0;border-radius:0;font-size:14px;resize:vertical;background:transparent;min-height:120px}
-.adq-img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-top:1px solid var(--line)}
+.adq-img{width:100%;height:auto;max-height:560px;object-fit:contain;display:block;border-top:1px solid var(--line);background:#000}
 .adq-f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;background:var(--bg)}.adq-f>div{display:grid}
 .adq-head{border:0;padding:2px 0;font-weight:600;background:transparent;font-size:14px}
 .adq-cta{flex:none;background:var(--line);border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600}
@@ -226,7 +226,7 @@ footer{padding:28px 0 110px;text-align:center}
 .ads-pl{font-size:13.5px}.ads-pl.up b{color:var(--ok)}.ads-pl.down b{color:var(--bad)}
 .ads-todo{font-size:13.5px;font-weight:600;color:var(--bad)}.ads-why{color:var(--bad)}.ads-acts{display:flex;flex-direction:column;gap:6px}
 @media (max-width:760px){.ads-row{grid-template-columns:48px minmax(0,1fr)}.ads-img{width:48px;height:48px}.ads-acts{grid-column:1/-1;flex-direction:row}}
-.adq-pick{position:relative;width:64px;height:80px}.adq-n{position:absolute;top:3px;left:3px;background:#EE4D2D;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:grid;place-items:center}.adq-tag{position:absolute;left:0;right:0;bottom:0;background:rgba(15,27,51,.75);color:#fff;font-size:9.5px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.adq-pick{position:relative;width:64px;height:80px}.adq-pw{position:relative;display:inline-block}.adq-del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:14px;line-height:1;cursor:pointer;padding:0;z-index:2}.adq-n{position:absolute;top:3px;left:3px;background:#EE4D2D;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:grid;place-items:center}.adq-tag{position:absolute;left:0;right:0;bottom:0;background:rgba(15,27,51,.75);color:#fff;font-size:9.5px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .adtest{margin:0 0 14px;border:2px solid #F5B301}
 .adflow{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin:0 0 6px}.adf-s{flex:1 0 auto;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 4px;white-space:nowrap}
 .adf-s b{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--ink);font-size:11px}.adf-s.done{color:#15803d;border-color:#bbf7d0;background:#f0fdf4}.adf-s.done b{background:#16a34a;color:#fff}
@@ -3911,6 +3911,7 @@ function adsStatusBox(){
       <span class="ads-st"><span class="badge ${g[2]}">${g[0]} ${esc(a.label)}</span>${a.dailyTHB?`<span class="fine">≈${money(a.dailyTHB)}/วัน</span>`:''}${a.end&&a.group!=='ended'?`<span class="fine">ถึง ${new Date(a.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}</span>
       ${a.todo?`<span class="ads-todo">👉 ${esc(a.todo)}</span>`:''}${a.reasons.length?`<span class="fine ads-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</span>`:''}
       <span class="fine">7 วัน: ใช้ไป ${money(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · ซื้อ ${a.week.purchases}${a.week.purchases?` · ต้นทุน/ซื้อ ${money(a.week.spendTHB/a.week.purchases)}`:''}</span>
+      ${a.shop?`<span class="fine">🧾 ร้านนับได้: 7 วัน ${a.shop.orders7} ออเดอร์ ${money(a.shop.rev7)} · 30 วัน ${a.shop.orders30} ออเดอร์ ${money(a.shop.rev30)} <span title="ชื่อที่ลิงก์แอดติดไว้กับออเดอร์">(ชื่อในลิงก์: ${esc(a.shop.tag||'-')})</span></span>`:''}
       ${a.week.spendTHB?`<span class="ads-pl ${a.week.profitTHB>=0?'up':'down'}">ยอดขายจากแอด ${money(a.week.valueTHB||0)} − ค่าแอด ${money(a.week.spendTHB)} = <b>${a.week.profitTHB>=0?'กำไร':'ขาดทุน'} ${money(Math.abs(a.week.profitTHB||0))}</b></span>`:''}</div>
     <div class="ads-acts">${a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`:a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:''}
       <a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${esc(a.id)}" target="_blank" rel="noopener noreferrer">Ads Manager</a></div></div>`;};
@@ -3950,7 +3951,7 @@ function adsAutoBox(compact,noLive){
         <span class="fine adq-desc">แคมเปญยอดขาย · คนไทย (Facebook หาคนที่น่าจะซื้อเอง) · หยุดเองเมื่อครบวัน</span>
         ${(()=>{const p=getProduct(x.productId)||{},imgs=[...new Set([...(x.extra||[]).slice().reverse(),...(p.images||[]).slice(0,9)])],busy=ADA.aiBusy===x.id;
           const sel=(x.multi&&x.multi.length?x.multi:[x.image]).filter(Boolean);
-          return `<div><span class="adq-lbl">รูปที่ใช้ในแอด (ไม่กระทบรูปสินค้า) · เลือกได้ถึง 4 รูป Facebook จะส่งงบให้รูปที่ขายได้ดีกว่าเอง</span><div class="adq-imgs">${imgs.map(u=>{const k=sel.indexOf(u);return `<button class="adq-pick${k>=0?' on':''}" data-a="adsImg" data-id="${x.id}" data-v="${esc(u)}" aria-pressed="${k>=0}" title="${esc((x.labels||{})[u]||'')}"><img src="${esc(u)}" alt="" loading="lazy">${k>=0?`<b class="adq-n">${k+1}</b>`:''}${(x.labels||{})[u]?`<span class="adq-tag">${esc(x.labels[u])}</span>`:''}</button>`;}).join('')}</div>
+          return `<div><span class="adq-lbl">รูปที่ใช้ในแอด (ไม่กระทบรูปสินค้า) · เลือกได้ถึง 4 รูป Facebook จะส่งงบให้รูปที่ขายได้ดีกว่าเอง</span><div class="adq-imgs">${imgs.map(u=>{const k=sel.indexOf(u);return `<span class="adq-pw"><button class="adq-pick${k>=0?' on':''}" data-a="adsImg" data-id="${x.id}" data-v="${esc(u)}" aria-pressed="${k>=0}" title="${esc((x.labels||{})[u]||'')}"><img src="${esc(u)}" alt="" loading="lazy">${k>=0?`<b class="adq-n">${k+1}</b>`:''}${(x.labels||{})[u]?`<span class="adq-tag">${esc(x.labels[u])}</span>`:''}</button>${(x.extra||[]).includes(u)&&k<0?`<button class="adq-del" data-a="adsImgDel" data-id="${x.id}" data-v="${esc(u)}" aria-label="เอารูปนี้ออกจากรายการ">×</button>`:''}</span>`;}).join('')}</div>
           ${sel.length>1?`<p class="fine" style="margin:4px 0 0">ยิงเป็น ${sel.length} แอดในชุดเดียว งบรวมเท่าเดิม</p>`:''}
           <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sm ${ADA.ai===x.id?'btn-line':'btn-dark'}" data-a="adsAiOpen" data-id="${x.id}">✨ ${ADA.ai===x.id?'ปิด':'สร้างรูปใหม่ด้วย AI'}</button><label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-adsup="${x.id}"></label></div>
           ${ADA.ai===x.id?`<div class="adq-ai">
@@ -3996,7 +3997,7 @@ function adfModel(){
   const clicks=h.filter(x=>!sales.includes(x));
   const spend=sales.reduce((a,x)=>a+x.spendTHB,0),n=sales.reduce((a,x)=>a+x.purchases,0),val=sales.reduce((a,x)=>a+x.valueTHB,0);
   const daily=sales.reduce((a,x)=>a+x.spendTHB/Math.max(1,x.days),0); // ที่แอดเคยใช้จริงต่อวัน (รวมทุกแคมเปญยอดขาย)
-  const names=sales.map(x=>String(x.name).toLowerCase()),since=Math.min(...sales.map(x=>Date.parse(x.start)||Date.now()));
+  const names=sales.flatMap(x=>(x.tags||[]).concat(String(x.name).toLowerCase())),since=Math.min(...sales.map(x=>Date.parse(x.start)||Date.now()));
   const real=(D.orders||[]).filter(o=>o.status==='paid'&&o.campaign&&names.includes(String(o.campaign).toLowerCase())&&o.created>=since-864e5);
   const recent=(D.orders||[]).filter(o=>o.status==='paid'&&o.created>Date.now()-60*864e5&&o.amount>0);
   const aov=recent.length>=5?recent.reduce((a,o)=>a+o.amount,0)/recent.length:n&&val?val/n:179;
@@ -5030,8 +5031,9 @@ function act(a,el){
     case 'soOpen':S.soOpen=!S.soOpen;break;
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที':'แสดงอีกครั้งแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
-    case 'adsImg':case 'adsPlat':case 'adsPlatRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;
+    case 'adsImg':case 'adsImgDel':case 'adsPlat':case 'adsPlatRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;
       adsKeep(x);
+      if(a==='adsImgDel'){const u=el.dataset.v;x.extra=(x.extra||[]).filter(v=>v!==u);x.multi=(x.multi||[]).filter(v=>v!==u);if(x.image===u)x.image=(x.multi||[])[0]||x.image;adsSave(x);render(true);break;}
       if(a==='adsImg'){const u=el.dataset.v,m=(x.multi&&x.multi.length?x.multi:[x.image]).filter(Boolean);const on=m.includes(u);
         if(on&&m.length===1){toast('ต้องมีอย่างน้อย 1 รูป');break;}x.multi=on?m.filter(v=>v!==u):m.concat(u).slice(-4);x.image=x.multi[0];adsSave(x);}
       else if(a==='adsPlatRec')x.platforms=adRecommend(x).plats.slice();

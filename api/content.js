@@ -2568,6 +2568,15 @@ export default async function handler(req, res) {
         if (!fb?.userToken || (acc.reason === 'token' || acc.reason === 'perm')) return res.status(200).json({ ok: false, access: acc, error: acc.error });
         try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() });
           const history = await adsHistory(fb, r.rate).catch(() => null); // ใช้ประเมินรายได้ ไม่มีก็ไม่เป็นไร
+          // ออเดอร์จริงในร้านของแต่ละแอด: จับคู่จากชื่อที่ลิงก์แอดส่งมา (tag) หรือชื่อแคมเปญ · 7 วันและ 30 วัน (ไม่นับออเดอร์ทดสอบ)
+          try {
+            const since = new Date(Date.now() - 30 * 864e5).toISOString(), wk = Date.now() - 7 * 864e5;
+            const [ords, priv] = await Promise.all([sb(`orders?status=eq.paid&paid_at=gte.${since}&select=campaign,amount,paid_at,email&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
+            const isTest = testOrder(null, priv?.[0]?.data?.testEmails); const real = ords.filter((o) => !isTest(o) && o.campaign);
+            for (const ad of r.ads) { const keys = new Set([ad.tag, ad.campaign].filter(Boolean).map((x) => x.toLowerCase())); const m = real.filter((o) => keys.has(String(o.campaign).toLowerCase())), m7 = m.filter((o) => Date.parse(o.paid_at) >= wk);
+              ad.shop = { tag: ad.tag || ad.campaign, orders7: m7.length, rev7: m7.reduce((x, o) => x + (Number(o.amount) || 0), 0), orders30: m.length, rev30: m.reduce((x, o) => x + (Number(o.amount) || 0), 0) }; }
+            if (history) for (const h of history) { const tags = new Set(r.ads.filter((a) => a.campaign === h.name).map((a) => (a.tag || a.campaign).toLowerCase()).concat(h.name.toLowerCase())); const m = real.filter((o) => tags.has(String(o.campaign).toLowerCase())); h.tags = [...tags]; h.shopOrders30 = m.length; h.shopRev30 = m.reduce((x, o) => x + (Number(o.amount) || 0), 0); }
+          } catch (e) { console.error('ad shop orders', e.message); }
           return res.status(200).json({ ok: true, access: acc, ...r, history }); }
         catch (e) { return res.status(200).json({ ok: false, access: acc, error: String(e.message || e) }); }
       }
