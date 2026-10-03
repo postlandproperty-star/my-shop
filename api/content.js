@@ -1158,7 +1158,7 @@ export default async function handler(req, res) {
       if (/bot|crawl|spider|slurp|facebookexternalhit|headless|preview/i.test(ua)) return res.status(204).end();
       const body = await readBody(req);
       const k = String(body.s || '');
-      if (!/^(store|order|quiz|learn|daily|p\/[a-z0-9-]{1,70}|quiz\/[a-z0-9-]{1,70}|learn\/[a-z0-9-]{1,70})$/.test(k)) return res.status(204).end();
+      if (!/^(store|order|quiz|learn|daily|p\/[a-z0-9-]{1,70}|quiz\/[a-z0-9-]{1,70}|learn\/[a-z0-9-]{1,70}|topic\/[a-z0-9-]{1,40})$/.test(k)) return res.status(204).end();
       try {
         const day = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
         const rows = await sb('shop_state?id=eq.hits&select=data'); const d = rows?.[0]?.data || { days: {} }; const days = d.days || {};
