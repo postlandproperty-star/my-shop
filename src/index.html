@@ -270,6 +270,7 @@ footer{padding:28px 0 110px;text-align:center}
 .adt-cell img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:6px}.adt-cell span{color:var(--muted)}.adt-cell em{font-style:normal;font-weight:700;font-size:12px}
 .adt-cell.win{border-color:#16a34a;box-shadow:0 0 0 1px #16a34a}.adt-cell.win em{color:#16a34a}.adt-cell.lose em{color:#BE123C}.adt-cell.off{opacity:.55}
 .adq-models{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.adq-var{display:grid;gap:6px;background:#FFF7D6;border-radius:10px;padding:10px 12px}.adq-var .btn{justify-self:start}
 .adq-extp{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.45;background:var(--bg)}.adq-steps{margin:2px 0 0;padding-left:18px}.adq-steps li{margin:2px 0}
 .adq-plats{display:flex;gap:6px;flex-wrap:wrap}
 .adq-ai{display:grid;gap:6px;margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px}.adq-ai .adq-lbl{margin:4px 0 0}.adq-ai .input{margin:0}
@@ -3924,12 +3925,13 @@ function adHook(p){const n=String(p.name||''),ex=(n.match(/TOEIC|IELTS|TGAT|ก\
   const items=(n.match(/([\d,]+)\s*ข้อ/)||[])[1];
   if(pfmt(p)==='bundle'){const k=bundleBooks(p).length||(String(p.name).match(/(\d+)\s*เล่ม/)||[])[1]||'';return `${ex?'ถ้าจะสอบ '+ex+' เดือนหน้า':'ถ้าจะสอบเร็วๆ นี้'}\nชุดนี้ชุดเดียว ครบ ${k} เล่ม\n${fromPrice(p)} บาท (ทั้งชุด)`;} // ชุด: ห้ามพูดว่า "เล่มเดียว"
   return pfmt(p)==='notion'?`จัดแผนอ่านทั้งเดือน\nในหน้าเดียว\n${Number(p.price)} บาท`:`${ex?'ถ้าจะสอบ '+ex+' เดือนหน้า':'ถ้าจะสอบเร็วๆ นี้'}\n${l2}\n${Number(p.price)} บาท${items?'/'+items+' ข้อ':''}`;}
-function adImgPrompt(p,style,hook){
+const UGC_SPOTS=['บนโต๊ะในห้องนอน ไฟเพดานสีขาว','บนโต๊ะไม้ในคาเฟ่ มีแก้วกาแฟเย็น แสงจากหน้าต่างตอนบ่าย','บนเตียงตอนกลางคืน มีโคมไฟหัวเตียงแสงส้ม','บนโต๊ะทำงานในออฟฟิศ มีคีย์บอร์ดและแก้วกาแฟ','บนโต๊ะในห้องสมุด มีหนังสือกองข้างๆ','บนตักขณะนั่งบนรถไฟฟ้า มีราวจับเบลออยู่ด้านหลัง'];
+function adImgPrompt(p,style,hook,sceneOver){
   if(style==='clean')return coverPrompt(p);
   const L=String(hook||'').split('\n').map(x=>x.trim()).filter(Boolean),last=L.length>1?L.pop():'';
   const scene=pfmt(p)==='bundle'?`แท็บเล็ต (iPad) วางบนโต๊ะ หน้าจอเปิดไฟล์ชีทข้อสอบภาษาอังกฤษแบบเลือกตอบ (A) (B) (C) (D) ข้างๆ มีชีทที่พิมพ์ออกมาหลายเล่มวางซ้อนกันเป็นตั้ง (สื่อว่าเป็นชุดหลายเล่ม) ปากกาไฮไลต์และโพสต์อิทแปะอยู่`:pfmt(p)==='notion'?'แล็ปท็อปวางบนโต๊ะไม้ในห้องนอน หน้าจอเปิดหน้า Notion แผนอ่านหนังสือที่มีตารางรายวันและเช็คบ็อกซ์ที่ติ๊กแล้วบางช่อง มีแก้วกาแฟและสมุดจดวางข้างๆ'
     :`แท็บเล็ต (iPad) วางบนโต๊ะ หน้าจอเปิดไฟล์ข้อสอบภาษาอังกฤษแบบเลือกตอบ (A) (B) (C) (D) มีวงกลมคำตอบด้วยปากกาสีแดงบางข้อ ปากกาสไตลัสวางข้างๆ ${CAT_SCENE[p.cat]||'มีของใช้บนโต๊ะเล็กน้อย'}`;
-  return `ภาพโฆษณาแนว "ugly ad" ที่จงใจให้ดูไม่โปร เหมือนโพสต์ของคนธรรมดา ไม่ใช่งานกราฟิก: ภาพแนวตั้ง 4:5 (ข้อความทั้งหมดอยู่ช่วงกลางภาพ ไม่ชิดขอบบนล่าง) ถ่ายด้วยมือถือมือเดียวแบบลวกๆ เหมือนนักเรียนถ่ายเก็บไว้เอง ไม่จัดแสง ใช้ไฟในห้องธรรมดา มีแสงสะท้อนบนจอเล็กน้อย มุมกล้องเฉียง โต๊ะรกนิดหน่อยแบบชีวิตจริง ไม่มีกรอบ ไม่มีกราฟิกตกแต่ง ไม่มีโลโก้ ไม่มีป้ายราคาแบบโฆษณา: ${scene}
+  return `ภาพโฆษณาแนว "ugly ad" ที่จงใจให้ดูไม่โปร เหมือนโพสต์ของคนธรรมดา ไม่ใช่งานกราฟิก: ภาพแนวตั้ง 4:5 (ข้อความทั้งหมดอยู่ช่วงกลางภาพ ไม่ชิดขอบบนล่าง) ถ่ายด้วยมือถือมือเดียวแบบลวกๆ เหมือนนักเรียนถ่ายเก็บไว้เอง ไม่จัดแสง ใช้ไฟในห้องธรรมดา มีแสงสะท้อนบนจอเล็กน้อย มุมกล้องเฉียง โต๊ะรกนิดหน่อยแบบชีวิตจริง ไม่มีกรอบ ไม่มีกราฟิกตกแต่ง ไม่มีโลโก้ ไม่มีป้ายราคาแบบโฆษณา: ${sceneOver||scene+' · สถานที่: '+UGC_SPOTS[Math.floor(Math.random()*UGC_SPOTS.length)]}
 ข้อความภาษาไทยเหมือนเขียนด้วยนิ้วในแอปแต่งรูป/IG Story ลายมือหวัดเล็กน้อย สีขาวตัวใหญ่ ซ้อนอยู่ครึ่งบนของภาพ มีเงาดำบางๆ ให้อ่านออก แบ่งบรรทัดตามนี้: ${L.map(x=>'"'+x+'"').join(' / ')}${last?`
 บรรทัดสุดท้ายเขียนด้วยลายมือสีเหลืองสด: "${last}"`:''}`+AI_NO_TEXT;}
 /* prompt สำหรับเอาไปสร้างรูปแอดเองข้างนอก (ChatGPT / Gemini): ภาษาอังกฤษ (โมเดลเข้าใจดีกว่า) + ข้อความไทยที่ต้องขึ้นบนรูปตรงตัว + ข้อมูลสินค้าจริง · ไม่เสียค่า AI ของร้าน */
@@ -3956,6 +3958,19 @@ ${L.map(x=>`"${x}"`).join('\n')}${last?`\n"${last}" (this last line in bright ye
 ${angle==='ugc'?'The Thai text should look handwritten with a finger in an Instagram-story editor: white, slightly messy, thin dark shadow.\n':''}
 Rules: no logos of TOEIC / ETS / IELTS / British Council or any other brand; no fake reviews, star ratings or score guarantees; no extra text besides the lines above; no watermark; no real person's face.
 If you cannot write the Thai text correctly, leave a clean empty area in the upper half for the text instead of writing wrong letters.`;}
+/* 3 แบบสำหรับทดสอบ: ต่างกันทั้งมุมขาย ข้อความบนรูป ฉาก และแนวภาพ (Facebook ส่งงบให้แบบที่ขายได้ แล้วเราดูผลวันที่ 5) */
+function adVariants(p){
+  const f=pfmt(p),ex=(String(p.name||'').match(/TOEIC|IELTS|TGAT|ก\.พ\.|CU-TEP|TU-GET/i)||['สอบ'])[0].toUpperCase(),bd=f==='bundle',bks=bd?bundleBooks(p):[],k=bks.length;
+  const price=bd?fromPrice(p):Number(p.price)||0,sum=bd?bks.reduce((a,b)=>a+(Number(b.price)||0),0):Number(p.fullPrice)||0,off=sum>price?Math.round((1-price/sum)*100):0,feat=lines(p.features)[0]||'';
+  const tab='แท็บเล็ต (iPad) หน้าจอเปิดหน้าชีทสรุปภาษาอังกฤษ (ใช้หน้าตาปกและเนื้อหาจากรูปอ้างอิงที่แนบ)';
+  const T=(L)=>`\nข้อความภาษาไทยตัวใหญ่ อ่านง่ายบนมือถือ อยู่ช่วงกลางภาพ แบ่งบรรทัดตามนี้: ${L.slice(0,-1).map(x=>'"'+x+'"').join(' / ')}\nบรรทัดสุดท้ายสีเหลืองสด: "${L[L.length-1]}"`+AI_NO_TEXT;
+  const pain=[`อ่าน ${ex} เองแล้วงง?`,'ไม่รู้จะเริ่มตรงไหน',bd?`ชุดนี้เรียงให้แล้ว ${k} เล่ม`:'เล่มนี้สรุปให้แล้ว'];
+  const goal=[`เตรียมสอบ ${ex}`,bd?'ครบทุกพาร์ตในชุดเดียว':(feat.length<=28&&feat?feat:'สรุป + แบบฝึก + เฉลย'),`${price} บาท${bd?' ทั้งชุด':''}`];
+  const val=bd&&off?[`${k} เล่ม ซื้อแยก ${sum.toLocaleString('th-TH')} บาท`,`ซื้อเป็นชุด ${price.toLocaleString('th-TH')} บาท`,`ประหยัด ${off}%`]:off?[`ปกติ ${sum} บาท`,`ตอนนี้ ${price} บาท`,`ลด ${off}%`]:['ดูหน้าตัวอย่างได้ก่อนซื้อ','จ่ายแล้วได้ไฟล์ทันที',`${price} บาท`];
+  return [
+    {label:'ก ความเจ็บปวด',prompt:`ภาพแนว ugly ad ถ่ายด้วยมือถือแบบลวกๆ เหมือนโพสต์คนธรรมดา ภาพแนวตั้ง 4:5: โต๊ะรกตอนดึก มีกระดาษโน้ตเขียนยุ่งๆ ขยำวางอยู่ ปากกาหลายด้าม แก้วกาแฟหมดแล้ว ตรงกลางมี${tab} ไฟโต๊ะแสงส้ม ไม่มีกราฟิก ไม่มีโลโก้ ไม่มีคน (เห็นได้แค่มือ)`+T(pain)},
+    {label:'ข เป้าหมาย',prompt:`ภาพถ่ายจริงมุมบน (flat-lay) ภาพแนวตั้ง 4:5: ${bd?`ชีทที่พิมพ์ออกมาหลายเล่ม (${k} เล่ม) วางเรียงเป็นพัดบนโต๊ะสีอ่อน`:'ชีทที่พิมพ์ออกมาวางบนโต๊ะสีอ่อน'} มีปากกาไฮไลต์ โพสต์อิท มือถือ และ${tab} แสงธรรมชาติตอนเช้า ดูเป็นระเบียบ น่าเริ่มอ่าน ไม่มีโลโก้ ไม่มีคน`+T(goal)},
+    {label:'ค ความคุ้ม',prompt:`ภาพโฆษณาสินค้าแบบสะอาด ภาพแนวตั้ง 4:5: ปกสินค้าจากรูปอ้างอิง ${bd?`แสดงเป็นหนังสือ ${k} เล่มวางเรียงซ้อนแบบ 3 มิติ`:'แสดงเป็นแท็บเล็ตคู่กับหนังสือ 3 มิติ'} บนพื้นหลังไล่สีน้ำเงิน (#2440E8) ถึงฟ้าอ่อน เงานุ่ม มีประกายสีเหลืองเล็กน้อย หัวข้อตัวใหญ่ด้านบน ป้ายราคาวงกลมสีเหลือง ห้ามเปลี่ยนชื่อสินค้าหรือหน้าปก`+T(val)}];}
 /* เก็บค่าที่คุณแดนพิมพ์ในการ์ดแอดไว้ก่อนวาดหน้าใหม่ */
 function adsKeep(x){const v=k=>{const e=$('#'+k+x.id);return e?e.value:null;};const t=v('adt-'),h=v('adh-'),d=v('add-'),n=v('adn-'),k=v('adai-hook-'),st=v('adai-style-'),m=(document.querySelector(`input[name="adai-model-${x.id}"]:checked`)||{}).value;
   if(t!=null)x.text=t;if(h!=null)x.headline=h;if(d!=null)x.dailyTHB=Number(d)||x.dailyTHB;if(n!=null)x.days=Number(n)||x.days;if(k!=null)x.aiHook=k;if(st)x.aiStyle=st;if(m)x.aiModel=m;}
@@ -4041,6 +4056,9 @@ function adsAutoBox(compact,noLive){
             <ol class="fine adq-steps"><li>คัดลอก prompt${cov?' + โหลดรูปปก':''}</li><li>เปิด ChatGPT หรือ Gemini ${cov?'แนบรูปปก ':''}แล้ววาง prompt</li><li>ได้รูปที่ชอบ บันทึกลงเครื่อง แล้วกด "⬆ อัปโหลดรูปเอง" ด้านบน รูปจะถูกเลือกเป็นรูปแอดทันที</li></ol>
             <span class="fine">ตัวหนังสือไทยบนรูปที่ AI ทำอาจเพี้ยน ตรวจทุกคำก่อนใช้ · ไม่เสียค่า AI ของร้าน</span></div>`;})():''}
           ${ADA.ai===x.id?`<div class="adq-ai">
+            <div class="adq-var"><b>🎲 แนะนำ: สร้าง 3 แบบที่ต่างกัน</b><span class="fine">ก ความเจ็บปวด · ข เป้าหมาย · ค ความคุ้ม ต่างกันทั้งข้อความ ฉาก และแนวภาพ ใช้รูปปกจริงเป็นต้นแบบ แล้วเลือกเป็นรูปแอดทั้ง 3 ให้ Facebook ทดสอบว่าแบบไหนขายได้</span>
+              <button class="btn btn-cta btn-sm" data-a="adsAiVar" data-id="${x.id}" ${busy?'disabled':''}>${busy?'กำลังสร้าง... (ประมาณ 1-3 นาที)':`🎲 สร้าง 3 แบบ${IMG_INFO[x.aiModel||imgModel()]?` (≈ ฿${IMG_INFO[x.aiModel||imgModel()][1]*3})`:''}`}</button></div>
+            <span class="adq-lbl" style="margin-top:6px">หรือสร้างทีละรูปเอง</span>
             <label class="adq-lbl" for="adai-style-${x.id}">แนวรูป</label><select class="input" id="adai-style-${x.id}">${AD_STYLES.map(([k,l])=>`<option value="${k}" ${(x.aiStyle||'ugc')===k?'selected':''}>${l}</option>`).join('')}</select>
             <label class="adq-lbl" for="adai-hook-${x.id}">ข้อความบนรูป (บรรทัดละท่อน · บรรทัดสุดท้ายเป็นสีเหลือง)</label><textarea class="input" id="adai-hook-${x.id}" rows="3">${esc(x.aiHook!=null?x.aiHook:adHook(p))}</textarea>
             <span class="adq-lbl">โมเดล</span><div class="bxi-models adq-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>{const on=(x.aiModel||imgModel())===k;return `<label class="bxi-model${on?' on':''}"><input type="radio" name="adai-model-${x.id}" value="${k}" data-a="adsModel" data-id="${x.id}" ${on?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`;}).join('')}</div>
@@ -5126,6 +5144,10 @@ function act(a,el){
       else if(a==='adsPlatRec')x.platforms=adRecommend(x).plats.slice();
       else{const v=el.dataset.v;let pl=(x.platforms||[]).slice();if(v==='auto')pl=[];else{pl=pl.includes(v)?pl.filter(k=>k!==v):pl.concat(v);if(v==='threads'&&pl.includes('threads')&&!pl.includes('instagram'))pl.push('instagram');if(v==='instagram'&&!pl.includes('instagram'))pl=pl.filter(k=>k!=='threads');}x.platforms=pl;}
       render(true);break;}
+    case 'adsAiVar':{const x=(ADA.items||[]).find(y=>y.id===id),p=x&&getProduct(x.productId);if(!x||!p)break;adsKeep(x);const cov=(p.images||[])[0];ADA.aiBusy=id;ADA.aiErr='';render(true);
+      adminPost('/api/content?action=ads_auto_creatives',{id:x.id,model:x.aiModel||imgModel(),quality:imgQuality(),refs:cov?[cov]:[],select:true,variants:adVariants(p)})
+        .then(j=>{if(!j||!j.ok||!(j.images||[]).length)throw new Error(((j&&j.errors)||[]).join(' · ')||(j&&j.error)||'สร้างรูปไม่สำเร็จ');Object.assign(x,j.item);toast(`ได้ ${j.images.length} แบบแล้ว เลือกเป็นรูปแอดให้แล้ว`+((j.errors||[]).length?' (บางแบบไม่สำเร็จ)':''));})
+        .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
     case 'adsExtOpen':{const x=(ADA.items||[]).find(y=>y.id===id);if(x)adsKeep(x);ADA.ext=ADA.ext===id?null:id;render(true);break;}
     case 'adsExtAngle':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;adsKeep(x);const h=$('#adext-hook-'+id);if(h)x.aiHook=h.value;x.extAngle=el.dataset.v;render(true);break;}
     case 'adsExtSize':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;adsKeep(x);const h=$('#adext-hook-'+id);if(h)x.aiHook=h.value;x.extSize=el.dataset.v;render(true);break;}

@@ -209,6 +209,9 @@ try {
         const tap = (sel) => page.evaluate((q) => document.querySelector(q)?.click(), sel);
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(200); await tap('[data-a="adsExtAngle"][data-v="cover"]'); await page.waitForTimeout(200);
         await tap('[data-a="adsExtSize"][data-v="916"]'); await page.waitForTimeout(200);
+        const vv = await page.evaluate(() => { const x = ADA.items.find((y) => y.id === 'ad-test'), v = adVariants(getProduct(x.productId)); document.querySelector('[data-a="adsAiOpen"][data-id="ad-test"]')?.click(); return { n: v.length, uniq: new Set(v.map((z) => z.prompt.split('\n')[0])).size, labels: v.map((z) => z.label).join(','), noOne: v.every((z) => !/เล่มเดียว/.test(z.prompt)), btn: !!document.querySelector('[data-a="adsAiVar"]') }; });
+        pass(`[${kind}] โฆษณา: ปุ่มสร้าง 3 แบบที่ต่างกัน (ฉาก/ข้อความไม่ซ้ำ)`, vv.n === 3 && vv.uniq === 3 && vv.noOne && vv.btn, JSON.stringify(vv));
+        await page.evaluate(() => document.querySelector('[data-a="adsAiOpen"][data-id="ad-test"]')?.click());
         const hk = await page.evaluate(() => (document.querySelector('[id^="adext-hook-"]') || {}).value || '');
         pass(`[${kind}] โฆษณา: ข้อความบนรูปของชุดไม่พูดว่า "เล่มเดียว" และบอกจำนวนเล่ม`, !/เล่มเดียว/.test(hk) && /ครบ \d+ เล่ม/.test(hk), hk.replace(/\n/g, ' / '));
         const ep = await page.evaluate(() => { const t = document.querySelector('.adq-extp'); return t ? t.value : ''; });
