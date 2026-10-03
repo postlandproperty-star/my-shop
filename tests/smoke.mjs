@@ -146,7 +146,7 @@ try {
     // 4) หลังบ้าน (จำลองล็อกอิน ข้อมูลจาก /api ปลอม): ทุกแท็บหลัก + โรงงาน + ตัวแก้ชุด ต้องเปิดได้ไม่พัง
     page = await newPage(kind);
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid');
-    const views = [['home', 'ภาพรวม'], ['todo', 'เช็คลิสต์'], ['orders', 'ออเดอร์'], ['products', 'สินค้า'], ['ads', 'โฆษณา'], ['factory', 'โรงงาน'], ['bundle', 'แก้ไขชุด']];
+    const views = [['home', 'ภาพรวม'], ['todo', 'เช็คลิสต์'], ['orders', 'ออเดอร์'], ['products', 'สินค้า'], ['ads', 'โฆษณา'], ['seo', 'SEO'], ['factory', 'โรงงาน'], ['bundle', 'แก้ไขชุด']];
     for (const [v, name] of views) {
       const err = await page.evaluate(([v, bid]) => {
         try {

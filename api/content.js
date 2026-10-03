@@ -1833,6 +1833,18 @@ export default async function handler(req, res) {
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
     }
+    if (action === 'seo_topics') { // แท็บ SEO: หน้ารวมหัวข้อแต่ละหน้ามีของเท่าไหร่ ขึ้น Google แล้วไหม + บทความ/แบบทดสอบล่าสุด
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const T = await import('../lib/topics.js');
+      const [ar, qr, shop] = await Promise.all([sb('shop_state?id=eq.articles&select=data'), sb('shop_state?id=eq.quizzes&select=data'), loadShop().catch(() => ({ products: [] }))]);
+      const articles = (ar?.[0]?.data?.list || []).filter((a) => a.status !== 'hidden'), quizzes = (qr?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden');
+      const site = await siteUrl();
+      const topics = T.TOPICS.map((t) => { const it = T.topicItems(t, { articles, quizzes, products: shop.products }); return { slug: t.slug, name: t.name, url: `${site}/topic/${t.slug}`, articles: it.articles.length, quizzes: it.quizzes.length, products: it.products.length, ready: T.topicReady(it) }; });
+      const recent = articles.map((a) => ({ type: 'article', slug: a.slug, title: a.title, cat: a.cat, at: a.updated_at || a.created_at, image: !!a.image, faq: /\n##\s+คำถามที่พบบ่อย/.test(a.body || ''), url: `${site}/learn/${a.slug}` }))
+        .concat(quizzes.map((q) => ({ type: 'quiz', slug: q.slug, title: q.title, cat: q.cat, at: q.updated_at || q.created_at, n: (q.questions || []).length, url: `${site}/quiz/${q.slug}` }))).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 30);
+      return res.status(200).json({ ok: true, topics, recent, totals: { articles: articles.length, quizzes: quizzes.length } });
+    }
     if (action === 'seo_report') { // คำค้นจาก Google Search Console (แอดมิน/ทีม) เก็บไว้ 12 ชม. · ?fresh=1 ดึงใหม่
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
