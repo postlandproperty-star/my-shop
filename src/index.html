@@ -130,6 +130,11 @@ footer{padding:28px 0 110px;text-align:center}
 .st-faq details{border-bottom:1px solid var(--line);padding:10px 0}.st-faq details:last-child{border-bottom:0}.st-faq summary{cursor:pointer;font-weight:600}.st-faq details p{margin:6px 0 0;color:var(--muted);font-size:15px}
 .st-ftop{display:inline-block;margin:4px 0 6px}
 .live-pill{display:inline-block;margin-top:4px;font-size:11.5px;opacity:.85}
+.ins-h{margin:0 0 8px;font-size:15.5px}.ins-h .fine{font-weight:400}
+.ins-tbl{display:grid;gap:0}.ins-tbl>div{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);font-size:14px}.ins-tbl>div:first-child{border-top:0}.ins-k{flex:1 1 220px;min-width:0;overflow-wrap:anywhere;font-weight:600}.ins-tbl>div>span:not(.ins-k){color:var(--muted);white-space:nowrap}
+.ins-fun{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.ins-fun>div{display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg);border-radius:10px;padding:10px 4px}.ins-fun b{font-size:20px}.ins-fun span{font-size:12.5px}.ins-fun em{font-style:normal;font-size:12px;color:#C2410C;font-weight:600}
+@media(max-width:640px){.ins-fun{grid-template-columns:1fr 1fr}.ins-2{grid-template-columns:1fr}}
+.ins-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.ins-spark{display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:10px}.ins-spark span{flex:1;background:var(--brand);border-radius:3px 3px 0 0;opacity:.75}
 .vipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.vipf{display:grid;gap:4px;font-size:13px;color:var(--muted)}.vipsql{white-space:pre-wrap;word-break:break-word;font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0;max-height:160px;overflow:auto}.vipstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}.vipstats div{display:flex;flex-direction:column;background:var(--bg);border-radius:10px;padding:8px 10px}.vipstats b{font-size:20px}.vipstats span{font-size:12.5px;color:var(--muted)}
 .st-h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5vw,30px);margin:0}.st-cathead .fine{margin:4px 0 0}.st-cat{gap:16px}.st-cat .st-bundles{margin-bottom:0}
 /* ร้านค้า /store แบบ Shopee (clean): หัวร้าน · แท็บติดบนจอ · การ์ดรูปเต็มขอบ ราคาส้ม */
@@ -4730,6 +4735,33 @@ function seoCard(){if(SEO.d===null&&!SEO.loading)loadSeo();const d=SEO.d||{},n=v
     ${(d.opportunities||[]).length?`<h4 class="seo-h">🎯 ใกล้ขึ้นหน้าแรก (อันดับ 5–20 คนเห็นเยอะ) ทีมจะเขียนเพิ่มเรื่องเหล่านี้ก่อน</h4><div class="seo-tbl">${d.opportunities.slice(0,8).map(x=>`<div><b>${esc(x.key)}</b><span>อันดับ ${x.position} · เห็น ${n(x.impressions)} · คลิก ${n(x.clicks)}</span></div>`).join('')}</div>`:''}
     <details style="margin-top:8px"><summary class="fine">คำค้นที่พาคนเข้าเว็บมากสุด (${(d.queries||[]).length}) · หน้าที่คนเข้าจาก Google</summary><div class="seo-tbl">${(d.queries||[]).slice(0,20).map(x=>`<div><b>${esc(x.key)}</b><span>คลิก ${n(x.clicks)} · เห็น ${n(x.impressions)} · อันดับ ${x.position}</span></div>`).join('')}</div>
       <div class="seo-tbl" style="margin-top:6px">${(d.pages||[]).slice(0,10).map(x=>`<div><a href="${esc(x.key)}" target="_blank" rel="noopener noreferrer">${esc(x.key)}</a><span>คลิก ${n(x.clicks)} · อันดับ ${x.position}</span></div>`).join('')}</div></details></section>`;}
+/* แท็บ 📈 พฤติกรรม: คนเข้าเว็บทำอะไร (เก็บเอง ไม่ระบุตัวตน) · อ่านนานแค่ไหน · กดอะไร · ออกตรงไหน · ขั้นการซื้อ · แบบทดสอบข้อยาก */
+const INS={d:null,loading:false,days:7};
+function loadInsights(){if(INS.loading)return;INS.loading=true;adminApi('/api/content?action=insights&days='+INS.days).then(j=>{INS.d=j||{};}).catch(()=>{INS.d={ok:false};}).then(()=>{INS.loading=false;render(true);});}
+const INS_CLICK={cartTick:'+ เพิ่ม (หน้าร้าน/ร้านค้า)',cartAdd:'+ เพิ่ม (หน้าขาย)',cartOpen:'เปิดตะกร้า',cartPay:'ชำระเงิน (ตะกร้า)',toCheckout:'ไปส่วนชำระเงิน',qrOpen:'สแกนจ่าย QR',payGo:'จ่ายด้วยบัตร',zoom:'ขยายรูปสินค้า',scat:'เลือกหมวดสินค้า',ssort:'เรียงสินค้า',dailyAns:'ตอบข้อสอบประจำวัน',codeOpen:'กรอกโค้ดส่วนลด',codeApply:'ใช้โค้ดส่วนลด',pvOpen:'ดูหน้าตัวอย่าง',bplan:'เลือกแพ็กเกจชุด'};
+const insClick=k=>INS_CLICK[k]||(k.startsWith('link:/p/')?'ลิงก์ไปหน้าขาย '+k.slice(8):k.startsWith('link:/learn/')?'ลิงก์ไปบทความ':k.startsWith('link:/quiz/')?'ลิงก์ไปแบบทดสอบ':k.startsWith('link:/topic/')?'ลิงก์ไปหัวข้อ '+k.slice(12):k==='link:/store'?'ลิงก์ไปร้านค้า':k==='link:/vip'?'ลิงก์ไป VIP':k.startsWith('out:m.me')?'ทักแชท Messenger':k.startsWith('out:')?'ออกไปเว็บ '+k.slice(4):k.startsWith('link:')?'ลิงก์ '+k.slice(5):k);
+const insSrc=k=>({direct:'พิมพ์เข้าเอง/บุ๊กมาร์ก',google:'Google',facebook:'Facebook',line:'LINE',instagram:'Instagram',threads:'Threads',internal:'ลิงก์ในเว็บ','search-other':'ค้นหาอื่นๆ'}[k]||(k.startsWith('ad:')?'แอด '+k.slice(3):k.startsWith('web:')?'เว็บ '+k.slice(4):k));
+const insSecs=n=>n>=60?Math.floor(n/60)+' นาที '+(n%60?n%60+' วิ':''):n+' วิ';
+function insightsTab(){if(INS.d===null&&!INS.loading)loadInsights();const d=INS.d;
+  if(!d)return '<p class="fine">กำลังโหลด...</p>';
+  if(d.ready===false)return `<section class="card"><h3 class="h3" style="margin-top:0">📈 พฤติกรรมคนเข้าเว็บ</h3><div class="adt-msg"><b>ขั้นแรก (ครั้งเดียว):</b> สร้างตารางเก็บข้อมูล เปิด Supabase → SQL Editor → วาง SQL นี้แล้วกด Run แล้วกดรีเฟรช ระบบจะเริ่มเก็บข้อมูลทันที<pre class="vipsql">${esc(d.sql||'')}</pre><div class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="insSql">📋 คัดลอก SQL</button><button class="btn btn-line btn-sm" data-a="insReload">รีเฟรช</button></div></div></section>`;
+  if(!d.ok)return `<p class="err">โหลดไม่สำเร็จ ${esc(d.error||'')}</p>`;
+  const t=d.totals||{},f=d.funnel||{},pc=(a,b)=>b?Math.round(a/b*100)+'%':'–',mx=Math.max(1,...(d.daily||[]).map(x=>x.n));
+  const tbl=(rows,cols)=>rows.length?`<div class="ins-tbl">${rows.map(r=>`<div>${cols.map((c,i)=>`<span${i?'':' class="ins-k"'}>${c(r)}</span>`).join('')}</div>`).join('')}</div>`:'<p class="fine">ยังไม่มีข้อมูล</p>';
+  const plink=p=>`<a href="${esc(p)}" target="_blank" rel="noopener">${esc(p)}</a>`;
+  const steps=[['เห็นสินค้า',f.product],['กด + เพิ่ม',f.add],['กดไปจ่าย',f.buy],['เปิดหน้าจ่าย',f.pay],['จ่ายจริง',f.paid]];
+  return `<div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><h3 class="h3" style="margin:0">📈 พฤติกรรมคนเข้าเว็บ</h3><div class="row" style="gap:6px">${[[1,'วันนี้'],[7,'7 วัน'],[30,'30 วัน']].map(([n,l])=>`<button class="chip" data-a="insDays" data-v="${n}" aria-pressed="${INS.days===n}">${l}</button>`).join('')}</div></div>
+  <p class="fine" style="margin:-4px 0 12px">เก็บเองแบบไม่ระบุตัวตน ไม่นับเครื่องที่ล็อกอินหลังบ้าน · ${(d.events||0).toLocaleString('th-TH')} เหตุการณ์ · อัปเดตอัตโนมัติ</p>
+  <div class="vipstats"><div><b>${(t.sessions||0).toLocaleString('th-TH')}</b><span>คนเข้าเว็บ (ครั้ง)</span></div><div><b>${t.perSession||0}</b><span>หน้าต่อคน</span></div><div><b>${t.bounce||0}%</b><span>ดูหน้าเดียวแล้วออก</span></div><div><b>${t.mobile||0}%</b><span>ใช้มือถือ</span></div></div>
+  ${(d.daily||[]).length>1?`<div class="ins-spark" aria-label="คนเข้าเว็บรายวัน">${d.daily.map(x=>`<span title="${esc(x.d)}: ${x.n}" style="height:${Math.max(4,Math.round(x.n/mx*56))}px"></span>`).join('')}</div>`:''}
+  <section class="card" style="margin-top:14px"><h4 class="ins-h">🛒 ขั้นการซื้อ <span class="fine">หลุดตรงไหนมากสุด</span></h4><div class="ins-fun">${steps.map(([l,n],i)=>`<div><b>${(n||0).toLocaleString('th-TH')}</b><span>${l}</span>${i?`<em>${pc(n||0,steps[i-1][1]||0)} ไปต่อ</em>`:''}</div>`).join('')}</div><p class="fine" style="margin:8px 0 0">"จ่ายจริง" นับจากออเดอร์ที่จ่ายแล้วในช่วงเดียวกัน (ไม่รวมออเดอร์ทดลองของคุณแดน)</p></section>
+  <section class="card" style="margin-top:14px"><h4 class="ins-h">📄 หน้าที่คนเปิดเยอะ</h4>${tbl((d.pages||[]).slice(0,12),[x=>plink(x.p),x=>`${x.views} ครั้ง`,x=>`อ่าน ${insSecs(x.avg)}`,x=>`ถึง 75%: ${x.pct75}%`,x=>`ออกจากเว็บ ${x.exitRate}%`])}</section>
+  <section class="card" style="margin-top:14px"><h4 class="ins-h">📖 บทความที่คนอ่านนานสุด</h4>${tbl(d.articles||[],[x=>plink(x.p),x=>`เฉลี่ย ${insSecs(x.avg)}`,x=>`อ่านจบ ${x.pct100}%`,x=>`${x.views} ครั้ง`])}</section>
+  <section class="card" style="margin-top:14px"><h4 class="ins-h">👆 ปุ่ม/ลิงก์ที่คนกดเยอะสุด</h4>${tbl(d.clicks||[],[x=>esc(insClick(x.k)),x=>`${x.n} ครั้ง`])}</section>
+  <section class="card" style="margin-top:14px"><h4 class="ins-h">🚪 หน้าที่คนออกจากเว็บเยอะสุด</h4>${tbl(d.exits||[],[x=>plink(x.p),x=>`ออก ${x.exits} ครั้ง`,x=>`${x.exitRate}% ของคนที่เปิด`])}</section>
+  <section class="card" style="margin-top:14px"><h4 class="ins-h">🧭 คนมาจากไหน</h4><div class="ins-2">${tbl(d.sources||[],[x=>esc(insSrc(x.k)),x=>`${x.n} คน`])}<div><b class="fine">ออเดอร์ที่จ่ายแล้ว แยกตามที่มา</b>${tbl(d.orderSources||[],[x=>esc(x.k),x=>`${x.n} ออเดอร์`])}</div></div></section>
+  <section class="card" style="margin-top:14px"><h4 class="ins-h">📝 แบบทดสอบ</h4>${tbl(d.quizzes||[],[x=>plink('/quiz/'+x.slug),x=>`เริ่มทำ ${x.starts}`,x=>`ทำครบ ${x.done} (${pc(x.done,x.starts)})`,x=>`คะแนนเฉลี่ย ${x.avg}%`])}
+    ${(d.hardest||[]).length?`<h4 class="ins-h" style="margin-top:12px">ข้อที่คนตอบผิดเยอะสุด <span class="fine">เอาไปเขียนบทความอธิบายเพิ่มได้</span></h4>${tbl(d.hardest,[x=>plink('/quiz/'+x.slug)+' ข้อ '+(x.i+1),x=>`ตอบถูก ${x.rate}%`,x=>`${x.n} คนตอบ`])}`:''}</section>`;}
 /* แท็บ 🔎 SEO: คำค้นจาก Google · หน้ารวมหัวข้อ (ขึ้น Google แล้วหรือยัง) · งานล่าสุดของน้องปากกา */
 const SEOT={d:null,loading:false};
 /* 👑 สมาชิก VIP: ราคาและการเปิดรับเป็นของคุณแดน (0 = ไม่ขายแบบนั้น) · ตารางสมาชิกต้องสร้างครั้งแรกด้วย SQL */
@@ -4779,11 +4811,11 @@ function homeTab(){
 function adminView(){
   // เรียงตามความสำคัญ: 4 อันแรกใช้ทุกวัน (ปุ่มใหญ่) ที่เหลือเป็นแถวรองเลื่อนได้
   const TABS_MAIN=[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์'],['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา']];
-  const TABS_MORE=[['content','✍️','คอนเทนต์'],['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['reviews','⭐','รีวิว'],['seo','🔎','SEO'],['coupons','🏷️','โค้ดส่วนลด'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['pay','⚙️','ตั้งค่าร้าน']];
+  const TABS_MORE=[['content','✍️','คอนเทนต์'],['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['reviews','⭐','รีวิว'],['seo','🔎','SEO'],['insights','📈','พฤติกรรม'],['coupons','🏷️','โค้ดส่วนลด'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['pay','⚙️','ตั้งค่าร้าน']];
   if(S.tab==='pixel')S.tab='pay';
   const badge=k=>k==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:k==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:'';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
+  const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     <nav class="tabs" aria-label="เมนูหลังบ้าน"><div class="tabs-main">${TABS_MAIN.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}"><i aria-hidden="true">${t[1]}</i>${t[2]}${badge(t[0])}</button>`).join('')}</div>
       <div class="tabs-more">${TABS_MORE.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]} ${t[2]}${badge(t[0])}</button>`).join('')}</div></nav>
@@ -4954,6 +4986,9 @@ function act(a,el){
     case 'propReject':if(S.confirm!=='pr:'+id){S.confirm='pr:'+id;render(true);break;}S.confirm='';propDone(id,false);toast('ไม่ใช้ข้อเสนอนี้แล้ว');break;
     case 'facReject':if(S.confirm!=='fr:'+id){S.confirm='fr:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reject:true})}).then(j=>{if(j&&j.ok){FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==id);toast('ไม่ลงขายชีทนี้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;
     case 'scat':S.scat=el.dataset.v;render(true);break;
+    case 'insDays':INS.days=Number(el.dataset.v)||7;INS.d=null;loadInsights();render(true);break;
+    case 'insSql':copyText((INS.d||{}).sql||'','คัดลอก SQL แล้ว ไปวางใน Supabase → SQL Editor');break;
+    case 'insReload':INS.d=null;loadInsights();render(true);break;
     case 'vipSqlCopy':copyText((VIPA.d||{}).sql||'','คัดลอก SQL แล้ว ไปวางใน Supabase → SQL Editor');break;
     case 'vipReload':VIPA.d=null;loadVipAdmin();render(true);break;
     case 'vipSave':{const g=k=>Math.max(0,Math.round(Number(($('#'+k)||{}).value)||0)),body={monthly:g('vip-m'),yearly:g('vip-y'),packs:{1:g('vip-p1'),3:g('vip-p3'),12:g('vip-p12')},open:!!($('#vip-open')||{}).checked};
@@ -5725,6 +5760,7 @@ const LIVE=[
   {k:'orders',tabs:['orders'],every:60,run:()=>autoSync()},
   {k:'seo',tabs:['seo','home'],every:900,run:()=>loadSeo()},
   {k:'seotopics',tabs:['seo'],every:300,run:()=>loadSeoTopics()},
+  {k:'insights',tabs:['insights'],every:120,run:()=>loadInsights()},
   {k:'vip',views:['vip'],every:60,run:()=>loadVipAdmin()},
   {k:'factory',views:['factory'],every:30,run:()=>loadFactoryJobs(true)},
 ];

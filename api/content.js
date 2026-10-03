@@ -895,6 +895,7 @@ export default async function handler(req, res) {
       const r = await fetch(`${SB_URL}/rest/v1/shop_state?select=id&limit=1`, { headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}` } });
       // รอบเช้า 10:00 กทม. โพสต์ที่อนุมัติและถึงเวลาแล้วขึ้นด้วย (โหมดเร่งผู้ติดตาม: วันละ 2 รอบ 10:00 และ 19:05)
       let morning = null;
+      if (r.ok && cronOk(req)) { try { await (await import('../lib/insights.js')).pruneEvents(90); } catch (e) {} } // พฤติกรรมคนเข้าเว็บเก็บ 90 วัน
       if (r.ok && cronOk(req)) {
         try {
           const pr = await fetch(`https://${req.headers.host}/api/content?action=publish`, { headers: { 'x-content-key': CONTENT_KEY } });
@@ -1161,6 +1162,23 @@ export default async function handler(req, res) {
       list = list.filter((b) => !b.used).concat(list.filter((b) => b.used).slice(-30)).slice(-120);
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'idea_bank', data: { list }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, added, left: list.filter((b) => !b.used).length });
+    }
+    if (action === 'ev') { // พฤติกรรมคนเข้าเว็บ (สาธารณะ ไม่ระบุตัวตน) ส่งเป็นชุดจากสคริปต์ในหน้าเว็บ
+      if (req.method !== 'POST') return res.status(405).end();
+      if (/bot|crawl|spider|slurp|facebookexternalhit|headless|preview|lighthouse/i.test(String(req.headers['user-agent'] || ''))) return res.status(204).end();
+      try { const I = await import('../lib/insights.js'); await I.saveEvents(I.cleanEvents(await readBody(req))); } catch (e) { if (!e.missing) console.error('ev', e.message); }
+      return res.status(204).end();
+    }
+    if (action === 'insights') { // แท็บ 📈 พฤติกรรม (แอดมิน/ทีมอ่าน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const I = await import('../lib/insights.js');
+      if (!(await I.insightsReady())) return res.status(200).json({ ok: true, ready: false, sql: I.INSIGHTS_SQL });
+      const days = [1, 7, 30].includes(Number(req.query.days)) ? Number(req.query.days) : 7;
+      const since = new Date(Date.now() - days * 864e5).toISOString();
+      const tests = await loadTestEmails().catch(() => new Set());
+      const paid = ((await sb(`orders?status=eq.paid&created_at=gte.${since}&select=email,campaign,amount`)) || []).filter((o) => !tests.has(String(o.email || '').toLowerCase()));
+      return res.status(200).json({ ready: true, ...(await I.insightsReport(days, paid)) });
     }
     if (action === 'hit') {
       // นับผู้เข้าชมแต่ละส่วนของเว็บ (สาธารณะ ไม่เก็บข้อมูลส่วนตัว): หน้าเว็บส่งครั้งเดียวต่อคนต่อส่วนต่อวัน · เก็บ 60 วันใน shop_state hits

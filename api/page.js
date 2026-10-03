@@ -10,6 +10,7 @@ import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/to
 import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
 import { vipPage, vipReviewPage } from '../lib/vipPage.js';
 import { loadVip } from '../lib/members.js';
+import { TRACK_JS } from '../lib/insights.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
 async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
@@ -246,5 +247,5 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   // หน้าร้าน/หน้าขาย: จำไว้แค่ 10 วินาที แก้หลังบ้านแล้วลูกค้าเห็นของใหม่แทบทันที (เดิม 60 วิ + เสิร์ฟของเก่าอีก 10 นาที)
   res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=20');
-  res.status(200).send(out);
+  res.status(200).send(out.replace('</body>', `${TRACK_JS}</body>`)); // เก็บพฤติกรรมคนเข้าเว็บ (ไม่นับเครื่องแอดมิน)
 }

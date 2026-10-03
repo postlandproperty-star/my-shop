@@ -58,6 +58,7 @@ async function newPage(kind) {
     if (/\/api\/checkout\?m=qr/.test(url)) return route.fulfill({ json: { ok: true, pi: 'pi_test', k: 'pi_test_secret', png: `${BASE}/qr.png`, amount: 1 } });
     if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD, LIVE], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอด 2 รูป + แอดทดสอบ 3 รูปที่วิ่งมา 6 วัน
     if (/action=ads_auto_status/.test(url) && AD) return route.fulfill({ json: { ok: true, access: { ok: true }, currency: 'AUD', rate: 0.04, history: [], ads: LIVE_ADS } });
+    if (/action=insights/.test(url)) return route.fulfill({ json: { ok: true, ready: true, events: 120, totals: { sessions: 40, views: 90, bounce: 55, perSession: 2.3, mobile: 80 }, daily: [{ d: '2026-10-01', n: 12 }, { d: '2026-10-02', n: 28 }], funnel: { product: 30, add: 8, buy: 6, pay: 4, paid: 2 }, pages: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct75: 40, pct100: 25, exitRate: 50, exits: 10 }], articles: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct100: 25 }], exits: [{ p: '/p/x', exits: 6, exitRate: 60 }], clicks: [{ k: 'cartAdd', n: 9 }, { k: 'link:/p/toeic-750', n: 5 }, { k: 'out:m.me', n: 2 }], sources: [{ k: 'google', n: 20 }, { k: 'ad:toeic-checkout', n: 10 }], orderSources: [{ k: 'fb-toeic-test', n: 2 }], quizzes: [{ slug: 'toeic-tense-quiz', starts: 10, done: 6, avg: 70 }], hardest: [{ slug: 'toeic-tense-quiz', i: 3, rate: 20, n: 10 }] } });
     if (/action=vip_admin/.test(url)) return route.fulfill({ json: { ok: true, ready: false, sql: 'create table members (...);', settings: { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, stats: null } });
     if (/m=vip_me/.test(url)) return route.fulfill({ json: { ok: true, email: null, active: false, settings: { open: true } } });
     if (/action=dash(&|$)/.test(url)) return route.fulfill({ json: { ok: false, error: 'ทดสอบ: โหลดตัวเลขไม่ได้' } }); // หน้าต้องไม่พังตอน API มีปัญหา
@@ -210,7 +211,7 @@ try {
     // 4) หลังบ้าน (จำลองล็อกอิน ข้อมูลจาก /api ปลอม): ทุกแท็บหลัก + โรงงาน + ตัวแก้ชุด ต้องเปิดได้ไม่พัง
     page = await newPage(kind);
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid');
-    const views = [['home', 'ภาพรวม'], ['todo', 'เช็คลิสต์'], ['orders', 'ออเดอร์'], ['products', 'สินค้า'], ['ads', 'โฆษณา'], ['seo', 'SEO'], ['factory', 'โรงงาน'], ['vip', 'สมาชิก VIP'], ['bundle', 'แก้ไขชุด']];
+    const views = [['home', 'ภาพรวม'], ['todo', 'เช็คลิสต์'], ['orders', 'ออเดอร์'], ['products', 'สินค้า'], ['ads', 'โฆษณา'], ['seo', 'SEO'], ['factory', 'โรงงาน'], ['vip', 'สมาชิก VIP'], ['insights', 'พฤติกรรม'], ['bundle', 'แก้ไขชุด']];
     for (const [v, name] of views) {
       const err = await page.evaluate(([v, bid]) => {
         try {
@@ -228,6 +229,8 @@ try {
       }, [v, bundle && bundle.id]);
       await page.waitForTimeout(400);
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
+      if (v === 'insights') { await page.waitForTimeout(300); const x = await page.evaluate(() => ({ fun: document.querySelectorAll('.ins-fun > div').length, rows: document.querySelectorAll('.ins-tbl > div').length, label: document.body.innerText.includes('+ เพิ่ม (หน้าขาย)') && document.body.innerText.includes('ทักแชท Messenger') }));
+        pass(`[${kind}] แท็บพฤติกรรม: ขั้นการซื้อ 5 ขั้น + ตาราง + ชื่อปุ่มภาษาไทย`, x.fun === 5 && x.rows >= 8 && x.label, JSON.stringify(x)); }
       if (v === 'vip') { await page.waitForTimeout(400); pass(`[${kind}] แท็บสมาชิก VIP แยก: SQL ให้คัดลอก + ช่องราคา + ปุ่มบนแถบ`, await page.locator('.vipa .vipsql').count() === 1 && await page.locator('#vip-m').count() === 1 && await page.locator('#seg [data-a="toVip"]').count() === 1); }
       if (v === 'factory') { await page.waitForTimeout(300); const f = await page.evaluate(() => ({ steps: document.querySelectorAll('.ffl-steps li').length, cur: document.querySelectorAll('.ffl-steps li.cur').length, now: (document.querySelector('.ffl-now') || {}).textContent || '', global: !!document.querySelector('details.fac-global'), globalLast: (() => { const g = document.querySelector('details.fac-global'); return !!g && !g.nextElementSibling; })() }));
         await page.locator('.ffl').screenshot({ path: path.join(OUT, `factory-flow-${kind}.png`) }).catch(() => {});
