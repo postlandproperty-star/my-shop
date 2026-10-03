@@ -108,16 +108,20 @@ try {
     // 1) หน้าร้าน
     let page = await newPage(kind);
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid', { timeout: 15000 });
-    pass(`[${kind}] หน้าร้าน: มีปุ่มหมวด`, await page.locator('.st-chips .chip').count() >= 2);
     const hs = await page.evaluate(async () => { const im = document.querySelector('.st-tcard img'); if (im) { im.loading = 'eager'; await new Promise((r) => { if (im.complete) r(); else { im.onload = r; im.onerror = r; setTimeout(r, 3000); } }); }
-      return { tiles: document.querySelectorAll('.st-topics .st-tcard').length, img: im ? im.naturalWidth : 0, faq: document.querySelectorAll('.st-faq details').length, cta: document.querySelectorAll('.st-hcta a').length, nav: !!document.querySelector('.st-nav a[href="/topic/toeic"]'), foot: document.querySelectorAll('.st-ftop a').length }; });
-    pass(`[${kind}] หน้าร้าน: ทางลัดหัวข้อพร้อมรูป + ปุ่มในหัวหน้า + คำถามที่พบบ่อย + ลิงก์หัวข้อท้ายหน้า`, hs.tiles === 3 && hs.img > 0 && hs.faq === 2 && hs.cta >= 1 && hs.nav && hs.foot === 3, JSON.stringify(hs));
+      return { tiles: document.querySelectorAll('.st-topics .st-tcard').length, img: im ? im.naturalWidth : 0, faq: document.querySelectorAll('.st-faq details').length, cta: document.querySelector('.st-hcta a[href="/store"]') ? 1 : 0, nav: !!document.querySelector('.st-nav a[href="/store"]'), foot: document.querySelectorAll('.st-ftop a').length, cards: document.querySelectorAll('.st-grid .st-item').length, all: !!document.querySelector('.st-allbtn'), chips: document.querySelectorAll('.st-chips').length, daily: !!document.querySelector('.st-daily') }; });
+    pass(`[${kind}] หน้าแรก: โล่ง (หัวข้อพร้อมรูป · ชีทแนะนำ ≤ 4 เล่ม + ปุ่มไปร้านค้า · ฝึกฟรี · FAQ) ไม่มีตัวกรอง/ข้อสอบประจำวัน`, hs.tiles === 3 && hs.img > 0 && hs.faq === 2 && hs.cta && hs.nav && hs.foot === 3 && hs.cards <= 4 && hs.cards > 0 && hs.all && !hs.chips && !hs.daily, JSON.stringify(hs));
+    await layout(page, `[${kind}] หน้าแรก`);
+    await page.screenshot({ path: path.join(OUT, `home-${kind}.png`), fullPage: true });
+    // 1.5) ร้านค้าแยก /store: กดจากหน้าแรกแล้วไปหน้าร้านค้า (ไม่โหลดหน้าใหม่)
+    await page.evaluate(() => document.querySelector('.st-hcta a[href="/store"]').click()); await page.waitForSelector('.st-cat', { timeout: 8000 });
+    pass(`[${kind}] ร้านค้า /store: เปิดจากปุ่มหน้าแรก มีตัวกรองหมวด + สินค้าครบ`, await page.locator('.st-chips .chip').count() >= 2 && await page.locator('.st-cat .st-item').count() === pub.filter((p) => p.type !== 'bundle').length && new URL(page.url()).pathname === '/store', `${await page.locator('.st-cat .st-item').count()} เล่ม`);
     if (bundle) {
       const pos = await page.evaluate(() => { const c = document.querySelector('.st-bundle'), b = document.querySelector('.st-badd'); if (!c || !b) return null; return { below: b.getBoundingClientRect().top >= c.getBoundingClientRect().bottom - 1 }; });
-      pass(`[${kind}] หน้าร้าน: ชุดมีปุ่ม + เพิ่ม อยู่ใต้การ์ด`, !!pos && pos.below);
+      pass(`[${kind}] ร้านค้า: ชุดมีปุ่ม + เพิ่ม อยู่ใต้การ์ด`, !!pos && pos.below);
     }
-    await page.locator('#st-s').scrollIntoViewIfNeeded();
-    await layout(page, `[${kind}] หน้าร้าน`);
+    await layout(page, `[${kind}] ร้านค้า /store`);
+    await page.screenshot({ path: path.join(OUT, `store-${kind}.png`), fullPage: true });
 
     // 2) ตะกร้า: เล่มในชุด + เล่มนอกชุด + ชุด → เล่มในชุดถูกเอาออก ยอด = ชุด + เล่มนอกชุด · โค้ดลด 20%
     if (kind === 'mobile' && bundle && inBundle && outside) try {
@@ -151,6 +155,7 @@ try {
       if (p.type === 'bundle') pass(`[${kind}] หน้าขายชุด: ส่วนบนแบบเดียวกับเล่มเดี่ยว`, await page.locator('.spx .sp-band .now').count() === 1 && await page.locator('.spx [data-a="toCheckout"]').count() === 1);
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: มีปุ่มซื้อ`, await page.locator('[data-a="qrOpen"], [data-a="toCheckout"]').count() > 0);
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: มีปุ่ม + เพิ่ม`, await page.locator('[data-a="cartAdd"]').count() > 0);
+      pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: แถบบนมีปุ่ม "ดูสินค้าทั้งหมด" ไป /store`, await page.locator('.sp-topbar a[href="/store"]').count() === 1);
       await page.locator('#checkout').scrollIntoViewIfNeeded().catch(() => {});
       await layout(page, `[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}`);
       await page.context().close();

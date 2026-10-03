@@ -128,6 +128,11 @@ footer{padding:28px 0 110px;text-align:center}
 @media(max-width:640px){.st-topics{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:16px;gap:10px;margin:0 -16px;padding:0 16px 6px;scrollbar-width:none}.st-topics::-webkit-scrollbar{display:none}.st-tcard{flex:0 0 46%;scroll-snap-align:start}}
 .st-faq details{border-bottom:1px solid var(--line);padding:10px 0}.st-faq details:last-child{border-bottom:0}.st-faq summary{cursor:pointer;font-weight:600}.st-faq details p{margin:6px 0 0;color:var(--muted);font-size:15px}
 .st-ftop{display:inline-block;margin:4px 0 6px}
+.st-h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5vw,30px);margin:0}.st-cathead .fine{margin:4px 0 0}.st-cat{gap:16px}.st-cat .st-bundles{margin-bottom:0}
+.st-rowh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.st-more{font-size:14px;font-weight:600;white-space:nowrap}
+.st-allbtn{margin-top:2px}
+.st-free{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.st-flist{display:flex;flex-direction:column;gap:0;padding:14px 16px}.st-flist>a{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:600;line-height:1.4}.st-flist>a:hover span:last-child{color:var(--brand)}.st-flist .st-rowh{padding-bottom:8px}
+.sp-topbar{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}.sp-topbar-in{display:flex;justify-content:space-between;align-items:center;padding-block:8px}.sp-topbar .st-logo{font-size:19px}.sp-tostore{font-weight:600;font-size:14.5px;text-decoration:none;color:var(--ink);border:1.5px solid var(--line);border-radius:999px;padding:6px 14px;background:var(--bg)}.sp-tostore:hover{border-color:var(--brand);color:var(--brand)}
 .st-why{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px}
 .st-why li{background:rgba(255,255,255,.16);border-radius:999px;padding:3px 12px;font-size:14px}
 .st-main{display:flex;flex-direction:column;gap:30px;padding-top:24px}
@@ -1966,7 +1971,7 @@ function bundleView(p){
     <section class="bx-sec"><h2>คำถามที่พบบ่อย</h2>${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}</section>
   </main>
   </div>
-  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}<br>${storeMode()?'<a href="/" data-go="">ดูสินค้าทั้งหมด</a> · ':''}${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
+  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}<br>${storeMode()?'<a href="/store" data-go="">ดูสินค้าทั้งหมด</a> · ':''}${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
   <div class="sticky" id="sticky"><div class="sticky-in">
     <div class="sp-sp"><span class="p">${baht(payTotal)}</span>${sel&&sel.fullPrice>sel.price?`<s>${baht(sel.fullPrice)}</s>`:''}</div>
     <button class="btn btn-buy" data-a="toCheckout">ซื้อชุดนี้</button>
@@ -2005,6 +2010,7 @@ function shopHead(p){
     <code>${DOMAIN}${esc(p.slug)}</code>
     ${D.campaigns.length?`<span class="fine">จำลองว่าลูกค้ามาจาก</span><select id="src" aria-label="จำลองแหล่งที่มาของลูกค้า"><option value="">เข้าตรง ไม่ได้มาจากโฆษณา</option>${D.campaigns.map(c=>`<option value="${esc(c.name)}" ${S.src===c.name?'selected':''}>โฆษณา ${esc(c.name)}</option>`).join('')}</select>`:''}
   </div></div>`:''}
+  ${storeMode()&&!PV&&!S.sessionId?`<div class="sp-topbar"><div class="wrap wide sp-topbar-in"><a class="st-logo" href="/" data-go="">SheetLab</a><a class="sp-tostore" href="/store" data-go="">🛍 ดูสินค้าทั้งหมด</a></div></div>`:''}
   ${paidCard()}
 `;
 }
@@ -2037,7 +2043,14 @@ function shelves(p){const t=(p.name+' '+(p.headline||'')).toLowerCase(),o=[];
   if(/toeic/.test(t))o.push('toeic');if(/ielts/.test(t)||p.cat==='ielts')o.push('ielts');if(/tgat|a-level/.test(t)||p.cat==='tgat')o.push('tgat');if(/ก\.พ|ราชการ/.test(t)||p.cat==='kp')o.push('kp');
   if(/notion/.test(t)||p.cat==='notion')o.push('notion');if(['work','speak'].includes(p.cat)||/business|travel|ทำงาน|เที่ยว/.test(t)&&!o.includes('toeic'))o.push('work');
   if(!o.filter(k=>k!=='bundle').length)o.push('other');return o;}
-function storeView(){
+/* หัว/ท้ายของหน้าแรกและร้านค้า: เมนูเดียวกันทุกหน้า หน้าแรก · ร้านค้า · คลังข้อสอบ · คลังความรู้ */
+function stHead(on,chat){const n=(k,href,l,go)=>`<a href="${href}"${go?' data-go=""':''}${on===k?' class="on" aria-current="page"':''}>${l}</a>`;
+  return `<header class="st-top"><div class="wrap wide st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a><a class="st-chat" href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a></div>
+    <nav class="wrap wide st-nav" aria-label="เมนูหลัก">${n('home','/','หน้าแรก',1)}${n('store','/store','ร้านค้า',1)}${QUIZZES.length?n('quiz','/quiz','คลังข้อสอบ'):''}${ARTICLES.length?n('learn','/learn','คลังความรู้'):''}</nav></header>`;}
+function stFoot(chat){return `<footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}<a href="/store" data-go="">ร้านค้า</a> · ${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
+    <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;}
+const catalogView=()=>storeView(true);
+function storeView(catalog){
   loadSold();
   const all=storeItems(),sold=id=>(SOLD&&SOLD[id])||0;
   const rank=(a,b)=>sold(b.id)-sold(a.id)||(b.publishedAt||0)-(a.publishedAt||0);
@@ -2071,44 +2084,42 @@ function storeView(){
       ${live?`<span class="st-promo">ราคาเปิดตัวเหลืออีก ${Math.max(1,Math.ceil((b.promoEnd-Date.now())/864e5))} วัน</span>`:''}
       <span class="st-go">ดูชุดนี้ →</span></span></a>`;};
   const note=hasAdminAccess()&&!storeMode()?`<div class="wrap"><p class="st-note">ลูกค้ายังไม่เห็นหน้านี้ หน้าแรกจะเปลี่ยนเป็นหน้าร้านเองเมื่อมีสินค้าเผยแพร่ตั้งแต่ ${STORE_MIN} รายการ ตอนนี้มี ${all.length}</p></div>`:'';
-  return `${ceoBar('ceo_store')}${note}${cartFab()}
-  <header class="st-top"><div class="wrap wide st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a><a class="st-chat" href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a></div>
-    ${QUIZZES.length||ARTICLES.length?`<nav class="wrap wide st-nav" aria-label="เมนูหลัก"><a href="/" data-go="" class="on" aria-current="page">ร้านชีท</a>${TOPICS_LIVE.some(t=>t.slug==='toeic')?'<a href="/topic/toeic">TOEIC</a>':''}${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a>':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a>':''}</nav>`:''}</header>
+  const addB=b=>{const on=CART.includes(b.id);return `<div class="st-bwrap">${bcard(b)}${cartOk(b)&&!PV?`<button class="st-add st-badd${on?' on':''}" data-a="cartTick" data-id="${esc(b.id)}" aria-pressed="${on}" aria-label="${on?'เอาออก':'เพิ่ม'} ${esc(b.name)}">${on?'✓ เพิ่มแล้ว':'+ เพิ่มชุดนี้'}</button>`:''}</div>`;};
+  const head=stHead(catalog?'store':'home',chat),foot=stFoot(chat);
+  if(catalog)return `${ceoBar('ceo_store')}${note}${cartFab()}${head}
+  <main class="wrap wide st-main st-cat">
+    <div class="st-cathead"><h1 class="st-h1">ร้านค้า SheetLab</h1><p class="fine">${all.length} รายการ · ดูหน้าตัวอย่างได้ทุกเล่ม · กด + เพิ่ม หลายเล่มแล้วจ่ายครั้งเดียว</p></div>
+    ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
+    ${shownB.length?`<div class="st-bundles">${shownB.map(addB).join('')}</div>`:''}
+    ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
+    <section class="st-sec st-how" aria-labelledby="st-h"><h2 id="st-h" class="st-h2">ซื้อยังไง</h2>
+      <ol><li><b>เลือกเล่มหรือชุด</b><span>กดดูหน้าตัวอย่างจริงก่อนตัดสินใจ</span></li><li><b>สแกนจ่าย</b><span>QR PromptPay หรือบัตร ไม่ต้องสมัครสมาชิก</span></li><li><b>รับไฟล์ทันที</b><span>ปุ่มดาวน์โหลดขึ้นหลังจ่าย และส่งลิงก์ไปที่อีเมลด้วย</span></li></ol></section>
+  </main>${foot}`;
+  // หน้าแรก (คนจาก Google): สั้น โล่ง ทางไปต่อชัด · ร้านค้าเต็มอยู่ /store
+  const topB=bundles[0],top4=singles.slice(0,4),qz=QUIZZES.filter(q=>!LEVELQ||q.slug!==LEVELQ.slug).slice(0,3),ar=ARTICLES.slice(0,3);
+  return `${ceoBar('ceo_store')}${note}${cartFab()}${head}
   <section class="st-hero"><div class="wrap wide"><h1>ชีทสรุป TOEIC ที่ทำข้อสอบได้จริง</h1><p>สรุปภาษาไทยเข้าใจง่าย พร้อมแบบฝึกและเฉลยละเอียด ดูหน้าตัวอย่างก่อนซื้อทุกเล่ม</p>
-    <div class="st-hcta"><a class="btn st-hbtn" href="#st-s">ดูชีททั้งหมด</a>${QUIZZES.length?`<a class="btn st-hbtn2" href="/quiz">ลองทำข้อสอบฟรี</a>`:''}</div>
+    <div class="st-hcta"><a class="btn st-hbtn" href="/store" data-go="">เลือกซื้อชีท</a>${LEVELQ?`<a class="btn st-hbtn2" href="/quiz/${esc(LEVELQ.slug)}">วัดระดับฟรี ${LEVELQ.n} ข้อ</a>`:QUIZZES.length?'<a class="btn st-hbtn2" href="/quiz">ลองทำข้อสอบฟรี</a>':''}</div>
     <ul class="st-why"><li>รับไฟล์ทันทีหลังจ่าย</li><li>สแกนจ่าย QR ได้</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></div></section>
   <main class="wrap wide st-main">
-    ${LEVELQ?`<a class="st-level" href="/quiz/${esc(LEVELQ.slug)}"><span><b>วัดระดับ TOEIC ฟรี ${LEVELQ.n} ข้อ</b><span class="fine">รู้ผลทันที พร้อมคำแนะนำว่าควรเริ่มฝึกตรงไหน</span></span><span class="st-go">เริ่มเลย →</span></a>`:''}
-    ${TOPICS_LIVE.length?`<section class="st-sec" aria-labelledby="st-t"><h2 id="st-t" class="st-h2">เตรียมสอบเรื่องไหนอยู่?</h2><p class="fine" style="margin:0">รวมสรุป ข้อสอบฟรี และชีทของแต่ละเรื่องไว้หน้าเดียว</p>
+    ${TOPICS_LIVE.length?`<section class="st-sec" aria-labelledby="st-t"><h2 id="st-t" class="st-h2">เตรียมสอบเรื่องไหนอยู่?</h2>
       <div class="st-topics">${TOPICS_LIVE.map(t=>`<a class="st-tcard" href="/topic/${esc(t.slug)}"><span class="st-tcov"><img src="/topic-img/${esc(t.slug)}.jpg?v=1" alt="" loading="lazy" width="1200" height="675"></span><b>${esc(t.name)}</b><span class="fine">${t.n} รายการ</span></a>`).join('')}</div></section>`:''}
-    <section class="st-sec" aria-labelledby="st-s"><h2 id="st-s" class="st-h2">สินค้าทั้งหมด</h2>
-      ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
-      ${shownB.length?`<div class="st-bundles">${shownB.map(b=>{const on=CART.includes(b.id);return `<div class="st-bwrap">${bcard(b)}${cartOk(b)&&!PV?`<button class="st-add st-badd${on?' on':''}" data-a="cartTick" data-id="${esc(b.id)}" aria-pressed="${on}" aria-label="${on?'เอาออก':'เพิ่ม'} ${esc(b.name)}">${on?'✓ เพิ่มแล้ว':'+ เพิ่มชุดนี้'}</button>`:''}</div>`;}).join('')}</div>`:''}
-      ${shown.some(cartOk)&&!PV?`<p class="st-pickhint">ซื้อหลายเล่ม: กด + เพิ่ม ใต้ราคา แล้วกดชำระเงินครั้งเดียว</p>`:''}
-      ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
-    </section>
-    ${DAILY?(()=>{const a=S.dailyAns,L='ABCD';return `<section class="st-sec st-daily" aria-labelledby="st-d"><h2 id="st-d" class="st-h2">ข้อสอบประจำวัน</h2>
-      <div class="card"><div style="font-weight:600;white-space:pre-line">${esc(DAILY.q)}</div>
-      <div class="st-dch">${DAILY.choices.map((c,k)=>`<button type="button" data-a="dailyAns" data-v="${k}" class="${a==null?'':k===DAILY.answer?'right':k===a?'wrong':''}" ${a==null?'':'disabled'}>(${L[k]}) ${esc(c)}</button>`).join('')}</div>
-      ${a==null?'<p class="fine" style="margin:8px 0 0">วันละ 1 ข้อ กดเลือกแล้วดูเฉลยทันที</p>':`<p class="st-dres ${a===DAILY.answer?'ok':'no'}">${a===DAILY.answer?'ถูกต้อง ✓':'ยังไม่ถูก คำตอบคือ ('+L[DAILY.answer]+')'}</p><p class="fine" style="margin:4px 0 8px;color:var(--ink)">${esc(DAILY.explain)}</p><a href="/quiz/${esc(DAILY.slug)}">ทำต่อทั้งชุด: ${esc(DAILY.title)} →</a>`}</div></section>`;})():''}
-    ${QUIZZES.length?`<section class="st-sec" aria-labelledby="st-q"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><h2 id="st-q" class="st-h2">คลังข้อสอบฟรี</h2><a href="/quiz" class="fine">ดูทั้งหมด →</a></div>
-      <p class="fine" style="margin:0">ลองทำโจทย์แนว TOEIC พร้อมเฉลยอธิบายภาษาไทย ไม่ต้องสมัครสมาชิก</p>
-      <div class="st-quiz">${QUIZZES.slice(0,6).map(q=>`<a class="st-qcard" href="/quiz/${esc(q.slug)}"><span class="st-kicker">${esc(CATS[q.cat]||'TOEIC')} · ${q.n} ข้อ</span><b>${esc(q.title)}</b><span class="st-go">เริ่มทำ →</span></a>`).join('')}</div></section>`:''}
-    ${ARTICLES.length?`<section class="st-sec" aria-labelledby="st-l"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><h2 id="st-l" class="st-h2">คลังความรู้</h2><a href="/learn" class="fine">อ่านทั้งหมด →</a></div>
-      <div class="st-learn">${ARTICLES.slice(0,4).map(a=>`<a class="st-lcard" href="/learn/${esc(a.slug)}">${a.image?`<span class="st-lcov"><img src="${esc(a.image)}" alt="" loading="lazy" decoding="async"></span>`:`<span class="st-lcov ph c-${esc(a.cat||'grammar')}" aria-hidden="true">${{grammar:'✍️',vocab:'📚',tips:'🎯',listening:'🎧',reading:'📖',ielts:'🌏',tgat:'🎓',kp:'🏛️',work:'💼',speak:'💬'}[a.cat]||'💡'}</span>`}<span class="st-kicker">${esc(LEARN_CATS[a.cat]||'TOEIC')} · อ่าน ${a.mins} นาที</span><b>${esc(a.title)}</b><span class="fine">${esc(a.desc)}</span></a>`).join('')}</div></section>`:''}
-    <section class="st-sec st-how" aria-labelledby="st-h"><h2 id="st-h" class="st-h2">สั่งซื้ออย่างไร</h2>
-      <ol><li><b>เลือกเล่มหรือชุด</b><span>ดูหน้าตัวอย่างจริงในหน้าขายก่อนตัดสินใจ</span></li><li><b>สแกนจ่าย</b><span>QR PromptPay บนหน้าเดียว หรือจ่ายด้วยบัตร ไม่ต้องสมัครสมาชิก</span></li><li><b>รับไฟล์ทันที</b><span>ปุ่มดาวน์โหลดขึ้นหลังจ่าย และส่งลิงก์ไปที่อีเมลด้วย</span></li></ol></section>
+    <section class="st-sec" aria-labelledby="st-s"><div class="st-rowh"><h2 id="st-s" class="st-h2">ชีทแนะนำ</h2><a href="/store" data-go="" class="st-more">ดูทั้งหมด ${all.length} รายการ →</a></div>
+      ${topB?`<div class="st-bundles">${addB(topB)}</div>`:''}
+      ${top4.length?`<div class="st-grid">${top4.map(card).join('')}</div>`:''}
+      <a class="btn btn-line btn-block st-allbtn" href="/store" data-go="">ดูสินค้าทั้งหมดในร้าน →</a></section>
+    ${qz.length||ar.length?`<section class="st-sec" aria-labelledby="st-q"><h2 id="st-q" class="st-h2">ฝึกฟรีก่อนซื้อ</h2>
+      <div class="st-free">${qz.length?`<div class="card st-flist"><div class="st-rowh"><b>แบบทดสอบพร้อมเฉลย</b><a href="/quiz" class="st-more">ทั้งหมด →</a></div>${qz.map(q=>`<a href="/quiz/${esc(q.slug)}"><span class="st-kicker">${esc(CATS[q.cat]||'TOEIC')} · ${q.n} ข้อ</span><span>${esc(q.title)}</span></a>`).join('')}</div>`:''}
+      ${ar.length?`<div class="card st-flist"><div class="st-rowh"><b>บทความสรุป</b><a href="/learn" class="st-more">ทั้งหมด →</a></div>${ar.map(a=>`<a href="/learn/${esc(a.slug)}"><span class="st-kicker">${esc(LEARN_CATS[a.cat]||'TOEIC')} · อ่าน ${a.mins} นาที</span><span>${esc(a.title)}</span></a>`).join('')}</div>`:''}</div></section>`:''}
     ${STORE_FAQ.length?`<section class="st-sec st-faq" aria-labelledby="st-f"><h2 id="st-f" class="st-h2">คำถามที่พบบ่อย</h2><div class="card">${STORE_FAQ.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div></section>`:''}
-  </main>
-  <footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
-    <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;
+  </main>${foot}`
 }
 /* หน้าชำระเงินหลายเล่ม (/checkout): รายการที่เลือก + ยอดรวม + สแกน QR บนหน้าเดียว (เหมือนซื้อเล่มเดียว) จ่ายแล้วได้ลิงก์ทุกเล่มบนหน้านี้ */
 function cartView(){
   const L=cartItems(),tot=cartTotal();
-  const top=`<header class="st-top"><div class="wrap st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a>${storeMode()&&!S.sessionId?'<a class="co-back" href="/" data-go="">← เลือกเล่มอื่นต่อ</a>':''}</div></header>`;
+  const top=`<header class="st-top"><div class="wrap st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a>${storeMode()&&!S.sessionId?'<a class="co-back" href="/store" data-go="">← เลือกเล่มอื่นต่อ</a>':''}</div></header>`;
   if(S.sessionId)return `${top}${paidCard()}<div class="wrap" style="max-width:560px;padding:12px 16px 40px"><button class="btn btn-line btn-block" data-a="coDone">กลับหน้าร้าน</button></div>`;
-  if(!L.length)return `${top}<div class="wrap" style="max-width:560px;padding:24px 16px 40px"><div class="card center"><h2 style="margin:0 0 8px">ยังไม่ได้เพิ่มเล่มไหน</h2><p class="muted" style="margin:0 0 14px">กด + เพิ่ม ใต้ราคาในหน้าร้านเพื่อซื้อหลายเล่ม แล้วจ่ายครั้งเดียว</p><a class="btn btn-buy" href="/" data-go="">ไปหน้าร้าน</a></div></div>`;
+  if(!L.length)return `${top}<div class="wrap" style="max-width:560px;padding:24px 16px 40px"><div class="card center"><h2 style="margin:0 0 8px">ยังไม่ได้เพิ่มเล่มไหน</h2><p class="muted" style="margin:0 0 14px">กด + เพิ่ม ใต้ราคาในหน้าร้านเพื่อซื้อหลายเล่ม แล้วจ่ายครั้งเดียว</p><a class="btn btn-buy" href="/store" data-go="">ไปร้านค้า</a></div></div>`;
   return `${top}<div class="wrap co" style="max-width:560px;padding:18px 16px 40px">
     <h1 class="co-h">ชำระเงิน ${L.length} รายการ</h1>
     <div class="card">
@@ -2150,6 +2161,7 @@ function route(){
   const m=location.pathname.match(/\/p\/([a-z0-9-]+)\/?$/i);
   if(m){const p=D.products.find(x=>x.slug===m[1]);if(p)selectProduct(p.id);S.view='shop';const c=curProduct();document.title=c?c.name:TITLE0;if(c)track('ViewContent',{content_name:c.name,value:c.price,currency:'THB'});}
   else if(location.pathname==='/order'){S.view='order';document.title='หาออเดอร์ของฉัน · SheetLab';}
+  else if(location.pathname==='/store'&&storeMode()){S.view='catalog';document.title='ร้านค้า · SheetLab';}
   else if(location.pathname==='/checkout'){S.view='cart';document.title='ชำระเงิน · SheetLab';if(!S.sessionId&&cartItems().length)track('InitiateCheckout',Object.assign({content_name:'เลือก '+cartItems().length+' เล่ม',value:cartTotal(),currency:'THB',num_items:cartItems().length},S.src?{campaign:S.src}:{}));}
   else{S.view=storeMode()?'store':'shop';document.title=TITLE0;}
   render(false);
@@ -2281,7 +2293,7 @@ function shopView(){
     <h2>คำถามที่พบบ่อย</h2>
     ${faqs.map(q=>`<details><summary>${esc(q[0])}</summary>${q[1]?`<p>${esc(q[1])}</p>`:''}</details>`).join('')}
   </div></section>
-  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}<br>${storeMode()?'<a href="/" data-go="">ดูสินค้าทั้งหมด</a> · ':''}${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
+  <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.contactInfo?`<br>ติดต่อ: ${esc(D.settings.contactInfo)}`:''}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}${D.settings.refundPolicy?`<br><span style="white-space:pre-line">${esc(D.settings.refundPolicy)}</span>`:''}<br>${storeMode()?'<a href="/store" data-go="">ดูสินค้าทั้งหมด</a> · ':''}${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
 
   <div class="sticky" id="sticky"><div class="sticky-in">
     ${D.settings.chatLink?`<a class="sp-chat" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer" aria-label="แชทกับร้าน"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><small>แชท</small></a>`:''}
@@ -3492,7 +3504,7 @@ function dashBox(){
       ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0,vs('todo','down'))}
     </div>
     ${stripeBox()}
-    ${(()=>{const V=d.visits;if(!V)return '';const G=[['store','🏪 หน้าร้าน'],['salepage','📄 salepage'],['quiz','📝 คลังข้อสอบ'],['learn','📖 คลังความรู้'],['daily','🗓️ ข้อสอบประจำวัน'],['order','🔎 หาออเดอร์']];const nm=k=>k==='store'?'หน้าร้าน':k==='order'?'หาออเดอร์':k==='daily'?'ข้อสอบประจำวัน':k==='quiz'?'คลังข้อสอบ (หน้ารวม)':k==='learn'?'คลังความรู้ (หน้ารวม)':k.startsWith('p/')?'salepage '+k.slice(2):k.startsWith('quiz/')?'ข้อสอบ '+k.slice(5):'บทความ '+k.slice(6);
+    ${(()=>{const V=d.visits;if(!V)return '';const G=[['store','🏠 หน้าแรก'],['catalog','🛍 ร้านค้า'],['salepage','📄 salepage'],['quiz','📝 คลังข้อสอบ'],['learn','📖 คลังความรู้'],['daily','🗓️ ข้อสอบประจำวัน'],['order','🔎 หาออเดอร์']];const nm=k=>k==='store'?'หน้าแรก':k==='catalog'?'ร้านค้า (/store)':k==='order'?'หาออเดอร์':k==='daily'?'ข้อสอบประจำวัน':k==='quiz'?'คลังข้อสอบ (หน้ารวม)':k==='learn'?'คลังความรู้ (หน้ารวม)':k.startsWith('p/')?'salepage '+k.slice(2):k.startsWith('quiz/')?'ข้อสอบ '+k.slice(5):'บทความ '+k.slice(6);
       const dv=(a,b)=>{const x=(a||0)-(b||0);return x?`<em class="vs ${x>0?'good':'bad'}">${x>0?'▲ +':'▼ −'}${Math.abs(x)} จากเมื่อวาน</em>`:''};
       return `<div class="visits"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><b>👀 ผู้เข้าชมเว็บ 7 วัน</b><span class="fine">นับไม่ซ้ำต่อคนต่อวัน ไม่นับคุณแดน${V.since?' · เริ่มนับ '+new Date(V.since).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></div>
         <div class="vis-total"><span><b>${num(V.total7)}</b> ครั้ง 7 วัน</span><span>วันนี้ <b>${num(V.totalToday)}</b> ${dv(V.totalToday,V.totalYesterday)}</span></div>
@@ -4715,8 +4727,8 @@ function render(keep){
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
-  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:storeView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
-  if(v==='store')hit('store');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
+  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:()=>storeView(false),catalog:catalogView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
+  if(v==='store')hit('store');else if(v==='catalog')hit('catalog');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
   if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
   document.body.style.overflow=((v==='admin'&&S.cfgOpen)||S.cart)?'hidden':'';
@@ -4979,7 +4991,7 @@ function act(a,el){
       render(true);break;}
     case 'cartClose':S.cart=false;S.cartJust=null;drawCart();break;
     case 'cartRemove':CART=CART.filter(x=>x!==id);cartSave();drawCart();render(true);break;
-    case 'cartMore':S.cart=false;drawCart();if(S.view!=='store')navTo('/');break;
+    case 'cartMore':S.cart=false;drawCart();if(S.view!=='catalog')navTo('/store');break;
     case 'cartPay':S.cart=false;drawCart();S.sessionId=null;S.order=null;navTo('/checkout');break;
     case 'coDone':S.sessionId=null;S.order=null;S.qr=null;navTo('/');break;
     case 'applyCoupon':{
@@ -5526,6 +5538,7 @@ function applyUrl(){
     }
     if(location.pathname==='/order')S.view='order';
     else if(location.pathname==='/checkout')S.view='cart';
+    else if(location.pathname==='/store'&&storeMode())S.view='catalog';
     else if(!m&&location.pathname==='/'&&S.view==='shop'&&!new URLSearchParams(location.search).has('session_id')&&storeMode())S.view='store';
     const q=new URLSearchParams(location.search);
     const camp=q.get('utm_campaign');

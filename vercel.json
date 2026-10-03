@@ -41,6 +41,10 @@
       "destination": "/api/page?view=order"
     },
     {
+      "source": "/store",
+      "destination": "/api/page?view=store"
+    },
+    {
       "source": "/checkout",
       "destination": "/api/page?view=checkout"
     },
