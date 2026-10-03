@@ -83,12 +83,14 @@ def main():
         import fitz; body['pages'] = fitz.open(pdf).page_count
         if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'pages': body['pages'], 'file_url': body['file_url']}, ensure_ascii=False))
+        if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
     elif a.cmd == 'done-notion':
         job, url = a.args[0], a.args[1]
         imgs = ([cover(job, os.path.expanduser(a.cover))] if a.cover else []) + [upload(job, os.path.expanduser(p), os.path.basename(p), 'image/png') for p in a.images]
         body = {'id': job, 'by': 'mac', 'notion_url': url, 'images': imgs, 'summary': a.summary}
         if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok')}, ensure_ascii=False))
+        if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
     elif a.cmd == 'fail':
         print(json.dumps(api('factory_fail', {'id': a.args[0], 'error': ' '.join(a.args[1:])[:400]}), ensure_ascii=False)[:300])
     else:

@@ -105,6 +105,11 @@ async function sweepQrPayments() {
   const origin = await siteUrl();
   const out = [];
   for (const pi of paid) { const f = await fulfill(piToSession(pi), { origin }); out.push({ id: pi.id.slice(-8), sent: f.sent, reason: f.reason || null }); }
+  // บัตร/หน้า Stripe: ลูกค้าปิดหน้าแล้ว webhook หลุดหรืออีเมลส่งไม่ผ่าน ก็ยังได้ไฟล์ (fulfill ส่งครั้งเดียวต่อออเดอร์)
+  try {
+    const cs = await stripe('GET', `checkout/sessions?limit=100&status=complete&created[gte]=${since}`);
+    for (const s of (cs.data || []).filter((x) => x.payment_status === 'paid')) { const f = await fulfill(s, { origin }); out.push({ id: s.id.slice(-8), sent: f.sent, reason: f.reason || null, card: true }); }
+  } catch (e) { console.error('sweep cards', e); }
   return { ok: true, paid: paid.length, sent: out.filter((x) => x.sent).length, items: out };
 }
 
@@ -793,6 +798,12 @@ async function shopChecks(add, host) {
       if (acc.ok && acc.limit?.capTHB) add('ads_limit', acc.limit.leftTHB >= 300, 'warn', `วงเงินบัญชีโฆษณาเหลือ ฿${Math.round(acc.limit.leftTHB).toLocaleString('th-TH')}`, 'เพิ่มวงเงิน ไม่งั้นแอดจะหยุดเอง', acc.limit.page);
     }
   } catch (e) { add('ads', false, 'warn', 'ตรวจบัญชีโฆษณาไม่ได้: ' + String(e.message).slice(0, 60), '', null); }
+  try { // จ่ายแล้วแต่ยังไม่ได้ส่งไฟล์ทางอีเมล เกิน 30 นาที (ลิงก์ไฟล์หาย / อีเมลส่งไม่ผ่าน / บันทึกออเดอร์ไม่ได้)
+    const cut = new Date(Date.now() - 30 * 60e3).toISOString(), from = new Date(Date.now() - 14 * 864e5).toISOString();
+    const stuck = await sb(`orders?status=eq.paid&emailed_at=is.null&created_at=lt.${cut}&created_at=gt.${from}&email=not.is.null&select=session_id,product_name,created_at`);
+    const n = (stuck || []).length;
+    add('delivery', !n, 'bad', n ? `ลูกค้าจ่ายแล้ว ${n} ออเดอร์ แต่ยังไม่ได้รับไฟล์ทางอีเมล (${(stuck || []).slice(0, 3).map((o) => String(o.product_name || '').slice(0, 30)).join(', ')})` : 'ทุกออเดอร์ที่จ่ายแล้วได้รับไฟล์ทางอีเมล', 'เปิดแท็บออเดอร์ เช็คว่าสินค้ามีลิงก์ไฟล์ แล้วกด "ส่งอีเมลซ้ำ"', null);
+  } catch (e) {}
   try { const G = await import('../lib/gsc.js'); add('gsc', G.gscConnected(), 'warn', G.gscConnected() ? 'เชื่อม Google Search Console แล้ว (รายงานคำค้นทำงาน)' : 'ยังไม่ได้เชื่อม Google Search Console (ยังไม่เห็นว่าคนค้นคำไหนเจอเว็บ)', 'ทำตามคู่มือในการ์ด 🔎 คำค้นจาก Google บนหน้าภาพรวม', null); } catch (e) {}
   try { const u = await storageUsage(); const pct = Math.round(u.total_mb / 1024 * 100); add('storage', pct < 80, pct < 95 ? 'warn' : 'bad', `พื้นที่เก็บไฟล์ใช้ ${u.total_mb} MB จาก 1 GB (${pct}%)`, 'ลบไฟล์ที่ไม่ใช้ หรืออัปเกรด Supabase', 'https://supabase.com/dashboard'); } catch (e) {}
   try {
@@ -1969,6 +1980,7 @@ export default async function handler(req, res) {
         if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status} ${JSON.stringify(j).slice(0, 200)}` });
         return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, headers: { 'Content-Type': ctype, 'x-upsert': 'true' } });
       } else if (action === 'factory_done') {
+        if (!['producing', 'queued'].includes(job.status) && !(job.status === 'done' && job.listing === 'pending')) return res.status(409).json({ ok: false, error: `ใบสั่งนี้สถานะ ${job.status} แล้ว (ยกเลิกหรืออนุมัติไปแล้ว) ไม่รับงานเสร็จซ้ำ` });
         job.status = 'done'; job.done_at = new Date().toISOString(); if (body.by === 'mac') { job.made_on = 'mac'; await workerBeat({ note: `ผลิตเสร็จ: ${String(job.title).slice(0, 60)}` }); }
         if (body.file_url) job.file_url = String(body.file_url).slice(0, 500);
         if (body.pages) job.pages = Number(body.pages);

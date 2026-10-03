@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       orderId: s.id.slice(-8).toUpperCase(),
       productId: order.product_id, productName: items.map((it) => it.name).join(' + '),
       amount: order.amount, currency: order.currency, email: order.email,
-      link: items[0] ? items[0].link : '', items, emailed: r.sent || r.reason === 'already sent',
+      link: items[0] ? items[0].link : '', items, emailed: r.sent || r.reason === 'already sent', pending: r.reason === 'missing link' || !!r.retry,
     });
   } catch (e) {
     console.error(e);

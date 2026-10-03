@@ -34,11 +34,11 @@ export default async function handler(req, res) {
       const session = event.data.object;
       const origin = `https://${req.headers.host}`;
       const r = await fulfill(session, { origin });
-      return res.status(200).json({ ok: true, sent: r.sent, reason: r.reason || null });
+      return res.status(r.retry ? 500 : 200).json({ ok: !r.retry, sent: r.sent, reason: r.reason || null }); // 500 = ให้ Stripe ส่งมาใหม่
     }
     if (event.type === 'payment_intent.succeeded' && event.data.object?.metadata?.flow === 'qr') { // จ่ายด้วย QR บนหน้าร้าน
       const r = await fulfill(piToSession(event.data.object), { origin: `https://${req.headers.host}` });
-      return res.status(200).json({ ok: true, sent: r.sent, reason: r.reason || null });
+      return res.status(r.retry ? 500 : 200).json({ ok: !r.retry, sent: r.sent, reason: r.reason || null });
     }
     res.status(200).json({ ok: true, ignored: event.type });
   } catch (e) {

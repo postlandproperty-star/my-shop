@@ -2817,6 +2817,8 @@ async function facApprove(id,quick){
     }
     toast('พร้อมตรวจแล้ว ดูตัวอย่างสด แก้ราคาหรือข้อความได้ แล้วกด "อนุมัติ ลงขาย"');
   }catch(e){console.error(e);toast('ทำภาพจาก PDF ไม่สำเร็จ ('+(e.message||e)+') เพิ่มภาพเองได้ในฟอร์ม');}
+  if(quick&&S.draft&&S.draft.fromJob===id&&(!(S.draft.images||[]).length||!(S.draft.previews||[]).length)){ // ทำรูปปก/หน้าตัวอย่างไม่ได้: ไม่ลงขายเงียบๆ (สินค้าไม่มีรูปจะหลุดจาก Google และแอด) เปิดฟอร์มให้ตรวจแทน
+    FAC.busy='';FAC.quick=false;render(true);toast('ยังไม่ลงขาย: ทำรูปปกหรือหน้าตัวอย่างไม่สำเร็จ เพิ่มรูปในฟอร์มแล้วกด "อนุมัติ ลงขาย"');return;}
   if(quick&&S.draft&&S.draft.fromJob===id){ // อนุมัติเลย: บันทึกด้วยค่าที่ระบบเตรียม (หน้าร้านอย่างเดียว ราคาตามใบสั่ง)
     FAC.busy='';FAC.quick=false;const btn={dataset:{}};act('saveProduct',btn);
     if(S.err){toast('ลงขายไม่สำเร็จ: '+S.err+' เปิดตัวแก้ไขให้แล้ว แก้แล้วกดบันทึก');render(true);}else toast('ลงขายแล้ว ขึ้นหน้าร้านเรียบร้อย');
