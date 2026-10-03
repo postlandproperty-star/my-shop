@@ -3983,6 +3983,12 @@ async function adsUseImage(x,dataUrl){const blob=await (await fetch(dataUrl)).bl
   const url=await uploadImage(im&&im.height>im.width*1.1?await crop45(dataUrl):(await square(new File([blob],'ad.jpg',{type:blob.type||'image/jpeg'}))).url);
   x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;x.multi=[url].concat((x.multi||[]).filter(u=>u!==url)).slice(0,4);await adsSave(x);return url;}
 const AD_PLATS=[['facebook','Facebook'],['instagram','Instagram'],['threads','Threads']];
+/* แปล error ที่เจอบ่อยจาก Facebook เป็นภาษาไทย + บอกว่าต้องทำอะไร */
+function fbErrHelp(e){e=String(e||'');
+  if(/development mode/i.test(e))return `<div class="adt-msg"><b>แปลว่า:</b> แอป Facebook ของร้าน (SheetLab Publisher) ยังอยู่ "โหมดพัฒนา" Facebook จึงไม่ยอมให้ใช้ยิงแอด ต้องเปลี่ยนเป็น "Live" ครั้งเดียว (คุณแดนทำเอง ฟรี ประมาณ 5 นาที)
+    <ol style="margin:6px 0 0;padding-left:20px"><li>เปิด <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps ↗</a> แล้วเลือกแอป SheetLab Publisher</li><li>การตั้งค่าแอป → ข้อมูลพื้นฐาน: ใส่ Privacy Policy URL และ User data deletion (URL คำแนะนำ) เป็น <code>https://sheetlabth.com/privacy</code> ใส่ไอคอนแอป 1024×1024 หมวดหมู่ และอีเมลติดต่อ แล้วกดบันทึก</li><li>กดสวิตช์ "โหมดแอป" ด้านบนจาก พัฒนา เป็น Live (หรือเมนู "เผยแพร่" แล้วกดเผยแพร่)</li><li>กลับมากด "↻ ลองยิงใหม่"</li></ol><span class="fine">ถ้า Facebook ขอยืนยันธุรกิจหรือส่งรีวิวแอป ให้แคปหน้าจอส่งมา</span></div>`;
+  if(/under 18|20 in Thailand/i.test(e))return '<div class="adt-msg">แก้ในระบบแล้ว (อายุขั้นต่ำ 20 ปี) กด "↻ ลองยิงใหม่" ได้เลย</div>';
+  return '';}
 function adRecommend(x){const p=getProduct(x.productId),notion=p&&pfmt(p)==='notion';
   return notion?{plats:['facebook','instagram'],why:'Notion template ขายด้วยภาพสวย คนบน Instagram ตัดสินใจจากรูปได้ไว แนะนำ Facebook + Instagram (หรือปล่อยอัตโนมัติก็ได้)'}
     :{plats:[],why:'แนะนำ "อัตโนมัติ" ให้ Facebook ย้ายงบไปช่องที่ได้ยอดซื้อถูกที่สุดเอง (ส่วนใหญ่ได้ทั้ง FB และ IG) งบ ฿100/วัน ถ้าแบ่งเองหลายช่อง แต่ละช่องจะได้งบน้อยจนเรียนรู้ช้า · Threads คนเห็นแอดยังน้อย ใช้เป็นช่องเสริมเมื่ออยากลอง'};}
@@ -4073,7 +4079,7 @@ function adsAutoBox(compact,noLive){
         <div class="adq-budget"><label>งบต่อวัน (บาท)<input class="input" type="number" min="50" max="2000" step="10" id="add-${x.id}" value="${esc(x.dailyTHB)}" data-adsum="${x.id}"></label>
           <label>จำนวนวัน<input class="input" type="number" min="1" max="30" id="adn-${x.id}" value="${esc(x.days)}" data-adsum="${x.id}"></label></div>
         <p class="adq-total">รวมไม่เกิน <b id="ads-sum-${x.id}">฿${tot.toLocaleString('th-TH')}</b>${cur&&cur!=='THB'?` <span class="fine">(บัญชีโฆษณาตัดเป็น ${esc(cur)} ตามเรทวันนี้)</span>`:''}</p>
-        ${x.status==='failed'&&x.error?`<p class="err" style="margin:0">ยิงไม่สำเร็จ: ${esc(x.error)}</p>`:''}
+        ${x.status==='failed'&&x.error?`<p class="err" style="margin:0">ยิงไม่สำเร็จ: ${esc(x.error)}</p>${fbErrHelp(x.error)}`:''}
         <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="adsLaunch" data-id="${x.id}" ${!okAcc||busy||x.status==='launching'?'disabled':''}>${busy||x.status==='launching'?'กำลังสร้างแอด...':x.status==='failed'?'↻ ลองยิงใหม่':'✅ ตกลง ยิงแอด'}</button>${x.status!=='launching'?`<button class="btn btn-line btn-sm" data-a="adsDismiss" data-id="${x.id}">ไม่เอา</button>`:''}</div>
         <span class="fine">เงินยังไม่ออกจนกว่าจะกดตกลง · Facebook รีวิวแอดก่อนวิ่ง (ไม่เกิน 1 วัน)</span>
       </div></div></div>`;};
