@@ -56,7 +56,7 @@ export default async function handler(req, res) {
   const doc = String(req.query.doc || '');
   const seo = String(req.query.seo || '');
   if (seo === 'robots') { // ให้ Google เก็บหน้าร้าน ไม่เก็บ API และหน้าร่าง
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=3600');
     return res.status(200).send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /draft/\n\nSitemap: ${NEW_SITE}/sitemap.xml\n`);
   }
   if (seo === 'feed') { // ฟีดสินค้า Google Merchant Center: ทุกสินค้าที่เผยแพร่และมีราคา (สินค้าใหม่เข้าเองอัตโนมัติ) Google ดึงวันละครั้ง
@@ -84,7 +84,7 @@ ${full > price ? `    <g:sale_price>${price.toFixed(2)} THB</g:sale_price>\n` : 
 ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:country>TH</g:country><g:service>ดาวน์โหลดทันที</g:service><g:price>0.00 THB</g:price></g:shipping>
   </item>`;
     });
-    res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=600');
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n<channel>\n  <title>SheetLab</title>\n  <link>${NEW_SITE}</link>\n  <description>ชีทสรุป TOEIC และ Notion Template</description>\n${items.join('\n')}\n</channel>\n</rss>\n`);
   }
   if (seo === 'sitemap') { // รายการหน้าที่ลูกค้าเปิดได้ (เฉพาะสินค้าที่เผยแพร่แล้ว)
@@ -93,7 +93,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const [quizzes, articles] = await Promise.all([loadQuizzes(), loadArticles()]);
     const topics = TOPICS.filter((t) => topicReady(topicItems(t, { articles, quizzes, products: shop.products }))).map((t) => `/topic/${t.slug}`);
     const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
-    res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=3600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
   if (req.query.review) { // หน้ารีวิวจากลิงก์ในอีเมล (ลายเซ็นต่อออเดอร์) ไม่ให้ Google เก็บ
@@ -168,7 +168,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   if (topic) { // หน้ารวมตามหัวข้อ /topic/<slug>
     const t = TOPICS.find((x) => x.slug === topic);
     const [shop, articles, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadArticles(), loadQuizzes()]);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=600');
     const live = TOPICS.filter((x) => topicReady(topicItems(x, { articles, quizzes, products: shop.products })));
     if (!t) { res.statusCode = 404; return res.end(topicPage(TOPICS[0], topicItems(TOPICS[0], { articles, quizzes, products: shop.products }), { settings: shop.settings, site: NEW_SITE, all: live })); }
     return res.status(200).send(topicPage(t, topicItems(t, { articles, quizzes, products: shop.products }), { settings: shop.settings, site: NEW_SITE, all: live }));
@@ -177,7 +177,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   if (learn) { // คลังความรู้ /learn และ /learn/<slug>
     const [shop, articles, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadArticles(), loadQuizzes()]);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=120');
     if (learn === '_index') return res.status(200).send(articleIndex(articles, { settings: shop.settings, site: NEW_SITE }));
     const a = articles.find((x) => x.slug === learn);
     if (!a) { res.statusCode = 404; return res.end(articleIndex(articles, { settings: shop.settings, site: NEW_SITE })); }
@@ -188,9 +188,9 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   if (quiz) { // แบบทดสอบฟรี /quiz และ /quiz/<slug> (หน้าเนื้อหาให้ Google เก็บ)
     const [shop, quizzes, articles] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadQuizzes(), loadArticles()]);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=120');
     if (quiz === '_index') return res.status(200).send(quizIndex(quizzes, { settings: shop.settings, site: NEW_SITE }));
-    if (quiz === 'daily') { res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=600'); return res.status(200).send(dailyPage(dailyPick(quizzes), { settings: shop.settings, site: NEW_SITE })); }
+    if (quiz === 'daily') { res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=600, stale-while-revalidate=600'); return res.status(200).send(dailyPage(dailyPick(quizzes), { settings: shop.settings, site: NEW_SITE })); }
     const q = quizzes.find((x) => x.slug === quiz);
     if (!q) { res.statusCode = 404; return res.end(quizIndex(quizzes, { settings: shop.settings, site: NEW_SITE })); }
     const article = articles.find((x) => x.slug === q.article_slug) || articles.find((x) => x.quiz_slug === q.slug) || null;
@@ -199,7 +199,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   if (POLICY_DOCS.includes(doc)) { // หน้านโยบาย /privacy และ /refund
     const shop = await loadShop().catch(() => ({ settings: {} }));
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=60, stale-while-revalidate=120');
     return res.status(200).send(policyPage(doc, shop.settings));
   }
   let out = html;
@@ -266,6 +266,6 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   // หน้าร้าน/หน้าขาย: จำไว้แค่ 10 วินาที แก้หลังบ้านแล้วลูกค้าเห็นของใหม่แทบทันที (เดิม 60 วิ + เสิร์ฟของเก่าอีก 10 นาที)
-  res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=20');
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=10, stale-while-revalidate=20');
   res.status(200).send(out.replace('</body>', `${TRACK_JS}</body>`)); // เก็บพฤติกรรมคนเข้าเว็บ (ไม่นับเครื่องแอดมิน)
 }
