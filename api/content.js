@@ -445,15 +445,16 @@ async function genImageRaw({ model, prompt, quality, refs, aspect }) {
     return { b64: d.data, mime: d.mimeType || d.mime_type || 'image/png', model };
   }
   const KEY = process.env.OPENAI_API_KEY || ''; if (!KEY) throw new Error('ยังไม่ได้ใส่ OPENAI_API_KEY ใน Vercel');
+  if (aspect === '4:5') prompt += '\nสำคัญ: ภาพจะถูกตัดขอบบนและล่างให้เหลือสัดส่วน 4:5 ข้อความ ตัวเลข และสิ่งสำคัญทั้งหมดต้องอยู่ห่างขอบบนและขอบล่างอย่างน้อย 12% ของความสูง และห่างขอบซ้ายขวาอย่างน้อย 7% ของความกว้าง ห้ามมีตัวหนังสือถูกตัดขอบ';
   if (ref.length) { // มีรูปต้นแบบ: ใช้ images/edits (รับหลายรูป)
-    const fd = new FormData(); fd.append('model', model); fd.append('prompt', prompt); fd.append('size', tall ? '1024x1536' : '1024x1024'); fd.append('n', '1');
+    const fd = new FormData(); fd.append('model', model); fd.append('prompt', prompt); fd.append('size', tall ? '1024x1536' : '1024x1024'); fd.append('n', '1'); fd.append('output_format', 'jpeg');
     fd.append('quality', ['low', 'medium', 'high'].includes(quality) ? quality : 'medium');
     ref.forEach((x, i) => fd.append('image[]', new Blob([x.buf], { type: x.mime }), `ref${i}.${/png/.test(x.mime) ? 'png' : 'jpg'}`));
     const re = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { Authorization: `Bearer ${KEY}` }, body: fd });
     const je = await re.json().catch(() => ({}));
     if (!re.ok) throw aiErr('openai', je?.error?.message, re.status);
     if (!je?.data?.[0]?.b64_json) throw new Error('OpenAI ไม่ส่งรูปกลับมา ลองใหม่อีกครั้ง');
-    return { b64: je.data[0].b64_json, mime: 'image/png', model };
+    return { b64: je.data[0].b64_json, mime: 'image/jpeg', model };
   }
   const r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, prompt, size: tall ? '1024x1536' : '1024x1024', output_format: 'jpeg', output_compression: 90, quality: ['low', 'medium', 'high'].includes(quality) ? quality : (process.env.OPENAI_IMAGE_QUALITY || 'medium'), n: 1 }) });
