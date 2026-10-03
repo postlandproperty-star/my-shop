@@ -117,6 +117,14 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(page);
   }
+  const timg = String(req.query.timg || '');
+  if (timg) { // รูปหัวข้อจาก Canva /topic-img/<slug>.jpg (ไฟล์อยู่ใน src/topics)
+    const t = TOPICS.find((x) => x.slug === timg.replace(/\.jpg$/, ''));
+    let buf = null; if (t) try { buf = readFileSync(join(process.cwd(), 'src', 'topics', `${t.slug}.jpg`)); } catch (e) {}
+    if (!buf) return res.status(404).end();
+    res.setHeader('Content-Type', 'image/jpeg'); res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=2592000');
+    return res.status(200).end(buf);
+  }
   const topic = String(req.query.topic || '');
   if (topic) { // หน้ารวมตามหัวข้อ /topic/<slug>
     const t = TOPICS.find((x) => x.slug === topic);

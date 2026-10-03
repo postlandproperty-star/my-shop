@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/topic-img/:slug",
+      "destination": "/api/page?timg=:slug"
+    },
+    {
       "source": "/topic/:slug",
       "destination": "/api/page?topic=:slug"
     },

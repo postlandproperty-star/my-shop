@@ -27,6 +27,7 @@ const server = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split('?')[0]);
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
   if (tp) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(topicPage(tp, topicItems(tp, { articles: T_ART, quizzes: T_QZ, products: SHOP.products }), { site: BASE, all: TOPICS })); }
+  const ti = u.match(/^\/topic-img\/([a-z-]+)\.jpg$/); if (ti) { const f = path.join(SRC, 'topics', ti[1] + '.jpg'); if (fs.existsSync(f)) { res.setHeader('Content-Type', 'image/jpeg'); return res.end(fs.readFileSync(f)); } res.statusCode = 404; return res.end(); }
   const f = path.join(SRC, u);
   if (u !== '/' && fs.existsSync(f) && fs.statSync(f).isFile()) return res.end(fs.readFileSync(f));
   res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(fs.readFileSync(path.join(SRC, 'index.html')));
@@ -157,6 +158,12 @@ try {
       page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/__topic/${slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(300);
       pass(`[${kind}] หัวข้อ ${slug}: มีส่วนหัวพร้อมภาพหรือข้อความ`, await page.locator('.thero h1').count() === 1);
+      await page.waitForLoadState('load').catch(() => {});
+      const ti = await page.evaluate(() => { const imgs = [...document.querySelectorAll('.thero-ban img, .tother img')].map((i) => { i.loading = 'eager'; return i; });
+        const cards = [...document.querySelectorAll('.alist .acard')]; const c2 = cards[1]?.querySelector('.acov')?.getBoundingClientRect();
+        return { ban: document.querySelector('.thero-ban img')?.naturalWidth || 0, others: imgs.length, cards: cards.length, c2w: c2 ? Math.round(c2.width) : 0, vw: innerWidth }; });
+      pass(`[${kind}] หัวข้อ ${slug}: รูปหัวข้อจาก Canva ขึ้น`, ti.ban > 0, `naturalWidth ${ti.ban}`);
+      if (slug !== 'ielts') pass(`[${kind}] หัวข้อ ${slug}: การ์ดบทความ/แบบทดสอบแบบใหม่ ${kind === 'mobile' ? '(ใบที่ 2 เป็นแถวรูปเล็ก)' : '(รูปบนเต็มการ์ด)'}`, ti.cards >= 2 && (kind === 'mobile' ? ti.c2w > 60 && ti.c2w < 140 : ti.c2w >= 200), `${ti.cards} การ์ด รูปใบ 2 กว้าง ${ti.c2w}px`);
       await layout(page, `[${kind}] หัวข้อ ${slug}`); await page.screenshot({ path: path.join(OUT, `topic-${slug}-${kind}.png`), fullPage: true });
       await page.context().close();
     } catch (e) { pass(`[${kind}] หัวข้อ ${slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
