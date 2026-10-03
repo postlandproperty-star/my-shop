@@ -129,6 +129,27 @@ footer{padding:28px 0 110px;text-align:center}
 .st-faq details{border-bottom:1px solid var(--line);padding:10px 0}.st-faq details:last-child{border-bottom:0}.st-faq summary{cursor:pointer;font-weight:600}.st-faq details p{margin:6px 0 0;color:var(--muted);font-size:15px}
 .st-ftop{display:inline-block;margin:4px 0 6px}
 .st-h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5vw,30px);margin:0}.st-cathead .fine{margin:4px 0 0}.st-cat{gap:16px}.st-cat .st-bundles{margin-bottom:0}
+/* ร้านค้า /store แบบ Shopee (clean): หัวร้าน · แท็บติดบนจอ · การ์ดรูปเต็มขอบ ราคาส้ม */
+.st-cat{gap:14px;padding-top:16px}
+.st-shop{display:grid;grid-template-columns:60px minmax(0,1fr);gap:12px 14px;align-items:center;border-radius:16px;padding:16px;color:#fff;background:linear-gradient(120deg,#1B36C9 0%,#2440E8 55%,#4D69FF 100%);box-shadow:0 8px 24px rgba(36,64,232,.18)}
+.st-shop-logo{width:60px;height:60px;border-radius:50%;background:#fff;color:#2440E8;display:grid;place-items:center;font-family:var(--font-head);font-size:21px;font-weight:700;box-shadow:0 0 0 3px rgba(255,255,255,.35)}
+.st-shop h1{margin:0;font-family:var(--font-head);font-weight:500;font-size:clamp(21px,4.6vw,26px);color:#fff;line-height:1.25}.st-shop-id p{margin:2px 0 0;font-size:14px;opacity:.9}
+.st-shop-stats{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:rgba(255,255,255,.13);border-radius:12px;padding:8px 4px;text-align:center}.st-shop-stats div{display:flex;flex-direction:column;gap:1px;min-width:0}.st-shop-stats div+div{border-left:1px solid rgba(255,255,255,.22)}.st-shop-stats b{font-size:17px}.st-shop-stats span{font-size:12.5px;opacity:.88}
+.st-shop-trust{grid-column:1/-1;list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px}.st-shop-trust li::before{content:'✓ ';color:#FFD23F;font-weight:700}
+@media(min-width:760px){.st-shop{grid-template-columns:72px minmax(0,1fr) minmax(300px,380px);padding:20px 22px}.st-shop-logo{width:72px;height:72px;font-size:24px}.st-shop-stats{grid-column:3;grid-row:1}.st-shop-trust{grid-column:2/-1}}
+.st-bar{position:sticky;top:0;z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 8px rgba(15,27,51,.05)}
+.st-tabs{display:flex;overflow-x:auto;scrollbar-width:none}.st-tabs::-webkit-scrollbar{display:none}.st-tabs button{flex:0 0 auto;background:none;border:0;border-bottom:2.5px solid transparent;padding:12px 14px 10px;font:inherit;font-size:15px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}.st-tabs button[aria-pressed="true"]{color:#EE4D2D;border-bottom-color:#EE4D2D}.st-tabs button:focus-visible,.st-sort button:focus-visible{outline:2px solid #EE4D2D;outline-offset:-2px}
+.st-sort{display:flex;align-items:center;gap:2px;padding:6px 10px;border-top:1px solid var(--line);overflow-x:auto;scrollbar-width:none}.st-sort>.fine:first-child{margin-right:6px;white-space:nowrap}.st-sort button{flex:0 0 auto;background:none;border:0;border-radius:8px;padding:6px 10px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;white-space:nowrap}.st-sort button[aria-pressed="true"]{color:#EE4D2D;font-weight:700;background:#FFF1EC}.st-count{margin-left:auto;white-space:nowrap;padding-left:8px}
+.st-main .st-card{border:0;border-radius:10px;padding:0 0 52px;gap:5px;box-shadow:0 1px 3px rgba(15,27,51,.09);transition:box-shadow .15s,transform .15s}.st-main .st-card:hover{box-shadow:0 8px 22px rgba(15,27,51,.14);transform:translateY(-2px)}
+.st-main .st-cover{border-radius:10px 10px 0 0}.st-main .st-card>:not(.st-cover){margin-inline:10px}
+.st-main .st-name{font-size:14.5px;font-weight:500;line-height:1.4;min-height:2.8em;margin-top:6px}
+.st-prow{display:flex;align-items:baseline;justify-content:space-between;gap:6px;flex-wrap:wrap}.st-main .st-price strong{color:#EE4D2D;font-size:18px;font-weight:700}.st-main .st-price s{font-size:12.5px;color:var(--muted)}.st-prow .st-meta{font-size:12px}
+.st-dtag{position:absolute;top:0;right:0;font-style:normal;background:#FFD839;color:#EE4D2D;font-weight:700;font-size:12.5px;padding:3px 7px 4px;border-radius:0 10px 0 8px}
+.st-main .st-add{left:10px;right:10px;bottom:10px;height:34px;border-radius:8px;font-size:14px}.st-main .st-add.on{background:#EE4D2D;color:#fff}
+.st-main .st-item.picked .st-card{box-shadow:0 0 0 2px #16a34a}
+.st-cat .st-bundle{border:1.5px solid #FFD2C2;border-radius:14px;box-shadow:0 1px 3px rgba(15,27,51,.06);background:linear-gradient(105deg,#FFF6F2 0%,#fff 55%)}.st-cat .st-bundle .st-kicker{align-self:flex-start;background:#FFF1EC;color:#EE4D2D;border-radius:999px;padding:2px 10px}.st-cat .st-bundle .st-price strong{color:#EE4D2D;font-size:20px}
+.st-cat .st-bwrap{gap:8px}@media(min-width:760px){.st-cat .st-badd{justify-self:end;min-width:200px}}
+@media(max-width:640px){.st-cat .st-grid{gap:8px}.st-main .st-name{font-size:14px}.st-main .st-price strong{font-size:17px}.st-tabs button{padding:11px 12px 9px;font-size:14.5px}}
 .st-rowh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.st-more{font-size:14px;font-weight:600;white-space:nowrap}
 .st-allbtn{margin-top:2px}
 .st-free{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}.st-flist{display:flex;flex-direction:column;gap:0;padding:14px 16px}.st-flist>a{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:600;line-height:1.4}.st-flist>a:hover span:last-child{color:var(--brand)}.st-flist .st-rowh{padding-bottom:8px}
@@ -2068,11 +2089,10 @@ function storeView(catalog){
   const card=p=>{const pr=Number(p.price)||0,full=Number(p.fullPrice)||0,off=full>pr&&pr>=1?Math.round((1-pr/full)*100):0,n=sold(p.id),b=inBundle(p.id),img=(p.images||[])[0];
     const on=CART.includes(p.id);
     return `<div class="st-item${on?' picked':''}${cartOk(p)&&!PV?' has-add':''}">${cartOk(p)&&!PV?`<button class="st-add${on?' on':''}" data-a="cartTick" data-id="${esc(p.id)}" aria-pressed="${on}" aria-label="${on?'เอาออก':'เพิ่ม'} ${esc(p.name)}">${on?'✓ เพิ่มแล้ว':'+ เพิ่ม'}</button>`:''}<a class="st-card" href="/p/${esc(p.slug)}" data-go="${esc(p.id)}">
-      <span class="st-cover">${img?`<img src="${esc(img)}" alt="" loading="lazy" width="600" height="600">`:cover(p.color,p.kind||'other')}${hot.includes(p.id)?'<em class="st-badge hot">ขายดี</em>':fresh(p)?'<em class="st-badge">ใหม่</em>':''}</span>
+      <span class="st-cover">${img?`<img src="${esc(img)}" alt="" loading="lazy" width="600" height="600">`:cover(p.color,p.kind||'other')}${hot.includes(p.id)?'<em class="st-badge hot">ขายดี</em>':fresh(p)?'<em class="st-badge">ใหม่</em>':''}${off?`<em class="st-dtag" aria-label="ลด ${off}%">-${off}%</em>`:''}</span>
       <b class="st-name">${esc(p.name)}</b>
       ${rvLine(p)}
-      <span class="st-price">${free(p)?'<strong>ฟรี</strong>':`<strong>${baht(pr)}</strong>${full>pr?` <s>${baht(full)}</s>`:''}${off?` <span class="st-off">−${off}%</span>`:''}`}</span>
-      ${n>=SOLD_MIN?`<span class="st-meta">ขายแล้ว ${n.toLocaleString('th-TH')} ชิ้น</span>`:''}
+      <span class="st-prow"><span class="st-price">${free(p)?'<strong>ฟรี</strong>':`<strong>${baht(pr)}</strong>${full>pr?` <s>${baht(full)}</s>`:''}`}</span>${n>=SOLD_MIN?`<span class="st-meta">ขายแล้ว ${n.toLocaleString('th-TH')}</span>`:''}</span>
       ${b?`<span class="st-inb">มีในชุด ${esc(String(b.name).replace(/^ชุด\s*/,''))}</span>`:''}
     </a></div>`;};
   const bcard=b=>{const books=bundleBooks(b),sum=books.reduce((a,x)=>a+(Number(x.price)||0),0),from=fromPrice(b),off=sum>from?Math.round((1-from/sum)*100):0,live=b.promoEnd&&b.promoEnd>Date.now();
@@ -2086,15 +2106,23 @@ function storeView(catalog){
   const note=hasAdminAccess()&&!storeMode()?`<div class="wrap"><p class="st-note">ลูกค้ายังไม่เห็นหน้านี้ หน้าแรกจะเปลี่ยนเป็นหน้าร้านเองเมื่อมีสินค้าเผยแพร่ตั้งแต่ ${STORE_MIN} รายการ ตอนนี้มี ${all.length}</p></div>`:'';
   const addB=b=>{const on=CART.includes(b.id);return `<div class="st-bwrap">${bcard(b)}${cartOk(b)&&!PV?`<button class="st-add st-badd${on?' on':''}" data-a="cartTick" data-id="${esc(b.id)}" aria-pressed="${on}" aria-label="${on?'เอาออก':'เพิ่ม'} ${esc(b.name)}">${on?'✓ เพิ่มแล้ว':'+ เพิ่มชุดนี้'}</button>`:''}</div>`;};
   const head=stHead(catalog?'store':'home',chat),foot=stFoot(chat);
-  if(catalog)return `${ceoBar('ceo_store')}${note}${cartFab()}${head}
+  if(catalog){ // ร้านค้าแบบหน้าร้าน Shopee: หัวร้าน (ตัวเลขจริง) · แท็บหมวด + เรียงลำดับ ติดบนจอ · ชุดสุดคุ้ม · การ์ดสินค้า
+    const so=S.ssort||'pop',price=p=>Number(p.price)||0;
+    const list=so==='new'?shown.slice().sort((a,b)=>(b.publishedAt||0)-(a.publishedAt||0)):so==='asc'?shown.slice().sort((a,b)=>price(a)-price(b)):so==='desc'?shown.slice().sort((a,b)=>price(b)-price(a)):shown;
+    const soldAll=all.reduce((a,p)=>a+sold(p.id),0),rv=all.map(p=>REVIEWS[p.id]).filter(r=>r&&r.count),rc=rv.reduce((a,r)=>a+r.count,0),ravg=rc?rv.reduce((a,r)=>a+r.avg*r.count,0)/rc:0;
+    const sb=(k,l)=>`<button type="button" data-a="ssort" data-v="${k}" aria-pressed="${so===k||(k==='asc'&&so==='desc')}">${l}</button>`;
+    return `${ceoBar('ceo_store')}${note}${cartFab()}${head}
   <main class="wrap wide st-main st-cat">
-    <div class="st-cathead"><h1 class="st-h1">ร้านค้า SheetLab</h1><p class="fine">${all.length} รายการ · ดูหน้าตัวอย่างได้ทุกเล่ม · กด + เพิ่ม หลายเล่มแล้วจ่ายครั้งเดียว</p></div>
-    ${chips.length>1?`<div class="st-chips" role="group" aria-label="กรองตามหมวด">${chips.map(c=>`<button class="chip" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1])}</button>`).join('')}</div>`:''}
-    ${shownB.length?`<div class="st-bundles">${shownB.map(addB).join('')}</div>`:''}
-    ${shown.length?`<div class="st-grid">${shown.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
+    <header class="st-shop"><span class="st-shop-logo" aria-hidden="true">SL</span><div class="st-shop-id"><h1>ร้านค้า SheetLab</h1><p>ชีทสรุปเตรียมสอบภาษาอังกฤษ อธิบายภาษาไทย</p></div>
+      <div class="st-shop-stats"><div><b>${all.length}</b><span>สินค้า</span></div><div><b>${soldAll>=SOLD_MIN?soldAll.toLocaleString('th-TH'):'ใหม่'}</b><span>${soldAll>=SOLD_MIN?'ขายแล้ว':'เพิ่งเปิดร้าน'}</span></div><div><b>${rc?'★ '+ravg.toFixed(1):'-'}</b><span>${rc?rc+' รีวิว':'ยังไม่มีรีวิว'}</span></div></div>
+      <ul class="st-shop-trust"><li>ดูหน้าตัวอย่างก่อนซื้อ</li><li>รับไฟล์ทันทีหลังจ่าย</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></header>
+    <div class="st-bar">${chips.length>1?`<div class="st-tabs" role="group" aria-label="หมวดสินค้า">${chips.map(c=>`<button type="button" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1].replace(/^📦\s*/,''))}</button>`).join('')}</div>`:''}
+      ${f!=='bundle'&&shown.length>1?`<div class="st-sort"><span class="fine">เรียงตาม</span>${sb('pop','ยอดนิยม')}${sb('new','ล่าสุด')}<button type="button" data-a="ssort" data-v="${so==='asc'?'desc':'asc'}" aria-pressed="${so==='asc'||so==='desc'}">ราคา ${so==='desc'?'↓':'↑'}</button><span class="fine st-count">${list.length+shownB.length} รายการ</span></div>`:''}</div>
+    ${shownB.length?`<section class="st-bundles" aria-label="ชุดสุดคุ้ม">${shownB.map(addB).join('')}</section>`:''}
+    ${list.length?`<div class="st-grid">${list.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
     <section class="st-sec st-how" aria-labelledby="st-h"><h2 id="st-h" class="st-h2">ซื้อยังไง</h2>
       <ol><li><b>เลือกเล่มหรือชุด</b><span>กดดูหน้าตัวอย่างจริงก่อนตัดสินใจ</span></li><li><b>สแกนจ่าย</b><span>QR PromptPay หรือบัตร ไม่ต้องสมัครสมาชิก</span></li><li><b>รับไฟล์ทันที</b><span>ปุ่มดาวน์โหลดขึ้นหลังจ่าย และส่งลิงก์ไปที่อีเมลด้วย</span></li></ol></section>
-  </main>${foot}`;
+  </main>${foot}`;}
   // หน้าแรก (คนจาก Google): สั้น โล่ง ทางไปต่อชัด · ร้านค้าเต็มอยู่ /store
   const topB=bundles[0],top4=singles.slice(0,4),qz=QUIZZES.filter(q=>!LEVELQ||q.slug!==LEVELQ.slug).slice(0,3),ar=ARTICLES.slice(0,3);
   return `${ceoBar('ceo_store')}${note}${cartFab()}${head}
@@ -3906,7 +3934,8 @@ function adImgPrompt(p,style,hook){
 /* prompt สำหรับเอาไปสร้างรูปแอดเองข้างนอก (ChatGPT / Gemini): ภาษาอังกฤษ (โมเดลเข้าใจดีกว่า) + ข้อความไทยที่ต้องขึ้นบนรูปตรงตัว + ข้อมูลสินค้าจริง · ไม่เสียค่า AI ของร้าน */
 const EXT_ANGLES=[['ugc','📱 ภาพมือถือบ้านๆ + ลายมือ (Ugly ad)'],['cover','🎨 ปกสินค้าเด่น + หัวข้อใหญ่'],['flat','🗂 ชีทวางบนโต๊ะ มองจากด้านบน'],['pain','😵 ก่อน/หลัง (โน้ตรก → ชีทสรุปเป็นระเบียบ)']];
 const EXT_AI=[['ChatGPT','https://chatgpt.com/'],['Gemini','https://gemini.google.com/app']];
-function adExtPrompt(p,angle,hook){
+const EXT_SIZES=[['45','4:5 ฟีด (แนะนำ)','vertical 4:5 image (1080×1350) for a Facebook / Instagram feed ad','placed in the middle 80% of the frame (nothing near the top/bottom edges)'],['11','1:1 จัตุรัส','square 1:1 image (1080×1080) for a Facebook / Instagram feed ad','placed inside the central area with comfortable margins on all sides'],['916','9:16 Story / Reels','vertical 9:16 image (1080×1920) for Facebook / Instagram Stories and Reels ads','placed in the middle area only: keep the top 250px and bottom 340px completely free of text and important objects (app buttons cover them)']];
+function adExtPrompt(p,angle,hook,size){const Z=EXT_SIZES.find(z=>z[0]===size)||EXT_SIZES[0];
   const L=lines(hook),last=L.length>1?L.pop():'',f=pfmt(p),ex=(String(p.name||'').match(/TOEIC|IELTS|TGAT|ก\.พ\.|CU-TEP|TU-GET/i)||[''])[0],feat=lines(p.features).slice(0,3);
   const kind=f==='notion'?'a Notion study-planner template (digital, used on laptop/iPad)':f==='bundle'?'a bundle of downloadable PDF study sheets (several books in one set)':'a downloadable PDF study sheet / summary book';
   const prop=f==='notion'?'a laptop on a wooden desk showing a Notion study plan with a daily table and some ticked checkboxes':'an iPad on a desk showing an English multiple-choice exam page (A) (B) (C) (D) with a few answers circled in red, a stylus next to it';
@@ -3914,14 +3943,14 @@ function adExtPrompt(p,angle,hook){
     cover:`Style: clean, bright product ad. The product cover (attached image) shown large as a slightly angled ${f==='notion'?'laptop screen mockup':f==='bundle'?'stack of books/sheets fanned out':'tablet + printed book mockup'} on a soft royal-blue (#2440E8) to light-blue gradient background, soft shadow, a few small yellow sparkles. Big bold Thai headline above it.`,
     flat:`Style: top-down flat-lay photo of printed study sheets spread on a light desk (the attached cover on top), highlighter pens, sticky notes, a coffee cup, phone. Natural daylight, real-photo look.`,
     pain:`Style: vertical split before/after. Top half: messy handwritten notes, crumpled paper, a tired hand holding a pen (hands only, no face). Bottom half: the same desk tidy with the attached sheet open, clean highlighted summary pages. Real-photo look, phone camera.`}[angle]||'';
-  return `Create a vertical 4:5 image (1080×1350) for a Facebook / Instagram feed ad of a Thai online shop called SheetLab.
+  return `Create a ${Z[2]} of a Thai online shop called SheetLab.
 
 Product: "${p.name}" — ${kind}${ex?` for the ${ex} exam`:''}.${feat.length?`\nWhat buyers get:\n${feat.map(x=>'- '+x).join('\n')}`:''}
 Price: ${Number(p.price)||0} THB.
 ${(p.images||[])[0]?'I attached the real product cover image. Show it accurately (same colours and title). Do not invent a different cover or a different product name.\n':''}
 ${sc}
 
-Thai text on the image — render EXACTLY as written, correct Thai spelling, large and easy to read on a phone, placed in the middle 80% of the frame (nothing near the top/bottom edges):
+Thai text on the image — render EXACTLY as written, correct Thai spelling, large and easy to read on a phone, ${Z[3]}:
 ${L.map(x=>`"${x}"`).join('\n')}${last?`\n"${last}" (this last line in bright yellow)`:''}
 ${angle==='ugc'?'The Thai text should look handwritten with a finger in an Instagram-story editor: white, slightly messy, thin dark shadow.\n':''}
 Rules: no logos of TOEIC / ETS / IELTS / British Council or any other brand; no fake reviews, star ratings or score guarantees; no extra text besides the lines above; no watermark; no real person's face.
@@ -4002,7 +4031,8 @@ function adsAutoBox(compact,noLive){
           return `<div><span class="adq-lbl">รูปที่ใช้ในแอด (ไม่กระทบรูปสินค้า) · เลือกได้ถึง 4 รูป Facebook จะส่งงบให้รูปที่ขายได้ดีกว่าเอง</span><div class="adq-imgs">${imgs.map(u=>{const k=sel.indexOf(u);return `<span class="adq-pw"><button class="adq-pick${k>=0?' on':''}" data-a="adsImg" data-id="${x.id}" data-v="${esc(u)}" aria-pressed="${k>=0}" title="${esc((x.labels||{})[u]||'')}"><img src="${esc(u)}" alt="" loading="lazy">${k>=0?`<b class="adq-n">${k+1}</b>`:''}${(x.labels||{})[u]?`<span class="adq-tag">${esc(x.labels[u])}</span>`:''}</button>${(x.extra||[]).includes(u)&&k<0?`<button class="adq-del" data-a="adsImgDel" data-id="${x.id}" data-v="${esc(u)}" aria-label="เอารูปนี้ออกจากรายการ">×</button>`:''}</span>`;}).join('')}</div>
           ${sel.length>1?`<p class="fine" style="margin:4px 0 0">ยิงเป็น ${sel.length} แอดในชุดเดียว งบรวมเท่าเดิม</p>`:''}
           <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn btn-sm ${ADA.ai===x.id?'btn-line':'btn-dark'}" data-a="adsAiOpen" data-id="${x.id}">✨ ${ADA.ai===x.id?'ปิด':'สร้างรูปใหม่ด้วย AI'}</button><button class="btn btn-line btn-sm" data-a="adsExtOpen" data-id="${x.id}" aria-expanded="${ADA.ext===x.id}">📋 ${ADA.ext===x.id?'ปิด prompt':'สร้าง prompt ไปทำรูปเอง'}</button><label class="btn btn-line btn-sm" style="cursor:pointer">⬆ อัปโหลดรูปเอง<input type="file" accept="image/*" hidden data-adsup="${x.id}"></label></div>
-          ${ADA.ext===x.id?(()=>{const ang=x.extAngle||'ugc',pr=adExtPrompt(p,ang,x.aiHook!=null?x.aiHook:adHook(p)),cov=(p.images||[])[0];return `<div class="adq-ai adq-ext">
+          ${ADA.ext===x.id?(()=>{const ang=x.extAngle||'ugc',sz=x.extSize||'45',pr=adExtPrompt(p,ang,x.aiHook!=null?x.aiHook:adHook(p),sz),cov=(p.images||[])[0];return `<div class="adq-ai adq-ext">
+            <span class="adq-lbl">ขนาดรูป <span class="fine">· ฟีด FB/IG ใช้ 4:5 (1080×1350) เต็มจอมือถือที่สุด · Story/Reels ใช้ 9:16</span></span><div class="adq-plats">${EXT_SIZES.map(([k,l])=>`<button class="chip" data-a="adsExtSize" data-id="${x.id}" data-v="${k}" aria-pressed="${sz===k}">${l}</button>`).join('')}</div>
             <span class="adq-lbl">แนวรูป</span><div class="adq-plats">${EXT_ANGLES.map(([k,l])=>`<button class="chip" data-a="adsExtAngle" data-id="${x.id}" data-v="${k}" aria-pressed="${ang===k}">${l}</button>`).join('')}</div>
             <label class="adq-lbl" for="adext-hook-${x.id}">ข้อความบนรูป (บรรทัดละท่อน · บรรทัดสุดท้ายสีเหลือง) แก้แล้วกด "อัปเดต prompt"</label><textarea class="input" id="adext-hook-${x.id}" rows="3">${esc(x.aiHook!=null?x.aiHook:adHook(p))}</textarea>
             <label class="adq-lbl" for="adext-${x.id}">Prompt (ภาษาอังกฤษ ใส่ข้อมูลสินค้านี้ให้แล้ว)</label><textarea class="input adq-extp" id="adext-${x.id}" rows="9" readonly>${esc(pr)}</textarea>
@@ -4824,6 +4854,7 @@ function act(a,el){
     case 'propReject':if(S.confirm!=='pr:'+id){S.confirm='pr:'+id;render(true);break;}S.confirm='';propDone(id,false);toast('ไม่ใช้ข้อเสนอนี้แล้ว');break;
     case 'facReject':if(S.confirm!=='fr:'+id){S.confirm='fr:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,reject:true})}).then(j=>{if(j&&j.ok){FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==id);toast('ไม่ลงขายชีทนี้แล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');render(true);});break;
     case 'scat':S.scat=el.dataset.v;render(true);break;
+    case 'ssort':S.ssort=el.dataset.v;render(true);break;
     case 'dailyAns':if(S.dailyAns==null){S.dailyAns=Number(el.dataset.v);render(true);}break;
     case 'findAgain':S.find={email:'',busy:false,done:false,err:''};render(false);break;
     case 'pvOpen':document.body.classList.add('pv-open');pvPost(0);break;
@@ -5096,6 +5127,7 @@ function act(a,el){
       render(true);break;}
     case 'adsExtOpen':{const x=(ADA.items||[]).find(y=>y.id===id);if(x)adsKeep(x);ADA.ext=ADA.ext===id?null:id;render(true);break;}
     case 'adsExtAngle':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;adsKeep(x);const h=$('#adext-hook-'+id);if(h)x.aiHook=h.value;x.extAngle=el.dataset.v;render(true);break;}
+    case 'adsExtSize':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;adsKeep(x);const h=$('#adext-hook-'+id);if(h)x.aiHook=h.value;x.extSize=el.dataset.v;render(true);break;}
     case 'adsExtHook':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;adsKeep(x);const h=$('#adext-hook-'+id);if(h)x.aiHook=h.value;render(true);toast('อัปเดต prompt แล้ว');break;}
     case 'adsExtCopy':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;const h=$('#adext-hook-'+id);if(h&&h.value!==(x.aiHook!=null?x.aiHook:'')){x.aiHook=h.value;render(true);}copyText(($('#adext-'+id)||{}).value||'','คัดลอก prompt แล้ว ไปวางใน ChatGPT / Gemini ได้เลย');break;}
     case 'adsAiOpen':{const x=(ADA.items||[]).find(y=>y.id===id);if(x)adsKeep(x);ADA.ai=ADA.ai===id?null:id;ADA.aiErr='';render(true);break;}

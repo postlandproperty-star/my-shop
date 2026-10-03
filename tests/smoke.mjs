@@ -115,11 +115,18 @@ try {
     await page.screenshot({ path: path.join(OUT, `home-${kind}.png`), fullPage: true });
     // 1.5) ร้านค้าแยก /store: กดจากหน้าแรกแล้วไปหน้าร้านค้า (ไม่โหลดหน้าใหม่)
     await page.evaluate(() => document.querySelector('.st-hcta a[href="/store"]').click()); await page.waitForSelector('.st-cat', { timeout: 8000 });
-    pass(`[${kind}] ร้านค้า /store: เปิดจากปุ่มหน้าแรก มีตัวกรองหมวด + สินค้าครบ`, await page.locator('.st-chips .chip').count() >= 2 && await page.locator('.st-cat .st-item').count() === pub.filter((p) => p.type !== 'bundle').length && new URL(page.url()).pathname === '/store', `${await page.locator('.st-cat .st-item').count()} เล่ม`);
+    pass(`[${kind}] ร้านค้า /store: เปิดจากปุ่มหน้าแรก มีหัวร้าน แท็บหมวด + สินค้าครบ`, await page.locator('.st-shop h1').count() === 1 && await page.locator('.st-tabs button').count() >= 2 && await page.locator('.st-cat .st-item').count() === pub.filter((p) => p.type !== 'bundle').length && new URL(page.url()).pathname === '/store', `${await page.locator('.st-cat .st-item').count()} เล่ม`);
     if (bundle) {
       const pos = await page.evaluate(() => { const c = document.querySelector('.st-bundle'), b = document.querySelector('.st-badd'); if (!c || !b) return null; return { below: b.getBoundingClientRect().top >= c.getBoundingClientRect().bottom - 1 }; });
       pass(`[${kind}] ร้านค้า: ชุดมีปุ่ม + เพิ่ม อยู่ใต้การ์ด`, !!pos && pos.below);
     }
+    { const pr = () => page.evaluate(() => [...document.querySelectorAll('.st-cat .st-grid .st-price strong')].map((e) => Number(e.textContent.replace(/[^\d.]/g, '')) || 0));
+      await page.evaluate(() => document.querySelector('[data-a="ssort"][data-v="asc"]')?.click()); await page.waitForTimeout(150); const up = await pr();
+      await page.evaluate(() => document.querySelector('[data-a="ssort"][data-v="desc"]')?.click()); await page.waitForTimeout(150); const dn = await pr();
+      pass(`[${kind}] ร้านค้า: เรียงราคา ต่ำ→สูง และ สูง→ต่ำ ได้`, up.length > 1 && up.every((v, i) => !i || v >= up[i - 1]) && dn.every((v, i) => !i || v <= dn[i - 1]), `${up.join(',')} | ${dn.join(',')}`);
+      await page.evaluate(() => document.querySelector('[data-a="ssort"][data-v="pop"]')?.click()); await page.waitForTimeout(150); }
+    { const sticky = await page.evaluate(() => { scrollTo(0, 900); const b = document.querySelector('.st-bar'); return b ? Math.round(b.getBoundingClientRect().top) : -1; }); await page.evaluate(() => scrollTo(0, 0));
+      pass(`[${kind}] ร้านค้า: แถบหมวดติดบนจอตอนเลื่อน`, sticky >= 0 && sticky <= 2, `top ${sticky}`); }
     await layout(page, `[${kind}] ร้านค้า /store`);
     await page.screenshot({ path: path.join(OUT, `store-${kind}.png`), fullPage: true });
 
@@ -201,8 +208,9 @@ try {
         pass(`[${kind}] โฆษณา: ผลทดสอบรูป รูป ข ชนะ + แนะนำหยุด ก และ ค (แพงกว่า 1.5 เท่า)`, !!t && /ข เป้าหมาย/.test(t.win) && t.lose === 2 && t.pause && t.remake, JSON.stringify(t)); if (t) await page.locator('.adtest').first().screenshot({ path: path.join(OUT, `adtest-${kind}.png`) });
         const tap = (sel) => page.evaluate((q) => document.querySelector(q)?.click(), sel);
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(200); await tap('[data-a="adsExtAngle"][data-v="cover"]'); await page.waitForTimeout(200);
+        await tap('[data-a="adsExtSize"][data-v="916"]'); await page.waitForTimeout(200);
         const ep = await page.evaluate(() => { const t = document.querySelector('.adq-extp'); return t ? t.value : ''; });
-        pass(`[${kind}] โฆษณา: ปุ่มสร้าง prompt ไปทำรูปเอง (มีชื่อสินค้า ข้อความไทย แนวปกเด่น)`, /4:5/.test(ep) && /SheetLab/.test(ep) && /[\u0E00-\u0E7F]/.test(ep) && /royal-blue/.test(ep), ep.slice(0, 80));
+        pass(`[${kind}] โฆษณา: ปุ่มสร้าง prompt ไปทำรูปเอง (มีชื่อสินค้า ข้อความไทย แนวปกเด่น ขนาด 9:16)`, /9:16/.test(ep) && /250px/.test(ep) && /SheetLab/.test(ep) && /[\u0E00-\u0E7F]/.test(ep) && /royal-blue/.test(ep), ep.slice(0, 80));
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(150);
         const fl = await page.evaluate(() => [...document.querySelectorAll('.adflow')].map((f) => [...f.children].findIndex((c) => c.classList.contains('cur'))));
         pass(`[${kind}] โฆษณา: แถบขั้นตอน (ร่าง = ขั้น 1, ทดสอบวันที่ 6 = ขั้น 4)`, fl.includes(0) && fl.includes(3), JSON.stringify(fl));
