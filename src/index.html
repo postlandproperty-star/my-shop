@@ -51,7 +51,7 @@ body.pv-on #pvw{display:flex;flex-direction:column;gap:8px;position:fixed;z-inde
 @media(min-width:1100px){body.pv-on #pvw{top:64px;right:16px;bottom:16px;width:400px}body.pv-on #app{margin-right:432px}#pvw .pvw-x{display:none}}
 @media(max-width:1099px){body.pv-on:not(.pv-open) #pvw{display:none}body.pv-open #pvw{inset:0;padding:10px 10px 0}body.pv-open .pvw-phone{border-radius:16px 16px 0 0}body.pv-open{overflow:hidden}
   body.pv-on:not(.pv-open) #pvbtn{display:inline-flex;position:fixed;right:16px;bottom:16px;z-index:59;box-shadow:0 6px 20px rgba(15,27,51,.25)}}
-.bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}@media(max-width:760px){.bar{position:relative}}
 .bar.mini{position:fixed;top:auto;bottom:16px;left:16px;background:transparent;border:0;z-index:40}.bar.mini .bar-in{display:none}.bar .bar-mini{display:none}.bar.mini .bar-mini{display:block;font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;box-shadow:0 4px 14px rgba(15,27,51,.18);cursor:pointer}
 .bar-in{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;max-width:960px;margin:0 auto}
 .bar-note{font-size:13px;color:var(--muted);line-height:1.3}
@@ -465,7 +465,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .hc-msg{flex:1;min-width:0;display:grid;font-size:14px;word-break:break-word}.hc-ok{margin-top:8px}.hc-ok summary{cursor:pointer}
 .dl-all{margin-bottom:0}
 .fq-h{margin:16px 0 10px}.fq-h .fine{font-weight:400;display:block;margin-top:2px}
-.fq-bar{position:sticky;top:0;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;display:grid;gap:8px;box-shadow:0 4px 14px rgba(15,27,51,.06)}
+.fq-bar{position:relative;z-index:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;display:grid;gap:8px;box-shadow:0 4px 14px rgba(15,27,51,.06)}
 .fq-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.fq-stats span{font-size:12.5px;color:var(--muted);display:grid}.fq-stats b{font-size:20px;color:var(--ink);line-height:1.2}.fq-stats .hot b{color:#EE4D2D}
 .fq-ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .fq-pc{font-size:13px;border-radius:999px;padding:4px 10px;border:1.5px solid #86d0ad;background:var(--okbg)}.fq-pc.warn{border-color:#E8A23A;background:var(--warnbg)}
@@ -2143,7 +2143,7 @@ function storeView(catalog){
     const list=so==='new'?shown.slice().sort((a,b)=>(b.publishedAt||0)-(a.publishedAt||0)):so==='asc'?shown.slice().sort((a,b)=>price(a)-price(b)):so==='desc'?shown.slice().sort((a,b)=>price(b)-price(a)):shown;
     const soldAll=all.reduce((a,p)=>a+sold(p.id),0),rv=all.map(p=>REVIEWS[p.id]).filter(r=>r&&r.count),rc=rv.reduce((a,r)=>a+r.count,0),ravg=rc?rv.reduce((a,r)=>a+r.avg*r.count,0)/rc:0;
     const sb=(k,l)=>`<button type="button" data-a="ssort" data-v="${k}" aria-pressed="${so===k||(k==='asc'&&so==='desc')}">${l}</button>`;
-    return `${ceoBar('ceo_store')}${note}${cartFab()}${head}
+    return `${note}${cartFab()}${head}
   <main class="wrap wide st-main st-cat">
     <header class="st-shop"><span class="st-shop-logo" aria-hidden="true">SL</span><div class="st-shop-id"><h1>ร้านค้า SheetLab</h1><p>ชีทสรุปเตรียมสอบภาษาอังกฤษ อธิบายภาษาไทย</p></div>
       <div class="st-shop-stats"><div><b>${all.length}</b><span>สินค้า</span></div><div><b>${soldAll>=SOLD_MIN?soldAll.toLocaleString('th-TH'):'ใหม่'}</b><span>${soldAll>=SOLD_MIN?'ขายแล้ว':'เพิ่งเปิดร้าน'}</span></div><div><b>${rc?'★ '+ravg.toFixed(1):'-'}</b><span>${rc?rc+' รีวิว':'ยังไม่มีรีวิว'}</span></div></div>
@@ -2157,7 +2157,7 @@ function storeView(catalog){
   </main>${foot}`;}
   // หน้าแรก (คนจาก Google): สั้น โล่ง ทางไปต่อชัด · ร้านค้าเต็มอยู่ /store
   const topB=bundles[0],top4=singles.slice(0,4),qz=QUIZZES.filter(q=>!LEVELQ||q.slug!==LEVELQ.slug).slice(0,3),ar=ARTICLES.slice(0,3);
-  return `${ceoBar('ceo_store')}${note}${cartFab()}${head}
+  return `${note}${cartFab()}${head}
   <section class="st-hero"><div class="wrap wide"><h1>ชีทสรุป TOEIC ที่ทำข้อสอบได้จริง</h1><p>สรุปภาษาไทยเข้าใจง่าย พร้อมแบบฝึกและเฉลยละเอียด ดูหน้าตัวอย่างก่อนซื้อทุกเล่ม</p>
     <div class="st-hcta"><a class="btn st-hbtn" href="/store" data-go="">เลือกซื้อชีท</a>${LEVELQ?`<a class="btn st-hbtn2" href="/quiz/${esc(LEVELQ.slug)}">วัดระดับฟรี ${LEVELQ.n} ข้อ</a>`:QUIZZES.length?'<a class="btn st-hbtn2" href="/quiz">ลองทำข้อสอบฟรี</a>':''}</div>
     <ul class="st-why"><li>รับไฟล์ทันทีหลังจ่าย</li><li>สแกนจ่าย QR ได้</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></div></section>
@@ -2938,7 +2938,7 @@ async function tplOrder(id){
 function facIdeas(){
   needPosts();
   const pick=k=>POSTS.filter(p=>p.source===k&&(p.status==='note'||p.status==='log')&&['product','store'].includes(p.kind)).sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at))[0];
-  const rows=[['product','พี่โปร'],['ceo_store','พี่โอ๊ค']].map(([k,n])=>{const x=pick(k);return x?`<details class="fac-idea"><summary>${ava(k,1)} ${n} · ${fdt(Date.parse(x.created_at))}</summary><div>${esc(x.text)}</div></details>`:'';}).filter(Boolean);
+  const rows=[['product','พี่โปร']].map(([k,n])=>{const x=pick(k);return x?`<details class="fac-idea"><summary>${ava(k,1)} ${n} · ${fdt(Date.parse(x.created_at))}</summary><div>${esc(x.text)}</div></details>`:'';}).filter(Boolean);
   return `<section class="card" style="margin-bottom:16px"><h3 class="h3" style="margin-top:0">💡 ไอเดียเล่มถัดไปจากทีม</h3><p class="fine" style="margin:0 0 8px">พี่โปรเสนอทุกจันทร์ พี่โอ๊คเสนอทุกพุธ จากยอดขายและคำที่คนค้นจริง อ่านแล้วสั่งผลิตในฟอร์มด้านล่างได้เลย (ไม่ใช้ token เพิ่ม)</p>${rows.length?rows.join(''):'<p class="fine">ยังไม่มีข้อเสนอ รอรอบถัดไป</p>'}</section>`;
 }
 async function fIdea(){
@@ -4401,7 +4401,7 @@ function mood(k){
   }
   return M('🙂','ปกติ','');
 }
-function moodStrip(){const ks=['manager','ceo_sale','ceo_store','factory','writer','designer','trend','community','analyst','guard','market','clip','product','finance','hr','manual'];
+function moodStrip(){const ks=['manager','ceo_sale','factory','writer','designer','trend','community','analyst','guard','market','clip','product','finance','hr','manual'];
   return `<div class="moods">${ks.map(k=>{const m=mood(k),t=TEAM[k];return `<div class="md${TEAM_KEYS.includes(k)?' cfgable':''}" title="${esc(m.why)}"${TEAM_KEYS.includes(k)?` data-a="cfgOpen" data-v="${k}"`:''}><span class="e"><img class="ava" src="${t.img}" alt="" style="background:${t.bg}" loading="lazy"><span>${m.e}</span></span><b>${esc(t.name)}</b><small>${esc(m.t)}</small>${m.why?`<em>${esc(m.why)}</em>`:''}</div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];const cf=TEAM_KEYS.includes(k);const cs=cf?cfgSummary(k):'';return `<article class="ocard${o.vacant?' vacant':''}${cf?' cfgable':''}" style="--obg:${m.bg}"${cf?` data-a="cfgOpen" data-v="${k}" role="button" tabindex="0" aria-label="ตั้งค่า${esc(m.name)}"`:''}>${cs==='พักงาน'?`<span class="ocfg">พักงาน</span>`:''}
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
@@ -4509,7 +4509,7 @@ let CHAT={msgs:null,loading:false,err:'',next_at:null,next_source:null,pending:0
 async function loadChat(){CHAT.loading=true;try{await loadChat0();}finally{if(CHAT.msgs===null)CHAT.msgs=[];CHAT.loading=false;}}
 async function loadChat0(){try{const j=await adminApi('/api/content?action=chat&days=7');if(j.ok){CHAT.msgs=j.messages||[];CHAT.next_at=j.next_at||null;CHAT.next_source=j.next_source||null;CHAT.pending=j.pending||0;CHAT.engine=j.engine||'Claude';CHAT.err='';}else CHAT.err=j.error||'โหลดไม่ได้';}catch(e){CHAT.err='เชื่อมต่อไม่ได้';}CHAT.loading=false;}
 function onDutyNow(k){const sc=SCHED[k];if(!sc)return false;const b=new Date(Date.now()+BKK);const ok=sc.dow?sc.dow.includes(b.getUTCDay()):b.getUTCDate()===sc.dom;if(!ok)return false;const mins=b.getUTCHours()*60+b.getUTCMinutes();return sc.times.some(([h,mi])=>mins>=h*60+mi&&mins<h*60+mi+(sc.dur||15));}
-function onlineStrip(){const ks=['manager','ceo_sale','ceo_store','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
+function onlineStrip(){const ks=['manager','ceo_sale','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
 function chatTab(){
   if(CHAT.msgs===null&&!CHAT.loading){loadChat().then(()=>{render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);});}
   const msgs=CHAT.msgs||[];let lastDay='';
@@ -4646,7 +4646,7 @@ function teamTab(){
   <div class="org">
     <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
     <div class="tier one">${orgCard('manager')}</div><div class="conn"></div><div class="bar"></div><div class="conn"></div>
-    <div class="tier many">${orgCard('ceo_sale')}${orgCard('ceo_store')}${orgCard('factory')}</div>
+    <div class="tier many">${orgCard('ceo_sale')}${orgCard('factory')}</div>
   </div>
   <h3 class="h3" style="margin-top:20px">ทีมที่ขึ้นกับพี่ต้นโดยตรง</h3>
   <div class="org"><div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div></div>
