@@ -1415,11 +1415,7 @@ function coverPrompt(d){
 หัวข้อใหญ่ในกล่องขาวขอบดำ อ่านง่าย: "${aiTitle(d)}"
 ${sub?`คำโปรยรองตัวเล็กใต้หัวข้อ: "${sub}"\n`:''}มุมบนซ้ายมีไอคอนโลโก้ Notion ขนาดเล็ก (สี่เหลี่ยมสีขาวขอบดำหนา มีตัว N สีดำแบบมีเชิง) ตามด้วยป้ายแคปซูลขอบดำเขียนว่า "NOTION TEMPLATE"
 ${price?`มุมล่างขวามีป้ายราคาสีเหลือง (#FFD23F) ขอบดำ เขียนว่า "${price}"\n`:''}แถบล่างมีไอคอนลายเส้น 3 อันพร้อมคำ: "ใช้ Notion ฟรีได้" "มือถือ / คอม" "กด Duplicate ใช้ได้ทันที"`+AI_NO_TEXT;
-  const bundle=d.type==='bundle';
-  return `ภาพปก${bundle?'ชุดหนังสือ e-book หลายเล่มวางซ้อนกัน':'หนังสือ e-book'} สำหรับขายออนไลน์ ภาพสี่เหลี่ยมจัตุรัส 1:1 ภาพถ่ายสินค้าสมจริง หนังสือสามมิติวางเอียงบนโต๊ะไม้สีอ่อน แสงธรรมชาติจากหน้าต่าง ${CAT_SCENE[d.cat]||CAT_SCENE.general} โทนปกสีน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab
-ชื่อบนปกตัวใหญ่ หนา อ่านง่าย: "${aiTitle(d)}"
-${sub?`คำโปรยรองบนปก: "${sub}"\n`:''}มุมล่างซ้ายมีป้ายวงกลมสีแดงเขียนว่า "ไฟล์ PDF${price?' '+price:''}"
-แถบล่างมีไอคอนเล็ก 3 อันพร้อมคำ: "ไฟล์ PDF" "อ่านได้ทุกอุปกรณ์" "ไม่ต้องรอจัดส่ง"`+AI_NO_TEXT;
+  return imgSetCover(d); // ปกสินค้า = สินค้าเดี่ยวๆ พื้นเรียบ ไม่มีของประกอบ (เหมือนรูปแรกของชุด 5 รูป)
 }
 const IMG_MODELS=[['gemini-3-pro-image','Google Nano Banana Pro (ตัวหนังสือแม่น ~4.5 บาท)'],['gemini-3.1-flash-image','Google Nano Banana (เร็ว ~1.5 บาท)'],['gpt-image-2','OpenAI gpt-image-2'],['gpt-image-2.5-sunburst','OpenAI gpt-image-2.5 sunburst'],['gpt-image-2.5-flare','OpenAI gpt-image-2.5 flare'],['chatgpt-image-latest','OpenAI แบบเดียวกับใน ChatGPT'],['gpt-image-1','OpenAI gpt-image-1 (ตัวเดิม)']];
 /* จุดเด่น + ค่าใช้จ่ายประมาณต่อรูป (บาท รวมค่ารูปต้นแบบ คุณภาพปกติ) ใช้แสดงให้คุณแดนเลือกโมเดล */
@@ -1467,7 +1463,7 @@ function imgSetPrompts(d){
     `อินโฟกราฟิก 3 ขั้นตอน "สั่งซื้อ → สแกนจ่าย QR → รับไฟล์ PDF ทันที" มีไอคอนมือถือ QR code และไฟล์ PDF`+base];
 }
 async function imgSetGen(){
-  if(!S.draft)return;const ps=imgSetPrompts(S.draft);S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
+  if(!S.draft)return;const ps=imgSetPrompts(S.draft);{const ta=document.getElementById('e-cover-prompt');if(ta&&ta.value.trim().length>=20)ps[0]=ta.value.trim();} // รูปแรกใช้คำสั่งในกล่อง (แก้ได้)S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
   const real=imgSetReal(S.draft),useReal=S.imgFirst==='real'&&real;let ref=useReal?real:'';
   if(useReal){S.imgSet[0].url=real;S.imgSet[0].real=true;render(true);} // รูปแรก = ปกจริงจากโรงงาน ไม่ต้องสร้าง รูป 2-5 ใช้ปกนี้เป็นต้นแบบ
   for(let i=useReal?1:0;i<ps.length;i++){
@@ -3098,7 +3094,6 @@ function factoryView(){
         <li><b>ชุดขายเสร็จ</b> → แท็บ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง → ตรวจ → (ถ้ามีไฟล์เสียง อัป mp3 ขึ้น Google Drive และแชร์ก่อน) → กด <b>✅ เผยแพร่</b></li>
         <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน"</li>
       </ol></details>
-      ${ceoBar('factory')}
     </details>
     ${(()=>{if(FAC.jobs===null&&!FAC.loading)loadFacJobs();const G=FAC.global||[],pend=G.filter(j=>j.listing==='global_pending').length;
       return `<details class="card fac-more fac-global" data-keep="fqGlobal" ${S.fqGlobal?'open':''}><summary><b>🌏 ขายต่างประเทศ (Notion EN)</b> <span class="fine">${pend?`<span class="badge warn">รอลง ${pend}</span> `:''}Gumroad · Notion Gallery · Pinterest · กดเปิด</span></summary>${globalBox()}</details>`;})()}
@@ -4400,7 +4395,7 @@ function mood(k){
   }
   return M('🙂','ปกติ','');
 }
-function moodStrip(){const ks=['manager','factory','writer','designer','trend','community','analyst','guard','market','clip','product','finance','hr','manual'];
+function moodStrip(){const ks=['manager','writer','designer','trend','community','analyst','guard','market','clip','product','finance','hr','manual'];
   return `<div class="moods">${ks.map(k=>{const m=mood(k),t=TEAM[k];return `<div class="md${TEAM_KEYS.includes(k)?' cfgable':''}" title="${esc(m.why)}"${TEAM_KEYS.includes(k)?` data-a="cfgOpen" data-v="${k}"`:''}><span class="e"><img class="ava" src="${t.img}" alt="" style="background:${t.bg}" loading="lazy"><span>${m.e}</span></span><b>${esc(t.name)}</b><small>${esc(m.t)}</small>${m.why?`<em>${esc(m.why)}</em>`:''}</div>`;}).join('')}</div>`;}
 function orgCard(k){const m=TEAM[k],o=ORG[k];const cf=TEAM_KEYS.includes(k);const cs=cf?cfgSummary(k):'';return `<article class="ocard${o.vacant?' vacant':''}${cf?' cfgable':''}" style="--obg:${m.bg}"${cf?` data-a="cfgOpen" data-v="${k}" role="button" tabindex="0" aria-label="ตั้งค่า${esc(m.name)}"`:''}>${cs==='พักงาน'?`<span class="ocfg">พักงาน</span>`:''}
   <div class="oh"><img class="ava" src="${m.img}" alt="" style="background:${m.bg}"><div><div class="on">${esc(m.name)} <span class="kind ${o.human?'human':'ai'}">${o.human?'คนจริง':'AI'}</span>${statusBadge(k,false)}</div><div class="ot">${esc(o.title)}</div>${(()=>{const m=mood(k);return m.why?`<div class="mood" title="${esc(m.why)}"><b>${m.e}</b>${esc(m.t)}</div>`:'';})()}</div></div>
@@ -4454,7 +4449,7 @@ function healthBox(){
 }
 function MEMBER_NAME(k){return (TEAM&&TEAM[k]&&TEAM[k].name)||k||'ทีม';}
 /* ---------- ตั้งค่าสมาชิก: กดที่ตำแหน่งในทีมเพื่อตั้งค่าคนนั้น ตำแหน่งผู้จัดการตั้งค่าได้ทั้งทีม ---------- */
-const TEAM_KEYS=['manager','writer','designer','trend','clip','community','analyst','market','product','factory','finance','guard','hr'];
+const TEAM_KEYS=['manager','writer','designer','trend','clip','community','analyst','market','product','finance','guard','hr'];
 const CFG_F={
   manager:[{k:'review',label:'ความเข้มในการตรวจโพสต์',type:'sel',opts:['ปกติ','เข้มงวด ตีกลับง่าย','ปล่อยผ่านง่าย เน้นจำนวน']}],
   writer:[{k:'fb_week',label:'โพสต์ Facebook ต่อสัปดาห์',type:'num',min:0,max:21,ph:'ปกติ 7'},{k:'th_day',label:'โพสต์ Threads ต่อวัน',type:'num',min:0,max:3,ph:'ปกติ 3'},{k:'focus',label:'เน้นเนื้อหาแนวไหน',type:'text',ph:'เช่น ควิซคำศัพท์ ไวยากรณ์ Part 5'}],
@@ -4508,7 +4503,7 @@ let CHAT={msgs:null,loading:false,err:'',next_at:null,next_source:null,pending:0
 async function loadChat(){CHAT.loading=true;try{await loadChat0();}finally{if(CHAT.msgs===null)CHAT.msgs=[];CHAT.loading=false;}}
 async function loadChat0(){try{const j=await adminApi('/api/content?action=chat&days=7');if(j.ok){CHAT.msgs=j.messages||[];CHAT.next_at=j.next_at||null;CHAT.next_source=j.next_source||null;CHAT.pending=j.pending||0;CHAT.engine=j.engine||'Claude';CHAT.err='';}else CHAT.err=j.error||'โหลดไม่ได้';}catch(e){CHAT.err='เชื่อมต่อไม่ได้';}CHAT.loading=false;}
 function onDutyNow(k){const sc=SCHED[k];if(!sc)return false;const b=new Date(Date.now()+BKK);const ok=sc.dow?sc.dow.includes(b.getUTCDay()):b.getUTCDate()===sc.dom;if(!ok)return false;const mins=b.getUTCHours()*60+b.getUTCMinutes();return sc.times.some(([h,mi])=>mins>=h*60+mi&&mins<h*60+mi+(sc.dur||15));}
-function onlineStrip(){const ks=['manager','writer','designer','trend','community','analyst','market','finance','product','guard','factory','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
+function onlineStrip(){const ks=['manager','writer','designer','trend','community','analyst','market','finance','product','guard','clip','hr'];const hour=new Date(Date.now()+BKK).getUTCHours();const awake=hour>=7&&hour<24;return `<div class="online" title="จุดเขียว = กำลังทำงานตามตาราง จุดเหลือง = ว่าง แวะห้องพักได้">${ks.map(k=>`<span title="${esc(TEAM[k].name)} · ${onDutyNow(k)?'กำลังทำงาน':awake?'ว่าง':'พักผ่อน'}">${ava(k,1)}<i class="${onDutyNow(k)?'on':awake?'idle':''}"></i></span>`).join('')}</div>`;}
 function chatTab(){
   if(CHAT.msgs===null&&!CHAT.loading){loadChat().then(()=>{render(true);setTimeout(()=>{const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end'});},0);});}
   const msgs=CHAT.msgs||[];let lastDay='';
@@ -4645,7 +4640,6 @@ function teamTab(){
   <div class="org">
     <div class="tier one">${orgCard('manual')}</div><div class="conn"></div>
     <div class="tier one">${orgCard('manager')}</div><div class="conn"></div><div class="bar"></div><div class="conn"></div>
-    <div class="tier many">${orgCard('factory')}</div>
   </div>
   <h3 class="h3" style="margin-top:20px">ทีมที่ขึ้นกับพี่ต้นโดยตรง</h3>
   <div class="org"><div class="tier many">${orgCard('writer')}${orgCard('community')}${orgCard('analyst')}${orgCard('product')}</div></div>
