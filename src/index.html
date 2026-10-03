@@ -479,7 +479,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .ffl-steps li:not(:last-child)::after{content:'›';position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--muted)}
 .ffl-now{margin:10px 0 0;padding:9px 12px;border-radius:10px;background:#FFF7D6;font-size:14px}
 @media(max-width:760px){.ffl-steps{grid-template-columns:1fr}.ffl-steps li{display:grid;grid-template-columns:26px minmax(0,1fr) auto;column-gap:10px;align-items:center;padding:9px 10px}.ffl-steps li i{grid-row:1/3}.ffl-d{grid-column:2}.ffl-steps em{grid-column:3;grid-row:1/3;margin:0}.ffl-steps li:not(:last-child)::after{content:'↓';right:auto;left:16px;top:auto;bottom:-13px;transform:none;font-size:13px}}
-.fac-global{margin-top:12px}
+.fac-global{margin-top:12px}.fq-gl{margin:8px 0 0;padding:8px 12px;border-radius:10px;background:var(--bg);font-size:14px}
 .fq-sec{font-size:17px;margin:6px 0 8px}.fq-sec .fine{font-weight:400}
 .fq-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
 .fq-item{display:grid;grid-template-columns:8px minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:4px 12px 12px 4px;overflow:hidden}
@@ -1069,7 +1069,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 </style>
 </head>
 <body>
-<div class="bar" id="bar" style="display:none"><button class="bar-mini" data-a="barOpen" aria-label="เปิดแถบหลังบ้าน">⚙️ หลังบ้าน</button><div class="bar-in">
+<div class="bar" id="bar" style="display:none"><div class="bar-in">
   <div class="bar-note" id="bar-note"></div>
   <div class="seg" id="seg"></div>
 </div></div>
@@ -3067,7 +3067,7 @@ function factoryView(){
     </div>
     ${facFlow({active,producing,review,done,stale})}
     ${FPAUSED?'<div class="fac-worker stale">หยุดโรงงานไว้: คอมจะไม่หยิบเล่มใหม่ (เล่มที่กำลังผลิตทำต่อจนเสร็จ) กด "หยุดอยู่ · กดเปิด" เพื่อผลิตต่อ</div>':stale&&active.length?'<div class="fac-worker stale">มีเล่มรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกด 📋 คัดลอกคำสั่งไปวางในแชต Claude</div>':''}
-    ${review.length?`<details class="fq-review" data-keep="fqRev" ${S.fqRev!==false?'open':''}><summary><b>👀 รอคุณแดนตรวจ ${review.length} เล่ม</b> <span class="fine">ผลิตเสร็จแล้ว ตรวจไฟล์แล้วกดอนุมัติลงขาย</span></summary>${facBox(1)||''}</details>`:''}
+    ${review.length?`<details class="fq-review" data-keep="fqRev" ${S.fqRev!==false?'open':''}><summary><b>👀 รอคุณแดนตรวจ ${review.length} เล่ม</b> <span class="fine">ผลิตเสร็จแล้ว ตรวจไฟล์แล้วกดอนุมัติลงขาย</span></summary>${facBox(1)||''}${(()=>{const g=review.filter(j=>j.listing==='global_pending').length,t=review.length-g;return (g?`<p class="fq-gl">🌏 ${g} เล่มเป็นเทมเพลตขายต่างประเทศ (Notion EN) อยู่ในหัวข้อ <b>🌏 ขายต่างประเทศ</b> ล่างสุด <button class="chip" data-a="openGlobal">ไปที่หัวข้อนี้ ↓</button></p>`:'')+(t&&FAC.jobs===null?'<p class="fine">กำลังโหลด...</p>':'');})()}</details>`:''}
     <section class="card fq-add">
       <div class="fq-addrow"><input class="input" id="fq-title" data-fqn="title" value="${esc(S.fqTitle||'')}" placeholder="พิมพ์ชื่อเล่ม เช่น IELTS Listening 10 ชุด พร้อมเฉลย" autocomplete="off"><input class="input fq-price" id="fq-price" data-fqn="price" type="number" inputmode="numeric" min="0" value="${esc(S.fqPrice||'')}" placeholder="ราคา ฿" aria-label="ราคาเสนอ"><button class="btn btn-dark" data-a="fqAdd" ${S.fqBusy?'disabled':''}>เพิ่มเข้าคิว</button></div>
       <div class="fq-airow"><select class="input" data-fqn="cat" aria-label="หมวดที่ให้ AI คิด"><option value="">ทุกหมวด</option>${FQ_CATS.map(c=>`<option ${S.fqCat===c?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="fq-dice" data-a="fqIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 ให้ AI คิดเล่มใหม่'}</button></div>
@@ -4839,19 +4839,22 @@ function hit(k){
     if(!hit.pruned){hit.pruned=1;Object.keys(localStorage).forEach(x=>{if(x.startsWith('hit:')&&!x.startsWith('hit:'+d))localStorage.removeItem(x);});}}catch(e){return;}
   try{fetch('/api/content?action=hit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({s:k}),keepalive:true}).catch(()=>{});}catch(e){}
 }
+/* วาดหน้าใหม่แบบไม่แย่งคลิก: ระหว่างกดค้าง (นิ้ว/เมาส์ลงแล้วยังไม่ปล่อย) เลื่อนไปวาดหลังปล่อย · หน้าตาเหมือนเดิม = ไม่แตะ DOM (ปุ่ม/กล่องที่เปิดไว้/ช่องที่พิมพ์อยู่คงเดิม) */
+let APP_HTML='',RENDER_LATER=false,PTR=0;
+document.addEventListener('pointerdown',()=>{PTR=1;},true);
+{const up=()=>{PTR=0;if(RENDER_LATER){RENDER_LATER=false;setTimeout(()=>render(true),150);}};document.addEventListener('pointerup',up,true);document.addEventListener('pointercancel',up,true);}
+function setHtml(el,h){if(el&&el.__h!==h){el.innerHTML=h;el.__h=h;}}
 function render(keep){
+  if(keep&&PTR){RENDER_LATER=true;return;}
   const y=window.scrollY,v=S.view;
   const isAdmin=hasAdminAccess();
   $('#bar').style.display=isAdmin?'':'none';
-  $('#bar-note').innerHTML=isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a><br><span id="live-pill" class="live-pill">${livePillText()}</span>`:'';
-  $('#seg').innerHTML=isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory','vip','catalog'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button><button data-a="toVip" aria-pressed="${v==='vip'}">👑 สมาชิก</button>`:'';
-  // ดูหน้าลูกค้า (หน้าร้าน/ร้านค้า/salepage/ชำระเงิน): ย่อแถบหลังบ้านเป็นปุ่มเล็กมุมซ้ายล่าง ไม่บังหน้าที่ลูกค้าเห็น กดเพื่อกางเมื่อต้องการ
-  const custView=['store','catalog','shop','cart','order','pay','thanks'].includes(v);if(!custView)S.barOpen=false;
-  $('#bar').classList.toggle('mini',isAdmin&&custView&&!S.barOpen);
-  if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
+  setHtml($('#bar-note'),isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a><br><span id="live-pill" class="live-pill">${livePillText()}</span>`:'');
+  setHtml($('#seg'),isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory','vip','catalog'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button><button data-a="toVip" aria-pressed="${v==='vip'}">👑 สมาชิก</button>`:''); // แถบหลังบ้านตามคุณแดนทุกหน้า (ลูกค้าไม่เห็น)
+  if(S.loading){setHtml($('#app'),`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`);return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
-  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),vip:()=>hasAdminAccess()?vipView():loginView(),store:()=>storeView(false),catalog:catalogView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
+  setHtml($('#app'),({factory:()=>hasAdminAccess()?factoryView():loginView(),vip:()=>hasAdminAccess()?vipView():loginView(),store:()=>storeView(false),catalog:catalogView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])());
   if(v==='store')hit('store');else if(v==='catalog')hit('catalog');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
   if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
@@ -4909,9 +4912,9 @@ function act(a,el){
     case 'toStore':go('store');break;
     case 'artHide':authFetch('/api/content?action=article_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนบทความแล้ว':'เปิดบทความแล้ว');QZ.arts=undefined;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'quizHide':authFetch('/api/content?action=quiz_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนแบบทดสอบแล้ว':'เปิดแบบทดสอบแล้ว');QZ.list=null;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
+    case 'openGlobal':{S.fqGlobal=true;render(true);setTimeout(()=>{const g=document.querySelector('details.fac-global');if(g){g.open=true;g.scrollIntoView({behavior:'smooth',block:'start'});}},60);break;}
     case 'toVip':VIPA.d=null;go('vip');break;
     case 'imgFirst':S.imgFirst=el.dataset.v;render(true);break;
-    case 'barOpen':S.barOpen=true;render(true);break;
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
@@ -5694,6 +5697,7 @@ function applyUrl(){
     if(q.get('cart')==='open'&&CART.length){S.cart=true;setTimeout(drawCart,50);history.replaceState(null,'',location.pathname);}
     const pi=q.get('pi'),pk=q.get('k');if(pi&&/^pi_[A-Za-z0-9]+$/.test(pi)&&pk){S.sessionId=pi;S.piKey=pk;}
     if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';
+    else if(location.hash==='#factory'||location.hash==='#vip')S.view=hasAdminAccess()?location.hash.slice(1):'login';
   }catch(e){}
 }
 let authWired=false;
@@ -5751,7 +5755,7 @@ document.addEventListener('visibilitychange',async()=>{
     D=normalize(Object.assign({},cached,inline));remoteReady=true;saveCache();
   }
   const q=new URLSearchParams(location.search);
-  const wantAdmin=q.has('admin')||location.hash==='#admin'||hasAdminToken();
+  const wantAdmin=q.has('admin')||['#admin','#factory','#vip'].includes(location.hash)||hasAdminToken();
   S.loading=!inline&&!load(); // ไม่มีข้อมูลฝังและไม่มีแคช: รอโหลดจากระบบก่อน
   applyUrl();
   render(false);

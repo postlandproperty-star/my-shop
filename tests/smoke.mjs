@@ -116,9 +116,11 @@ try {
       return { tiles: document.querySelectorAll('.st-topics .st-tcard').length, img: im ? im.naturalWidth : 0, faq: document.querySelectorAll('.st-faq details').length, cta: document.querySelector('.st-hcta a[href="/store"]') ? 1 : 0, nav: !!document.querySelector('.st-nav a[href="/store"]'), foot: document.querySelectorAll('.st-ftop a').length, cards: document.querySelectorAll('.st-grid .st-item').length, all: !!document.querySelector('.st-allbtn'), chips: document.querySelectorAll('.st-chips').length, daily: !!document.querySelector('.st-daily') }; });
     pass(`[${kind}] หน้าแรก: โล่ง (หัวข้อพร้อมรูป · ชีทแนะนำ ≤ 4 เล่ม + ปุ่มไปร้านค้า · ฝึกฟรี · FAQ) ไม่มีตัวกรอง/ข้อสอบประจำวัน`, hs.tiles === 3 && hs.img > 0 && hs.faq === 2 && hs.cta && hs.nav && hs.foot === 3 && hs.cards <= 4 && hs.cards > 0 && hs.all && !hs.chips && !hs.daily, JSON.stringify(hs));
     await layout(page, `[${kind}] หน้าแรก`);
-    { const b = await page.evaluate(() => { window.hasAdminAccess = () => true; sbSession = { user: { email: 't@e.st' } }; render(false); const bar = document.getElementById('bar'); return { mini: bar.classList.contains('mini'), pill: getComputedStyle(bar.querySelector('.bar-mini')).display !== 'none' }; });
-      pass(`[${kind}] แอดมินดูหน้าลูกค้า: แถบหลังบ้านย่อเป็นปุ่มเล็ก ไม่บังหน้า`, b.mini && b.pill, JSON.stringify(b));
-      await page.evaluate(() => { window.hasAdminAccess = () => false; sbSession = null; render(false); }); }
+    { const b = await page.evaluate(() => { const el0 = document.querySelector('.st-hcta a'); render(true); const same = el0 === document.querySelector('.st-hcta a');
+        window.hasAdminAccess = () => true; sbSession = { user: { email: 't@e.st' } }; render(false); const bar = document.getElementById('bar'); const shown = getComputedStyle(bar).display !== 'none' && !!bar.querySelector('[data-a="toVip"]');
+        PTR = 1; const before = document.querySelector('.st-hcta a'); S.tick = (S.tick || 0) + 1; render(true); const kept = before === document.querySelector('.st-hcta a'); PTR = 0;
+        window.hasAdminAccess = () => false; sbSession = null; render(false); return { same, shown, kept }; });
+      pass(`[${kind}] วาดหน้าใหม่ไม่แย่งคลิก (หน้าเหมือนเดิมไม่แตะปุ่ม · กดค้างอยู่ไม่วาดทับ) + แถบหลังบ้านตามแอดมินทุกหน้า`, b.same && b.shown && b.kept, JSON.stringify(b)); }
     await page.screenshot({ path: path.join(OUT, `home-${kind}.png`), fullPage: true });
     // 1.5) ร้านค้าแยก /store: กดจากหน้าแรกแล้วไปหน้าร้านค้า (ไม่โหลดหน้าใหม่)
     await page.evaluate(() => document.querySelector('.st-hcta a[href="/store"]').click()); await page.waitForSelector('.st-cat', { timeout: 8000 });
@@ -186,7 +188,11 @@ try {
         return { ban: document.querySelector('.thero-ban img')?.naturalWidth || 0, others: imgs.length, cards: cards.length, c2w: c2 ? Math.round(c2.width) : 0, vw: innerWidth }; });
       pass(`[${kind}] หัวข้อ ${slug}: รูปหัวข้อจาก Canva ขึ้น`, ti.ban > 0, `naturalWidth ${ti.ban}`);
       if (slug !== 'ielts') pass(`[${kind}] หัวข้อ ${slug}: การ์ดบทความ/แบบทดสอบแบบใหม่ ${kind === 'mobile' ? '(ใบที่ 2 เป็นแถวรูปเล็ก)' : '(รูปบนเต็มการ์ด)'}`, ti.cards >= 2 && (kind === 'mobile' ? ti.c2w > 60 && ti.c2w < 140 : ti.c2w >= 200), `${ti.cards} การ์ด รูปใบ 2 กว้าง ${ti.c2w}px`);
-      await layout(page, `[${kind}] หัวข้อ ${slug}`); await page.screenshot({ path: path.join(OUT, `topic-${slug}-${kind}.png`), fullPage: true });
+      await layout(page, `[${kind}] หัวข้อ ${slug}`);
+      if (slug === 'toeic') { await page.evaluate(() => localStorage.setItem('sb-lpeqaorswhwzlplsaqpe-auth-token', JSON.stringify({ user: { email: 'owner@test.co' } }))); await page.reload({ waitUntil: 'domcontentloaded' }); await page.waitForTimeout(300);
+        const ab = await page.evaluate(() => { const b = document.querySelector('.adm-bar'); return b ? [...b.querySelectorAll('a')].map((a) => a.getAttribute('href')).join(' ') : ''; });
+        pass(`[${kind}] หน้าหัวข้อ: แอดมินเห็นแถบหลังบ้าน (ลูกค้าไม่เห็น)`, /#admin/.test(ab) && /#factory/.test(ab) && /#vip/.test(ab), ab);
+        await page.evaluate(() => localStorage.removeItem('sb-lpeqaorswhwzlplsaqpe-auth-token')); } await page.screenshot({ path: path.join(OUT, `topic-${slug}-${kind}.png`), fullPage: true });
       await page.context().close();
     } catch (e) { pass(`[${kind}] หัวข้อ ${slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
@@ -244,6 +250,8 @@ try {
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(150);
         const fl = await page.evaluate(() => [...document.querySelectorAll('.adflow')].map((f) => [...f.children].findIndex((c) => c.classList.contains('cur'))));
         pass(`[${kind}] โฆษณา: แถบขั้นตอน (ร่าง = ขั้น 1, ทดสอบวันที่ 6 = ขั้น 4)`, fl.includes(0) && fl.includes(3), JSON.stringify(fl));
+        { const chip = page.locator('[data-a="adsFilter"][data-v="run"]').first(); await chip.click({ timeout: 4000 }).catch(() => {}); const on = await chip.getAttribute('aria-pressed'); await page.locator('[data-a="adsFilter"][data-v="all"]').first().click({ timeout: 4000 }).catch(() => {});
+          pass(`[${kind}] โฆษณา: กดตัวกรอง "กำลังวิ่ง" ได้จริง (คลิกด้วยเมาส์)`, on === 'true', String(on)); }
         const d = page.locator('.adq-wrap').first(); if (await d.count()) await d.screenshot({ path: path.join(OUT, `adflow-${kind}.png`) }); }
       if (v === 'products' && bundle) { // เมนู "ดูเพิ่มเติม" ของชุด: มีปุ่มเอาไปโฆษณา และทำหน้าตัวอย่างใหม่
         await page.evaluate((bid) => { S.pmore = bid; render(true); }, bundle.id);
