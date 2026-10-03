@@ -116,6 +116,9 @@ try {
       return { tiles: document.querySelectorAll('.st-topics .st-tcard').length, img: im ? im.naturalWidth : 0, faq: document.querySelectorAll('.st-faq details').length, cta: document.querySelector('.st-hcta a[href="/store"]') ? 1 : 0, nav: !!document.querySelector('.st-nav a[href="/store"]'), foot: document.querySelectorAll('.st-ftop a').length, cards: document.querySelectorAll('.st-grid .st-item').length, all: !!document.querySelector('.st-allbtn'), chips: document.querySelectorAll('.st-chips').length, daily: !!document.querySelector('.st-daily') }; });
     pass(`[${kind}] หน้าแรก: โล่ง (หัวข้อพร้อมรูป · ชีทแนะนำ ≤ 4 เล่ม + ปุ่มไปร้านค้า · ฝึกฟรี · FAQ) ไม่มีตัวกรอง/ข้อสอบประจำวัน`, hs.tiles === 3 && hs.img > 0 && hs.faq === 2 && hs.cta && hs.nav && hs.foot === 3 && hs.cards <= 4 && hs.cards > 0 && hs.all && !hs.chips && !hs.daily, JSON.stringify(hs));
     await layout(page, `[${kind}] หน้าแรก`);
+    { const b = await page.evaluate(() => { window.hasAdminAccess = () => true; sbSession = { user: { email: 't@e.st' } }; render(false); const bar = document.getElementById('bar'); return { mini: bar.classList.contains('mini'), pill: getComputedStyle(bar.querySelector('.bar-mini')).display !== 'none' }; });
+      pass(`[${kind}] แอดมินดูหน้าลูกค้า: แถบหลังบ้านย่อเป็นปุ่มเล็ก ไม่บังหน้า`, b.mini && b.pill, JSON.stringify(b));
+      await page.evaluate(() => { window.hasAdminAccess = () => false; sbSession = null; render(false); }); }
     await page.screenshot({ path: path.join(OUT, `home-${kind}.png`), fullPage: true });
     // 1.5) ร้านค้าแยก /store: กดจากหน้าแรกแล้วไปหน้าร้านค้า (ไม่โหลดหน้าใหม่)
     await page.evaluate(() => document.querySelector('.st-hcta a[href="/store"]').click()); await page.waitForSelector('.st-cat', { timeout: 8000 });
@@ -201,7 +204,7 @@ try {
     // 4) หลังบ้าน (จำลองล็อกอิน ข้อมูลจาก /api ปลอม): ทุกแท็บหลัก + โรงงาน + ตัวแก้ชุด ต้องเปิดได้ไม่พัง
     page = await newPage(kind);
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid');
-    const views = [['home', 'ภาพรวม'], ['todo', 'เช็คลิสต์'], ['orders', 'ออเดอร์'], ['products', 'สินค้า'], ['ads', 'โฆษณา'], ['seo', 'SEO'], ['factory', 'โรงงาน'], ['bundle', 'แก้ไขชุด']];
+    const views = [['home', 'ภาพรวม'], ['todo', 'เช็คลิสต์'], ['orders', 'ออเดอร์'], ['products', 'สินค้า'], ['ads', 'โฆษณา'], ['seo', 'SEO'], ['factory', 'โรงงาน'], ['vip', 'สมาชิก VIP'], ['bundle', 'แก้ไขชุด']];
     for (const [v, name] of views) {
       const err = await page.evaluate(([v, bid]) => {
         try {
@@ -211,6 +214,7 @@ try {
           sb = { auth: { getSession: async () => ({ data: { session: sbSession } }), refreshSession: async () => ({ data: { session: null } }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) }, from: () => chain, storage: { from: () => chain } };
           window.hasAdminAccess = () => true;
           if (v === 'factory') { S.view = 'factory'; FJOBS = null; }
+          else if (v === 'vip') { S.view = 'vip'; VIPA.d = null; }
           else if (v === 'bundle') { S.view = 'admin'; S.tab = 'products'; const b = getProduct(bid); S.draft = bundleDraft(b); S.edit = bid; }
           else { S.view = 'admin'; S.tab = v; S.edit = null; S.draft = null; }
           render(false); return '';
@@ -218,11 +222,12 @@ try {
       }, [v, bundle && bundle.id]);
       await page.waitForTimeout(400);
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
+      if (v === 'vip') { await page.waitForTimeout(400); pass(`[${kind}] แท็บสมาชิก VIP แยก: SQL ให้คัดลอก + ช่องราคา + ปุ่มบนแถบ`, await page.locator('.vipa .vipsql').count() === 1 && await page.locator('#vip-m').count() === 1 && await page.locator('#seg [data-a="toVip"]').count() === 1); }
       if (v === 'factory') { await page.waitForTimeout(300); const f = await page.evaluate(() => ({ steps: document.querySelectorAll('.ffl-steps li').length, cur: document.querySelectorAll('.ffl-steps li.cur').length, now: (document.querySelector('.ffl-now') || {}).textContent || '', global: !!document.querySelector('details.fac-global'), globalLast: (() => { const g = document.querySelector('details.fac-global'); return !!g && !g.nextElementSibling; })() }));
         await page.locator('.ffl').screenshot({ path: path.join(OUT, `factory-flow-${kind}.png`) }).catch(() => {});
         pass(`[${kind}] โรงงาน: คู่มือภาพ 5 ขั้น + บอกว่าตอนนี้ต้องทำอะไร · ขายต่างประเทศพับไว้ล่างสุด`, f.steps === 5 && f.cur >= 1 && /ตอนนี้/.test(f.now) && f.global && f.globalLast, JSON.stringify(f).slice(0, 160)); }
       if (v === 'home') { const lv = await page.evaluate(() => ({ n: LIVE.length, ok: LIVE.every((L) => typeof L.run === 'function' && L.every > 0 && (L.tabs || L.views)), pill: !!document.getElementById('live-pill') })); pass(`[${kind}] ข้อมูลสด: ทุกแหล่งข้อมูลลงทะเบียนรอบรีเฟรช + ป้ายอัปเดตอัตโนมัติ`, lv.n >= 10 && lv.ok, JSON.stringify(lv)); }
-      if (v === 'seo') { await page.waitForTimeout(400); pass(`[${kind}] SEO: การ์ดสมาชิก VIP (ยังไม่มีตาราง → ขึ้น SQL ให้คัดลอก + ช่องราคา)`, await page.locator('.vipa .vipsql').count() === 1 && await page.locator('#vip-m').count() === 1); }
+
       if (v === 'ads' && AD) { await page.waitForTimeout(400); pass(`[${kind}] โฆษณา: ร่างแอดเลือกไว้ 2 รูป`, await page.locator('.adq-pick.on').count() === 2);
         const t = await page.evaluate(() => { const c = document.querySelector('.adtest'); return c ? { win: (c.querySelector('.adt-cell.win b') || {}).textContent || '', lose: c.querySelectorAll('.adt-cell.lose').length, pause: !!c.querySelector('[data-a="adTestPause"]'), remake: !!c.querySelector('[data-a="adTestRemake"]') } : null; });
         pass(`[${kind}] โฆษณา: ผลทดสอบรูป รูป ข ชนะ + แนะนำหยุด ก และ ค (แพงกว่า 1.5 เท่า)`, !!t && /ข เป้าหมาย/.test(t.win) && t.lose === 2 && t.pause && t.remake, JSON.stringify(t)); if (t) await page.locator('.adtest').first().screenshot({ path: path.join(OUT, `adtest-${kind}.png`) });

@@ -52,6 +52,7 @@ body.pv-on #pvw{display:flex;flex-direction:column;gap:8px;position:fixed;z-inde
 @media(max-width:1099px){body.pv-on:not(.pv-open) #pvw{display:none}body.pv-open #pvw{inset:0;padding:10px 10px 0}body.pv-open .pvw-phone{border-radius:16px 16px 0 0}body.pv-open{overflow:hidden}
   body.pv-on:not(.pv-open) #pvbtn{display:inline-flex;position:fixed;right:16px;bottom:16px;z-index:59;box-shadow:0 6px 20px rgba(15,27,51,.25)}}
 .bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar.mini{position:fixed;top:auto;bottom:16px;left:16px;background:transparent;border:0;z-index:40}.bar.mini .bar-in{display:none}.bar .bar-mini{display:none}.bar.mini .bar-mini{display:block;font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;box-shadow:0 4px 14px rgba(15,27,51,.18);cursor:pointer}
 .bar-in{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px;max-width:960px;margin:0 auto}
 .bar-note{font-size:13px;color:var(--muted);line-height:1.3}
 .seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;flex-shrink:0}
@@ -1068,7 +1069,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 </style>
 </head>
 <body>
-<div class="bar" id="bar" style="display:none"><div class="bar-in">
+<div class="bar" id="bar" style="display:none"><button class="bar-mini" data-a="barOpen" aria-label="เปิดแถบหลังบ้าน">⚙️ หลังบ้าน</button><div class="bar-in">
   <div class="bar-note" id="bar-note"></div>
   <div class="seg" id="seg"></div>
 </div></div>
@@ -1435,13 +1436,14 @@ async function coverGen(){
 }
 /* ชุดภาพสินค้า 5 รูป (OpenAI): ปก + ภาพในเล่ม + สิ่งที่ได้ + เหมาะกับใคร + วิธีรับไฟล์ สร้างทีละรูป เลือกเฉพาะรูปที่ชอบ */
 /* ชุดภาพสินค้า 5 รูป: รูปแรก = สินค้าเดี่ยวๆ (หนังสือเล่มเดียว/ชุดเดียว พื้นเรียบ ไม่มีของประกอบ) รูป 2-5 ทำทีหลังโดยใช้รูปแรกเป็นต้นแบบ หน้าปกจึงเหมือนกันทุกรูป */
+const imgSetReal=d=>(d.images||[]).find(u=>/\/cover\.(png|jpe?g)/i.test(u))||d.cover||'';
 const SAME_AS_REF=' หนังสือ/หน้าจอสินค้าในภาพต้องเหมือนรูปอ้างอิงที่แนบทุกอย่าง (ชื่อบนปก สี ลาย ตำแหน่งตัวหนังสือ) ห้ามออกแบบปกใหม่';
 function imgSetCover(d){
   if(isNotionDraft(d))return coverPrompt(d);
   const bundle=d.type==='bundle',price=Number(d.price)>=1?'฿'+Number(d.price).toLocaleString('th-TH'):'',sub=String(d.headline||'').trim()&&String(d.headline).trim()!==String(d.name).trim()?String(d.headline).trim():'';
   return `ภาพสินค้า${bundle?'ชุดหนังสือ e-book หลายเล่มวางเรียงซ้อนกันเป็นชุดเดียว':'หนังสือ e-book เล่มเดียว'} แบบสามมิติ ตั้งเอียงเล็กน้อยอยู่กลางภาพ บนพื้นหลังสีเรียบสว่าง (ฟ้าอ่อนไล่เป็นขาว) มีเงานุ่มใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 ไม่มีของประกอบอื่น ไม่มีโต๊ะ ไม่มีคน ไม่มีมือถือ สินค้าเด่นเพียงอย่างเดียว ปกโทนสีน้ำเงินเข้ม (#2440E8) และเหลือง (#FFD23F) แบรนด์ SheetLab
 ชื่อบนปกตัวใหญ่ หนา อ่านง่าย: "${aiTitle(d)}"
-${sub?`คำโปรยรองบนปก: "${sub}"\n`:''}${price?`มุมล่างของภาพมีป้ายวงกลมสีแดงเขียนว่า "ไฟล์ PDF ${price}"\n`:''}ถ้ามีรูปอ้างอิงที่แนบ ให้ใช้เป็นหน้าปกจริงของเล่ม ใส่ลงบนหนังสือให้ตรงทุกรายละเอียด`+AI_NO_TEXT;}
+${sub?`คำโปรยรองบนปก: "${sub}"\n`:''}${price?`มุมล่างของภาพมีป้ายวงกลมสีแดงเขียนว่า "ไฟล์ PDF ${price}"\n`:''}`+AI_NO_TEXT;}
 function imgSetPrompts(d){
   const n=aiTitle(d),feats=String(d.features||'').split('\n').map(x=>x.trim()).filter(Boolean).slice(0,4),q=f=>f.map(x=>'"'+x+'"').join(' ');
   if(isNotionDraft(d)){
@@ -1461,10 +1463,11 @@ function imgSetPrompts(d){
 }
 async function imgSetGen(){
   if(!S.draft)return;const ps=imgSetPrompts(S.draft);S.imgSet=ps.map(()=>({url:null,pick:true,err:''}));S.coverBusy=true;S.coverErr='';render(true);
-  const real=(S.draft.images||[]).find(u=>/\/cover\.(png|jpe?g)/i.test(u))||S.draft.cover||'';let ref='';
-  for(let i=0;i<ps.length;i++){
+  const real=imgSetReal(S.draft),useReal=S.imgFirst==='real'&&real;let ref=useReal?real:'';
+  if(useReal){S.imgSet[0].url=real;S.imgSet[0].real=true;render(true);} // รูปแรก = ปกจริงจากโรงงาน ไม่ต้องสร้าง รูป 2-5 ใช้ปกนี้เป็นต้นแบบ
+  for(let i=useReal?1:0;i<ps.length;i++){
     if(i>0&&!ref){S.imgSet[i].err='ข้ามเพราะรูปแรกไม่สำเร็จ (รูปอื่นต้องใช้รูปแรกเป็นต้นแบบ)';S.imgSet[i].pick=false;continue;}
-    try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i],model:imgModel(),quality:imgQuality(),refs:i?[ref]:real?[real]:[]})});
+    try{const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:ps[i],model:imgModel(),quality:imgQuality(),refs:i?[ref]:[]})});
       if(j&&j.ok){S.imgSet[i].url=j.image;if(!i){try{const r=await square(new File([await (await fetch(j.image)).blob()],'img.png',{type:'image/png'}));ref=await uploadImage(r.url);S.imgSet[0].url=ref;}catch(e){console.error(e);}}}else{S.imgSet[i].err=(j&&j.error)||'ไม่สำเร็จ';S.imgSet[i].pick=false;if(i===0&&/OPENAI_API_KEY|GEMINI_API_KEY|เครดิตหมด|ใช้เงินครบ/.test(S.imgSet[i].err)){S.coverErr=S.imgSet[i].err;S.imgSet=null;break;}}}
     catch(e){S.imgSet[i].err='ไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองคุณภาพปกติ';S.imgSet[i].pick=false;}
     render(true);
@@ -2677,7 +2680,7 @@ function productForm(){
       <div class="swatches" role="radiogroup" aria-labelledby="lbl-color">${COLORS.map(c=>`<label class="sw" style="--c:${c[0]}"><input type="radio" name="theme" data-d="color" value="${c[0]}" ${d.color===c[0]?'checked':''}><span class="dot"></span><span>${c[1]}</span></label>`).join('')}</div></div>
     <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
       ${S.coverOpen?`<div class="aic-box"><label for="e-cover-prompt">คำสั่งทำปก (แก้ได้)</label><textarea class="input" id="e-cover-prompt" data-cp="1" rows="7">${esc(S.coverPrompt==null?coverPrompt(d):S.coverPrompt)}</textarea>
-        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button><button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
+        <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${imgSetReal(d)?`<div class="kind-seg" role="group" aria-label="รูปแรกของชุด" style="margin:0 0 6px"><button data-a="imgFirst" data-v="ai" aria-pressed="${S.imgFirst!=='real'}">🎨 รูปแรกให้ AI ออกแบบ</button><button data-a="imgFirst" data-v="real" aria-pressed="${S.imgFirst==='real'}">📕 ใช้ปกจริงเป็นรูปแรก</button></div>`:''}<button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button><button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><label class="fine">โมเดล <select class="input" data-imgset="model" style="width:auto;display:inline-block;padding:6px 8px">${IMG_MODELS.map(m=>`<option value="${m[0]}" ${imgModel()===m[0]?'selected':''}>${esc(m[1])}</option>`).join('')}</select></label>
           <label class="fine">คุณภาพ <select class="input" data-imgset="q" style="width:auto;display:inline-block;padding:6px 8px">${[['medium','ปกติ (~1.5 บาท/รูป)'],['high','สูง (~6 บาท/รูป)'],['low','ร่าง (ถูกสุด)']].map(q=>`<option value="${q[0]}" ${imgQuality()===q[0]?'selected':''}>${q[1]}</option>`).join('')}</select></label></div>
         ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}${aiPay(S.coverErr)}</p>`:''}
@@ -2799,7 +2802,7 @@ async function facAiImages(id){
   const j=(FAC.jobs||[]).find(x=>x.id===id);if(!j)return;const lc=j.listing_copy||{}; // เซิร์ฟเวอร์ทำรูปแรก (ใช้ปกจากโรงงานเป็นต้นแบบ) ก่อน แล้วรูป 2-5 ใช้รูปแรกเป็นต้นแบบ
   const d={name:lc.name||j.title,headline:lc.headline||'',price:Number(j.price)||0,features:lc.features||'',specs:lc.specs||'',cat:j.kind==='notion'?'notion':guessCat(j.title+' '+(j.category||'')),slug:j.kind==='notion'?'notion-x':'sheet-x',type:''};
   FAC.aiBusy=id;render(true);toast('กำลังทำรูปขาย 5 รูปพร้อมกัน ใช้เวลา 1-3 นาที');
-  try{const r=await authFetch('/api/content?action=ai_images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,prompts:imgSetPrompts(d),model:imgModel(),quality:imgQuality()})});
+  try{const r=await authFetch('/api/content?action=ai_images',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,prompts:imgSetPrompts(d),model:imgModel(),quality:imgQuality(),first:S.imgFirst==='real'?'real':'ai'})});
     if(r&&r.images&&r.images.length){j.ai_images=r.images;toast(`ได้รูปขาย ${r.images.length} รูป${r.errors&&r.errors.length?` (ไม่สำเร็จ ${r.errors.length} รูป)`:''} · ตอนอนุมัติจะใส่ให้อัตโนมัติ`);}
     else{const m=(r&&(r.error||(r.errors||[])[0]))||'ลองใหม่อีกครั้ง';FAC.aiErr={id,m};toast('ทำรูปไม่สำเร็จ: '+m);}}
   catch(e){toast('ทำรูปไม่สำเร็จ (ใช้เวลานานเกินหรือระบบขัดข้อง) ลองคุณภาพปกติ');}
@@ -4732,17 +4735,18 @@ const SEOT={d:null,loading:false};
 /* 👑 สมาชิก VIP: ราคาและการเปิดรับเป็นของคุณแดน (0 = ไม่ขายแบบนั้น) · ตารางสมาชิกต้องสร้างครั้งแรกด้วย SQL */
 const VIPA={d:null,loading:false,busy:false};
 function loadVipAdmin(){if(VIPA.loading)return;VIPA.loading=true;adminApi('/api/content?action=vip_admin').then(j=>{VIPA.d=j||{};}).catch(()=>{VIPA.d={};}).then(()=>{VIPA.loading=false;render(true);});}
+function vipView(){return `<div class="wrap wide vipv" style="padding:16px 16px 60px"><h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งราคา เปิด/ปิดรับสมาชิก และดูว่าใครเป็นสมาชิกอยู่ · หน้าลูกค้า <a href="/vip" target="_blank" rel="noopener">sheetlabth.com/vip ↗</a></p>${vipCard()}</div>`;}
 function vipCard(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d;
   if(!d)return '<section class="card" style="margin-top:14px"><p class="fine">กำลังโหลดสมาชิก VIP...</p></section>';
   const v=d.settings||{packs:{}},st=d.stats,num=(id,val,l)=>`<label class="vipf">${l}<input class="input" type="number" min="0" step="1" id="${id}" value="${Number(val)||0}"></label>`;
-  return `<section class="card vipa" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">👑 สมาชิก VIP ${v.open?'<span class="badge ok">เปิดรับอยู่</span>':'<span class="badge gray">ยังไม่เปิด</span>'}</h3><a class="chip" href="/vip" target="_blank" rel="noopener">ดูหน้า /vip ↗</a></div>
+  return `<section class="card vipa"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">👑 สมาชิก VIP ${v.open?'<span class="badge ok">เปิดรับอยู่</span>':'<span class="badge gray">ยังไม่เปิด</span>'}</h3><a class="chip" href="/vip" target="_blank" rel="noopener">ดูหน้า /vip ↗</a></div>
     <p class="fine" style="margin:4px 0 10px">สมัครด้วยอีเมล (ไม่มีรหัสผ่าน) · บัตรตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้ · PromptPay จ่ายล่วงหน้าเป็นก้อน · ตอนนี้ VIP ได้ "สมุดจุดพลาด" เก็บข้อที่ผิดจากคลังข้อสอบให้ทวน</p>
     ${!d.ready?`<div class="adt-msg"><b>ขั้นแรก (ครั้งเดียว):</b> สร้างตารางสมาชิก เปิด Supabase → SQL Editor → วาง SQL นี้แล้วกด Run แล้วกดรีเฟรชการ์ดนี้<pre class="vipsql">${esc(d.sql||'')}</pre><div class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="vipSqlCopy">📋 คัดลอก SQL</button><button class="btn btn-line btn-sm" data-a="vipReload">รีเฟรช</button></div></div>`:''}
     <div class="vipgrid">${num('vip-m',v.monthly,'บัตร รายเดือน (บาท/เดือน)')}${num('vip-y',v.yearly,'บัตร รายปี (บาท/ปี)')}${num('vip-p1',v.packs[1],'PromptPay 1 เดือน')}${num('vip-p3',v.packs[3],'PromptPay 3 เดือน')}${num('vip-p12',v.packs[12],'PromptPay 12 เดือน')}</div>
     <label class="row" style="gap:8px;margin:10px 0"><input type="checkbox" id="vip-open" ${v.open?'checked':''} ${d.ready?'':'disabled'}> <span>เปิดรับสมาชิก (หน้า /vip แสดงราคาและให้สมัครได้)</span></label>
     <div class="row" style="gap:8px;align-items:center"><button class="btn btn-sm pt-new" data-a="vipSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึก'}</button><span class="fine">ใส่ 0 = ไม่ขายแบบนั้น · ตลาดไทยแนวนี้ประมาณ ฿99–299/เดือน</span></div>
     ${st?`<div class="vipstats"><div><b>${st.active}</b><span>สมาชิกที่ใช้งานอยู่</span></div><div><b>${st.card}</b><span>ต่ออายุบัตรอัตโนมัติ</span></div><div><b>${st.leaving}</b><span>ยกเลิกการต่ออายุแล้ว</span></div><div><b>${st.total}</b><span>เคยเป็นสมาชิกทั้งหมด</span></div></div>
-      ${st.recent.length?`<details style="margin-top:8px"><summary class="fine">สมาชิกล่าสุด (${st.recent.length})</summary>${st.recent.map(m=>`<p class="fine" style="margin:4px 0">${esc(m.email)} · ${esc(m.plan||'')} · ถึง ${new Date(m.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}${m.cancel?' · ยกเลิกต่ออายุ':''}</p>`).join('')}</details>`:''}`:''}
+      <h4 style="margin:14px 0 6px">สมาชิกที่ใช้งานอยู่ ${st.recent.length?`(${st.recent.length})`:''}</h4>${st.recent.length?`<div class="seo-tbl">${st.recent.map(m=>`<div><span>${esc(m.email)}</span><span class="fine">${m.plan&&String(m.plan).startsWith('prepaid')?'PromptPay '+String(m.plan).split('-')[1]+' เดือน':m.plan==='yearly'?'บัตร รายปี':'บัตร รายเดือน'} · ถึง ${new Date(m.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}${m.cancel?' · <b>ยกเลิกต่ออายุ</b>':''}</span></div>`).join('')}</div>`:'<p class="fine">ยังไม่มีสมาชิก</p>'}`:''}
   </section>`;}
 function loadSeoTopics(){if(SEOT.loading)return;SEOT.loading=true;adminApi('/api/content?action=seo_topics').then(j=>{SEOT.d=j||{};}).catch(()=>{SEOT.d={};}).then(()=>{SEOT.loading=false;render(true);});}
 function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d||{},T=d.topics||[],R=d.recent||[],tt=d.totals||{};
@@ -4754,7 +4758,7 @@ function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d
   <section class="card" style="margin-top:14px"><h3 class="h3" style="margin:0">✍️ เนื้อหาฟรีบนเว็บ <span class="fine" style="font-weight:400">บทความ ${tt.articles||0} · แบบทดสอบ ${tt.quizzes||0} · 7 วันล่าสุดเพิ่ม ${wk.length} ชิ้น</span></h3>
     <p class="fine" style="margin:4px 0 10px">น้องปากกาเขียนบทความ + แบบทดสอบคู่กัน จันทร์ พุธ พฤหัส เสาร์ 10:00 · ทุกบทความมีคำถามที่พบบ่อยและลิงก์ภายใน · ซ่อนชิ้นไหนได้ที่แท็บคอนเทนต์</p>
     <div class="seo-tbl">${R.slice(0,15).map(x=>`<div><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${x.type==='quiz'?'📝':'📄'} ${esc(x.title)}</a><span>${x.at?new Date(x.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}${x.type==='article'?(x.faq?' · มีคำถามที่พบบ่อย':' · ยังไม่มีคำถามที่พบบ่อย')+(x.image?'':' · ยังไม่มีรูปปก'):` · ${x.n} ข้อ`}</span></div>`).join('')}</div></section>
-  ${vipCard()}`;}
+`;}
 function homeTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
@@ -4840,11 +4844,14 @@ function render(keep){
   const isAdmin=hasAdminAccess();
   $('#bar').style.display=isAdmin?'':'none';
   $('#bar-note').innerHTML=isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a><br><span id="live-pill" class="live-pill">${livePillText()}</span>`:'';
-  $('#seg').innerHTML=isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button>`:'';
+  $('#seg').innerHTML=isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory','vip','catalog'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button><button data-a="toVip" aria-pressed="${v==='vip'}">👑 สมาชิก</button>`:'';
+  // ดูหน้าลูกค้า (หน้าร้าน/ร้านค้า/salepage/ชำระเงิน): ย่อแถบหลังบ้านเป็นปุ่มเล็กมุมซ้ายล่าง ไม่บังหน้าที่ลูกค้าเห็น กดเพื่อกางเมื่อต้องการ
+  const custView=['store','catalog','shop','cart','order','pay','thanks'].includes(v);if(!custView)S.barOpen=false;
+  $('#bar').classList.toggle('mini',isAdmin&&custView&&!S.barOpen);
   if(S.loading){$('#app').innerHTML=`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`;return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
-  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),store:()=>storeView(false),catalog:catalogView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
+  $('#app').innerHTML=({factory:()=>hasAdminAccess()?factoryView():loginView(),vip:()=>hasAdminAccess()?vipView():loginView(),store:()=>storeView(false),catalog:catalogView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])();
   if(v==='store')hit('store');else if(v==='catalog')hit('catalog');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
   if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
@@ -4902,6 +4909,9 @@ function act(a,el){
     case 'toStore':go('store');break;
     case 'artHide':authFetch('/api/content?action=article_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนบทความแล้ว':'เปิดบทความแล้ว');QZ.arts=undefined;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'quizHide':authFetch('/api/content?action=quiz_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:el.dataset.v,hidden:el.dataset.h==='1'})}).then(j=>{if(j&&j.ok){toast(j.status==='hidden'?'ซ่อนแบบทดสอบแล้ว':'เปิดแบบทดสอบแล้ว');QZ.list=null;}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
+    case 'toVip':VIPA.d=null;go('vip');break;
+    case 'imgFirst':S.imgFirst=el.dataset.v;render(true);break;
+    case 'barOpen':S.barOpen=true;render(true);break;
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
@@ -5711,14 +5721,14 @@ const LIVE=[
   {k:'orders',tabs:['orders'],every:60,run:()=>autoSync()},
   {k:'seo',tabs:['seo','home'],every:900,run:()=>loadSeo()},
   {k:'seotopics',tabs:['seo'],every:300,run:()=>loadSeoTopics()},
-  {k:'vip',tabs:['seo'],every:120,run:()=>loadVipAdmin()},
+  {k:'vip',views:['vip'],every:60,run:()=>loadVipAdmin()},
   {k:'factory',views:['factory'],every:30,run:()=>loadFactoryJobs(true)},
 ];
 const LIVEAT={};let liveAt=0;
 function liveBump(k){LIVEAT[k]=0;liveTick(true);}
 function liveBusy(){const a=document.activeElement;return !!(a&&a.closest&&a.closest('#app')&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.type!=='checkbox'&&a.type!=='radio');}
 function liveTick(soon){
-  if(!sbSession||document.visibilityState!=='visible'||!['admin','factory'].includes(S.view)||liveBusy()||S.edit)return;
+  if(!sbSession||document.visibilityState!=='visible'||!['admin','factory','vip'].includes(S.view)||liveBusy()||S.edit)return;
   const now=Date.now();let any=false;
   for(const L of LIVE){const here=L.views?L.views.includes(S.view):S.view==='admin'&&L.tabs.includes(S.tab);if(!here)continue;
     const age=now-(LIVEAT[L.k]||0);if(age<(soon?Math.min(20e3,L.every*1e3):L.every*1e3))continue;

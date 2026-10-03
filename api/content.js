@@ -1198,8 +1198,9 @@ export default async function handler(req, res) {
         return `${SB_URL}/storage/v1/object/public/product-images/${path}`;
       };
       // รูปแรก = สินค้าเดี่ยวๆ ใช้ปกจริงจากโรงงานเป็นต้นแบบ · รูป 2-5 ทำพร้อมกันโดยใช้รูปแรกเป็นต้นแบบ ปกจึงเหมือนกันทุกรูป
+      // คุณแดนเลือก: รูปแรกให้ AI ออกแบบ (ค่าเริ่มต้น) หรือใช้ปกจริงจากโรงงานเป็นรูปแรกเลย
       const realCover = (job.images || []).find((u) => /\/cover\.(png|jpe?g)/i.test(u)) || (job.images || [])[0];
-      const first = await Promise.allSettled([one(prompts[0], 0, realCover ? [realCover] : (body.refs || []))]);
+      const first = body.first === 'real' && realCover ? [{ status: 'fulfilled', value: realCover }] : await Promise.allSettled([one(prompts[0], 0, [])]);
       const rest = first[0].status === 'fulfilled' ? await Promise.allSettled(prompts.slice(1).map((p, k) => one(p, k + 1, [first[0].value]))) : [];
       const out = [...first, ...rest];
       const urls = out.filter((x) => x.status === 'fulfilled').map((x) => x.value);
