@@ -2593,11 +2593,11 @@ export default async function handler(req, res) {
         const items = await loadAdsAuto(); const x = items.find((y) => y.id === String(body.id || ''));
         if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบร่างแอด' });
         if (!['pending', 'failed'].includes(x.status)) return res.status(400).json({ ok: false, error: 'แอดนี้ยิงไปแล้ว' });
-        const vs = (Array.isArray(body.variants) ? body.variants : []).slice(0, 4).map((v) => ({ label: String(v.label || '').slice(0, 40), prompt: String(v.prompt || '').slice(0, 3000) })).filter((v) => v.prompt.length > 30);
+        const vs = (Array.isArray(body.variants) ? body.variants : []).slice(0, 4).map((v) => ({ label: String(v.label || '').slice(0, 40), prompt: String(v.prompt || '').slice(0, 3000), refs: Array.isArray(v.refs) ? v.refs.slice(0, 2) : null })).filter((v) => v.prompt.length > 30); // refs ต่อแบบ (เช่น แคปจอโน้ตไม่ต้องใช้รูปปก)
         const out = [], errors = [];
         for (const v of vs) {
           try {
-            const g = await genImage({ model: body.model, prompt: v.prompt, quality: body.quality || 'medium', aspect: '4:5', refs: Array.isArray(body.refs) ? body.refs.slice(0, 2) : [] });
+            const g = await genImage({ model: body.model, prompt: v.prompt, quality: body.quality || 'medium', aspect: '4:5', refs: v.refs || (Array.isArray(body.refs) ? body.refs.slice(0, 2) : []) });
             let buf = Buffer.from(g.b64, 'base64'), mime = g.mime;
             if (/jpe?g/.test(mime)) buf = await fit45(buf); // ภาพสูงกว่า 4:5: ย่อให้พอดีความสูง เติมขอบข้างด้วยภาพเดิมแบบเบลอ (ไม่ตัดข้อความทิ้ง)
             const path = `ads/${x.id.slice(0, 8)}-${Date.now().toString(36)}-${out.length + 1}.${/png/.test(mime) ? 'png' : 'jpg'}`;
