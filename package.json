@@ -12,6 +12,6 @@
     "playwright-core": "^1.63.0"
   },
   "scripts": {
-    "test": "node tests/check.mjs && node tests/smoke.mjs"
+    "test": "node tests/check.mjs && node tests/unit.mjs && node tests/smoke.mjs"
   }
 }

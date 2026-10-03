@@ -775,6 +775,7 @@ async function shopChecks(add, host) {
       if (acc.ok && acc.limit?.capTHB) add('ads_limit', acc.limit.leftTHB >= 300, 'warn', `วงเงินบัญชีโฆษณาเหลือ ฿${Math.round(acc.limit.leftTHB).toLocaleString('th-TH')}`, 'เพิ่มวงเงิน ไม่งั้นแอดจะหยุดเอง', acc.limit.page);
     }
   } catch (e) { add('ads', false, 'warn', 'ตรวจบัญชีโฆษณาไม่ได้: ' + String(e.message).slice(0, 60), '', null); }
+  try { const G = await import('../lib/gsc.js'); add('gsc', G.gscConnected(), 'warn', G.gscConnected() ? 'เชื่อม Google Search Console แล้ว (รายงานคำค้นทำงาน)' : 'ยังไม่ได้เชื่อม Google Search Console (ยังไม่เห็นว่าคนค้นคำไหนเจอเว็บ)', 'ทำตามคู่มือในการ์ด 🔎 คำค้นจาก Google บนหน้าภาพรวม', null); } catch (e) {}
   try { const u = await storageUsage(); const pct = Math.round(u.total_mb / 1024 * 100); add('storage', pct < 80, pct < 95 ? 'warn' : 'bad', `พื้นที่เก็บไฟล์ใช้ ${u.total_mb} MB จาก 1 GB (${pct}%)`, 'ลบไฟล์ที่ไม่ใช้ หรืออัปเกรด Supabase', 'https://supabase.com/dashboard'); } catch (e) {}
   try {
     const w = (await sb('shop_state?id=eq.factory_worker&select=data'))?.[0]?.data; const jobs = await loadJobs(); const q = jobs.filter((j) => j.status === 'queued' && !j.paused).length;
@@ -1813,6 +1814,16 @@ export default async function handler(req, res) {
       const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
+    }
+    if (action === 'seo_report') { // คำค้นจาก Google Search Console (แอดมิน/ทีม) เก็บไว้ 12 ชม. · ?fresh=1 ดึงใหม่
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const G = await import('../lib/gsc.js');
+      if (!G.gscConnected()) return res.status(200).json({ ok: false, connected: false });
+      const old = (await sb('shop_state?id=eq.seo_report&select=data'))?.[0]?.data;
+      if (old?.ok && !req.query.fresh && Date.now() - Date.parse(old.at) < 12 * 3600e3) return res.status(200).json({ ...old, connected: true, cached: true });
+      try { const r = await G.gscReport(); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'seo_report', data: r, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); return res.status(200).json({ ...r, connected: true }); }
+      catch (e) { return res.status(200).json({ ok: false, connected: true, email: G.gscEmail(), error: String(e.message || e).slice(0, 240) }); }
     }
     if (action === 'file_remove') { // คุณแดน: ลบไฟล์ PDF รุ่นที่ไม่ใช้แล้ว (ใน files/ เท่านั้น และต้องไม่มีสินค้าไหนใช้อยู่) ประหยัดพื้นที่
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

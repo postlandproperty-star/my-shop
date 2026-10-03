@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/topic/:slug",
+      "destination": "/api/page?topic=:slug"
+    },
+    {
       "source": "/api/threads-callback",
       "destination": "/api/threads?action=callback"
     },

@@ -415,7 +415,8 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .code-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.code-row .input{flex:1;min-width:140px;text-transform:uppercase}.code-row.ok{background:var(--okbg);border-radius:10px;padding:8px 12px;font-size:14px}
 .linkbtn{background:none;border:0;padding:0;font:inherit;color:#2563EB;text-decoration:underline;cursor:pointer}.code-open{display:block;margin:8px auto 0;font-size:14px}
 .rv-note{margin:4px 0 10px}
-.hcard{margin:0 0 14px}.hc-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.hcard{margin:0 0 14px}.seocard{margin:14px 0}.seocard>summary{cursor:pointer}.seo-steps{margin:10px 0 6px;padding-left:20px;line-height:1.8;font-size:14.5px}.seo-h{margin:12px 0 6px;font-size:14.5px}
+.seo-tbl{display:grid;gap:4px}.seo-tbl>div{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:6px 10px;border-radius:8px;background:var(--bg);font-size:14px}.seo-tbl span{color:var(--muted);font-size:13px}.hc-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
 .hc-row{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}.hc-row.bad{background:#FFF1F2;border-color:#FECDD3}.hc-row.warn{background:#FFFBEB;border-color:#FDE68A}
 .hc-dot{flex:none;width:10px;height:10px;border-radius:50%;background:#16a34a}.hc-row.bad .hc-dot{background:#dc2626}.hc-row.warn .hc-dot{background:#d97706}
 .hc-msg{flex:1;min-width:0;display:grid;font-size:14px;word-break:break-word}.hc-ok{margin-top:8px}.hc-ok summary{cursor:pointer}
@@ -3102,6 +3103,30 @@ function exportCsv(one){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=(one?'sheetlab-'+one.slug:'sheetlab-products-'+new Date().toISOString().slice(0,10))+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
   toast(one?'ดาวน์โหลดข้อมูล "'+String(one.name||'').slice(0,30)+'" แล้ว':'ดาวน์โหลดข้อมูลสินค้า '+list.length+' รายการแล้ว');
 }
+/* ลง Shopee เป็นเล่มพิมพ์ (แม่พิมพ์และส่งจากไทย): ไฟล์ Excel ทุกเล่มที่พิมพ์ได้ + ชุด · ราคา = ราคา PDF + ค่าพิมพ์และส่งต่อเล่มที่คุณแดนกำหนด
+   น้ำหนัก/ขนาดประมาณจากจำนวนหน้า (A4 พิมพ์สองหน้า ~5 กรัม/แผ่น + ปกและแพ็ก) · มีลิงก์ PDF ต้นฉบับให้แม่สั่งพิมพ์ */
+const pagesOf=p=>Number((String(p.specs||'').match(/(\d[\d,]*)\s*หน้า/)||[])[1]?.replace(/,/g,''))||Number(p.pages)||0;
+function printSpec(pages,books){const sheets=Math.ceil((pages||80)/2),g=sheets*5+40*(books||1)+80;return {kg:Math.max(.2,Math.round(g/100)/10),w:21.5,l:30,h:Math.max(1,Math.round((sheets*.011+.4*(books||1))*10)/10)};}
+function exportShopee(){
+  let add=null;try{add=localStorage.getItem('sl_print_add');}catch(e){}
+  const v=prompt('ราคาเล่มพิมพ์ = ราคา PDF + ค่าพิมพ์และค่าส่ง "ต่อเล่ม" กี่บาท?\n(เช่น 120 · ชุด 10 เล่มจะบวก 10 เท่า · แก้ราคาในไฟล์ได้อีกครั้งก่อนอัป)',add||'');
+  if(v===null)return;const plus=Math.max(0,Number(String(v).replace(/[^\d.]/g,''))||0);if(!plus&&!confirm('ไม่บวกค่าพิมพ์เลย (ราคาเท่า PDF) ใช่ไหม?'))return;try{localStorage.setItem('sl_print_add',String(plus));}catch(e){}
+  const list=exportList().filter(p=>pfmt(p)!=='notion'&&(isBundle(p)?bundleBooks(p).length:true));if(!list.length){toast('ยังไม่มีเล่มที่พิมพ์ได้');return;}
+  const q=x=>'"'+String(x==null?'':x).replace(/"/g,'""')+'"',L=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
+  const head=['SKU','ชื่อสินค้า','รายละเอียดสินค้า','ราคา (บาท)','คลังสินค้า','น้ำหนัก (กก.)','กว้าง (ซม.)','ยาว (ซม.)','สูง (ซม.)','รูปปก','รูปที่ 2','รูปที่ 3','รูปที่ 4','รูปที่ 5','รูปที่ 6','รูปที่ 7','รูปที่ 8','รูปที่ 9','จำนวนหน้า','ไฟล์ PDF สำหรับพิมพ์ (ให้แม่)','ลิงก์หน้าขายบนเว็บ'];
+  const rows=list.map(p=>{const bun=isBundle(p),books=bun?bundleBooks(p):[p],pages=books.reduce((a,b)=>a+pagesOf(b),0),sp=printSpec(pages,books.length);
+    const base=bun?fromPrice(p):Number(p.price)||0,price=Math.round(base+plus*books.length);
+    const im=[...(p.images||[]),...(bun?books.map(b=>b.bookCover||(b.images||[])[0]):(p.previews||[]))].filter(Boolean).slice(0,9);while(im.length<9)im.push('');
+    const name=(bun?`${p.name} (เล่มพิมพ์ ${books.length} เล่ม)`:`${p.name} (เล่มพิมพ์ A4)`).slice(0,120);
+    const desc=[bun?(p.headline||p.name):(p.headline||p.name),p.desc||'',bun?'ในชุดมี:\n'+books.map((b,i)=>`${i+1}. ${b.name}${pagesOf(b)?` (${pagesOf(b)} หน้า)`:''}`).join('\n'):L(p.features).map(x=>'✅ '+x).join('\n'),
+      '📦 สินค้าเป็นหนังสือเล่มพิมพ์ ขนาด A4'+(pages?` รวม ${pages} หน้า`:'')+' จัดส่งจากประเทศไทย',books.some(b=>/MP3|ไฟล์เสียง|QR/i.test(b.specs||b.features||''))?'🎧 ไฟล์เสียงฟังผ่าน QR code ในเล่ม':'',
+      'สั่งแล้วร้านพิมพ์และแพ็กส่งตามรอบ ถ้ามีคำถามทักแชทได้เลย'].filter(Boolean).join('\n\n').slice(0,3000);
+    const pdf=bun?books.map(b=>b.link?b.link.split('?')[0]:'').filter(Boolean).join(' | '):(p.link||'').split('?')[0];
+    return [p.slug+'-print',name,desc,price,20,sp.kg,sp.w,sp.l,sp.h,...im,pages||'',pdf,location.origin+'/p/'+p.slug];});
+  const csv='\ufeff'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shopee-print-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
+  toast(`ไฟล์ลง Shopee ${list.length} รายการแล้ว (ราคา PDF + ฿${plus}/เล่ม) เปิดใน Excel แล้วคัดลอกไปวางในเทมเพลตของ Shopee`);
+}
 async function exportImgs(one){
   const list=(one?[one]:exportList()).filter(p=>(p.images||[]).length);if(!list.length){toast(one?'สินค้านี้ยังไม่มีรูป':'ยังไม่มีรูปสินค้า');return;}
   S.zipBusy=one?one.id:true;render(true);
@@ -3130,6 +3155,7 @@ function productsTab(){
     <span class="row" style="gap:8px;flex-wrap:wrap">
       <details class="pt-dd"><summary class="btn btn-line btn-sm">⬇ ดาวน์โหลด ▾</summary><div class="pt-menu">
         <button class="pt-a" data-a="exportCsv">ข้อมูลสินค้าทั้งหมด (Excel)</button>
+        <button class="pt-a" data-a="exportShopee">🛒 ไฟล์ลง Shopee (เล่มพิมพ์)</button>
         <button class="pt-a" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy===true?'กำลังรวมรูป...':'รูปสินค้าทั้งหมด (ZIP)'}</button>
         <span class="fine" style="padding:4px 10px;display:block">เฉพาะที่ขายอยู่ · ไว้ลง Shopee / Lazada · ทีละรายการกด "ดูเพิ่มเติม" ที่สินค้า</span></div></details>
       <button class="btn btn-line btn-sm" data-a="newBundle">+ สร้างชุด</button>
@@ -4525,6 +4551,24 @@ function healthCard(){if(HEALTH.d===null&&!HEALTH.loading)loadHealth();const h=H
     ${bad.length||warn.length?`<ul class="hc-list">${bad.concat(warn).map(row).join('')}</ul>`:''}
     ${ok.length?`<details class="hc-ok"><summary class="fine">✓ ปกติ ${ok.length} จุด</summary><ul class="hc-list">${ok.map(row).join('')}</ul></details>`:''}
     <p class="fine" style="margin:6px 0 0">ระบบตรวจเองทุกเช้า 10:00 · เขียวหมด = ไม่ต้องทำอะไร</p></section>`;}
+/* 🔎 คำค้นจาก Google (Search Console): คนค้นอะไรแล้วเจอเว็บ คลิกเท่าไหร่ อันดับเท่าไหร่ + โอกาสที่ใกล้หน้าแรก */
+const SEO={d:null,loading:false};
+function loadSeo(fresh){if(SEO.loading)return;SEO.loading=true;adminApi('/api/content?action=seo_report'+(fresh?'&fresh=1':'')).then(j=>{SEO.d=j||{};}).catch(()=>{SEO.d={};}).then(()=>{SEO.loading=false;render(true);});}
+function seoCard(){if(SEO.d===null&&!SEO.loading)loadSeo();const d=SEO.d||{},n=v=>Math.round(Number(v)||0).toLocaleString('th-TH');
+  if(!SEO.d)return '';
+  if(!d.connected)return `<details class="card seocard"><summary><b>🔎 คำค้นจาก Google</b> <span class="badge warn">ยังไม่เชื่อม</span> <span class="fine">เชื่อมครั้งเดียว แล้วจะเห็นว่าคนค้นคำไหนเจอเว็บ กดเพื่อดูวิธี</span></summary>
+    <ol class="seo-steps"><li>เปิด <a href="https://console.cloud.google.com/apis/library/searchconsole.googleapis.com" target="_blank" rel="noopener noreferrer">Google Cloud → Search Console API</a> เลือก/สร้างโปรเจกต์ แล้วกด <b>Enable</b></li>
+      <li>ไปที่ <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener noreferrer">Service Accounts</a> → <b>Create service account</b> ตั้งชื่อ sheetlab-seo → เสร็จแล้วกดเข้าไป → แท็บ <b>Keys</b> → Add key → <b>JSON</b> (ได้ไฟล์ .json)</li>
+      <li>คัดลอกอีเมลของ service account (ลงท้าย .iam.gserviceaccount.com) ไปที่ <a href="https://search.google.com/search-console/users" target="_blank" rel="noopener noreferrer">Search Console → Settings → Users and permissions</a> → <b>Add user</b> สิทธิ์ Restricted</li>
+      <li>เปิดไฟล์ .json คัดลอกทั้งหมด ไปวางใน <b>Vercel → Settings → Environment Variables</b> ชื่อ <code>GSC_SA</code> แล้วกด Redeploy</li></ol>
+    <p class="fine">ไฟล์ .json เป็นกุญแจ ห้ามส่งในแชทหรือห้องเอกสาร วางใน Vercel ที่เดียว · ผมไม่สร้างบัญชีหรือกุญแจแทนคุณแดน</p></details>`;
+  if(!d.ok)return `<section class="card seocard"><b>🔎 คำค้นจาก Google</b> <span class="badge bad">ดึงข้อมูลไม่ได้</span><p class="fine">${esc(d.error||'')}</p><button class="chip" data-a="seoFresh">ลองใหม่</button></section>`;
+  const t=d.total||{},p=d.prev||{},dv=(a,b)=>b?Math.round((a-b)/b*100):null,chg=(a,b)=>{const v=dv(a,b);return v==null?'':`<small class="${v>=0?'up':'down'}">${v>=0?'+':''}${v}%</small>`;};
+  return `<section class="card seocard"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">🔎 คำค้นจาก Google <span class="fine" style="font-weight:400">28 วัน (${esc(d.start||'')} – ${esc(d.end||'')})</span></h3><button class="chip" data-a="seoFresh" ${SEO.loading?'disabled':''}>${SEO.loading?'กำลังโหลด...':'รีเฟรช'}</button></div>
+    <div class="dgrid"><div class="dtile"><span>คลิกเข้าเว็บ</span><b>${n(t.clicks)}</b>${chg(t.clicks,p.clicks)}</div><div class="dtile"><span>คนเห็นในผลค้นหา</span><b>${n(t.impressions)}</b>${chg(t.impressions,p.impressions)}</div><div class="dtile"><span>อันดับเฉลี่ย</span><b>${t.position||'–'}</b><small>ยิ่งน้อยยิ่งดี</small></div><div class="dtile"><span>อัตราคลิก</span><b>${((t.ctr||0)*100).toFixed(1)}%</b></div></div>
+    ${(d.opportunities||[]).length?`<h4 class="seo-h">🎯 ใกล้ขึ้นหน้าแรก (อันดับ 5–20 คนเห็นเยอะ) ทีมจะเขียนเพิ่มเรื่องเหล่านี้ก่อน</h4><div class="seo-tbl">${d.opportunities.slice(0,8).map(x=>`<div><b>${esc(x.key)}</b><span>อันดับ ${x.position} · เห็น ${n(x.impressions)} · คลิก ${n(x.clicks)}</span></div>`).join('')}</div>`:''}
+    <details style="margin-top:8px"><summary class="fine">คำค้นที่พาคนเข้าเว็บมากสุด (${(d.queries||[]).length}) · หน้าที่คนเข้าจาก Google</summary><div class="seo-tbl">${(d.queries||[]).slice(0,20).map(x=>`<div><b>${esc(x.key)}</b><span>คลิก ${n(x.clicks)} · เห็น ${n(x.impressions)} · อันดับ ${x.position}</span></div>`).join('')}</div>
+      <div class="seo-tbl" style="margin-top:6px">${(d.pages||[]).slice(0,10).map(x=>`<div><a href="${esc(x.key)}" target="_blank" rel="noopener noreferrer">${esc(x.key)}</a><span>คลิก ${n(x.clicks)} · อันดับ ${x.position}</span></div>`).join('')}</div></details></section>`;}
 function homeTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
@@ -4539,7 +4583,8 @@ function homeTab(){
   return `<section class="waitbar">${waits.length?`<b>รอคุณแดน</b>${waits.map(w=>`<button class="wchip ${w[3]}" data-a="${w[2]}">${w[1]}${w[0]>1||w[2]!=='goAdsFix'?` <span>${w[0]}</span>`:''}</button>`).join('')}`:'<b>✓ ไม่มีเรื่องค้าง</b><span class="fine">ทีมดูแลอยู่ เปิดดูตัวเลขด้านล่างได้เลย</span>'}
     ${ads.length?`<button class="wchip info" data-a="tab" data-v="ads">📣 แอด 7 วัน: ค่าแอด ฿${sp.toLocaleString('th-TH')} · ยอดขาย ฿${va.toLocaleString('th-TH')} · <b class="${va-sp>=0?'up':'down'}">${va-sp>=0?'กำไร':'ขาดทุน'} ฿${Math.abs(va-sp).toLocaleString('th-TH')}</b></button>`:''}</section>
   ${healthCard()}
-  ${dashBox()}`;
+  ${dashBox()}
+  ${seoCard()}`;
 }
 function adminView(){
   // เรียงตามความสำคัญ: 4 อันแรกใช้ทุกวัน (ปุ่มใหญ่) ที่เหลือเป็นแถวรองเลื่อนได้
@@ -4816,6 +4861,7 @@ function act(a,el){
     case 'dashRefresh':DASH.d=null;DASH.err='';render(true);break;
     case 'chatPhoto':S.chatPhoto=el.dataset.u;render(true);break;
     case 'chatPhotoClose':S.chatPhoto=null;render(true);break;
+    case 'seoFresh':loadSeo(true);render(true);break;
     case 'healthRun':HEALTH.busy=true;render(true);adminApi('/api/content?action=health&record=1').then(j=>{if(!j||!j.checks)throw new Error((j&&j.error)||'ตรวจไม่ได้');HEALTH.d=j;toast(j.problems.length?'พบ '+j.problems.length+' จุดที่ต้องดู':'ปกติทุกจุด ✓');}).catch(e=>toast('ตรวจไม่ได้: '+e.message)).then(()=>{HEALTH.busy=false;render(true);});break;
     case 'goHealth':{const e=document.querySelector('.hcard');if(e)e.scrollIntoView({behavior:'smooth',block:'start'});break;}
     case 'healthNow':{el.disabled=true;toast('กำลังตรวจระบบ...');adminApi('/api/content?action=health&record=1').then(h=>{if(!h.checks)throw new Error(h.error||'ตรวจไม่ได้');postsLoaded=false;TODO.items=null;return loadPosts().then(()=>{render(true);toast(h.problems.length?'พบ '+h.problems.length+' จุดที่ต้องดู เพิ่มเข้าเช็คลิสต์แล้ว':'ระบบปกติทั้ง '+h.checks.length+' จุด');});}).catch(e=>{toast(e.message);el.disabled=false;});break;}
@@ -4859,6 +4905,7 @@ function act(a,el){
       else{S.confirm='import';render(true);}break;}
     case 'toCheckout':glideTo('checkout');break;
     case 'exportCsv':exportCsv();break;
+    case 'exportShopee':exportShopee();break;
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
     case 'exportOne':{const p=getProduct(el.dataset.id);if(p)exportCsv(p);break;}
     case 'exportOneImgs':{const p=getProduct(el.dataset.id);if(p&&!S.zipBusy)exportImgs(p);break;}

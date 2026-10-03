@@ -6,6 +6,7 @@ import { newSiteLive, NEW_SITE } from '../lib/site.js';
 import { policyPage, POLICY_DOCS } from '../lib/policies.js';
 import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } from '../lib/quiz.js';
 import { sbSelect } from '../lib/shop.js';
+import { TOPICS, topicItems, topicReady, topicPage } from '../lib/topics.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
 async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
@@ -85,7 +86,8 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const shop = await loadShop().catch(() => ({ products: [] }));
     const today = new Date().toISOString().slice(0, 10);
     const [quizzes, articles] = await Promise.all([loadQuizzes(), loadArticles()]);
-    const urls = ['/', ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
+    const topics = TOPICS.filter((t) => topicReady(topicItems(t, { articles, quizzes, products: shop.products }))).map((t) => `/topic/${t.slug}`);
+    const urls = ['/', ...topics, ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/privacy', '/refund'];
     res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=3600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
@@ -114,6 +116,15 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(page);
+  }
+  const topic = String(req.query.topic || '');
+  if (topic) { // หน้ารวมตามหัวข้อ /topic/<slug>
+    const t = TOPICS.find((x) => x.slug === topic);
+    const [shop, articles, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadArticles(), loadQuizzes()]);
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    const live = TOPICS.filter((x) => topicReady(topicItems(x, { articles, quizzes, products: shop.products })));
+    if (!t) { res.statusCode = 404; return res.end(topicPage(TOPICS[0], topicItems(TOPICS[0], { articles, quizzes, products: shop.products }), { settings: shop.settings, site: NEW_SITE, all: live })); }
+    return res.status(200).send(topicPage(t, topicItems(t, { articles, quizzes, products: shop.products }), { settings: shop.settings, site: NEW_SITE, all: live }));
   }
   const learn = String(req.query.learn || '');
   if (learn) { // คลังความรู้ /learn และ /learn/<slug>
