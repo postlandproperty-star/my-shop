@@ -118,6 +118,14 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(page);
   }
+  const brand = String(req.query.brand || '');
+  if (brand) { // โลโก้ร้าน (ทำจาก Canva) ไอคอนแท็บ/หน้าจอมือถือ ไฟล์อยู่ใน src/brand
+    if (!/^(favicon\.ico|apple-touch-icon\.png|icon-(32|48|192|512)\.png)$/.test(brand)) return res.status(404).end();
+    let buf = null; try { buf = readFileSync(join(process.cwd(), 'src', 'brand', brand)); } catch (e) {}
+    if (!buf) return res.status(404).end();
+    res.setHeader('Content-Type', brand.endsWith('.ico') ? 'image/x-icon' : 'image/png'); res.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=2592000');
+    return res.status(200).end(buf);
+  }
   const timg = String(req.query.timg || '');
   if (timg) { // รูปหัวข้อจาก Canva /topic-img/<slug>.jpg (ไฟล์อยู่ใน src/topics)
     const t = TOPICS.find((x) => x.slug === timg.replace(/\.jpg$/, ''));

@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/favicon.ico",
+      "destination": "/api/page?brand=favicon.ico"
+    },
+    {
+      "source": "/apple-touch-icon.png",
+      "destination": "/api/page?brand=apple-touch-icon.png"
+    },
+    {
+      "source": "/icon-:size.png",
+      "destination": "/api/page?brand=icon-:size.png"
+    },
+    {
       "source": "/topic-img/:slug",
       "destination": "/api/page?timg=:slug"
     },
