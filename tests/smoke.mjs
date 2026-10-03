@@ -134,6 +134,8 @@ try {
     for (const p of [single, bundle].filter(Boolean)) try {
       page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/p/${p.slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(700);
+      await page.screenshot({ path: path.join(OUT, `top-${kind}-${p.type === 'bundle' ? 'bundle' : 'single'}.png`) });
+      if (p.type === 'bundle') pass(`[${kind}] หน้าขายชุด: ส่วนบนแบบเดียวกับเล่มเดี่ยว`, await page.locator('.spx .sp-band .now').count() === 1 && await page.locator('.spx [data-a="toCheckout"]').count() === 1);
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: มีปุ่มซื้อ`, await page.locator('[data-a="qrOpen"], [data-a="toCheckout"]').count() > 0);
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: มีปุ่ม + เพิ่ม`, await page.locator('[data-a="cartAdd"]').count() > 0);
       await page.locator('#checkout').scrollIntoViewIfNeeded().catch(() => {});
@@ -163,7 +165,10 @@ try {
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
       if (v === 'ads' && AD) { await page.waitForTimeout(400); pass(`[${kind}] โฆษณา: ร่างแอดเลือกไว้ 2 รูป`, await page.locator('.adq-pick.on').count() === 2);
         const t = await page.evaluate(() => { const c = document.querySelector('.adtest'); return c ? { win: (c.querySelector('.adt-cell.win b') || {}).textContent || '', lose: c.querySelectorAll('.adt-cell.lose').length, pause: !!c.querySelector('[data-a="adTestPause"]'), remake: !!c.querySelector('[data-a="adTestRemake"]') } : null; });
-        pass(`[${kind}] โฆษณา: ผลทดสอบรูป รูป ข ชนะ + แนะนำหยุด ก และ ค (แพงกว่า 1.5 เท่า)`, !!t && /ข เป้าหมาย/.test(t.win) && t.lose === 2 && t.pause && t.remake, JSON.stringify(t)); if (t) await page.locator('.adtest').first().screenshot({ path: path.join(OUT, `adtest-${kind}.png`) }); }
+        pass(`[${kind}] โฆษณา: ผลทดสอบรูป รูป ข ชนะ + แนะนำหยุด ก และ ค (แพงกว่า 1.5 เท่า)`, !!t && /ข เป้าหมาย/.test(t.win) && t.lose === 2 && t.pause && t.remake, JSON.stringify(t)); if (t) await page.locator('.adtest').first().screenshot({ path: path.join(OUT, `adtest-${kind}.png`) });
+        const fl = await page.evaluate(() => [...document.querySelectorAll('.adflow')].map((f) => [...f.children].findIndex((c) => c.classList.contains('cur'))));
+        pass(`[${kind}] โฆษณา: แถบขั้นตอน (ร่าง = ขั้น 1, ทดสอบวันที่ 6 = ขั้น 4)`, fl.includes(0) && fl.includes(3), JSON.stringify(fl));
+        const d = page.locator('.adq-wrap').first(); if (await d.count()) await d.screenshot({ path: path.join(OUT, `adflow-${kind}.png`) }); }
       if (v === 'products' && bundle) { // เมนู "ดูเพิ่มเติม" ของชุด: มีปุ่มเอาไปโฆษณา และทำหน้าตัวอย่างใหม่
         await page.evaluate((bid) => { S.pmore = bid; render(true); }, bundle.id);
         pass(`[${kind}] สินค้า: ชุดมีปุ่มเอาไปโฆษณา + หน้าตัวอย่างหน้า 3`, await page.locator(`[data-a="adsDraftOne"][data-id="${bundle.id}"]`).count() === 1 && await page.locator(`[data-a="pvRedoSet"][data-id="${bundle.id}"]`).count() === 1);

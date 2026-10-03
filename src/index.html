@@ -139,6 +139,7 @@ footer{padding:28px 0 110px;text-align:center}
 .st-kicker{font-size:13px;font-weight:600;color:var(--brand)}
 .st-promo{font-size:13px;color:var(--bad);font-weight:600}
 .st-go{font-weight:600;color:var(--brand);margin-top:4px}
+.bx-kicker{display:inline-block;font-size:13.5px;font-weight:600;color:var(--brand);background:#EEF2FF;border-radius:999px;padding:3px 12px;margin:0 0 6px}.sp-price .from{font-size:14px;opacity:.85;margin-right:4px}
 .st-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .st-chips .chip{white-space:nowrap}
 .st-chips .chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
@@ -226,7 +227,12 @@ footer{padding:28px 0 110px;text-align:center}
 .ads-todo{font-size:13.5px;font-weight:600;color:var(--bad)}.ads-why{color:var(--bad)}.ads-acts{display:flex;flex-direction:column;gap:6px}
 @media (max-width:760px){.ads-row{grid-template-columns:48px minmax(0,1fr)}.ads-img{width:48px;height:48px}.ads-acts{grid-column:1/-1;flex-direction:row}}
 .adq-pick{position:relative;width:64px;height:80px}.adq-n{position:absolute;top:3px;left:3px;background:#EE4D2D;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;display:grid;place-items:center}.adq-tag{position:absolute;left:0;right:0;bottom:0;background:rgba(15,27,51,.75);color:#fff;font-size:9.5px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.adtest{margin:0 0 14px;border:2px solid #F5B301}.adt-msg{margin:8px 0 10px;padding:8px 12px;border-radius:10px;background:var(--bg);font-size:14px}.adt-msg.done{background:#FFF7D6}
+.adtest{margin:0 0 14px;border:2px solid #F5B301}
+.adflow{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin:0 0 6px}.adf-s{flex:1 0 auto;display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 4px;white-space:nowrap}
+.adf-s b{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--ink);font-size:11px}.adf-s.done{color:#15803d;border-color:#bbf7d0;background:#f0fdf4}.adf-s.done b{background:#16a34a;color:#fff}
+.adf-s.cur{color:var(--ink);font-weight:700;border-color:#EE4D2D;background:#FFF1EE}.adf-s.cur b{background:#EE4D2D;color:#fff}
+@media (max-width:560px){.adf-s:not(.cur){font-size:0;gap:0;padding:4px;flex:0 0 auto}.adf-s:not(.cur) b{font-size:11px}.adf-s.cur{flex:1 1 auto;white-space:normal}}
+.adf-now{margin:0 0 10px;padding:8px 12px;border-radius:10px;background:#FFF7D6;font-size:14px}.adq-wrap{margin-bottom:14px}.adt-msg{margin:8px 0 10px;padding:8px 12px;border-radius:10px;background:var(--bg);font-size:14px}.adt-msg.done{background:#FFF7D6}
 .adt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}.adt-cell{display:grid;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:6px;font-size:12.5px;background:var(--surface)}
 .adt-cell img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:6px}.adt-cell span{color:var(--muted)}.adt-cell em{font-style:normal;font-weight:700;font-size:12px}
 .adt-cell.win{border-color:#16a34a;box-shadow:0 0 0 1px #16a34a}.adt-cell.win em{color:#16a34a}.adt-cell.lose em{color:#BE123C}.adt-cell.off{opacity:.55}
@@ -1894,15 +1900,34 @@ function bundleView(p){
   return `${shopHead(p)}
   ${p.status==='draft'?`<div class="draftnote">ฉบับร่าง ลูกค้ายังเปิดหน้านี้ไม่ได้ จนกว่าคุณจะเผยแพร่</div>`:''}
   <div class="bx">
-  <header class="bx-hero" style="--hero:${esc(p.color)}"><div class="wrap">
-    <span class="bx-tag">ชุด ${books.length} เล่ม</span>
-    <h1>${esc(p.headline||p.name)}</h1>
-    ${p.desc?`<p>${esc(p.desc)}</p>`:''}
-    ${p.cover?`<img class="bx-heroimg" src="${esc(p.cover)}" alt="${esc(p.name)}">`:`<div class="bx-stack">${books.slice(0,8).map((b,i)=>`<span class="bx-mini" ${cover(b,i)}></span>`).join('')}</div>`}
-    <div class="bx-price">${sum>minP?`<s>ราคาแยกเล่ม ${baht(sum)}</s>`:''}${plans.length>1?'<span>เริ่มต้น</span>':''}<b>${baht(minP)}</b>${off>0?`<span class="bx-off">ประหยัด ${off}%</span>`:''}</div>
-    ${live?`<div class="sp-cd bx-cd" data-end="${p.promoEnd}"><span>ราคาเปิดตัวเหลือ</span>${p.promoEnd-Date.now()>864e5?'<b data-u="d">00</b><i>วัน</i>':''}<b data-u="h">00</b><i>:</i><b data-u="m">00</b><i>:</i><b data-u="s">00</b></div>`:''}
-    <button class="btn btn-buy btn-block" style="margin-top:16px" data-a="toCheckout">ดูแพ็กเกจและสั่งซื้อ</button>
-  </div></header>
+  ${(()=>{ // ส่วนบนแบบเดียวกับหน้าขายเล่มเดี่ยว: รูปซ้าย · ราคา ชื่อ ปุ่มซื้อขวา
+    const imgs=(p.images||[]).length?p.images:(p.cover?[p.cover]:[]);loadSold();const sold=(SOLD&&SOLD[p.id])||0;
+    const pvN=books.reduce((a,b)=>a+((b.previews||[]).length?1:0),0),pages=books.reduce((a,b)=>a+(Number((String(b.specs||'').match(/(\d+)\s*หน้า/)||[])[1])||0),0);
+    return `<section class="spx"><div class="sp-media">
+    <div class="sp-car-wrap"><div class="sp-car" id="sp-car">${imgs.length?imgs.map((src,i)=>`<button class="zoom" data-a="zoom" data-i="${i}" aria-label="ขยายภาพที่ ${i+1}"><img width="1200" height="1200" src="${esc(src)}" alt="${i?'ภาพที่ '+(i+1)+' ของ ':''}${esc(p.name)}"></button>`).join(''):`<div class="bx-stack">${books.slice(0,8).map((b,i)=>`<span class="bx-mini" ${cover(b,i)}></span>`).join('')}</div>`}</div>
+      ${imgs.length>1?`<button class="sp-nav prev" data-a="spNav" data-d="-1" aria-label="รูปก่อนหน้า">‹</button><button class="sp-nav next" data-a="spNav" data-d="1" aria-label="รูปถัดไป">›</button><span class="sp-count" id="sp-count">📷 1/${imgs.length}</span>`:''}${off>0?`<span class="sp-off">ประหยัด ${off}%</span>`:''}</div>
+    ${imgs.length>1?`<div class="sp-thumbs" id="sp-thumbs">${imgs.map((src,i)=>`<button class="sp-th${i?'':' on'}" data-a="spGo" data-i="${i}" aria-label="ดูรูปที่ ${i+1}"><img src="${esc(src)}" alt=""></button>`).join('')}</div>`:''}</div>
+    <div class="sp-band" style="--hero:${esc(p.color)}"><div class="wrap sp-band-in">
+      <div class="sp-price">${plans.length>1?'<span class="from">เริ่มต้น</span>':''}<span class="now">${baht(minP)}</span>${sum>minP?`<span class="old">${baht(sum)}</span>`:''}</div>
+      ${live?`<div class="sp-cd" data-end="${p.promoEnd}"><span>ราคาเปิดตัวจบใน</span>${p.promoEnd-Date.now()>864e5?'<b data-u="d">00</b><i>วัน</i>':''}<b data-u="h">00</b><i>:</i><b data-u="m">00</b><i>:</i><b data-u="s">00</b></div>`:''}
+    </div></div>
+    <div class="wrap sp-info">
+      <span class="bx-kicker">📦 ชุด ${books.length} เล่ม${sum>minP?` · ราคาแยกเล่ม ${baht(sum)} ประหยัด ${baht(sum-minP)}`:''}</span>
+      <h1>${esc(p.name)}</h1>
+      ${sold>=SOLD_MIN?`<div class="sp-meta"><span>ขายแล้ว ${sold.toLocaleString('th-TH')} ชุด</span></div>`:''}
+      ${p.headline&&p.headline!==p.name||p.desc?`<p class="lead" style="display:block">${p.headline&&p.headline!==p.name?`<b>${esc(p.headline)}</b>${p.desc?'<br>':''}`:''}${esc(p.desc||'')}</p>`:''}
+      <div class="sp-perks"><span>⚡ รับไฟล์ทุกเล่มทันทีหลังชำระเงิน</span><span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${pvN?`<span>👀 ดูตัวอย่างได้ ${pvN} เล่ม</span>`:''}</div>
+      <div class="hero-cta">
+        <button class="btn btn-buy" data-a="toCheckout">${plans.length>1?'ดูแพ็กเกจและสั่งซื้อ':'สั่งซื้อและรับไฟล์ทันที'}</button>
+        ${pvN?`<a class="btn btn-line" href="#bx-preview">ดูตัวอย่างเนื้อหา</a>`:''}
+      </div>
+      ${payLogos(0)}
+    </div>
+  </section>
+  <section class="section" style="padding-bottom:0"><div class="wrap"><div class="specs">
+    <div><span class="k">จำนวนเล่ม</span><b>${books.length} เล่ม</b></div>${pages?`<div><span class="k">รวม</span><b>${pages.toLocaleString('th-TH')} หน้า</b></div>`:''}
+    <div><span class="k">รูปแบบ</span><b>ไฟล์ PDF</b></div><div><span class="k">ราคาแยกเล่ม</span><b>${baht(sum)}</b></div>
+  </div></div></section>`;})()}
 
   <main class="wrap">
     <section class="bx-sec"><h2>ในชุดมีอะไรบ้าง</h2>
@@ -3889,7 +3914,7 @@ function adsAutoBox(compact,noLive){
       <textarea class="input" id="ads-token" rows="3" placeholder="วางโทเค็นที่นี่"></textarea>
       <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="adsConnect">อัปเดตสิทธิ์</button></div>${ADA.tokMsg?`<p class="fine" style="margin-top:8px">${esc(ADA.tokMsg)}</p>`:''}`:`<p class="fine" style="margin:6px 0 0">โทเค็นและสิทธิ์ครบแล้ว ติดที่บัญชีโฆษณาอย่างเดียว แก้เสร็จกด "รีเฟรช" ด้านบน</p><a class="btn btn-cta btn-sm" style="margin-top:8px" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">เปิดหน้าการชำระเงินของบัญชีโฆษณา →</a>`}</div>`:'';
   const card=x=>{const tot=(Number(x.dailyTHB)||0)*(Number(x.days)||0),busy=ADA.busy===x.id;
-    return `<div class="adq">
+    return `<div class="adq-wrap">${adFlow(x)}<div class="adq">
       <div class="adq-prev"><div class="adq-h"><b>SheetLab</b><span class="fine">ได้รับการสนับสนุน</span></div>
         ${x.image?`<img src="${esc(x.image)}" alt="" class="adq-img" id="adi-${x.id}">`:''}
         <div class="adq-f"><div style="min-width:0"><span class="fine">sheetlabth.com</span><input class="input adq-head" id="adh-${x.id}" value="${esc(x.headline)}" aria-label="หัวข้อแอด"><span class="fine">${esc(x.description||'')}</span></div><span class="adq-cta">ซื้อเลย</span></div>
@@ -3918,7 +3943,7 @@ function adsAutoBox(compact,noLive){
         ${x.status==='failed'&&x.error?`<p class="err" style="margin:0">ยิงไม่สำเร็จ: ${esc(x.error)}</p>`:''}
         <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="adsLaunch" data-id="${x.id}" ${!okAcc||busy||x.status==='launching'?'disabled':''}>${busy||x.status==='launching'?'กำลังสร้างแอด...':x.status==='failed'?'↻ ลองยิงใหม่':'✅ ตกลง ยิงแอด'}</button>${x.status!=='launching'?`<button class="btn btn-line btn-sm" data-a="adsDismiss" data-id="${x.id}">ไม่เอา</button>`:''}</div>
         <span class="fine">เงินยังไม่ออกจนกว่าจะกดตกลง · Facebook รีวิวแอดก่อนวิ่ง (ไม่เกิน 1 วัน)</span>
-      </div></div>`;};
+      </div></div></div>`;};
   const liveRow=x=>{const st=x.stats||{};const end=x.ends_at?new Date(x.ends_at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):'';
     return `<div class="adq-live"><b>${esc(x.name)}</b><span class="badge ${x.status==='live'?'ok':'gray'}">${x.status==='live'?'กำลังวิ่ง':'หยุดไว้'}</span>
       <span class="fine">฿${esc(x.dailyTHB)}/วัน · ${x.platforms&&x.platforms.length?x.platforms.map(k=>(AD_PLATS.find(p=>p[0]===k)||[,k])[1]).join(' + '):'อัตโนมัติ'} · ถึง ${end}${st.status&&st.status!=='ACTIVE'&&x.status==='live'?' · สถานะ FB: '+esc(st.status):''}</span>
@@ -3989,6 +4014,19 @@ function adsForecast(){
       <p class="fine">วิธีคิด: ต้นทุนต่อออเดอร์ที่ผ่านมา ปรับตามจำนวนข้อมูล (ข้อมูลน้อย ช่วงยิ่งกว้าง) และงบต่อวันที่มากกว่าที่เคยใช้ · ประเมินเท่านั้น ระบบไม่ตั้งงบหรือเปิดแอดให้</p>
     </details></section>`;
 }
+/* แถบขั้นตอนแอด: อยู่ขั้นไหน และตอนนี้คุณแดนต้องทำอะไร (ร่าง → ตกลง → รีวิว → ทดสอบ 5 วัน → ดูผล → ทำรูปใหม่) */
+const AD_STEPS=['ตรวจร่าง & กดตกลง','Facebook รีวิว','ทดสอบ 5 วัน','ดูผล & หยุดรูปที่แพ้','ทำรูปใหม่จากผู้ชนะ'];
+function adFlow(x){const ads=(ADST.d&&ADST.d.ads)||[],mine=ads.filter(a=>(x.fb&&(x.fb.ads||[x.fb.ad]).includes(a.id))||(x.campaign&&a.campaign===x.campaign));
+  const multi=(x.fb&&(x.fb.ads||[]).length>1)||((x.multi||[]).length>1),age=x.launched_at?(Date.now()-Date.parse(x.launched_at))/864e5:0;
+  const T=adTests().find(t=>t.x.id===x.id),ended=mine.length&&mine.every(a=>['ended','paused'].includes(a.group));
+  let i,now;
+  if(['pending','failed'].includes(x.status)){i=0;now=x.status==='failed'?'ยิงไม่สำเร็จ ดูเหตุผลด้านล่าง แก้แล้วกด "ลองยิงใหม่"':`ตรวจรูป${multi?' ('+(x.multi||[]).length+' รูป)':''} ข้อความ งบ แล้วกด ✅ ตกลง ยิงแอด`;}
+  else if(x.status==='launching'||mine.some(a=>a.group==='review')||(!mine.length&&age<1.5)){i=1;now='ไม่ต้องทำอะไร รอ Facebook รีวิว ปกติไม่เกิน 1 วัน';}
+  else if(mine.some(a=>a.group==='fix')){i=Math.min(age>=5?3:2,3);now='มีแอดต้องแก้ ดูกลุ่ม 🔴 ต้องแก้ไข ด้านล่าง';}
+  else if(!ended&&age<5){i=2;now=`ไม่ต้องทำอะไร ปล่อยให้ Facebook ${multi?'ทดสอบรูป':'เรียนรู้'} · ผลชัดวันที่ 5 (${new Date(Date.parse(x.launched_at)+5*864e5).toLocaleDateString('th-TH',{day:'numeric',month:'short'})})`;}
+  else if(T&&T.lose.length){i=3;now=`กด ⏸ หยุดรูปที่แพ้ (${T.lose.length}) ในการ์ด 🏆 แล้วงบจะไปที่ ${T.win.label}`;}
+  else{i=4;now=multi?'กด ✨ ทำรูปใหม่ 2 แบบแนวเดียวกับผู้ชนะ เพื่อทดสอบรอบต่อไป (หรือปล่อยวิ่งจนครบวัน)':'ดูผลในกล่องประเมินรายได้ ถ้าคุ้มทำแอดรอบใหม่ หรือลองหลายรูปรอบหน้า';}
+  return `<div class="adflow" role="list" aria-label="ขั้นตอนแอด">${AD_STEPS.map((t,k)=>`<span role="listitem" class="adf-s${k<i?' done':k===i?' cur':''}"><b>${k<i?'✓':k+1}</b>${t}</span>`).join('')}</div><p class="adf-now">👉 <b>ตอนนี้:</b> ${now}</p>`;}
 /* 🏆 ผลทดสอบรูปแอด: แอดที่ยิงหลายรูป เทียบทีละรูป (ซื้อ > ต้นทุนต่อออเดอร์ > คนคลิก) ครบ 5 วันสรุปผู้ชนะ + ปุ่มหยุดรูปที่แพ้ / ทำรูปใหม่แนวเดียวกับผู้ชนะ */
 function adTests(){const ads=(ADST.d&&ADST.d.ads)||[];
   return (ADA.items||[]).filter(x=>x.fb&&(x.fb.ads||[]).length>1&&x.launched_at&&Date.now()-Date.parse(x.launched_at)<30*864e5).map(x=>{
@@ -4001,6 +4039,7 @@ function adTests(){const ads=(ADST.d&&ADST.d.ads)||[];
 function adTestBox(){const T=adTests();if(!T.length)return '';const money=n=>'฿'+Math.round(n).toLocaleString('th-TH');
   return T.map(({x,rows,win,age,done,lose})=>`<section class="card adtest">
     <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">🏆 ผลทดสอบรูปแอด · ${esc(String(x.name).slice(0,40))}</h3><span class="fine">วันที่ ${Math.min(Math.floor(age)+1,x.days||7)} จาก ${x.days||7}</span></div>
+    ${adFlow(x)}
     <p class="adt-msg ${done?'done':''}">${done?(win.buy?`🏆 <b>${esc(win.label)}</b> ชนะ ขายได้ ${win.buy} ครั้ง ต้นทุน ${money(win.cpa)}/ออเดอร์`:`ยังไม่มีรูปไหนขายได้ · <b>${esc(win.label)}</b> มีคนคลิกมากสุด (${(win.ctr*100).toFixed(1)}%)`):`⏳ กำลังทดสอบ ยังไม่ต้องทำอะไร ผลชัดวันที่ 5 (${new Date(Date.parse(x.launched_at)+5*864e5).toLocaleDateString('th-TH',{day:'numeric',month:'short'})})${win.buy||win.clicks?` · ตอนนี้ ${esc(win.label)} นำอยู่`:''}`}</p>
     <div class="adt-grid">${rows.map(r=>`<div class="adt-cell${done&&r===win?' win':''}${lose.includes(r)?' lose':''}${r.live?'':' off'}">${r.img?`<img src="${esc(r.img)}" alt="" loading="lazy">`:''}
       <b>${done&&r===win?'🏆 ':''}${esc(r.label)}</b><span>ใช้ ${money(r.spend)} · ซื้อ ${r.buy}${r.buy?` · ${money(r.cpa)}/ออเดอร์`:''}</span><span>คลิก ${r.clicks} (${(r.ctr*100).toFixed(1)}%)</span>
