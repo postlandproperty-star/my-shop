@@ -1280,6 +1280,29 @@ export default async function handler(req, res) {
       } catch (e) { console.error('hit', e.message); }
       return res.status(204).end();
     }
+    if (action === 'set_copy') { // ชุดจากโรงงาน: หัวข้อขาย + คำโปรยของชุด (หน้าร้าน/เซลเพจ) จากชื่อและหัวข้อของเล่มในชุด
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const b = await readBody(req), books = (Array.isArray(b.books) ? b.books : []).slice(0, 20).map((x) => `- ${String(x.name || '').slice(0, 150)}${x.headline && x.headline !== x.name ? ' — ' + String(x.headline).slice(0, 200) : ''}`).join('\n');
+      let out = null;
+      try {
+        const G = process.env.GEMINI_API_KEY;
+        if (G && books) {
+          const prompt = `เขียนข้อความขายภาษาไทยของ "ชุดหนังสือเรียน" ชื่อ "${String(b.name || '').slice(0, 120)}" ของร้าน SheetLab (หนังสือ PDF ซื้อแล้วได้ไฟล์ทันที) จากรายชื่อเล่มจริงด้านล่าง
+ตอบเป็น JSON เท่านั้น: {"headline": "...", "desc": "..."}
+headline = 1 ประโยค ไม่เกิน 110 ตัวอักษร บอกเป้าหมายและว่าครบอะไรบ้าง (เช่น ครบ 4 ทักษะ) ใช้คำจากรายชื่อเล่ม
+desc = 1–2 ประโยค ไม่เกิน 220 ตัวอักษร บอกว่าเหมาะกับใคร และทำไมซื้อเป็นชุดคุ้มกว่า
+ห้ามอ้างสิ่งที่ไม่มีในรายชื่อเล่ม ห้ามรับประกันคะแนน ห้ามใส่ราคา ห้ามคำว่า "เจ้าของภาษา"
+เล่มในชุด:
+${books}`;
+          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json' } }) });
+          const j = await r.json().catch(() => ({})); const t = (j?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join('');
+          const o = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
+          if (o && o.headline) out = { headline: String(o.headline).replace(/\s+/g, ' ').trim().slice(0, 160), desc: String(o.desc || '').replace(/\s+/g, ' ').trim().slice(0, 300) };
+        }
+      } catch (e) { console.error('set_copy', e.message); }
+      return res.status(200).json({ ok: true, ai: !!out, ...(out || {}) });
+    }
     if (action === 'shopee_copy') { // คุณแดนกดในหน้าแก้สินค้า: รายละเอียดสินค้าสำหรับ Shopee (เล่มพิมพ์) ไว้คัดลอกไปวางเอง
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });

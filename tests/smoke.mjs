@@ -375,6 +375,24 @@ try {
           S.view = 'admin'; S.tab = 'products'; S.edit = null; S.draft = null; S.pstat = 'all'; render(false); const row = [...document.querySelectorAll('.pt-hint')].map((x) => x.textContent).find((x) => /มาใหม่/.test(x) && /SL-044/.test(x)) || '';
           S.draft = initDraft(p); S.edit = 'pnote'; render(false); const box = document.querySelector('.fnote'); const r = { row, box: !!box, link: !!(box && box.querySelector('a[href*="drive.google.com"]')), code: !!(box && box.querySelector('code')) };
           D.products = D.products.filter((x) => x.id !== 'pnote'); S.edit = null; S.draft = null; render(false); return r; });
+        { await page.evaluate(() => { S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; render(false); });
+          const n0 = await page.evaluate(() => D.products.filter((x) => isBundle(x)).length);
+          await page.locator('[data-a="newBundle"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(200);
+          await page.fill('#b-name', 'ชุดทดสอบเอง').catch(() => {}); await page.fill('#b-slug', 'set-test-own').catch(() => {});
+          for (let i = 0; i < 3; i++) { await page.locator('details [data-a="bxItem"]').first().click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(120); }
+          const items = await page.evaluate(() => S.draft && S.draft.items.length);
+          await page.locator('[data-a="saveBundle"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(300);
+          const priced = await page.evaluate(() => S.draft && S.draft.plans.some((x) => x.on && x.price >= 1));
+          await page.locator('[data-a="saveBundle"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(1500);
+          const r = await page.evaluate((n0) => { const nb = D.products.find((x) => isBundle(x) && x.slug === 'set-test-own'); const o = { n: D.products.filter((x) => isBundle(x)).length - n0, items: nb ? nb.items.length : 0, err: S.err, closed: !S.edit }; D.products = D.products.filter((x) => x !== nb); S.edit = null; S.draft = null; render(false); return o; }, n0);
+          pass(`[${kind}] สร้างชุดขายเอง: กดเพิ่มเล่มได้ต่อเนื่อง (รายการไม่หุบ) · ไม่ใส่ราคา ระบบคำนวณให้ตรวจก่อน · กดบันทึกแล้วได้ชุดใหม่`, items === 3 && priced && r.n === 1 && r.items === 3 && r.closed, JSON.stringify({ items, priced, ...r })); }
+        const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
+          bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
+          S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);
+          const ids = [...document.querySelectorAll('[data-a="editProduct"]')].map((e) => e.dataset.id); const r = { set: ids.includes('bgrp'), hidden: !bks.some((x) => ids.includes(x.id)) };
+          D.products = D.products.filter((x) => x.id !== 'bgrp'); keep.forEach((k) => { k.x.status = k.st; k.x.fromJob = k.fj; }); render(false);
+          SOLD = { [(D.products.find((x) => isBundle(x) && x.status === 'published') || {}).id]: 2 }; S.view = 'catalog'; S.scat = 'all'; S.edit = null; render(false); r.sold = ((document.querySelector('.st-bsold') || {}).textContent || ''); S.view = 'admin'; render(false); return r; });
+        pass(`[${kind}] ชุดจากโรงงาน: รวมเป็น listing เดียว (เล่มในชุดไม่แยกแถว) · การ์ดชุดหน้าร้านบอกจำนวนที่ขายแล้ว`, gp.set && gp.hidden && /ขายแล้ว 2 ชุด/.test(gp.sold), JSON.stringify(gp));
         const sh = await page.evaluate(async () => { const p = D.products.find((x) => !isBundle(x)); S.draft = initDraft(p); S.edit = p.id; S.shopee = null; render(false);
           const btn = !!document.querySelector('.shp [data-a="shopeeCopy"]'); await shopeeCopy(); const t = (document.getElementById('shp-t') || {}).value || '';
           const bp = D.products.find((x) => isBundle(x)); let bun = false; if (bp) { S.draft = initDraft(bp); S.edit = bp.id; render(false); bun = !!document.querySelector('.shp [data-a="shopeeCopy"]'); }
