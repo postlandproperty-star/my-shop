@@ -2105,6 +2105,17 @@ ${books}`;
         return res.status(200).json({ ok: true, url: own + path, pages: out.getPageCount(), size: bytes.length });
       } catch (e) { return res.status(200).json({ ok: false, error: 'ใส่ปกในไฟล์ไม่สำเร็จ: ' + String(e.message || e).slice(0, 200) }); }
     }
+    if (action === 'factory_bulk') { // คุณแดนจัดคิวทีละหลายใบ: ลบ (ยกเลิก) / พัก / เลิกพัก เฉพาะใบที่ยังรอผลิต · ทำในครั้งเดียว ไม่ชนกัน
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const body = await readBody(req), ids = new Set((Array.isArray(body.ids) ? body.ids : []).map(String).slice(0, 500)), op = String(body.op || '');
+      if (!['cancel', 'pause', 'resume'].includes(op) || !ids.size) return res.status(400).json({ ok: false, error: 'ต้องมี ids และ op' });
+      const jobs = await loadJobs(), now = new Date().toISOString(); let n = 0;
+      for (const j of jobs) { if (!ids.has(j.id) || j.status !== 'queued') continue; n++;
+        if (op === 'cancel') { j.status = 'cancelled'; j.cancelled_at = now; j.cancel_note = 'คุณแดนลบจากคิว (เลือกหลายรายการ)'; } else j.paused = op === 'pause'; }
+      if (n) { await saveJobs(jobs); await logNote('factory', `คุณแดน${op === 'cancel' ? 'ลบ' : op === 'pause' ? 'พัก' : 'เลิกพัก'}ใบสั่งในคิว ${n} ใบ`); }
+      return res.status(200).json({ ok: true, n });
+    }
     if (action === 'factory_edit' || action === 'factory_move') { // คุณแดนจัดคิว: แก้รายละเอียด/พักเล่มที่ยังไม่เริ่มผลิต · เลื่อนลำดับ (dir -1 ขึ้น, 1 ลง, 'top' บนสุด)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });

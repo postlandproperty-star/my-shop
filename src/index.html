@@ -522,7 +522,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fq-list{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:8px}
 .fq-item{display:grid;grid-template-columns:8px minmax(0,1fr);background:var(--surface);border:1px solid var(--line);border-radius:4px 12px 12px 4px;overflow:hidden}
 .fq-item::before{content:"";background:var(--c,#999)}.fq-item.paused .fq-mid{opacity:.5}.fq-item.prod{box-shadow:0 0 0 1.5px #2e7d4f}
-.fq-top{display:flex;align-items:center;min-width:0}
+.fq-top{display:flex;align-items:center;min-width:0}.fq-sel{display:flex;align-items:center;gap:6px;padding-left:12px;cursor:pointer;font-size:14px}.fq-sel input{width:18px;height:18px}.fq-bulk{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);position:sticky;top:0;z-index:3}.fq-bulk .fq-sel{padding-left:2px}.fq-bulk-n{font-size:14px}
 .fq-main{flex:1;min-width:0;display:flex;gap:10px;align-items:center;padding:11px 10px 11px 12px;background:none;border:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .fq-n{font-weight:600;color:var(--muted);min-width:18px;font-variant-numeric:tabular-nums}.fq-mid{flex:1;min-width:0;display:grid}
 .fq-t{font-weight:600;font-size:15.5px;line-height:1.4;word-break:break-word}.fq-m{font-size:12.5px;color:var(--muted)}
@@ -3270,7 +3270,7 @@ function fqRow(j,n,qLen){
   const badge=(prod?'<span class="fq-b go">⚙️ กำลังผลิตในคอม</span>':j.paused?'<span class="fq-b pz">⏸ พักไว้</span>':n===1&&!FPAUSED?'<span class="fq-b nx">ถัดไป</span>':'')+(j.set_name?`<span class="fq-b">📚 ${esc(String(j.set_name).slice(0,24))}${j.set_no?' #'+esc(j.set_no):''}</span>`:'')+(j.export_no?'<span class="fq-b">📤 จากคลัง</span>':'')+(j.fill_id?'<span class="fq-b">📝 เติมรายละเอียด</span>':'')+(j.rush&&!j.auto?'<span class="fq-b go">⚡ เร่ง</span>':'');
   const sel=(k,list)=>`<select class="input" data-fqe="${k}"><option value="">-</option>${list.map(o=>`<option ${String(e[k]!=null?e[k]:j[k]||'')===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
   return `<li class="fq-item${j.paused?' paused':''}${open?' open':''}${prod?' prod':''}" style="--c:${fqColor((j.category||'')+' '+j.title)}">
-    <div class="fq-top"><button class="fq-main" data-a="fqOpen" data-id="${esc(j.id)}" aria-expanded="${open}"><span class="fq-n">${prod?'⚙️':n}</span><span class="fq-mid"><span class="fq-t">${esc(j.title)}</span><span class="fq-m">${esc(meta)}</span></span>${badge}</button>
+    <div class="fq-top">${prod?'':`<label class="fq-sel" aria-label="เลือก ${esc(j.title)}"><input type="checkbox" data-a="fqSel" data-id="${esc(j.id)}" ${(S.fqSel||[]).includes(j.id)?'checked':''}></label>`}<button class="fq-main" data-a="fqOpen" data-id="${esc(j.id)}" aria-expanded="${open}"><span class="fq-n">${prod?'⚙️':n}</span><span class="fq-mid"><span class="fq-t">${esc(j.title)}</span><span class="fq-m">${esc(meta)}</span></span>${badge}</button>
       ${prod?'':`<span class="fq-ord"><button class="fq-ib" data-a="fqMove" data-id="${esc(j.id)}" data-v="-1" aria-label="เลื่อนขึ้น" ${n>1?'':'disabled'}>↑</button><button class="fq-ib" data-a="fqMove" data-id="${esc(j.id)}" data-v="1" aria-label="เลื่อนลง" ${n<qLen?'':'disabled'}>↓</button></span>`}</div>
     ${open?`<div class="fq-detail">${prod?`<p class="fine" style="margin:0 0 8px">คอมกำลังผลิตเล่มนี้ แก้รายละเอียดไม่ได้แล้ว${j.started_at?' · เริ่ม '+fdt(Date.parse(j.started_at)):''}</p>`:`
       <div class="fq-fields">
@@ -3384,7 +3384,10 @@ function factoryView(){
       ${idea?`<div class="fq-idea"><b>💡 ${esc(idea.title)}</b><span class="fine">${[idea.category,idea.pages?idea.pages+' หน้า':'',idea.price!=null&&idea.price!==''?baht(idea.price):''].filter(Boolean).map(esc).join(' · ')}${idea.why?'<br>'+esc(idea.why):''}</span><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn btn-cta btn-sm" data-a="fqIdeaAdd">+ สั่งผลิตเล่มนี้</button><button class="chip" data-a="fqIdea">💡 แนะนำเล่มอื่น</button><button class="chip" data-a="fqIdeaX">ไม่เอา</button></div></div>`:''}
       ${S.fqErr?`<p class="err" style="margin:6px 0 0">${esc(S.fqErr)}</p>`:''}
     </section>${S.fOrder?facOrderForm(f,lb):''}`}`,
-    queue:()=>`<p class="fine fqt-hint">บนสุดผลิตก่อน · กดที่เล่มเพื่อแก้รายละเอียด เลื่อนลำดับ หรือพักไว้</p>
+    queue:()=>`<p class="fine fqt-hint">บนสุดผลิตก่อน · กดที่เล่มเพื่อแก้รายละเอียด เลื่อนลำดับ หรือพักไว้ · ติ๊กหลายเล่มเพื่อลบ/พักพร้อมกัน</p>
+      ${queued.length?(()=>{const sel=(S.fqSel||[]).filter(id=>queued.some(j=>j.id===id)),all=sel.length===queued.length,autoN=queued.filter(j=>j.auto).length,busy=S.fqBulk;
+        return `<div class="fq-bulk"><label class="fq-sel"><input type="checkbox" data-a="fqSelAll" ${all?'checked':''}> เลือกทั้งหมด (${queued.length})</label>${autoN?`<button class="chip" data-a="fqSelAuto">เลือกเฉพาะที่ระบบสั่งเอง (${autoN})</button>`:''}
+          ${sel.length?`<span class="fq-bulk-n">เลือกแล้ว <b>${sel.length}</b></span><button class="btn btn-sm ${S.confirm==='fqDel'?'btn-danger':'btn-line'}" data-a="fqBulk" data-v="cancel" ${busy?'disabled':''}>${S.confirm==='fqDel'?`กดอีกครั้งเพื่อยืนยันลบ ${sel.length} ใบ`:'🗑 ลบที่เลือก'}</button><button class="btn btn-line btn-sm" data-a="fqBulk" data-v="pause" ${busy?'disabled':''}>⏸ พัก</button><button class="btn btn-line btn-sm" data-a="fqBulk" data-v="resume" ${busy?'disabled':''}>▶ เลิกพัก</button><button class="chip" data-a="fqSelNone">ไม่เลือก</button>`:''}</div>`;})():''}
       ${S.floading&&!jobs.length?'<p class="fine">กำลังโหลด...</p>':producing.length||queued.length?`<ul class="fq-list">${producing.map(j=>fqRow(j,0,0)).join('')}${queued.map((j,i)=>fqRow(j,i+1,queued.length)).join('')}</ul>`:'<div class="fqt-empty"><b>คิวว่าง</b><span>สั่งเล่มใหม่ได้ที่แท็บ ➕ สั่งผลิต</span><button class="chip" data-a="facTab" data-v="order">ไปสั่งผลิต</button></div>'}
       <datalist id="fq-cats">${FQ_CATS.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
       ${failed.length?`<details class="fq-done"><summary>⚠️ ผลิตไม่สำเร็จ <b>${failed.length}</b></summary><ul class="fq-dl">${failed.map(j=>`<li><span><b>${esc(j.title)}</b><span class="fine">${esc(j.error||'')}</span></span></li>`).join('')}</ul></details>`:''}
@@ -5358,6 +5361,14 @@ function act(a,el){
         S.form.setBooks=L.map(x=>x.title+(Number(x.price)>=1?' | '+x.price:'')).join('\n');const nm=String(S.form.setName||'').trim();if(!nm||/ครบชุด \d+ เล่ม$/.test(nm))S.form.setName=`${cat} ครบชุด ${L.length} เล่ม`;
         S.soShort=L.length<n?`ขอ ${n} เล่ม แต่หมวดนี้มีหัวข้อที่ร้านยังไม่มี (และไม่ซ้ำเล่มในคลังบน Mac) เหลือแค่ ${L.length} เล่ม · พิมพ์หัวข้อเพิ่มเองในช่องด้านล่างได้ บรรทัดละเล่ม`:'';
         toast(L.length<n?`หมวดนี้มีหัวข้อใหม่แค่ ${L.length} เล่ม ใส่ให้แล้ว`:`จัดชุดให้ ${L.length} เล่มแล้ว แก้ได้ก่อนกดสั่ง`);}).catch(e=>toast('ไม่สำเร็จ: '+(e.message||e))).then(()=>{S.soBusy=false;render(true);});break;}
+    case 'fqSel':{const L=S.fqSel||(S.fqSel=[]),k=L.indexOf(id);if(el.checked&&k<0)L.push(id);else if(!el.checked&&k>=0)L.splice(k,1);S.confirm='';render(true);break;}
+    case 'fqSelAll':{const q=(FJOBS||[]).filter(j=>j.status==='queued');S.fqSel=el.checked?q.map(j=>j.id):[];S.confirm='';render(true);break;}
+    case 'fqSelAuto':S.fqSel=(FJOBS||[]).filter(j=>j.status==='queued'&&j.auto).map(j=>j.id);S.confirm='';render(true);break;
+    case 'fqSelNone':S.fqSel=[];S.confirm='';render(true);break;
+    case 'fqBulk':{const op=el.dataset.v,ids=(S.fqSel||[]).filter(i=>(FJOBS||[]).some(j=>j.id===i&&j.status==='queued'));if(!ids.length)break;
+      if(op==='cancel'&&S.confirm!=='fqDel'){S.confirm='fqDel';render(true);break;}S.confirm='';S.fqBulk=true;render(true);
+      fqPost('factory_bulk',{ids,op}).then(r=>{toast(op==='cancel'?`ลบออกจากคิวแล้ว ${r.n} ใบ`:op==='pause'?`พักไว้ ${r.n} ใบ`:`เลิกพัก ${r.n} ใบ คอมจะผลิตตามลำดับ`);S.fqSel=[];loadFactoryJobs(true);})
+        .catch(e=>toast('ไม่สำเร็จ: '+(e.message||e))).then(()=>{S.fqBulk=false;render(true);});break;}
     case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
