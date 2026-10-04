@@ -475,6 +475,9 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fq-bar{position:relative;z-index:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;display:grid;gap:8px;box-shadow:0 4px 14px rgba(15,27,51,.06)}
 .fq-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.fq-stats span{font-size:12.5px;color:var(--muted);display:grid}.fq-stats b{font-size:20px;color:var(--ink);line-height:1.2}.fq-stats .hot b{color:#EE4D2D}
 .fq-ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.flib-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0}.flib-bar .input{flex:1;min-width:180px;width:auto}.flib-bar .chip.on{background:var(--ink);color:var(--bg)}
+.flib{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.flib-b{position:relative;display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface)}.flib-b img,.flib-no{width:100%;aspect-ratio:210/297;object-fit:cover;border-radius:6px;background:var(--bg);display:block;margin-bottom:4px}.flib-b em{position:absolute;left:12px;top:12px;background:var(--ink);color:var(--bg);font-style:normal;font-size:11.5px;font-weight:700;border-radius:6px;padding:0 6px}.flib-b b{font-size:13px;line-height:1.3}.flib-b[hidden]{display:none}
+@media(max-width:560px){.flib{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .fq-pc{font-size:13px;border-radius:999px;padding:4px 10px;border:1.5px solid #86d0ad;background:var(--okbg)}.fq-pc.warn{border-color:#E8A23A;background:var(--warnbg)}
 .fq-run{font:inherit;font-size:13.5px;font-weight:600;border-radius:999px;padding:5px 12px;cursor:pointer;border:1.5px solid #2e7d4f;color:#2e7d4f;background:none}.fq-run.off{border-color:var(--bad);color:var(--bad)}
 .fq-review{margin:0 0 12px}.fq-review>summary{cursor:pointer;background:#FFF1EE;border:2px solid #EE4D2D;border-radius:12px;padding:10px 12px;margin-bottom:8px}
@@ -3078,6 +3081,21 @@ function fqRow(j,n,qLen){
     </div>`:''}
   </li>`;
 }
+/* คลังหนังสือบน Mac/SSD: Mac ส่งรายการ + ปกย่อขึ้นมาทุกชั่วโมง (tools/factory/catalog.py --sync) ดูได้จากหลังบ้าน/มือถือ ไม่ต้องเปิดแอปบน Mac */
+const FLIB={d:null,loading:false};
+function loadFacLib(){if(FLIB.loading)return;FLIB.loading=true;adminApi('/api/content?action=factory_library').then(j=>{FLIB.d=j&&j.ok?j:{books:[],sets:[]};}).catch(()=>{FLIB.d={books:[],sets:[]};}).then(()=>{FLIB.loading=false;render(true);});}
+function facMacPills(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if(!d||!d.at)return '';
+  const mins=Math.round((Date.now()-Date.parse(d.at))/6e4);
+  return `${d.ssd===false?'<span class="fq-pc warn">💾 SSD ไม่ได้เสียบ</span>':'<span class="fq-pc ok">💾 SSD พร้อม</span>'}${d.running?`<span class="fq-pc warn" title="${esc(d.running.note||'')}">⚙️ กำลังผลิต: ${esc(String(d.running.note||'').split('\n')[0].slice(0,40))}</span>`:''}${mins>180?`<span class="fq-pc warn">Mac ส่งข้อมูลล่าสุด ${mins<1440?Math.round(mins/60)+' ชม.':Math.round(mins/1440)+' วัน'}ที่แล้ว</span>`:''}`;}
+function facLib(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if(!d||!(d.books||[]).length)return '';
+  const B=d.books,q=String(S.flq||'').toLowerCase().trim(),cat=S.flcat||'',cats=[...new Set(B.map(b=>b.cat))].sort();
+  const list=B.filter(b=>!cat||b.cat===cat);
+  const wk=B.filter(b=>Date.now()-Date.parse(b.day)<7*864e5).length,pg=B.reduce((a,b)=>a+(b.pages||0),0);
+  return `<details class="card fac-more fac-lib" data-keep="fqLib" ${S.fqLib?'open':''}><summary><b>📚 คลังหนังสือบน Mac</b> <span class="fine">${B.length} เล่ม · ผลิตใน 7 วัน ${wk} · ${pg.toLocaleString('th-TH')} หน้า${(d.sets||[]).length?' · ชุดขาย '+d.sets.length:''} · อัปเดต ${new Date(d.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></summary>
+    ${(d.sets||[]).length?`<p class="fine" style="margin:8px 0">📦 ${d.sets.map(s=>`${esc(s.name)} (${s.n} เล่ม)`).join(' · ')}</p>`:''}
+    <div class="flib-bar"><input class="input" data-flq="1" value="${esc(S.flq||'')}" placeholder="ค้นหาชื่อเล่มหรือเลขที่" aria-label="ค้นหาหนังสือ"><button class="chip${!cat?' on':''}" data-a="flCat" data-v="" aria-pressed="${!cat}">ทั้งหมด</button>${cats.map(c=>`<button class="chip${cat===c?' on':''}" data-a="flCat" data-v="${esc(c)}" aria-pressed="${cat===c}">${esc(c)}</button>`).join('')}</div>
+    <div class="flib" id="flib">${list.map(b=>`<div class="flib-b" data-q="${esc((b.title+' '+b.no).toLowerCase())}" ${q&&!(b.title+' '+b.no).toLowerCase().includes(q)?'hidden':''}>${b.thumb?`<img src="${esc(b.thumb)}" alt="" loading="lazy">`:'<span class="flib-no"></span>'}<em>#${esc(b.no)}</em><b>${esc(b.title)}</b><span class="fine">${esc(b.cat)} · ${b.pages} หน้า${b.audio?' · 🎧':''} · ${b.where==='SSD'?'💾 SSD':'💻 Mac'}</span></div>`).join('')||'<p class="fine">ไม่พบเล่มที่ค้นหา</p>'}</div>
+    <p class="fine" style="margin:10px 0 0">ไฟล์ PDF อยู่ใน SSD ของ Mac · เล่มที่ส่งขึ้นร้านแล้วดูได้ที่ 👀 รอคุณแดนตรวจ หรือแท็บสินค้า</p></details>`;}
 function factoryView(){
   if(FJOBS===null)loadFactoryJobs();
   const f=S.fnew||(S.fnew={title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''});
@@ -3098,7 +3116,7 @@ function factoryView(){
     <h2 class="h3 fq-h">🏭 โรงงาน <span class="fine">สั่งที่นี่ · คอมคุณแดนผลิต · คุณแดนตรวจแล้วกดลงขาย</span></h2>
     <div class="fq-bar" role="status">
       <div class="fq-stats"><span><b>${active.length}</b> ในคิว</span><span><b>${producing.length}</b> กำลังผลิต</span><span class="${review.length?'hot':''}"><b>${review.length}</b> รอตรวจ</span><span><b>${done.length}</b> เสร็จ</span></div>
-      <div class="fq-ctl"><span class="fq-pc ${stale&&active.length?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 ${when}</span>
+      <div class="fq-ctl"><span class="fq-pc ${stale&&active.length?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 ${when}</span>${facMacPills()}
         <button class="fq-run ${FPAUSED?'off':''}" data-a="fqRun" ${S.fqBusy?'disabled':''}>${FPAUSED?'⏸ หยุดอยู่ · กดเปิด':'▶ เปิดผลิตอยู่'}</button>
         <button class="chip" data-a="fqCmd">📋 คำสั่ง “ทำเล่มบนสุด”</button><button class="chip" data-a="toFactory" aria-label="รีเฟรช">↻</button></div>
     </div>
@@ -3107,7 +3125,7 @@ function factoryView(){
     ${review.length?`<details class="fq-review" data-keep="fqRev" ${S.fqRev!==false?'open':''}><summary><b>👀 รอคุณแดนตรวจ ${review.length} เล่ม</b> <span class="fine">ผลิตเสร็จแล้ว ตรวจไฟล์แล้วกดอนุมัติลงขาย</span></summary>${facBox(1)||''}${(()=>{const g=review.filter(j=>j.listing==='global_pending').length,t=review.length-g;return (g?`<p class="fq-gl">🌏 ${g} เล่มเป็นเทมเพลตขายต่างประเทศ (Notion EN) อยู่ในหัวข้อ <b>🌏 ขายต่างประเทศ</b> ล่างสุด <button class="chip" data-a="openGlobal">ไปที่หัวข้อนี้ ↓</button></p>`:'')+(t&&FAC.jobs===null?'<p class="fine">กำลังโหลด...</p>':'');})()}</details>`:''}
     <section class="card fq-add">
       <div class="fq-addrow"><input class="input" id="fq-title" data-fqn="title" value="${esc(S.fqTitle||'')}" placeholder="พิมพ์ชื่อเล่ม เช่น IELTS Listening 10 ชุด พร้อมเฉลย" autocomplete="off"><input class="input fq-price" id="fq-price" data-fqn="price" type="number" inputmode="numeric" min="0" value="${esc(S.fqPrice||'')}" placeholder="ราคา ฿" aria-label="ราคาเสนอ"><button class="btn btn-dark" data-a="fqAdd" ${S.fqBusy?'disabled':''}>เพิ่มเข้าคิว</button></div>
-      <div class="fq-airow"><select class="input" data-fqn="cat" aria-label="หมวดที่ให้ AI คิด"><option value="">ทุกหมวด</option>${FQ_CATS.map(c=>`<option ${S.fqCat===c?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="fq-dice" data-a="fqIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'🎲 ให้ AI คิดเล่มใหม่'}</button></div>
+      <div class="fq-airow"><select class="input" data-fqn="cat" aria-label="หมวดที่ให้ AI คิด"><option value="">ทุกหมวด</option>${FQ_CATS.map(c=>`<option ${S.fqCat===c?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="fq-dice" data-a="fqIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'💡 แนะนำเล่มถัดไป'}</button></div>
       ${idea?`<div class="fq-idea"><b>💡 ${esc(idea.title)}</b><span class="fine">${[idea.category,idea.pages?idea.pages+' หน้า':'',idea.price!=null&&idea.price!==''?baht(idea.price):''].filter(Boolean).map(esc).join(' · ')}${idea.why?'<br>'+esc(idea.why):''}</span><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn btn-cta btn-sm" data-a="fqIdeaAdd">+ เพิ่มเล่มนี้เข้าคิว</button><button class="chip" data-a="fqIdea">🎲 สุ่มใหม่</button><button class="chip" data-a="fqIdeaX">ไม่เอา</button></div></div>`:''}
       ${S.fqErr?`<p class="err" style="margin:6px 0 0">${esc(S.fqErr)}</p>`:''}
       <p class="fine" style="margin:8px 0 0">ใส่แค่ชื่อกับราคาก็พอ กดที่เล่มในคิวเพื่อแก้หมวด ระดับ รูปแบบ หน้า ทีหลังได้ · <a href="#" data-a="fOrderToggle">ฟอร์มเต็ม / Notion Template</a></p>
@@ -3132,6 +3150,7 @@ function factoryView(){
         <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน"</li>
       </ol></details>
     </details>
+    ${facLib()}
     ${(()=>{if(FAC.jobs===null&&!FAC.loading)loadFacJobs();const G=FAC.global||[],pend=G.filter(j=>j.listing==='global_pending').length;
       return `<details class="card fac-more fac-global" data-keep="fqGlobal" ${S.fqGlobal?'open':''}><summary><b>🌏 ขายต่างประเทศ (Notion EN)</b> <span class="fine">${pend?`<span class="badge warn">รอลง ${pend}</span> `:''}Gumroad · Notion Gallery · Pinterest · กดเปิด</span></summary>${globalBox()}</details>`;})()}
   </div>`;
@@ -5035,6 +5054,7 @@ function act(a,el){
       act('tab',{dataset:{v:t}});break;}
     case 'svcGo':{const t=document.querySelector(el.dataset.v);if(t){if(t.tagName==='DETAILS')t.open=true;t.scrollIntoView({behavior:'smooth',block:'start'});}break;}
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
+    case 'flCat':S.flcat=el.dataset.v;S.fqLib=true;render(true);break;
     case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
@@ -5586,6 +5606,7 @@ document.addEventListener('input',e=>{
   if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
   if(ds.rvp){S.rvp=t.value;render(true);return;}
   if(ds.adsum){const id=ds.adsum,d=Number(($('#add-'+id)||{}).value)||0,n=Number(($('#adn-'+id)||{}).value)||0,e=document.getElementById('ads-sum-'+id);if(e)e.textContent='฿'+(d*n).toLocaleString('th-TH');}
+  if(ds.flq){S.flq=t.value;const q=t.value.toLowerCase().trim();document.querySelectorAll('#flib [data-q]').forEach(e=>{e.hidden=!!q&&!e.dataset.q.includes(q);});return;}
   if(ds.psearch){S.pq=t.value;const q=t.value.toLowerCase().trim();let n=0;document.querySelectorAll('#plist [data-q]').forEach(e=>{const ok=!q||e.dataset.q.includes(q);e.hidden=!ok;if(ok)n++;});const z=document.getElementById('pnone');if(z)z.hidden=n>0;const c=document.getElementById('pcount');if(c)c.textContent=n;}
   else if(ds.psort){S.psort=t.value;render(true);}
   if(ds.fpub){FAC.pub=Object.assign(FAC.pub||{},{[ds.fpub]:t.value});}
@@ -5870,6 +5891,7 @@ const LIVE=[
   {k:'insights',tabs:['insights'],every:120,run:()=>loadInsights()},
   {k:'vip',views:['vip'],every:60,run:()=>loadVipAdmin()},
   {k:'factory',views:['factory'],every:30,run:()=>loadFactoryJobs(true)},
+  {k:'factoryLib',views:['factory'],every:120,run:()=>loadFacLib()},
 ];
 const LIVEAT={};let liveAt=0;
 function liveBump(k){LIVEAT[k]=0;liveTick(true);}

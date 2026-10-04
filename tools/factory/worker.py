@@ -10,10 +10,25 @@
 #
 # listing.json = ข้อความหน้าขาย {name, headline, desc, features, forwho, notfor, faq, specs, toc} (ห้ามใส่ราคา)
 # ไฟล์เสียงไม่อัปขึ้นร้าน (อยู่ Google Drive ตาม QR ในเล่ม)
-import json, os, io, sys, argparse, urllib.request
+import json, os, io, sys, argparse, subprocess, urllib.request
 
 KEY = os.environ.get('CONTENT_KEY', '')
 BASE = 'https://sheetlabth.com/api/content'
+LOCK = '/Volumes/PortableSSD/Sheetlab/_factory/.running'  # กำลังผลิต (แอป Mac / หน้าโรงงานบนเว็บแสดงสถานะ) · รอบถัดไปไม่ผลิตซ้อน
+
+
+def sync():
+    # ส่งคลังหนังสือ + สถานะ SSD/กำลังผลิต ขึ้นหน้าโรงงานบนเว็บ (ไม่สำเร็จก็ไม่เป็นไร รอบหน้าส่งใหม่)
+    try: subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'catalog.py'), '--sync'], capture_output=True, timeout=240)
+    except Exception: pass
+
+
+def page_count(pdf):
+    try:
+        out = subprocess.run(['/opt/homebrew/bin/pdfinfo', pdf], capture_output=True, text=True, timeout=30).stdout
+        return int(next(l.split()[-1] for l in out.splitlines() if l.startswith('Pages:')))
+    except Exception:
+        import fitz; return fitz.open(pdf).page_count
 
 
 def api(action, body=None, query=''):
@@ -64,6 +79,12 @@ def cover(job, png):
     return upload(job, b.getvalue(), 'cover.jpg', 'image/jpeg')
 
 
+def unlock():
+    try: os.remove(LOCK)
+    except Exception: pass
+    sync()
+
+
 def main():
     if not KEY: sys.exit('ต้องใส่ CONTENT_KEY')
     ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('args', nargs='*')
@@ -71,19 +92,25 @@ def main():
     a = ap.parse_args()
     if a.cmd == 'queue':
         j = api('factory', query='&status=queued&by=mac')
+        sync()
         if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
         jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
         print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
-        print(json.dumps(api('factory_claim', {'id': a.args[0], 'by': 'mac'}), ensure_ascii=False)[:300])
+        r = api('factory_claim', {'id': a.args[0], 'by': 'mac'}); print(json.dumps(r, ensure_ascii=False)[:300])
+        if r.get('ok'):
+            try: open(LOCK, 'w').write(f"{(r.get('job') or {}).get('title', a.args[0])}\n{a.args[0]}")
+            except Exception: pass
+            sync()
     elif a.cmd == 'done':
         job, pdf = a.args[0], os.path.expanduser(a.args[1])
         body = {'id': job, 'by': 'mac', 'file_url': upload(job, pdf, os.path.basename(pdf).replace(' ', '-'), 'application/pdf'), 'size': os.path.getsize(pdf), 'summary': a.summary}
         body['images'] = [cover(job, os.path.expanduser(a.cover))] if a.cover else []  # หน้าตัวอย่างหน้าเว็บทำเองตอนอนุมัติ
-        import fitz; body['pages'] = fitz.open(pdf).page_count
+        body['pages'] = page_count(pdf)
         if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'pages': body['pages'], 'file_url': body['file_url']}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
+        unlock()
     elif a.cmd == 'done-notion':
         job, url = a.args[0], a.args[1]
         imgs = ([cover(job, os.path.expanduser(a.cover))] if a.cover else []) + [upload(job, os.path.expanduser(p), os.path.basename(p), 'image/png') for p in a.images]
@@ -93,6 +120,7 @@ def main():
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
     elif a.cmd == 'fail':
         print(json.dumps(api('factory_fail', {'id': a.args[0], 'error': ' '.join(a.args[1:])[:400]}), ensure_ascii=False)[:300])
+        unlock()
     else:
         sys.exit('คำสั่ง: queue | claim | done | done-notion | fail')
 

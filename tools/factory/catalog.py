@@ -2,9 +2,10 @@
 #   python3 tools/factory/catalog.py            สร้าง /Volumes/PortableSSD/Sheetlab/โรงงาน.html แล้วจบ
 #   python3 tools/factory/catalog.py --open     สร้างแล้วเปิดใน Chrome
 #   python3 tools/factory/catalog.py --json     พิมพ์รายการเล่มเป็น JSON (ใช้ในแอปโรงงานบน Mac)
+#   python3 tools/factory/catalog.py --sync     ส่งรายการเล่ม + ปกย่อ + สถานะ SSD/กำลังผลิต ขึ้นหน้าโรงงานบนเว็บ (worker.py queue เรียกให้ทุกชั่วโมง)
 # ไม่ใช้ AI ไม่ใช้อินเทอร์เน็ต อ่านอย่างเดียว (ไม่แก้/ไม่ย้ายไฟล์หนังสือ) · ปกย่อเก็บใน _factory/thumbs (สร้างใหม่เฉพาะไฟล์ที่เปลี่ยน)
 # เล่มที่นับ = ไฟล์ชื่อ NNN_YYYY-MM-DD_ชื่อ.pdf (เลขลำดับการผลิต) · ชุดขายแสดงแยกเป็นกลุ่ม
-import html, json, os, re, subprocess, sys, time
+import html, json, os, re, subprocess, sys, time, urllib.request
 from datetime import datetime
 from pathlib import Path
 
@@ -50,6 +51,49 @@ def title_of(pdf, slug):
     return slug.replace('-', ' ').title()
 
 
+API = 'https://sheetlabth.com/api/content?action=factory_library'
+
+
+def key():
+    try: m = re.search(r'[0-9a-f]{48}', (Path.home() / '.config' / 'sheetlab' / 'content-key').read_text()); return m.group(0) if m else ''
+    except Exception: return os.environ.get('CONTENT_KEY', '')
+
+
+def post(body, k):
+    req = urllib.request.Request(API, data=json.dumps(body).encode(), headers={'x-content-key': k, 'Content-Type': 'application/json'}, method='POST')
+    return json.load(urllib.request.urlopen(req, timeout=60))
+
+
+def sync(books, sets):
+    # อัปปกย่อเฉพาะเล่มที่ยังไม่เคยส่งหรือไฟล์เปลี่ยน แล้วส่งรายการทั้งหมด (ข้อมูลไม่มีที่อยู่ไฟล์ในเครื่อง)
+    k = key()
+    if not k: print(json.dumps({'ok': False, 'error': 'ไม่มีคีย์ร้าน'})); return
+    done_f = THUMBS / '.synced.json'
+    try: done = json.loads(done_f.read_text())
+    except Exception: done = {}
+    out = []
+    for b in books:
+        t = THUMBS / f"{b['no']}.jpg"; url = ''
+        if t.exists():
+            stamp = str(int(t.stat().st_mtime))
+            if done.get(b['no'], {}).get('m') == stamp: url = done[b['no']]['u']
+            else:
+                try:
+                    j = post({'thumb': b['no']}, k)
+                    urllib.request.urlopen(urllib.request.Request(j['upload_url'], data=t.read_bytes(), method='PUT', headers={'Content-Type': 'image/jpeg', 'x-upsert': 'true'}), timeout=60).read()
+                    url = j['file_url'] + f'?v={stamp}'; done[b['no']] = {'m': stamp, 'u': url}
+                except Exception as e: print('thumb', b['no'], e, file=sys.stderr)
+        out.append({k2: b[k2] for k2 in ('no', 'day', 'title', 'cat', 'pages', 'mb', 'where', 'audio')} | {'thumb': url})
+    try: done_f.write_text(json.dumps(done))
+    except Exception: pass
+    running = None
+    lock = SSD / '_factory' / '.running'
+    if lock.exists() and time.time() - lock.stat().st_mtime < 4 * 3600:
+        running = {'note': lock.read_text(errors='ignore')[:300], 'since': datetime.fromtimestamp(lock.stat().st_mtime).astimezone().isoformat()}
+    r = post({'ssd': SSD.exists(), 'running': running, 'books': out, 'sets': [{'name': s['name'], 'n': len(s['books']), 'where': s['where']} for s in sets.values()]}, k)
+    print(json.dumps(r, ensure_ascii=False))
+
+
 def main():
     books, sets, seen = [], {}, set()
     for root, where in ((SSD, 'SSD'), (OLD, 'Mac')):
@@ -70,6 +114,12 @@ def main():
             books.append({'no': no, 'day': day, 'title': title_of(pdf, slug), 'cat': cat, 'pages': pages(pdf), 'mb': round(pdf.stat().st_size / 1e6, 1),
                           'where': where, 'path': str(pdf), 'pdf': pdf.as_uri(), 'folder': pdf.parent.as_uri(), 'thumb': t.as_uri() if t else '', 'audio': audio})
     books.sort(key=lambda b: b['no'], reverse=True)
+    if '--sync' in sys.argv:
+        if not SSD.exists():  # SSD หลุด: บอกเว็บว่าหา SSD ไม่เจอ (เว็บแจ้งคุณแดนถ้ามีเล่มรอผลิต) โดยไม่ทับรายการเดิมด้วยรายการว่าง
+            k = key()
+            if k: print(json.dumps(post({'ssd': False, 'running': None, 'books': books, 'sets': []}, k), ensure_ascii=False))
+            return
+        return sync(books, sets)
     if '--json' in sys.argv:  # แอปโรงงานบน Mac อ่านรายการนี้ (tools/factory/app/server.mjs)
         print(json.dumps({'ok': True, 'ssd': SSD.exists(), 'books': books, 'sets': [{'name': s['name'], 'n': len(s['books']), 'where': s['where'], 'path': s['path']} for s in sets.values()]}, ensure_ascii=False)); return
     cats = sorted({b['cat'] for b in books})

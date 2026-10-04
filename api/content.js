@@ -229,6 +229,19 @@ async function publishReadlab(onlyId = '') {
 // ที่มาของออเดอร์จาก campaign (utm_campaign หรือที่หน้าเว็บเดาจาก referrer) · แอด = ชื่อแคมเปญอื่นทั้งหมด
 const ORGANIC_SRC = { store: 'หน้าร้าน', fb_page: 'เพจ Facebook', threads: 'Threads', google: 'Google', instagram: 'Instagram', pinterest: 'Pinterest', line: 'LINE', tiktok: 'TikTok', youtube: 'YouTube', email: 'อีเมล', web: 'เว็บอื่น' };
 const srcGroup = (c) => { const k = String(c || '').trim().toLowerCase(); if (!k) return { g: 'direct', label: 'ไม่ทราบที่มา' }; if (ORGANIC_SRC[k]) return { g: 'organic', label: ORGANIC_SRC[k] }; return { g: 'ads', label: 'แอด ' + c }; }; // ชื่อแคมเปญแอดที่มีคำว่า test (เช่น fb-toeic-test) คือแอดจริง
+// อีเมลถึงคุณแดน (เล่มเสร็จ / ผลิตไม่สำเร็จ / โรงงานบน Mac มีปัญหา) · once = คีย์กันส่งซ้ำวันละครั้ง
+const escH = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function ownerMail(subject, bodyHtml, { once = '', button = null, image = '' } = {}) {
+  const to = process.env.OWNER_EMAIL || process.env.GMAIL_USER; if (!to || !process.env.GMAIL_APP_PASSWORD) return false;
+  if (once) {
+    const day = new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 10), st = (await sb('shop_state?id=eq.owner_mail&select=data'))?.[0]?.data || {};
+    if (st[once] === day) return false;
+    await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'owner_mail', data: { ...st, [once]: day }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  }
+  const html = `<!doctype html><html lang="th"><body style="margin:0;background:#EDF1F7;font-family:-apple-system,'IBM Plex Sans Thai','Noto Sans Thai',Segoe UI,Roboto,sans-serif;color:#0F1B33"><div style="max-width:520px;margin:0 auto;padding:24px 16px"><div style="background:#fff;border-radius:16px;padding:24px 22px"><p style="font-size:13px;color:#56637D;margin:0 0 6px">SheetLab · โรงงาน</p><h1 style="font-size:20px;margin:0 0 12px">${escH(subject)}</h1>${image ? `<img src="${escH(image)}" alt="" width="180" style="display:block;border-radius:10px;margin:0 0 14px;max-width:100%">` : ''}${bodyHtml}${button ? `<p style="margin:18px 0 0"><a href="${escH(button[1])}" style="display:inline-block;background:#2440E8;color:#fff;font-weight:700;text-decoration:none;padding:12px 20px;border-radius:12px">${escH(button[0])}</a></p>` : ''}</div></div></body></html>`;
+  try { await nodemailer.createTransport({ service: 'gmail', auth: { user: process.env.GMAIL_USER, pass: String(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g, '') } }).sendMail({ from: `"SheetLab โรงงาน" <${process.env.GMAIL_USER}>`, to, subject, html }); return true; } catch (e) { console.error('owner mail', e.message); return false; }
+}
+const FAC_PAGE = 'https://sheetlabth.com/#factory';
 async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory', data: { jobs }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 // ห้องพักทีม: เหตุการณ์จริงในร้านสะท้อนเข้าห้องทันที (ไม่ใช้โมเดล ใช้แม่แบบสุ่ม)
@@ -810,7 +823,9 @@ async function shopChecks(add, host) {
   try {
     const w = (await sb('shop_state?id=eq.factory_worker&select=data'))?.[0]?.data; const jobs = await loadJobs(); const q = jobs.filter((j) => j.status === 'queued' && !j.paused).length;
     const h = w?.last_seen ? Math.round((Date.now() - Date.parse(w.last_seen)) / 36e5) : null;
-    add('mac', !q || (h != null && h <= 48), 'warn', h == null ? 'คอมโรงงานยังไม่เคยมาเช็คคิว' : `คอมโรงงานเช็คคิวล่าสุด ${h < 1 ? 'ไม่ถึงชั่วโมง' : h + ' ชม.'}ที่แล้ว${q ? ` · มี ${q} เล่มรอ` : ''}`, 'เปิดคอมและแอป Claude ไว้ หรือกดคัดลอกคำสั่งในหน้าโรงงานไปวางในแชต Claude', null);
+    const lib = (await sb('shop_state?id=eq.factory_library&select=data'))?.[0]?.data;
+    if (lib && lib.ssd === false) add('ssd', !q, 'warn', `SSD ของโรงงานไม่ได้เสียบ${q ? ` · มี ${q} เล่มรอผลิต` : ''}`, 'เสียบ SSD (PortableSSD) เข้ากับ Mac โรงงานจะผลิตต่อเองในรอบชั่วโมงถัดไป', null);
+    add('mac', !q || (h != null && h <= 3), 'warn', h == null ? 'คอมโรงงานยังไม่เคยมาเช็คคิว' : `คอมโรงงานเช็คคิวล่าสุด ${h < 1 ? 'ไม่ถึงชั่วโมง' : h + ' ชม.'}ที่แล้ว${q ? ` · มี ${q} เล่มรอ` : ''}`, 'เปิดคอมและแอป Claude ไว้ หรือกดคัดลอกคำสั่งในหน้าโรงงานไปวางในแชต Claude', null);
   } catch (e) {}
   if (host) {
     try {
@@ -824,6 +839,8 @@ async function recordHealth(h) {
   try { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'health_last', data: h, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {}
   const line = h.problems.length ? `ตรวจระบบ ${h.at.slice(0, 10)}: พบ ${h.problems.length} จุด\n` + h.problems.map((c) => `- [${c.level === 'bad' ? 'ด่วน' : 'เตือน'}] ${c.msg} → ${c.fix || ''}`).join('\n') : `ตรวจระบบ ${h.at.slice(0, 10)}: ปกติทั้ง ${h.checks.length} จุด`;
   await logNote('guard', line, 'health');
+  const macBad = h.problems.filter((c) => ['mac', 'ssd'].includes(c.key || c.id || c.k));
+  if (macBad.length) await ownerMail('💻 โรงงานบน Mac ไม่ได้ผลิต', `<p style="margin:0 0 10px">${macBad.map((c) => escH(c.msg)).join('<br>')}</p><p style="margin:0 0 6px"><b>วิธีแก้:</b></p><ol style="margin:0;padding-left:20px"><li>เปิด Mac เสียบสายชาร์จ เปิดฝาไว้</li><li>เสียบ SSD (PortableSSD)</li><li>เปิดแอป Claude ไว้ (โรงงานรันในแอปนี้ทุกชั่วโมง)</li><li>ถ้ายังไม่ผลิต: แอป Claude → Scheduled → โรงงาน SheetLab → Run now แล้วกด Allow ถ้ามีถาม</li></ol>`, { once: 'mac', button: ['เปิดหน้าโรงงาน', FAC_PAGE] }).catch(() => {});
   for (const c of h.problems) {
     if (!c.fix) continue;
     try { await addTodo({ text: `[ระบบ] ${c.msg} → ${c.fix}`, type: 'do', from: 'guard' }); } catch (e) { console.error('health todo', e.message); }
@@ -1854,6 +1871,27 @@ export default async function handler(req, res) {
       if (auto.on !== old.auto.on) await logNote('factory', auto.on ? `คุณแดนเปิดผลิตอัตโนมัติ สัปดาห์ละ ${auto.per_week} เล่ม` : 'คุณแดนปิดผลิตอัตโนมัติ');
       return res.status(200).json({ ok: true, cfg: { sets, auto, paused } });
     }
+    if (action === 'factory_library') { // คลังหนังสือบน Mac/SSD: Mac ส่งรายการขึ้นมาทุกชั่วโมง (key) · หน้าโรงงานในหลังบ้านอ่าน (แอดมิน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (req.method !== 'POST') return res.status(200).json({ ok: true, ...((await sb('shop_state?id=eq.factory_library&select=data'))?.[0]?.data || { books: [], sets: [] }) });
+      if (!keyOk(req)) return res.status(403).json({ ok: false });
+      const body = await readBody(req);
+      if (body.thumb) { // ขอที่อัปปกย่อ factory-library/NNN.jpg
+        const no = String(body.thumb).replace(/\D/g, '').slice(0, 4); if (!no) return res.status(400).json({ ok: false });
+        const path = `factory-library/${no}.jpg`;
+        const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', 'x-upsert': 'true' }, body: '{}' });
+        const j = await r.json().catch(() => ({})); if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url ${r.status}` });
+        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
+      }
+      const s = (v, n) => String(v ?? '').slice(0, n), own = `${SB_URL}/storage/v1/object/public/product-images/factory-library/`;
+      const books = (Array.isArray(body.books) ? body.books : []).slice(0, 1000).map((b) => ({ no: s(b.no, 4), day: s(b.day, 10), title: s(b.title, 200), cat: s(b.cat, 80), pages: Number(b.pages) || 0, mb: Number(b.mb) || 0, where: b.where === 'SSD' ? 'SSD' : 'Mac', audio: !!b.audio, thumb: String(b.thumb || '').startsWith(own) ? s(b.thumb, 300) : '' }));
+      const sets = (Array.isArray(body.sets) ? body.sets : []).slice(0, 50).map((x) => ({ name: s(x.name, 200), n: Number(x.n) || 0, where: x.where === 'SSD' ? 'SSD' : 'Mac' }));
+      const data = { at: new Date().toISOString(), ssd: body.ssd !== false, running: body.running && typeof body.running === 'object' ? { note: s(body.running.note, 300), since: s(body.running.since, 40) } : null, books, sets };
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_library', data, updated_at: data.at }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (!data.ssd) { const q = (await loadJobs()).filter((j) => j.status === 'queued' && !j.paused).length; if (q) await ownerMail('💾 SSD ของโรงงานไม่ได้เสียบ', `<p style="margin:0">มี ${q} เล่มรอผลิต แต่ Mac หา SSD (PortableSSD) ไม่เจอ เสียบ SSD แล้วโรงงานจะผลิตต่อเองในรอบชั่วโมงถัดไป</p>`, { once: 'ssd', button: ['เปิดหน้าโรงงาน', FAC_PAGE] }).catch(() => {}); }
+      return res.status(200).json({ ok: true, books: books.length });
+    }
     if (action === 'factory_order') { // พี่ต้นสั่ง (key) หรือคุณแดนสั่งเองจากช่องโรงงาน (แอดมิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
@@ -2053,12 +2091,14 @@ export default async function handler(req, res) {
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
         try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
+        await ownerMail(`📗 เล่มใหม่เสร็จแล้ว: ${String(job.title).slice(0, 70)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);
       } else if (action === 'factory_fail') {
         job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
         await logNote('factory', `ผลิตไม่สำเร็จ: ${job.title} เหตุผล: ${job.error}`);
+        await ownerMail(`⚠️ ผลิตไม่สำเร็จ: ${String(job.title).slice(0, 70)}`, `<p style="margin:0 0 8px">เหตุผล: ${escH(job.error)}</p><p style="margin:0">สั่งใหม่หรือแก้รายละเอียดได้ในหน้าโรงงาน</p>`, { button: ['เปิดหน้าโรงงาน', FAC_PAGE] }).catch(() => {});
       } else if (action === 'factory_cancel') {
         job.status = 'cancelled'; job.cancelled_at = new Date().toISOString(); if (body.dup) { job.dup = true; job.cancel_note = String(body.note || 'ผลิตแล้วที่อื่น').slice(0, 200); }
       }
