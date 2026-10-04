@@ -487,6 +487,8 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
 @media(max-width:640px){.fqh{grid-template-columns:1fr}.fqh-nums button{flex:1}.fqt button{padding:8px 11px;font-size:14px}}
+.pt-sku{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 6px;vertical-align:middle}
+.flib-b .fl-au{font-size:12px;line-height:1.4;color:var(--muted);word-break:break-word}.flib-b .fl-au a{color:var(--brand)}.flib-b .fl-act{margin-top:6px}.flib-b .fl-act button,.flib-b .fl-act span{width:100%;text-align:center;font-size:12.5px}
 .flib-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0}.flib-bar .input{flex:1;min-width:180px;width:auto}.flib-bar .chip.on{background:var(--ink);color:var(--bg)}
 .flib{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.flib-b{position:relative;display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface)}.flib-b img,.flib-no{width:100%;aspect-ratio:210/297;object-fit:cover;border-radius:6px;background:var(--bg);display:block;margin-bottom:4px}.flib-b em{position:absolute;left:12px;top:12px;background:var(--ink);color:var(--bg);font-style:normal;font-size:11.5px;font-weight:700;border-radius:6px;padding:0 6px}.flib-b b{font-size:13px;line-height:1.3}.flib-b[hidden]{display:none}
 @media(max-width:560px){.flib{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -1193,6 +1195,12 @@ async function flushRemote(){
   if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);return false;}
   remoteStamp=now;return true;
 }
+/* SKU: SL-NNN = เลขการผลิตบน Mac (ไฟล์ NNN_วันที่_ชื่อ.pdf) · ชุด SL-SETnn · สินค้าที่ไม่ได้มาจากโรงงาน SL-Wnn */
+function ensureSkus(){let ch=0;const used=new Set(D.products.map(p=>p.sku).filter(Boolean));
+  const next=(pre)=>{let i=1;while(used.has(pre+String(i).padStart(2,'0')))i++;return pre+String(i).padStart(2,'0');};
+  for(const p of D.products){if(p.sku)continue;const m=String(p.link||'').match(/\/(\d{3})_\d{4}-\d{2}-\d{2}_/);
+    p.sku=isBundle(p)?next('SL-SET'):m&&!used.has('SL-'+m[1])?'SL-'+m[1]:next('SL-W');used.add(p.sku);ch++;}
+  return ch;}
 async function loadRemote(){
   if(!sb)return false;
   const {data,error}=await sb.from('shop_state').select('id,data,updated_at');
@@ -1210,6 +1218,7 @@ async function loadRemote(){
     PRIVATE_KEYS.forEach(k=>{if(merged[k]===undefined)merged[k]=cached[k]||[];});
   }
   D=normalize(merged);
+  if(sbSession&&ensureSkus())setTimeout(save,0); // สินค้าที่ยังไม่มี SKU ได้เลขอัตโนมัติ
   if(sbSession){
     const demo=o=>o.src!=='stripe'&&(/^DP2609/.test(o.id||'')||/@example\.com$/.test(o.email||''));
     const demoCamp=c=>['calc1-early','grammar-students'].includes(c.name)&&['c1','c2'].includes(c.id);
@@ -1381,7 +1390,7 @@ function normalize(d){
 function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',price:199,fullPrice:390,features:'',link:'https://',color:COLORS[0][0],status:'draft'};}
 function initDraft(p){
   const d={};
-  ['name','slug','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
+  ['name','slug','sku','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
   d.bumpPrice=p.bumpPrice||0;
   if(!d.kind)d.kind='other';
   d.promoEndStr=toLocalInput(p.promoEnd);
@@ -1869,6 +1878,7 @@ function bundleForm(){
     <div class="field">${lb('b-headline','เป้าหมาย (หัวข้อใหญ่บนหน้า)')}<input class="input" id="b-headline" data-d="headline" value="${esc(d.headline)}" placeholder="เช่น TOEIC 750+ ใน 30 วัน ครบทั้ง Listening และ Reading"></div>
     <div class="field">${lb('b-desc','คำโปรย 1–2 ประโยค')}<textarea class="input" id="b-desc" data-d="desc" rows="2">${esc(d.desc)}</textarea></div>
     <div class="grid2">
+      <div class="field">${lb('b-sku','SKU ชุด')}<input class="input" id="b-sku" data-d="sku" value="${esc(d.sku||'')}" placeholder="ระบบตั้งให้เอง เช่น SL-SET01" autocapitalize="characters"></div>
       <div class="field">${lb('b-slug','ชื่อในลิงก์ (sheetlabth.com/p/...)')}<div class="row"><code style="align-self:center">/p/</code><input class="input" id="b-slug" data-d="slug" value="${esc(d.slug)}" placeholder="toeic-750" autocapitalize="none"></div></div>
       <div class="field"><label>สถานะตอนนี้</label><p style="margin:6px 0 0">${d.status==='published'?'<span class="badge ok">ขายอยู่</span>':'<span class="badge gray">ฉบับร่าง</span>'} <span class="fine">เลือกด้วยปุ่มบันทึกด้านล่าง</span></p></div>
     </div>
@@ -1956,7 +1966,7 @@ function bundleData(d){ // ชุดจากช่องที่กรอก�
   const first=getProduct(items[0]);
   return {type:'bundle',sell:SELL[d.sell]?d.sell:'both',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
     plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
-    cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
+    sku:String(d.sku||'').trim().toUpperCase(),cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
 }
 function bundleErr(d,selfId){
   const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase();
@@ -2647,7 +2657,7 @@ function productRow(p){
   const acts=p.fresh&&!pub?[['togglePub','✅ เผยแพร่'],['viewPage','ดูเซลเพจ'],['editProduct',bun?'แก้ไขชุด':'แก้ไขทั้งหมด']]:bun?[['editProduct','แก้ไขชุด'],['viewPage','ดูเซลเพจ'],['copyLink','คัดลอกลิงก์']]:[['quickEdit',S.quick===p.id?'ปิดแก้ไขด่วน':'แก้ไขด่วน'],['editProduct','แก้ไขทั้งหมด'],['viewPage','ดูเซลเพจ']];
   return `<div class="pt-row${pub?'':' draft'}" data-q="${esc(pq(p))}">
     <div class="pt-prod">${pthumb(p)}<div class="pt-info">
-      <b class="pt-name" title="${esc(p.name)}">${bun?'📦 ':''}${esc(p.name||'(ยังไม่มีชื่อ)')}</b>
+      <b class="pt-name" title="${esc(p.name)}">${bun?'📦 ':''}${esc(p.name||'(ยังไม่มีชื่อ)')}</b>${p.sku?`<span class="pt-sku">${esc(p.sku)}</span>`:''}
       <div class="pt-tags">${ptags(p)}${bun?`<span class="badge">ชุด ${bundleBooks(p).length} เล่ม</span>`:''}${p.sell&&p.sell!=='both'?`<span class="badge">${esc(SELL[p.sell]?SELL[p.sell][0]:'')}</span>`:''}</div>
       <span class="pt-sku">SKU: ${esc(p.slug||'-')}</span>
       ${(()=>{const top=hints.find(h=>h[0]==='bad')||hints.find(h=>h[0]==='warn'),ad=(ADA.items||[]).find(y=>y.productId===p.id&&['pending','failed','launching','live','paused'].includes(y.status));
@@ -2687,7 +2697,7 @@ function productRow(p){
 function draftToProduct(d){
   const t=k=>String(d[k]==null?'':d[k]).trim();
   const name=t('name'),link=t('link'),sample=t('sampleLink');
-  return {slug:t('slug').toLowerCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
+  return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
     proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
     bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both'};
@@ -2712,6 +2722,7 @@ function productForm(){
     </div>
     <div class="field">${lb('e-slug','ชื่อในลิงก์ (ภาษาอังกฤษพิมพ์เล็ก ตัวเลข และ -)')}
       <div class="row"><code style="align-self:center">${DOMAIN}</code><input class="input" id="e-slug" data-d="slug" value="${esc(d.slug)}" placeholder="เช่น calculus-1-summary" autocapitalize="none"></div></div>
+    <div class="field">${lb('e-sku','SKU (รหัสสินค้า)')}<input class="input" id="e-sku" data-d="sku" value="${esc(d.sku)}" placeholder="ระบบตั้งให้เอง เช่น SL-046" autocapitalize="characters" style="max-width:220px"><span class="fine">เลข SL-NNN ตรงกับเลขไฟล์บน Mac · ใช้เป็นรหัสสินค้าใน Shopee ได้</span></div>
     ${sellPicker(d)}
     <div class="field">${lb('e-cat','หมวดบนหน้าร้าน')}<select class="input" id="e-cat" data-d="cat"><option value="">ไม่ระบุ</option>${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${d.cat===k?'selected':''}>${v}</option>`).join('')}</select>
       <span class="fine">ปุ่มกรองหมวดบนหน้าร้านขึ้นเมื่อหมวดนั้นมีตั้งแต่ 2 เล่ม</span></div>
@@ -2790,7 +2801,7 @@ function productForm(){
 
 /* ชีทขายที่โรงงานผลิตเสร็จ รอคุณแดนตรวจแล้วกดอนุมัติลงขาย (โรงงานไม่เคยลงขายเอง) */
 const FAC={jobs:null,loading:false,busy:''};
-function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));FAC.global=all.filter(x=>x.lang==='en'&&['global_pending','global'].includes(x.listing));}).catch(()=>{FAC.jobs=[];FAC.queue=[];FAC.global=[];}).then(()=>{FAC.loading=false;render(true);});}
+function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>!x.export_no&&x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.exports=all.filter(x=>x.export_no&&x.status==='done'&&x.listing==='pending');FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));FAC.global=all.filter(x=>x.lang==='en'&&['global_pending','global'].includes(x.listing));}).catch(()=>{FAC.jobs=[];FAC.queue=[];FAC.global=[];FAC.exports=[];}).then(()=>{FAC.loading=false;facExportImport();render(true);});}
 /* 📦 ชุดพร้อมลงขาย: ชุดที่คิวหนังสือบนคอมคุณแดนผลิตเสร็จ (ไฟล์อัปขึ้นคลังแล้ว) กดลงขายทั้งชุดครั้งเดียว: สร้างเล่มที่ยังไม่มี + สร้างชุด */
 const SETI={items:null,loading:false,busy:''};
 function loadSets(){if(SETI.loading)return;SETI.loading=true;adminApi('/api/content?action=set_list').then(j=>{SETI.items=j&&j.ok?j.items:[];}).catch(()=>{SETI.items=[];}).then(()=>{SETI.loading=false;setAutoImport();render(true);});}
@@ -2834,6 +2845,22 @@ function setImportBox(){
   </section>`;}).join('');
 }
 const b2n=v=>Number(v)||0;
+/* ส่งเล่มจากคลังบน Mac ขึ้นร้าน: สั่งเป็นงาน export (Mac อัป PDF + ปก + เขียนหน้าขายจากเนื้อหาจริง ไม่ผลิตใหม่ · เร่ง)
+   เสร็จแล้วหลังบ้านสร้างเป็นฉบับร่างในแท็บ ✨ มาใหม่ ให้เอง พร้อมบอกว่าไฟล์เสียงอยู่ที่ไหนใน Mac และต้องอัปขึ้น Drive ที่ไหน */
+async function libExport(no){const b=((FLIB.d||{}).books||[]).find(x=>String(x.no)===String(no));if(!b)return;
+  try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:b.title,export_no:b.no,sku:b.sku||('SL-'+b.no),rush:'1',price:0,category:b.cat,purpose:'ส่งเล่มที่ผลิตแล้วในคลังขึ้นร้าน (แท็บมาใหม่) ไม่ต้องผลิตใหม่',notes:b.audio?`มีไฟล์เสียงที่ ${b.audio_path}${b.audio_drive?' · Drive: '+b.audio_drive:''}`:''})});
+    if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');FJOBS=null;loadFactoryJobs();toast(`ส่งคำขอแล้ว: ${b.sku||'SL-'+b.no} Mac จะอัปไฟล์และเขียนหน้าขายให้ภายใน 1 ชม. แล้วขึ้นในแท็บสินค้า → ✨ มาใหม่`);}
+  catch(e){toast('ส่งไม่สำเร็จ: '+(e.message||e));}render(true);}
+SETI.exp={};
+function facExportImport(){if(!sbSession||!D.products.length)return;
+  for(const j of (FAC.exports||[]).filter(x=>!SETI.exp[x.id])){SETI.exp[x.id]=1;
+    if(D.products.some(p=>p.fromJob===j.id)){adminPost('/api/content?action=factory_list',{id:j.id,product_id:D.products.find(p=>p.fromJob===j.id).id}).catch(()=>{});continue;}
+    const lc=j.listing_copy||{},sku=j.sku||('SL-'+j.export_no),name=lc.name||j.title,pages=Number(j.pages)||0;
+    const note=[`จากคลังบน Mac (${sku})`,j.audio_path?`🎧 ไฟล์เสียงอยู่ใน Mac: ${j.audio_path}`:'',j.audio_drive?`เสียงอยู่ใน Google Drive แล้ว: ${j.audio_drive}`:j.audio_path?'ยังไม่ได้อัปเสียงขึ้น Drive → อัปไปที่ https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f แล้วแชร์แบบมีลิงก์':'','ตั้งราคาแล้วกดเผยแพร่'].filter(Boolean).join(' · ');
+    const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36)+Math.floor(Math.random()*99),name,headline:lc.headline||name,desc:lc.desc||String(j.summary||'').split('\n')[0].slice(0,300),features:lc.features||(pages?`ไฟล์ PDF ${pages} หน้า`:''),forwho:lc.forwho||'',notfor:lc.notfor||'',faq:lc.faq||'',specs:lc.specs||(pages?`รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | ${pages} หน้า`:''),toc:lc.toc||'',
+      price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url||'',images:(j.images||[]).slice(0,5),cat:guessCat(j.title+' '+(j.category||'')),slug:setSlug(name),sku,status:'draft',fresh:true,freshNote:note,fromJob:j.id});
+    D.products.push(p);save();clearTimeout(saveTimer);
+    flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=factory_list',{id:j.id,product_id:p.id});}).then(()=>{toast(`📤 ${sku} เข้าแท็บมาใหม่แล้ว ตั้งราคาแล้วกดเผยแพร่`);FAC.exports=(FAC.exports||[]).filter(x=>x.id!==j.id);render(true);}).catch(e=>{console.error(e);delete SETI.exp[j.id];});}}
 function setSlug(name){let s=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'set';let t=s,i=2;while(D.products.some(p=>p.slug===t))t=s+'-'+i++;return t;}
 function facBox(inFactory){
   if(FAC.jobs===null){loadFacJobs();return '';}
@@ -2879,6 +2906,7 @@ async function facApprove(id,quick){
     features:[pages?`ไฟล์ PDF ${pages} หน้า`:'ไฟล์ PDF',j.level?`ระดับ ${j.level}`:'',j.audience?`เหมาะกับ ${j.audience}`:'','ดาวน์โหลดได้ทันทีหลังจ่าย'].filter(Boolean).join('\n'),
     specs:`รูปแบบ | ไฟล์ PDF${pages?`\nจำนวนหน้า | ${pages} หน้า`:''}`});
   const lc=j.listing_copy||{};['name','headline','desc','features','forwho','notfor','faq','specs','toc'].forEach(k=>{if(String(lc[k]||'').trim())p0[k]=lc[k];});
+  if(j.sku)p0.sku=j.sku;
   S.draft=initDraft(p0);S.draft.fromJob=j.id;S.edit='new';S.err='';S.pvPages='3-6';render(false);
   FAC.busy=id;toast('กำลังเปิดไฟล์จากโรงงานเพื่อทำภาพปกและหน้าตัวอย่าง...');
   try{
@@ -3106,7 +3134,10 @@ function facLib(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if
   return `<div class="fac-lib"><p class="fine fqt-hint">📚 ${B.length} เล่ม · ผลิตใน 7 วัน ${wk} · ${pg.toLocaleString('th-TH')} หน้า${(d.sets||[]).length?' · ชุดขาย '+d.sets.length:''} · อัปเดต ${new Date(d.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p>
     ${(d.sets||[]).length?`<p class="fine" style="margin:8px 0">📦 ${d.sets.map(s=>`${esc(s.name)} (${s.n} เล่ม)`).join(' · ')}</p>`:''}
     <div class="flib-bar"><input class="input" data-flq="1" value="${esc(S.flq||'')}" placeholder="ค้นหาชื่อเล่มหรือเลขที่" aria-label="ค้นหาหนังสือ"><button class="chip${!cat?' on':''}" data-a="flCat" data-v="" aria-pressed="${!cat}">ทั้งหมด</button>${cats.map(c=>`<button class="chip${cat===c?' on':''}" data-a="flCat" data-v="${esc(c)}" aria-pressed="${cat===c}">${esc(c)}</button>`).join('')}</div>
-    <div class="flib" id="flib">${list.map(b=>`<div class="flib-b" data-q="${esc((b.title+' '+b.no).toLowerCase())}" ${q&&!(b.title+' '+b.no).toLowerCase().includes(q)?'hidden':''}>${b.thumb?`<img src="${esc(b.thumb)}" alt="" loading="lazy">`:'<span class="flib-no"></span>'}<em>#${esc(b.no)}</em><b>${esc(b.title)}</b><span class="fine">${esc(b.cat)} · ${b.pages} หน้า${b.audio?' · 🎧':''} · ${b.where==='SSD'?'💾 SSD':'💻 Mac'}</span></div>`).join('')||'<p class="fine">ไม่พบเล่มที่ค้นหา</p>'}</div>
+    <div class="flib" id="flib">${list.map(b=>{const sku=b.sku||('SL-'+b.no),inShop=D.products.find(p=>p.sku===sku),pend=(FJOBS||[]).find(j=>String(j.export_no||'')===String(b.no)&&(['queued','producing'].includes(j.status)||(j.status==='done'&&j.listing==='pending')));
+      return `<div class="flib-b" data-q="${esc((b.title+' '+b.no+' '+sku).toLowerCase())}" ${q&&!(b.title+' '+b.no+' '+sku).toLowerCase().includes(q)?'hidden':''}>${b.thumb?`<img src="${esc(b.thumb)}" alt="" loading="lazy">`:'<span class="flib-no"></span>'}<em>${esc(sku)}</em><b>${esc(b.title)}</b><span class="fine">${esc(b.cat)} · ${b.pages} หน้า · ${b.where==='SSD'?'💾 SSD':'💻 Mac'}</span>
+      ${b.audio?`<span class="fl-au">🎧 เสียงใน Mac: <code>${esc(String(b.audio_path||'').replace(/^\/Users\/[^/]+/,'~'))}</code><br>${b.audio_drive?`Drive: <a href="${esc(b.audio_drive)}" target="_blank" rel="noopener noreferrer">เปิดโฟลเดอร์เสียง ↗</a>`:`ยังไม่อยู่ใน Drive → อัปไปที่ <a href="${esc(b.audio_target||'')}" target="_blank" rel="noopener noreferrer">Sheetlab/Academic Audio ↗</a>`}</span>`:''}
+      <div class="fl-act">${inShop?`<span class="badge ok">✓ ในร้านแล้ว</span>`:pend?'<span class="badge warn">⏳ กำลังส่งขึ้นร้าน</span>':`<button class="chip" data-a="libExport" data-v="${esc(b.no)}">📤 ลงร้าน (มาใหม่)</button>`}</div></div>`;}).join('')||'<p class="fine">ไม่พบเล่มที่ค้นหา</p>'}</div>
     <p class="fine" style="margin:10px 0 0">ไฟล์ PDF อยู่ใน SSD ของ Mac · Mac ส่งรายการขึ้นมาทุกชั่วโมง</p></div>`;}
 /* สั่งทั้งชุดในครั้งเดียว: บรรทัดละเล่ม "ชื่อเล่ม | ราคา" + ชื่อชุด + ⚡ เร่งผลิต (Mac ผลิตต่อกันรวดเดียว ไม่รอรอบชั่วโมง) */
 function setOrderLines(){return String(S.form.setBooks||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.lastIndexOf('|'),p=i>0?Number(l.slice(i+1).replace(/[^\d.]/g,'')):NaN;return {title:(i>0&&p>=0&&!isNaN(p)?l.slice(0,i):l).trim(),price:i>0&&!isNaN(p)?p:0};}).filter(x=>x.title);}
@@ -3134,7 +3165,7 @@ function factoryView(){
   const pos=id=>{const i=FORDER.indexOf(id);return i<0?1e9:i;};
   const queued=jobs.filter(j=>j.status==='queued').sort((a,b)=>pos(a.id)-pos(b.id)||String(a.created_at).localeCompare(String(b.created_at)));
   const producing=jobs.filter(j=>j.status==='producing');
-  const review=jobs.filter(j=>j.status==='done'&&['pending','global_pending'].includes(j.listing));
+  const review=jobs.filter(j=>j.status==='done'&&!j.export_no&&['pending','global_pending'].includes(j.listing));
   const done=jobs.filter(j=>j.status==='done'&&!['pending','global_pending'].includes(j.listing)).sort((a,b)=>String(b.done_at||'').localeCompare(String(a.done_at||'')));
   const failed=jobs.filter(j=>j.status==='failed');
   const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>3*36e5;
@@ -3298,7 +3329,7 @@ function exportCsv(one){
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const head=['SKU','ชื่อสินค้า','ราคาขาย','ราคาปกติ (ก่อนลด)','ประเภท','หมวด','คำอธิบายสินค้า','รูปที่ 1 (ปก)','รูปที่ 2','รูปที่ 3','รูปที่ 4','รูปที่ 5','ลิงก์หน้าขายบนเว็บ'];
   const rows=list.map(p=>{const im=(p.images||[]).slice(0,5);while(im.length<5)im.push('');
-    return [p.slug,String(p.name||'').slice(0,120),Number(p.price)||0,Number(p.fullPrice)>Number(p.price)?Number(p.fullPrice):'',PFMT[pfmt(p)][1],CATS[p.cat]||'',exportDesc(p),...im,location.origin+'/p/'+p.slug];});
+    return [p.sku||p.slug,String(p.name||'').slice(0,120),Number(p.price)||0,Number(p.fullPrice)>Number(p.price)?Number(p.fullPrice):'',PFMT[pfmt(p)][1],CATS[p.cat]||'',exportDesc(p),...im,location.origin+'/p/'+p.slug];});
   const csv='﻿'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n'); // BOM ให้ Excel อ่านภาษาไทยถูก
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=(one?'sheetlab-'+one.slug:'sheetlab-products-'+new Date().toISOString().slice(0,10))+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
   toast(one?'ดาวน์โหลดข้อมูล "'+String(one.name||'').slice(0,30)+'" แล้ว':'ดาวน์โหลดข้อมูลสินค้า '+list.length+' รายการแล้ว');
@@ -3322,7 +3353,7 @@ function exportShopee(){
       '📦 สินค้าเป็นหนังสือเล่มพิมพ์ ขนาด A4'+(pages?` รวม ${pages} หน้า`:'')+' จัดส่งจากประเทศไทย',books.some(b=>/MP3|ไฟล์เสียง|QR/i.test(b.specs||b.features||''))?'🎧 ไฟล์เสียงฟังผ่าน QR code ในเล่ม':'',
       'สั่งแล้วร้านพิมพ์และแพ็กส่งตามรอบ ถ้ามีคำถามทักแชทได้เลย'].filter(Boolean).join('\n\n').slice(0,3000);
     const pdf=bun?books.map(b=>b.link?b.link.split('?')[0]:'').filter(Boolean).join(' | '):(p.link||'').split('?')[0];
-    return [p.slug+'-print',name,desc,price,20,sp.kg,sp.w,sp.l,sp.h,...im,pages||'',pdf,location.origin+'/p/'+p.slug];});
+    return [(p.sku||p.slug)+'-P',name,desc,price,20,sp.kg,sp.w,sp.l,sp.h,...im,pages||'',pdf,location.origin+'/p/'+p.slug];});
   const csv='\ufeff'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shopee-print-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
   toast(`ไฟล์ลง Shopee ${list.length} รายการแล้ว (ราคา PDF + ฿${plus}/เล่ม) เปิดใน Excel แล้วคัดลอกไปวางในเทมเพลตของ Shopee`);
@@ -5099,6 +5130,7 @@ function act(a,el){
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'flCat':S.flcat=el.dataset.v;render(true);break;
     case 'facTab':S.facTab=el.dataset.v;render(true);break;
+    case 'libExport':libExport(el.dataset.v);break;
     case 'ordMode':S.ordMode=el.dataset.v;S.fqErr='';render(true);break;
     case 'soRush':S.soRush=!!el.checked;break;
     case 'soOrder':setOrder();break;

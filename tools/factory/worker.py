@@ -88,14 +88,14 @@ def unlock():
 def main():
     if not KEY: sys.exit('ต้องใส่ CONTENT_KEY')
     ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('args', nargs='*')
-    ap.add_argument('--cover'); ap.add_argument('--listing'); ap.add_argument('--summary', default=''); ap.add_argument('--images', nargs='*', default=[])
+    ap.add_argument('--cover'); ap.add_argument('--listing'); ap.add_argument('--sku', default=''); ap.add_argument('--audio-path', default=''); ap.add_argument('--audio-drive', default=''); ap.add_argument('--summary', default=''); ap.add_argument('--images', nargs='*', default=[])
     a = ap.parse_args()
     if a.cmd == 'queue':
         j = api('factory', query='&status=queued&by=mac')
         sync()
         if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
         jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
-        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush']} for x in jobs], ensure_ascii=False, indent=1))
+        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
         r = api('factory_claim', {'id': a.args[0], 'by': 'mac'}); print(json.dumps(r, ensure_ascii=False)[:300])
         if r.get('ok'):
@@ -104,7 +104,7 @@ def main():
             sync()
     elif a.cmd == 'done':
         job, pdf = a.args[0], os.path.expanduser(a.args[1])
-        body = {'id': job, 'by': 'mac', 'file_url': upload(job, pdf, os.path.basename(pdf).replace(' ', '-'), 'application/pdf'), 'size': os.path.getsize(pdf), 'summary': a.summary}
+        body = {'id': job, 'by': 'mac', 'file_url': upload(job, pdf, os.path.basename(pdf).replace(' ', '-'), 'application/pdf'), 'size': os.path.getsize(pdf), 'summary': a.summary, 'sku': a.sku, 'audio_path': a.audio_path, 'audio_drive': a.audio_drive}
         body['images'] = [cover(job, os.path.expanduser(a.cover))] if a.cover else []  # หน้าตัวอย่างหน้าเว็บทำเองตอนอนุมัติ
         body['pages'] = page_count(pdf)
         if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))

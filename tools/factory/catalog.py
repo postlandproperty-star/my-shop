@@ -16,6 +16,35 @@ THUMBS = SSD / '_factory' / 'thumbs'
 SKIP = {'_factory', '_เก่า', '_kit', '_audio_test', '_image_test'}
 NUM = re.compile(r'^(\d{3})_(\d{4}-\d{2}-\d{2})_(.+)\.pdf$')
 POPPLER = '/opt/homebrew/bin'
+# ไฟล์เสียงขึ้น Google Drive ผ่านแอป Drive ในเครื่อง · ที่ใหม่ = บัญชี postland (Sheetlab/Academic Audio) · ที่เก่า = บัญชี dksim.store
+DRIVES = [Path.home() / 'Library/CloudStorage/GoogleDrive-postland.property@gmail.com/My Drive/Sheetlab/Academic Audio',
+          Path.home() / 'Library/CloudStorage/GoogleDrive-dksim.store@gmail.com/My Drive/Academic Audio']
+AUDIO_TARGET = 'https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f'  # Sheetlab/Academic Audio (postland)
+
+
+def drive_id(p):
+    try:
+        v = subprocess.run(['/usr/bin/xattr', '-p', 'com.google.drivefs.item-id#S', str(p)], capture_output=True, text=True, timeout=10).stdout.strip()
+        return v if v and not v.startswith('local') else ''
+    except Exception: return ''
+
+
+def drive_folders():
+    out = []
+    for d in DRIVES:
+        try: out += [x for x in d.iterdir() if x.is_dir()]
+        except Exception: pass
+    return out
+
+
+def audio_drive(title, folders):
+    t = re.sub(r'\s+', ' ', title.upper()).strip()
+    for f in folders:
+        n = re.sub(r'\s+', ' ', f.name.upper()).strip()
+        if n and (t.startswith(n) or n.startswith(t[:40])):
+            i = drive_id(f)
+            if i: return f'https://drive.google.com/drive/folders/{i}'
+    return ''
 
 
 def walk(root):
@@ -83,7 +112,7 @@ def sync(books, sets):
                     urllib.request.urlopen(urllib.request.Request(j['upload_url'], data=t.read_bytes(), method='PUT', headers={'Content-Type': 'image/jpeg', 'x-upsert': 'true'}), timeout=60).read()
                     url = j['file_url'] + f'?v={stamp}'; done[b['no']] = {'m': stamp, 'u': url}
                 except Exception as e: print('thumb', b['no'], e, file=sys.stderr)
-        out.append({k2: b[k2] for k2 in ('no', 'day', 'title', 'cat', 'pages', 'mb', 'where', 'audio')} | {'thumb': url})
+        out.append({k2: b[k2] for k2 in ('no', 'sku', 'day', 'title', 'cat', 'pages', 'mb', 'where', 'audio', 'audio_path', 'audio_drive', 'audio_target')} | {'thumb': url})
     try: done_f.write_text(json.dumps(done))
     except Exception: pass
     running = None
@@ -95,7 +124,7 @@ def sync(books, sets):
 
 
 def main():
-    books, sets, seen = [], {}, set()
+    books, sets, seen, dfold = [], {}, set(), drive_folders()
     for root, where in ((SSD, 'SSD'), (OLD, 'Mac')):
         for pdf in walk(root):
             rel = pdf.relative_to(root)
@@ -111,7 +140,9 @@ def main():
             cat = rel.parts[0] if len(rel.parts) > 1 else '-'
             t = thumb(pdf, no)
             audio = (pdf.parent / 'audio').is_dir()
-            books.append({'no': no, 'day': day, 'title': title_of(pdf, slug), 'cat': cat, 'pages': pages(pdf), 'mb': round(pdf.stat().st_size / 1e6, 1),
+            title = title_of(pdf, slug)
+            books.append({'no': no, 'sku': f'SL-{no}', 'audio_path': str(pdf.parent / 'audio') if audio else '', 'audio_drive': audio_drive(title, dfold) if audio else '', 'audio_target': AUDIO_TARGET if audio else '',
+                          'day': day, 'title': title, 'cat': cat, 'pages': pages(pdf), 'mb': round(pdf.stat().st_size / 1e6, 1),
                           'where': where, 'path': str(pdf), 'pdf': pdf.as_uri(), 'folder': pdf.parent.as_uri(), 'thumb': t.as_uri() if t else '', 'audio': audio})
     books.sort(key=lambda b: b['no'], reverse=True)
     if '--sync' in sys.argv:

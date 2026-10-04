@@ -133,7 +133,7 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 
 
 // โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
-const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush']; // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
+const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush', 'export_no', 'sku']; // export_no = ส่งเล่มที่ผลิตแล้วในคลังบน Mac ขึ้นร้าน (ไม่ผลิตใหม่) · sku = SL-NNN // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
 // ประเภทงานโรงงาน: pdf (ชีท PDF ค่าเริ่มต้น) | notion (Notion template สร้างใน Notion ของคุณแดน คุณแดนกด Publish เอง)
 const jobKind = (b) => (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
 const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|app\.notion\.com)\//i.test(String(u || ''));
@@ -1885,7 +1885,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
       }
       const s = (v, n) => String(v ?? '').slice(0, n), own = `${SB_URL}/storage/v1/object/public/product-images/factory-library/`;
-      const books = (Array.isArray(body.books) ? body.books : []).slice(0, 1000).map((b) => ({ no: s(b.no, 4), day: s(b.day, 10), title: s(b.title, 200), cat: s(b.cat, 80), pages: Number(b.pages) || 0, mb: Number(b.mb) || 0, where: b.where === 'SSD' ? 'SSD' : 'Mac', audio: !!b.audio, thumb: String(b.thumb || '').startsWith(own) ? s(b.thumb, 300) : '' }));
+      const books = (Array.isArray(body.books) ? body.books : []).slice(0, 1000).map((b) => ({ no: s(b.no, 4), sku: /^SL-[A-Z0-9-]{2,12}$/.test(String(b.sku || '')) ? s(b.sku, 16) : '', day: s(b.day, 10), title: s(b.title, 200), cat: s(b.cat, 80), pages: Number(b.pages) || 0, mb: Number(b.mb) || 0, where: b.where === 'SSD' ? 'SSD' : 'Mac', audio: !!b.audio, audio_path: b.audio ? s(b.audio_path, 300) : '', audio_drive: /^https:\/\/drive\.google\.com\//.test(String(b.audio_drive || '')) ? s(b.audio_drive, 200) : '', audio_target: /^https:\/\/drive\.google\.com\//.test(String(b.audio_target || '')) ? s(b.audio_target, 200) : '', thumb: String(b.thumb || '').startsWith(own) ? s(b.thumb, 300) : '' }));
       const sets = (Array.isArray(body.sets) ? body.sets : []).slice(0, 50).map((x) => ({ name: s(x.name, 200), n: Number(x.n) || 0, where: x.where === 'SSD' ? 'SSD' : 'Mac' }));
       const data = { at: new Date().toISOString(), ssd: body.ssd !== false, running: body.running && typeof body.running === 'object' ? { note: s(body.running.note, 300), since: s(body.running.since, 40) } : null, books, sets };
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_library', data, updated_at: data.at }], prefer: 'resolution=merge-duplicates,return=minimal' });
@@ -2076,13 +2076,16 @@ export default async function handler(req, res) {
         if (isNotionUrl(body.notion_url)) { job.notion_url = String(body.notion_url).slice(0, 400); job.kind = 'notion'; }
         const own = `${SB_URL}/storage/v1/object/public/product-images/factory/${job.id}/`;
         if (Array.isArray(body.images)) job.images = body.images.map(String).filter((u) => u.startsWith(own)).slice(0, 6);
+        if (/^SL-[A-Z0-9-]{2,12}$/.test(String(body.sku || ''))) job.sku = String(body.sku);
+        if (body.audio_path) job.audio_path = String(body.audio_path).slice(0, 300); // ไฟล์เสียงอยู่ที่ไหนใน Mac
+        if (/^https:\/\/drive\.google\.com\//.test(String(body.audio_drive || ''))) job.audio_drive = String(body.audio_drive).slice(0, 200);
         if (Array.isArray(body.pins)) job.pin_images = body.pins.map(String).filter((u) => u.startsWith(own)).slice(0, 10);
         if (isNotionUrl(body.lite_url)) job.lite_url = String(body.lite_url).slice(0, 400);
         if (body.global && typeof body.global === 'object') job.global_copy = cleanGlobal(body.global);
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
         await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
         if (job.lang === 'en' && job.notion_url) job.listing = 'global_pending'; // ขายต่างประเทศ: ชุดลง Gumroad/Notion Gallery/Pinterest ไม่ขึ้นหน้าร้านไทย
-        else if (Number(job.price) >= 1 && (job.file_url || job.notion_url)) job.listing = 'pending'; // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
+        else if ((Number(job.price) >= 1 || job.export_no) && (job.file_url || job.notion_url)) job.listing = 'pending'; // export_no: เล่มจากคลังบน Mac หลังบ้านสร้างเป็นฉบับร่างในแท็บมาใหม่ให้เอง // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
         const todoText = job.listing === 'global_pending'
           ? `ลงขายต่างประเทศ "${job.title}" (Notion EN) เปิดแท็บโรงงาน → 🌏 ชุดลงขายต่างประเทศ: Publish ตัวเต็มและตัว Lite ใน Notion แล้วคัดลอกข้อความ/รูปไปลง Gumroad และส่ง Notion Template Gallery แล้ววางลิงก์กลับมา`
           : job.listing === 'pending' && job.kind === 'notion'
@@ -2090,8 +2093,8 @@ export default async function handler(req, res) {
           : job.listing === 'pending'
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
-        try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
-        await ownerMail(`📗 เล่มใหม่เสร็จแล้ว: ${String(job.title).slice(0, 70)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
+        if (!job.export_no) try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
+        await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว: ${String(job.title).slice(0, 70)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);
