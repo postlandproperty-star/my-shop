@@ -556,6 +556,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bxi-hero{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}.bxi-big{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;background:var(--bg);text-align:center}.bxi-big img{width:100%;height:100%;object-fit:cover}
 .bxi-side{display:grid;gap:8px;align-content:start;justify-items:start}
 .bxi-pick{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin:0 0 8px}.bxi-selb{display:flex;gap:5px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}.bxi-selb input{width:18px;height:18px}.bxi-b.sel .bxi-bc{outline:3px solid #2440E8;outline-offset:1px}.bxi-b.sel .bxi-selb{color:var(--ink);font-weight:600}
+.bxi-upl{cursor:pointer;font-size:12.5px}
 .bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
 .bxi-bc{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--line);position:relative}.bxi-bc img{width:100%;height:100%;object-fit:cover}
 .bxi-bc{padding:0;cursor:zoom-in;display:block}.bxi-zoom{position:absolute;right:4px;top:4px;background:rgba(255,255,255,.9);border-radius:6px;font-size:12px;padding:1px 4px;opacity:.85}
@@ -1112,6 +1113,15 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .upsell .info b{display:block;font-size:15px}
 .upsell .info span{font-size:14px;color:var(--muted)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+/* ชุดสุดคุ้ม: ปุ่มเพิ่มอยู่ในการ์ดเดียวกัน · 2 ชุดขึ้นไปเรียงเท่ากันสวย (คุณแดน 5 ต.ค. 69) */
+.st-main .st-bundles{display:grid;grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:12px;overflow:visible}
+.st-main .st-bundles .st-bwrap{display:flex;flex-direction:column;gap:0;border:1.5px solid #FFD2C2;border-radius:14px;background:linear-gradient(105deg,#FFF6F2 0%,#fff 55%);overflow:hidden;box-shadow:0 1px 3px rgba(15,27,51,.06)}
+.st-main .st-bundles .st-bwrap .st-bundle{flex:1;border:0;border-radius:0;background:none;box-shadow:none;padding:14px 14px 10px;align-items:start}
+.st-main .st-bundles .st-bwrap .st-add.st-badd{position:static;margin:0 14px 14px;width:auto;min-width:0;height:40px;justify-self:auto}
+.st-main .st-bundles .st-binfo b,.st-main .st-bundles .st-bhead{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.st-main .st-bundles .st-add.st-badd.on{border-color:#EE4D2D}
+@media(max-width:700px){.st-main .st-bundles .st-bundle{grid-template-columns:84px minmax(0,1fr);gap:10px;padding:12px 12px 8px}.st-main .st-bundles .st-kicker{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-size:12px}.st-main .st-bundles .st-binfo b{font-size:16px}.st-main .st-bundles .st-bimg,.st-main .st-bundles .st-stack{width:84px}}
+@media(max-width:700px){.st-main .st-bundles{grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:86%;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}.st-main .st-bundles>*{scroll-snap-align:start}.st-main .st-bundles:has(> :only-child){grid-auto-columns:100%}}
 </style>
 </head>
 <body>
@@ -1964,7 +1974,7 @@ function bundleForm(){
     <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`).join('')}</div>
     <div class="bxi-pick"><span class="fine">ติ๊กเล่มที่จะให้ AI ทำปก${sel.length?` · เลือกแล้ว <b>${sel.length}</b> เล่ม`:''}</span><button class="chip" data-a="bxSelAll" data-v="todo" ${todo?'':'disabled'}>เลือกเล่มที่ยังไม่มีปกเรียบ (${todo})</button><button class="chip" data-a="bxSelAll" data-v="all">เลือกทั้งหมด</button>${sel.length?'<button class="chip" data-a="bxSelAll" data-v="none">ไม่เลือก</button>':''}</div>
     <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b${sel.includes(b.id)?' sel':''}"><button class="bxi-bc" data-a="bxView" data-id="${b.id}" aria-label="ดูปกเล่ม ${i+1} ขนาดใหญ่">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?`<span class="bxi-ok">✓ ปกเรียบ${(b.images||[])[0]===b.bookCover?' · รูปสินค้า':''}</span>`:''}<span class="bxi-zoom" aria-hidden="true">🔍</span></button>
-      <label class="bxi-selb"><input type="checkbox" data-a="bxSel" data-id="${b.id}" ${sel.includes(b.id)?'checked':''} ${pend?'disabled':''}> เล่ม ${i+1}</label><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button></div>`).join('')}</div>
+      <label class="bxi-selb"><input type="checkbox" data-a="bxSel" data-id="${b.id}" ${sel.includes(b.id)?'checked':''} ${pend?'disabled':''}> เล่ม ${i+1}</label><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button><label class="chip bxi-upl" title="ใส่รูปปกของเล่มนี้เอง (ใช้จริงเมื่อกดบันทึกชุด)">⬆ ใส่ปกเอง<input type="file" accept="image/*" hidden data-bxbook="${b.id}"></label></div>`).join('')}</div>
     <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">${pend?'<button class="btn btn-danger btn-sm" data-a="aiStop">⏹ หยุดทำปก AI</button>':''}<button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${S.bxImgT||cnt}...`:sel.length?`✨ ทำปกเล่มที่เลือก (${sel.length} รูป)`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก${st.pdf?' (รวมปกในไฟล์ PDF)':''} · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
     ${S.bxImgErr?`<div class="bxi-err">⚠️ ${esc(S.bxImgErr)}${aiPay(S.bxImgErr)}</div>`:''}
     <h4 class="bxi-step" style="margin-top:20px"><span>2</span> รูปใหญ่ของชุด (หัวหน้าขาย · การ์ดหน้าร้าน · แอด)</h4>
@@ -4353,6 +4363,17 @@ function fbErrHelp(e){e=String(e||'');
     <ol style="margin:6px 0 0;padding-left:20px"><li>เปิด <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps ↗</a> แล้วเลือกแอป SheetLab Publisher</li><li>การตั้งค่าแอป → ข้อมูลพื้นฐาน: ใส่ Privacy Policy URL และ User data deletion (URL คำแนะนำ) เป็น <code>https://sheetlabth.com/privacy</code> ใส่ไอคอนแอป 1024×1024 หมวดหมู่ และอีเมลติดต่อ แล้วกดบันทึก</li><li>กดสวิตช์ "โหมดแอป" ด้านบนจาก พัฒนา เป็น Live (หรือเมนู "เผยแพร่" แล้วกดเผยแพร่)</li><li>กลับมากด "↻ ลองยิงใหม่"</li></ol><span class="fine">ถ้า Facebook ขอยืนยันธุรกิจหรือส่งรีวิวแอป ให้แคปหน้าจอส่งมา</span></div>`;
   if(/under 18|20 in Thailand/i.test(e))return '<div class="adt-msg">แก้ในระบบแล้ว (อายุขั้นต่ำ 20 ปี) กด "↻ ลองยิงใหม่" ได้เลย</div>';
   return '';}
+/* น้องบูสต์แนะนำงบ: ตามราคาสินค้า + ต้นทุนต่อออเดอร์จริงจากแอดที่ผ่านมา (ถ้ามี) · คุณแดนเป็นคนตัดสินใจและกดตกลงเอง */
+function adBudgetRec(x){const p=getProduct(x.productId)||{},bun=isBundle(p),price=bun?fromPrice(p):Number(p.price)||0;
+  const h=(ADST.d&&ADST.d.history)||[],sales=h.filter(y=>y.purchases>0),n=sales.reduce((a,y)=>a+y.purchases,0),cpa=n?Math.round(sales.reduce((a,y)=>a+y.spendTHB,0)/n):0;
+  let daily=price>=500?200:price>=200?150:100;if(cpa&&price&&cpa<price*0.8)daily=Math.min(500,Math.max(daily,Math.ceil(cpa/10)*10));
+  const days=7,total=daily*days,need=price?Math.ceil(total/price):0,unit=bun?'ชุด':'เล่ม';
+  const why=[`${unit}นี้ราคา ฿${price.toLocaleString('th-TH')} แนะนำ ฿${daily}/วัน × ${days} วัน (รวม ฿${total.toLocaleString('th-TH')})`,
+    '7 วันคือเวลาขั้นต่ำที่ Facebook ใช้เรียนรู้ว่าควรโชว์แอดให้ใคร งบน้อยกว่า ฿100/วัน มักเรียนรู้ไม่ทัน',
+    need?`คืนทุนเมื่อขายได้ ${need} ${unit}ใน ${days} วัน`:'',
+    cpa?`แอดที่ผ่านมาได้ 1 ออเดอร์ต่อค่าแอดประมาณ ฿${cpa.toLocaleString('th-TH')}${cpa<price*0.8?' (คุ้ม) เลยแนะนำให้พอได้วันละประมาณ 1 ออเดอร์':cpa>price?` ซึ่งแพงกว่าราคา${unit} ลองยิงชุดแทนเล่มเดี่ยวจะคุ้มกว่า`:''}`:'ยังไม่มีข้อมูลยอดซื้อจากแอดเก่า เลยใช้งบเริ่มต้นไว้ก่อน',
+    'ถ้า 3 วันแรกมีคนคลิกแต่ยังไม่มีคนสั่ง ให้เปลี่ยนรูปแอดก่อนเพิ่มงบ'].filter(Boolean);
+  return {daily,days,total,why};}
 function adRecommend(x){const p=getProduct(x.productId),notion=p&&pfmt(p)==='notion';
   return notion?{plats:['facebook','instagram'],why:'Notion template ขายด้วยภาพสวย คนบน Instagram ตัดสินใจจากรูปได้ไว แนะนำ Facebook + Instagram (หรือปล่อยอัตโนมัติก็ได้)'}
     :{plats:[],why:'แนะนำ "อัตโนมัติ" ให้ Facebook ย้ายงบไปช่องที่ได้ยอดซื้อถูกที่สุดเอง (ส่วนใหญ่ได้ทั้ง FB และ IG) งบ ฿100/วัน ถ้าแบ่งเองหลายช่อง แต่ละช่องจะได้งบน้อยจนเรียนรู้ช้า · Threads คนเห็นแอดยังน้อย ใช้เป็นช่องเสริมเมื่ออยากลอง'};}
@@ -4442,6 +4463,7 @@ function adsAutoBox(compact,noLive){
           ${pl.includes('threads')?'<span class="fine">Threads ต้องลงคู่กับ Instagram (ข้อกำหนดของ Meta) ถ้าบัญชียังเปิด Threads ผ่านระบบไม่ได้ จะยิง FB/IG แทนแล้วแจ้งให้ทราบ</span>':''}</div>`;})()}
         <div class="adq-budget"><label>งบต่อวัน (บาท)<input class="input" type="number" min="50" max="2000" step="10" id="add-${x.id}" value="${esc(x.dailyTHB)}" data-adsum="${x.id}"></label>
           <label>จำนวนวัน<input class="input" type="number" min="1" max="30" id="adn-${x.id}" value="${esc(x.days)}" data-adsum="${x.id}"></label></div>
+        ${(()=>{const r=adBudgetRec(x),same=Number(x.dailyTHB)===r.daily&&Number(x.days)===r.days;return `<details class="adq-rec adq-brec"><summary>${ava('analyst',1)}<span><b>น้องบูสต์แนะนำงบ:</b> ฿${r.daily}/วัน × ${r.days} วัน (รวม ฿${r.total.toLocaleString('th-TH')}) ${same?'✓':''}</span><span class="fine">ทำไม?</span></summary><ul class="fine">${r.why.map(w=>`<li>${esc(w)}</li>`).join('')}</ul></details>${same?'':`<button class="pt-a" data-a="adsBudgetRec" data-id="${x.id}">ใช้งบตามคำแนะนำ</button>`}`;})()}
         <p class="adq-total">รวมไม่เกิน <b id="ads-sum-${x.id}">฿${tot.toLocaleString('th-TH')}</b>${cur&&cur!=='THB'?` <span class="fine">(บัญชีโฆษณาตัดเป็น ${esc(cur)} ตามเรทวันนี้)</span>`:''}</p>
         ${x.status==='failed'&&x.error?`<p class="err" style="margin:0">ยิงไม่สำเร็จ: ${esc(x.error)}</p>${fbErrHelp(x.error)}`:''}
         <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="adsLaunch" data-id="${x.id}" ${!okAcc||busy||x.status==='launching'?'disabled':''}>${busy||x.status==='launching'?'กำลังสร้างแอด...':x.status==='failed'?'↻ ลองยิงใหม่':'✅ ตกลง ยิงแอด'}</button>${x.status!=='launching'?`<button class="btn btn-line btn-sm" data-a="adsDismiss" data-id="${x.id}">ไม่เอา</button>`:''}</div>
@@ -5659,6 +5681,7 @@ function act(a,el){
     case 'soOpen':S.soOpen=!S.soOpen;break;
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที':'แสดงอีกครั้งแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
+    case 'adsBudgetRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;const r=adBudgetRec(x);x.dailyTHB=r.daily;x.days=r.days;{const i1=$('#add-'+id),i2=$('#adn-'+id);if(i1)i1.value=r.daily;if(i2)i2.value=r.days;}render(true);toast(`ใส่งบ ฿${r.daily}/วัน × ${r.days} วันแล้ว เงินยังไม่ออกจนกว่าจะกดตกลง`);break;}
     case 'adsImg':case 'adsImgDel':case 'adsPlat':case 'adsPlatRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;
       adsKeep(x);
       if(a==='adsImgDel'){const u=el.dataset.v;x.extra=(x.extra||[]).filter(v=>v!==u);x.multi=(x.multi||[]).filter(v=>v!==u);if(x.image===u)x.image=(x.multi||[])[0]||x.image;adsSave(x);render(true);break;}
@@ -5929,6 +5952,10 @@ document.addEventListener('change',e=>{
       .catch(e=>toast('เปลี่ยนไฟล์ไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxFile='';render(true);});return;}
   if(t.dataset&&t.dataset.bxref){const f=t.files&&t.files[0];t.value='';if(!f)return;S.bxRefUp=true;render(true);
     new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f);}).then(d=>toJpeg(d,1200)).then(uploadImage).then(u=>{const st=bxStyle();bxStyleSet('refs',(st.refs||[]).concat(u).slice(0,3));toast('เพิ่มรูปตัวอย่างแล้ว ปกที่ทำต่อจากนี้จะใช้สไตล์นี้');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxRefUp=false;render(true);});return;}
+  if(t.dataset&&t.dataset.bxbook&&S.draft){const f=t.files&&t.files[0],b=getProduct(t.dataset.bxbook);if(!f||!b)return;toast('กำลังอัปโหลดปก...');S.bxImg=b.id;render(true);
+    new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f);}).then(d=>toJpeg(d,1200)).then(uploadImage)
+      .then(u=>{if(!('origImg' in b))b.origImg=(b.images||[]).find(x=>x!==b.bookCover)||'';if(b.bookCover)b.oldCovers=[...(b.oldCovers||[]),b.bookCover].slice(-5);b.bookCover=u;b.coverMode='own';bxUseCover(b,true);if(!S.bxSnap)save();toast('ใส่ปกเองแล้ว กดบันทึกชุดเพื่อใช้');})
+      .catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e))).then(()=>{S.bxImg='';t.value='';render(true);});return;}
   if(t.dataset&&t.dataset.bxup&&S.draft){const f=t.files&&t.files[0];if(!f)return;toast('กำลังอัปโหลดรูป...');square(f).then(r=>uploadImage(r.url)).then(u=>{S.draft.cover=u;S.draft.coverAuto='';render(true);toast('ใส่รูปชุดแล้ว อย่าลืมกดบันทึก');}).catch(e=>toast('อัปโหลดไม่สำเร็จ: '+(e.message||e)));return;}
   if(t.dataset&&t.dataset.adsup){const x=(ADA.items||[]).find(y=>y.id===t.dataset.adsup),f=t.files&&t.files[0];if(!x||!f)return;adsKeep(x);toast('กำลังอัปโหลดรูป...');
     square(f).then(r=>uploadImage(r.url)).then(async url=>{x.extra=(x.extra||[]).concat(url).slice(-12);x.image=url;await adsSave(x);render(true);toast('ใช้รูปนี้ในแอดแล้ว');}).catch(err=>toast('อัปโหลดไม่สำเร็จ: '+(err.message||err)));return;}

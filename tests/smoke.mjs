@@ -418,6 +418,9 @@ try {
         { const r = await page.evaluate(() => { const p = D.products.find((x) => !isBundle(x)); const keep = JSON.parse(JSON.stringify(p)); p.fromJob = 'jr1'; p.faq = '[object Object],[object Object]'; p.features = 'ก,ข';
             FAC.all = [{ id: 'jr1', listing_copy: { faq: 'ถาม | ตอบ', features: 'ก\nข', specs: 'จำนวนหน้า | 119 หน้า' } }]; facRepair(); const o = { faq: p.faq, feat: p.features }; Object.keys(p).forEach((k) => delete p[k]); Object.assign(p, keep); FAC.all = []; return o; });
           pass(`[${kind}] ซ่อมช่องที่เสีย ([object Object] / คั่นด้วยจุลภาค) จากข้อความโรงงาน`, r.faq === 'ถาม | ตอบ' && r.feat === 'ก\nข', JSON.stringify(r)); }
+        { const r = await page.evaluate(() => { const b = D.products.find((x) => isBundle(x)); S.view = 'admin'; S.tab = 'products'; act('editProduct', { dataset: { id: b.id } }); const up = document.querySelectorAll('.bxi-b input[data-bxbook]').length; act('cancelEdit', { dataset: {} });
+            const p = D.products.find((x) => !isBundle(x) && x.price > 0); const rec = adBudgetRec({ productId: p.id }); return { up, n: bundleBooks(b).length, daily: rec.daily, days: rec.days, why: rec.why.length }; });
+          pass(`[${kind}] หน้าแก้ชุด: ปุ่ม ⬆ ใส่ปกเองทุกเล่ม · แอด: น้องบูสต์แนะนำงบต่อวันพร้อมเหตุผล`, r.up === r.n && r.daily >= 100 && r.days === 7 && r.why >= 3, JSON.stringify(r)); }
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);
