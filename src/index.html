@@ -139,8 +139,6 @@ footer{padding:28px 0 110px;text-align:center}
 .ins-fun{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.ins-fun>div{display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--bg);border-radius:10px;padding:10px 4px}.ins-fun b{font-size:20px}.ins-fun span{font-size:12.5px}.ins-fun em{font-style:normal;font-size:12px;color:#C2410C;font-weight:600}
 @media(max-width:640px){.ins-fun{grid-template-columns:1fr 1fr}.ins-2{grid-template-columns:1fr}}
 .ins-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.ins-spark{display:flex;align-items:flex-end;gap:3px;height:60px;margin-top:10px}.ins-spark span{flex:1;background:var(--brand);border-radius:3px 3px 0 0;opacity:.75}
-.vip-2{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}.vip-pv{position:sticky;top:12px}@media(max-width:900px){.vip-2{grid-template-columns:1fr}.vip-pv{position:static}}
-.vip-frame{margin:10px auto 0;max-width:390px;border:6px solid #0F1B33;border-radius:28px;overflow:hidden;background:#EDF1F7}.vip-frame iframe{display:block;width:100%;height:min(720px,75vh);border:0}
 .vp-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto;gap:6px;align-items:center;margin-bottom:6px}.vp-chk{display:flex;gap:4px;align-items:center;white-space:nowrap}.vp-row select.input{width:auto}
 @media(max-width:640px){.vp-row{grid-template-columns:auto 1fr auto auto}.vp-row>input.input{grid-column:1/-1}}
 .vp-faq{display:grid;gap:6px;border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px}
@@ -4792,11 +4790,14 @@ function insightsTab(){if(INS.d===null&&!INS.loading)loadInsights();const d=INS.
 /* แท็บ 🔎 SEO: คำค้นจาก Google · หน้ารวมหัวข้อ (ขึ้น Google แล้วหรือยัง) · งานล่าสุดของน้องปากกา */
 const SEOT={d:null,loading:false};
 /* 👑 สมาชิก VIP: ราคาและการเปิดรับเป็นของคุณแดน (0 = ไม่ขายแบบนั้น) · ตารางสมาชิกต้องสร้างครั้งแรกด้วย SQL */
-const VIPA={d:null,loading:false,busy:false,pg:null,pv:Date.now(),gBusy:false};
+const VIPA={d:null,loading:false,busy:false,pg:null,gBusy:false};
 function loadVipAdmin(){if(VIPA.loading)return;VIPA.loading=true;adminApi('/api/content?action=vip_admin').then(j=>{VIPA.d=j||{};}).catch(()=>{VIPA.d={};}).then(()=>{VIPA.loading=false;render(true);});}
 /* แท็บ 👑 สมาชิก: ตั้งค่าทุกอย่างของ VIP ที่เดียว (ราคา เปิดรับ ข้อความหน้า ให้สิทธิ์เอง) + หน้าที่ลูกค้าเห็นอยู่ข้างๆ */
-function vipView(){return `<div class="wrap wide vipv" style="padding:0 16px 60px">${svcNav()}<h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งค่าทุกอย่างของสมาชิกในหน้านี้ · ${innerWidth>900?'ด้านขวา':'ด้านล่าง'}คือหน้าที่ลูกค้าเห็น เปลี่ยนตามทุกครั้งที่กดบันทึก</p>
-  <div class="vip-2"><div>${vipCard()}${vipPageCard()}${vipGrantCard()}</div><aside class="vip-pv">${vipPreview()}</aside></div></div>`;}
+function vipView(){return `<div class="wrap wide vipv" style="padding:0 16px 60px">${svcNav()}<h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งค่าทุกอย่างของสมาชิกในหน้านี้ · ${vipPageLink()}</p>
+  ${vipCard()}${vipPageCard()}${vipGrantCard()}</div>`;}
+/* ปุ่มเปิดหน้าลูกค้า: ยังไม่เปิดรับ = หน้าตัวอย่าง (เห็นราคาแต่กดสมัครไม่ได้) · เปิดแล้ว = หน้าจริง */
+function vipPageHref(){const v=(VIPA.d&&VIPA.d.settings)||{};return v.open?'/vip':'/vip?preview=1';}
+function vipPageLink(){return `<a class="chip" href="${vipPageHref()}" target="_blank" rel="noopener">👀 เปิดหน้าลูกค้า /vip ↗</a>`;}
 function vipPg(){const s=VIPA.d&&VIPA.d.settings;if(!VIPA.pg&&s)VIPA.pg=JSON.parse(JSON.stringify(s.page||{title:'',sub:'',perks:[],faq:[]}));return VIPA.pg;}
 function vipPageCard(){if(!VIPA.d||!VIPA.d.settings)return '';const p=vipPg(),sel=(v,x)=>v===x?'selected':'';
   return `<section class="card vipa" id="vip-page" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">📝 ข้อความบนหน้า /vip</h3><p class="fine" style="margin:0 0 10px">แก้ได้อิสระ กดบันทึกแล้วหน้าลูกค้าเปลี่ยนทันที</p>
@@ -4808,13 +4809,12 @@ function vipPageCard(){if(!VIPA.d||!VIPA.d.settings)return '';const p=vipPg(),se
     <h4 style="margin:16px 0 6px">คำถามที่พบบ่อย</h4>
     ${p.faq.map((x,i)=>`<div class="vp-faq"><input class="input" data-vp="faq.${i}.q" maxlength="150" value="${esc(x.q)}" placeholder="คำถาม" aria-label="คำถามข้อ ${i+1}"><textarea class="input" data-vp="faq.${i}.a" rows="2" maxlength="600" placeholder="คำตอบ" aria-label="คำตอบข้อ ${i+1}">${esc(x.a)}</textarea><span class="row" style="gap:6px"><button class="chip" data-a="vpRow" data-v="faq:${i}:up" aria-label="เลื่อนขึ้น" ${i?'':'disabled'}>↑</button><button class="chip" data-a="vpRow" data-v="faq:${i}:del">ลบ</button></span></div>`).join('')}
     ${p.faq.length<10?'<button class="chip" data-a="vpAdd" data-v="faq">+ เพิ่มคำถาม</button>':''}
-    <div class="row" style="gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="vpSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึกข้อความหน้า'}</button><button class="chip" data-a="vpReset">${S.confirm==='vpReset'?'กดอีกครั้งเพื่อใช้ข้อความตั้งต้น':'ใช้ข้อความตั้งต้น'}</button></div>
+    <div class="row" style="gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="vpSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึกข้อความหน้า'}</button>${vipPageLink()}<button class="chip" data-a="vpReset">${S.confirm==='vpReset'?'กดอีกครั้งเพื่อใช้ข้อความตั้งต้น':'ใช้ข้อความตั้งต้น'}</button></div>
   </section>`;}
 function vipGrantCard(){const d=VIPA.d;if(!d||!d.ready)return '';
   return `<section class="card vipa" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">🎁 ให้สิทธิ์ VIP เอง</h3><p class="fine" style="margin:0 0 10px">ลองระบบเองโดยไม่ต้องจ่าย หรือให้เป็นของขวัญ/ชดเชยลูกค้า · ต่อจากวันหมดอายุเดิม · ระบบส่งอีเมลต้อนรับพร้อมลิงก์เข้าระบบให้</p>
     <div class="row" style="gap:8px;flex-wrap:wrap"><input class="input" type="email" data-f="vgEmail" value="${esc(S.form.vgEmail||'')}" placeholder="อีเมลคนที่จะให้สิทธิ์" aria-label="อีเมลคนที่จะให้สิทธิ์" style="flex:1;min-width:200px"><select class="input" data-f="vgDays" aria-label="จำนวนวัน" style="width:auto">${[[7,'7 วัน'],[30,'30 วัน'],[90,'90 วัน'],[365,'1 ปี']].map(([n,l])=>`<option value="${n}" ${String(S.form.vgDays||30)===String(n)?'selected':''}>${l}</option>`).join('')}</select><button class="btn btn-sm pt-new" data-a="vipGrant" ${VIPA.gBusy?'disabled':''}>${VIPA.gBusy?'กำลังให้สิทธิ์...':'ให้สิทธิ์'}</button></div></section>`;}
-function vipPreview(){return `<div class="card vip-pvc"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>👀 หน้าที่ลูกค้าเห็น</b><span class="row" style="gap:6px"><button class="chip" data-a="vpReload" aria-label="โหลดตัวอย่างใหม่">↻ รีเฟรช</button><a class="chip" href="/vip" target="_blank" rel="noopener">เปิดหน้าจริง ↗</a></span></div>
-  <div class="vip-frame"><iframe title="ตัวอย่างหน้า /vip ที่ลูกค้าเห็น" src="/vip?preview=1&v=${VIPA.pv}" loading="lazy"></iframe></div></div>`;}
+
 function vipCard(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d;
   if(!d)return '<section class="card" style="margin-top:14px"><p class="fine">กำลังโหลดสมาชิก VIP...</p></section>';
   const v=d.settings||{packs:{}},st=d.stats,num=(id,val,l)=>`<label class="vipf">${l}<input class="input" type="number" min="0" step="1" id="${id}" value="${Number(val)||0}"></label>`;
@@ -4885,7 +4885,7 @@ function svcFour(k){
     h=B('📊','ตัวเลข','ยอดขาย · ออเดอร์','tab','orders')+B('✅','ต้องทำ',fr||aw?[fr?`สินค้ารอเผยแพร่ ${fr}`:'',aw?`แอดรอกด ${aw}`:''].filter(Boolean).join(' · '):'ไม่มีงานค้าง',fr?'goNew':aw?'goAds':'tab',fr||aw?'':'products',fr||aw)+B('⚙️','ตั้งค่า','ชำระเงิน · Pixel · ร้าน','tab','pay')+P('หน้าลูกค้า','ร้านชีท ↗','/store');}
   else if(k==='learn')h=B('📊','ตัวเลข','Google · คนเข้าเว็บ','tab','seo')+B('✅','ต้องทำ','โพสต์และบทความรอตรวจ','tab','content')+B('⚙️','ตั้งค่า','หน้ารวมหัวข้อ · พฤติกรรม','tab','insights')+P('หน้าลูกค้า','ข้อสอบฟรี ↗','/quiz');
   else if(k==='vip'){const d=VIPA.d||{},v=d.settings||{},todo=!d.ready?'สร้างตารางสมาชิก (SQL)':!v.open?'ตั้งราคา แล้วเปิดรับ':'';
-    h=B('📊','ตัวเลข','สมาชิก · ต่ออายุ','svcGo','#vip-set')+B('✅','ต้องทำ',todo||'ไม่มีงานค้าง','svcGo','#vip-set',!!todo)+B('⚙️','ตั้งค่า','ราคา · ข้อความหน้า · ให้สิทธิ์','svcGo','#vip-page')+B('👀','หน้าลูกค้า','หน้า /vip (ในหน้านี้)','svcGo','.vip-pv');}
+    h=B('📊','ตัวเลข','สมาชิก · ต่ออายุ','svcGo','#vip-set')+B('✅','ต้องทำ',todo||'ไม่มีงานค้าง','svcGo','#vip-set',!!todo)+B('⚙️','ตั้งค่า','ราคา · ข้อความหน้า · ให้สิทธิ์','svcGo','#vip-page')+P('หน้าลูกค้า','หน้า /vip ↗',vipPageHref());}
   else if(k==='factory'){const n=svcWork('factory');
     h=B('📊','ตัวเลข','คิว · กำลังผลิต','svcGo','.ffl')+B('✅','ต้องทำ',n?`ตรวจไฟล์ ${n} เล่ม`:'ไม่มีงานค้าง','svcGo',n?'details.fq-review':'.ffl',n)+B('⚙️','ตั้งค่า','สั่งเล่มใหม่','svcGo','.fq-add')+P('หน้าลูกค้า','ของที่ลงขายแล้ว ↗','/store');}
   return h?`<div class="svf-row">${h}</div>`:'';}
@@ -5073,12 +5073,11 @@ function act(a,el){
     case 'insReload':INS.d=null;loadInsights();render(true);break;
     case 'vpAdd':{const p=vipPg();if(!p)break;p[el.dataset.v].push(el.dataset.v==='faq'?{q:'',a:''}:{t:'',free:false,vip:'yes'});render(true);break;}
     case 'vpRow':{const p=vipPg(),[k,i0,op]=String(el.dataset.v).split(':'),i=Number(i0),L=p&&p[k];if(!L)break;if(op==='del')L.splice(i,1);else if(i>0)[L[i-1],L[i]]=[L[i],L[i-1]];render(true);break;}
-    case 'vpReload':VIPA.pv=Date.now();render(true);break;
     case 'vpReset':if(S.confirm!=='vpReset'){S.confirm='vpReset';render(true);break;}S.confirm='';/* fallthrough */
     case 'vpSave':{if(VIPA.busy)break;const reset=a==='vpReset',p=vipPg();if(!reset&&!p)break;
       if(!reset&&p.perks.some(x=>!String(x.t).trim())){toast('มีช่องสิทธิ์ว่าง กรอกหรือกดลบก่อน');break;}
       if(!reset&&p.faq.some(x=>!String(x.q).trim()||!String(x.a).trim())){toast('คำถามที่พบบ่อยต้องมีทั้งคำถามและคำตอบ');break;}
-      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',reset?{resetPage:true}:{page:p}).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});VIPA.pg=null;VIPA.pv=Date.now();toast(reset?'กลับเป็นข้อความตั้งต้นแล้ว':'บันทึกข้อความหน้าแล้ว หน้าลูกค้าเปลี่ยนแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
+      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',reset?{resetPage:true}:{page:p}).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});VIPA.pg=null;toast(reset?'กลับเป็นข้อความตั้งต้นแล้ว':'บันทึกข้อความหน้าแล้ว หน้าลูกค้าเปลี่ยนแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'vipGrant':{const email=String(S.form.vgEmail||'').trim().toLowerCase(),days=Number(S.form.vgDays||30);
       if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)){toast('ใส่อีเมลให้ถูกต้อง');break;}
       VIPA.gBusy=true;render(true);adminPost('/api/content?action=vip_admin',{grant:{email,days}}).then(j=>{VIPA.gBusy=false;if(j&&j.ok){S.form.vgEmail='';if(j.stats)VIPA.d=Object.assign(VIPA.d||{},{stats:j.stats});toast(`🎁 ให้สิทธิ์ ${email} ถึง ${new Date(j.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})} แล้ว${j.mailed?' ส่งอีเมลต้อนรับแล้ว':' (ส่งอีเมลไม่สำเร็จ ให้เขาขอลิงก์เข้าระบบที่หน้า /vip เอง)'}`);}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.gBusy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
@@ -5086,7 +5085,7 @@ function act(a,el){
     case 'vipReload':VIPA.d=null;loadVipAdmin();render(true);break;
     case 'vipSave':{const g=k=>Math.max(0,Math.round(Number(($('#'+k)||{}).value)||0)),body={monthly:g('vip-m'),yearly:g('vip-y'),packs:{1:g('vip-p1'),3:g('vip-p3'),12:g('vip-p12')},open:!!($('#vip-open')||{}).checked};
       if(body.open&&!body.monthly&&!body.yearly&&!body.packs[1]&&!body.packs[3]&&!body.packs[12]){toast('ใส่ราคาอย่างน้อย 1 แบบก่อนเปิดรับ');break;}
-      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',body).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});VIPA.pv=Date.now();toast(j.settings.open?'บันทึกแล้ว เปิดรับสมาชิก VIP':'บันทึกแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
+      VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',body).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});toast(j.settings.open?'บันทึกแล้ว เปิดรับสมาชิก VIP':'บันทึกแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'ssort':S.ssort=el.dataset.v;render(true);break;
     case 'dailyAns':if(S.dailyAns==null){S.dailyAns=Number(el.dataset.v);render(true);}break;
     case 'findAgain':S.find={email:'',busy:false,done:false,err:''};render(false);break;
