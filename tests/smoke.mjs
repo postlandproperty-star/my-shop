@@ -307,6 +307,11 @@ try {
         const tab = async (k) => { await page.locator(`.fqt [data-v="${k}"]`).click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(150); };
         const h = await page.evaluate(() => ({ now: (document.querySelector('.fqh-main b') || {}).textContent || '', tabs: document.querySelectorAll('.fqt button').length, nums: document.querySelectorAll('.fqh-nums button').length, flow: document.querySelectorAll('.ffl-steps li').length }));
         await tab('order'); const o = await page.evaluate(() => ({ title: !!document.getElementById('fq-title'), idea: (document.querySelector('[data-a="fqIdea"]') || {}).textContent || '' }));
+        await page.locator('[data-a="ordMode"][data-v="set"]').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(150);
+        await page.fill('#so-name', 'IELTS 6.5').catch(() => {}); await page.fill('#so-books', 'IELTS Listening 10 ชุด | 199\nIELTS Reading 10 ชุด\n\nIELTS Writing 50 หัวข้อ | 179').catch(() => {});
+        const so = await page.evaluate(() => ({ lines: setOrderLines(), rush: !!document.querySelector('[data-a="soRush"]'), btn: (document.querySelector('[data-a="soOrder"]') || {}).textContent || '' }));
+        pass(`[${kind}] โรงงาน: สั่งทั้งชุดหลายเล่มในครั้งเดียว (อ่านบรรทัดละเล่ม + ราคา) + ตัวเลือกเร่งผลิต`, so.lines.length === 3 && so.lines[0].price === 199 && so.lines[1].price === 0 && so.lines[2].title === 'IELTS Writing 50 หัวข้อ' && so.rush && /3 เล่ม/.test(so.btn), JSON.stringify(so));
+        await page.evaluate(() => { S.ordMode = 'one'; S.form.setBooks = ''; S.form.setName = ''; });
         await tab('lib'); await page.fill('[data-flq]', 'health').catch(() => {}); await page.waitForTimeout(100);
         const fl = await page.evaluate(() => ({ books: document.querySelectorAll('.flib-b').length, shown: document.querySelectorAll('.flib-b:not([hidden])').length, now: (document.querySelector('.fqh-main') || {}).textContent || '' }));
         await page.locator('.fqt-body').screenshot({ path: path.join(OUT, `factory-lib-${kind}.png`) }).catch(() => {});

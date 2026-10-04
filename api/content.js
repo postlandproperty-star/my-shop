@@ -133,7 +133,7 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 
 
 // โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
-const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes'];
+const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush']; // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
 // ประเภทงานโรงงาน: pdf (ชีท PDF ค่าเริ่มต้น) | notion (Notion template สร้างใน Notion ของคุณแดน คุณแดนกด Publish เอง)
 const jobKind = (b) => (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
 const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|app\.notion\.com)\//i.test(String(u || ''));

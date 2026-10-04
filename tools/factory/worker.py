@@ -95,7 +95,7 @@ def main():
         sync()
         if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
         jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
-        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by']} for x in jobs], ensure_ascii=False, indent=1))
+        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
         r = api('factory_claim', {'id': a.args[0], 'by': 'mac'}); print(json.dumps(r, ensure_ascii=False)[:300])
         if r.get('ok'):
