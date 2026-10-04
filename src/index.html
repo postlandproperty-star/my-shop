@@ -488,8 +488,9 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .fl-help{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 12px;background:var(--bg)}.fl-help summary{cursor:pointer;font-weight:600}.fl-help p{margin:8px 0 0;font-size:14px}.fl-sku{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}.fl-sku th,.fl-sku td{border:1px solid var(--line);padding:5px 8px;text-align:left}.fl-sku th{background:var(--surface)}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
 @media(max-width:640px){.fqh{grid-template-columns:1fr}.fqh-nums button{flex:1}.fqt button{padding:8px 11px;font-size:14px}}
+.fnote{margin:0 0 14px;border-left:4px solid #E8A23A;background:var(--warnbg)}.fnote ul{margin:6px 0 0;padding-left:18px}.fnote li{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.fnote code{font-size:12.5px;background:var(--surface);padding:1px 5px;border-radius:5px}
+.pt-hint{overflow-wrap:anywhere}
 .zipbtn{font-size:12.5px;margin-right:6px;vertical-align:middle}
-.pt-sku{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 6px;vertical-align:middle}
 .flib-b .fl-au{font-size:12px;line-height:1.4;color:var(--muted);word-break:break-word}.flib-b .fl-au a{color:var(--brand)}.flib-b .fl-act{margin-top:6px}.flib-b .fl-act button,.flib-b .fl-act span{width:100%;text-align:center;font-size:12.5px}
 .flib-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0}.flib-bar .input{flex:1;min-width:180px;width:auto}.flib-bar .chip.on{background:var(--ink);color:var(--bg)}
 .flib{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.flib-b{position:relative;display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface)}.flib-b img,.flib-no{width:100%;aspect-ratio:210/297;object-fit:cover;border-radius:6px;background:var(--bg);display:block;margin-bottom:4px}.flib-b em{position:absolute;left:12px;top:12px;background:var(--ink);color:var(--bg);font-style:normal;font-size:11.5px;font-weight:700;border-radius:6px;padding:0 6px}.flib-b b{font-size:13px;line-height:1.3}.flib-b[hidden]{display:none}
@@ -1874,6 +1875,7 @@ function bundleForm(){
   const lb=(id,t)=>`<label for="${id}">${t}</label>`;
   return `
   <h3 class="h3">${isNew?'สร้างชุดใหม่':'แก้ไขชุด '+esc(d.name)}</h3>
+  ${isNew?'':noteBox(getProduct(S.edit))}
   <div class="card">
     <h3 class="h3">1. ข้อมูลชุด</h3>
     <div class="field">${lb('b-name','ชื่อชุด')}<input class="input" id="b-name" data-d="name" value="${esc(d.name)}" placeholder="เช่น ชุด TOEIC 750+"></div>
@@ -2648,7 +2650,7 @@ function pHints(p){
     if(!(p.images||[]).length)h.push(['warn','ยังไม่มีรูปสินค้า']);
     if(pfmt(p)==='pdf'&&!(p.previews||[]).length)h.push(['warn','ยังไม่มีหน้าตัวอย่าง']);
   }
-  if(p.fresh&&!pub&&p.freshNote)h.unshift([/🎧/.test(p.freshNote)?'warn':'muted','✨ มาใหม่ · '+p.freshNote]);
+  if(p.fresh&&!pub&&p.freshNote)h.unshift([/🎧/.test(p.freshNote)?'warn':'muted','✨ มาใหม่ · '+shortNote(p.freshNote)]);
   if(!h.length)h.push(pub?(prodStats(p).paid?['ok','พร้อมขาย']:['muted','พร้อมขาย · ยังไม่มียอดขาย']):['muted','ฉบับร่าง ลูกค้ายังไม่เห็น']);
   return h;
 }
@@ -2661,9 +2663,9 @@ function productRow(p){
   const acts=p.fresh&&!pub?[['togglePub','✅ เผยแพร่'],['viewPage','ดูเซลเพจ'],['editProduct',bun?'แก้ไขชุด':'แก้ไขทั้งหมด']]:bun?[['editProduct','แก้ไขชุด'],['viewPage','ดูเซลเพจ'],['copyLink','คัดลอกลิงก์']]:[['quickEdit',S.quick===p.id?'ปิดแก้ไขด่วน':'แก้ไขด่วน'],['editProduct','แก้ไขทั้งหมด'],['viewPage','ดูเซลเพจ']];
   return `<div class="pt-row${pub?'':' draft'}" data-q="${esc(pq(p))}">
     <div class="pt-prod">${pthumb(p)}<div class="pt-info">
-      <b class="pt-name" title="${esc(p.name)}">${bun?'📦 ':''}${esc(p.name||'(ยังไม่มีชื่อ)')}</b>${p.sku?`<span class="pt-sku">${esc(p.sku)}</span>`:''}
+      <b class="pt-name" title="${esc(p.name)}">${bun?'📦 ':''}${esc(p.name||'(ยังไม่มีชื่อ)')}</b>
       <div class="pt-tags">${ptags(p)}${bun?`<span class="badge">ชุด ${bundleBooks(p).length} เล่ม</span>`:''}${p.sell&&p.sell!=='both'?`<span class="badge">${esc(SELL[p.sell]?SELL[p.sell][0]:'')}</span>`:''}</div>
-      <span class="pt-sku">SKU: ${esc(p.slug||'-')}</span>
+      <span class="pt-sku">SKU: ${esc(p.sku||p.slug||'-')}</span>
       ${(()=>{const top=hints.find(h=>h[0]==='bad')||hints.find(h=>h[0]==='warn'),ad=(ADA.items||[]).find(y=>y.productId===p.id&&['pending','failed','launching','live','paused'].includes(y.status));
         return `<div class="pt-m"><span><b>${price}</b>${full?' '+full:''}</span><span class="fine">ขายแล้ว ${st.paid}</span></div>
         <div class="pt-m pt-m2"><span class="badge ${pub?'ok':'gray'}">${pub?'ขายอยู่':'ร่าง'}</span>${top?`<span class="pt-hint ${top[0]}">${top[0]==='bad'?'⚠️ ':''}${esc(top[1])}</span>`:ad?`<button class="pt-a" data-a="goAds">${ad.status==='live'?'📣 แอดกำลังวิ่ง':ad.status==='paused'?'📣 แอดหยุดไว้':'📣 แอดรอกดตกลง'}</button>`:''}</div>`;})()}
@@ -2706,6 +2708,11 @@ function draftToProduct(d){
     proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
     bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both'};
 }
+/* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
+function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/|\/Users\//.test(x)).slice(0,2).join(' · ')+(/🎧/.test(n)?' · 🎧 มีไฟล์เสียง (ดูในหน้าแก้สินค้า)':'');}
+function noteBox(p){if(!p||!p.freshNote)return '';const parts=String(p.freshNote).split(' · ').filter(Boolean);
+  const fmt=x=>esc(x).replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>').replace(/(\/Users\/[^·]+)/g,'<code>$1</code>');
+  return `<div class="card fnote"><b>📝 โน้ตจากโรงงาน</b><ul>${parts.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul></div>`;}
 function productForm(){
   if(S.draft&&S.draft.type==='bundle')return bundleForm();
   const isNew=S.edit==='new';
@@ -2715,6 +2722,7 @@ function productForm(){
   const ta=(id,k,label,ph,hint)=>`<div class="field">${lb(id,label)}<textarea class="input" id="${id}" data-d="${k}" ${ph?`placeholder="${esc(ph)}"`:''}>${esc(d[k])}</textarea>${hint?`<span class="fine">${hint}</span>`:''}</div>`;
   return `
   <h3 class="h3">${isNew?'เพิ่มสินค้าใหม่':'แก้ไข '+esc(d.name)}</h3>
+  ${isNew?'':noteBox(getProduct(S.edit))}
   <div class="card">
     <h3 class="h3">ข้อมูลหลัก</h3>
     <div class="field">${lb('e-name','ชื่อสินค้า')}<input class="input" id="e-name" data-d="name" value="${esc(d.name)}"></div>
