@@ -47,18 +47,21 @@ def upload(job, path, filename, ctype):
 
 
 def previews(job, pdf):
-    import fitz  # pip install pymupdf pillow
+    # หน้าตัวอย่าง 3-6 มีลายน้ำ (ใช้ pdftoppm ของ poppler ไม่ต้องมี pymupdf) → ขึ้นเป็นหน้าตัวอย่างในเซลเพจ
+    import tempfile, glob
     from PIL import Image, ImageDraw, ImageFont
     def font(sz):
         for f in ['/System/Library/Fonts/Supplemental/Arial Bold.ttf', '/Library/Fonts/Arial Bold.ttf']:
             if os.path.exists(f): return ImageFont.truetype(f, sz)
         return ImageFont.load_default()
-    doc = fitz.open(pdf); n = doc.page_count
+    n = page_count(pdf)
     pages = [p for p in [3, 4, 5, 6] if p <= n] or list(range(1, min(4, n) + 1))
-    out = []
+    out = []; tmp = tempfile.mkdtemp()
     for p in pages:
-        pg = doc[p - 1]; z = 1100 / pg.rect.width
-        im = Image.open(io.BytesIO(pg.get_pixmap(matrix=fitz.Matrix(z, z)).tobytes('png'))).convert('RGB'); W, H = im.size
+        base = os.path.join(tmp, f'p{p}')
+        subprocess.run(['/opt/homebrew/bin/pdftoppm', '-f', str(p), '-l', str(p), '-scale-to-x', '1100', '-scale-to-y', '-1', '-png', '-singlefile', pdf, base], capture_output=True, timeout=120)
+        if not os.path.exists(base + '.png'): continue
+        im = Image.open(base + '.png').convert('RGB'); W, H = im.size
         layer = Image.new('RGBA', (W * 2, H * 2), (0, 0, 0, 0)); d = ImageDraw.Draw(layer)
         for yy in range(0, H * 2, 220):
             for xx in range(0, W * 2, 620): d.text((xx, yy), 'SheetLab · PREVIEW', font=font(54), fill=(36, 64, 232, 26))
@@ -105,7 +108,9 @@ def main():
     elif a.cmd == 'done':
         job, pdf = a.args[0], os.path.expanduser(a.args[1])
         body = {'id': job, 'by': 'mac', 'file_url': upload(job, pdf, os.path.basename(pdf).replace(' ', '-'), 'application/pdf'), 'size': os.path.getsize(pdf), 'summary': a.summary, 'sku': a.sku, 'audio_path': a.audio_path, 'audio_drive': a.audio_drive}
-        body['images'] = [cover(job, os.path.expanduser(a.cover))] if a.cover else []  # หน้าตัวอย่างหน้าเว็บทำเองตอนอนุมัติ
+        body['images'] = [cover(job, os.path.expanduser(a.cover))] if a.cover else []
+        try: body['previews'] = previews(job, pdf)[0]  # หน้าตัวอย่าง 3-6 สำหรับเซลเพจ
+        except Exception as e: print('previews', e, file=sys.stderr)
         body['pages'] = page_count(pdf)
         if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'pages': body['pages'], 'file_url': body['file_url']}, ensure_ascii=False))

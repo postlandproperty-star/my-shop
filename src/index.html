@@ -2802,7 +2802,7 @@ function productForm(){
 
 /* ชีทขายที่โรงงานผลิตเสร็จ รอคุณแดนตรวจแล้วกดอนุมัติลงขาย (โรงงานไม่เคยลงขายเอง) */
 const FAC={jobs:null,loading:false,busy:''};
-function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];FAC.jobs=all.filter(x=>!x.export_no&&x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.exports=all.filter(x=>x.export_no&&x.status==='done'&&x.listing==='pending');FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));FAC.global=all.filter(x=>x.lang==='en'&&['global_pending','global'].includes(x.listing));}).catch(()=>{FAC.jobs=[];FAC.queue=[];FAC.global=[];FAC.exports=[];}).then(()=>{FAC.loading=false;facExportImport();render(true);});}
+function loadFacJobs(){if(FAC.loading)return;FAC.loading=true;adminApi('/api/content?action=factory').then(j=>{const all=j&&j.ok?j.jobs:[];const manual=x=>x.kind==='notion'||x.lang==='en';FAC.all=all;FAC.jobs=all.filter(x=>manual(x)&&x.status==='done'&&(x.listing==='pending'||(x.listing==='listed'&&x.product_id&&Number(x.price)>0&&!getProduct(x.product_id))));FAC.exports=all.filter(x=>!manual(x)&&x.status==='done'&&x.listing==='pending');FAC.queue=all.filter(x=>['queued','producing'].includes(x.status));FAC.global=all.filter(x=>x.lang==='en'&&['global_pending','global'].includes(x.listing));}).catch(()=>{FAC.jobs=[];FAC.queue=[];FAC.global=[];FAC.exports=[];}).then(()=>{FAC.loading=false;facExportImport();render(true);});}
 /* 📦 ชุดพร้อมลงขาย: ชุดที่คิวหนังสือบนคอมคุณแดนผลิตเสร็จ (ไฟล์อัปขึ้นคลังแล้ว) กดลงขายทั้งชุดครั้งเดียว: สร้างเล่มที่ยังไม่มี + สร้างชุด */
 const SETI={items:null,loading:false,busy:''};
 function loadSets(){if(SETI.loading)return;SETI.loading=true;adminApi('/api/content?action=set_list').then(j=>{SETI.items=j&&j.ok?j.items:[];}).catch(()=>{SETI.items=[];}).then(()=>{SETI.loading=false;setAutoImport();render(true);});}
@@ -2852,16 +2852,33 @@ async function libExport(no){const b=((FLIB.d||{}).books||[]).find(x=>String(x.n
   try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:b.title,export_no:b.no,sku:b.sku||('SL-'+b.no),rush:'1',price:0,category:b.cat,purpose:'ส่งเล่มที่ผลิตแล้วในคลังขึ้นร้าน (แท็บมาใหม่) ไม่ต้องผลิตใหม่',notes:b.audio?`มีไฟล์เสียงที่ ${b.audio_path}${b.audio_drive?' · Drive: '+b.audio_drive:''}`:''})});
     if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');FJOBS=null;loadFactoryJobs();toast(`ส่งคำขอแล้ว: ${b.sku||'SL-'+b.no} Mac จะอัปไฟล์และเขียนหน้าขายให้ภายใน 1 ชม. แล้วขึ้นในแท็บสินค้า → ✨ มาใหม่`);}
   catch(e){toast('ส่งไม่สำเร็จ: '+(e.message||e));}render(true);}
-SETI.exp={};
+SETI.exp={};SETI.bun={};
+/* ทุกเล่มที่โรงงานทำเสร็จ (ผลิตใหม่ · จากคลัง · เล่มในชุด) → ฉบับร่างในแท็บ ✨ มาใหม่ กรอกรายละเอียดครบ (ข้อความหน้าขาย ปก หน้าตัวอย่าง SKU ราคาเสนอ)
+   คุณแดนตรวจแล้วกดเผยแพร่เอง · Notion template / ขายต่างประเทศ ยังใช้การ์ดอนุมัติเดิม (ต้องใส่ลิงก์ Publish) */
 function facExportImport(){if(!sbSession||!D.products.length)return;
-  for(const j of (FAC.exports||[]).filter(x=>!SETI.exp[x.id])){SETI.exp[x.id]=1;
+  for(const j of (FAC.exports||[]).filter(x=>!SETI.exp[x.id])){SETI.exp[j.id]=1;
     if(D.products.some(p=>p.fromJob===j.id)){adminPost('/api/content?action=factory_list',{id:j.id,product_id:D.products.find(p=>p.fromJob===j.id).id}).catch(()=>{});continue;}
-    const lc=j.listing_copy||{},sku=j.sku||('SL-'+j.export_no),name=lc.name||j.title,pages=Number(j.pages)||0;
-    const note=[`จากคลังบน Mac (${sku})`,j.audio_path?`🎧 ไฟล์เสียงอยู่ใน Mac: ${j.audio_path}`:'',j.audio_drive?`เสียงอยู่ใน Google Drive แล้ว: ${j.audio_drive}`:j.audio_path?'ยังไม่ได้อัปเสียงขึ้น Drive → อัปไปที่ https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f แล้วแชร์แบบมีลิงก์':'','ตั้งราคาแล้วกดเผยแพร่'].filter(Boolean).join(' · ');
+    const lc=j.listing_copy||{},no=j.export_no||(String(j.file_url||'').match(/\/(\d{3})_\d{4}-\d{2}-\d{2}_/)||[])[1]||'',sku=j.sku||(no?'SL-'+no:''),name=lc.name||j.title,pages=Number(j.pages)||0;
+    const note=[j.export_no?`จากคลังบน Mac${sku?' ('+sku+')':''} · ตั้งราคาก่อนเผยแพร่`:`ผลิตใหม่จากโรงงาน${sku?' ('+sku+')':''} · ราคาเสนอ ${Number(j.price)>=1?'฿'+j.price:'ยังไม่ตั้ง'}`,j.set_name?`เล่ม ${j.set_no||'?'} ในชุด "${j.set_name}"`:'',
+      j.audio_path?`🎧 ไฟล์เสียงอยู่ใน Mac: ${j.audio_path}`:'',j.audio_drive?`เสียงอยู่ใน Google Drive แล้ว: ${j.audio_drive}`:j.audio_path?'ยังไม่ได้อัปเสียงขึ้น Drive → อัปไปที่ https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f แล้วแชร์แบบมีลิงก์':'',
+      'อยากได้ภาพขาย 5 รูป: กด ✨ สร้างชุดภาพสินค้า ในหน้าแก้สินค้า'].filter(Boolean).join(' · ');
     const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36)+Math.floor(Math.random()*99),name,headline:lc.headline||name,desc:lc.desc||String(j.summary||'').split('\n')[0].slice(0,300),features:lc.features||(pages?`ไฟล์ PDF ${pages} หน้า`:''),forwho:lc.forwho||'',notfor:lc.notfor||'',faq:lc.faq||'',specs:lc.specs||(pages?`รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | ${pages} หน้า`:''),toc:lc.toc||'',
-      price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url||'',images:(j.images||[]).slice(0,5),cat:guessCat(j.title+' '+(j.category||'')),slug:setSlug(name),sku,status:'draft',fresh:true,freshNote:note,fromJob:j.id});
-    D.products.push(p);save();clearTimeout(saveTimer);
-    flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=factory_list',{id:j.id,product_id:p.id});}).then(()=>{toast(`📤 ${sku} เข้าแท็บมาใหม่แล้ว ตั้งราคาแล้วกดเผยแพร่`);FAC.exports=(FAC.exports||[]).filter(x=>x.id!==j.id);render(true);}).catch(e=>{console.error(e);delete SETI.exp[j.id];});}}
+      price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url||'',images:(j.images||[]).slice(0,5),previews:(j.previews||[]).slice(0,6),cat:guessCat(j.title+' '+(j.category||'')),slug:setSlug(name),sku,status:'draft',sell:'store',fresh:true,freshNote:note,fromJob:j.id});
+    D.products.push(p);if(!p.sku)ensureSkus();save();clearTimeout(saveTimer);
+    flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=factory_list',{id:j.id,product_id:p.id});}).then(()=>{toast(`📗 ${p.sku||''} ${String(name).slice(0,40)} เข้าแท็บมาใหม่แล้ว`);FAC.exports=(FAC.exports||[]).filter(x=>x.id!==j.id);facSetBundles();render(true);}).catch(e=>{console.error(e);delete SETI.exp[j.id];});}
+  facSetBundles();}
+/* ชุดที่สั่งผลิตครบทุกเล่มแล้ว → ฉบับร่างชุดขายในแท็บมาใหม่ (ราคาคิดตามสูตรเดียวกับ "คำนวณราคาตามสูตร" แก้ได้) */
+function facSetBundles(){const all=FAC.all||[];
+  for(const name of [...new Set(all.filter(j=>j.set_name).map(j=>j.set_name))]){
+    if(SETI.bun[name]||D.products.some(p=>isBundle(p)&&p.fromSetName===name))continue;
+    const js=all.filter(j=>j.set_name===name&&!['cancelled','failed'].includes(j.status)).sort((a,b)=>(Number(a.set_no)||0)-(Number(b.set_no)||0));
+    if(js.length<2||js.some(j=>j.status!=='done'))continue;
+    const books=js.map(j=>D.products.find(p=>p.fromJob===j.id)).filter(Boolean);if(books.length!==js.length)continue;
+    SETI.bun[name]=1;const n=books.length,sum=books.reduce((a,b)=>a+(Number(b.price)||0),0),pct=n>=9?.5:n>=7?.55:.6,price=sum?end90(sum*pct):0,full=sum>price?sum:0;
+    const bd=Object.assign(blankBundle(),{id:'b'+Date.now().toString(36),name,slug:setSlug(name),headline:name,desc:`ครบ ${n} เล่มในชุดเดียว: ${books.map(b=>b.name).join(' · ')}`.slice(0,300),items:books.map(b=>b.id),status:'draft',planDefault:'basic',price,fullPrice:full,images:(books[0].images||[]).slice(0,1),fresh:true,fromSetName:name,
+      freshNote:`ชุดจากโรงงาน ${n} เล่ม · ราคาคิดตามสูตร ${Math.round(pct*100)}% ของราคาแยกรวม${sum?' ฿'+sum.toLocaleString('th-TH'):''} แก้ได้ · เปิดแก้แล้วกดบันทึก ระบบจัดรูปชุดจากปกให้เอง`});
+    bd.plans=bd.plans.map(pl=>pl.key==='basic'?Object.assign({},pl,{name:'ครบชุด '+n+' เล่ม',on:true,price,fullPrice:full}):Object.assign({},pl,{on:false}));
+    D.products.push(bd);ensureSkus();save();toast(`📦 ชุด "${name}" ครบ ${n} เล่ม เข้าแท็บมาใหม่แล้ว`);}}
 function setSlug(name){let s=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'set';let t=s,i=2;while(D.products.some(p=>p.slug===t))t=s+'-'+i++;return t;}
 function facBox(inFactory){
   if(FAC.jobs===null){loadFacJobs();return '';}
@@ -3173,7 +3190,8 @@ function factoryView(){
   const pos=id=>{const i=FORDER.indexOf(id);return i<0?1e9:i;};
   const queued=jobs.filter(j=>j.status==='queued').sort((a,b)=>pos(a.id)-pos(b.id)||String(a.created_at).localeCompare(String(b.created_at)));
   const producing=jobs.filter(j=>j.status==='producing');
-  const review=jobs.filter(j=>j.status==='done'&&!j.export_no&&['pending','global_pending'].includes(j.listing));
+  const review=jobs.filter(j=>j.status==='done'&&(j.kind==='notion'||j.lang==='en')&&['pending','global_pending'].includes(j.listing));
+  const freshD=D.products.filter(p=>p.fresh&&p.status!=='published'&&(p.fromJob||p.fromSetName||p.fromSet));
   const done=jobs.filter(j=>j.status==='done'&&!['pending','global_pending'].includes(j.listing)).sort((a,b)=>String(b.done_at||'').localeCompare(String(a.done_at||'')));
   const failed=jobs.filter(j=>j.status==='failed');
   const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>3*36e5;
@@ -3186,15 +3204,16 @@ function factoryView(){
     :lib.ssd===false?['bad','💾 SSD ไม่ได้เสียบ','เสียบ SSD (PortableSSD) เข้ากับ Mac แล้วโรงงานจะผลิตต่อเองในรอบชั่วโมงถัดไป']
     :runTitle?['run','⚙️ กำลังผลิต',runTitle]
     :stale&&active.length?['bad','⚠️ Mac ไม่ได้มาหยิบงาน',`เช็คล่าสุด ${when} · เปิด Mac เสียบชาร์จ และเปิดแอป Claude ไว้ (โรงงานรันในแอปนี้ทุกชั่วโมง)`]
-    :review.length?['warn',`👀 มี ${review.length} เล่มรอคุณแดนตรวจ`,'เปิดแท็บ "ตรวจ & ลงขาย" ดูไฟล์แล้วกดลงขาย']
+    :review.length+freshD.length?['warn',`👀 มี ${review.length+freshD.length} รายการรอคุณแดนตรวจ`,'อยู่ในแท็บ "ตรวจ & ลงขาย" ตรวจแล้วกดเผยแพร่']
     :active.length?['wait',`⏳ รอผลิต ${active.length} เล่ม`,'Mac เช็คคิวทุกชั่วโมง เล่มบนสุดผลิตก่อน']
     :['idle','💤 โรงงานว่าง','สั่งเล่มใหม่ได้ที่แท็บ "สั่งผลิต" หรือกด 💡 แนะนำเล่มถัดไป'];
   const wk=done.concat(review).filter(j=>j.done_at&&Date.now()-Date.parse(j.done_at)<7*864e5).length;
-  const T=S.facTab||(review.length?'review':active.length||producing.length?'queue':'order');
-  const tabs=[['review','👀 ตรวจ & ลงขาย',review.length],['order','➕ สั่งผลิต',0],['queue','🏭 คิว',active.length+producing.length],['lib','📚 คลังหนังสือ',(lib.books||[]).length],['more','⋯ อื่นๆ',0]];
+  const T=S.facTab||(review.length||freshD.length?'review':active.length||producing.length?'queue':'order');
+  const tabs=[['review','👀 ตรวจ & ลงขาย',review.length+freshD.length],['order','➕ สั่งผลิต',0],['queue','🏭 คิว',active.length+producing.length],['lib','📚 คลังหนังสือ',(lib.books||[]).length],['more','⋯ อื่นๆ',0]];
   const body={
-    review:()=>review.length?`<p class="fine fqt-hint">เปิดไฟล์ดูก่อน แล้วกด <b>อนุมัติ ลงขาย</b> · ราคาแก้ได้ก่อนกด</p>${facBox(1)||''}${(()=>{const g=review.filter(j=>j.listing==='global_pending').length;return g?`<p class="fq-gl">🌏 ${g} เล่มเป็นเทมเพลตขายต่างประเทศ อยู่ในแท็บ <b>⋯ อื่นๆ</b> <button class="chip" data-a="facTab" data-v="more">ไปที่แท็บนี้</button></p>`:'';})()}`
-      :'<div class="fqt-empty"><b>ไม่มีเล่มรอตรวจ 🎉</b><span>เล่มใหม่เสร็จแล้วจะมีอีเมลแจ้ง พร้อมปุ่มกดมาที่นี่</span></div>',
+    review:()=>(freshD.length?`<p class="fine fqt-hint">เล่มที่ผลิตเสร็จเข้า <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง กรอกรายละเอียดให้แล้ว ตรวจแล้วกด <b>บันทึกและเผยแพร่</b></p>
+      <ul class="fq-dl">${freshD.map(p=>`<li><span style="display:flex;gap:10px;align-items:center">${(p.images||[])[0]?`<img src="${esc(p.images[0])}" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:8px">`:''}<span><b>${isBundle(p)?'📦 ':''}${esc(p.name)}</b><span class="fine">${esc(p.sku||'')}${Number(p.price)>=1?' · '+baht(p.price):' · ยังไม่ตั้งราคา'}${(p.previews||[]).length?' · หน้าตัวอย่าง '+p.previews.length+' หน้า':''}</span></span></span><button class="chip" data-a="facEdit" data-id="${esc(p.id)}">ตรวจ / แก้</button></li>`).join('')}</ul>
+      <button class="btn btn-dark btn-sm" data-a="facGoNew" style="margin-top:10px">ไปที่ ✨ มาใหม่ (${freshD.length})</button>`:'')+(review.length?`<h4 style="margin:16px 0 6px">Notion Template / ขายต่างประเทศ (ต้องใส่ลิงก์ Publish)</h4>${facBox(1)||''}`:'')+(review.length||freshD.length?'':'<div class="fqt-empty"><b>ไม่มีอะไรรอตรวจ 🎉</b><span>เล่มใหม่เสร็จแล้วเข้าแท็บ ✨ มาใหม่ อัตโนมัติ และมีอีเมลแจ้ง</span></div>'),
     order:()=>`<div class="kind-seg fqm" role="group" aria-label="แบบการสั่ง"><button data-a="ordMode" data-v="one" aria-pressed="${S.ordMode!=='set'}">📕 สั่งทีละเล่ม</button><button data-a="ordMode" data-v="set" aria-pressed="${S.ordMode==='set'}">📚 สั่งทั้งชุด (หลายเล่ม)</button></div>
     ${S.ordMode==='set'?setOrderForm():`<section class="fq-add">
       <label class="fqt-lab" for="fq-title">ชื่อเล่ม</label>
@@ -3229,7 +3248,7 @@ function factoryView(){
     ${svcNav()}
     <section class="fqh fqh-${now[0]}" role="status">
       <div class="fqh-main"><b>${esc(now[1])}</b><span>${esc(now[2])}</span></div>
-      <div class="fqh-nums"><button data-a="facTab" data-v="review"><b>${review.length}</b><span>รอตรวจ</span></button><button data-a="facTab" data-v="queue"><b>${active.length+producing.length}</b><span>ในคิว</span></button><button data-a="facTab" data-v="queue"><b>${wk}</b><span>เสร็จ 7 วัน</span></button></div>
+      <div class="fqh-nums"><button data-a="facTab" data-v="review"><b>${review.length+freshD.length}</b><span>รอตรวจ</span></button><button data-a="facTab" data-v="queue"><b>${active.length+producing.length}</b><span>ในคิว</span></button><button data-a="facTab" data-v="queue"><b>${wk}</b><span>เสร็จ 7 วัน</span></button></div>
       <div class="fqh-foot"><span class="fq-pc ${stale&&active.length?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 Mac เช็คล่าสุด ${when}</span>${lib.at?(lib.ssd===false?'<span class="fq-pc warn">💾 SSD ไม่ได้เสียบ</span>':'<span class="fq-pc ok">💾 SSD พร้อม</span>'):''}
         <button class="fq-run ${FPAUSED?'off':''}" data-a="fqRun" ${S.fqBusy?'disabled':''}>${FPAUSED?'▶ เปิดผลิต':'⏸ หยุดผลิตชั่วคราว'}</button><button class="chip" data-a="toFactory" aria-label="รีเฟรช">↻</button></div>
     </section>
@@ -5139,6 +5158,8 @@ function act(a,el){
     case 'flCat':S.flcat=el.dataset.v;render(true);break;
     case 'facTab':S.facTab=el.dataset.v;render(true);break;
     case 'libExport':libExport(el.dataset.v);break;
+    case 'facGoNew':S.tab='products';S.pstat='new';S.edit=null;go('admin');break;
+    case 'facEdit':{const p=getProduct(id);if(!p)break;S.tab='products';S.draft=isBundle(p)?bundleDraft(p):initDraft(p);S.edit=id;S.err='';go('admin');break;}
     case 'ordMode':S.ordMode=el.dataset.v;S.fqErr='';render(true);break;
     case 'soRush':S.soRush=!!el.checked;break;
     case 'soOrder':setOrder();break;

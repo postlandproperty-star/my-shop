@@ -2088,6 +2088,7 @@ export default async function handler(req, res) {
         const own = `${SB_URL}/storage/v1/object/public/product-images/factory/${job.id}/`;
         if (Array.isArray(body.images)) job.images = body.images.map(String).filter((u) => u.startsWith(own)).slice(0, 6);
         if (/^SL-[A-Z0-9-]{2,12}$/.test(String(body.sku || ''))) job.sku = String(body.sku);
+        if (Array.isArray(body.previews)) job.previews = body.previews.map(String).filter((u) => u.startsWith(own)).slice(0, 6); // หน้าตัวอย่าง 3-6 (Mac ทำ มีลายน้ำ)
         if (body.audio_path) job.audio_path = String(body.audio_path).slice(0, 300); // ไฟล์เสียงอยู่ที่ไหนใน Mac
         if (/^https:\/\/drive\.google\.com\//.test(String(body.audio_drive || ''))) job.audio_drive = String(body.audio_drive).slice(0, 200);
         if (Array.isArray(body.pins)) job.pin_images = body.pins.map(String).filter((u) => u.startsWith(own)).slice(0, 10);
@@ -2096,7 +2097,7 @@ export default async function handler(req, res) {
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
         await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
         if (job.lang === 'en' && job.notion_url) job.listing = 'global_pending'; // ขายต่างประเทศ: ชุดลง Gumroad/Notion Gallery/Pinterest ไม่ขึ้นหน้าร้านไทย
-        else if ((Number(job.price) >= 1 || job.export_no) && (job.file_url || job.notion_url)) job.listing = 'pending'; // export_no: เล่มจากคลังบน Mac หลังบ้านสร้างเป็นฉบับร่างในแท็บมาใหม่ให้เอง // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
+        else if ((Number(job.price) >= 1 || job.export_no) && (job.file_url || job.notion_url)) job.listing = 'pending'; // หลังบ้านสร้างเป็นฉบับร่างในแท็บ ✨ มาใหม่ ให้เอง (กรอกรายละเอียดครบ) คุณแดนตรวจแล้วกดเผยแพร่ // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
         const todoText = job.listing === 'global_pending'
           ? `ลงขายต่างประเทศ "${job.title}" (Notion EN) เปิดแท็บโรงงาน → 🌏 ชุดลงขายต่างประเทศ: Publish ตัวเต็มและตัว Lite ใน Notion แล้วคัดลอกข้อความ/รูปไปลง Gumroad และส่ง Notion Template Gallery แล้ววางลิงก์กลับมา`
           : job.listing === 'pending' && job.kind === 'notion'
@@ -2104,8 +2105,8 @@ export default async function handler(req, res) {
           : job.listing === 'pending'
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
-        if (!job.export_no) try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
-        await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว: ${String(job.title).slice(0, 70)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
+        if (job.kind === 'notion' || job.lang === 'en') try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
+        await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);
