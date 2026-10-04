@@ -556,7 +556,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bxi-hero{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}.bxi-big{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;background:var(--bg);text-align:center}.bxi-big img{width:100%;height:100%;object-fit:cover}
 .bxi-side{display:grid;gap:8px;align-content:start;justify-items:start}
 .bxi-pick{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin:0 0 8px}.bxi-selb{display:flex;gap:5px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}.bxi-selb input{width:18px;height:18px}.bxi-b.sel .bxi-bc{outline:3px solid #2440E8;outline-offset:1px}.bxi-b.sel .bxi-selb{color:var(--ink);font-weight:600}
-.bxi-upl{cursor:pointer;font-size:12.5px}.bx-pubb{padding:12px 14px;margin-top:14px}
+.bxi-upl{cursor:pointer;font-size:12.5px}.boost-pick{margin-bottom:14px}.boost-picks{list-style:none;margin:0;padding:0;display:grid;gap:10px}.boost-picks li{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--surface)}.boost-picks img{width:56px;height:56px;object-fit:cover;border-radius:8px;background:#fff}.boost-picks li>div{display:grid;gap:2px;min-width:0}@media(max-width:560px){.boost-picks li{grid-template-columns:48px minmax(0,1fr)}.boost-picks img{width:48px;height:48px}.boost-picks li .btn{grid-column:1/-1}}.bx-pubb{padding:12px 14px;margin-top:14px}
 .bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
 .bxi-bc{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--line);position:relative}.bxi-bc img{width:100%;height:100%;object-fit:cover}
 .bxi-bc{padding:0;cursor:zoom-in;display:block}.bxi-zoom{position:absolute;right:4px;top:4px;background:rgba(255,255,255,.9);border-radius:6px;font-size:12px;padding:1px 4px;opacity:.85}
@@ -4295,7 +4295,8 @@ function memberDesk(k){
 const ADA={items:null,access:null,loading:false,busy:'',msg:'',tokMsg:''};
 function loadAdsAuto(){if(ADA.loading)return Promise.resolve();ADA.loading=true;return adminApi('/api/content?action=ads_auto&stats=1').then(j=>{if(j&&j.ok){ADA.items=j.items||[];ADA.access=j.access;}else{ADA.items=ADA.items||[];ADA.msg=(j&&j.error)||'';}}).catch(()=>{ADA.items=ADA.items||[];}).then(()=>{ADA.loading=false;render(true);});}
 /* หลังเผยแพร่สินค้าใหม่ครั้งแรก: รอข้อมูลขึ้นเซิร์ฟเวอร์แล้วขอร่างแอด (ไม่เสียเงิน) */
-function adDraftSoon(pid,tries){tries=tries||0;setTimeout(()=>{const p=getProduct(pid);if(!p||p.status!=='published'||isBundle(p)||Number(p.price)<30||!(p.images||[]).length||setsOf(p).length)return; // เล่มในชุดไม่ร่างแอดแยก
+function adDraftSoon(pid,tries){return; // ปิดแล้ว (คุณแดน 5 ต.ค. 69): ไม่ร่างแอดเองเมื่อเผยแพร่ คุณแดนเลือกเองจากคำแนะนำของน้องบูสต์
+  tries=tries||0;setTimeout(()=>{const p=getProduct(pid);if(!p||p.status!=='published'||isBundle(p)||Number(p.price)<30||!(p.images||[]).length||setsOf(p).length)return; // เล่มในชุดไม่ร่างแอดแยก
   authFetch('/api/content?action=ads_auto_draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:pid})}).then(j=>{
     if(j&&j.ok){if(!j.existed){ADA.items=null;toast('📣 เตรียมแอดสินค้าใหม่ไว้แล้ว รอคุณแดนกดตกลงที่แท็บโฆษณา (ยังไม่เสียเงิน)');}}
     else if(tries<2)adDraftSoon(pid,tries+1);}).catch(()=>{if(tries<2)adDraftSoon(pid,tries+1);});},2500+tries*3000);}
@@ -4373,6 +4374,26 @@ function fbErrHelp(e){e=String(e||'');
   if(/under 18|20 in Thailand/i.test(e))return '<div class="adt-msg">แก้ในระบบแล้ว (อายุขั้นต่ำ 20 ปี) กด "↻ ลองยิงใหม่" ได้เลย</div>';
   return '';}
 /* น้องบูสต์แนะนำงบ: ตามราคาสินค้า + ต้นทุนต่อออเดอร์จริงจากแอดที่ผ่านมา (ถ้ามี) · คุณแดนเป็นคนตัดสินใจและกดตกลงเอง */
+/* 💡 น้องบูสต์แนะนำว่าควรยิงแอดตัวไหน: ให้คะแนนจากยอดขายจริง ราคา (คืนทุนง่ายไหม) ความพร้อมของรูป/หน้าตัวอย่าง และผลแอดเก่าของสินค้านั้น */
+function adPicks(){const busy=new Set((ADA.items||[]).filter(x=>['pending','failed','launching','live','paused'].includes(x.status)).map(x=>x.productId));
+  const out=[];
+  for(const p of D.products){if(p.status!=='published'||busy.has(p.id)||/ทดสอบ|^test/i.test(p.name))continue;
+    const bun=isBundle(p),price=bun?fromPrice(p):Number(p.price)||0,imgs=(p.images||[]).length+(p.cover?1:0);if(!price||!imgs)continue;
+    const st=prodStats(p),past=(ADA.items||[]).filter(x=>x.productId===p.id&&x.stats),spent=past.reduce((a,x)=>a+(Number(x.stats.spendTHB||x.stats.spend)||0),0),bought=past.reduce((a,x)=>a+(Number(x.stats.purchases)||0),0);
+    let sc=0;const why=[];
+    if(st.paid){sc+=Math.min(st.paid,6)*2;why.push(`ขายได้แล้ว ${st.paid} ครั้ง (มีคนซื้อจริง แอดมักได้ผล)`);}
+    if(price>=700){sc+=4;why.push(`ราคา ${baht(price)} ขายได้ 1 ${bun?'ชุด':'เล่ม'}ก็คุ้มค่าแอดเกือบทั้งสัปดาห์`);}else if(price>=200){sc+=2;why.push(`ราคา ${baht(price)} คืนทุนได้เร็ว`);}else if(price<100){sc-=3;why.push(`ราคา ${baht(price)} ต่ำ ต้องขายหลายเล่มถึงคุ้ม`);}
+    if(bun){sc+=2;why.push(`เป็นชุด ${bundleBooks(p).length} เล่ม คนเห็นความคุ้มชัด`);}
+    if(!bun&&(p.previews||[]).length)sc+=1;if(imgs>=3)sc+=1;else why.push('รูปสินค้าน้อย ควรเพิ่มรูปก่อนยิง');
+    if(bought){sc+=3;why.push(`แอดเก่าขายได้ ${bought} ครั้ง`);}else if(spent>300){sc-=3;why.push(`แอดเก่าใช้ไป ${baht(Math.round(spent))} ยังไม่มีคนซื้อ ลองเปลี่ยนรูปก่อน`);}
+    if(!bun&&setsOf(p).some(b=>b.status==='published')){sc-=1;why.push('อยู่ในชุดที่ขายอยู่ ยิงแอดชุดแทนอาจคุ้มกว่า');}
+    out.push({p,sc,why,price,rec:adBudgetRec({productId:p.id})});}
+  return out.sort((a,b)=>b.sc-a.sc);}
+function adPickBox(){const L=adPicks();if(!L.length)return '';const top=L.slice(0,3),skip=L.filter(x=>x.sc<0).slice(0,3);
+  return `<section class="card adq-box boost-pick"><h3 class="h3" style="margin:0 0 4px">${ava('analyst',1)} น้องบูสต์แนะนำ: ควรยิงแอดตัวไหน</h3>
+    <p class="fine" style="margin:0 0 10px">ดูจากยอดขายจริง ราคา (คืนทุนง่ายไหม) ความพร้อมของรูป และผลแอดเก่า · กดแล้วเป็นแค่ร่าง ยังไม่เสียเงิน</p>
+    <ol class="boost-picks">${top.map((x,i)=>`<li><img src="${esc((x.p.images||[])[0]||x.p.cover||'')}" alt="" loading="lazy"><div><b>${i+1}. ${esc(x.p.name)}</b><span class="fine">${x.why.map(esc).join(' · ')||'พร้อมยิง'}</span><span class="fine">งบแนะนำ ฿${x.rec.daily}/วัน × ${x.rec.days} วัน (รวม ฿${x.rec.total.toLocaleString('th-TH')})</span></div><button class="btn btn-cta btn-sm" data-a="adsDraftOne" data-id="${x.p.id}">📣 เอาไปโฆษณา</button></li>`).join('')}</ol>
+    ${skip.length?`<p class="fine" style="margin:8px 0 0">ยังไม่แนะนำ: ${skip.map(x=>esc(x.p.name.slice(0,40))).join(' · ')} (ราคาต่ำหรือแอดเก่ายังไม่ได้ผล)</p>`:''}</section>`;}
 function adBudgetRec(x){const p=getProduct(x.productId)||{},bun=isBundle(p),price=bun?fromPrice(p):Number(p.price)||0;
   const h=(ADST.d&&ADST.d.history)||[],sales=h.filter(y=>y.purchases>0),n=sales.reduce((a,y)=>a+y.purchases,0),cpa=n?Math.round(sales.reduce((a,y)=>a+y.spendTHB,0)/n):0;
   let daily=price>=500?200:price>=200?150:100;if(cpa&&price&&cpa<price*0.8)daily=Math.min(500,Math.max(daily,Math.ceil(cpa/10)*10));
@@ -4410,7 +4431,7 @@ function adsStatusBox(){
       ${a.week.spendTHB?`<span class="ads-pl ${a.week.profitTHB>=0?'up':'down'}">ยอดขายจากแอด ${money(a.week.valueTHB||0)} − ค่าแอด ${money(a.week.spendTHB)} = <b>${a.week.profitTHB>=0?'กำไร':'ขาดทุน'} ${money(Math.abs(a.week.profitTHB||0))}</b></span>`:''}</div>
     <div class="ads-acts">${a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`:a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:''}
       <a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/ads?selected_ad_ids=${esc(a.id)}" target="_blank" rel="noopener noreferrer">Ads Manager</a></div></div>`;};
-  return `<section class="card adst">
+  return `${f==='all'?adPickBox():''}<section class="card adst">
     <h3 class="h3" style="margin:0">แอดทั้งหมด</h3>
     <p class="fine" style="margin:4px 0 10px">สถานะจริงจาก Facebook · ตัวเลข 7 วัน · แอดที่ใช้เงินเกิน 2 เท่าของราคาแล้วยังขายไม่ได้จะอยู่ใน 🔴 ต้องแก้ไข</p>
     <div class="adst-chips">${chips.map(c=>`<button class="chip${c[0]==='fix'&&c[2]?' warnchip':''}" data-a="adsFilter" data-v="${c[0]}" aria-pressed="${f===c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>
@@ -4486,7 +4507,7 @@ function adsAutoBox(compact,noLive){
       <span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="${x.status==='live'?'adsStop':'adsResume'}" data-id="${x.id}" ${ADA.busy===x.id?'disabled':''}>${x.status==='live'?'⏸ หยุด':'▶ เปิดต่อ'}</button>${x.fb&&x.fb.campaign?`<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/campaigns?selected_campaign_ids=${esc(x.fb.campaign)}" target="_blank" rel="noopener noreferrer">ดูใน Ads Manager</a>`:''}</span></div>`;};
   return `<section class="card adq-box">
     <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">📣 แอดสินค้าใหม่ ${pend.length?`<span class="badge warn">รอกดตกลง ${pend.length}</span>`:''}</h3><div class="row" style="gap:6px">${pend.filter(x=>x.status==='pending').length>1?`<button class="chip" data-a="adsDismissAll" ${ADA.bulk?'disabled':''}>${ADA.bulk?'กำลังเอาออก...':S.confirm==='adsAll'?`กดอีกครั้ง: ไม่เอาทั้ง ${pend.filter(x=>x.status==='pending').length} รายการ`:'ไม่เอาทั้งหมด'}</button>`:''}<button class="chip" data-a="adsRefresh">รีเฟรช</button></div></div>
-    <p class="fine" style="margin:6px 0 0">ระบบร่างแอดให้เองเมื่อเผยแพร่สินค้าใหม่ (เล่มในชุดไม่ร่างแยก) · ยังไม่เสียเงินจนกว่าจะกด ✅ ตกลง · ไม่อยากยิงตัวไหนกด "ไม่เอา"</p>
+    <p class="fine" style="margin:6px 0 0">ระบบไม่ร่างแอดเองแล้ว คุณแดนเลือกสินค้าเอง (ดูคำแนะนำของน้องบูสต์ด้านบน หรือกด "📣 เอาไปโฆษณา" ในแท็บสินค้า) · ยังไม่เสียเงินจนกว่าจะกด ✅ ตกลง</p>
     <p class="fine" style="margin:4px 0 12px">เผยแพร่สินค้าใหม่แล้วระบบเตรียมแอดให้ครบ (ข้อความ รูป ลิงก์ งบ ฿100/วัน × 7 วัน) แก้ข้อความหรืองบได้ แล้วกด "ตกลง ยิงแอด" ไม่ต้องเข้า Ads Manager · ทำแอดให้สินค้าเก่าได้ที่แท็บสินค้า → ดูเพิ่มเติม → ทำแอด</p>
     ${permBox}
     ${ADA.items===null?'<p class="fine">กำลังโหลด...</p>':''}

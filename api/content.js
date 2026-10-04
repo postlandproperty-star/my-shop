@@ -366,6 +366,7 @@ async function draftAd(productId, { by = 'system', force = false } = {}) {
   return { item, existed: false };
 }
 // cron วันละครั้ง: สินค้าที่เผยแพร่ใหม่แต่ยังไม่มีร่างแอด → ร่างให้ (ข้ามสินค้าทดสอบ/ไม่มีรูป)
+const AUTO_AD_DRAFTS = false;
 async function ensureAdDrafts() {
   const shop = await loadShop(); const items = await loadAdsAuto(); const made = [];
   for (const p of shop.products) {
@@ -373,6 +374,7 @@ async function ensureAdDrafts() {
     if (shop.products.some((b) => b.type === 'bundle' && (b.items || []).includes(p.id))) continue; // เล่มในชุด: ขายผ่านชุดแล้ว ไม่ร่างแอดแยกทีละเล่ม (คุณแดน 5 ต.ค. 69 · ทำแอดเองได้ที่ปุ่มทำแอด)
     const pub = p.publishedAt ? new Date(p.publishedAt).toISOString() : '';
     if (!pub || pub < ADS_SINCE || items.some((x) => x.productId === p.id)) continue;
+    if (!AUTO_AD_DRAFTS) continue; // ปิดแล้ว (คุณแดน 5 ต.ค. 69: เลือกสินค้ายิงแอดเอง)
     try { await draftAd(p.id); made.push(p.name); } catch (e) {}
   }
   // แอดที่ครบวันแล้ว → ปิดการ์ดเป็น "จบแล้ว"
@@ -2843,7 +2845,8 @@ ${books}`;
         x.updated_at = new Date().toISOString(); await saveAdsAuto(items);
         return res.status(200).json({ ok: out.length > 0 || !vs.length, images: out, errors, item: x });
       }
-      if (action === 'ads_auto_draft') { // ร่างแอด (ไม่เสียเงิน) ทีมขอได้
+      if (action === 'ads_auto_draft') { // ร่างแอด (ไม่เสียเงิน) · คุณแดนเลือกเองเท่านั้น (5 ต.ค. 69)
+        if (!admin) return res.status(403).json({ ok: false, error: 'คุณแดนเลือกสินค้ายิงแอดเอง ทีมแนะนำได้ แต่ไม่ร่างแอดเอง' });
         try { const r = await draftAd(String(body.productId || ''), { by: admin ? 'owner' : 'team', force: !!body.force && !!admin }); return res.status(200).json({ ok: true, ...r }); }
         catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
       }
