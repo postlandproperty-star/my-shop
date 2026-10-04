@@ -21,7 +21,10 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 // เซิร์ฟเวอร์หน้าเว็บในเครื่อง: ไฟล์ใน src/ ทุกเส้นทางที่ไม่ใช่ไฟล์ = index.html (เหมือน /p/slug บนเว็บจริง)
 // หน้ารวมหัวข้อ SEO (เซิร์ฟเวอร์สร้าง): สร้างจาก lib/topics.js + ข้อมูลชุดทดสอบ ให้ตรวจหน้าตาเหมือนหน้าอื่น
 const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'lib/topics.js'));
-const { vipPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
+const { vipPage, accountPage, vipMockPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
+const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
+const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
+const MARKS = [];
 const { freePage, FREEBIES } = await import(path.join(ROOT, '..', 'lib/free.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
 const T_QZ = [{ slug: 'toeic-level-test', title: 'วัดระดับ TOEIC ฟรี 20 ข้อ', cat: 'grammar', mode: 'level', questions: [1] }, { slug: 'toeic-tense-quiz', title: 'ข้อสอบ TOEIC Tense 10 ข้อ พร้อมเฉลย', desc: 'ลองทำข้อสอบ TOEIC Part 5 เรื่อง Tense 10 ข้อ พร้อมเฉลยและคำอธิบายภาษาไทยครบทุกข้อ', cat: 'grammar', questions: Array(10).fill(1) }, { slug: 'toeic-ctm', title: 'จับผิดประโยค TOEIC 10 ข้อ พิมพ์แก้เอง ตรวจใจดี', desc: 'แบบฝึกจับผิดประโยคภาษาอังกฤษแนว TOEIC 10 ข้อ พิมพ์ประโยคที่ถูกเอง', cat: 'grammar', questions: Array(10).fill(1) }];
@@ -29,6 +32,7 @@ const server = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split('?')[0]);
   if (u === '/__free') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(freePage(FREEBIES[0], { site: BASE, upsell: SHOP.products.find((p) => p.status === 'published' && p.type !== 'bundle') })); }
   const fi = u.match(/^\/free-(img|file)\/([\w.-]+)$/); if (fi) { const f = path.join(SRC, 'free', fi[2]); if (fs.existsSync(f)) return res.end(fs.readFileSync(f)); res.statusCode = 404; return res.end(); }
+  if (u === '/__account' || u === '/__mock') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(u === '/__account' ? accountPage({ site: BASE }) : vipMockPage({ site: BASE })); }
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
   if (tp) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(topicPage(tp, topicItems(tp, { articles: T_ART, quizzes: T_QZ, products: SHOP.products }), { site: BASE, all: TOPICS })); }
@@ -66,6 +70,9 @@ async function newPage(kind) {
     if (/\/api\/order\?m=free/.test(url)) return route.fulfill({ json: { ok: true, file: `${BASE}/free-file/toeic-confusing-50.pdf` } });
     if (/action=insights/.test(url)) return route.fulfill({ json: { ok: true, ready: true, events: 120, totals: { sessions: 40, views: 90, bounce: 55, perSession: 2.3, mobile: 80 }, daily: [{ d: '2026-10-01', n: 12 }, { d: '2026-10-02', n: 28 }], funnel: { product: 30, add: 8, buy: 6, pay: 4, paid: 2 }, pages: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct75: 40, pct100: 25, exitRate: 50, exits: 10 }], articles: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct100: 25 }], exits: [{ p: '/p/x', exits: 6, exitRate: 60 }], clicks: [{ k: 'cartAdd', n: 9 }, { k: 'link:/p/toeic-750', n: 5 }, { k: 'out:m.me', n: 2 }], sources: [{ k: 'google', n: 20 }, { k: 'ad:toeic-checkout', n: 10 }], orderSources: [{ k: 'fb-toeic-test', n: 2 }], quizzes: [{ slug: 'toeic-tense-quiz', starts: 10, done: 6, avg: 70 }], hardest: [{ slug: 'toeic-tense-quiz', i: 3, rate: 20, n: 10 }] } });
     if (/action=vip_admin/.test(url)) return route.fulfill({ json: { ok: true, ready: false, sql: 'create table members (...);', settings: { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 }, page: { title: 'SheetLab VIP', sub: 'ฝึกต่อเนื่อง', perks: [{ t: 'คลังข้อสอบ', free: true, vip: 'yes' }, { t: 'สมุดจุดพลาด', free: false, vip: 'yes' }], faq: [{ q: 'ต้องตั้งรหัสไหม', a: 'ไม่ต้อง' }] } }, stats: null } });
+    if (/m=vip_acct/.test(url)) return route.fulfill({ json: { ok: true, email: 'buyer@test.co', orders: [{ at: '2026-10-01T03:00:00Z', name: 'ชุด TOEIC 750+', amount: 390, items: [{ name: 'TOEIC Grammar', link: 'https://x.supabase.co/storage/v1/object/public/files/a.pdf' }, { name: 'Study Planner', link: 'https://www.notion.so/x' }] }], more: false, vip: { active: true, until: '2026-11-04T00:00:00Z', card: false }, review: 3, settings: { open: true } } });
+    if (/m=vip_mock/.test(url)) return route.fulfill({ json: route.request().method() === 'POST' ? { ok: true, k: 'mini', name: 'ฝึกเร็ว ทุกหมวด', n: 3, mins: 1, questions: MOCK_Q } : { ok: true, email: 'buyer@test.co', active: true, open: true, kinds: [{ k: 'mini', name: 'ฝึกเร็ว ทุกหมวด', desc: 'สุ่มจากคลัง', n: 3, mins: 1 }, { k: 'toeic', name: 'TOEIC แนว Part 5–7', desc: 'ไวยากรณ์', n: 30, mins: 18 }] } });
+    if (/m=vip_marks/.test(url)) { try { MARKS.push(...JSON.parse(route.request().postData() || '{}').items); } catch (e) {} return route.fulfill({ json: { ok: true, saved: 3 } }); }
     if (/m=vip_me/.test(url)) return route.fulfill({ json: { ok: true, email: null, active: false, settings: { open: true } } });
     if (/action=dash(&|$)/.test(url)) return route.fulfill({ json: { ok: false, error: 'ทดสอบ: โหลดตัวเลขไม่ได้' } }); // หน้าต้องไม่พังตอน API มีปัญหา
     if (/\/api\//.test(url)) return route.fulfill({ json: { ok: true, jobs: [], items: [], list: [], ads: [], checks: [], problems: [], history: [], posts: [], logs: [] } });
@@ -212,6 +219,30 @@ try {
       await layout(page, `[${kind}] ชีทแจกฟรี`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'free-mobile.png'), fullPage: true });
       await page.context().close();
     } catch (e) { pass(`[${kind}] ชีทแจกฟรี: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
+    // 3.58) บัญชีของฉัน + ข้อสอบเสมือนจริง + เมนูเดียวกันทุกหน้า
+    try { page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.goto(`${BASE}/__account`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.ac-ord', { timeout: 4000 });
+      const ac = await page.evaluate(() => ({ dl: document.querySelectorAll('.ac-dl').length, mock: !!document.querySelector('a[href="/vip/mock"]'), review: /สมุดจุดพลาด \(3 ข้อ\)/.test(document.body.innerText), nav: [...document.querySelectorAll('.nav a')].map((a) => a.getAttribute('href')), acc: !!document.querySelector('.hd-acc.on') }));
+      pass(`[${kind}] บัญชีของฉัน: ชีทที่ซื้อ (ปุ่มโหลดทุกไฟล์) + สถานะ VIP + ทางไปข้อสอบเสมือนจริง/สมุดจุดพลาด`, ac.dl === 2 && ac.mock && ac.review && ac.acc, JSON.stringify(ac));
+      pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท ข้อสอบฟรี ความรู้ VIP)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
+      await layout(page, `[${kind}] บัญชีของฉัน`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'account-mobile.png'), fullPage: true });
+      MARKS.length = 0; page.on('dialog', (d) => d.accept());
+      await page.goto(`${BASE}/__mock`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.mk-go', { timeout: 4000 });
+      await layout(page, `[${kind}] ข้อสอบเสมือนจริง (เลือกชุด)`);
+      await page.click('.mk-go[data-k="mini"]'); await page.waitForSelector('.mk-q', { timeout: 4000 });
+      await page.click('.mk-q[data-n="0"] .ch button[data-k="0"]'); await page.click('.mk-q[data-n="1"] .ch button[data-k="2"]');
+      const during = await page.evaluate(() => ({ n: document.querySelectorAll('.mk-q').length, t: (document.getElementById('mk-t') || {}).textContent, cnt: (document.getElementById('mk-n') || {}).textContent }));
+      await layout(page, `[${kind}] ข้อสอบเสมือนจริง (กำลังทำ)`);
+      await page.click('#mk-send'); await page.waitForSelector('.mk-res', { timeout: 4000 }); await page.waitForTimeout(300);
+      const res = await page.evaluate(() => ({ score: (document.querySelector('.mk-score') || {}).textContent, right: document.querySelectorAll('.ch button.right').length, wrong: document.querySelectorAll('.ch button.wrong').length, saved: (document.getElementById('mk-saved') || {}).textContent, hist: JSON.parse(localStorage.getItem('sl_mock_hist') || '[]').length }));
+      pass(`[${kind}] ข้อสอบเสมือนจริง: จับเวลา ตอบ ส่ง → คะแนน 1/3 เฉลยทุกข้อ ข้อผิด/ไม่ตอบเข้าสมุดจุดพลาด`, during.n === 3 && /^\d+:\d\d$/.test(during.t) && /2\/3/.test(during.cnt) && res.score === '1/3' && res.right === 3 && res.wrong === 1 && /เข้าสมุดจุดพลาดแล้ว/.test(res.saved) && res.hist === 1 && JSON.stringify(MARKS.map((x) => x.ok)) === '[true,false,false]', JSON.stringify({ during, res, marks: MARKS.length }));
+      await layout(page, `[${kind}] ข้อสอบเสมือนจริง (ผลคะแนน)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'mock-mobile.png'), fullPage: true });
+      await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid, .st-svc', { timeout: 6000 }).catch(() => {});
+      const home = await page.evaluate(() => ({ nav: [...document.querySelectorAll('.st-nav a')].map((a) => a.getAttribute('href')), svc: document.querySelectorAll('.st-svcc').length, acc: !!document.querySelector('.st-top a[href="/account"]') }));
+      pass(`[${kind}] หน้าแรก: เมนูเดียวกับหน้าอื่น + การ์ด 3 บริการ + ปุ่มบัญชีของฉัน`, JSON.stringify(home.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])) && home.svc === 3 && home.acc, JSON.stringify(home));
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] บัญชี/ข้อสอบเสมือนจริง: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
     // 3.6) หน้าสมาชิก VIP: ยังไม่เปิด = "เร็วๆ นี้" · เปิดแล้ว = ราคาจากหลังบ้าน + ปุ่มสมัคร + ฟอร์มเข้าระบบด้วยอีเมล
     for (const mode of ['closed', 'open']) try {

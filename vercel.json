@@ -33,8 +33,16 @@
       "destination": "/api/page?freeimg=:f"
     },
     {
+      "source": "/account",
+      "destination": "/api/page?acct=1"
+    },
+    {
       "source": "/vip",
       "destination": "/api/page?vip=home"
+    },
+    {
+      "source": "/vip/mock",
+      "destination": "/api/page?vip=mock"
     },
     {
       "source": "/vip/review",

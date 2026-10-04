@@ -8,8 +8,8 @@ import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } 
 import { sbSelect } from '../lib/shop.js';
 import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/topics.js';
 import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
-import { vipPage, vipReviewPage } from '../lib/vipPage.js';
-import { loadVip } from '../lib/members.js';
+import { vipPage, vipReviewPage, accountPage, vipMockPage } from '../lib/vipPage.js';
+import { loadVip, vipSellable } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
 import { FREEBIES, freeBySlug, freePage } from '../lib/free.js';
 
@@ -149,10 +149,16 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300');
     return res.status(200).send(freePage(f, { settings: shop.settings || {}, site: NEW_SITE, upsell: up }));
   }
-  const vipQ = String(req.query.vip || '');
-  if (vipQ === 'home' || vipQ === 'review') { // สมาชิก VIP (/vip) และสมุดจุดพลาด (/vip/review)
+  if (req.query.acct === '1') { // บัญชีของฉัน: บัญชีเดียวทุกบริการ (ข้อมูลโหลดหลังเข้าระบบ)
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));
+    return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE }));
+  }
+  const vipQ = String(req.query.vip || '');
+  if (vipQ === 'home' || vipQ === 'review' || vipQ === 'mock') { // สมาชิก VIP (/vip) สมุดจุดพลาด (/vip/review) ข้อสอบเสมือนจริง (/vip/mock)
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
+    const shop = await loadShop().catch(() => ({ settings: {} }));
+    if (vipQ === 'mock') return res.status(200).send(vipMockPage({ settings: shop.settings, site: NEW_SITE }));
     if (vipQ === 'review') return res.status(200).send(vipReviewPage({ settings: shop.settings, site: NEW_SITE }));
     return res.status(200).send(vipPage(await loadVip(), { settings: shop.settings, site: NEW_SITE, preview: req.query.preview === '1' }));
   }
@@ -211,13 +217,13 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
       out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
     }
     // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
-    const [qz, ar, rvAll] = await Promise.all([loadQuizzes(), loadArticles(), import('../lib/reviews.js').then((m) => m.loadReviews().then((d) => m.reviewSummary(d.list))).catch(() => ({}))]);
+    const [qz, ar, rvAll, vipSet] = await Promise.all([loadQuizzes(), loadArticles(), import('../lib/reviews.js').then((m) => m.loadReviews().then((d) => m.reviewSummary(d.list))).catch(() => ({})), loadVip().catch(() => null)]);
     const quizList = qz.map((q) => ({ slug: q.slug, title: q.title, cat: q.cat || '', n: q.questions.length }));
     const dp = dailyPick(qz); const daily = dp ? { q: dp.x.q, choices: dp.x.choices, answer: dp.x.answer, explain: dp.x.explain, slug: dp.quiz.slug, title: dp.quiz.title } : null;
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
     const topics = TOPICS.map((t) => { const it = topicItems(t, { articles: ar, quizzes: qz, products: shop.products }); return topicReady(it) ? { slug: t.slug, name: t.name, n: topicCount(it) } : null; }).filter(Boolean); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว (หน้าร้านโชว์เป็นทางลัด)
-    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ }).replace(/<\//g, '<\\/');
+    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';

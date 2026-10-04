@@ -7,13 +7,14 @@ import * as V from '../lib/members.js';
 
 // ---------- สมาชิก VIP (/vip) ?m=vip_* ----------
 const json = (req) => { let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } } return b || {}; };
+const liveQuizzes = async () => ((await sbSelect('shop_state?id=eq.quizzes&select=data'))?.[0]?.data?.list || []).filter((x) => x.status !== 'hidden');
 const originOf = (req) => `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
 async function vip(req, res, m) {
   const origin = originOf(req), me = V.sessionEmail(req);
   if (m === 'vip_auth') { // ลิงก์จากอีเมล → ตั้งคุกกี้ แล้วกลับหน้า /vip
-    const email = V.readToken(req.query.t, 'login');
-    if (!email) { res.writeHead(302, { Location: '/vip?e=link' }); return res.end(); }
-    res.writeHead(302, { 'Set-Cookie': V.sessionCookie(email), Location: '/vip?in=1' }); return res.end();
+    const email = V.readToken(req.query.t, 'login'), back = req.query.n === 'account' ? '/account' : '/vip';
+    if (!email) { res.writeHead(302, { Location: `${back}?e=link` }); return res.end(); }
+    res.writeHead(302, { 'Set-Cookie': V.sessionCookie(email), Location: `${back}?in=1` }); return res.end();
   }
   if (m === 'vip_sync') { // กลับจากหน้าจ่ายบัตรของ Stripe: เปิดสิทธิ์ทันที (ไม่ต้องรอ webhook) แล้วเข้าระบบให้เลย
     const id = String(req.query.session_id || '');
@@ -28,16 +29,24 @@ async function vip(req, res, m) {
     let mem = await V.getMember(me).catch(() => null); mem = await V.refreshMember(mem);
     return res.status(200).json({ ok: true, email: me, active: V.isActive(mem), until: mem?.paid_until || null, plan: mem?.plan || null, card: !!mem?.stripe_sub, cancelAt: mem?.cancel_at || null, settings: pub });
   }
+  if (m === 'vip_mock' && req.method === 'GET') { // ข้อสอบเสมือนจริง: ชุดที่ทำได้ + สถานะสมาชิก (ดูรายการได้ทุกคน เริ่มทำได้เฉพาะ VIP)
+    const M = await import('../lib/mock.js');
+    let active = false; if (me) { try { active = V.isActive(await V.refreshMember(await V.getMember(me))); } catch (e) {} }
+    return res.status(200).json({ ok: true, email: me, active, open: pub.open, kinds: M.mockKinds(await liveQuizzes()) });
+  }
+  if (m === 'vip_acct') { // หน้า "บัญชีของฉัน": เฉพาะเจ้าของอีเมลที่ยืนยันผ่านลิงก์ในอีเมลแล้ว (คุกกี้ลงลายเซ็น)
+    if (!me) return res.status(200).json({ ok: true, email: null, settings: pub });
+    const A = await import('../lib/account.js');
+    return res.status(200).json({ ok: true, ...(await A.accountData(me)), settings: pub });
+  }
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
   const b = json(req);
   if (m === 'vip_login') { // ส่งลิงก์เข้าระบบ (ไม่บอกว่ามีบัญชีหรือไม่ · ส่งได้ทุก 1 นาที)
     const email = String(b.email || '').trim().toLowerCase();
     if (!V.okEmail(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง' });
     try {
-      const cur = await V.getMember(email);
-      if (cur?.login_sent_at && Date.now() - Date.parse(cur.login_sent_at) < 60e3) return res.status(200).json({ ok: true });
-      await V.putMember({ email, login_sent_at: new Date().toISOString() });
-      await V.sendLoginLink(email, origin);
+      if (!(await V.loginThrottle(email))) return res.status(200).json({ ok: true });
+      await V.sendLoginLink(email, origin, b.next === 'account' ? 'account' : '');
     } catch (e) { console.error('vip login', e); return res.status(500).json({ ok: false, error: 'ส่งอีเมลไม่สำเร็จ ลองใหม่อีกครั้ง' }); }
     return res.status(200).json({ ok: true });
   }
@@ -63,7 +72,7 @@ async function vip(req, res, m) {
     const at = sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : mem.paid_until;
     await V.putMember({ email: me, cancel_at: at }); return res.status(200).json({ ok: true, cancelAt: at });
   }
-  if (m === 'vip_mark' || m === 'vip_mistakes') {
+  if (['vip_mark', 'vip_marks', 'vip_mistakes', 'vip_mock'].includes(m)) {
     const mem = await V.refreshMember(await V.getMember(me).catch(() => null));
     if (!V.isActive(mem)) return res.status(403).json({ ok: false, error: 'สำหรับสมาชิก VIP' });
     if (m === 'vip_mark') {
@@ -71,8 +80,18 @@ async function vip(req, res, m) {
       if (!/^[a-z0-9-]{3,80}$/.test(quiz) || !(q >= 0 && q < 50)) return res.status(400).json({ ok: false });
       await V.markAnswer(me, quiz, q, !!b.ok); return res.status(200).json({ ok: true });
     }
-    const qz = (await sbSelect('shop_state?id=eq.quizzes&select=data'))?.[0]?.data?.list || [];
-    return res.status(200).json({ ok: true, ...(await V.listMistakes(me, qz.filter((x) => x.status !== 'hidden'))) });
+    if (m === 'vip_marks') { // ส่งผลข้อสอบเสมือนจริงทั้งชุด: ผิด/ไม่ตอบ → สมุดจุดพลาด · ถูก → ปิดข้อที่เคยผิด
+      const items = (Array.isArray(b.items) ? b.items : []).slice(0, 60).filter((it) => /^[a-z0-9-]{3,80}$/.test(String(it?.quiz || '')) && Number(it.q) >= 0 && Number(it.q) < 50);
+      const r = await Promise.allSettled(items.map((it) => V.markAnswer(me, String(it.quiz), Number(it.q), !!it.ok)));
+      return res.status(200).json({ ok: true, saved: r.filter((x) => x.status === 'fulfilled').length });
+    }
+    const qz = await liveQuizzes();
+    if (m === 'vip_mock') {
+      const M = await import('../lib/mock.js'), r = M.pickMock(qz, String(b.k || ''));
+      if (!r) return res.status(400).json({ ok: false, error: 'ชุดนี้ยังมีข้อในคลังไม่พอ เลือกชุดอื่นก่อน' });
+      return res.status(200).json({ ok: true, ...r });
+    }
+    return res.status(200).json({ ok: true, ...(await V.listMistakes(me, qz)) });
   }
   return res.status(400).json({ ok: false, error: 'unknown' });
 }

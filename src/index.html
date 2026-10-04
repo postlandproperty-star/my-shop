@@ -118,6 +118,10 @@ footer{padding:28px 0 110px;text-align:center}
 .st-top{background:var(--surface);border-bottom:1px solid var(--line)}
 .st-top-in{display:flex;justify-content:space-between;align-items:center;padding-block:12px}
 .st-logo{font-family:var(--font-head);font-size:22px;color:var(--brand);text-decoration:none}.st-logo::before{content:'';display:inline-block;width:1.25em;height:1.25em;background:url(/icon-48.png) center/contain no-repeat;vertical-align:-.25em;margin-right:.3em}
+.st-svc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.st-svcc{display:flex;gap:12px;align-items:flex-start;text-decoration:none;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px}.st-svcc:hover{border-color:var(--brand)}.st-svcc>span:last-child{display:flex;flex-direction:column;gap:4px}.st-svcc b{font-size:17px}.st-svci{font-size:28px;line-height:1}.st-svcc .st-go{color:var(--brand);font-weight:600;font-size:14px}
+@media(max-width:720px){.st-svc{grid-template-columns:1fr;gap:8px}.st-svcc{padding:12px}}
+.st-nav{gap:4px}@media(max-width:440px){.st-nav{gap:0}.st-nav a{font-size:13.5px;padding:8px 2px;letter-spacing:-.1px}}
+.st-topr{display:flex;gap:8px;align-items:center}@media(max-width:400px){.st-acc{font-size:13px;padding:5px 10px}}
 .st-chat{font-weight:600;color:var(--ink);text-decoration:none;border:1.5px solid var(--line);border-radius:999px;padding:5px 14px;font-size:14px}
 .st-hero{background:var(--brand);color:var(--hero-ink);padding:26px 0 24px}
 .st-hero h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5.4vw,34px);line-height:1.25;margin:0 0 4px;text-wrap:balance}
@@ -2087,6 +2091,7 @@ function rvSection(p,cls){const r=REVIEWS[p.id];if(!r||!r.count)return '';
   return `<section class="${cls}"><div class="${cls==='section'?'wrap':''}"><h2>รีวิวจากผู้ซื้อจริง</h2>
     <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ทุกรีวิวมาจากคนที่ซื้อจริง</span></div><p class="fine rv-note">ผู้รีวิวได้รับโค้ดส่วนลดเล่มถัดไปเป็นการขอบคุณ ไม่ว่าจะให้กี่ดาว</p>
     <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div><span class="rv-ver">✓ ผู้ซื้อจริง${x.em?` · ${esc(x.em)}`:''}</span>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
+const VIP_OPEN=(()=>{try{return !!(window.__SHOP__&&window.__SHOP__.vip&&window.__SHOP__.vip.open);}catch(e){return false;}})(); // เปิดรับสมาชิก VIP แล้ว (หน้าแรกโชว์การ์ด VIP)
 const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
 const TOPICS_LIVE=(()=>{try{return (window.__SHOP__&&window.__SHOP__.topics)||[];}catch(e){return [];}})(),STORE_FAQ=(()=>{try{return (window.__SHOP__&&window.__SHOP__.faq)||[];}catch(e){return [];}})(); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว + คำถามที่พบบ่อย (ฝังมาจากเซิร์ฟเวอร์)
@@ -2107,9 +2112,10 @@ function shelves(p){const t=(p.name+' '+(p.headline||'')).toLowerCase(),o=[];
   if(!o.filter(k=>k!=='bundle').length)o.push('other');return o;}
 /* หัว/ท้ายของหน้าแรกและร้านค้า: เมนูเดียวกันทุกหน้า หน้าแรก · ร้านค้า · คลังข้อสอบ · คลังความรู้ */
 function stHead(on,chat){const n=(k,href,l,go)=>`<a href="${href}"${go?' data-go=""':''}${on===k?' class="on" aria-current="page"':''}>${l}</a>`;
-  return `<header class="st-top"><div class="wrap wide st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a><a class="st-chat" href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a></div>
-    <nav class="wrap wide st-nav" aria-label="เมนูหลัก">${n('home','/','หน้าแรก',1)}${n('store','/store','ร้านค้า',1)}${QUIZZES.length?n('quiz','/quiz','คลังข้อสอบ'):''}${ARTICLES.length?n('learn','/learn','คลังความรู้'):''}</nav></header>`;}
-function stFoot(chat){return `<footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}<a href="/store" data-go="">ร้านค้า</a> · <a href="/free">🎁 ชีทแจกฟรี</a> · ${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
+  // เมนูเดียวกับหน้าอื่นของเว็บ (SITE_NAV ใน lib/quiz.js) ทุกบริการ: หน้าแรก · ร้านชีท · ข้อสอบฟรี · ความรู้ · VIP + บัญชีของฉัน
+  return `<header class="st-top"><div class="wrap wide st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a><span class="st-topr"><a class="st-chat st-acc" href="/account">👤 บัญชีของฉัน</a><a class="st-chat" href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a></span></div>
+    <nav class="wrap wide st-nav" aria-label="เมนูหลัก">${n('home','/','หน้าแรก',1)}${n('store','/store','ร้านชีท',1)}${n('quiz','/quiz','ข้อสอบฟรี')}${n('learn','/learn','ความรู้')}${n('vip','/vip','👑 VIP')}</nav></header>`;}
+function stFoot(chat){return `<footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}<a href="/store" data-go="">ร้านค้า</a> · <a href="/free">🎁 ชีทแจกฟรี</a> · ${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/account">บัญชีของฉัน</a> · <a href="/vip">สมาชิก VIP</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
     <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;}
 const catalogView=()=>storeView(true);
 function storeView(catalog){
@@ -2171,6 +2177,12 @@ function storeView(catalog){
     <div class="st-hcta"><a class="btn st-hbtn" href="/store" data-go="">เลือกซื้อชีท</a>${LEVELQ?`<a class="btn st-hbtn2" href="/quiz/${esc(LEVELQ.slug)}">วัดระดับฟรี ${LEVELQ.n} ข้อ</a>`:QUIZZES.length?'<a class="btn st-hbtn2" href="/quiz">ลองทำข้อสอบฟรี</a>':''}</div>
     <ul class="st-why"><li>รับไฟล์ทันทีหลังจ่าย</li><li>สแกนจ่าย QR ได้</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></div></section>
   <main class="wrap wide st-main">
+    <section class="st-sec" aria-labelledby="st-s"><h2 id="st-s" class="st-h2">SheetLab มีอะไรให้บ้าง</h2>
+      <div class="st-svc">
+        <a class="st-svcc" href="/quiz"><span class="st-svci" aria-hidden="true">📚</span><span><b>ฝึกฟรี</b><span class="fine">ข้อสอบพร้อมเฉลย ${QUIZZES.length} ชุด และบทความสรุปทุกหัวข้อ ไม่ต้องสมัคร</span><span class="st-go">เริ่มฝึกฟรี →</span></span></a>
+        <a class="st-svcc" href="/store" data-go=""><span class="st-svci" aria-hidden="true">🛒</span><span><b>ร้านชีท</b><span class="fine">ชีทสรุป PDF ${all.length} รายการ ดูตัวอย่างก่อนซื้อ สแกนจ่ายแล้วได้ไฟล์ทันที</span><span class="st-go">เลือกซื้อชีท →</span></span></a>
+        ${VIP_OPEN?`<a class="st-svcc" href="/vip"><span class="st-svci" aria-hidden="true">👑</span><span><b>สมาชิก VIP</b><span class="fine">ข้อสอบเสมือนจริงจับเวลา และสมุดจุดพลาดที่พาทวนจนแม่น</span><span class="st-go">ดูสิทธิ์ VIP →</span></span></a>`:`<a class="st-svcc" href="/free"><span class="st-svci" aria-hidden="true">🎁</span><span><b>ชีทแจกฟรี</b><span class="fine">TOEIC 50 คำศัพท์ที่คนไทยสับสน กรอกอีเมลรับไฟล์ทันที</span><span class="st-go">รับชีทฟรี →</span></span></a>`}
+      </div></section>
     ${TOPICS_LIVE.length?`<section class="st-sec" aria-labelledby="st-t"><h2 id="st-t" class="st-h2">เตรียมสอบเรื่องไหนอยู่?</h2>
       <div class="st-topics">${TOPICS_LIVE.map(t=>`<a class="st-tcard" href="/topic/${esc(t.slug)}"><span class="st-tcov"><img src="/topic-img/${esc(t.slug)}.jpg?v=1" alt="" loading="lazy" width="1200" height="675"></span><b>${esc(t.name)}</b><span class="fine">${t.n} รายการ</span></a>`).join('')}</div></section>`:''}
     <section class="st-sec" aria-labelledby="st-s"><div class="st-rowh"><h2 id="st-s" class="st-h2">ชีทแนะนำ</h2><a href="/store" data-go="" class="st-more">ดูทั้งหมด ${all.length} รายการ →</a></div>
@@ -2213,6 +2225,7 @@ function orderView(){
       `<form id="find-form" class="st-find" novalidate><label for="find-email">อีเมลที่ใช้ซื้อ</label><input class="input" id="find-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" value="${esc(f.email)}" placeholder="เช่น name@gmail.com"><button class="btn btn-dark" type="submit" ${f.busy?'disabled':''}>${f.busy?'กำลังส่ง...':'ส่งลิงก์ไปที่อีเมล'}</button></form>
       ${f.err?`<p class="err" style="margin-top:8px">${esc(f.err)}</p>`:''}`}
       <p class="fine" style="margin:14px 0 0">ลิงก์ส่งไปที่อีเมลของออเดอร์เท่านั้น ขอซ้ำได้ทุก 10 นาที</p>
+      <p style="margin:12px 0 0">หรือ <a href="/account"><b>👤 เข้าบัญชีของฉัน</b></a> ดูและโหลดชีททุกเล่มที่เคยซื้อได้ในหน้าเดียว</p>
     </div></div>`;
 }
 async function findOrder(email){
