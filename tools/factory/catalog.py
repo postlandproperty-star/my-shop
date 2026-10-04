@@ -1,6 +1,7 @@
 # หน้าภาพรวมโรงงาน: รวมทุกเล่มที่ผลิตแล้ว (SSD + โฟลเดอร์เดิมบน Mac) เป็นตารางพร้อมปก เปิดดูใน Chrome
 #   python3 tools/factory/catalog.py            สร้าง /Volumes/PortableSSD/Sheetlab/โรงงาน.html แล้วจบ
 #   python3 tools/factory/catalog.py --open     สร้างแล้วเปิดใน Chrome
+#   python3 tools/factory/catalog.py --json     พิมพ์รายการเล่มเป็น JSON (ใช้ในแอปโรงงานบน Mac)
 # ไม่ใช้ AI ไม่ใช้อินเทอร์เน็ต อ่านอย่างเดียว (ไม่แก้/ไม่ย้ายไฟล์หนังสือ) · ปกย่อเก็บใน _factory/thumbs (สร้างใหม่เฉพาะไฟล์ที่เปลี่ยน)
 # เล่มที่นับ = ไฟล์ชื่อ NNN_YYYY-MM-DD_ชื่อ.pdf (เลขลำดับการผลิต) · ชุดขายแสดงแยกเป็นกลุ่ม
 import html, json, os, re, subprocess, sys, time
@@ -67,8 +68,10 @@ def main():
             t = thumb(pdf, no)
             audio = (pdf.parent / 'audio').is_dir()
             books.append({'no': no, 'day': day, 'title': title_of(pdf, slug), 'cat': cat, 'pages': pages(pdf), 'mb': round(pdf.stat().st_size / 1e6, 1),
-                          'where': where, 'pdf': pdf.as_uri(), 'folder': pdf.parent.as_uri(), 'thumb': t.as_uri() if t else '', 'audio': audio})
+                          'where': where, 'path': str(pdf), 'pdf': pdf.as_uri(), 'folder': pdf.parent.as_uri(), 'thumb': t.as_uri() if t else '', 'audio': audio})
     books.sort(key=lambda b: b['no'], reverse=True)
+    if '--json' in sys.argv:  # แอปโรงงานบน Mac อ่านรายการนี้ (tools/factory/app/server.mjs)
+        print(json.dumps({'ok': True, 'ssd': SSD.exists(), 'books': books, 'sets': [{'name': s['name'], 'n': len(s['books']), 'where': s['where'], 'path': s['path']} for s in sets.values()]}, ensure_ascii=False)); return
     cats = sorted({b['cat'] for b in books})
     e = html.escape
     row = lambda b: f'''<a class="bk" href="{e(b['pdf'])}" data-cat="{e(b['cat'])}" data-q="{e((b['title'] + ' ' + b['no']).lower())}" target="_blank">

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>โรงงาน SheetLab</title>
+<link rel="icon" href="/icon.png">
+<style>
+:root{--bg:#EDF1F7;--card:#fff;--ink:#0F1B33;--mut:#56637D;--line:#D9E0EC;--brand:#2440E8;--ok:#0E7A4F;--okbg:#DDF5EA;--warn:#8A5300;--warnbg:#FCEBC8;--bad:#B42318;--badbg:#FDE2DF}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1220;--card:#161d30;--ink:#e8ecf5;--mut:#9aa6bf;--line:#2a3350;--okbg:#123a2a;--ok:#5fd4a0;--warnbg:#3d2c0c;--warn:#F3B85B;--badbg:#3d1512;--bad:#ff8a80}}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,'Sarabun',sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.top img{width:30px;height:30px;border-radius:8px}.top h1{margin:0;font-size:19px}.pills{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.pill{font-size:12.5px;font-weight:600;border-radius:999px;padding:4px 10px;background:var(--bg);color:var(--mut)}.pill.ok{background:var(--okbg);color:var(--ok)}.pill.warn{background:var(--warnbg);color:var(--warn)}.pill.bad{background:var(--badbg);color:var(--bad)}
+.tabs{display:flex;gap:6px;padding:12px 20px 0}.tabs button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 16px;cursor:pointer;font-weight:600}.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{padding:16px 20px 60px;max-width:1200px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:17px}.fine{color:var(--mut);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}.stats b{display:block;font-size:26px;color:var(--brand);line-height:1.2}.stats span{font-size:13px;color:var(--mut)}
+.row{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.row:first-of-type{border-top:0}
+.row .cv{width:48px;height:68px;border-radius:6px;object-fit:cover;background:var(--bg);flex:none}.row .tx{flex:1;min-width:0}.row b{display:block}
+.badge{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:1px 8px;margin-right:6px}.b-queued{background:var(--bg);color:var(--mut)}.b-producing{background:var(--warnbg);color:var(--warn)}.b-done{background:var(--okbg);color:var(--ok)}.b-cancelled,.b-failed{background:var(--badbg);color:var(--bad)}
+.btn{border:0;background:var(--brand);color:#fff;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}.btn:disabled{opacity:.5}
+.ghost{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 12px;cursor:pointer;text-decoration:none;color:var(--ink);font-size:13.5px;white-space:nowrap}
+form.order{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}form.order textarea{grid-column:1/-1;min-height:60px}form.order .act{grid-column:1/-1;display:flex;gap:10px;align-items:center}
+input,textarea,select{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:8px 10px;width:100%}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.bar input{flex:1;min-width:200px;width:auto}.bar .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px}.bar .chip[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.bk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:3px}.bk:hover{border-color:var(--brand)}
+.bk .im{position:relative;aspect-ratio:210/297;border-radius:8px;overflow:hidden;background:var(--bg);cursor:pointer;margin-bottom:6px}.bk .im img{width:100%;height:100%;object-fit:cover}.bk em{position:absolute;left:6px;top:6px;background:var(--ink);color:var(--bg);font-style:normal;font-size:12px;font-weight:700;border-radius:6px;padding:1px 7px}
+.bk b{font-size:13.5px;line-height:1.35}.bk .mt{color:var(--mut);font-size:12px}.bk .acts{display:flex;gap:6px;margin-top:6px}.bk .acts button{flex:1}
+.empty{color:var(--mut);padding:8px 0}.err{color:var(--bad)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}.toast.on{opacity:1}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}form.order{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><img src="/icon.png" alt=""><h1>โรงงาน SheetLab</h1><div class="pills" id="pills"><span class="pill">กำลังเชื่อมต่อ...</span></div></header>
+<nav class="tabs" role="tablist"><button data-t="queue" aria-pressed="true">🏭 คิวผลิต</button><button data-t="lib" aria-pressed="false">📚 คลังหนังสือ</button></nav>
+<main id="main"></main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+var S={t:'queue',st:null,lib:null,q:'',cat:'',busy:false};
+function e(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function ago(t){if(!t)return'-';var m=Math.round((Date.now()-Date.parse(t))/6e4);return m<1?'เมื่อกี้':m<60?m+' นาทีที่แล้ว':m<1440?Math.round(m/60)+' ชม.ที่แล้ว':Math.round(m/1440)+' วันที่แล้ว';}
+function toast(s){var t=document.getElementById('toast');t.textContent=s;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(function(){t.classList.remove('on');},3000);}
+function post(u,b){return fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})}).then(function(r){return r.json();});}
+var STAT={queued:'รอผลิต',producing:'กำลังผลิต',done:'ผลิตเสร็จ',cancelled:'ยกเลิก',failed:'ผลิตไม่สำเร็จ'};
+var LIST={pending:'รอคุณแดนตรวจในหลังบ้าน',listed:'ลงขายแล้ว',rejected:'ไม่ลงขาย',global_pending:'รอลงขายต่างประเทศ',global:'ลงต่างประเทศแล้ว'};
+function pills(){var s=S.st,h='';if(!s){document.getElementById('pills').innerHTML='<span class="pill">กำลังเชื่อมต่อ...</span>';return;}
+ h+=s.ok?'<span class="pill ok">🌐 เชื่อมเว็บแล้ว · '+ago(s.at)+'</span>':'<span class="pill bad">🌐 เชื่อมเว็บไม่ได้</span>';
+ h+=s.ssd?'<span class="pill ok">💾 SSD เสียบอยู่</span>':'<span class="pill bad">💾 SSD ไม่ได้เสียบ</span>';
+ h+=s.running?'<span class="pill warn">⚙️ กำลังผลิต (เริ่ม '+ago(s.running.since)+')</span>':'<span class="pill">💤 ว่าง · เช็คคิวทุกชั่วโมง</span>';
+ if(s.paused)h+='<span class="pill bad">⏸ หยุดโรงงานไว้บนเว็บ</span>';
+ document.getElementById('pills').innerHTML=h;}
+function queueView(){var s=S.st;if(!s)return '<p class="fine">กำลังโหลดคิวจากเว็บ...</p>';if(!s.ok)return '<div class="card err">'+e(s.error||'เชื่อมเว็บไม่ได้')+'</div>';
+ var J=s.jobs,act=J.filter(function(j){return j.status==='queued'||j.status==='producing';}),wait=J.filter(function(j){return j.status==='done'&&j.listing==='pending';}),done=J.filter(function(j){return j.status==='done';}).slice(0,15),wk=J.filter(function(j){return j.status==='done'&&j.done_at&&Date.now()-Date.parse(j.done_at)<7*864e5;}).length;
+ var row=function(j,can){return '<div class="row">'+(j.cover?'<img class="cv" src="'+e(j.cover)+'" alt="">':'<span class="cv"></span>')+'<div class="tx"><b>'+e(j.title)+'</b><span class="fine"><span class="badge b-'+e(j.status)+'">'+e(STAT[j.status]||j.status)+'</span>'+(j.listing&&LIST[j.listing]?e(LIST[j.listing])+' · ':'')+(j.pages?e(j.pages)+' หน้า · ':'')+(j.price?'฿'+e(j.price)+' · ':'')+'สั่ง '+ago(j.created_at)+(j.done_at?' · เสร็จ '+ago(j.done_at):'')+'</span></div>'+(j.file_url?'<a class="ghost" href="'+e(j.file_url)+'" target="_blank">เปิดไฟล์</a>':'')+(can&&j.status==='queued'?'<button class="ghost" data-cancel="'+e(j.id)+'">ยกเลิก</button>':'')+'</div>';};
+ return '<div class="stats"><div><b>'+act.length+'</b><span>ในคิว / กำลังผลิต</span></div><div><b>'+wait.length+'</b><span>รอคุณแดนตรวจ</span></div><div><b>'+wk+'</b><span>ผลิตเสร็จ 7 วัน</span></div><div><b style="font-size:16px;padding-top:6px">'+(s.worker&&s.worker.last_seen?ago(s.worker.last_seen):'ยังไม่เคย')+'</b><span>Mac มาเช็คคิวล่าสุด</span></div></div>'
+ +'<div class="card"><h2>➕ สั่งเล่มใหม่</h2><form class="order" id="order"><input name="title" placeholder="ชื่อเล่ม เช่น TOEIC Part 7 อ่านเร็ว 20 ชุด พร้อมเฉลย" required aria-label="ชื่อเล่ม"><input name="price" type="number" min="0" placeholder="ราคา ฿ (ตั้งเองตอนลงขายได้)" aria-label="ราคา"><input name="pages" type="number" min="10" placeholder="จำนวนหน้า" aria-label="จำนวนหน้า"><textarea name="notes" placeholder="รายละเอียดเพิ่ม (ระดับ กลุ่มเป้าหมาย สิ่งที่ต้องมีในเล่ม) ไม่ใส่ก็ได้" aria-label="รายละเอียด"></textarea><div class="act"><button class="btn" '+(S.busy?'disabled':'')+'>'+(S.busy?'กำลังสั่ง...':'สั่งผลิต')+'</button><span class="fine">เข้าคิวบนเว็บทันที (คิวเดียวกับหลังบ้าน) · Mac เริ่มผลิตภายใน 1 ชม.</span></div></form></div>'
+ +'<div class="card"><h2>🏭 คิวผลิต</h2>'+(act.length?act.map(function(j){return row(j,true);}).join(''):'<p class="empty">คิวว่าง สั่งเล่มใหม่ด้านบนได้เลย</p>')+'</div>'
+ +(wait.length?'<div class="card"><h2>👀 รอคุณแดนตรวจ ('+wait.length+')</h2><p class="fine" style="margin:0 0 6px">ตรวจไฟล์แล้วกดลงขายในหลังบ้าน <a class="ghost" href="https://sheetlabth.com/#factory" target="_blank">เปิดหลังบ้าน ↗</a></p>'+wait.map(function(j){return row(j);}).join('')+'</div>':'')
+ +'<div class="card"><h2>✅ ผลิตเสร็จล่าสุด</h2>'+(done.length?done.map(function(j){return row(j);}).join(''):'<p class="empty">ยังไม่มี</p>')+'</div>';}
+function libView(){var d=S.lib;if(!d)return '<p class="fine">กำลังอ่านคลังหนังสือ...</p>';var B=d.books||[];
+ var cats=[];B.forEach(function(b){if(cats.indexOf(b.cat)<0)cats.push(b.cat);});cats.sort();
+ var q=S.q.toLowerCase(),list=B.filter(function(b){return (!S.cat||b.cat===S.cat)&&(!q||(b.title+' '+b.no).toLowerCase().indexOf(q)>=0);});
+ var pg=B.reduce(function(a,b){return a+(b.pages||0);},0),wk=B.filter(function(b){return Date.now()-Date.parse(b.day)<7*864e5;}).length;
+ return '<div class="stats"><div><b>'+B.length+'</b><span>เล่มทั้งหมด</span></div><div><b>'+wk+'</b><span>ผลิตใน 7 วัน</span></div><div><b>'+pg.toLocaleString('th-TH')+'</b><span>หน้ารวม</span></div><div><b>'+(d.sets||[]).length+'</b><span>ชุดขาย</span></div></div>'
+ +((d.sets||[]).length?'<div class="card"><h2>📦 ชุดขาย</h2>'+d.sets.map(function(s){return '<div class="row"><div class="tx"><b>'+e(s.name)+'</b><span class="fine">'+s.n+' เล่ม · '+(s.where==='SSD'?'💾 SSD':'💻 Mac')+'</span></div><button class="ghost" data-reveal="'+e(s.path)+'/">เปิดโฟลเดอร์</button></div>';}).join('')+'</div>':'')
+ +'<div class="bar"><input id="q" placeholder="ค้นหาชื่อเล่มหรือเลขที่" value="'+e(S.q)+'" aria-label="ค้นหา"><button class="chip" data-cat="" aria-pressed="'+(!S.cat)+'">ทั้งหมด</button>'+cats.map(function(c){return '<button class="chip" data-cat="'+e(c)+'" aria-pressed="'+(S.cat===c)+'">'+e(c)+'</button>';}).join('')+'<button class="ghost" id="refresh">↻ อ่านใหม่</button></div>'
+ +'<div class="grid">'+list.map(function(b){return '<div class="bk"><div class="im" data-open="'+e(b.path)+'" title="เปิด PDF"><img src="/thumb/'+e(b.no)+'.jpg" alt="" loading="lazy"><em>#'+e(b.no)+'</em></div><b>'+e(b.title)+'</b><span class="mt">'+e(b.cat)+'</span><span class="mt">'+b.pages+' หน้า · '+b.mb+' MB · '+(b.where==='SSD'?'💾 SSD':'💻 Mac')+(b.audio?' · 🎧':'')+'</span><div class="acts"><button class="ghost" data-open="'+e(b.path)+'">เปิด</button><button class="ghost" data-reveal="'+e(b.path)+'">ใน Finder</button></div></div>';}).join('')+'</div>'+(list.length?'':'<p class="empty">ไม่พบเล่มที่ค้นหา</p>');}
+function draw(){pills();var m=document.getElementById('main'),f=document.activeElement&&document.activeElement.id==='q';m.innerHTML=S.t==='queue'?queueView():libView();if(f){var q=document.getElementById('q');q.focus();q.setSelectionRange(q.value.length,q.value.length);}}
+function loadStatus(){return fetch('/api/status').then(function(r){return r.json();}).then(function(j){S.st=j;if(S.t==='queue'&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)))draw();else pills();}).catch(function(){S.st={ok:false,error:'แอปติดต่อเซิร์ฟเวอร์ในเครื่องไม่ได้ ปิดแล้วเปิดแอปใหม่'};draw();});}
+function loadLib(fresh){return fetch('/api/library'+(fresh?'?fresh=1':'')).then(function(r){return r.json();}).then(function(j){S.lib=j;if(S.t==='lib')draw();});}
+document.addEventListener('click',function(ev){var t=ev.target.closest('[data-t],[data-cancel],[data-open],[data-reveal],[data-cat],#refresh');if(!t)return;
+ if(t.dataset.t){S.t=t.dataset.t;document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-pressed',b===t);});if(S.t==='lib'&&!S.lib)loadLib();draw();return;}
+ if(t.dataset.cancel){if(!confirm('ยกเลิกใบสั่งนี้?'))return;post('/api/cancel',{id:t.dataset.cancel}).then(function(j){toast(j.ok?'ยกเลิกแล้ว':'ไม่สำเร็จ: '+(j.error||''));loadStatus();});return;}
+ if(t.dataset.open!=null){post('/api/open',{path:t.dataset.open});return;}
+ if(t.dataset.reveal!=null){post('/api/reveal',{path:t.dataset.reveal.replace(/\/$/,'')});return;}
+ if(t.dataset.cat!=null){S.cat=t.dataset.cat;draw();return;}
+ if(t.id==='refresh'){toast('กำลังอ่านคลังใหม่...');post('/api/refresh').then(function(j){S.lib=j;draw();toast('อัปเดตแล้ว');});}});
+document.addEventListener('input',function(ev){if(ev.target.id==='q'){S.q=ev.target.value;draw();}});
+document.addEventListener('submit',function(ev){if(ev.target.id!=='order')return;ev.preventDefault();var f=new FormData(ev.target),b={};f.forEach(function(v,k){b[k]=v;});S.busy=true;draw();
+ post('/api/order',b).then(function(j){S.busy=false;toast(j.ok?'สั่งแล้ว เข้าคิวบนเว็บแล้ว':'ไม่สำเร็จ: '+(j.error||''));loadStatus();}).catch(function(){S.busy=false;toast('สั่งไม่สำเร็จ');draw();});});
+loadStatus();setInterval(loadStatus,15000);setInterval(function(){loadLib();},60000);
+</script>
+</body>
+</html>
