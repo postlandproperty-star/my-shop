@@ -2171,13 +2171,10 @@ function ceoBar(k){
     </div></div></div>`;
 }
 function shopHead(p){
-  const opts=D.products.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(x.name)}${x.status==='draft'?' (ฉบับร่าง)':''}</option>`).join('');
   return `
   ${hasAdminAccess()?`<div class="urlbar"><div class="wrap wide urlbar-in">
-    <span class="fine">เซลเพจ</span>
-    <select id="pick" aria-label="เลือกเซลเพจที่จะดู">${opts}</select>
-    <code>${DOMAIN}${esc(p.slug)}</code>
-    ${D.campaigns.length?`<span class="fine">จำลองว่าลูกค้ามาจาก</span><select id="src" aria-label="จำลองแหล่งที่มาของลูกค้า"><option value="">เข้าตรง ไม่ได้มาจากโฆษณา</option>${D.campaigns.map(c=>`<option value="${esc(c.name)}" ${S.src===c.name?'selected':''}>โฆษณา ${esc(c.name)}</option>`).join('')}</select>`:''}
+    <code>${esc(DOMAIN.replace(/^https?:\/\//,''))}${esc(p.slug)}</code>
+    <button class="btn btn-dark btn-sm" data-a="copyLink" data-id="${p.id}">📋 คัดลอกลิงก์ส่งลูกค้า</button>${p.status!=='published'?'<span class="fine">ฉบับร่าง ลูกค้ายังเปิดไม่ได้</span>':''}
   </div></div>`:''}
   ${storeMode()&&!PV&&!S.sessionId?`<div class="sp-topbar"><div class="wrap wide sp-topbar-in"><a class="st-logo" href="/" data-go="">SheetLab</a><a class="sp-tostore" href="/store" data-go="">🛍 ดูสินค้าทั้งหมด</a></div></div>`:''}
   ${paidCard()}
