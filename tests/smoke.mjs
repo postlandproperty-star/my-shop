@@ -424,10 +424,10 @@ try {
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);
-          const ids = [...document.querySelectorAll('[data-a="editProduct"]')].map((e) => e.dataset.id); const r = { set: ids.includes('bgrp'), hidden: !bks.some((x) => ids.includes(x.id)) };
+          const ids = [...document.querySelectorAll('[data-a="editProduct"]')].map((e) => e.dataset.id); const r = { set: ids.includes('bgrp'), tag: bks.every((x) => pHints(x).some((h) => /📦 ในชุด .*ชุดกลุ่ม/.test(h[1]))) };
           D.products = D.products.filter((x) => x.id !== 'bgrp'); keep.forEach((k) => { k.x.status = k.st; k.x.fromJob = k.fj; }); render(false);
           SOLD = { [(D.products.find((x) => isBundle(x) && x.status === 'published') || {}).id]: 2 }; S.view = 'catalog'; S.scat = 'all'; S.edit = null; render(false); r.sold = ((document.querySelector('.st-bsold') || {}).textContent || ''); S.view = 'admin'; render(false); return r; });
-        pass(`[${kind}] ชุดจากโรงงาน: รวมเป็น listing เดียว (เล่มในชุดไม่แยกแถว) · การ์ดชุดหน้าร้านบอกจำนวนที่ขายแล้ว`, gp.set && gp.hidden && /ขายแล้ว 2 ชุด/.test(gp.sold), JSON.stringify(gp));
+        pass(`[${kind}] ชุดจากโรงงาน: เล่มในชุดอยู่ในรายการพร้อมป้าย 📦 ในชุด · การ์ดชุดหน้าร้านบอกจำนวนที่ขายแล้ว`, gp.set && gp.tag && /ขายแล้ว 2 ชุด/.test(gp.sold), JSON.stringify(gp));
         const sh = await page.evaluate(async () => { const p = D.products.find((x) => !isBundle(x)); S.draft = initDraft(p); S.edit = p.id; S.shopee = null; render(false);
           const btn = !!document.querySelector('.shp [data-a="shopeeCopy"]'); await shopeeCopy(); const t = (document.getElementById('shp-t') || {}).value || '';
           const bp = D.products.find((x) => isBundle(x)); let bun = false; if (bp) { S.draft = initDraft(bp); S.edit = bp.id; render(false); bun = !!document.querySelector('.shp [data-a="shopeeCopy"]'); }

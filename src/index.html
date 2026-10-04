@@ -556,7 +556,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bxi-hero{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;align-items:start}.bxi-big{aspect-ratio:1/1;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;background:var(--bg);text-align:center}.bxi-big img{width:100%;height:100%;object-fit:cover}
 .bxi-side{display:grid;gap:8px;align-content:start;justify-items:start}
 .bxi-pick{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin:0 0 8px}.bxi-selb{display:flex;gap:5px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}.bxi-selb input{width:18px;height:18px}.bxi-b.sel .bxi-bc{outline:3px solid #2440E8;outline-offset:1px}.bxi-b.sel .bxi-selb{color:var(--ink);font-weight:600}
-.bxi-upl{cursor:pointer;font-size:12.5px}
+.bxi-upl{cursor:pointer;font-size:12.5px}.bx-pubb{padding:12px 14px;margin-top:14px}
 .bxi-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}.bxi-b{display:grid;gap:4px;justify-items:center;text-align:center}
 .bxi-bc{width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--line);position:relative}.bxi-bc img{width:100%;height:100%;object-fit:cover}
 .bxi-bc{padding:0;cursor:zoom-in;display:block}.bxi-zoom{position:absolute;right:4px;top:4px;background:rgba(255,255,255,.9);border-radius:6px;font-size:12px;padding:1px 4px;opacity:.85}
@@ -1732,7 +1732,7 @@ function drawCart(){
       <p class="fine ct-note">จ่ายครั้งเดียวด้วย QR พร้อมเพย์ หรือบัตร · ได้ลิงก์ดาวน์โหลดทุกเล่มทันทีหลังจ่าย และส่งเข้าอีเมลด้วย</p>
       ${recs.length?`<div class="ct-recs"><b class="ct-rh">ซื้อเพิ่มอีกเล่ม จ่ายครั้งเดียว</b><ul>${recs.map(x=>{const img=(x.images||[])[0];return `<li><a class="ct-rl" href="/p/${esc(x.slug)}" data-go="${esc(x.id)}"><span class="ct-img">${img?`<img src="${esc(img)}" alt="" width="56" height="56" loading="lazy">`:cover(x.color,x.kind||'other')}</span><span class="ct-nm"><b>${esc(x.name)}</b><span>${baht(x.price)}</span></span></a><button class="ct-add" data-a="cartAddIn" data-id="${esc(x.id)}" aria-label="เพิ่ม ${esc(x.name)}">+ เพิ่ม</button></li>`;}).join('')}</ul></div>`:''}`
       :`<p class="ct-empty">ยังไม่ได้เพิ่มเล่มไหน</p>`}
-    ${storeMode()?`<button class="btn btn-line btn-block" data-a="cartMore">${n?'เลือกเล่มอื่นต่อ':'ไปเลือกสินค้า'}</button>`:''}
+    ${storeMode()?`<button class="btn btn-line btn-block" data-a="cartMore">${n?'🛍 ดูร้านค้า เลือกเล่มอื่นต่อ':'🛍 ไปดูร้านค้า'}</button>`:''}
   </div>`;
   const x=root.querySelector('.ct-x');if(x&&!drawCart._f){x.focus({preventScroll:true});}drawCart._f=true;
 }
@@ -1800,6 +1800,9 @@ function bundleDraft(p){const b=blankBundle();const d=Object.assign({},b,JSON.pa
   d.plans=b.plans.map(x=>Object.assign({},x,(p&&p.plans||[]).find(y=>y.key===x.key)||{}));d.items=(d.items||[]).slice();d.planLinks=Object.assign({},(p&&p.planLinks)||{});d.promoEndStr=toLocalInput(d.promoEnd);return d;}
 const isBundle=p=>p&&p.type==='bundle';
 const end90=x=>Math.max(90,Math.round((Number(x)-90)/100)*100+90); // ปัดเป็นราคาลงท้าย 90 ที่ใกล้ที่สุด (1,700×55% → 890)
+// เผยแพร่เล่มในชุดพร้อมชุด: ค่าเริ่มต้นติ๊กเมื่อชุดยังไม่เคยขาย (เช่นชุดใหม่จากโรงงาน) · ชุดที่ขายอยู่แล้วไม่ติ๊ก (กันเล่มที่ตั้งใจขายเฉพาะในชุดถูกเปิดขายเดี่ยว)
+const bxPubOn=()=>S.bxPubBooks!=null?S.bxPubBooks:!(S.edit&&S.edit!=='new'&&(getProduct(S.edit)||{}).status==='published');
+const setsOf=p=>D.products.filter(b=>isBundle(b)&&(b.items||[]).includes(p.id));
 function bundleBooks(p){return (p.items||[]).map(getProduct).filter(Boolean);}
 function bundlePlans(p){return (p.plans||[]).filter(x=>x.on!==false&&Number(x.price)>=1);}
 
@@ -2010,6 +2013,8 @@ function bundleForm(){
     <div class="field">${lb('b-faq','คำถามที่พบบ่อย (บรรทัดละ "คำถาม | คำตอบ") เว้นว่างได้ ระบบใส่คำถามพื้นฐานให้')}<textarea class="input" id="b-faq" data-d="faq" rows="3">${esc(d.faq)}</textarea></div>
   </div>
   ${S.err?`<p class="err" style="margin:10px 0">${esc(S.err)}</p>`:''}
+  ${(()=>{const dr=chosen.filter(b=>b.status!=='published');if(!dr.length)return '';const on=bxPubOn();
+    return `<div class="card bx-pubb"><label class="aud-ok"><input type="checkbox" data-a="bxPubBooks" ${on?'checked':''}> ตอนกด "บันทึกและเผยแพร่" เผยแพร่เล่มเดี่ยวในชุดที่ยังเป็นร่างพร้อมกันด้วย (${dr.length} เล่ม)</label><p class="fine" style="margin:4px 0 0">ไม่ติ๊ก = เล่มเหล่านี้ขายเฉพาะในชุด</p></div>`;})()}
   ${audioBox(d)}
   ${saveActs('saveBundle',d)}`;
 }
@@ -2084,7 +2089,7 @@ function bundleView(p){
   const off=sum>minP?Math.round((1-minP/sum)*100):0;
   const pvSel=Math.min(S.bxPv||0,Math.max(0,books.length-1));
   const pv=books[pvSel]?(books[pvSel].previews||[]):[];
-  const cover=(b,i)=>{const u=b.bookCover||(b.images&&b.images[0]);return u?`style="background:#fff url('${esc(u)}') center/${b.bookCover?'cover':'contain'} no-repeat"`:`style="background:${esc(b.color||'#2440E8')}"`;};
+  const cover=(b,i)=>{const u=b.bookCover||(b.images&&b.images[0]);return u?`style="background:#fff url('${esc(u)}') center/contain no-repeat"`:`style="background:${esc(b.color||'#2440E8')}"`;};
   const lines2=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
   let faqs=lines(p.faq).map(pair);
   if(!faqs.length)faqs=[['ได้รับไฟล์เมื่อไหร่','ทันทีที่ชำระเงินสำเร็จ ลิงก์ทุกเล่มจะขึ้นในหน้านี้และส่งไปที่อีเมลของคุณ'],
@@ -2722,6 +2727,7 @@ function pHints(p){
     if(pfmt(p)==='pdf'&&!(p.previews||[]).length)h.push(['warn','ยังไม่มีหน้าตัวอย่าง']);
   }
   if(p.fresh&&!pub&&p.freshNote)h.unshift([/🎧/.test(p.freshNote)?'warn':'muted','✨ มาใหม่ · '+shortNote(p.freshNote)]);
+  if(!isBundle(p)){const sets=setsOf(p);if(sets.length)h.unshift(['muted','📦 ในชุด '+sets.map(b=>b.name+(b.status==='published'?'':' (ร่าง)')).join(' · ')+(pub?'':' · เผยแพร่พร้อมชุดได้')]);}
   if(!h.length)h.push(pub?(prodStats(p).paid?['ok','พร้อมขาย']:['muted','พร้อมขาย · ยังไม่มียอดขาย']):['muted','ฉบับร่าง ลูกค้ายังไม่เห็น']);
   return h;
 }
@@ -2889,6 +2895,7 @@ function productForm(){
     </div>
 
     ${S.err?`<p class="err" style="margin-bottom:10px">${esc(S.err)}</p>`:''}
+    ${(()=>{const sets=S.edit&&S.edit!=='new'?setsOf({id:S.edit}):[];return sets.length?`<p class="fine fill-note">📦 เล่มนี้อยู่ในชุด: ${sets.map(b=>`<a href="#" data-a="editProduct" data-id="${b.id}">${esc(b.name)}</a>${b.status==='published'?'':' (ร่าง)'}`).join(' · ')}</p>`:'';})()}
     ${(d.fillFrom||[]).length?`<p class="fine fill-note">📝 ระบบเติมช่องที่ยังว่างให้แล้ว (${d.fillFrom.map(k=>FILL_TH[k]||k).join(', ')}) ตรวจแล้วกดบันทึกเพื่อใช้ · ไม่บันทึก = ไม่เปลี่ยน</p>`:''}
     ${audioBox(d)}
     ${saveActs('saveProduct',d)}
@@ -3590,8 +3597,7 @@ function productsTab(){
   </div>
   ${reviewBox()}
   ${(()=>{const st=S.pstat||'all',k=S.pkind||'all',q=(S.pq||'').toLowerCase().trim();
-    const inSet=new Set(D.products.filter(b=>isBundle(b)&&b.fromSetName).flatMap(b=>b.items||[]));
-    const all=q?D.products:D.products.filter(x=>!(inSet.has(x.id)&&x.status!=='published'&&x.fromJob)); // เล่มใหม่ที่ผลิตมาเป็นชุด รวมอยู่ใน listing ของชุด (แก้ได้จากหน้าแก้ชุด)
+    const all=D.products; // เล่มในชุดแสดงในรายการด้วย (มีป้าย 📦 ในชุด กดไปที่ชุดได้) คุณแดนเผยแพร่พร้อมชุดหรือทีละเล่มก็ได้
     if(ADA.items===null&&!ADA.loading)loadAdsAuto();
     const adFix=ADST.d&&ADST.d.ads?ADST.d.ads.filter(a=>a.group==='fix').length+(ADST.d.access&&!ADST.d.access.ok&&ADST.d.access.reason==='account'?1:0):0;
     const adN=(ADA.items||[]).filter(x=>['pending','failed','launching','live','paused'].includes(x.status)).length,adWait=(ADA.items||[]).filter(x=>['pending','failed'].includes(x.status)).length;
@@ -5667,7 +5673,7 @@ function act(a,el){
       Object.assign(p,{price,fullPrice:full,link,status,bumpProductId,bumpPrice:bumpProductId?bumpPrice:0});
       S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');checkAllLinks();break;}
     case 'newProduct':S.draft=initDraft(blankProduct());S.edit='new';S.err='';render(false);break;
-    case 'newBundle':S.bxSel=[];bxSnapStart();S.draft=bundleDraft(null);S.edit='new';S.err='';S.bxAddOpen=false;S.bxSynced='';render(false);break;
+    case 'newBundle':S.bxSel=[];S.bxPubBooks=null;bxSnapStart();S.draft=bundleDraft(null);S.edit='new';S.err='';S.bxAddOpen=false;S.bxSynced='';render(false);break;
     case 'rvReq':{const to=el.dataset.to,sid=el.dataset.sid;if(to==='customer'&&S.confirm!=='rv:'+sid){S.confirm='rv:'+sid;el.textContent='กดอีกครั้งเพื่อส่งถึงลูกค้า';break;}S.confirm='';el.disabled=true;toast('กำลังส่ง...');
       authFetch('/api/content?action=review_send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid,to})}).then(j=>{if(j&&j.ok){toast(to==='me'?'ส่งตัวอย่างไปที่อีเมลของคุณแดนแล้ว':'ส่งอีเมลขอรีวิวถึงลูกค้าแล้ว');if(to==='customer'){RVA.sentAt=RVA.sentAt||{};RVA.sentAt[sid]=new Date().toISOString();}}else toast((j&&j.error)||'ส่งไม่สำเร็จ');render(true);});break;}
     case 'rvopen':S.rvopen=!S.rvopen;break;
@@ -5812,13 +5818,19 @@ function act(a,el){
       if(items.length>=2&&books.some(b=>b.bookCover||(b.images||[])[0])&&(!d.cover||(d.coverAuto&&(d.coverAuto!==key||(d.coverPrice!=null&&d.coverPrice!==bxPrice(d)))))&&S.bxAuto!==key+'|'+bxPrice(d)){ // รูปชุดมีป้ายราคา: ราคาเปลี่ยนก็จัดใหม่
         S.bxAuto=key+'|'+bxPrice(d);S.bxImg='compose';render(true);toast('กำลังจัดรูปชุดจากปกเล่มในชุด...');
         bxCompose(d,books).then(uploadImage).then(u=>{d.cover=u;d.coverAuto=key;d.coverPrice=bxPrice(d);}).catch(e=>{console.error(e);toast('จัดรูปชุดไม่สำเร็จ ใช้ปกเล่มแรกไปก่อน');}).then(()=>{S.bxImg='';act('saveBundle',el);});break;}
-      const err=saveBundleDraft(el);if(err){S.err=err;render(true);}else bxSnapCommit();break;}
+      if(d.status==='published'||el.dataset.status==='published'){const dr=d.items.map(getProduct).filter(b=>b&&!isBundle(b)&&b.status!=='published');
+        if(dr.length&&bxPubOn()){const bad=dr.filter(b=>!(Number(b.price)>=1)||!(b.link&&validLink(b.link)));if(bad.length){S.err='เผยแพร่เล่มในชุดพร้อมกันไม่ได้: '+bad.map(b=>`${b.sku||''} ${b.name.slice(0,30)} (${!(Number(b.price)>=1)?'ยังไม่ตั้งราคา':'ยังไม่มีไฟล์'})`).join(' · ')+' — ตั้งราคา/ใส่ไฟล์ก่อน หรือเอาติ๊ก "เผยแพร่เล่มเดี่ยว" ออก';render(true);break;}}}
+      const selfId0=S.edit,slug0=String(d.slug).trim().toLowerCase();S.bxPubOn0=bxPubOn();
+      const err=saveBundleDraft(el);if(err){S.err=err;render(true);}else{
+        const saved=(selfId0!=='new'&&getProduct(selfId0))||D.products.find(x=>isBundle(x)&&x.slug===slug0);
+        if(saved&&saved.status==='published'&&S.bxPubOn0){let n=0;for(const b of bundleBooks(saved).filter(b=>b.status!=='published')){b.status='published';delete b.fresh;if(saved.audioOk&&hasAudio(b))b.audioOk=true;if(!b.publishedAt){b.publishedAt=Date.now();}n++;}if(n){save();toast(`เผยแพร่ชุดและเล่มในชุดอีก ${n} เล่มแล้ว`);}}
+        bxSnapCommit();}break;}
     case 'bxAddSet':{const d=S.draft,src=getProduct(id);if(!d||!src)break;const add=(src.items||[]).filter(i=>getProduct(i)&&!isBundle(getProduct(i))&&!d.items.includes(i));
       d.items.push(...add);render(true);toast(add.length?`ใส่ ${add.length} เล่มจาก "${src.name}" แล้ว`:'เล่มในชุดนี้อยู่ในชุดใหม่ครบแล้ว');break;}
     case 'bxPlan':{S.bplan=S.bplan||{};S.bplan[el.dataset.slug]=el.dataset.v;S.qr=null;qrStop();render(true);break;}
     case 'bxPv':{S.bxPv=Number(el.dataset.v)||0;render(true);const t=document.getElementById('bx-preview');if(t)t.scrollIntoView({block:'start',behavior:'smooth'});break;}
     case 'editProduct':if(S.bxSnap&&S.draft&&S.draft.type==='bundle'&&!isBundle(getProduct(id))){if(bxDirty()){toast('มีปก/รูปในชุดที่ยังไม่บันทึก กดบันทึกชุดก่อน (หรือยกเลิก) แล้วค่อยแก้เล่มนี้');break;}S.bxSnap=null;}
-      S.bxSynced='';S.bxAddOpen=false;S.bxSel=[];if(isBundle(getProduct(id)))bxSnapStart();S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));if(isBundle(getProduct(id))&&getProduct(id).fromSetName)setTimeout(()=>setPrep(id),50);S.edit=id;S.err='';render(false);break;
+      S.bxSynced='';S.bxAddOpen=false;S.bxSel=[];S.bxPubBooks=null;if(isBundle(getProduct(id)))bxSnapStart();S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));if(isBundle(getProduct(id))&&getProduct(id).fromSetName)setTimeout(()=>setPrep(id),50);S.edit=id;S.err='';render(false);break;
     case 'cancelEdit':S.aiRun=(S.aiRun||0)+1;S.bxImg='';S.coverBusy=false;bxSnapUndo();S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}
@@ -5834,6 +5846,7 @@ function act(a,el){
       else{S.confirm='del:'+id;render(true);}break;}
     case 'bxSel':{const L=S.bxSel||(S.bxSel=[]),k=L.indexOf(id);if(el.checked&&k<0)L.push(id);else if(!el.checked&&k>=0)L.splice(k,1);render(true);break;}
     case 'bxSelAll':{const d=S.draft;if(!d)break;const st=bxStyle(),ids=d.items.filter(i=>getProduct(i)&&!isBundle(getProduct(i)));S.bxSel=el.dataset.v==='all'?ids.slice():el.dataset.v==='todo'?ids.filter(i=>bxNeeds(getProduct(i),st)):[];render(true);break;}
+    case 'bxPubBooks':S.bxPubBooks=!!el.checked;render(true);break;
     case 'aiStop':S.aiRun=(S.aiRun||0)+1;S.coverBusy=false;S.imgSet=null;S.bxImg='';S.bxImgN=0;render(true);toast('หยุดสร้างรูปแล้ว รูปที่ยังไม่เสร็จไม่ถูกใช้ (รูปที่ส่งไปสร้างแล้วอาจยังคิดเงินตามรูป)');break;
     case 'drvCheck':drvCheck();break;
     case 'audioOk':{if(S.draft){S.draft.audioOk=!!el.checked;S.err='';render(true);}break;}
