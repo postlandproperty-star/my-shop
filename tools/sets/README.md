@@ -1,9 +1,9 @@
 # ส่งชุดขายจากคอมขึ้นหลังบ้าน
 
-หลังคิวหนังสือ (Cowork) ผลิตชุดเสร็จในโฟลเดอร์ `/Volumes/PortableSSD/Sheetlap/ชุดขาย/<ชื่อชุด>/` ให้เขียน `set.json` ไว้ในโฟลเดอร์ชุด แล้วรัน
+หลังคิวหนังสือ (Cowork) ผลิตชุดเสร็จในโฟลเดอร์ `/Volumes/PortableSSD/Sheetlab/ชุดขาย/<ชื่อชุด>/` ให้เขียน `set.json` ไว้ในโฟลเดอร์ชุด แล้วรัน
 
 ```
-CONTENT_KEY=<คีย์ร้าน> python3 ~/Projects/my-shop/tools/sets/upload_set.py "/Volumes/PortableSSD/Sheetlap/ชุดขาย/<ชื่อชุด>"
+CONTENT_KEY=<คีย์ร้าน> python3 ~/Projects/my-shop/tools/sets/upload_set.py "/Volumes/PortableSSD/Sheetlab/ชุดขาย/<ชื่อชุด>"
 ```
 
 สคริปต์อัป PDF + ปก (cover.png) + หน้าตัวอย่างหน้า 3-6 (ใส่ลายน้ำ) ขึ้นคลังร้าน แล้วสร้างการ์ด "📦 ชุดพร้อมลงขาย" ในแท็บสินค้าและเซลเพจ คุณแดนตรวจราคาแล้วกด "ลงขายทั้งชุด" เอง
