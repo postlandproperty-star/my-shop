@@ -145,7 +145,7 @@ async function workerBeat({ note = '' } = {}) { try { await sb('shop_state?on_co
 // งานอัตโนมัติต่อท้ายคิวเสมอ (ใบสั่งของคุณแดนได้ก่อน) · ทำครั้งเดียวต่อเล่ม/สินค้า ถ้าคุณแดนยกเลิกก็ไม่สร้างซ้ำ
 const normT = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const LIST_NEED = ['headline', 'desc', 'features', 'forwho', 'notfor', 'faq', 'toc', 'specs', 'previews'];
-const listGaps = (p) => LIST_NEED.filter((k) => k === 'previews' ? (p.kind !== 'notion' && !(p.previews || []).length) : !String(p[k] || '').trim());
+const listGaps = (p, link) => LIST_NEED.filter((k) => k === 'previews' ? (p.kind !== 'notion' && !isNotionUrl(link) && !(p.previews || []).length) : !String(p[k] || '').trim()); // Notion template ไม่มีหน้า PDF ให้ทำตัวอย่าง
 async function autoListings(books) {
   const [shop, jobs, links] = await Promise.all([loadShop(), loadJobs(), loadLinks().catch(() => ({}))]);
   const prods = shop.products.filter((p) => p.type !== 'bundle' && !/ทดสอบ|^test/i.test(String(p.name || '')));
@@ -155,13 +155,13 @@ async function autoListings(books) {
   let ex = 0, fill = 0;
   for (const b of books) {
     const sku = b.sku || `SL-${b.no}`, k = k12(b.title);
-    if (!b.no || (b.day && b.day >= recent)) continue; // เล่มที่เพิ่งผลิต มีใบสั่งของมันเองอยู่แล้ว
+    if (!b.no || (b.day && b.day >= recent && jobs.some((j) => j.status === 'producing'))) continue; // เล่มใหม่ที่อาจเป็นของใบสั่งที่กำลังผลิต (ยังไม่ได้ SKU) รอรอบหน้า
     if (prods.some((p) => p.sku === sku || (k.length >= 8 && k12(p.name) === k))) continue;
     if (jobs.some((j) => String(j.export_no || '') === String(b.no) || (live(j) && (j.sku === sku || (k.length >= 8 && k12(j.title) === k))))) continue;
     jobs.push(add({ title: b.title, export_no: b.no, sku, category: b.cat || '', purpose: 'อัตโนมัติ: เล่มในคลังบน Mac ที่ยังไม่อยู่ในร้าน → ลงแท็บมาใหม่ (ไม่ผลิตใหม่)', notes: b.audio ? `มีไฟล์เสียงที่ ${b.audio_path}${b.audio_drive ? ' · Drive: ' + b.audio_drive : ''}` : '' })); ex++;
   }
   for (const p of prods) {
-    const gaps = listGaps(p); if (!gaps.length || p.kind === 'notion' && gaps.length === 1 && gaps[0] === 'previews') continue;
+    const gaps = listGaps(p, links[p.id]); if (!gaps.length) continue;
     if (jobs.some((j) => j.fill_id === p.id) || (p.fromJob && jobs.some((j) => j.id === p.fromJob && j.status === 'done' && j.listing === 'pending'))) continue;
     jobs.push(add({ title: p.name, fill_id: p.id, fill_need: gaps.join(','), fill_url: String(links[p.id] || '').slice(0, 500), sku: p.sku || '', category: p.cat || '', purpose: 'อัตโนมัติ: เติมรายละเอียดหน้าขายที่ยังว่าง (ไม่แก้ข้อความเดิม ไม่แก้ราคา)' })); fill++;
   }
