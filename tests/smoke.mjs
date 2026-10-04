@@ -276,6 +276,13 @@ try {
       }, [v, bundle && bundle.id]);
       await page.waitForTimeout(400);
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
+      if (v !== 'bundle') { const sv = await page.evaluate(() => ({ svc: document.querySelectorAll('.svc-main button').length, on: (document.querySelector('.svc-main button[aria-pressed="true"]') || {}).dataset?.v || '', four: document.querySelectorAll('.svf-row .svf').length }));
+        const want = { home: 'all', todo: 'all', orders: 'shop', products: 'shop', ads: 'shop', seo: 'learn', insights: 'learn', factory: 'factory', vip: 'vip' }[v];
+        pass(`[${kind}] หลังบ้าน ${name}: เมนูแบ่งตามบริการ (อยู่ในบริการ ${want})${['all'].includes(want) ? '' : ' + แถบ 4 ช่อง'}`, sv.svc === 6 && sv.on === want && (want === 'all' ? sv.four === 0 : sv.four === 4), JSON.stringify(sv)); }
+      if (v === 'seo') { await page.locator('.svc-main [data-v="shop"]').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(200); const t1 = await page.evaluate(() => S.tab);
+        await page.locator('.tabs-more [data-v="ads"]').click({ timeout: 4000 }).catch(() => {}); await page.locator('.svc-main [data-v="learn"]').click({ timeout: 4000 }).catch(() => {}); await page.locator('.svc-main [data-v="shop"]').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(200);
+        const t2 = await page.evaluate(() => S.tab); await page.evaluate(() => { S.tab = 'seo'; render(false); });
+        pass(`[${kind}] หลังบ้าน: กดบริการ "ร้านชีท" ไปหน้าแรกของบริการ และจำหน้าย่อยล่าสุดไว้`, t1 === 'orders' && t2 === 'ads', `${t1} → ${t2}`); }
       if (v === 'insights') { await page.waitForTimeout(300); const x = await page.evaluate(() => ({ fun: document.querySelectorAll('.ins-fun > div').length, rows: document.querySelectorAll('.ins-tbl > div').length, label: document.body.innerText.includes('+ เพิ่ม (หน้าขาย)') && document.body.innerText.includes('ทักแชท Messenger') }));
         pass(`[${kind}] แท็บพฤติกรรม: ขั้นการซื้อ 5 ขั้น + ตาราง + ชื่อปุ่มภาษาไทย`, x.fun === 5 && x.rows >= 8 && x.label, JSON.stringify(x)); }
       if (v === 'vip') { await page.waitForTimeout(400); pass(`[${kind}] แท็บสมาชิก VIP แยก: SQL ให้คัดลอก + ช่องราคา + ปุ่มบนแถบ`, await page.locator('.vipa .vipsql').count() === 1 && await page.locator('#vip-m').count() === 1 && await page.locator('#seg [data-a="toVip"]').count() === 1);

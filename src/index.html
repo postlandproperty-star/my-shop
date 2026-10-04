@@ -661,6 +661,13 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .tabs-main button i{font-style:normal;font-size:20px;line-height:1}
 .tabs-main button .tcount{position:absolute;top:6px;right:8px;margin:0}
 .tabs-more{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.svc-main{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.svc-main::-webkit-scrollbar{display:none}
+.svc-main button{flex:1 0 auto;min-height:54px;border-radius:14px;padding:6px 12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:14px;font-weight:600;line-height:1.2;position:relative;white-space:nowrap}
+.svc-main button i{font-style:normal;font-size:20px;line-height:1}.svc-main button .tcount{position:absolute;top:4px;right:6px;margin:0}
+.svf-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:2px 0 14px}
+.svf{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 10px;font:inherit;color:var(--ink);text-decoration:none;cursor:pointer;min-width:0}
+.svf:hover{border-color:var(--brand)}.svf i{font-style:normal;font-size:16px}.svf b{font-size:14px}.svf span{font-size:12.5px;color:var(--muted);line-height:1.35}.svf.hot{border-color:var(--warn);background:var(--warnbg)}
+@media(max-width:640px){.svf-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.svf{display:grid;grid-template-columns:auto 1fr;column-gap:6px;align-items:center;padding:6px 9px}.svf i{font-size:14px}.svf b{font-size:13.5px}.svf span{grid-column:1/-1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.svc-main button{font-size:12.5px;padding:6px 9px;min-height:50px}}
 .tabs-more button{min-height:40px;border-radius:999px;padding:6px 14px;font-size:14px;white-space:nowrap}
 @media(max-width:640px){
   .tabs{padding:8px 0 6px}
@@ -3084,6 +3091,7 @@ function factoryView(){
   const active=queued.filter(j=>!j.paused);
   const idea=S.fqIdea;
   return `<div class="wrap wide fac fq" style="padding-bottom:60px">
+    ${svcNav()}
     <h2 class="h3 fq-h">🏭 โรงงาน <span class="fine">สั่งที่นี่ · คอมคุณแดนผลิต · คุณแดนตรวจแล้วกดลงขาย</span></h2>
     <div class="fq-bar" role="status">
       <div class="fq-stats"><span><b>${active.length}</b> ในคิว</span><span><b>${producing.length}</b> กำลังผลิต</span><span class="${review.length?'hot':''}"><b>${review.length}</b> รอตรวจ</span><span><b>${done.length}</b> เสร็จ</span></div>
@@ -4787,11 +4795,11 @@ const SEOT={d:null,loading:false};
 const VIPA={d:null,loading:false,busy:false,pg:null,pv:Date.now(),gBusy:false};
 function loadVipAdmin(){if(VIPA.loading)return;VIPA.loading=true;adminApi('/api/content?action=vip_admin').then(j=>{VIPA.d=j||{};}).catch(()=>{VIPA.d={};}).then(()=>{VIPA.loading=false;render(true);});}
 /* แท็บ 👑 สมาชิก: ตั้งค่าทุกอย่างของ VIP ที่เดียว (ราคา เปิดรับ ข้อความหน้า ให้สิทธิ์เอง) + หน้าที่ลูกค้าเห็นอยู่ข้างๆ */
-function vipView(){return `<div class="wrap wide vipv" style="padding:16px 16px 60px"><h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งค่าทุกอย่างของสมาชิกในหน้านี้ · ${innerWidth>900?'ด้านขวา':'ด้านล่าง'}คือหน้าที่ลูกค้าเห็น เปลี่ยนตามทุกครั้งที่กดบันทึก</p>
+function vipView(){return `<div class="wrap wide vipv" style="padding:0 16px 60px">${svcNav()}<h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งค่าทุกอย่างของสมาชิกในหน้านี้ · ${innerWidth>900?'ด้านขวา':'ด้านล่าง'}คือหน้าที่ลูกค้าเห็น เปลี่ยนตามทุกครั้งที่กดบันทึก</p>
   <div class="vip-2"><div>${vipCard()}${vipPageCard()}${vipGrantCard()}</div><aside class="vip-pv">${vipPreview()}</aside></div></div>`;}
 function vipPg(){const s=VIPA.d&&VIPA.d.settings;if(!VIPA.pg&&s)VIPA.pg=JSON.parse(JSON.stringify(s.page||{title:'',sub:'',perks:[],faq:[]}));return VIPA.pg;}
 function vipPageCard(){if(!VIPA.d||!VIPA.d.settings)return '';const p=vipPg(),sel=(v,x)=>v===x?'selected':'';
-  return `<section class="card vipa" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">📝 ข้อความบนหน้า /vip</h3><p class="fine" style="margin:0 0 10px">แก้ได้อิสระ กดบันทึกแล้วหน้าลูกค้าเปลี่ยนทันที</p>
+  return `<section class="card vipa" id="vip-page" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">📝 ข้อความบนหน้า /vip</h3><p class="fine" style="margin:0 0 10px">แก้ได้อิสระ กดบันทึกแล้วหน้าลูกค้าเปลี่ยนทันที</p>
     <label class="vipf">หัวข้อใหญ่<input class="input" data-vp="title" maxlength="60" value="${esc(p.title)}"></label>
     <label class="vipf" style="margin-top:8px">คำโปรยใต้หัวข้อ<textarea class="input" data-vp="sub" rows="2" maxlength="220">${esc(p.sub)}</textarea></label>
     <h4 style="margin:16px 0 6px">ได้อะไรบ้าง <span class="fine" style="font-weight:400">(ตารางเทียบ ฟรี / VIP)</span></h4>
@@ -4810,7 +4818,7 @@ function vipPreview(){return `<div class="card vip-pvc"><div class="row" style="
 function vipCard(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d;
   if(!d)return '<section class="card" style="margin-top:14px"><p class="fine">กำลังโหลดสมาชิก VIP...</p></section>';
   const v=d.settings||{packs:{}},st=d.stats,num=(id,val,l)=>`<label class="vipf">${l}<input class="input" type="number" min="0" step="1" id="${id}" value="${Number(val)||0}"></label>`;
-  return `<section class="card vipa"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">👑 สมาชิก VIP ${v.open?'<span class="badge ok">เปิดรับอยู่</span>':'<span class="badge gray">ยังไม่เปิด</span>'}</h3><a class="chip" href="/vip" target="_blank" rel="noopener">ดูหน้า /vip ↗</a></div>
+  return `<section class="card vipa" id="vip-set"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">👑 สมาชิก VIP ${v.open?'<span class="badge ok">เปิดรับอยู่</span>':'<span class="badge gray">ยังไม่เปิด</span>'}</h3><a class="chip" href="/vip" target="_blank" rel="noopener">ดูหน้า /vip ↗</a></div>
     <p class="fine" style="margin:4px 0 10px">สมัครด้วยอีเมล (ไม่มีรหัสผ่าน) · บัตรตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้ · PromptPay จ่ายล่วงหน้าเป็นก้อน · ตอนนี้ VIP ได้ "สมุดจุดพลาด" เก็บข้อที่ผิดจากคลังข้อสอบให้ทวน</p>
     ${!d.ready?`<div class="adt-msg"><b>ขั้นแรก (ครั้งเดียว):</b> สร้างตารางสมาชิก เปิด Supabase → SQL Editor → วาง SQL นี้แล้วกด Run แล้วกดรีเฟรชการ์ดนี้<pre class="vipsql">${esc(d.sql||'')}</pre><div class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="vipSqlCopy">📋 คัดลอก SQL</button><button class="btn btn-line btn-sm" data-a="vipReload">รีเฟรช</button></div></div>`:''}
     <div class="vipgrid">${num('vip-m',v.monthly,'บัตร รายเดือน (บาท/เดือน)')}${num('vip-y',v.yearly,'บัตร รายปี (บาท/ปี)')}${num('vip-p1',v.packs[1],'PromptPay 1 เดือน')}${num('vip-p3',v.packs[3],'PromptPay 3 เดือน')}${num('vip-p12',v.packs[12],'PromptPay 12 เดือน')}</div>
@@ -4847,17 +4855,46 @@ function homeTab(){
   ${dashBox()}
   ${(()=>{if(SEO.d===null&&!SEO.loading)loadSeo();const d=SEO.d||{},t=d.total||{};return d.ok?`<button class="wchip info" data-a="tab" data-v="seo" style="margin-top:12px">🔎 Google 28 วัน: คลิก ${Math.round(t.clicks||0).toLocaleString('th-TH')} · เห็น ${Math.round(t.impressions||0).toLocaleString('th-TH')} · อันดับเฉลี่ย ${t.position||'–'} → แท็บ SEO</button>`:'';})()}`;
 }
+/* หลังบ้านแบ่งตามบริการ: ชั้นบน = บริการ · ชั้นล่าง = หน้าย่อยของบริการนั้น
+   ทุกบริการมีแถบ 4 ช่องแบบเดียวกัน (📊 ตัวเลข · ✅ ต้องทำ · ⚙️ ตั้งค่า · 👀 หน้าลูกค้า) · บริการใหม่ = เพิ่มใน SVC + svcFour */
+const SVC=[
+  {k:'all',i:'📊',l:'ภาพรวม',tabs:[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์']]},
+  {k:'shop',i:'🛒',l:'ร้านชีท',tabs:[['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา'],['coupons','🏷️','โค้ดส่วนลด'],['reviews','⭐','รีวิว'],['pay','⚙️','ตั้งค่าร้าน']]},
+  {k:'learn',i:'📚',l:'คอนเทนต์+SEO',tabs:[['seo','🔎','SEO'],['content','✍️','โพสต์'],['insights','📈','พฤติกรรม']]},
+  {k:'vip',i:'👑',l:'สมาชิก',view:'vip'},
+  {k:'factory',i:'🏭',l:'โรงงาน',view:'factory'},
+  {k:'team',i:'👥',l:'ทีม',tabs:[['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก']]},
+];
+const tabBadge=k=>k==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:k==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:'';
+const svcOfTab=t=>(SVC.find(s=>s.tabs&&s.tabs.some(x=>x[0]===t))||SVC[0]).k;
+function svcNow(){return S.view==='vip'||S.view==='factory'?S.view:svcOfTab(S.tab==='pixel'?'pay':S.tab);}
+function svcWork(k){ // งานค้างของแต่ละบริการ (ป้ายตัวเลขบนปุ่มบริการ + ช่อง "ต้องทำ")
+  if(k==='all')return todoOpenCount();
+  if(k==='team')return unseenNotes();
+  if(k==='shop')return D.products.filter(p=>p.fresh&&p.status!=='published').length+(ADA.items||[]).filter(x=>x.status==='pending').length;
+  if(k==='factory')return (FJOBS||[]).filter(j=>j.status==='done'&&['pending','global_pending'].includes(j.listing)).length;
+  return 0;}
+function svcNav(){const cur=svcNow(),s=SVC.find(x=>x.k===cur);
+  return `<nav class="tabs svc" aria-label="เมนูหลังบ้าน"><div class="svc-main">${SVC.map(x=>{const n=svcWork(x.k);return `<button data-a="svc" data-v="${x.k}" aria-pressed="${x.k===cur}"><i aria-hidden="true">${x.i}</i>${x.l}${n?`<span class="tcount">${n}</span>`:''}</button>`;}).join('')}</div>
+    ${s.tabs&&s.tabs.length>1?`<div class="tabs-more">${s.tabs.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]} ${t[2]}${tabBadge(t[0])}</button>`).join('')}</div>`:''}</nav>${svcFour(cur)}`;}
+function svcFour(k){
+  const B=(i,t,sub,a,v,hot)=>`<button class="svf${hot?' hot':''}" data-a="${a}" data-v="${esc(v||'')}"><i aria-hidden="true">${i}</i><b>${t}</b><span>${sub}</span></button>`;
+  const P=(t,sub,href)=>`<a class="svf" href="${href}" target="_blank" rel="noopener"><i aria-hidden="true">👀</i><b>${t}</b><span>${sub}</span></a>`;
+  let h='';
+  if(k==='shop'){const fr=D.products.filter(p=>p.fresh&&p.status!=='published').length,aw=(ADA.items||[]).filter(x=>x.status==='pending').length;
+    h=B('📊','ตัวเลข','ยอดขาย · ออเดอร์','tab','orders')+B('✅','ต้องทำ',fr||aw?[fr?`สินค้ารอเผยแพร่ ${fr}`:'',aw?`แอดรอกด ${aw}`:''].filter(Boolean).join(' · '):'ไม่มีงานค้าง',fr?'goNew':aw?'goAds':'tab',fr||aw?'':'products',fr||aw)+B('⚙️','ตั้งค่า','ชำระเงิน · Pixel · ร้าน','tab','pay')+P('หน้าลูกค้า','ร้านชีท ↗','/store');}
+  else if(k==='learn')h=B('📊','ตัวเลข','Google · คนเข้าเว็บ','tab','seo')+B('✅','ต้องทำ','โพสต์และบทความรอตรวจ','tab','content')+B('⚙️','ตั้งค่า','หน้ารวมหัวข้อ · พฤติกรรม','tab','insights')+P('หน้าลูกค้า','ข้อสอบฟรี ↗','/quiz');
+  else if(k==='vip'){const d=VIPA.d||{},v=d.settings||{},todo=!d.ready?'สร้างตารางสมาชิก (SQL)':!v.open?'ตั้งราคา แล้วเปิดรับ':'';
+    h=B('📊','ตัวเลข','สมาชิก · ต่ออายุ','svcGo','#vip-set')+B('✅','ต้องทำ',todo||'ไม่มีงานค้าง','svcGo','#vip-set',!!todo)+B('⚙️','ตั้งค่า','ราคา · ข้อความหน้า · ให้สิทธิ์','svcGo','#vip-page')+B('👀','หน้าลูกค้า','หน้า /vip (ในหน้านี้)','svcGo','.vip-pv');}
+  else if(k==='factory'){const n=svcWork('factory');
+    h=B('📊','ตัวเลข','คิว · กำลังผลิต','svcGo','.ffl')+B('✅','ต้องทำ',n?`ตรวจไฟล์ ${n} เล่ม`:'ไม่มีงานค้าง','svcGo',n?'details.fq-review':'.ffl',n)+B('⚙️','ตั้งค่า','สั่งเล่มใหม่','svcGo','.fq-add')+P('หน้าลูกค้า','ของที่ลงขายแล้ว ↗','/store');}
+  return h?`<div class="svf-row">${h}</div>`:'';}
 function adminView(){
-  // เรียงตามความสำคัญ: 4 อันแรกใช้ทุกวัน (ปุ่มใหญ่) ที่เหลือเป็นแถวรองเลื่อนได้
-  const TABS_MAIN=[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์'],['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา']];
-  const TABS_MORE=[['content','✍️','คอนเทนต์'],['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['reviews','⭐','รีวิว'],['seo','🔎','SEO'],['insights','📈','พฤติกรรม'],['coupons','🏷️','โค้ดส่วนลด'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก'],['pay','⚙️','ตั้งค่าร้าน']];
   if(S.tab==='pixel')S.tab='pay';
-  const badge=k=>k==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:k==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:'';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
   const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
-    <nav class="tabs" aria-label="เมนูหลังบ้าน"><div class="tabs-main">${TABS_MAIN.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}"><i aria-hidden="true">${t[1]}</i>${t[2]}${badge(t[0])}</button>`).join('')}</div>
-      <div class="tabs-more">${TABS_MORE.map(t=>`<button data-a="tab" data-v="${t[0]}" aria-pressed="${S.tab===t[0]}">${t[1]} ${t[2]}${badge(t[0])}</button>`).join('')}</div></nav>
+    ${svcNav()}
     ${body}
   </div>${S.cfgOpen?cfgSheet():''}`;
 }
@@ -4986,6 +5023,12 @@ function act(a,el){
     case 'openGlobal':{S.fqGlobal=true;render(true);setTimeout(()=>{const g=document.querySelector('details.fac-global');if(g){g.open=true;g.scrollIntoView({behavior:'smooth',block:'start'});}},60);break;}
     case 'toVip':VIPA.d=null;go('vip');break;
     case 'imgFirst':S.imgFirst=el.dataset.v;render(true);break;
+    case 'svc':{const s=SVC.find(x=>x.k===el.dataset.v);if(!s)break;
+      if(s.view){act(s.view==='vip'?'toVip':'toFactory',el);break;}
+      const last=(S.svcLast||{})[s.k],t=s.tabs.some(x=>x[0]===last)?last:s.tabs[0][0];
+      if(S.view!=='admin'){S.tab=t;go('admin');}
+      act('tab',{dataset:{v:t}});break;}
+    case 'svcGo':{const t=document.querySelector(el.dataset.v);if(t){if(t.tagName==='DETAILS')t.open=true;t.scrollIntoView({behavior:'smooth',block:'start'});}break;}
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
@@ -5266,7 +5309,7 @@ function act(a,el){
     case 'filter':S.filter=el.dataset.v;render(true);break;
     case 'cmtOpen':S.cmt=S.cmt===el.dataset.v?null:el.dataset.v;render(true);break;
     case 'cmtSend':{const k=el.dataset.v;const ta=document.getElementById('cmt-'+k);const text=ta?ta.value.trim():'';if(!text){toast('พิมพ์ข้อความก่อน');break;}el.disabled=true;adminPost('/api/content?action=reply',{to:k,text}).then(r=>{if(!r.ok)throw new Error(r.error||'ส่งไม่สำเร็จ');toast('ส่งถึง'+TEAM[k].name+'แล้ว จะตอบรับภายใน 1-3 นาที และทำตามในรอบงานถัดไป');setTimeout(()=>{postsLoaded=false;loadPosts().then(()=>render(true));},200000);S.cmt=null;return loadPosts();}).then(()=>render(true)).catch(e=>{toast(e.message);el.disabled=false;});break;}
-    case 'tab':if(el.dataset.goadmin&&S.view!=='admin'){S.view='admin';}S.tab=el.dataset.v;setTimeout(()=>liveTick(true),50);S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='meeting')postsLoaded=false;if(S.tab==='docs'){DOCS.links=null;LEADS.list=null;postsLoaded=false;}render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
+    case 'tab':if(el.dataset.goadmin&&S.view!=='admin'){S.view='admin';}S.tab=el.dataset.v;(S.svcLast||(S.svcLast={}))[svcOfTab(S.tab)]=S.tab;setTimeout(()=>liveTick(true),50);S.err='';S.confirm='';S.edit=null;S.quick=null;if(S.tab==='todo')TODO.items=null;if(S.tab==='chat')CHAT.msgs=null;if(S.tab==='meeting')postsLoaded=false;if(S.tab==='docs'){DOCS.links=null;LEADS.list=null;postsLoaded=false;}render(false);if(S.tab==='orders')autoSync();if(S.tab==='products')checkAllLinks();if(S.tab==='content'){postsLoaded=false;adminApi('/api/content?action=publish').catch(()=>{}).then(()=>loadPosts().then(()=>render(true)));}break;
     case 'toggle':S.open[id]=!S.open[id];render(true);break;
     case 'resend':{const o=getOrder(id);o.log.push({t:Date.now(),text:'ส่งลิงก์ดาวน์โหลดซ้ำไปที่ '+o.email});save();render(true);toast('ส่งลิงก์ซ้ำแล้ว (จำลอง)');break;}
     case 'refund':{
