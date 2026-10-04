@@ -387,7 +387,7 @@ try {
           const r = await page.evaluate((n0) => { const nb = D.products.find((x) => isBundle(x) && x.slug === 'set-test-own'); const o = { n: D.products.filter((x) => isBundle(x)).length - n0, items: nb ? nb.items.length : 0, err: S.err, closed: !S.edit }; D.products = D.products.filter((x) => x !== nb); S.edit = null; S.draft = null; render(false); return o; }, n0);
           pass(`[${kind}] สร้างชุดขายเอง: กดเพิ่มเล่มได้ต่อเนื่อง (รายการไม่หุบ) · ไม่ใส่ราคา ระบบคำนวณให้ตรวจก่อน · กดบันทึกแล้วได้ชุดใหม่`, items === 3 && priced && r.n === 1 && r.items === 3 && r.closed, JSON.stringify({ items, priced, ...r })); }
         { const prep = await page.evaluate(() => { const b = D.products.find((x) => isBundle(x)); window.__bk = JSON.parse(JSON.stringify(b)); const n = bundleBooks(b).length;
-            b.name = `ชุดซิงก์ ${n} เล่ม`; b.headline = `ครบ ${n} เล่ม`; b.plans.forEach((p) => { if (p.key === 'basic') { p.on = true; p.price = 500; p.fullPrice = 0; } });
+            b.audioOk = true; b.name = `ชุดซิงก์ ${n} เล่ม`; b.headline = `ครบ ${n} เล่ม`; b.plans.forEach((p) => { if (p.key === 'basic') { p.on = true; p.price = 500; p.fullPrice = 0; } });
             S.view = 'admin'; S.tab = 'products'; S.draft = bundleDraft(b); S.edit = b.id; S.bxSynced = ''; render(false); return { id: b.id, n }; });
           await page.locator('details [data-a="bxItem"]').first().click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(150);
           await page.locator('[data-a="saveBundle"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(800);
@@ -396,6 +396,14 @@ try {
           const r = await page.evaluate((id) => { const b = getProduct(id); const o = { name: b.name, head: b.headline, price: bxPrice(b), items: b.items.length, closed: !S.edit, err: S.err }; const i = D.products.findIndex((x) => x.id === id); D.products[i] = window.__bk; S.edit = null; S.draft = null; render(false); return o; }, prep.id);
           const n1 = prep.n + 1;
           pass(`[${kind}] เพิ่มเล่มเข้าชุดเอง: ชื่อ/ข้อความ/ราคาเปลี่ยนตาม (หยุดให้ตรวจก่อน) แล้วบันทึกได้`, /จำนวนเล่ม/.test(msg) && /ราคา/.test(msg) && r.name === `ชุดซิงก์ ${n1} เล่ม` && r.head === `ครบ ${n1} เล่ม` && r.price > 500 && r.items === n1 && r.closed, JSON.stringify({ msg: msg.slice(0, 160), ...r })); }
+        { const prep = await page.evaluate(() => { const p = D.products.find((x) => !isBundle(x)); window.__ap = JSON.parse(JSON.stringify(p)); p.status = 'draft'; p.audio = true; p.audioOk = false; p.audioDrive = 'https://drive.google.com/drive/folders/abc';
+            S.view = 'admin'; S.tab = 'products'; S.draft = initDraft(p); S.edit = p.id; S.err = ''; render(false); return { id: p.id, box: !!document.querySelector('.aud'), link: !!document.querySelector('.aud a[href*="drive.google.com"]') }; });
+          await page.locator('[data-a="saveProduct"][data-status="published"]').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(300);
+          const blocked = await page.evaluate((id) => ({ err: S.err, st: getProduct(id).status }), prep.id);
+          await page.locator('.aud input[data-a="audioOk"]').click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(150);
+          await page.locator('[data-a="saveProduct"][data-status="published"]').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(500);
+          const r = await page.evaluate((id) => { const p = getProduct(id), o = { st: p.status, ok: !!p.audioOk }; const i = D.products.findIndex((x) => x.id === id); D.products[i] = window.__ap; S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; render(false); return o; }, prep.id);
+          pass(`[${kind}] เล่มมีไฟล์เสียง: มีช่องติ๊กยืนยัน Drive เป็นสาธารณะ ไม่ติ๊กกดเผยแพร่ไม่ได้ · ติ๊กแล้วเผยแพร่ได้`, prep.box && prep.link && /Google Drive/.test(blocked.err) && blocked.st === 'draft' && r.st === 'published' && r.ok, JSON.stringify({ ...prep, blocked, r })); }
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);

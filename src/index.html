@@ -487,6 +487,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .st-bsold{display:inline-block;font-size:13px;font-weight:600;color:#B4471A;margin-top:4px}
+.aud{padding:12px 14px;margin-top:14px;border:1.5px solid #E9A23B;background:#FFF8EC}.aud.ok{border-color:#3f9a5a;background:#F1FAF3}.aud-steps{margin:6px 0 8px;padding-left:20px}.aud-ok{display:flex;gap:8px;align-items:flex-start;font-weight:600}.aud-ok input{width:20px;height:20px;flex:none;margin-top:2px}.aud-warn{display:block;margin-top:4px;color:#B4471A}
 .shp{padding:12px 14px}.shp-h{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.shp-t{width:100%;min-height:260px;margin-top:10px;font-size:14px;line-height:1.6}.shp-f{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .fl-bulk{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 12px;background:var(--surface)}.fl-bulk .fine{flex-basis:100%}
 .fl-help{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 12px;background:var(--bg)}.fl-help summary{cursor:pointer;font-weight:600}.fl-help p{margin:8px 0 0;font-size:14px}.fl-sku{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}.fl-sku th,.fl-sku td{border:1px solid var(--line);padding:5px 8px;text-align:left}.fl-sku th{background:var(--surface)}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
@@ -1395,8 +1396,18 @@ function normalize(d){
   return d;
 }
 function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',price:199,fullPrice:390,features:'',link:'https://',color:COLORS[0][0],status:'draft'};}
+/* 🎧 เล่มที่มีไฟล์เสียงใน Google Drive: ต้องติ๊กยืนยันว่าโฟลเดอร์แชร์เป็น "ทุกคนที่มีลิงก์" แล้ว ถึงจะเผยแพร่ได้ (กันลูกค้าสแกน QR แล้วฟังไม่ได้) */
+const DRIVE_RE=/https:\/\/drive\.google\.com\/drive\/folders\/[\w-]+/;
+const hasAudio=p=>!!p&&!isBundle(p)&&!!(p.audio||p.audioDrive||/🎧|ไฟล์เสียง|เสียงอ่าน|\bMP3\b|แทร็ก|audio/i.test([p.name,p.headline,p.desc,p.features,p.specs,p.freshNote].join(' ')));
+const audioDriveOf=p=>p.audioDrive||(String(p.freshNote||'').match(DRIVE_RE)||[])[0]||'';
+const audioBooks=d=>isBundle(d)||d.type==='bundle'?(d.items||[]).map(getProduct).filter(hasAudio):hasAudio(d)?[d]:[];
+const AUDIO_ERR='เล่มนี้มีไฟล์เสียงใน Google Drive: ตั้งโฟลเดอร์เสียงเป็น "ทุกคนที่มีลิงก์" แล้วติ๊กยืนยันในกล่อง 🎧 ก่อนเผยแพร่';
+function audioBox(d){const L=audioBooks(d);if(!L.length)return '';const ok=!!d.audioOk,links=[...new Set(L.map(audioDriveOf).filter(Boolean))];
+  return `<section class="card aud${ok?' ok':''}"><b>🎧 ${L.length>1?`มีไฟล์เสียง ${L.length} เล่ม`:'เล่มนี้มีไฟล์เสียง'} ใน Google Drive (ลูกค้าสแกน QR ในเล่มแล้วเปิดฟัง)</b>
+    <ol class="fine aud-steps"><li>เปิดโฟลเดอร์เสียง${links.length?': '+links.map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">โฟลเดอร์ ${links.length>1?i+1:''}</a>`).join(' · '):' (ใน Drive → Sheetlab/Academic Audio)'}</li><li>กด แชร์ → การเข้าถึงทั่วไป → <b>ทุกคนที่มีลิงก์</b> (ผู้มีสิทธิ์อ่าน)</li><li>ลองเปิดลิงก์ในหน้าต่างไม่ระบุตัวตน (ไม่ล็อกอิน) ต้องฟังได้</li></ol>
+    <label class="aud-ok"><input type="checkbox" data-a="audioOk" ${ok?'checked':''}> ตั้งเป็น "ทุกคนที่มีลิงก์" และลองฟังแล้ว ลูกค้าเปิดได้</label>${ok?'':'<span class="fine aud-warn">ยังไม่ติ๊ก = กดเผยแพร่ไม่ได้</span>'}</section>`;}
 function initDraft(p){
-  const d={};
+  const d={};d.audioOk=!!p.audioOk;d.audioDrive=p.audioDrive||'';d.audio=!!p.audio;d.freshNote=p.freshNote||'';
   ['name','slug','sku','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
   d.bumpPrice=p.bumpPrice||0;
   if(!d.kind)d.kind='other';
@@ -1967,6 +1978,7 @@ function bundleForm(){
     <div class="field">${lb('b-faq','คำถามที่พบบ่อย (บรรทัดละ "คำถาม | คำตอบ") เว้นว่างได้ ระบบใส่คำถามพื้นฐานให้')}<textarea class="input" id="b-faq" data-d="faq" rows="3">${esc(d.faq)}</textarea></div>
   </div>
   ${S.err?`<p class="err" style="margin:10px 0">${esc(S.err)}</p>`:''}
+  ${audioBox(d)}
   ${saveActs('saveBundle',d)}`;
 }
 /* ปุ่มบันทึกของหน้าแก้สินค้า/ชุด: ฉบับร่าง (ลูกค้ายังไม่เห็น) หรือ เผยแพร่แล้วพาไปเซลเพจที่ขายอยู่จริง */
@@ -1982,7 +1994,7 @@ function bundleData(d){ // ชุดจากช่องที่กรอก�
   return {type:'bundle',sell:SELL[d.sell]?d.sell:'both',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
     plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
     sku:String(d.sku||'').trim().toUpperCase(),cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:'',
-    ...Object.fromEntries(['specs','toc','forwho','notfor','features','freshNote','copyDone','coverPrice','oldCovers'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]))};
+    ...Object.fromEntries(['specs','toc','forwho','notfor','features','freshNote','copyDone','coverPrice','oldCovers','audioOk'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]))};
 }
 /* เปลี่ยนเล่มในชุดเอง (เพิ่ม/เอาออก) → ทุกอย่างของชุดเปลี่ยนตาม (คุณแดนขอ 4 ต.ค. 69): จำนวนเล่มในชื่อ/ข้อความ · จำนวนหน้ารวม · ราคา (คงสัดส่วนส่วนลดเดิม)
    · หัวข้อขาย/คำโปรยที่ AI เขียน (ถ้ายังไม่ได้แก้เอง) · รูปชุดจัดใหม่จากปกตอนบันทึก (รูปเดิมเก็บใน oldCovers) — แล้วหยุดให้ตรวจก่อนกดบันทึกอีกครั้ง */
@@ -2004,6 +2016,7 @@ async function setSync(d,old,items){const ch=[],n=items.length,real=x=>getProduc
   return ch;}
 function bundleErr(d,selfId){
   const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase();
+  if(d.status==='published'&&audioBooks(d).length&&!d.audioOk)return AUDIO_ERR.replace('เล่มนี้มี','ชุดนี้มีเล่มที่มี');
   if(!name)return 'กรอกชื่อชุด';
   if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug))return 'ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น toeic-750';
   if(slugTaken(slug,selfId))return 'ชื่อในลิงก์นี้ถูกใช้แล้ว';
@@ -2735,7 +2748,7 @@ function draftToProduct(d){
   return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
     proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
-    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both'};
+    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,audioDrive:t('audioDrive'),audio:!!d.audio};
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
 function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/|\/Users\//.test(x)).slice(0,2).join(' · ')+(/🎧/.test(n)?' · 🎧 มีไฟล์เสียง (ดูในหน้าแก้สินค้า)':'');}
@@ -2847,6 +2860,7 @@ function productForm(){
     </div>
 
     ${S.err?`<p class="err" style="margin-bottom:10px">${esc(S.err)}</p>`:''}
+    ${audioBox(d)}
     ${saveActs('saveProduct',d)}
   </div>`;
 }
@@ -2864,6 +2878,7 @@ function setAutoImport(){if(!sbSession||!D.products.length)return;
     const sum=x.books.reduce((a,b)=>{const ex=setMatch(b);return a+(ex?Number(ex.price)||0:Number(b.price)||0);},0);
     setListRun(x,{price:Number(x.price)||sum,full:sum,solo:false,pub:false,auto:true}).then(()=>{toast('📦 ชุดใหม่ "'+x.name+'" เข้าแท็บมาใหม่แล้ว ตรวจแล้วกดเผยแพร่');SETI.items=(SETI.items||[]).filter(y=>y.id!==x.id);render(true);}).catch(e=>{console.error(e);delete SETI.auto[x.id];});}}
 function setListRun(x,{price,full,solo,pub,auto}){
+  if(pub&&(x.books||[]).some(b=>b.audio)){pub=false;toast('ชุดนี้มีไฟล์เสียง: ลงเป็นฉบับร่างก่อน ติ๊กยืนยันเสียงในหน้าแก้ชุดแล้วค่อยเผยแพร่');}
   const old=D.products.find(p=>isBundle(p)&&p.fromSet===x.id); // กันสร้างซ้ำ (เปิดหลายแท็บ)
   if(old)return adminPost('/api/content?action=set_done',{id:x.id,bundle_id:old.id});
   const now=Date.now(),ids=[];let n=0;const audio=x.books.filter(b=>b.audio&&!setMatch(b)).length;
@@ -2934,7 +2949,7 @@ function facExportImport(){if(!sbSession||!D.products.length)return;
       j.audio_path?`🎧 ไฟล์เสียงอยู่ใน Mac: ${j.audio_path}`:'',j.audio_drive?`เสียงอยู่ใน Google Drive แล้ว: ${j.audio_drive}`:j.audio_path?'ยังไม่ได้อัปเสียงขึ้น Drive → อัปไปที่ https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f แล้วแชร์แบบมีลิงก์':'',
       'อยากได้ภาพขาย 5 รูป: กด ✨ สร้างชุดภาพสินค้า ในหน้าแก้สินค้า'].filter(Boolean).join(' · ');
     const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36)+Math.floor(Math.random()*99),name,headline:lc.headline||name,desc:lc.desc||String(j.summary||'').split('\n')[0].slice(0,300),features:lc.features||(pages?`ไฟล์ PDF ${pages} หน้า`:''),forwho:lc.forwho||'',notfor:lc.notfor||'',faq:lc.faq||'',specs:lc.specs||(pages?`รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | ${pages} หน้า`:''),toc:lc.toc||'',
-      price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url||'',images:(j.images||[]).slice(0,5),previews:(j.previews||[]).slice(0,6),cat:guessCat(j.title+' '+(j.category||'')),slug:setSlug(name),sku,status:'draft',sell:'store',fresh:true,freshNote:note,fromJob:j.id});
+      price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url||'',images:(j.images||[]).slice(0,5),previews:(j.previews||[]).slice(0,6),cat:guessCat(j.title+' '+(j.category||'')),slug:setSlug(name),sku,status:'draft',sell:'store',fresh:true,freshNote:note,fromJob:j.id,audio:!!(j.audio_path||j.audio_drive),audioDrive:j.audio_drive||''});
     D.products.push(p);if(!p.sku)ensureSkus();save();clearTimeout(saveTimer);
     flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=factory_list',{id:j.id,product_id:p.id});}).then(()=>{toast(`📗 ${p.sku||''} ${String(name).slice(0,40)} เข้าแท็บมาใหม่แล้ว`);FAC.exports=(FAC.exports||[]).filter(x=>x.id!==j.id);facSetBundles();render(true);}).catch(e=>{console.error(e);delete SETI.exp[j.id];});}
   facSetBundles();}
@@ -5751,7 +5766,7 @@ function act(a,el){
     case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}
-    case 'togglePub':{const p=getProduct(id);p.status=p.status==='published'?'draft':'published';if(p.status==='published')delete p.fresh;if(p.status==='published'&&!p.publishedAt){p.publishedAt=Date.now();adDraftSoon(p.id);}save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
+    case 'togglePub':{const p=getProduct(id);if(p&&p.status!=='published'&&audioBooks(p).length&&!p.audioOk){toast('🎧 '+AUDIO_ERR+' (เปิดแก้ไขแล้วติ๊ก)');break;}p.status=p.status==='published'?'draft':'published';if(p.status==='published')delete p.fresh;if(p.status==='published'&&!p.publishedAt){p.publishedAt=Date.now();adDraftSoon(p.id);}save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
     case 'dupProduct':{
       const p=getProduct(id);let slug=p.slug+'-copy',n=2;while(slugTaken(slug))slug=p.slug+'-copy'+n++;
       const nid='p'+Date.now().toString(36);
@@ -5761,6 +5776,7 @@ function act(a,el){
       if(D.orders.some(o=>o.productId===id)){S.confirm='';render(true);toast('สินค้านี้มีออเดอร์แล้ว ลบไม่ได้ ให้เปลี่ยนเป็นฉบับร่างแทน');break;}
       if(S.confirm==='del:'+id){D.products=D.products.filter(p=>p.id!==id);D.coupons=D.coupons.filter(c=>c.scope!==id);if(S.productId===id)S.productId=null;S.confirm='';save();render(true);toast('ลบสินค้าแล้ว');}
       else{S.confirm='del:'+id;render(true);}break;}
+    case 'audioOk':{if(S.draft){S.draft.audioOk=!!el.checked;S.err='';render(true);}break;}
     case 'saveProduct':{
       // รูปที่ AI สร้างไว้แต่ยังไม่ได้กด "ใช้เป็นปก"/"ใช้รูปที่เลือก": ใส่ให้ก่อนแล้วค่อยบันทึก (เดิมรูปหายถ้ากดบันทึกเลย)
       const pendSet=!!(S.imgSet&&S.imgSet.some(x=>x.pick&&x.url));
@@ -5771,6 +5787,7 @@ function act(a,el){
       if(el.dataset.status)d.status=el.dataset.status;
       const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase(),price=Number(d.price),full=Number(d.fullPrice)||0,link=String(d.link).trim(),sample=String(d.sampleLink).trim();
       if(!name){S.err='กรอกชื่อสินค้า';render(true);break;}
+      if(d.status==='published'&&hasAudio(d)&&!d.audioOk){d.status=getProduct(selfId)?getProduct(selfId).status:'draft';S.err=AUDIO_ERR;render(true);break;}
       if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)){S.err='ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น calculus-1-summary';render(true);break;}
       if(slugTaken(slug,selfId)){S.err='ชื่อในลิงก์นี้ถูกใช้แล้ว เลือกชื่ออื่น';render(true);break;}
       if(!(price>=1)){S.err='ราคาขายต้องเป็นตัวเลขตั้งแต่ 1 บาทขึ้นไป';render(true);break;}
