@@ -488,6 +488,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .fl-help{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 12px;background:var(--bg)}.fl-help summary{cursor:pointer;font-weight:600}.fl-help p{margin:8px 0 0;font-size:14px}.fl-sku{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}.fl-sku th,.fl-sku td{border:1px solid var(--line);padding:5px 8px;text-align:left}.fl-sku th{background:var(--surface)}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
 @media(max-width:640px){.fqh{grid-template-columns:1fr}.fqh-nums button{flex:1}.fqt button{padding:8px 11px;font-size:14px}}
+.zipbtn{font-size:12.5px;margin-right:6px;vertical-align:middle}
 .pt-sku{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 6px;vertical-align:middle}
 .flib-b .fl-au{font-size:12px;line-height:1.4;color:var(--muted);word-break:break-word}.flib-b .fl-au a{color:var(--brand)}.flib-b .fl-act{margin-top:6px}.flib-b .fl-act button,.flib-b .fl-act span{width:100%;text-align:center;font-size:12.5px}
 .flib-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0}.flib-bar .input{flex:1;min-width:180px;width:auto}.flib-bar .chip.on{background:var(--ink);color:var(--bg)}
@@ -1888,6 +1889,7 @@ function bundleForm(){
   </div>
 
   <div class="card" style="margin-top:14px">
+    ${chosen.length?`<div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end;margin:0 0 4px">${zipBtn('dlSetPdfs','⬇ โหลดไฟล์ทุกเล่ม (ZIP)')}</div>`:''}
     <h3 class="h3">2. เล่มในชุด <span class="fine" style="font-weight:400">${chosen.length} เล่ม · ราคาแยกรวม ${baht(sum)}${pages?` · ${pages} หน้า`:''}</span></h3>
     <p class="fine" style="margin:0 0 8px">ติ๊กเล่มที่อยู่ในชุด ใช้ลูกศรเรียงลำดับ เล่มที่ใช้ในชุดอย่างเดียวตั้งเป็นฉบับร่างไว้ได้ ระบบยังส่งไฟล์ให้ครบ</p>
     ${chosen.length?`<div class="bxe-list">${chosen.map((b,i)=>`<div class="bxe-row"><b>${i+1}</b><span>${esc(b.name)} <span class="fine">${baht(b.price)}${b.status==='draft'?' · ร่าง':''}${b.link?'':' · ⚠️ ยังไม่มีลิงก์ไฟล์'}</span>
@@ -1905,6 +1907,7 @@ function bundleForm(){
 
   ${(()=>{const st=bxStyle(),pend=S.bxImg||'',n=chosen.length,todo=chosen.filter(b=>bxNeeds(b,st)).length,mi=IMG_INFO[imgModel()]||['',3],per=mi[1]*(st.pdf?2:1),cost=(todo||n)*per,noFile=chosen.filter(b=>!b.link).length;
     return `<div class="card" style="margin-top:14px">
+    <div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end;margin:0 0 4px">${zipBtn('dlSetImgs','⬇ โหลดรูปทั้งหมดของชุด (ZIP)')}</div>
     <h3 class="h3">3. รูปชุด <span class="fine" style="font-weight:400">ทำ 2 ขั้น: ปกเล่มเดี่ยวก่อน แล้วรูปใหญ่ของชุดจะจัดจากปกชุดเดียวกัน ให้ดูเป็นสินค้าเดียวกัน</span></h3>
     <h4 class="bxi-step"><span>1</span> ปกเล่มเดี่ยว (ใช้ใน "ในชุดมีอะไรบ้าง")</h4>
     <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ได้แล้ว<b>ใช้เป็นรูปสินค้าของเล่มนั้นด้วย</b> รูปเดิมเก็บไว้เป็นรูปที่ 2 · กดที่รูปเพื่อดูใหญ่ เทียบกับรูปเดิม หรือสลับกลับ</p>
@@ -2749,11 +2752,11 @@ function productForm(){
         ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}${aiPay(S.coverErr)}</p>`:''}
         ${S.imgSet?`<div class="imgset">${S.imgSet.map((it,i)=>`<label class="imgset-it">${it.url?`<img src="${it.url}" alt="ภาพที่ ${i+1}">`:`<span class="imgset-ph">${it.err?esc(it.err):'กำลังสร้าง...'}</span>`}<span><input type="checkbox" data-a="imgPick" data-v="${i}" ${it.pick&&it.url?'checked':''} ${it.url?'':'disabled'}> ${['ปก','ภาพในเล่ม','มีอะไรบ้าง','เหมาะกับใคร','วิธีรับไฟล์'][i]}</span></label>`).join('')}</div><p class="fine" style="margin:6px 0 0">สร้างทีละรูป 5 รูปใช้เวลาประมาณ 2-4 นาที คิดเงิน OpenAI 5 รูป · <b>เสร็จแล้วระบบแทนรูปเดิมให้เอง</b> (เอาติ๊กออกระหว่างรอ = ไม่ใช้รูปนั้น) ไม่ชอบรูปไหนกดลบที่รายการรูปด้านบนได้</p>`:''}
         ${S.coverImg?`<div class="aic-out"><img src="${S.coverImg}" alt="ปกที่สร้าง"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverUse" ${S.coverBusy?'disabled':''}>ใช้เป็นปก (ภาพแรก)</button><span class="fine">ตรวจตัวสะกดภาษาไทยบนปกก่อนใช้ · กดบันทึกสินค้าได้เลย ระบบใส่รูปนี้เป็นภาพแรกให้อัตโนมัติ</span></div></div>`:''}</div>`:''}</div>
-    <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
+    <div class="field"><span class="lbl" id="lbl-img">${(d.images||[]).length?zipBtn('dlImgs','⬇ โหลดรูปทั้งหมด (ZIP)'):''} ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
       <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button>${i===0?'<span class="th-cover">ปก</span>':''}${d.images.length>1?`<span class="mv">${i>0?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="-1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางซ้าย">‹</button>`:''}${i<d.images.length-1?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางขวา">›</button>`:''}</span>`:''}</div>`).join('')}
       ${d.images.length<5?`<label class="add"><input type="file" id="e-img" accept="image/*" multiple>+ เพิ่มภาพ</label>`:''}</div>
       <span class="fine">ระบบจัดภาพเป็นสี่เหลี่ยมจัตุรัส 1200×1200 พิกเซล และแสดงภาพเต็มไม่ตัดขอบ ถ้าภาพไม่เป็นจัตุรัส จะเติมพื้นขาวรอบภาพ ภาพแรกเป็นภาพปกหลัก ภาพถัดไปเป็นตัวอย่างหน้าในไฟล์ ควรเลือกเฉพาะบางหน้า ไม่ใส่เนื้อหาทั้งเล่ม ผู้ซื้อกดที่ภาพเพื่อดูขยายเต็มจอได้ ถ้าไม่ใส่ภาพ จะใช้ภาพวาดตัวอย่างแทน</span></div>
-    <div class="field"><span class="lbl">หน้าตัวอย่างเนื้อหา (ลูกค้าเห็นใต้คำบรรยาย มีลายน้ำ หน้าสุดท้ายจะเบลอชวนซื้อ)</span>
+    <div class="field"><span class="lbl">${(d.previews||[]).length?zipBtn('dlPvs','⬇ โหลดหน้าตัวอย่าง (ZIP)'):''} หน้าตัวอย่างเนื้อหา (ลูกค้าเห็นใต้คำบรรยาย มีลายน้ำ หน้าสุดท้ายจะเบลอชวนซื้อ)</span>
       <div class="thumbs">${(d.previews||[]).map((src,i,A)=>`<div class="thumb pvthumb"><img src="${esc(src)}" alt="หน้าตัวอย่าง ${i+1}"><button class="x" data-a="rmPv" data-i="${i}" aria-label="ลบหน้าตัวอย่าง ${i+1}">×</button>${A.length>1?`<span class="mv">${i>0?`<button data-a="mvImg" data-k="previews" data-i="${i}" data-d="-1" aria-label="เลื่อนหน้าตัวอย่าง ${i+1} ไปทางซ้าย">‹</button>`:''}${i<A.length-1?`<button data-a="mvImg" data-k="previews" data-i="${i}" data-d="1" aria-label="เลื่อนหน้าตัวอย่าง ${i+1} ไปทางขวา">›</button>`:''}</span>`:''}</div>`).join('')}</div>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
         <label class="fine">หน้าที่ต้องการ <input class="input" id="e-pvpages" value="${esc(S.pvPages||'3-6')}" style="width:110px;display:inline-block;padding:6px 8px" placeholder="1-4 หรือ 1,3,5"></label>
@@ -3385,6 +3388,21 @@ function exportShopee(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shopee-print-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
   toast(`ไฟล์ลง Shopee ${list.length} รายการแล้ว (ราคา PDF + ฿${plus}/เล่ม) เปิดใน Excel แล้วคัดลอกไปวางในเทมเพลตของ Shopee`);
 }
+/* ดาวน์โหลดหลายไฟล์เป็น ZIP เดียว (รูปสินค้า · หน้าตัวอย่าง · รูปทั้งชุด · ไฟล์ PDF ทุกเล่มในชุด) */
+async function zipDownload(files,zipName,label){files=files.filter(f=>f&&f.url&&/^https?:\/\//.test(f.url));if(!files.length){toast('ยังไม่มีไฟล์ให้โหลด');return;}
+  if(S.zipBusy)return;S.zipBusy='dl';render(true);
+  try{if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const zip=new window.JSZip(),used=new Set();let n=0;
+    for(const f of files){try{const b=await fetch(f.url).then(r=>{if(!r.ok)throw 0;return r.blob();});
+      const ext=(f.ext||(b.type.split('/')[1]||'bin').replace('jpeg','jpg').replace('octet-stream','pdf'));let nm=String(f.name||('file-'+(n+1))).replace(/[\\/:*?"<>|]+/g,'-').slice(0,120),k=nm,i=2;while(used.has(k))k=nm+'-'+i++;used.add(k);
+      zip.file(`${k}.${ext}`,b);n++;toast(`กำลังรวม${label||'ไฟล์'} ${n}/${files.length}...`);}catch(e){console.error(e);}}
+    if(!n)throw new Error('none');const blob=await zip.generateAsync({type:'blob'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=zipName.replace(/[^\w.-]+/g,'-')+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast(`ดาวน์โหลด${label||'ไฟล์'} ${n} ไฟล์แล้ว${n<files.length?` (โหลดไม่ได้ ${files.length-n} ไฟล์)`:''}`);}
+  catch(e){toast('รวมไฟล์ไม่สำเร็จ ลองใหม่อีกครั้ง');}
+  S.zipBusy=false;render(true);}
+const dlName=d=>String(d.sku||d.slug||d.name||'sheetlab').trim();
+function zipBtn(a,label){return `<button type="button" class="chip zipbtn" data-a="${a}" ${S.zipBusy?'disabled':''}>${S.zipBusy==='dl'?'กำลังรวมไฟล์...':label}</button>`;}
 async function exportImgs(one){
   const list=(one?[one]:exportList()).filter(p=>(p.images||[]).length);if(!list.length){toast(one?'สินค้านี้ยังไม่มีรูป':'ยังไม่มีรูปสินค้า');return;}
   S.zipBusy=one?one.id:true;render(true);
@@ -5377,6 +5395,14 @@ function act(a,el){
     case 'exportCsv':exportCsv();break;
     case 'exportShopee':exportShopee();break;
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
+    case 'dlImgs':{const d=S.draft;if(d)zipDownload((d.images||[]).map((u,i)=>({name:`${dlName(d)}-${i+1}${i?'':'-cover'}`,url:u})),dlName(d)+'-images','รูป');break;}
+    case 'dlPvs':{const d=S.draft;if(d)zipDownload((d.previews||[]).map((u,i)=>({name:`${dlName(d)}-preview-${i+1}`,url:u})),dlName(d)+'-previews','หน้าตัวอย่าง');break;}
+    case 'dlSetImgs':{const d=S.draft;if(!d)break;const books=(d.items||[]).map(getProduct).filter(Boolean),f=[];
+      if(d.cover)f.push({name:`${dlName(d)}-00-set-cover`,url:d.cover});
+      books.forEach((b,i)=>{const nn=String(i+1).padStart(2,'0');const imgs=[...new Set([b.bookCover,...(b.images||[])].filter(Boolean))];imgs.forEach((u,k)=>f.push({name:`${dlName(d)}-${nn}-${dlName(b)}-${k?'img'+k:'cover'}`,url:u}));(b.previews||[]).forEach((u,k)=>f.push({name:`${dlName(d)}-${nn}-${dlName(b)}-preview-${k+1}`,url:u}));});
+      zipDownload(f,dlName(d)+'-all-images','รูป');break;}
+    case 'dlSetPdfs':{const d=S.draft;if(!d)break;const books=(d.items||[]).map(getProduct).filter(Boolean);
+      zipDownload(books.filter(b=>b.link&&validLink(b.link)&&!/notion\.(so|site)/.test(b.link)).map((b,i)=>({name:`${String(i+1).padStart(2,'0')}-${dlName(b)}-${String(b.name).slice(0,60)}`,url:b.link,ext:/notion\.(so|site)/.test(b.link)?'url':'pdf'})),dlName(d)+'-files','ไฟล์');break;}
     case 'exportOne':{const p=getProduct(el.dataset.id);if(p)exportCsv(p);break;}
     case 'exportOneImgs':{const p=getProduct(el.dataset.id);if(p&&!S.zipBusy)exportImgs(p);break;}
     case 'facAiToggle':FAC.aiOff=Object.assign(FAC.aiOff||{},{[el.dataset.id]:!el.checked});break;

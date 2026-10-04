@@ -366,6 +366,9 @@ try {
         pass(`[${kind}] แก้สินค้า: ปุ่ม "บันทึกฉบับร่าง" + "บันทึกและเผยแพร่" (กดแล้วเผยแพร่และไปเซลเพจ)`, /ฉบับร่าง/.test(ed.draft) && ed.pub === 'บันทึกและเผยแพร่' && !ed.sel && after.view === 'shop' && after.sel === ed.id && after.st === 'published', JSON.stringify({ ed, after }));
         if (bundle) { const bx = await page.evaluate((bid) => { S.view = 'admin'; S.tab = 'products'; S.draft = bundleDraft(null); S.edit = 'new'; render(false);
             const row = document.querySelector(`[data-a="bxAddSet"][data-id="${bid}"]`); if (row) row.click(); return { row: !!row, n: S.draft.items.length, want: bundleBooks(getProduct(bid)).length, pub: !!document.querySelector('[data-a="saveBundle"][data-status="published"]') }; }, bundle.id);
+          const dz = await page.evaluate((bid) => { S.draft = bundleDraft(getProduct(bid)); S.edit = bid; render(false); return { pdfs: !!document.querySelector('[data-a="dlSetPdfs"]'), imgs: !!document.querySelector('[data-a="dlSetImgs"]') }; }, bundle.id);
+          const dl = page.waitForEvent('download', { timeout: 8000 }).catch(() => null); await page.locator('[data-a="dlSetImgs"]').click({ timeout: 4000 }).catch(() => {}); const got = await dl;
+          pass(`[${kind}] ชุดขาย: ปุ่มโหลดไฟล์ทุกเล่ม + โหลดรูปทั้งหมดของชุด เป็น ZIP (กดแล้วได้ไฟล์ .zip)`, dz.pdfs && dz.imgs && !!got && /\.zip$/.test(got.suggestedFilename()), JSON.stringify({ ...dz, file: got && got.suggestedFilename() }));
           pass(`[${kind}] สร้างชุดขาย: รวมชุดที่มีอยู่เข้ามาได้ทั้งชุด + ปุ่มเผยแพร่`, bx.row && bx.n === bx.want && bx.n >= 2 && bx.pub, JSON.stringify(bx));
           await page.evaluate(() => { S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; render(false); }); }
       }
