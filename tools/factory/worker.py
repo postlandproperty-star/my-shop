@@ -78,8 +78,12 @@ def previews(job, pdf):
 
 def cover(job, png):
     from PIL import Image
-    im = Image.open(png).convert('RGB'); s = min(im.size)
-    im = im.crop(((im.width - s) // 2, (im.height - s) // 2, (im.width - s) // 2 + s, (im.height - s) // 2 + s)).resize((1200, 1200), Image.LANCZOS)
+    # วางปกทั้งเล่มบนพื้นสว่าง 1200×1200 (ไม่ตัดขอบปก ชื่อเล่มไม่หาย) มีเงาบางๆ ให้ดูเป็นหนังสือ
+    from PIL import ImageFilter
+    im = Image.open(png).convert('RGB'); im.thumbnail((900, 1080), Image.LANCZOS)
+    bg = Image.new('RGB', (1200, 1200), (241, 244, 250)); x, y = (1200 - im.width) // 2, (1200 - im.height) // 2
+    sh = Image.new('L', (1200, 1200), 0); sh.paste(70, (x + 10, y + 16, x + im.width + 10, y + im.height + 16)); sh = sh.filter(ImageFilter.GaussianBlur(18))
+    bg.paste((60, 70, 100), (0, 0), sh); bg.paste(im, (x, y)); im = bg
     b = io.BytesIO(); im.save(b, 'JPEG', quality=88)
     return upload(job, b.getvalue(), 'cover.jpg', 'image/jpeg')
 

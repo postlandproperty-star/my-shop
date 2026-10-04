@@ -1848,22 +1848,25 @@ async function bxCompose(d,books){
   const g=x.createLinearGradient(0,0,0,W);g.addColorStop(0,'#F5F8FF');g.addColorStop(1,'#DCE5FB');x.fillStyle=g;x.fillRect(0,0,W,W);
   // หัวข้อ: บรรทัดเดียวถ้าย่อแล้วยังใหญ่พอ ไม่งั้นตัด 2 บรรทัด (ไม่แยก "10 เล่ม")
   const title=String(d.name||'').trim().replace(/(\d+)\s+(เล่ม|ชุด|ข้อ|คำ)/g,'$1 $2');x.fillStyle='#0F1B33';x.textBaseline='alphabetic';
-  x.font=F(700,80);let tsz=Math.min(80,Math.floor(80*900/x.measureText(title).width));
-  if(tsz>=58){x.font=F(700,tsz);x.fillText(title,60,150);}
-  else{const words=title.split(' ');let L=[''];x.font=F(700,70);for(const w of words){const t=(L[L.length-1]+' '+w).trim();if(x.measureText(t).width>900&&L[L.length-1])L.push(w);else L[L.length-1]=t;}L.slice(0,2).forEach((l,k)=>x.fillText(l,60,110+k*82));}
+  let tsz=80;
+  // หัวข้อกลางภาพ ต่ำกว่ามุมซ้ายบน (หน้าเว็บวางป้าย "ประหยัด xx%" ทับมุมนั้น) ไม่ชนวงจำนวนเล่มขวาบน
+  x.textAlign='center';x.font=F(700,80);tsz=Math.min(80,Math.floor(80*780/x.measureText(title).width));let areaT0=270;
+  if(tsz>=58){x.font=F(700,tsz);x.fillText(title,W/2,215);}
+  else{const words=title.split(' ');let L=[''];x.font=F(700,66);for(const w of words){const t=(L[L.length-1]+' '+w).trim();if(x.measureText(t).width>780&&L[L.length-1])L.push(w);else L[L.length-1]=t;}L.slice(0,2).forEach((l,k)=>x.fillText(l,W/2,180+k*76));areaT0=300;}
+  x.textAlign='left';
   // ป้ายจำนวนเล่ม
   x.fillStyle='#E11D48';x.beginPath();x.arc(1085,118,82,0,Math.PI*2);x.fill();x.fillStyle='#fff';x.textAlign='center';x.font=F(800,74);x.fillText(String(books.length),1085,128);x.font=F(600,34);x.fillText('เล่ม',1085,170);x.textAlign='left';
   // ปกทุกเล่ม: ช่องสี่เหลี่ยมจัตุรัส แถวละไม่เกิน 4 เล่ม เต็มพื้นที่กลางภาพ
   const urls=bxRefs(books);const imgs=(await Promise.all(urls.map(u=>new Promise(r=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>r(im);im.onerror=()=>r(null);im.src=/^data:/.test(u)?u:u+(u.includes('?')?'&':'?')+'cv=1';})))).filter(Boolean);
   if(!imgs.length)throw new Error('ไม่มีปกให้จัด');
-  const n=imgs.length,per=n<=4?n:n<=8?Math.ceil(n/2):4,rows=[];for(let k=0;k<n;k+=per)rows.push(imgs.slice(k,k+per));
-  // แถวสุดท้ายสั้นกว่า: เกลี่ยให้แถวท้ายๆ ยาวพอกัน (10 เล่ม = 4/3/3)
-  if(rows.length===3&&rows[2].length<3){const all=imgs.slice();rows.length=0;rows.push(all.slice(0,4),all.slice(4,7),all.slice(7));}
-  const gap=22,areaT=210,areaB=990,tile=Math.floor(Math.min((1080-(per-1)*gap)/per,(areaB-areaT-(rows.length-1)*gap)/rows.length,330));
-  const y0=areaT+((areaB-areaT)-(rows.length*tile+(rows.length-1)*gap))/2;
-  rows.forEach((row,ri)=>{const k=row.length,x0=(W-(k*tile+(k-1)*gap))/2,y=y0+ri*(tile+gap);
-    row.forEach((im,i)=>{const X=x0+i*(tile+gap);x.save();x.shadowColor='rgba(15,27,51,.30)';x.shadowBlur=22;x.shadowOffsetY=8;x.fillStyle='#fff';x.fillRect(X-4,y-4,tile+8,tile+8);x.restore();
-      const s2=Math.min(im.width,im.height);x.drawImage(im,(im.width-s2)/2,(im.height-s2)/2,s2,s2,X,y,tile,tile);});});
+  // ปกหนังสือแนวตั้ง 3:4 (ปกจริงของเล่ม) แถวละครึ่งหนึ่ง (10 เล่ม = 5/5 · 9 เล่ม = 5/4) เหมือนรูปชุด TOEIC
+  const n=imgs.length,per=n<=4?n:n<=10?Math.ceil(n/2):Math.ceil(n/3),rows=[];for(let k=0;k<n;k+=per)rows.push(imgs.slice(k,k+per));
+  const gap=20,areaT=areaT0,areaB=985,R43=4/3,tw=Math.floor(Math.min((1100-(per-1)*gap)/per,(areaB-areaT-(rows.length-1)*gap)/rows.length/R43,300)),th=Math.round(tw*R43);
+  const y0=areaT+((areaB-areaT)-(rows.length*th+(rows.length-1)*gap))/2;
+  rows.forEach((row,ri)=>{const k=row.length,x0=(W-(k*tw+(k-1)*gap))/2,y=y0+ri*(th+gap);
+    row.forEach((im,i)=>{const X=x0+i*(tw+gap);x.save();x.shadowColor='rgba(15,27,51,.30)';x.shadowBlur=22;x.shadowOffsetY=8;x.fillStyle='#fff';x.fillRect(X-3,y-3,tw+6,th+6);x.restore();
+      const ar=im.width/im.height;if(ar<=0.85){const sh=Math.min(im.height,im.width*R43);x.drawImage(im,0,0,im.width,sh,X,y,tw,th);} // ปกแนวตั้ง: ชิดบน
+      else{x.fillStyle='#fff';x.fillRect(X,y,tw,th);const h2=tw/ar;x.drawImage(im,X,y+(th-h2)/2,tw,h2);}});}); // รูปจัตุรัส: วางทั้งรูปไม่ตัดขอบ
   // ป้ายราคา
   const price=bxPrice(d);if(price){x.font=F(800,64);const t=price.toLocaleString('th-TH')+' บาท',tw=x.measureText(t).width;const bw=tw+60,bx2=W-60-bw,by=1003;
     x.fillStyle='#FFD23F';x.strokeStyle='#0F1B33';x.lineWidth=6;x.beginPath();x.roundRect?x.roundRect(bx2,by,bw,96,18):x.rect(bx2,by,bw,96);x.fill();x.stroke();x.fillStyle='#0F1B33';x.fillText(t,bx2+30,by+72);}
@@ -1978,8 +1981,27 @@ function bundleData(d){ // ชุดจากช่องที่กรอก�
   const first=getProduct(items[0]);
   return {type:'bundle',sell:SELL[d.sell]?d.sell:'both',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
     plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
-    sku:String(d.sku||'').trim().toUpperCase(),cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:''};
+    sku:String(d.sku||'').trim().toUpperCase(),cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:'',
+    ...Object.fromEntries(['specs','toc','forwho','notfor','features','freshNote','copyDone','coverPrice','oldCovers'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]))};
 }
+/* เปลี่ยนเล่มในชุดเอง (เพิ่ม/เอาออก) → ทุกอย่างของชุดเปลี่ยนตาม (คุณแดนขอ 4 ต.ค. 69): จำนวนเล่มในชื่อ/ข้อความ · จำนวนหน้ารวม · ราคา (คงสัดส่วนส่วนลดเดิม)
+   · หัวข้อขาย/คำโปรยที่ AI เขียน (ถ้ายังไม่ได้แก้เอง) · รูปชุดจัดใหม่จากปกตอนบันทึก (รูปเดิมเก็บใน oldCovers) — แล้วหยุดให้ตรวจก่อนกดบันทึกอีกครั้ง */
+const nameCount=t=>Number((String(t||'').match(/(\d+)\s*เล่ม/)||[])[1])||0;
+async function setSync(d,old,items){const ch=[],n=items.length,real=x=>getProduct(x)&&!isBundle(getProduct(x)),oldItems=(old.items||[]).filter(real),nc=nameCount(d.name),on=nc&&nc!==n?nc:oldItems.length;
+  const books=items.map(getProduct),sum=books.reduce((a,b)=>a+(Number(b.price)||0),0),oldSum=oldItems.map(getProduct).reduce((a,b)=>a+(Number(b.price)||0),0);
+  const origH=d.headline,origD=d.desc,TXT=['name','headline','desc','specs','toc','forwho','notfor','features','freshNote'];
+  if(on&&on!==n){const re=new RegExp('(^|[^\\d,])'+on+'(\\s*เล่ม)','g'),fix=t=>String(t||'').replace(re,'$1'+n+'$2'),before=TXT.map(k=>d[k]||'').join('|');
+    TXT.forEach(k=>{if(d[k])d[k]=fix(d[k]);});d.plans.forEach(p=>{p.name=fix(p.name);p.features=fix(p.features);});
+    if(TXT.map(k=>d[k]||'').join('|')!==before)ch.push(`จำนวนเล่ม ${on} → ${n}`);}
+  const pages=books.reduce((a,b)=>a+pagesOf(b),0);
+  if(pages)TXT.forEach(k=>{if(d[k]&&/รวม\s*[\d,]+\s*หน้า/.test(d[k])){const t=d[k].replace(/รวม\s*[\d,]+\s*หน้า/g,`รวม ${pages.toLocaleString('th-TH')} หน้า`);if(t!==d[k]){d[k]=t;if(!ch.includes('จำนวนหน้ารวม'))ch.push('จำนวนหน้ารวม');}}});
+  const samePrice=d.plans.every(p=>Number(p.price||0)===Number(((old.plans||[]).find(x=>x.key===p.key)||{}).price||0)); // ราคาที่คุณแดนแก้เองในรอบนี้ ไม่ไปทับ
+  if(samePrice&&sum&&sum!==oldSum){const was=bxPrice(d),r=oldSum?sum/oldSum:0,pct=n>=9?.5:n>=7?.55:.6;
+    d.plans.forEach(p=>{if(!p.on&&p.key!=='basic')return;if(Number(p.price)>=1&&r){const v=p.price*r;p.price=r>1?Math.max(p.price,Math.ceil((v-90)/100)*100+90):Math.min(p.price,Math.max(90,Math.floor((v-90)/100)*100+90));if(Number(p.fullPrice)>0)p.fullPrice=p.key==='basic'?sum:Math.round(p.fullPrice*r);}else if(p.key==='basic'){p.price=end90(sum*pct);p.fullPrice=sum;}if(p.fullPrice&&p.fullPrice<=p.price)p.fullPrice=0;});
+    const now=bxPrice(d);if(now!==was)ch.push(`ราคา ${baht(was)} → ${baht(now)} (คงส่วนลดเดิม · ราคาแยกรวม ${baht(sum)})`);}
+  if(d.copyDone&&origH===old.headline&&origD===old.desc){try{const j=await adminPost('/api/content?action=set_copy',{name:d.name,books:books.map(x=>({name:x.name,headline:x.headline}))});if(j&&j.ok&&j.headline){d.headline=j.headline;if(j.desc)d.desc=j.desc;ch.push('หัวข้อขาย/คำโปรยเขียนใหม่');}}catch(e){console.error(e);}}
+  if(d.cover){d.oldCovers=[...(d.oldCovers||[]),d.cover].slice(-5);d.cover='';d.coverAuto='';ch.push('รูปชุดจัดใหม่จากปกทุกเล่มตอนบันทึก');}
+  return ch;}
 function bundleErr(d,selfId){
   const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase();
   if(!name)return 'กรอกชื่อชุด';
@@ -2017,7 +2039,7 @@ function bundleView(p){
   const off=sum>minP?Math.round((1-minP/sum)*100):0;
   const pvSel=Math.min(S.bxPv||0,Math.max(0,books.length-1));
   const pv=books[pvSel]?(books[pvSel].previews||[]):[];
-  const cover=(b,i)=>{const u=b.bookCover||(b.images&&b.images[0]);return u?`style="background:#fff url('${esc(u)}') center/cover"`:`style="background:${esc(b.color||'#2440E8')}"`;};
+  const cover=(b,i)=>{const u=b.bookCover||(b.images&&b.images[0]);return u?`style="background:#fff url('${esc(u)}') center/${b.bookCover?'cover':'contain'} no-repeat"`:`style="background:${esc(b.color||'#2440E8')}"`;};
   const lines2=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
   let faqs=lines(p.faq).map(pair);
   if(!faqs.length)faqs=[['ได้รับไฟล์เมื่อไหร่','ทันทีที่ชำระเงินสำเร็จ ลิงก์ทุกเล่มจะขึ้นในหน้านี้และส่งไปที่อีเมลของคุณ'],
@@ -2931,13 +2953,22 @@ function facSetBundles(){const all=FAC.all||[];
   setPolish();}
 /* ชุดจากโรงงาน (ฉบับร่าง): ทำให้เป็น listing เดียวแบบชุด TOEIC 750+ เอง — รูปชุดจัดจากปกทุกเล่ม + หัวข้อขาย/คำโปรยของชุด (ไม่แตะราคา) */
 SETI.pol={};
+/* ปกเล่มแนวตั้ง = หน้าแรกของไฟล์ PDF (ปกจริงของเล่ม) ใช้ใน "ในชุดมีอะไรบ้าง" และรูปชุด (ไม่ใช้ AI ไม่เสียเงิน) */
+async function pdfCoverUrl(link){
+  if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+  const buf=await fetch(link).then(r=>{if(!r.ok)throw new Error('เปิดไฟล์ไม่ได้ '+r.status);return r.arrayBuffer();});
+  const doc=await window.pdfjsLib.getDocument({data:buf}).promise,pg=await doc.getPage(1),v0=pg.getViewport({scale:1}),vp=pg.getViewport({scale:900/v0.width});
+  const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:vp}).promise;
+  return uploadImage(c.toDataURL('image/jpeg',.88));}
 async function setPolish(){if(!sbSession)return;
   for(const b of D.products.filter(x=>isBundle(x)&&x.fromSetName&&x.status!=='published'&&!SETI.pol[x.id])){
-    const books=bundleBooks(b);if(books.length<2)continue;const needCover=!b.cover,needCopy=!b.copyDone&&(!b.headline||b.headline===b.name||/^ครบ \d+ เล่มในชุดเดียว/.test(b.desc||''));if(!needCover&&!needCopy)continue;SETI.pol[b.id]=1;
+    const books=bundleBooks(b);if(books.length<2)continue;const needBook=books.some(x=>!x.bookCover&&x.link),needCount=nameCount(b.name)&&nameCount(b.name)!==books.length,needCover=!b.cover||(b.coverAuto&&b.coverV!==2)||needBook||needCount,needCopy=!b.copyDone&&(!b.headline||b.headline===b.name||/^ครบ \d+ เล่มในชุดเดียว/.test(b.desc||''));if(!needCover&&!needCopy)continue;SETI.pol[b.id]=1;
     try{
+      for(const x of books.filter(x=>!x.bookCover&&x.link)){try{x.bookCover=await pdfCoverUrl(x.link);}catch(e){console.error('bookCover',x.sku,e);}}
+      if(needCount){const re=new RegExp('(^|[^\\d,])'+nameCount(b.name)+'(\\s*เล่ม)','g'),n=books.length;['name','headline','desc','freshNote'].forEach(k=>{if(b[k])b[k]=String(b[k]).replace(re,'$1'+n+'$2');});(b.plans||[]).forEach(p=>{p.name=String(p.name||'').replace(re,'$1'+n+'$2');});}
       if(needCopy){const j=await adminPost('/api/content?action=set_copy',{name:b.name,books:books.map(x=>({name:x.name,headline:x.headline}))});
         if(j&&j.ok&&j.headline){b.headline=j.headline;if(j.desc)b.desc=j.desc;}b.copyDone=true;}
-      if(needCover){const key=books.map(x=>x.id).join(','),u=await uploadImage(await bxCompose(bundleDraft(b),books));b.cover=u;b.coverAuto=key;b.images=[u];}
+      if(needCover){const key=books.map(x=>x.id).join(','),u=await uploadImage(await bxCompose(bundleDraft(b),books));if(b.cover)b.oldCovers=[...(b.oldCovers||[]),b.cover].slice(-5);b.cover=u;b.coverAuto=key;b.coverV=2;b.coverPrice=bxPrice(b);b.images=[u];}
       save();toast(`📦 จัดชุด "${String(b.name).slice(0,30)}" เป็น listing เดียวแล้ว (รูปชุด + ข้อความขาย) ตรวจแล้วกดเผยแพร่`);render(true);
     }catch(e){console.error('setPolish',e);delete SETI.pol[b.id];}}}
 function setSlug(name){let s=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'set';let t=s,i=2;while(D.products.some(p=>p.slug===t))t=s+'-'+i++;return t;}
@@ -5568,7 +5599,7 @@ function act(a,el){
       Object.assign(p,{price,fullPrice:full,link,status,bumpProductId,bumpPrice:bumpProductId?bumpPrice:0});
       S.quick=null;S.err='';save();render(true);toast('บันทึกแล้ว ราคาใหม่มีผลกับลูกค้าทันที');checkAllLinks();break;}
     case 'newProduct':S.draft=initDraft(blankProduct());S.edit='new';S.err='';render(false);break;
-    case 'newBundle':S.draft=bundleDraft(null);S.edit='new';S.err='';S.bxAddOpen=false;render(false);break;
+    case 'newBundle':S.draft=bundleDraft(null);S.edit='new';S.err='';S.bxAddOpen=false;S.bxSynced='';render(false);break;
     case 'rvReq':{const to=el.dataset.to,sid=el.dataset.sid;if(to==='customer'&&S.confirm!=='rv:'+sid){S.confirm='rv:'+sid;el.textContent='กดอีกครั้งเพื่อส่งถึงลูกค้า';break;}S.confirm='';el.disabled=true;toast('กำลังส่ง...');
       authFetch('/api/content?action=review_send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid,to})}).then(j=>{if(j&&j.ok){toast(to==='me'?'ส่งตัวอย่างไปที่อีเมลของคุณแดนแล้ว':'ส่งอีเมลขอรีวิวถึงลูกค้าแล้ว');if(to==='customer'){RVA.sentAt=RVA.sentAt||{};RVA.sentAt[sid]=new Date().toISOString();}}else toast((j&&j.error)||'ส่งไม่สำเร็จ');render(true);});break;}
     case 'rvopen':S.rvopen=!S.rvopen;break;
@@ -5700,20 +5731,23 @@ function act(a,el){
       d.plans.forEach(x=>{x.fullPrice=full[x.key];x.price=end90(full[x.key]*0.8);});
       if(!d.promoEndStr)d.promoEndStr=toLocalInput(Date.now()+7*864e5);
       render(true);toast('คำนวณแล้ว: ราคาเปิดตัว −20% นับถอยหลัง 7 วัน แก้เองได้');break;}
-    case 'saveBundle':{const d=S.draft;if(!d||S.bxImg)break;
+    case 'saveBundle':{const d=S.draft;if(!d||S.bxImg||S.bxSyncing)break;
+      {const its=d.items.filter(i=>getProduct(i)&&!isBundle(getProduct(i))),k=its.join(','),old=S.edit!=='new'?getProduct(S.edit):null;
+        if(old&&its.length>=2&&S.bxSynced!==k&&((old.items||[]).filter(i=>getProduct(i)&&!isBundle(getProduct(i))).join(',')!==k||(nameCount(d.name)&&nameCount(d.name)!==its.length))){S.bxSynced=k;S.bxSyncing=true;render(true);
+          setSync(d,old,its).then(ch=>{S.bxSyncing=false;if(ch.length){S.err='ปรับชุดตามเล่มที่เปลี่ยนแล้ว: '+ch.join(' · ')+' — ตรวจแล้วกดบันทึกอีกครั้ง';render(true);}else act('saveBundle',el);}).catch(e=>{S.bxSyncing=false;console.error(e);act('saveBundle',el);});break;}}
       if(d.items.filter(i=>getProduct(i)&&!isBundle(getProduct(i))).length>=2&&!d.plans.some(x=>x.on&&Number(x.price)>=1)){act('bxCalc',el);S.err='ยังไม่ได้ใส่ราคา ระบบคำนวณราคาตามสูตรให้แล้ว (ส่วน 4. ราคาและแพ็กเกจ) ตรวจราคาแล้วกดบันทึกอีกครั้ง';render(true);break;}
       {const bad=bundleErr(d,S.edit==='new'?null:S.edit);if(bad){S.err=bad;render(true);break;}}
       const items=d.items.filter(i=>getProduct(i)&&!isBundle(getProduct(i))),key=items.join(','),books=items.map(getProduct);
       // รูปชุดตามเล่มในชุด: ยังไม่มีรูปชุด หรือรูปที่ระบบจัดให้ไม่ตรงกับเล่มตอนนี้ → จัดจากปกเล่มเดี่ยวให้ก่อนบันทึก (ฟรี)
-      if(items.length>=2&&books.some(b=>b.bookCover||(b.images||[])[0])&&(!d.cover||(d.coverAuto&&d.coverAuto!==key))&&S.bxAuto!==key){
-        S.bxAuto=key;S.bxImg='compose';render(true);toast('กำลังจัดรูปชุดจากปกเล่มในชุด...');
-        bxCompose(d,books).then(uploadImage).then(u=>{d.cover=u;d.coverAuto=key;}).catch(e=>{console.error(e);toast('จัดรูปชุดไม่สำเร็จ ใช้ปกเล่มแรกไปก่อน');}).then(()=>{S.bxImg='';act('saveBundle',el);});break;}
+      if(items.length>=2&&books.some(b=>b.bookCover||(b.images||[])[0])&&(!d.cover||(d.coverAuto&&(d.coverAuto!==key||(d.coverPrice!=null&&d.coverPrice!==bxPrice(d)))))&&S.bxAuto!==key+'|'+bxPrice(d)){ // รูปชุดมีป้ายราคา: ราคาเปลี่ยนก็จัดใหม่
+        S.bxAuto=key+'|'+bxPrice(d);S.bxImg='compose';render(true);toast('กำลังจัดรูปชุดจากปกเล่มในชุด...');
+        bxCompose(d,books).then(uploadImage).then(u=>{d.cover=u;d.coverAuto=key;d.coverPrice=bxPrice(d);}).catch(e=>{console.error(e);toast('จัดรูปชุดไม่สำเร็จ ใช้ปกเล่มแรกไปก่อน');}).then(()=>{S.bxImg='';act('saveBundle',el);});break;}
       const err=saveBundleDraft(el);if(err){S.err=err;render(true);}break;}
     case 'bxAddSet':{const d=S.draft,src=getProduct(id);if(!d||!src)break;const add=(src.items||[]).filter(i=>getProduct(i)&&!isBundle(getProduct(i))&&!d.items.includes(i));
       d.items.push(...add);render(true);toast(add.length?`ใส่ ${add.length} เล่มจาก "${src.name}" แล้ว`:'เล่มในชุดนี้อยู่ในชุดใหม่ครบแล้ว');break;}
     case 'bxPlan':{S.bplan=S.bplan||{};S.bplan[el.dataset.slug]=el.dataset.v;S.qr=null;qrStop();render(true);break;}
     case 'bxPv':{S.bxPv=Number(el.dataset.v)||0;render(true);const t=document.getElementById('bx-preview');if(t)t.scrollIntoView({block:'start',behavior:'smooth'});break;}
-    case 'editProduct':S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
+    case 'editProduct':S.bxSynced='';S.bxAddOpen=false;S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));S.edit=id;S.err='';render(false);break;
     case 'cancelEdit':S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}
