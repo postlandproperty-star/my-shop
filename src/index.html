@@ -485,7 +485,8 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt em{font-style:normal;background:var(--brand);color:#fff;border-radius:999px;padding:0 7px;font-size:12px;margin-left:2px}
 .fqt-body{border-top-left-radius:0;min-height:180px}.fqt-hint{margin:0 0 10px}.fqt-lab{display:block;font-weight:700;margin:0 0 6px}
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
-.fqm{margin:0 0 14px}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
+.fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
+.fl-help{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 12px;background:var(--bg)}.fl-help summary{cursor:pointer;font-weight:600}.fl-help p{margin:8px 0 0;font-size:14px}.fl-sku{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}.fl-sku th,.fl-sku td{border:1px solid var(--line);padding:5px 8px;text-align:left}.fl-sku th{background:var(--surface)}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
 @media(max-width:640px){.fqh{grid-template-columns:1fr}.fqh-nums button{flex:1}.fqt button{padding:8px 11px;font-size:14px}}
 .pt-sku{display:inline-block;margin-left:6px;font-size:11.5px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 6px;vertical-align:middle}
 .flib-b .fl-au{font-size:12px;line-height:1.4;color:var(--muted);word-break:break-word}.flib-b .fl-au a{color:var(--brand)}.flib-b .fl-act{margin-top:6px}.flib-b .fl-act button,.flib-b .fl-act span{width:100%;text-align:center;font-size:12.5px}
@@ -3131,7 +3132,13 @@ function facLib(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if
   const B=d.books,q=String(S.flq||'').toLowerCase().trim(),cat=S.flcat||'',cats=[...new Set(B.map(b=>b.cat))].sort();
   const list=B.filter(b=>!cat||b.cat===cat);
   const wk=B.filter(b=>Date.now()-Date.parse(b.day)<7*864e5).length,pg=B.reduce((a,b)=>a+(b.pages||0),0);
-  return `<div class="fac-lib"><p class="fine fqt-hint">📚 ${B.length} เล่ม · ผลิตใน 7 วัน ${wk} · ${pg.toLocaleString('th-TH')} หน้า${(d.sets||[]).length?' · ชุดขาย '+d.sets.length:''} · อัปเดต ${new Date(d.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p>
+  return `<div class="fac-lib"><details class="fl-help"><summary>ℹ️ เลข SKU และปุ่ม 📤 ลงร้าน คืออะไร</summary>
+      <p><b>เลข SKU</b> = รหัสประจำเล่ม ใช้เลขเดียวกันทุกที่: ไฟล์บน Mac · คลังนี้ · สินค้าบนเว็บ · Shopee</p>
+      <table class="fl-sku"><tr><th>แบบ</th><th>รูปแบบ</th><th>ตัวอย่าง</th></tr><tr><td>หนังสือจากโรงงาน</td><td>SL- + เลขไฟล์บน Mac</td><td>ไฟล์ 046_2026-10-04_…pdf = <b>SL-046</b></td></tr><tr><td>ชุดขาย</td><td>SL-SET + เลข</td><td>SL-SET01</td></tr><tr><td>สินค้าเก่าที่ไม่ได้มาจากโรงงาน</td><td>SL-W + เลข</td><td>SL-W01</td></tr><tr><td>เล่มพิมพ์ใน Shopee</td><td>SKU + -P</td><td>SL-046-P</td></tr></table>
+      <p><b>📤 ลงร้าน (มาใหม่)</b> = เอาเล่มที่ผลิตแล้วขึ้นร้าน ไม่ผลิตใหม่: Mac อัปไฟล์เดิม ทำปกจากหน้าแรก และเขียนหน้าขายจากเนื้อหาจริง (ใช้ token น้อย ประมาณ 5–10% ของการผลิต 1 เล่ม) แล้วขึ้นที่ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง ตั้งราคาแล้วกดเผยแพร่</p>
+      <p><b>ทำไมรอได้ถึง 1 ชม.:</b> Mac เช็คงานทุกชั่วโมง ตัวงานใช้แค่ไม่กี่นาที อยากให้เริ่มทันที: แอป Claude บน Mac → Scheduled → โรงงาน SheetLab → <b>Run now</b></p>
+      <p><b>🎧 ไฟล์เสียง:</b> การ์ดบอกว่าอยู่ที่ไหนใน Mac และอยู่ใน Google Drive แล้วหรือยัง ถ้ายัง ให้อัปไปที่โฟลเดอร์ Sheetlab/Academic Audio ตามลิงก์บนการ์ด</p></details>
+    <p class="fine fqt-hint">📚 ${B.length} เล่ม · ผลิตใน 7 วัน ${wk} · ${pg.toLocaleString('th-TH')} หน้า${(d.sets||[]).length?' · ชุดขาย '+d.sets.length:''} · อัปเดต ${new Date(d.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p>
     ${(d.sets||[]).length?`<p class="fine" style="margin:8px 0">📦 ${d.sets.map(s=>`${esc(s.name)} (${s.n} เล่ม)`).join(' · ')}</p>`:''}
     <div class="flib-bar"><input class="input" data-flq="1" value="${esc(S.flq||'')}" placeholder="ค้นหาชื่อเล่มหรือเลขที่" aria-label="ค้นหาหนังสือ"><button class="chip${!cat?' on':''}" data-a="flCat" data-v="" aria-pressed="${!cat}">ทั้งหมด</button>${cats.map(c=>`<button class="chip${cat===c?' on':''}" data-a="flCat" data-v="${esc(c)}" aria-pressed="${cat===c}">${esc(c)}</button>`).join('')}</div>
     <div class="flib" id="flib">${list.map(b=>{const sku=b.sku||('SL-'+b.no),inShop=D.products.find(p=>p.sku===sku),pend=(FJOBS||[]).find(j=>String(j.export_no||'')===String(b.no)&&(['queued','producing'].includes(j.status)||(j.status==='done'&&j.listing==='pending')));
@@ -3143,6 +3150,7 @@ function facLib(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if
 function setOrderLines(){return String(S.form.setBooks||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.lastIndexOf('|'),p=i>0?Number(l.slice(i+1).replace(/[^\d.]/g,'')):NaN;return {title:(i>0&&p>=0&&!isNaN(p)?l.slice(0,i):l).trim(),price:i>0&&!isNaN(p)?p:0};}).filter(x=>x.title);}
 function setOrderForm(){const L=setOrderLines();
   return `<section class="fq-add">
+    <div class="so-ai"><span class="fqt-lab" style="margin:0">💡 ให้ระบบจัดชุดให้</span><div class="so-airow"><select class="input" data-f="soCat" aria-label="หมวดของชุด">${FQ_CATS.map(c=>`<option ${(S.form.soCat||FQ_CATS[0])===c?'selected':''}>${esc(c)}</option>`).join('')}</select><select class="input" data-f="soN" aria-label="จำนวนเล่ม">${[3,4,5,6,8,10].map(n=>`<option value="${n}" ${String(S.form.soN||5)===String(n)?'selected':''}>${n} เล่ม</option>`).join('')}</select><button class="fq-dice" data-a="soIdea" ${S.soBusy?'disabled':''}>${S.soBusy?'กำลังจัด...':'💡 สุ่มชุดให้'}</button></div><span class="fine">เลือกหมวดกับจำนวนเล่ม ระบบเลือกหัวข้อที่ร้านยังไม่มีมาใส่ด้านล่าง แก้ได้ก่อนสั่ง · ไม่ใช้ AI ไม่เสีย token</span></div>
     <label class="fqt-lab" for="so-name">ชื่อชุด</label><input class="input" id="so-name" data-f="setName" value="${esc(S.form.setName||'')}" placeholder="เช่น IELTS 6.5 ครบ 4 ทักษะ" autocomplete="off">
     <label class="fqt-lab" for="so-books" style="margin-top:12px">เล่มในชุด <span class="fine" style="font-weight:400">บรรทัดละ 1 เล่ม · ใส่ราคาหลัง | ได้ (ไม่ใส่ก็ได้)</span></label>
     <textarea class="input" id="so-books" data-f="setBooks" rows="6" placeholder="IELTS Listening 10 ชุด พร้อมเฉลย | 199&#10;IELTS Reading 10 ชุด พร้อมเฉลย | 199&#10;IELTS Writing Task 2 50 หัวข้อ | 179&#10;IELTS Speaking Part 1-3 200 คำถาม | 179">${esc(S.form.setBooks||'')}</textarea>
@@ -5134,6 +5142,10 @@ function act(a,el){
     case 'ordMode':S.ordMode=el.dataset.v;S.fqErr='';render(true);break;
     case 'soRush':S.soRush=!!el.checked;break;
     case 'soOrder':setOrder();break;
+    case 'soIdea':{const cat=S.form.soCat||FQ_CATS[0],n=Number(S.form.soN||5);S.soBusy=true;render(true);
+      fqPost('idea',{hint:cat,n}).then(j=>{const L=j.ideas||[];if(!L.length){toast('หมวดนี้ไม่มีหัวข้อใหม่เหลือแล้ว ลองหมวดอื่น หรือพิมพ์เอง');return;}
+        S.form.setBooks=L.map(x=>x.title+(Number(x.price)>=1?' | '+x.price:'')).join('\n');if(!String(S.form.setName||'').trim())S.form.setName=`${cat} ครบชุด ${L.length} เล่ม`;
+        toast(L.length<n?`หมวดนี้มีหัวข้อใหม่แค่ ${L.length} เล่ม ใส่ให้แล้ว`:`จัดชุดให้ ${L.length} เล่มแล้ว แก้ได้ก่อนกดสั่ง`);}).catch(e=>toast('ไม่สำเร็จ: '+(e.message||e))).then(()=>{S.soBusy=false;render(true);});break;}
     case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;

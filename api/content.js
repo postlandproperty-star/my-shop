@@ -1146,6 +1146,17 @@ export default async function handler(req, res) {
       // คลังไอเดียที่ทีม Claude (พี่โปร พี่โอ๊ค) เติมไว้ หยิบข้อแรกที่ยังไม่ใช้และไม่ซ้ำเล่มที่มี
       const bankRows = await sb('shop_state?id=eq.idea_bank&select=data').catch(() => []); const bank = bankRows?.[0]?.data?.list || [];
       const lowHave = have.map((t) => t.toLowerCase().slice(0, 16));
+      const nSet = Math.max(0, Math.min(10, Math.round(Number(body.n) || 0)));
+      if (nSet >= 2) { // สุ่มทั้งชุด n เล่มในหมวดเดียว: คลังไอเดียของทีมก่อน แล้วเติมจากคลังหัวข้อสำเร็จรูป (ไม่ใช้ AI ไม่เสีย token)
+        const match = (t, c) => !lowHave.some((h) => h && String(t).toLowerCase().startsWith(h)) && (!hint || (t + ' ' + c).toLowerCase().includes(hint.toLowerCase()));
+        const out = [], seen = new Set();
+        for (const b of bank.filter((x) => !x.used && match(x.title, x.category))) { if (out.length >= nSet || seen.has(b.title)) continue; seen.add(b.title); b.used = new Date().toISOString(); out.push({ title: b.title, category: b.category, pages: b.pages, price: b.price }); }
+        const { IDEA_POOL } = await import('../lib/ideas.js');
+        const pool = IDEA_POOL.filter((b) => match(b.t, b.cat) && !seen.has(b.t)).sort(() => Math.random() - 0.5);
+        for (const b of pool) { if (out.length >= nSet) break; seen.add(b.t); out.push({ title: b.t, category: b.cat, pages: b.pages, price: b.price }); }
+        if (bank.some((b) => seen.has(b.title))) await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'idea_bank', data: { list: bank }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {});
+        return res.status(200).json({ ok: true, ideas: out, want: nSet });
+      }
       const fresh = bank.find((b) => !b.used && !lowHave.some((h) => h && String(b.title).toLowerCase().startsWith(h)) && (!hint || (b.title + ' ' + b.category).toLowerCase().includes(hint.toLowerCase())));
       if (fresh) {
         fresh.used = new Date().toISOString();
