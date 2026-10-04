@@ -486,6 +486,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-body{border-top-left-radius:0;min-height:180px}.fqt-hint{margin:0 0 10px}.fqt-lab{display:block;font-weight:700;margin:0 0 6px}
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
+.shp{padding:12px 14px}.shp-h{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.shp-t{width:100%;min-height:260px;margin-top:10px;font-size:14px;line-height:1.6}.shp-f{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .fl-bulk{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 12px;background:var(--surface)}.fl-bulk .fine{flex-basis:100%}
 .fl-help{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 12px;background:var(--bg)}.fl-help summary{cursor:pointer;font-weight:600}.fl-help p{margin:8px 0 0;font-size:14px}.fl-sku{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}.fl-sku th,.fl-sku td{border:1px solid var(--line);padding:5px 8px;text-align:left}.fl-sku th{background:var(--surface)}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
 @media(max-width:640px){.fqh{grid-template-columns:1fr}.fqh-nums button{flex:1}.fqt button{padding:8px 11px;font-size:14px}}
@@ -1877,6 +1878,7 @@ function bundleForm(){
   return `
   <h3 class="h3">${isNew?'สร้างชุดใหม่':'แก้ไขชุด '+esc(d.name)}</h3>
   ${isNew?'':noteBox(getProduct(S.edit))}
+  ${shopeeBox(d)}
   <div class="card">
     <h3 class="h3">1. ข้อมูลชุด</h3>
     <div class="field">${lb('b-name','ชื่อชุด')}<input class="input" id="b-name" data-d="name" value="${esc(d.name)}" placeholder="เช่น ชุด TOEIC 750+"></div>
@@ -2711,6 +2713,16 @@ function draftToProduct(d){
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
 function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/|\/Users\//.test(x)).slice(0,2).join(' · ')+(/🎧/.test(n)?' · 🎧 มีไฟล์เสียง (ดูในหน้าแก้สินค้า)':'');}
+/* 🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์): AI เขียนจากข้อมูลหน้าขาย คุณแดนคัดลอกไปวางเอง · กรองคำต้องห้ามของ Shopee (ดิจิทัล ebook PDF ไฟล์ ดาวน์โหลด ลิงก์) ที่เซิร์ฟเวอร์ */
+function shopeeBox(d){const x=S.shopee&&S.shopee.key===(d.id||'new')?S.shopee:null;
+  return `<section class="card shp"><div class="shp-h"><b>🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์)</b><button class="btn btn-sm ${x&&x.text?'btn-ghost':'btn-dark'}" data-a="shopeeCopy" ${x&&x.busy?'disabled':''}>${x&&x.busy?'กำลังเขียน...':x&&x.text?'↻ เขียนใหม่':'✍️ สร้างรายละเอียด'}</button></div>
+    ${x&&x.text?`<textarea class="input shp-t" id="shp-t" readonly>${esc(x.text)}</textarea><div class="shp-f"><button class="btn btn-sm btn-dark" data-a="shopeeCopyText">📋 คัดลอก</button><span class="fine">${x.text.length.toLocaleString('th-TH')} ตัวอักษร${x.ai?'':' · AI ใช้ไม่ได้ตอนนี้ ใช้ข้อความจากหน้าขายแทน'} · ไม่มีคำว่า ดิจิทัล / ebook / PDF / ไฟล์ / ดาวน์โหลด / ลิงก์ (ผิดกฎ Shopee)</span></div>`:x&&x.err?`<p class="fine" style="color:var(--danger,#c0392b)">${esc(x.err)}</p>`:`<p class="fine" style="margin:6px 0 0">กดแล้วได้ข้อความขายแบบเล่มพิมพ์ A4 จากข้อมูลหน้านี้ คัดลอกไปวางใน Shopee ได้เลย (ไม่บันทึกลงสินค้า)</p>`}</section>`;}
+async function shopeeCopy(){const d=S.draft;if(!d)return;const key=d.id||'new',bun=isBundle(d),books=bun?(d.items||[]).map(getProduct).filter(Boolean):[d];
+  S.shopee={key,busy:true};render(true);
+  const pages=books.reduce((a,b)=>a+pagesOf(b),0),audio=books.some(b=>/MP3|ไฟล์เสียง|เสียงอ่าน|QR|🎧/i.test([b.specs,b.features,b.desc].join(' ')));
+  try{const j=await adminPost('/api/content?action=shopee_copy',{name:d.name,headline:d.headline,desc:d.desc,features:bun?'':d.features,forwho:d.forwho,notfor:d.notfor,faq:d.faq,toc:bun?'':d.toc,specs:bun?'':d.specs,pages,audio,books:bun?books.map(b=>b.name):[]});
+    if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');S.shopee={key,text:j.text,ai:j.ai};}
+  catch(e){S.shopee={key,err:'สร้างไม่สำเร็จ: '+(e.message||e)};}render(true);}
 function noteBox(p){if(!p||!p.freshNote)return '';const parts=String(p.freshNote).split(' · ').filter(Boolean);
   const fmt=x=>esc(x).replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>').replace(/(\/Users\/[^·]+)/g,'<code>$1</code>');
   return `<div class="card fnote"><b>📝 โน้ตจากโรงงาน</b><ul>${parts.map(x=>`<li>${fmt(x)}</li>`).join('')}</ul></div>`;}
@@ -2724,6 +2736,7 @@ function productForm(){
   return `
   <h3 class="h3">${isNew?'เพิ่มสินค้าใหม่':'แก้ไข '+esc(d.name)}</h3>
   ${isNew?'':noteBox(getProduct(S.edit))}
+  ${shopeeBox(d)}
   <div class="card">
     <h3 class="h3">ข้อมูลหลัก</h3>
     <div class="field">${lb('e-name','ชื่อสินค้า')}<input class="input" id="e-name" data-d="name" value="${esc(d.name)}"></div>
@@ -3417,7 +3430,7 @@ function exportShopee(){
     const name=(bun?`${p.name} (เล่มพิมพ์ ${books.length} เล่ม)`:`${p.name} (เล่มพิมพ์ A4)`).slice(0,120);
     const desc=[bun?(p.headline||p.name):(p.headline||p.name),p.desc||'',bun?'ในชุดมี:\n'+books.map((b,i)=>`${i+1}. ${b.name}${pagesOf(b)?` (${pagesOf(b)} หน้า)`:''}`).join('\n'):L(p.features).map(x=>'✅ '+x).join('\n'),
       '📦 สินค้าเป็นหนังสือเล่มพิมพ์ ขนาด A4'+(pages?` รวม ${pages} หน้า`:'')+' จัดส่งจากประเทศไทย',books.some(b=>/MP3|ไฟล์เสียง|QR/i.test(b.specs||b.features||''))?'🎧 ไฟล์เสียงฟังผ่าน QR code ในเล่ม':'',
-      'สั่งแล้วร้านพิมพ์และแพ็กส่งตามรอบ ถ้ามีคำถามทักแชทได้เลย'].filter(Boolean).join('\n\n').slice(0,3000);
+      'สั่งแล้วร้านพิมพ์และแพ็กส่งตามรอบ ถ้ามีคำถามทักแชทได้เลย'].filter(Boolean).join('\n\n').replace(/สินค้า\s*ดิจิ[ทต]ั?ล|e-?books?|อี-?บุ๊[กค]|ไฟล์\s*PDF|\bPDF\b/gi,'หนังสือ').replace(/digital|ดิจิ[ทต]ั?ล/gi,'').replace(/ไฟล์เสียง/g,'เสียงอ่าน').replace(/ไฟล์/g,'เล่ม').replace(/ดาวน์โหลด|download/gi,'').replace(/https?:\/\/\S+/g,'').slice(0,3000); // กฎ Shopee: ห้ามคำดิจิทัล/ebook/PDF/ไฟล์/ลิงก์
     const pdf=bun?books.map(b=>b.link?b.link.split('?')[0]:'').filter(Boolean).join(' | '):(p.link||'').split('?')[0];
     return [(p.sku||p.slug)+'-P',name,desc,price,20,sp.kg,sp.w,sp.l,sp.h,...im,pages||'',pdf,location.origin+'/p/'+p.slug];});
   const csv='\ufeff'+[head,...rows].map(r=>r.map(q).join(',')).join('\r\n');
@@ -5432,6 +5445,8 @@ function act(a,el){
     case 'exportCsv':exportCsv();break;
     case 'exportShopee':exportShopee();break;
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
+    case 'shopeeCopy':shopeeCopy();break;
+    case 'shopeeCopyText':{const t=(S.shopee||{}).text||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('คัดลอกแล้ว ไปวางใน Shopee ได้เลย')).catch(()=>{const ta=document.getElementById('shp-t');if(ta){ta.select();document.execCommand('copy');toast('คัดลอกแล้ว');}});break;}
     case 'dlImgs':{const d=S.draft;if(d)zipDownload((d.images||[]).map((u,i)=>({name:`${dlName(d)}-${i+1}${i?'':'-cover'}`,url:u})),dlName(d)+'-images','รูป');break;}
     case 'dlPvs':{const d=S.draft;if(d)zipDownload((d.previews||[]).map((u,i)=>({name:`${dlName(d)}-preview-${i+1}`,url:u})),dlName(d)+'-previews','หน้าตัวอย่าง');break;}
     case 'dlSetImgs':{const d=S.draft;if(!d)break;const books=(d.items||[]).map(getProduct).filter(Boolean),f=[];
