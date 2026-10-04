@@ -1,5 +1,5 @@
 # ส่งชุดขายที่ผลิตเสร็จบนคอม (คิวหนังสือ / Cowork) ขึ้นหลังบ้าน SheetLab → การ์ด "📦 ชุดพร้อมลงขาย" ในแท็บสินค้า
-# ใช้: CONTENT_KEY=... python3 tools/sets/upload_set.py "~/Documents/Academic/ชุดขาย/<ชื่อชุด>"
+# ใช้: CONTENT_KEY=... python3 tools/sets/upload_set.py "/Volumes/PortableSSD/Sheetlap/ชุดขาย/<ชื่อชุด>"
 # ในโฟลเดอร์ชุดต้องมี set.json (ดู tools/sets/README.md) · เล่มที่ร้านมีอยู่แล้วใส่ "match" ไม่ต้องมีไฟล์
 # อัปเฉพาะ PDF + ปก + หน้าตัวอย่าง (ไฟล์เสียงอยู่ใน Google Drive ตาม QR ในเล่ม ไม่อัปขึ้นคลังร้าน ประหยัดพื้นที่)
 import json, os, io, sys, glob, urllib.request
