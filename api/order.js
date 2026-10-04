@@ -27,7 +27,8 @@ async function vip(req, res, m) {
   if (m === 'vip_me') {
     if (!me) return res.status(200).json({ ok: true, email: null, active: false, settings: pub });
     let mem = await V.getMember(me).catch(() => null); mem = await V.refreshMember(mem);
-    return res.status(200).json({ ok: true, email: me, active: V.isActive(mem), until: mem?.paid_until || null, plan: mem?.plan || null, card: !!mem?.stripe_sub, cancelAt: mem?.cancel_at || null, settings: pub });
+    const active = V.isActive(mem), review = active ? await V.openMistakeCount(me).catch(() => null) : null;
+    return res.status(200).json({ ok: true, email: me, active, review, until: mem?.paid_until || null, plan: mem?.plan || null, card: !!mem?.stripe_sub, cancelAt: mem?.cancel_at || null, settings: pub });
   }
   if (m === 'vip_mock' && req.method === 'GET') { // ข้อสอบเสมือนจริง: ชุดที่ทำได้ + สถานะสมาชิก (ดูรายการได้ทุกคน เริ่มทำได้เฉพาะ VIP)
     const M = await import('../lib/mock.js');
@@ -51,6 +52,13 @@ async function vip(req, res, m) {
     return res.status(200).json({ ok: true });
   }
   if (m === 'vip_logout') { res.setHeader('Set-Cookie', V.clearCookie); return res.status(200).json({ ok: true }); }
+  if (m === 'vip_code') { // ใส่รหัส 6 หลักจากอีเมล → เข้าระบบบนเครื่องนี้ (ใช้ในแอปบนหน้าจอโฮมได้)
+    const email = String(b.email || '').trim().toLowerCase(), code = String(b.code || '').replace(/\D/g, '');
+    if (!V.okEmail(email) || code.length !== 6) return res.status(400).json({ ok: false, error: 'ใส่อีเมลและรหัส 6 หลัก' });
+    const r = await V.checkCode(email, code);
+    if (!r.ok) return res.status(400).json({ ok: false, error: r.locked ? 'ใส่รหัสผิดหลายครั้ง รอ 15 นาทีแล้วขอรหัสใหม่' : 'รหัสไม่ถูกต้องหรือหมดอายุ ขอรหัสใหม่ได้' });
+    res.setHeader('Set-Cookie', V.sessionCookie(email)); return res.status(200).json({ ok: true });
+  }
   if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบก่อน' });
   if (m === 'vip_buy') { // บัตร: ตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้
     const plan = b.plan === 'yearly' ? 'yearly' : 'monthly', price = settings[plan];

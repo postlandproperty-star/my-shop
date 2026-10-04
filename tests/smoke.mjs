@@ -21,7 +21,7 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 // เซิร์ฟเวอร์หน้าเว็บในเครื่อง: ไฟล์ใน src/ ทุกเส้นทางที่ไม่ใช่ไฟล์ = index.html (เหมือน /p/slug บนเว็บจริง)
 // หน้ารวมหัวข้อ SEO (เซิร์ฟเวอร์สร้าง): สร้างจาก lib/topics.js + ข้อมูลชุดทดสอบ ให้ตรวจหน้าตาเหมือนหน้าอื่น
 const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'lib/topics.js'));
-const { vipPage, accountPage, vipMockPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
+const { vipPage, accountPage, vipMockPage, appPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
@@ -32,6 +32,7 @@ const server = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split('?')[0]);
   if (u === '/__free') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(freePage(FREEBIES[0], { site: BASE, upsell: SHOP.products.find((p) => p.status === 'published' && p.type !== 'bundle') })); }
   const fi = u.match(/^\/free-(img|file)\/([\w.-]+)$/); if (fi) { const f = path.join(SRC, 'free', fi[2]); if (fs.existsSync(f)) return res.end(fs.readFileSync(f)); res.statusCode = 404; return res.end(); }
+  if (u === '/__app') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(appPage({ site: BASE })); }
   if (u === '/__account' || u === '/__mock') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(u === '/__account' ? accountPage({ site: BASE }) : vipMockPage({ site: BASE })); }
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
@@ -244,11 +245,22 @@ try {
       await page.context().close();
     } catch (e) { pass(`[${kind}] บัญชี/ข้อสอบเสมือนจริง: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
+    // 3.59) แอปบนหน้าจอ (/app): ทางลัดทุกบริการ + เข้าระบบด้วยรหัส 6 หลักจากอีเมล
+    try { page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.goto(`${BASE}/__app`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('#app-in', { timeout: 4000 });
+      const ap = await page.evaluate(() => ({ tiles: document.querySelectorAll('.app-t').length, lock: document.querySelectorAll('.app-t.lock').length, vipHref: (document.querySelector('.app-vip') || {}).getAttribute?.('href'), manifest: !!document.querySelector('link[rel="manifest"]'), ios: !!document.querySelector('meta[name="apple-mobile-web-app-capable"]') }));
+      await page.click('#app-in'); await page.fill('#sl-le', 'buyer@test.co'); await page.click('#sl-lf button'); await page.waitForSelector('#sl-cf:not([hidden])', { timeout: 4000 });
+      const codeShown = await page.evaluate(() => /ใส่รหัส 6 หลัก/.test(document.getElementById('sl-ls').textContent) && document.activeElement && document.activeElement.id === 'sl-lc');
+      await layout(page, `[${kind}] แอป SheetLab (/app)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'app-mobile.png'), fullPage: true });
+      pass(`[${kind}] แอป SheetLab: 8 ทางลัด · ยังไม่เป็น VIP = ล็อกและพาไปหน้า VIP · ใส่อีเมลแล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 8 && ap.lock === 2 && ap.vipHref === '/vip' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] แอป SheetLab: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
     // 3.6) หน้าสมาชิก VIP: ยังไม่เปิด = "เร็วๆ นี้" · เปิดแล้ว = ราคาจากหลังบ้าน + ปุ่มสมัคร + ฟอร์มเข้าระบบด้วยอีเมล
     for (const mode of ['closed', 'open']) try {
       page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/__vip/${mode}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(500);
-      const v = await page.evaluate(() => ({ soon: document.body.innerText.includes('เร็วๆ นี้'), buy: document.querySelectorAll('.vp-buy').length, packs: document.querySelectorAll('.vp-pack').length, login: !!document.querySelector('#vp-login') }));
+      const v = await page.evaluate(() => ({ soon: document.body.innerText.includes('เร็วๆ นี้'), buy: document.querySelectorAll('.vp-buy').length, packs: document.querySelectorAll('.vp-pack').length, login: !!document.querySelector('#sl-lf') }));
       pass(`[${kind}] VIP ${mode === 'open' ? 'เปิดรับ: ราคา 2 แบบบัตร + PromptPay 2 แบบ + ฟอร์มเข้าระบบ' : 'ยังไม่เปิด: ขึ้นเร็วๆ นี้ ไม่มีปุ่มสมัคร'}`, mode === 'open' ? v.buy === 2 && v.packs === 2 && v.login && !v.soon : v.soon && !v.buy && !v.packs, JSON.stringify(v));
       await layout(page, `[${kind}] หน้า VIP ${mode}`);
       if (mode === 'open') await page.screenshot({ path: path.join(OUT, `vip-${kind}.png`), fullPage: true });

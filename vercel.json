@@ -33,6 +33,18 @@
       "destination": "/api/page?freeimg=:f"
     },
     {
+      "source": "/sw.js",
+      "destination": "/api/page?pwa=sw"
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "destination": "/api/page?pwa=manifest"
+    },
+    {
+      "source": "/app",
+      "destination": "/api/page?app=1"
+    },
+    {
       "source": "/account",
       "destination": "/api/page?acct=1"
     },

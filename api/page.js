@@ -8,7 +8,8 @@ import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } 
 import { sbSelect } from '../lib/shop.js';
 import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/topics.js';
 import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
-import { vipPage, vipReviewPage, accountPage, vipMockPage } from '../lib/vipPage.js';
+import { vipPage, vipReviewPage, accountPage, vipMockPage, appPage } from '../lib/vipPage.js';
+import { PWA_MANIFEST, SW_JS } from '../lib/pwa.js';
 import { loadVip, vipSellable } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
 import { FREEBIES, freeBySlug, freePage } from '../lib/free.js';
@@ -124,7 +125,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   }
   const brand = String(req.query.brand || '');
   if (brand) { // โลโก้ร้าน (ทำจาก Canva) ไอคอนแท็บ/หน้าจอมือถือ ไฟล์อยู่ใน src/brand
-    if (!/^(favicon\.ico|apple-touch-icon\.png|icon-(32|48|192|512)\.png)$/.test(brand)) return res.status(404).end();
+    if (!/^(favicon\.ico|apple-touch-icon\.png|icon-(32|48|192|512|maskable)\.png)$/.test(brand)) return res.status(404).end();
     let buf = null; try { buf = readFileSync(join(process.cwd(), 'src', 'brand', brand)); } catch (e) {}
     if (!buf) return res.status(404).end();
     res.setHeader('Content-Type', brand.endsWith('.ico') ? 'image/x-icon' : 'image/png'); res.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=2592000');
@@ -148,6 +149,14 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const up = (shop.products || []).find((p) => p.id === f.upsell && p.status === 'published') || null;
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300');
     return res.status(200).send(freePage(f, { settings: shop.settings || {}, site: NEW_SITE, upsell: up }));
+  }
+  const pwa = String(req.query.pwa || ''); // เว็บแอป: manifest + service worker (ไม่แคชหน้าเว็บ)
+  if (pwa === 'manifest') { res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600'); return res.status(200).send(JSON.stringify(PWA_MANIFEST)); }
+  if (pwa === 'sw') { res.setHeader('Content-Type', 'application/javascript; charset=utf-8'); res.setHeader('Cache-Control', 'no-cache'); return res.status(200).send(SW_JS); }
+  if (req.query.app === '1') { // หน้าแอป (เปิดจากไอคอนบนหน้าจอ)
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
+    const shop = await loadShop().catch(() => ({ settings: {} }));
+    return res.status(200).send(appPage({ settings: shop.settings, site: NEW_SITE }));
   }
   if (req.query.acct === '1') { // บัญชีของฉัน: บัญชีเดียวทุกบริการ (ข้อมูลโหลดหลังเข้าระบบ)
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
