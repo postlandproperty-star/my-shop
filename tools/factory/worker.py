@@ -6,6 +6,8 @@
 #   CONTENT_KEY=... python3 tools/factory/worker.py done <job_id> <ไฟล์.pdf> [--cover cover.png] [--listing listing.json] [--summary "..."]
 #        อัป PDF + ปก แล้วแจ้งเสร็จ (หน้าตัวอย่าง 3-6 เว็บทำเองตอนคุณแดนกดอนุมัติ) → เว็บขึ้นการ์ด "จากโรงงาน รออนุมัติ" ให้คุณแดน
 #   CONTENT_KEY=... python3 tools/factory/worker.py done-notion <job_id> <notion_url> [--cover cover.png] [--images a.png b.png] [--listing listing.json]
+#   CONTENT_KEY=... python3 tools/factory/worker.py fill <job_id> [<ไฟล์.pdf>] --listing listing.json
+#        งานเติมรายละเอียดสินค้าเดิม (fill_id): ส่งเฉพาะช่องใน fill_need · ใส่ PDF ถ้าต้องทำหน้าตัวอย่าง (ไม่อัป PDF ซ้ำ)
 #   CONTENT_KEY=... python3 tools/factory/worker.py fail <job_id> "เหตุผลสั้นๆ"
 #
 # listing.json = ข้อความหน้าขาย {name, headline, desc, features, forwho, notfor, faq, specs, toc} (ห้ามใส่ราคา)
@@ -98,7 +100,7 @@ def main():
         sync()
         if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
         jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
-        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku']} for x in jobs], ensure_ascii=False, indent=1))
+        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'auto', 'fill_id', 'fill_need', 'fill_url']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
         r = api('factory_claim', {'id': a.args[0], 'by': 'mac'}); print(json.dumps(r, ensure_ascii=False)[:300])
         if r.get('ok'):
@@ -116,6 +118,16 @@ def main():
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'pages': body['pages'], 'file_url': body['file_url']}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
         unlock()
+    elif a.cmd == 'fill':
+        job = a.args[0]; body = {'id': job, 'by': 'mac', 'summary': a.summary}
+        if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))
+        if len(a.args) > 1:
+            pdf = os.path.expanduser(a.args[1])
+            try: body['previews'], body['pages'] = previews(job, pdf)
+            except Exception as e: print('previews', e, file=sys.stderr)
+        r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'previews': len(body.get('previews') or [])}, ensure_ascii=False))
+        if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
+        unlock()
     elif a.cmd == 'done-notion':
         job, url = a.args[0], a.args[1]
         imgs = ([cover(job, os.path.expanduser(a.cover))] if a.cover else []) + [upload(job, os.path.expanduser(p), os.path.basename(p), 'image/png') for p in a.images]
@@ -127,7 +139,7 @@ def main():
         print(json.dumps(api('factory_fail', {'id': a.args[0], 'error': ' '.join(a.args[1:])[:400]}), ensure_ascii=False)[:300])
         unlock()
     else:
-        sys.exit('คำสั่ง: queue | claim | done | done-notion | fail')
+        sys.exit('คำสั่ง: queue | claim | done | fill | done-notion | fail')
 
 
 if __name__ == '__main__':

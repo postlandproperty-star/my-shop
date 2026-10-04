@@ -486,6 +486,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-body{border-top-left-radius:0;min-height:180px}.fqt-hint{margin:0 0 10px}.fqt-lab{display:block;font-weight:700;margin:0 0 6px}
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
+.fl-bulk{display:flex;gap:8px 12px;flex-wrap:wrap;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;margin:0 0 12px;background:var(--surface)}.fl-bulk .fine{flex-basis:100%}
 .fl-help{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 12px;background:var(--bg)}.fl-help summary{cursor:pointer;font-weight:600}.fl-help p{margin:8px 0 0;font-size:14px}.fl-sku{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}.fl-sku th,.fl-sku td{border:1px solid var(--line);padding:5px 8px;text-align:left}.fl-sku th{background:var(--surface)}.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
 @media(max-width:640px){.fqh{grid-template-columns:1fr}.fqh-nums button{flex:1}.fqt button{padding:8px 11px;font-size:14px}}
 .fnote{margin:0 0 14px;border-left:4px solid #E8A23A;background:var(--warnbg)}.fnote ul{margin:6px 0 0;padding-left:18px}.fnote li{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.fnote code{font-size:12.5px;background:var(--surface);padding:1px 5px;border-radius:5px}
@@ -2859,15 +2860,35 @@ function setImportBox(){
 const b2n=v=>Number(v)||0;
 /* ส่งเล่มจากคลังบน Mac ขึ้นร้าน: สั่งเป็นงาน export (Mac อัป PDF + ปก + เขียนหน้าขายจากเนื้อหาจริง ไม่ผลิตใหม่ · เร่ง)
    เสร็จแล้วหลังบ้านสร้างเป็นฉบับร่างในแท็บ ✨ มาใหม่ ให้เอง พร้อมบอกว่าไฟล์เสียงอยู่ที่ไหนใน Mac และต้องอัปขึ้น Drive ที่ไหน */
-async function libExport(no){const b=((FLIB.d||{}).books||[]).find(x=>String(x.no)===String(no));if(!b)return;
+function libPending(b){return (FJOBS||[]).find(j=>String(j.export_no||'')===String(b.no)&&(['queued','producing'].includes(j.status)||(j.status==='done'&&j.listing==='pending')));}
+function libTodo(){return ((FLIB.d||{}).books||[]).filter(b=>!libMatch(b)&&!libPending(b));}
+async function libExportAll(){const todo=libTodo();if(!todo.length)return;S.confirm='';let ok=0;
+  for(const b of todo){S.libBusy=`${ok+1}/${todo.length}`;render(true);try{await libExport(b.no,true);ok++;}catch(e){console.error(e);}}
+  S.libBusy='';FJOBS=null;loadFactoryJobs();toast(`ส่งคำขอลงร้าน ${ok} เล่มแล้ว Mac จะทำต่อกันรวดเดียว เสร็จแล้วขึ้นที่ ✨ มาใหม่`);render(true);}
+async function libExport(no,quiet){const b=((FLIB.d||{}).books||[]).find(x=>String(x.no)===String(no));if(!b)return;
   try{const j=await authFetch('/api/content?action=factory_order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:b.title,export_no:b.no,sku:b.sku||('SL-'+b.no),rush:'1',price:0,category:b.cat,purpose:'ส่งเล่มที่ผลิตแล้วในคลังขึ้นร้าน (แท็บมาใหม่) ไม่ต้องผลิตใหม่',notes:b.audio?`มีไฟล์เสียงที่ ${b.audio_path}${b.audio_drive?' · Drive: '+b.audio_drive:''}`:''})});
-    if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');FJOBS=null;loadFactoryJobs();toast(`ส่งคำขอแล้ว: ${b.sku||'SL-'+b.no} Mac จะอัปไฟล์และเขียนหน้าขายให้ภายใน 1 ชม. แล้วขึ้นในแท็บสินค้า → ✨ มาใหม่`);}
-  catch(e){toast('ส่งไม่สำเร็จ: '+(e.message||e));}render(true);}
+    if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');if(quiet){(FJOBS||(FJOBS=[])).push(j.job);return;}FJOBS=null;loadFactoryJobs();toast(`ส่งคำขอแล้ว: ${b.sku||'SL-'+b.no} Mac จะอัปไฟล์และเขียนหน้าขายให้ภายใน 1 ชม. แล้วขึ้นในแท็บสินค้า → ✨ มาใหม่`);}
+  catch(e){if(quiet)throw e;toast('ส่งไม่สำเร็จ: '+(e.message||e));}render(true);}
 SETI.exp={};SETI.bun={};
 /* ทุกเล่มที่โรงงานทำเสร็จ (ผลิตใหม่ · จากคลัง · เล่มในชุด) → ฉบับร่างในแท็บ ✨ มาใหม่ กรอกรายละเอียดครบ (ข้อความหน้าขาย ปก หน้าตัวอย่าง SKU ราคาเสนอ)
    คุณแดนตรวจแล้วกดเผยแพร่เอง · Notion template / ขายต่างประเทศ ยังใช้การ์ดอนุมัติเดิม (ต้องใส่ลิงก์ Publish) */
+/* งานเติมรายละเอียดสินค้าเดิม (ระบบสร้างเองทุกชั่วโมง): เติมเฉพาะช่องที่ยังว่าง ไม่แก้ข้อความเดิม ไม่แก้ราคา ไม่เปลี่ยนสถานะ */
+const FILL_TH={headline:'หัวข้อขาย',desc:'คำอธิบาย',features:'สิ่งที่ได้',forwho:'เหมาะกับใคร',notfor:'ไม่เหมาะกับใคร',faq:'คำถามที่พบบ่อย',toc:'สารบัญ',specs:'รายละเอียดไฟล์',previews:'หน้าตัวอย่าง'};
+function facFill(js){const marks=[],got=[];
+  for(const j of js){const p=D.products.find(x=>x.id===j.fill_id);marks.push({id:j.id,product_id:j.fill_id});if(!p)continue;
+    const lc=j.listing_copy||{},f=[];
+    for(const k of String(j.fill_need||'').split(',').filter(k=>FILL_TH[k])){
+      if(k==='previews'){if(!(p.previews||[]).length&&(j.previews||[]).length){p.previews=j.previews.slice(0,6);f.push(k);}}
+      else if(!String(p[k]||'').trim()&&String(lc[k]||'').trim()){p[k]=lc[k];f.push(k);}}
+    if(f.length)got.push(`${p.sku||''} ${String(p.name).slice(0,30)} (${f.map(k=>FILL_TH[k]).join(', ')})`);}
+  if(!marks.length)return;
+  const mark=()=>Promise.all(marks.map(m=>adminPost('/api/content?action=factory_list',m).catch(()=>{})));
+  if(!got.length){mark();return;}
+  save();clearTimeout(saveTimer);
+  flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return mark();}).then(()=>{toast(`📝 เติมรายละเอียดหน้าขายที่ยังว่างแล้ว ${got.length} สินค้า`);console.log('เติมรายละเอียด:',got);render(true);}).catch(e=>{console.error(e);js.forEach(j=>delete SETI.exp[j.id]);});}
 function facExportImport(){if(!sbSession||!D.products.length)return;
-  for(const j of (FAC.exports||[]).filter(x=>!SETI.exp[x.id])){SETI.exp[j.id]=1;
+  const fills=(FAC.exports||[]).filter(x=>x.fill_id&&!SETI.exp[x.id]);fills.forEach(j=>SETI.exp[j.id]=1);if(fills.length)facFill(fills);
+  for(const j of (FAC.exports||[]).filter(x=>!x.fill_id&&!SETI.exp[x.id])){SETI.exp[j.id]=1;
     if(D.products.some(p=>p.fromJob===j.id)){adminPost('/api/content?action=factory_list',{id:j.id,product_id:D.products.find(p=>p.fromJob===j.id).id}).catch(()=>{});continue;}
     const lc=j.listing_copy||{},no=j.export_no||(String(j.file_url||'').match(/\/(\d{3})_\d{4}-\d{2}-\d{2}_/)||[])[1]||'',sku=j.sku||(no?'SL-'+no:''),name=lc.name||j.title,pages=Number(j.pages)||0;
     const note=[j.export_no?`จากคลังบน Mac${sku?' ('+sku+')':''} · ตั้งราคาก่อนเผยแพร่`:`ผลิตใหม่จากโรงงาน${sku?' ('+sku+')':''} · ราคาเสนอ ${Number(j.price)>=1?'฿'+j.price:'ยังไม่ตั้ง'}`,j.set_name?`เล่ม ${j.set_no||'?'} ในชุด "${j.set_name}"`:'',
@@ -3125,8 +3146,8 @@ let FPAUSED=false,FORDER=[];
 function loadFactoryJobs(silent){if(!silent){FJOBS=[];S.floading=true;}adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
 function fqRow(j,n,qLen){
   const open=S.fqOpen===j.id,prod=j.status==='producing',e=open?(S.fqe||{}):{};const v=k=>esc(e[k]!=null?e[k]:(j[k]==null?'':j[k]));
-  const meta=[j.category,j.pages?j.pages+' หน้า':'',Number(j.price)>=1?baht(j.price):'แจกฟรี',j.ordered_by==='owner'?'':'สั่งโดย '+(j.ordered_by==='auto'?'ระบบอัตโนมัติ':member(j.ordered_by||'manager').name)].filter(Boolean).join(' · ');
-  const badge=(prod?'<span class="fq-b go">⚙️ กำลังผลิตในคอม</span>':j.paused?'<span class="fq-b pz">⏸ พักไว้</span>':n===1&&!FPAUSED?'<span class="fq-b nx">ถัดไป</span>':'')+(j.set_name?`<span class="fq-b">📚 ${esc(String(j.set_name).slice(0,24))}${j.set_no?' #'+esc(j.set_no):''}</span>`:'')+(j.rush?'<span class="fq-b go">⚡ เร่ง</span>':'');
+  const meta=[j.category,j.pages?j.pages+' หน้า':'',j.export_no||j.fill_id?'':Number(j.price)>=1?baht(j.price):'แจกฟรี',j.ordered_by==='owner'?'':'สั่งโดย '+(j.ordered_by==='auto'?'ระบบอัตโนมัติ':member(j.ordered_by||'manager').name)].filter(Boolean).join(' · ');
+  const badge=(prod?'<span class="fq-b go">⚙️ กำลังผลิตในคอม</span>':j.paused?'<span class="fq-b pz">⏸ พักไว้</span>':n===1&&!FPAUSED?'<span class="fq-b nx">ถัดไป</span>':'')+(j.set_name?`<span class="fq-b">📚 ${esc(String(j.set_name).slice(0,24))}${j.set_no?' #'+esc(j.set_no):''}</span>`:'')+(j.export_no?'<span class="fq-b">📤 จากคลัง</span>':'')+(j.fill_id?'<span class="fq-b">📝 เติมรายละเอียด</span>':'')+(j.rush&&!j.auto?'<span class="fq-b go">⚡ เร่ง</span>':'');
   const sel=(k,list)=>`<select class="input" data-fqe="${k}"><option value="">-</option>${list.map(o=>`<option ${String(e[k]!=null?e[k]:j[k]||'')===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
   return `<li class="fq-item${j.paused?' paused':''}${open?' open':''}${prod?' prod':''}" style="--c:${fqColor((j.category||'')+' '+j.title)}">
     <div class="fq-top"><button class="fq-main" data-a="fqOpen" data-id="${esc(j.id)}" aria-expanded="${open}"><span class="fq-n">${prod?'⚙️':n}</span><span class="fq-mid"><span class="fq-t">${esc(j.title)}</span><span class="fq-m">${esc(meta)}</span></span>${badge}</button>
@@ -3152,7 +3173,13 @@ function fqRow(j,n,qLen){
 }
 /* คลังหนังสือบน Mac/SSD: Mac ส่งรายการ + ปกย่อขึ้นมาทุกชั่วโมง (tools/factory/catalog.py --sync) ดูได้จากหลังบ้าน/มือถือ ไม่ต้องเปิดแอปบน Mac */
 const FLIB={d:null,loading:false};
-function loadFacLib(){if(FLIB.loading)return;FLIB.loading=true;adminApi('/api/content?action=factory_library').then(j=>{FLIB.d=j&&j.ok?j:{books:[],sets:[]};}).catch(()=>{FLIB.d={books:[],sets:[]};}).then(()=>{FLIB.loading=false;render(true);});}
+const normT=t=>String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+function libMatch(b){const sku=b.sku||('SL-'+b.no),k=normT(b.title).slice(0,12);return D.products.find(p=>p.sku===sku)||(k.length>=8?D.products.find(p=>!isBundle(p)&&normT(p.name).slice(0,12)===k):null)||null;}
+/* สินค้าเดิมที่ตรงกับเล่มในคลัง (ชื่อเหมือนกัน) แต่ได้เลข SL-W ไว้ → เปลี่ยนเป็นเลขเดียวกับไฟล์บน Mac (SL-NNN) จะได้ไม่งง */
+function libSkuSync(){if(!sbSession||!FLIB.d)return;let ch=0;const used=new Set(D.products.map(p=>p.sku));
+  for(const b of FLIB.d.books||[]){const sku=b.sku||('SL-'+b.no),p=libMatch(b);if(p&&/^SL-W/.test(p.sku||'')&&!used.has(sku)){used.delete(p.sku);p.sku=sku;used.add(sku);ch++;}}
+  if(ch){save();toast(`ปรับเลข SKU ให้ตรงกับไฟล์บน Mac ${ch} สินค้า`);}}
+function loadFacLib(){if(FLIB.loading)return;FLIB.loading=true;adminApi('/api/content?action=factory_library').then(j=>{FLIB.d=j&&j.ok?j:{books:[],sets:[]};libSkuSync();}).catch(()=>{FLIB.d={books:[],sets:[]};}).then(()=>{FLIB.loading=false;render(true);});}
 function facMacPills(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if(!d||!d.at)return '';
   const mins=Math.round((Date.now()-Date.parse(d.at))/6e4);
   return `${d.ssd===false?'<span class="fq-pc warn">💾 SSD ไม่ได้เสียบ</span>':'<span class="fq-pc ok">💾 SSD พร้อม</span>'}${d.running?`<span class="fq-pc warn" title="${esc(d.running.note||'')}">⚙️ กำลังผลิต: ${esc(String(d.running.note||'').split('\n')[0].slice(0,40))}</span>`:''}${mins>180?`<span class="fq-pc warn">Mac ส่งข้อมูลล่าสุด ${mins<1440?Math.round(mins/60)+' ชม.':Math.round(mins/1440)+' วัน'}ที่แล้ว</span>`:''}`;}
@@ -3169,7 +3196,8 @@ function facLib(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if
     <p class="fine fqt-hint">📚 ${B.length} เล่ม · ผลิตใน 7 วัน ${wk} · ${pg.toLocaleString('th-TH')} หน้า${(d.sets||[]).length?' · ชุดขาย '+d.sets.length:''} · อัปเดต ${new Date(d.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p>
     ${(d.sets||[]).length?`<p class="fine" style="margin:8px 0">📦 ${d.sets.map(s=>`${esc(s.name)} (${s.n} เล่ม)`).join(' · ')}</p>`:''}
     <div class="flib-bar"><input class="input" data-flq="1" value="${esc(S.flq||'')}" placeholder="ค้นหาชื่อเล่มหรือเลขที่" aria-label="ค้นหาหนังสือ"><button class="chip${!cat?' on':''}" data-a="flCat" data-v="" aria-pressed="${!cat}">ทั้งหมด</button>${cats.map(c=>`<button class="chip${cat===c?' on':''}" data-a="flCat" data-v="${esc(c)}" aria-pressed="${cat===c}">${esc(c)}</button>`).join('')}</div>
-    <div class="flib" id="flib">${list.map(b=>{const sku=b.sku||('SL-'+b.no),inShop=D.products.find(p=>p.sku===sku),pend=(FJOBS||[]).find(j=>String(j.export_no||'')===String(b.no)&&(['queued','producing'].includes(j.status)||(j.status==='done'&&j.listing==='pending')));
+    ${(()=>{const todo=libTodo();return todo.length?`<div class="fl-bulk"><span><b>${todo.length} เล่ม</b> ในคลังยังไม่อยู่ในร้าน</span><button class="btn btn-sm ${S.confirm==='libAll'?'btn-danger':'btn-dark'}" data-a="libExportAll" ${S.libBusy?'disabled':''}>${S.libBusy?`กำลังส่ง ${S.libBusy}...`:S.confirm==='libAll'?`กดอีกครั้งเพื่อยืนยัน (${todo.length} เล่ม)`:`📤 ลงร้านทุกเล่มที่ยังไม่มี (${todo.length})`}</button><span class="fine">Mac ทำต่อกันรวดเดียว รอบละไม่เกิน 6 เล่ม (ประมาณ ${Math.ceil(todo.length/6)} ชม.) · ใช้ token เล่มละประมาณ 5–10% ของการผลิตใหม่ (${todo.length} เล่ม ≈ ผลิตใหม่ ${Math.max(1,Math.round(todo.length*0.08))} เล่ม) · ข้ามเล่มที่ร้านมีแล้ว</span></div>`:'';})()}
+    <div class="flib" id="flib">${list.map(b=>{const sku=b.sku||('SL-'+b.no),inShop=libMatch(b),pend=(FJOBS||[]).find(j=>String(j.export_no||'')===String(b.no)&&(['queued','producing'].includes(j.status)||(j.status==='done'&&j.listing==='pending')));
       return `<div class="flib-b" data-q="${esc((b.title+' '+b.no+' '+sku).toLowerCase())}" ${q&&!(b.title+' '+b.no+' '+sku).toLowerCase().includes(q)?'hidden':''}>${b.thumb?`<img src="${esc(b.thumb)}" alt="" loading="lazy">`:'<span class="flib-no"></span>'}<em>${esc(sku)}</em><b>${esc(b.title)}</b><span class="fine">${esc(b.cat)} · ${b.pages} หน้า · ${b.where==='SSD'?'💾 SSD':'💻 Mac'}</span>
       ${b.audio?`<span class="fl-au">🎧 เสียงใน Mac: <code>${esc(String(b.audio_path||'').replace(/^\/Users\/[^/]+/,'~'))}</code><br>${b.audio_drive?`Drive: <a href="${esc(b.audio_drive)}" target="_blank" rel="noopener noreferrer">เปิดโฟลเดอร์เสียง ↗</a>`:`ยังไม่อยู่ใน Drive → อัปไปที่ <a href="${esc(b.audio_target||'')}" target="_blank" rel="noopener noreferrer">Sheetlab/Academic Audio ↗</a>`}</span>`:''}
       <div class="fl-act">${inShop?`<span class="badge ok">✓ ในร้านแล้ว</span>`:pend?'<span class="badge warn">⏳ กำลังส่งขึ้นร้าน</span>':`<button class="chip" data-a="libExport" data-v="${esc(b.no)}">📤 ลงร้าน (มาใหม่)</button>`}</div></div>`;}).join('')||'<p class="fine">ไม่พบเล่มที่ค้นหา</p>'}</div>
@@ -5184,6 +5212,7 @@ function act(a,el){
     case 'flCat':S.flcat=el.dataset.v;render(true);break;
     case 'facTab':S.facTab=el.dataset.v;render(true);break;
     case 'libExport':libExport(el.dataset.v);break;
+    case 'libExportAll':if(S.confirm!=='libAll'){S.confirm='libAll';render(true);break;}libExportAll();break;
     case 'facGoNew':S.tab='products';S.pstat='new';S.edit=null;go('admin');break;
     case 'facEdit':{const p=getProduct(id);if(!p)break;S.tab='products';S.draft=isBundle(p)?bundleDraft(p):initDraft(p);S.edit=id;S.err='';go('admin');break;}
     case 'ordMode':S.ordMode=el.dataset.v;S.fqErr='';render(true);break;

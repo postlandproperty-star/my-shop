@@ -322,6 +322,13 @@ try {
         const sk = await page.evaluate(() => { ensureSkus(); const ps = D.products; return { all: ps.every((p) => /^SL-/.test(p.sku || '')), set: (ps.find((p) => p.type === 'bundle') || {}).sku || '', uniq: new Set(ps.map((p) => p.sku)).size === ps.length }; });
         pass(`[${kind}] โรงงาน: คลังมีเลข SKU + บอกที่เก็บไฟล์เสียงใน Mac/Drive + ปุ่มลงร้าน (มาใหม่) · สินค้าทุกชิ้นได้ SKU ไม่ซ้ำ`, /SL-046/.test(fl.sku) && /SL-044/.test(fl.sku) && fl.help && /เสียงใน Mac/.test(fl.audio) && /Academic Audio/.test(fl.audio) && fl.exp >= 1 && sk.all && /^SL-SET\d\d$/.test(sk.set) && sk.uniq, JSON.stringify({ sku: fl.sku, audio: fl.audio.slice(0, 60), exp: fl.exp, sk }));
         await page.locator('.fqt-body').screenshot({ path: path.join(OUT, `factory-lib-${kind}.png`) }).catch(() => {});
+        const fb = await page.evaluate(async () => { const bulk = !!document.querySelector('[data-a="libExportAll"]');
+          const p = D.products.find((x) => x.type !== 'bundle'), keep = { headline: p.headline, faq: p.faq, status: p.status, price: p.price, previews: p.previews };
+          p.faq = ''; p.previews = [];
+          FAC.exports = [{ id: 'f1', status: 'done', listing: 'pending', fill_id: p.id, fill_need: 'faq,previews,headline', listing_copy: { headline: 'ใหม่', faq: 'Q|A' }, previews: ['https://x/pv3.jpg'] }]; SETI.exp = {}; facExportImport(); await new Promise((r) => setTimeout(r, 400));
+          const r = { bulk, faq: p.faq, pv: (p.previews || []).length, head: p.headline === keep.headline, st: p.status === keep.status, pr: p.price === keep.price, made: D.products.some((x) => x.fromJob === 'f1') };
+          Object.assign(p, keep); FAC.exports = []; return r; });
+        pass(`[${kind}] โรงงาน: ปุ่มลงร้านทุกเล่มที่ยังไม่มี + งานเติมรายละเอียดสินค้าเดิมเติมเฉพาะช่องที่ว่าง (ไม่แก้ข้อความเดิม/ราคา/สถานะ)`, fb.bulk && fb.faq === 'Q|A' && fb.pv === 1 && fb.head && fb.st && fb.pr && !fb.made, JSON.stringify(fb));
         const ai = await page.evaluate(async () => { const mk = (id, no, price) => ({ id, status: 'done', listing: 'pending', title: 'Book ' + no, price, set_name: 'ชุดทดสอบ', set_no: no, images: ['https://x/' + id + '.jpg'], previews: ['https://x/p3.jpg', 'https://x/p4.jpg'], listing_copy: { name: 'Book ' + no, headline: 'H', desc: 'D', features: 'F' }, sku: 'SL-10' + no });
           FAC.all = [mk('j1', 1, 199), mk('j2', 2, 149)]; FAC.exports = FAC.all.slice(); SETI.exp = {}; SETI.bun = {}; facExportImport(); await new Promise((r) => setTimeout(r, 600));
           const a = D.products.find((p) => p.fromJob === 'j1'), bun = D.products.find((p) => p.fromSetName === 'ชุดทดสอบ');

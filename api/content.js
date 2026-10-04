@@ -13,7 +13,7 @@
 //   ?action=publish  (cron หรือแอดมิน) โพสต์ที่อนุมัติแล้วและถึงเวลา → ขึ้นเพจ Facebook
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
-import { loadShop, verifyAdmin, sbPatch, stripe, piToSession, loadTestEmails } from '../lib/shop.js';
+import { loadShop, loadLinks, verifyAdmin, sbPatch, stripe, piToSession, loadTestEmails } from '../lib/shop.js';
 import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
@@ -133,12 +133,41 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 
 
 // โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
-const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush', 'export_no', 'sku']; // export_no = ส่งเล่มที่ผลิตแล้วในคลังบน Mac ขึ้นร้าน (ไม่ผลิตใหม่) · sku = SL-NNN // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
+const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'fill_id', 'fill_need']; // fill_id = เติมรายละเอียดหน้าขายที่ยังว่างของสินค้าเดิม (ไม่แก้ข้อความเดิม/ราคา) // export_no = ส่งเล่มที่ผลิตแล้วในคลังบน Mac ขึ้นร้าน (ไม่ผลิตใหม่) · sku = SL-NNN // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
 // ประเภทงานโรงงาน: pdf (ชีท PDF ค่าเริ่มต้น) | notion (Notion template สร้างใน Notion ของคุณแดน คุณแดนกด Publish เอง)
 const jobKind = (b) => (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
 const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|app\.notion\.com)\//i.test(String(u || ''));
 // คอมคุณแดน (โรงงานหลัก) แวะมาเมื่อไหร่ล่าสุด → หน้าโรงงานบนเว็บแสดงสถานะ/เตือนถ้าหายไปนาน
 async function workerBeat({ note = '' } = {}) { try { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_worker', data: { last_seen: new Date().toISOString(), note }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {} }
+// ทำ listing ให้ครบทั้งอดีตและอนาคต (คุณแดนสั่ง 4 ต.ค. 69) — เรียกทุกครั้งที่ Mac ส่งคลังขึ้นมา (ทุกชั่วโมง)
+//   1) เล่มในคลังบน Mac ที่ยังไม่อยู่ในร้าน → งาน export (ลงแท็บมาใหม่ เป็นฉบับร่าง คุณแดนตั้งราคา/กดเผยแพร่เอง)
+//   2) สินค้าในร้านที่หน้าขายยังมีช่องว่าง → งาน fill (Mac อ่านไฟล์แล้วเติมเฉพาะช่องที่ว่าง ไม่แก้ข้อความเดิม ไม่แก้ราคา)
+// งานอัตโนมัติต่อท้ายคิวเสมอ (ใบสั่งของคุณแดนได้ก่อน) · ทำครั้งเดียวต่อเล่ม/สินค้า ถ้าคุณแดนยกเลิกก็ไม่สร้างซ้ำ
+const normT = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const LIST_NEED = ['headline', 'desc', 'features', 'forwho', 'notfor', 'faq', 'toc', 'specs', 'previews'];
+const listGaps = (p) => LIST_NEED.filter((k) => k === 'previews' ? (p.kind !== 'notion' && !(p.previews || []).length) : !String(p[k] || '').trim());
+async function autoListings(books) {
+  const [shop, jobs, links] = await Promise.all([loadShop(), loadJobs(), loadLinks().catch(() => ({}))]);
+  const prods = shop.products.filter((p) => p.type !== 'bundle' && !/ทดสอบ|^test/i.test(String(p.name || '')));
+  const recent = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10), live = (j) => !['cancelled', 'failed'].includes(j.status);
+  const k12 = (t) => normT(t).slice(0, 12), now = new Date().toISOString(), { randomUUID } = await import('node:crypto');
+  const add = (o) => ({ id: randomUUID(), status: 'queued', created_at: now, ordered_by: 'auto', auto: true, prio: 9e12 + jobs.length + 1, rush: '1', price: 0, kind: 'pdf', lang: 'th', ...o });
+  let ex = 0, fill = 0;
+  for (const b of books) {
+    const sku = b.sku || `SL-${b.no}`, k = k12(b.title);
+    if (!b.no || (b.day && b.day >= recent)) continue; // เล่มที่เพิ่งผลิต มีใบสั่งของมันเองอยู่แล้ว
+    if (prods.some((p) => p.sku === sku || (k.length >= 8 && k12(p.name) === k))) continue;
+    if (jobs.some((j) => String(j.export_no || '') === String(b.no) || (live(j) && (j.sku === sku || (k.length >= 8 && k12(j.title) === k))))) continue;
+    jobs.push(add({ title: b.title, export_no: b.no, sku, category: b.cat || '', purpose: 'อัตโนมัติ: เล่มในคลังบน Mac ที่ยังไม่อยู่ในร้าน → ลงแท็บมาใหม่ (ไม่ผลิตใหม่)', notes: b.audio ? `มีไฟล์เสียงที่ ${b.audio_path}${b.audio_drive ? ' · Drive: ' + b.audio_drive : ''}` : '' })); ex++;
+  }
+  for (const p of prods) {
+    const gaps = listGaps(p); if (!gaps.length || p.kind === 'notion' && gaps.length === 1 && gaps[0] === 'previews') continue;
+    if (jobs.some((j) => j.fill_id === p.id) || (p.fromJob && jobs.some((j) => j.id === p.fromJob && j.status === 'done' && j.listing === 'pending'))) continue;
+    jobs.push(add({ title: p.name, fill_id: p.id, fill_need: gaps.join(','), fill_url: String(links[p.id] || '').slice(0, 500), sku: p.sku || '', category: p.cat || '', purpose: 'อัตโนมัติ: เติมรายละเอียดหน้าขายที่ยังว่าง (ไม่แก้ข้อความเดิม ไม่แก้ราคา)' })); fill++;
+  }
+  if (ex || fill) { await saveJobs(jobs); await logNote('factory', `ทำ listing อัตโนมัติ: ส่งเล่มในคลังลงร้าน ${ex} เล่ม · เติมรายละเอียดสินค้าเดิม ${fill} สินค้า`); }
+  return { export: ex, fill };
+}
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 // ชุดหนังสือและผลิตอัตโนมัติของโรงงาน (คุณแดนตั้งจากแท็บโรงงาน) · shop_state id=factory_cfg
 async function loadFacCfg() { const r = await sb('shop_state?id=eq.factory_cfg&select=data'); const d = r?.[0]?.data || {}; return { sets: Array.isArray(d.sets) ? d.sets : null, auto: { on: false, per_week: 1, sets: [], ...(d.auto || {}) }, paused: !!d.paused, updated_at: d.updated_at || null }; }
@@ -1900,8 +1929,9 @@ export default async function handler(req, res) {
       const sets = (Array.isArray(body.sets) ? body.sets : []).slice(0, 50).map((x) => ({ name: s(x.name, 200), n: Number(x.n) || 0, where: x.where === 'SSD' ? 'SSD' : 'Mac' }));
       const data = { at: new Date().toISOString(), ssd: body.ssd !== false, running: body.running && typeof body.running === 'object' ? { note: s(body.running.note, 300), since: s(body.running.since, 40) } : null, books, sets };
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_library', data, updated_at: data.at }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      let auto = null; if (data.ssd) { try { auto = await autoListings(books); } catch (e) { console.error('autoListings', e.message); } }
       if (!data.ssd) { const q = (await loadJobs()).filter((j) => j.status === 'queued' && !j.paused).length; if (q) await ownerMail('💾 SSD ของโรงงานไม่ได้เสียบ', `<p style="margin:0">มี ${q} เล่มรอผลิต แต่ Mac หา SSD (PortableSSD) ไม่เจอ เสียบ SSD แล้วโรงงานจะผลิตต่อเองในรอบชั่วโมงถัดไป</p>`, { once: 'ssd', button: ['เปิดหน้าโรงงาน', FAC_PAGE] }).catch(() => {}); }
-      return res.status(200).json({ ok: true, books: books.length });
+      return res.status(200).json({ ok: true, books: books.length, auto });
     }
     if (action === 'factory_order') { // พี่ต้นสั่ง (key) หรือคุณแดนสั่งเองจากช่องโรงงาน (แอดมิน)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -2097,6 +2127,7 @@ export default async function handler(req, res) {
         await logNote('factory', `ผลิตเสร็จ: ${job.title} (${job.pages || '?'} หน้า) ไฟล์: ${job.file_url || '-'}\n${job.summary || ''}`);
         await chatEvent('factory', pick([`เสร็จแล้ว ${String(job.title).slice(0, 40)}`, `ส่งไฟล์แล้วครับ ${String(job.title).slice(0, 40)} ${job.pages || '?'} หน้า`, `งานออกจากโรงงานแล้ว ${String(job.title).slice(0, 40)}`]), 'factory');
         if (job.lang === 'en' && job.notion_url) job.listing = 'global_pending'; // ขายต่างประเทศ: ชุดลง Gumroad/Notion Gallery/Pinterest ไม่ขึ้นหน้าร้านไทย
+        else if (job.fill_id && (job.listing_copy || job.previews)) job.listing = 'pending'; // เติมรายละเอียดสินค้าเดิม: หลังบ้านเติมเฉพาะช่องที่ว่างให้เอง
         else if ((Number(job.price) >= 1 || job.export_no) && (job.file_url || job.notion_url)) job.listing = 'pending'; // หลังบ้านสร้างเป็นฉบับร่างในแท็บ ✨ มาใหม่ ให้เอง (กรอกรายละเอียดครบ) คุณแดนตรวจแล้วกดเผยแพร่ // ชีทขาย: ขึ้นการ์ด "รออนุมัติ" ในแท็บสินค้า คุณแดนตรวจแล้วกดลงขายเอง
         const todoText = job.listing === 'global_pending'
           ? `ลงขายต่างประเทศ "${job.title}" (Notion EN) เปิดแท็บโรงงาน → 🌏 ชุดลงขายต่างประเทศ: Publish ตัวเต็มและตัว Lite ใน Notion แล้วคัดลอกข้อความ/รูปไปลง Gumroad และส่ง Notion Template Gallery แล้ววางลิงก์กลับมา`
@@ -2106,14 +2137,14 @@ export default async function handler(req, res) {
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
         if (job.kind === 'notion' || job.lang === 'en') try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
-        await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
+        if (!job.auto) await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);
       } else if (action === 'factory_fail') {
         job.status = 'failed'; job.error = String(body.error || '').slice(0, 500); job.failed_at = new Date().toISOString();
         await logNote('factory', `ผลิตไม่สำเร็จ: ${job.title} เหตุผล: ${job.error}`);
-        await ownerMail(`⚠️ ผลิตไม่สำเร็จ: ${String(job.title).slice(0, 70)}`, `<p style="margin:0 0 8px">เหตุผล: ${escH(job.error)}</p><p style="margin:0">สั่งใหม่หรือแก้รายละเอียดได้ในหน้าโรงงาน</p>`, { button: ['เปิดหน้าโรงงาน', FAC_PAGE] }).catch(() => {});
+        if (!job.auto) await ownerMail(`⚠️ ผลิตไม่สำเร็จ: ${String(job.title).slice(0, 70)}`, `<p style="margin:0 0 8px">เหตุผล: ${escH(job.error)}</p><p style="margin:0">สั่งใหม่หรือแก้รายละเอียดได้ในหน้าโรงงาน</p>`, { button: ['เปิดหน้าโรงงาน', FAC_PAGE] }).catch(() => {});
       } else if (action === 'factory_cancel') {
         job.status = 'cancelled'; job.cancelled_at = new Date().toISOString(); if (body.dup) { job.dup = true; job.cancel_note = String(body.note || 'ผลิตแล้วที่อื่น').slice(0, 200); }
       }
