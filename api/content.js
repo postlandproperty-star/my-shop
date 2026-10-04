@@ -800,7 +800,8 @@ async function shopChecks(add, host) {
   } catch (e) { add('ads', false, 'warn', 'ตรวจบัญชีโฆษณาไม่ได้: ' + String(e.message).slice(0, 60), '', null); }
   try { // จ่ายแล้วแต่ยังไม่ได้ส่งไฟล์ทางอีเมล เกิน 30 นาที (ลิงก์ไฟล์หาย / อีเมลส่งไม่ผ่าน / บันทึกออเดอร์ไม่ได้)
     const cut = new Date(Date.now() - 30 * 60e3).toISOString(), from = new Date(Date.now() - 14 * 864e5).toISOString();
-    const stuck = await sb(`orders?status=eq.paid&emailed_at=is.null&created_at=lt.${cut}&created_at=gt.${from}&email=not.is.null&select=session_id,product_name,created_at`);
+    const priv = await sb('shop_state?id=eq.private&select=data').catch(() => []), isTest = testOrder(null, priv?.[0]?.data?.testEmails); // ไม่นับออเดอร์ทดลองของคุณแดน (เช่น Payment Link ฿10)
+    const stuck = ((await sb(`orders?status=eq.paid&emailed_at=is.null&created_at=lt.${cut}&created_at=gt.${from}&email=not.is.null&select=session_id,product_name,created_at,amount,email,product_id`)) || []).filter((o) => !isTest(o));
     const n = (stuck || []).length;
     add('delivery', !n, 'bad', n ? `ลูกค้าจ่ายแล้ว ${n} ออเดอร์ แต่ยังไม่ได้รับไฟล์ทางอีเมล (${(stuck || []).slice(0, 3).map((o) => String(o.product_name || '').slice(0, 30)).join(', ')})` : 'ทุกออเดอร์ที่จ่ายแล้วได้รับไฟล์ทางอีเมล', 'เปิดแท็บออเดอร์ เช็คว่าสินค้ามีลิงก์ไฟล์ แล้วกด "ส่งอีเมลซ้ำ"', null);
   } catch (e) {}
