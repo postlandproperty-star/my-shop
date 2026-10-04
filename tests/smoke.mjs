@@ -408,6 +408,16 @@ try {
             m.bookCover = 'https://x/new.jpg'; bxUseCover(m, true); S.bxImg = 'all'; render(true); const stop = !!document.querySelector('[data-a="aiStop"]'); S.bxImg = '';
             const dirty = bxDirty(); act('cancelEdit', { dataset: {} }); return { stop, dirty, undone: JSON.stringify(getProduct(m.id)) === before, snap: S.bxSnap === null }; });
           pass(`[${kind}] หน้าแก้ชุด: มีปุ่มหยุดทำปก AI · ปก/รูปที่ทำไว้ไม่บันทึกจนกดบันทึก กดยกเลิกแล้วกลับเป็นแบบเดิม`, r.stop && r.dirty && r.undone && r.snap, JSON.stringify(r)); }
+        { await page.evaluate(() => { const b = D.products.find((x) => isBundle(x)); S.view = 'admin'; S.tab = 'products'; act('editProduct', { dataset: { id: b.id } }); });
+          const boxes = page.locator('.bxi-b input[data-a="bxSel"]'); await boxes.nth(0).click({ timeout: 3000 }).catch(() => {}); await boxes.nth(2).click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(150);
+          const lab = await page.evaluate(() => (document.querySelector('[data-a="bxAiBooks"]') || {}).textContent || '');
+          const made = await page.evaluate(async () => { const got = []; const keep = window.bxMakeBook, kc = window.confirm; window.confirm = () => true; bxMakeBook = async (id) => { got.push(id); };
+            act('bxAiBooks', { dataset: {} }); await new Promise((r) => setTimeout(r, 400)); bxMakeBook = keep; window.confirm = kc; const want = S.draft.items.filter((i) => getProduct(i) && !isBundle(getProduct(i))); S.bxImg = ''; act('cancelEdit', { dataset: {} });
+            return { got: got.length, ok: got[0] === want[0] && got[1] === want[2] }; });
+          pass(`[${kind}] หน้าแก้ชุด: ติ๊กเลือกเล่มที่จะให้ AI ทำปก แล้วทำเฉพาะเล่มที่เลือก`, /เล่มที่เลือก \(2 รูป\)/.test(lab) && made.got === 2 && made.ok, JSON.stringify({ lab, ...made })); }
+        { const r = await page.evaluate(() => { const p = D.products.find((x) => !isBundle(x)); const keep = JSON.parse(JSON.stringify(p)); p.fromJob = 'jr1'; p.faq = '[object Object],[object Object]'; p.features = 'ก,ข';
+            FAC.all = [{ id: 'jr1', listing_copy: { faq: 'ถาม | ตอบ', features: 'ก\nข', specs: 'จำนวนหน้า | 119 หน้า' } }]; facRepair(); const o = { faq: p.faq, feat: p.features }; Object.keys(p).forEach((k) => delete p[k]); Object.assign(p, keep); FAC.all = []; return o; });
+          pass(`[${kind}] ซ่อมช่องที่เสีย ([object Object] / คั่นด้วยจุลภาค) จากข้อความโรงงาน`, r.faq === 'ถาม | ตอบ' && r.feat === 'ก\nข', JSON.stringify(r)); }
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);

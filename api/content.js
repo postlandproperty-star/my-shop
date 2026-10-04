@@ -206,7 +206,10 @@ function cleanGlobal(g) {
     reddit: g.reddit && typeof g.reddit === 'object' ? { sub: t(g.reddit.sub, 40), title: t(g.reddit.title, 300), body: t(g.reddit.body, 4000) } : null };
 }
 // ข้อความหน้าขายที่ Claude เขียนมาพร้อมไฟล์ (ใช้กรอกตัวแก้สินค้าตอนอนุมัติ) ห้ามราคา
-function cleanListing(l) { const t = (k, n) => String(l[k] || '').trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
+// Mac ส่งบางช่องเป็น list/object (features [..], faq [{q,a}], specs {k:v}) → แปลงเป็นข้อความรูปแบบเดียวกับหน้าแก้สินค้า (บรรทัดละข้อ · "คำถาม | คำตอบ" · "หัวข้อ | ค่า")
+const listText = (v, k) => Array.isArray(v) ? v.map((x) => x && typeof x === 'object' ? (k === 'faq' ? `${x.q ?? x.question ?? x.Q ?? ''} | ${x.a ?? x.answer ?? x.A ?? ''}` : Object.values(x).join(' | ')) : String(x ?? '')).map((x) => x.trim()).filter((x) => x && x !== '|').join('\n')
+  : v && typeof v === 'object' ? Object.entries(v).map(([a, b]) => `${a} | ${b}`).join('\n') : String(v ?? '');
+function cleanListing(l) { const t = (k, n) => listText(l[k], k).trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
 // คลิป Reels ที่ขึ้นเพจแล้ว ส่งขึ้น Instagram ที่ผูกกับเพจด้วย (ไม่ทำให้โพสต์เพจล้มเหลวถ้า IG ไม่ผ่าน)
 // คืนบรรทัดบันทึก: "IG ✓ <id>" / "IG รอประมวลผล ig_container:<id>" (รอบถัดไปเผยแพร่ต่อ) / "IG ไม่ผ่าน: ..."
 async function crossToIg(fb, p, resume = '') {
