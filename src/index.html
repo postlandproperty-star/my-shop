@@ -1489,11 +1489,16 @@ async function imgSetGen(){
     render(true);
   }
   S.coverBusy=false;render(true);
+  if(S.imgSet&&S.imgSet.some(x=>x.pick&&x.url))await imgSetUse(); // เสร็จแล้วแทนรูปเดิมให้เลย (คุณแดนสั่ง: ไม่ต้องกด "ใช้รูปที่เลือก" ไม่ชอบรูปไหนลบเอง)
 }
 async function imgSetUse(){
   if(!S.imgSet||!S.draft)return;S.coverBusy=true;render(true);const urls=[];
   for(const it of S.imgSet){if(!it.pick||!it.url)continue;try{const blob=await (await fetch(it.url)).blob();const r=await square(new File([blob],'img.png',{type:'image/png'}));urls.push(await uploadImage(r.url));}catch(e){console.error(e);}}
-  if(urls.length){S.draft.images=urls.slice(0,5);toast('ใส่ภาพสินค้า '+urls.length+' รูปแล้ว (แทนภาพเดิม) อย่าลืมกดบันทึก');S.imgSet=null;S.coverOpen=false;}
+  if(urls.length){S.draft.images=urls.slice(0,5);S.imgSet=null;S.coverOpen=false;
+    // สินค้าที่มีอยู่แล้ว: บันทึกรูปใหม่ลงสินค้าทันที (สถานะขาย/ร่างเหมือนเดิม) · สินค้าใหม่: อยู่ในหน้าแก้ รอกดบันทึก
+    const p=S.edit&&S.edit!=='new'?getProduct(S.edit):null;
+    if(p){p.images=S.draft.images.slice();save();toast('แทนรูปสินค้าด้วยรูปใหม่ '+urls.length+' รูปแล้ว ไม่ชอบรูปไหนกด × ลบได้เลย');}
+    else toast('ใส่ภาพสินค้า '+urls.length+' รูปแล้ว ไม่ชอบรูปไหนกด × ลบได้ แล้วกดบันทึก');}
   S.coverBusy=false;render(true);pvPost(0);
 }
 async function coverUse(){
@@ -2715,7 +2720,7 @@ function productForm(){
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><label class="fine">โมเดล <select class="input" data-imgset="model" style="width:auto;display:inline-block;padding:6px 8px">${IMG_MODELS.map(m=>`<option value="${m[0]}" ${imgModel()===m[0]?'selected':''}>${esc(m[1])}</option>`).join('')}</select></label>
           <label class="fine">คุณภาพ <select class="input" data-imgset="q" style="width:auto;display:inline-block;padding:6px 8px">${[['medium','ปกติ (~1.5 บาท/รูป)'],['high','สูง (~6 บาท/รูป)'],['low','ร่าง (ถูกสุด)']].map(q=>`<option value="${q[0]}" ${imgQuality()===q[0]?'selected':''}>${q[1]}</option>`).join('')}</select></label></div>
         ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}${aiPay(S.coverErr)}</p>`:''}
-        ${S.imgSet?`<div class="imgset">${S.imgSet.map((it,i)=>`<label class="imgset-it">${it.url?`<img src="${it.url}" alt="ภาพที่ ${i+1}">`:`<span class="imgset-ph">${it.err?esc(it.err):'กำลังสร้าง...'}</span>`}<span><input type="checkbox" data-a="imgPick" data-v="${i}" ${it.pick&&it.url?'checked':''} ${it.url?'':'disabled'}> ${['ปก','ภาพในเล่ม','มีอะไรบ้าง','เหมาะกับใคร','วิธีรับไฟล์'][i]}</span></label>`).join('')}</div>${!S.coverBusy&&S.imgSet.some(x=>x.url)?`<button class="btn btn-cta btn-sm" data-a="imgSetUse" style="margin-top:8px">ใช้รูปที่เลือก (แทนภาพเดิม)</button>`:''}<p class="fine" style="margin:6px 0 0">สร้างทีละรูป 5 รูปใช้เวลาประมาณ 2-4 นาที คิดเงิน OpenAI 5 รูป</p>`:''}
+        ${S.imgSet?`<div class="imgset">${S.imgSet.map((it,i)=>`<label class="imgset-it">${it.url?`<img src="${it.url}" alt="ภาพที่ ${i+1}">`:`<span class="imgset-ph">${it.err?esc(it.err):'กำลังสร้าง...'}</span>`}<span><input type="checkbox" data-a="imgPick" data-v="${i}" ${it.pick&&it.url?'checked':''} ${it.url?'':'disabled'}> ${['ปก','ภาพในเล่ม','มีอะไรบ้าง','เหมาะกับใคร','วิธีรับไฟล์'][i]}</span></label>`).join('')}</div><p class="fine" style="margin:6px 0 0">สร้างทีละรูป 5 รูปใช้เวลาประมาณ 2-4 นาที คิดเงิน OpenAI 5 รูป · <b>เสร็จแล้วระบบแทนรูปเดิมให้เอง</b> (เอาติ๊กออกระหว่างรอ = ไม่ใช้รูปนั้น) ไม่ชอบรูปไหนกดลบที่รายการรูปด้านบนได้</p>`:''}
         ${S.coverImg?`<div class="aic-out"><img src="${S.coverImg}" alt="ปกที่สร้าง"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverUse" ${S.coverBusy?'disabled':''}>ใช้เป็นปก (ภาพแรก)</button><span class="fine">ตรวจตัวสะกดภาษาไทยบนปกก่อนใช้ · กดบันทึกสินค้าได้เลย ระบบใส่รูปนี้เป็นภาพแรกให้อัตโนมัติ</span></div></div>`:''}</div>`:''}</div>
     <div class="field"><span class="lbl" id="lbl-img">ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
       <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button>${i===0?'<span class="th-cover">ปก</span>':''}${d.images.length>1?`<span class="mv">${i>0?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="-1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางซ้าย">‹</button>`:''}${i<d.images.length-1?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางขวา">›</button>`:''}</span>`:''}</div>`).join('')}
