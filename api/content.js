@@ -370,6 +370,7 @@ async function ensureAdDrafts() {
   const shop = await loadShop(); const items = await loadAdsAuto(); const made = [];
   for (const p of shop.products) {
     if (p.status !== 'published' || p.type === 'bundle' || adsTestProduct(p) || !(p.images || []).length) continue;
+    if (shop.products.some((b) => b.type === 'bundle' && (b.items || []).includes(p.id))) continue; // เล่มในชุด: ขายผ่านชุดแล้ว ไม่ร่างแอดแยกทีละเล่ม (คุณแดน 5 ต.ค. 69 · ทำแอดเองได้ที่ปุ่มทำแอด)
     const pub = p.publishedAt ? new Date(p.publishedAt).toISOString() : '';
     if (!pub || pub < ADS_SINCE || items.some((x) => x.productId === p.id)) continue;
     try { await draftAd(p.id); made.push(p.name); } catch (e) {}
