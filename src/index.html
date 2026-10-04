@@ -475,6 +475,18 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fq-bar{position:relative;z-index:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 12px;display:grid;gap:8px;box-shadow:0 4px 14px rgba(15,27,51,.06)}
 .fq-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center}.fq-stats span{font-size:12.5px;color:var(--muted);display:grid}.fq-stats b{font-size:20px;color:var(--ink);line-height:1.2}.fq-stats .hot b{color:#EE4D2D}
 .fq-ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fqh{border-radius:18px;padding:16px 18px;margin:4px 0 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 16px;align-items:center;background:var(--surface);border:1.5px solid var(--line)}
+.fqh-run{border-color:#E8A23A;background:var(--warnbg)}.fqh-bad{border-color:var(--bad);background:var(--badbg)}.fqh-warn{border-color:#E8A23A}.fqh-idle,.fqh-wait{background:var(--surface)}
+.fqh-main b{display:block;font-size:20px;line-height:1.3}.fqh-main span{color:var(--muted);font-size:14px}
+.fqh-nums{display:flex;gap:8px}.fqh-nums button{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:6px 12px;min-width:72px;cursor:pointer;font-family:inherit;color:var(--ink)}.fqh-nums b{display:block;font-size:20px;color:var(--brand);line-height:1.2}.fqh-nums span{font-size:12px;color:var(--muted)}
+.fqh-foot{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fqt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 -1px;position:relative;z-index:1}.fqt::-webkit-scrollbar{display:none}
+.fqt button{flex:0 0 auto;border:1.5px solid var(--line);border-bottom:0;background:var(--bg);color:var(--muted);border-radius:12px 12px 0 0;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}.fqt button[aria-selected=true]{background:var(--surface);color:var(--ink)}
+.fqt em{font-style:normal;background:var(--brand);color:#fff;border-radius:999px;padding:0 7px;font-size:12px;margin-left:2px}
+.fqt-body{border-top-left-radius:0;min-height:180px}.fqt-hint{margin:0 0 10px}.fqt-lab{display:block;font-weight:700;margin:0 0 6px}
+.fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
+.fqt-or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0 10px}.fqt-or::before,.fqt-or::after{content:'';flex:1;height:1px;background:var(--line)}
+@media(max-width:640px){.fqh{grid-template-columns:1fr}.fqh-nums button{flex:1}.fqt button{padding:8px 11px;font-size:14px}}
 .flib-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0}.flib-bar .input{flex:1;min-width:180px;width:auto}.flib-bar .chip.on{background:var(--ink);color:var(--bg)}
 .flib{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.flib-b{position:relative;display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface)}.flib-b img,.flib-no{width:100%;aspect-ratio:210/297;object-fit:cover;border-radius:6px;background:var(--bg);display:block;margin-bottom:4px}.flib-b em{position:absolute;left:12px;top:12px;background:var(--ink);color:var(--bg);font-style:normal;font-size:11.5px;font-weight:700;border-radius:6px;padding:0 6px}.flib-b b{font-size:13px;line-height:1.3}.flib-b[hidden]{display:none}
 @media(max-width:560px){.flib{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -3091,11 +3103,11 @@ function facLib(){if(FLIB.d===null&&!FLIB.loading)loadFacLib();const d=FLIB.d;if
   const B=d.books,q=String(S.flq||'').toLowerCase().trim(),cat=S.flcat||'',cats=[...new Set(B.map(b=>b.cat))].sort();
   const list=B.filter(b=>!cat||b.cat===cat);
   const wk=B.filter(b=>Date.now()-Date.parse(b.day)<7*864e5).length,pg=B.reduce((a,b)=>a+(b.pages||0),0);
-  return `<details class="card fac-more fac-lib" data-keep="fqLib" ${S.fqLib?'open':''}><summary><b>📚 คลังหนังสือบน Mac</b> <span class="fine">${B.length} เล่ม · ผลิตใน 7 วัน ${wk} · ${pg.toLocaleString('th-TH')} หน้า${(d.sets||[]).length?' · ชุดขาย '+d.sets.length:''} · อัปเดต ${new Date(d.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></summary>
+  return `<div class="fac-lib"><p class="fine fqt-hint">📚 ${B.length} เล่ม · ผลิตใน 7 วัน ${wk} · ${pg.toLocaleString('th-TH')} หน้า${(d.sets||[]).length?' · ชุดขาย '+d.sets.length:''} · อัปเดต ${new Date(d.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p>
     ${(d.sets||[]).length?`<p class="fine" style="margin:8px 0">📦 ${d.sets.map(s=>`${esc(s.name)} (${s.n} เล่ม)`).join(' · ')}</p>`:''}
     <div class="flib-bar"><input class="input" data-flq="1" value="${esc(S.flq||'')}" placeholder="ค้นหาชื่อเล่มหรือเลขที่" aria-label="ค้นหาหนังสือ"><button class="chip${!cat?' on':''}" data-a="flCat" data-v="" aria-pressed="${!cat}">ทั้งหมด</button>${cats.map(c=>`<button class="chip${cat===c?' on':''}" data-a="flCat" data-v="${esc(c)}" aria-pressed="${cat===c}">${esc(c)}</button>`).join('')}</div>
     <div class="flib" id="flib">${list.map(b=>`<div class="flib-b" data-q="${esc((b.title+' '+b.no).toLowerCase())}" ${q&&!(b.title+' '+b.no).toLowerCase().includes(q)?'hidden':''}>${b.thumb?`<img src="${esc(b.thumb)}" alt="" loading="lazy">`:'<span class="flib-no"></span>'}<em>#${esc(b.no)}</em><b>${esc(b.title)}</b><span class="fine">${esc(b.cat)} · ${b.pages} หน้า${b.audio?' · 🎧':''} · ${b.where==='SSD'?'💾 SSD':'💻 Mac'}</span></div>`).join('')||'<p class="fine">ไม่พบเล่มที่ค้นหา</p>'}</div>
-    <p class="fine" style="margin:10px 0 0">ไฟล์ PDF อยู่ใน SSD ของ Mac · เล่มที่ส่งขึ้นร้านแล้วดูได้ที่ 👀 รอคุณแดนตรวจ หรือแท็บสินค้า</p></details>`;}
+    <p class="fine" style="margin:10px 0 0">ไฟล์ PDF อยู่ใน SSD ของ Mac · Mac ส่งรายการขึ้นมาทุกชั่วโมง</p></div>`;}
 function factoryView(){
   if(FJOBS===null)loadFactoryJobs();
   const f=S.fnew||(S.fnew={title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''});
@@ -3107,52 +3119,65 @@ function factoryView(){
   const review=jobs.filter(j=>j.status==='done'&&['pending','global_pending'].includes(j.listing));
   const done=jobs.filter(j=>j.status==='done'&&!['pending','global_pending'].includes(j.listing)).sort((a,b)=>String(b.done_at||'').localeCompare(String(a.done_at||'')));
   const failed=jobs.filter(j=>j.status==='failed');
-  const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>48*36e5;
+  const w=FWORKER,ago=w&&w.last_seen?Date.now()-Date.parse(w.last_seen):null,h=ago!=null?Math.round(ago/36e5):null,stale=ago==null||ago>3*36e5;
   const when=ago==null?'ยังไม่เคยมา':h<1?'ไม่ถึงชม.':h<48?h+' ชม.ที่แล้ว':Math.round(h/24)+' วันที่แล้ว';
   const active=queued.filter(j=>!j.paused);
   const idea=S.fqIdea;
+  /* หน้าโรงงานแบบใหม่ (คุณแดนบอก "งง ดูยาก" 4 ต.ค.): กล่อง "ตอนนี้" 1 กล่อง + 5 แท็บ แต่ละแท็บทำเรื่องเดียว */
+  const lib=FLIB.d||{},runTitle=producing[0]?producing[0].title:lib.running?String(lib.running.note||'').split('\n')[0]:'';
+  const now=FPAUSED?['bad','⏸ หยุดโรงงานไว้','Mac จะไม่หยิบเล่มใหม่ กดปุ่ม "เปิดผลิต" เมื่อพร้อม']
+    :lib.ssd===false?['bad','💾 SSD ไม่ได้เสียบ','เสียบ SSD (PortableSSD) เข้ากับ Mac แล้วโรงงานจะผลิตต่อเองในรอบชั่วโมงถัดไป']
+    :runTitle?['run','⚙️ กำลังผลิต',runTitle]
+    :stale&&active.length?['bad','⚠️ Mac ไม่ได้มาหยิบงาน',`เช็คล่าสุด ${when} · เปิด Mac เสียบชาร์จ และเปิดแอป Claude ไว้ (โรงงานรันในแอปนี้ทุกชั่วโมง)`]
+    :review.length?['warn',`👀 มี ${review.length} เล่มรอคุณแดนตรวจ`,'เปิดแท็บ "ตรวจ & ลงขาย" ดูไฟล์แล้วกดลงขาย']
+    :active.length?['wait',`⏳ รอผลิต ${active.length} เล่ม`,'Mac เช็คคิวทุกชั่วโมง เล่มบนสุดผลิตก่อน']
+    :['idle','💤 โรงงานว่าง','สั่งเล่มใหม่ได้ที่แท็บ "สั่งผลิต" หรือกด 💡 แนะนำเล่มถัดไป'];
+  const wk=done.concat(review).filter(j=>j.done_at&&Date.now()-Date.parse(j.done_at)<7*864e5).length;
+  const T=S.facTab||(review.length?'review':active.length||producing.length?'queue':'order');
+  const tabs=[['review','👀 ตรวจ & ลงขาย',review.length],['order','➕ สั่งผลิต',0],['queue','🏭 คิว',active.length+producing.length],['lib','📚 คลังหนังสือ',(lib.books||[]).length],['more','⋯ อื่นๆ',0]];
+  const body={
+    review:()=>review.length?`<p class="fine fqt-hint">เปิดไฟล์ดูก่อน แล้วกด <b>อนุมัติ ลงขาย</b> · ราคาแก้ได้ก่อนกด</p>${facBox(1)||''}${(()=>{const g=review.filter(j=>j.listing==='global_pending').length;return g?`<p class="fq-gl">🌏 ${g} เล่มเป็นเทมเพลตขายต่างประเทศ อยู่ในแท็บ <b>⋯ อื่นๆ</b> <button class="chip" data-a="facTab" data-v="more">ไปที่แท็บนี้</button></p>`:'';})()}`
+      :'<div class="fqt-empty"><b>ไม่มีเล่มรอตรวจ 🎉</b><span>เล่มใหม่เสร็จแล้วจะมีอีเมลแจ้ง พร้อมปุ่มกดมาที่นี่</span></div>',
+    order:()=>`<section class="fq-add">
+      <label class="fqt-lab" for="fq-title">ชื่อเล่ม</label>
+      <div class="fq-addrow"><input class="input" id="fq-title" data-fqn="title" value="${esc(S.fqTitle||'')}" placeholder="เช่น IELTS Listening 10 ชุด พร้อมเฉลย" autocomplete="off"><input class="input fq-price" id="fq-price" data-fqn="price" type="number" inputmode="numeric" min="0" value="${esc(S.fqPrice||'')}" placeholder="ราคา ฿" aria-label="ราคาเสนอ"><button class="btn btn-dark" data-a="fqAdd" ${S.fqBusy?'disabled':''}>สั่งผลิต</button></div>
+      <p class="fine" style="margin:6px 0 14px">ใส่แค่ชื่อกับราคาก็พอ · รายละเอียดอื่นแก้ทีหลังได้ในแท็บคิว · <a href="#" data-a="fOrderToggle">ฟอร์มเต็ม / Notion Template</a></p>
+      <div class="fqt-or"><span>หรือให้ระบบเลือกให้</span></div>
+      <div class="fq-airow"><select class="input" data-fqn="cat" aria-label="หมวดที่อยากได้"><option value="">ทุกหมวด</option>${FQ_CATS.map(c=>`<option ${S.fqCat===c?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="fq-dice" data-a="fqIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'💡 แนะนำเล่มถัดไป'}</button></div>
+      ${idea?`<div class="fq-idea"><b>💡 ${esc(idea.title)}</b><span class="fine">${[idea.category,idea.pages?idea.pages+' หน้า':'',idea.price!=null&&idea.price!==''?baht(idea.price):''].filter(Boolean).map(esc).join(' · ')}${idea.why?'<br>'+esc(idea.why):''}</span><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn btn-cta btn-sm" data-a="fqIdeaAdd">+ สั่งผลิตเล่มนี้</button><button class="chip" data-a="fqIdea">💡 แนะนำเล่มอื่น</button><button class="chip" data-a="fqIdeaX">ไม่เอา</button></div></div>`:''}
+      ${S.fqErr?`<p class="err" style="margin:6px 0 0">${esc(S.fqErr)}</p>`:''}
+    </section>${S.fOrder?facOrderForm(f,lb):''}`,
+    queue:()=>`<p class="fine fqt-hint">บนสุดผลิตก่อน · กดที่เล่มเพื่อแก้รายละเอียด เลื่อนลำดับ หรือพักไว้</p>
+      ${S.floading&&!jobs.length?'<p class="fine">กำลังโหลด...</p>':producing.length||queued.length?`<ul class="fq-list">${producing.map(j=>fqRow(j,0,0)).join('')}${queued.map((j,i)=>fqRow(j,i+1,queued.length)).join('')}</ul>`:'<div class="fqt-empty"><b>คิวว่าง</b><span>สั่งเล่มใหม่ได้ที่แท็บ ➕ สั่งผลิต</span><button class="chip" data-a="facTab" data-v="order">ไปสั่งผลิต</button></div>'}
+      <datalist id="fq-cats">${FQ_CATS.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      ${failed.length?`<details class="fq-done"><summary>⚠️ ผลิตไม่สำเร็จ <b>${failed.length}</b></summary><ul class="fq-dl">${failed.map(j=>`<li><span><b>${esc(j.title)}</b><span class="fine">${esc(j.error||'')}</span></span></li>`).join('')}</ul></details>`:''}
+      <details class="fq-done" data-keep="fqDone" ${S.fqDone?'open':''}><summary>✅ ประวัติที่ผลิตเสร็จ <b>${done.length}</b> เล่ม</summary>
+      <ul class="fq-dl">${done.slice(0,40).map(j=>{const ls=LIST[j.listing];return `<li><span><b>${esc(j.title)}</b><span class="fine">${j.done_at?fdt(Date.parse(j.done_at)):''}${j.pages?' · '+j.pages+' หน้า':''}${ls?` · <span class="badge ${ls[1]}">${ls[0]}</span>`:''}</span></span>${j.file_url?`<a class="chip" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">PDF</a>`:''}</li>`;}).join('')||'<li class="fine">ยังไม่มี</li>'}</ul></details>`,
+    lib:()=>facLib()||'<div class="fqt-empty"><b>ยังไม่มีข้อมูลจาก Mac</b><span>Mac ส่งรายการหนังสือขึ้นมาทุกชั่วโมงตอนเช็คคิว</span></div>',
+    more:()=>`${(()=>{if(FAC.jobs===null&&!FAC.loading)loadFacJobs();const G=FAC.global||[],pend=G.filter(j=>j.listing==='global_pending').length;
+      return `<details class="card fac-more fac-global" data-keep="fqGlobal" ${S.fqGlobal?'open':''}><summary><b>🌏 ขายต่างประเทศ (Notion EN)</b> <span class="fine">${pend?`<span class="badge warn">รอลง ${pend}</span> `:''}Gumroad · Notion Gallery · Pinterest</span></summary>${globalBox()}</details>`;})()}
+      <details class="card fac-more"><summary><b>📦 ชุดขาย</b> <span class="fine">วางแผนชุดหลายเล่ม</span></summary>${facSets()}</details>
+      <details class="card fac-more"><summary><b>💡 ไอเดียจากทีม</b></summary>${facIdeas()}</details>
+      <details class="card fac-more"><summary><b>📚 เล่มที่ร้านมีแล้ว</b> <span class="fine">ระบบจะไม่แนะนำซ้ำ</span></summary><p class="fine" style="line-height:1.8">${D.products.filter(p=>!isBundle(p)).map(p=>esc(p.name)).join(' · ')}</p></details>
+      <details class="card fac-more fac-guide"><summary><b>📖 โรงงานทำงานยังไง</b></summary>${facFlow({active,producing,review,done,stale})}
+      <ol>
+        <li><b>สั่งผลิต</b> ที่แท็บ ➕ สั่งผลิต (หรือ 💡 แนะนำเล่มถัดไป) จัดลำดับในแท็บ 🏭 คิว เล่มบนสุดผลิตก่อน</li>
+        <li><b>Mac ผลิตให้เอง</b> เช็คคิวทุกชั่วโมง (Mac ต้องเปิด เสียบ SSD และเปิดแอป Claude ไว้) ไฟล์เก็บใน SSD · เล่มฝึกฟัง/พูดมีไฟล์เสียงขึ้น Google Drive พร้อม QR ในเล่ม</li>
+        <li><b>เสร็จแล้วมีอีเมลแจ้ง</b> → แท็บ 👀 ตรวจ & ลงขาย → เปิดไฟล์ดู → กด <b>อนุมัติ ลงขาย</b></li>
+        <li><b>ชุดขายเสร็จ</b> → แท็บ <b>สินค้า → ✨ มาใหม่</b> → ตรวจ → กด <b>✅ เผยแพร่</b></li>
+        <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน"</li>
+      </ol></details>`,
+  }[T]||(()=>'');
   return `<div class="wrap wide fac fq" style="padding-bottom:60px">
     ${svcNav()}
-    <h2 class="h3 fq-h">🏭 โรงงาน <span class="fine">สั่งที่นี่ · คอมคุณแดนผลิต · คุณแดนตรวจแล้วกดลงขาย</span></h2>
-    <div class="fq-bar" role="status">
-      <div class="fq-stats"><span><b>${active.length}</b> ในคิว</span><span><b>${producing.length}</b> กำลังผลิต</span><span class="${review.length?'hot':''}"><b>${review.length}</b> รอตรวจ</span><span><b>${done.length}</b> เสร็จ</span></div>
-      <div class="fq-ctl"><span class="fq-pc ${stale&&active.length?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 ${when}</span>${facMacPills()}
-        <button class="fq-run ${FPAUSED?'off':''}" data-a="fqRun" ${S.fqBusy?'disabled':''}>${FPAUSED?'⏸ หยุดอยู่ · กดเปิด':'▶ เปิดผลิตอยู่'}</button>
-        <button class="chip" data-a="fqCmd">📋 คำสั่ง “ทำเล่มบนสุด”</button><button class="chip" data-a="toFactory" aria-label="รีเฟรช">↻</button></div>
-    </div>
-    ${facFlow({active,producing,review,done,stale})}
-    ${FPAUSED?'<div class="fac-worker stale">หยุดโรงงานไว้: คอมจะไม่หยิบเล่มใหม่ (เล่มที่กำลังผลิตทำต่อจนเสร็จ) กด "หยุดอยู่ · กดเปิด" เพื่อผลิตต่อ</div>':stale&&active.length?'<div class="fac-worker stale">มีเล่มรอในคิวแต่คอมไม่ได้มาหยิบนาน เปิดคอมและแอป Claude ไว้ หรือกด 📋 คัดลอกคำสั่งไปวางในแชต Claude</div>':''}
-    ${review.length?`<details class="fq-review" data-keep="fqRev" ${S.fqRev!==false?'open':''}><summary><b>👀 รอคุณแดนตรวจ ${review.length} เล่ม</b> <span class="fine">ผลิตเสร็จแล้ว ตรวจไฟล์แล้วกดอนุมัติลงขาย</span></summary>${facBox(1)||''}${(()=>{const g=review.filter(j=>j.listing==='global_pending').length,t=review.length-g;return (g?`<p class="fq-gl">🌏 ${g} เล่มเป็นเทมเพลตขายต่างประเทศ (Notion EN) อยู่ในหัวข้อ <b>🌏 ขายต่างประเทศ</b> ล่างสุด <button class="chip" data-a="openGlobal">ไปที่หัวข้อนี้ ↓</button></p>`:'')+(t&&FAC.jobs===null?'<p class="fine">กำลังโหลด...</p>':'');})()}</details>`:''}
-    <section class="card fq-add">
-      <div class="fq-addrow"><input class="input" id="fq-title" data-fqn="title" value="${esc(S.fqTitle||'')}" placeholder="พิมพ์ชื่อเล่ม เช่น IELTS Listening 10 ชุด พร้อมเฉลย" autocomplete="off"><input class="input fq-price" id="fq-price" data-fqn="price" type="number" inputmode="numeric" min="0" value="${esc(S.fqPrice||'')}" placeholder="ราคา ฿" aria-label="ราคาเสนอ"><button class="btn btn-dark" data-a="fqAdd" ${S.fqBusy?'disabled':''}>เพิ่มเข้าคิว</button></div>
-      <div class="fq-airow"><select class="input" data-fqn="cat" aria-label="หมวดที่ให้ AI คิด"><option value="">ทุกหมวด</option>${FQ_CATS.map(c=>`<option ${S.fqCat===c?'selected':''}>${esc(c)}</option>`).join('')}</select><button class="fq-dice" data-a="fqIdea" ${S.fideaBusy?'disabled':''}>${S.fideaBusy?'กำลังคิด...':'💡 แนะนำเล่มถัดไป'}</button></div>
-      ${idea?`<div class="fq-idea"><b>💡 ${esc(idea.title)}</b><span class="fine">${[idea.category,idea.pages?idea.pages+' หน้า':'',idea.price!=null&&idea.price!==''?baht(idea.price):''].filter(Boolean).map(esc).join(' · ')}${idea.why?'<br>'+esc(idea.why):''}</span><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn btn-cta btn-sm" data-a="fqIdeaAdd">+ เพิ่มเล่มนี้เข้าคิว</button><button class="chip" data-a="fqIdea">🎲 สุ่มใหม่</button><button class="chip" data-a="fqIdeaX">ไม่เอา</button></div></div>`:''}
-      ${S.fqErr?`<p class="err" style="margin:6px 0 0">${esc(S.fqErr)}</p>`:''}
-      <p class="fine" style="margin:8px 0 0">ใส่แค่ชื่อกับราคาก็พอ กดที่เล่มในคิวเพื่อแก้หมวด ระดับ รูปแบบ หน้า ทีหลังได้ · <a href="#" data-a="fOrderToggle">ฟอร์มเต็ม / Notion Template</a></p>
+    <section class="fqh fqh-${now[0]}" role="status">
+      <div class="fqh-main"><b>${esc(now[1])}</b><span>${esc(now[2])}</span></div>
+      <div class="fqh-nums"><button data-a="facTab" data-v="review"><b>${review.length}</b><span>รอตรวจ</span></button><button data-a="facTab" data-v="queue"><b>${active.length+producing.length}</b><span>ในคิว</span></button><button data-a="facTab" data-v="queue"><b>${wk}</b><span>เสร็จ 7 วัน</span></button></div>
+      <div class="fqh-foot"><span class="fq-pc ${stale&&active.length?'warn':'ok'}" title="${esc(w&&w.note||'')}">💻 Mac เช็คล่าสุด ${when}</span>${lib.at?(lib.ssd===false?'<span class="fq-pc warn">💾 SSD ไม่ได้เสียบ</span>':'<span class="fq-pc ok">💾 SSD พร้อม</span>'):''}
+        <button class="fq-run ${FPAUSED?'off':''}" data-a="fqRun" ${S.fqBusy?'disabled':''}>${FPAUSED?'▶ เปิดผลิต':'⏸ หยุดผลิตชั่วคราว'}</button><button class="chip" data-a="toFactory" aria-label="รีเฟรช">↻</button></div>
     </section>
-    ${S.fOrder?facOrderForm(f,lb):''}
-    <h3 class="fq-sec">คิวผลิต <span class="fine">บนสุดผลิตก่อน · กดที่เล่มเพื่อแก้/พัก</span></h3>
-    ${S.floading&&!jobs.length?'<p class="fine">กำลังโหลด...</p>':producing.length||queued.length?`<ul class="fq-list">${producing.map(j=>fqRow(j,0,0)).join('')}${queued.map((j,i)=>fqRow(j,i+1,queued.length)).join('')}</ul>`:'<p class="fq-empty">คิวว่าง พิมพ์ชื่อเล่มด้านบน หรือกด 🎲 ให้ AI คิด</p>'}
-    <datalist id="fq-cats">${FQ_CATS.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
-    ${failed.length?`<details class="fq-done"><summary>⚠️ ไม่สำเร็จ <b>${failed.length}</b></summary><ul class="fq-dl">${failed.map(j=>`<li><span><b>${esc(j.title)}</b><span class="fine">${esc(j.error||'')}</span></span></li>`).join('')}</ul></details>`:''}
-    <details class="fq-done" data-keep="fqDone" ${S.fqDone?'open':''}><summary>✅ เสร็จแล้ว <b>${done.length}</b> เล่ม</summary>
-      <ul class="fq-dl">${done.slice(0,40).map(j=>{const ls=LIST[j.listing];return `<li><span><b>${esc(j.title)}</b><span class="fine">${j.done_at?fdt(Date.parse(j.done_at)):''}${j.pages?' · '+j.pages+' หน้า':''}${ls?` · <span class="badge ${ls[1]}">${ls[0]}</span>`:''}</span></span>${j.file_url?`<a class="chip" href="${esc(j.file_url)}" target="_blank" rel="noopener noreferrer">PDF</a>`:''}</li>`;}).join('')||'<li class="fine">ยังไม่มี</li>'}</ul></details>
-    <details class="card fac-more"><summary><b>📦 ชุดขาย · 💡 ไอเดียจากทีม · 📚 เล่มที่ร้านมีแล้ว · 📖 คู่มือ</b> <span class="fine">กดเปิด</span></summary>
-      ${facSets()}
-      ${facIdeas()}
-      <details class="fac-guide"><summary><b>📚 เล่มที่ร้านมีแล้ว</b> <span class="fine">AI จะไม่เสนอซ้ำ</span></summary><p class="fine" style="line-height:1.8">${D.products.filter(p=>!isBundle(p)).map(p=>esc(p.name)).join(' · ')}</p></details>
-      <details class="fac-guide"><summary><b>📖 คู่มือโรงงาน</b> <span class="fine">ผลิตเสร็จแล้วคุณแดนต้องทำอะไร</span></summary>
-      <ol>
-        <li><b>เพิ่มเล่ม</b> พิมพ์ชื่อ + ราคา แล้วกด <b>เพิ่มเข้าคิว</b> (หรือ 🎲 ให้ AI คิด) จัดลำดับด้วย ↑↓ เล่มบนสุดผลิตก่อน พักเล่มที่ยังไม่อยากทำได้</li>
-        <li><b>คอมผลิตให้เอง</b> ตามเวลาที่ตั้งไว้ใน Cowork (คอมต้องเปิดและเปิดแอป Claude ไว้) อยากให้ทำเดี๋ยวนี้กด <b>📋 คำสั่ง “ทำเล่มบนสุด”</b> แล้ววางในแชต Claude · ไม่อยากให้ผลิตช่วงนี้กด <b>▶ เปิดผลิตอยู่</b> ให้เป็นหยุด</li>
-        <li><b>เล่มเดี่ยวเสร็จ</b> → ขึ้นที่ <b>👀 รอคุณแดนตรวจ</b> → เปิดไฟล์ดู → ดูราคา → กด <b>อนุมัติ ลงขาย</b></li>
-        <li><b>ชุดขายเสร็จ</b> → แท็บ <b>สินค้า → ✨ มาใหม่</b> เป็นฉบับร่าง → ตรวจ → (ถ้ามีไฟล์เสียง อัป mp3 ขึ้น Google Drive และแชร์ก่อน) → กด <b>✅ เผยแพร่</b></li>
-        <li><b>เจอที่ผิดในไฟล์</b> → แก้ไขสินค้า → "⬇ โหลดไฟล์ปัจจุบันมาแก้" → แก้ในคอม → "⬆ อัปโหลดไฟล์ที่แก้แล้วแทน"</li>
-      </ol></details>
-    </details>
-    ${facLib()}
-    ${(()=>{if(FAC.jobs===null&&!FAC.loading)loadFacJobs();const G=FAC.global||[],pend=G.filter(j=>j.listing==='global_pending').length;
-      return `<details class="card fac-more fac-global" data-keep="fqGlobal" ${S.fqGlobal?'open':''}><summary><b>🌏 ขายต่างประเทศ (Notion EN)</b> <span class="fine">${pend?`<span class="badge warn">รอลง ${pend}</span> `:''}Gumroad · Notion Gallery · Pinterest · กดเปิด</span></summary>${globalBox()}</details>`;})()}
+    <nav class="fqt" role="tablist" aria-label="โรงงาน">${tabs.map(([k,l,n])=>`<button role="tab" data-a="facTab" data-v="${k}" aria-selected="${T===k}" aria-pressed="${T===k}">${l}${n?` <em>${n}</em>`:''}</button>`).join('')}</nav>
+    <div class="fqt-body card">${body()}</div>
   </div>`;
 }
 /* คู่มือแบบภาพ: 5 ขั้นของโรงงาน ใครทำ (👤 คุณแดน · 💻 คอม · 🤖 ระบบ) ตัวเลขสด และบอกว่า "ตอนนี้ต้องทำอะไร" */
@@ -4911,7 +4936,7 @@ function svcFour(k){
   else if(k==='vip'){const d=VIPA.d||{},v=d.settings||{},todo=!d.ready?'สร้างตารางสมาชิก (SQL)':!v.open?'ตั้งราคา แล้วเปิดรับ':'';
     h=B('📊','ตัวเลข','สมาชิก · ต่ออายุ','svcGo','#vip-set')+B('✅','ต้องทำ',todo||'ไม่มีงานค้าง','svcGo','#vip-set',!!todo)+B('⚙️','ตั้งค่า','ราคา · ข้อความหน้า · ให้สิทธิ์','svcGo','#vip-page')+P('หน้าลูกค้า','หน้า /vip ↗',vipPageHref());}
   else if(k==='factory'){const n=svcWork('factory');
-    h=B('📊','ตัวเลข','คิว · กำลังผลิต','svcGo','.ffl')+B('✅','ต้องทำ',n?`ตรวจไฟล์ ${n} เล่ม`:'ไม่มีงานค้าง','svcGo',n?'details.fq-review':'.ffl',n)+B('⚙️','ตั้งค่า','สั่งเล่มใหม่','svcGo','.fq-add')+P('หน้าลูกค้า','ของที่ลงขายแล้ว ↗','/store');}
+    h=B('📊','ตัวเลข','คิว · กำลังผลิต','facTab','queue')+B('✅','ต้องทำ',n?`ตรวจไฟล์ ${n} เล่ม`:'ไม่มีงานค้าง','facTab','review',n)+B('⚙️','ตั้งค่า','สั่งเล่มใหม่','facTab','order')+P('หน้าลูกค้า','ของที่ลงขายแล้ว ↗','/store');}
   return h?`<div class="svf-row">${h}</div>`:'';}
 function adminView(){
   if(S.tab==='pixel')S.tab='pay';
@@ -5054,7 +5079,8 @@ function act(a,el){
       act('tab',{dataset:{v:t}});break;}
     case 'svcGo':{const t=document.querySelector(el.dataset.v);if(t){if(t.tagName==='DETAILS')t.open=true;t.scrollIntoView({behavior:'smooth',block:'start'});}break;}
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
-    case 'flCat':S.flcat=el.dataset.v;S.fqLib=true;render(true);break;
+    case 'flCat':S.flcat=el.dataset.v;render(true);break;
+    case 'facTab':S.facTab=el.dataset.v;render(true);break;
     case 'fqOpen':case 'fqMove':case 'fqSave':case 'fqPause':case 'fqRun':case 'fqCmd':case 'fqIdea':case 'fqIdeaX':case 'fqAdd':case 'fqIdeaAdd':fqAct(a,el);break;
     case 'ffilter':S.ffilter=el.dataset.v;render(true);break;
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
