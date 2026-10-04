@@ -464,11 +464,11 @@ async function loadRefs(refs) {
   return out;
 }
 // เงิน/เครดิตของผู้ให้บริการ AI หมด: แปลเป็นภาษาไทยพร้อมบอกว่าต้องไปเติมที่ไหน (คุณแดนเติมเอง)
-const AI_BILL = { google: 'Google AI (Nano Banana) ใช้เงินครบงบรายเดือนที่ตั้งไว้แล้ว: คุณแดนเพิ่มงบที่ aistudio.google.com/spend แล้วกดใหม่ หรือเลือกโมเดล OpenAI แทน',
+const AI_BILL = { google: 'Google AI (Nano Banana) เงินหมด: เติมเครดิตที่ aistudio.google.com → Billing (บัญชีแบบเติมเงินล่วงหน้า ขั้นต่ำ $5 · เครดิตทดลองของ Google Cloud ใช้กับ Gemini ไม่ได้) หรือเพิ่มงบรายเดือน แล้วกดใหม่ · หรือเลือกโมเดล OpenAI แทน',
   openai: 'OpenAI (GPT Image) เครดิตหมด: คุณแดนเติมเครดิตที่ platform.openai.com/settings/organization/billing แล้วกดใหม่ หรือเลือกโมเดล Nano Banana แทน' };
 function aiErr(provider, msg, status) {
   const m = String(msg || status || '');
-  if (status === 429 && /quota|billing|credit/i.test(m) || /spending cap|exceeded its monthly|no credits|insufficient_quota|billing_hard_limit|billing hard limit|exceeded your current quota/i.test(m)) {
+  if (status === 402 || status === 429 && /quota|billing|credit/i.test(m) || /spending cap|exceeded its monthly|no credits|insufficient_quota|billing_hard_limit|billing hard limit|exceeded your current quota|prepayment credits|credits are depleted/i.test(m)) { // 402 = เครดิตแบบเติมเงินล่วงหน้า (Prepay) หมด
     const e = new Error(AI_BILL[provider]); e.billing = provider; return e;
   }
   return new Error(`${provider === 'google' ? 'Google' : 'OpenAI'}: ${m}`);
@@ -841,13 +841,13 @@ async function shopChecks(add, host) {
         : await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }) });
       const j = await r.json().catch(() => ({})); const m = String(j?.error?.message || '');
       if (r.ok) return { ok: true, at: new Date().toISOString() };
-      if (/spending cap|exceeded its monthly|no credits|insufficient_quota|exceeded your current quota|billing/i.test(m + ' ' + (j?.error?.code || ''))) return { ok: false, at: new Date().toISOString(), msg: m };
+      if (r.status === 402 || /spending cap|exceeded its monthly|no credits|insufficient_quota|exceeded your current quota|billing|prepayment credits|credits are depleted/i.test(m + ' ' + (j?.error?.code || ''))) return { ok: false, at: new Date().toISOString(), msg: m };
     } catch (e) {} return null; };
     if (G) { const x = await probe('google'); if (x) st.google = x; }
     if (O) { const x = await probe('openai'); if (x) st.openai = x; }
     const one = (k, has, name, url) => { const x = st[k]; if (!has) return add(`ai_${k}`, false, 'warn', `${name}: ยังไม่ได้ใส่คีย์`, 'ใส่คีย์ใน Vercel', null);
       add(`ai_${k}`, !x || x.ok, 'warn', !x ? `${name}: ยังไม่เคยใช้ทำรูป` : x.ok ? `${name}: ทำรูปได้ (ล่าสุด ${x.at.slice(5, 16).replace('T', ' ')})` : `${name}: เงินหมด/ใช้ไม่ได้ (${x.at.slice(5, 10)})`, `เติมเงินแล้วลองทำรูปใหม่ 1 รูป สถานะจะเขียวเอง`, url); };
-    one('google', G, 'AI ทำรูป Google (Nano Banana)', 'https://aistudio.google.com/spend');
+    one('google', G, 'AI ทำรูป Google (Nano Banana)', 'https://aistudio.google.com/billing');
     one('openai', O, 'AI ทำรูป OpenAI', 'https://platform.openai.com/settings/organization/billing/overview');
   } catch (e) {}
   try {
@@ -1203,16 +1203,20 @@ export default async function handler(req, res) {
       // คลังไอเดียที่ทีม Claude (พี่โปร พี่โอ๊ค) เติมไว้ หยิบข้อแรกที่ยังไม่ใช้และไม่ซ้ำเล่มที่มี
       const bankRows = await sb('shop_state?id=eq.idea_bank&select=data').catch(() => []); const bank = bankRows?.[0]?.data?.list || [];
       const lowHave = have.map((t) => t.toLowerCase().slice(0, 16));
+      // เล่มที่ผลิตแล้วในคลังบน Mac ก็นับว่ามีแล้ว (ชื่อไฟล์เป็นอังกฤษ เทียบตัวอักษร A-Z/ตัวเลข ตัด KP นำหน้า)
+      const libKeys = (((await sb('shop_state?id=eq.factory_library&select=data').catch(() => []))?.[0]?.data?.books) || []).map((b) => normT(b.title).replace(/^KP/, '')).filter((k) => k.length >= 10);
+      const inLib = (t) => { const k = normT(t); return k.length >= 10 && libKeys.some((L) => k.includes(L) || L.includes(k)); };
       const nSet = Math.max(0, Math.min(10, Math.round(Number(body.n) || 0)));
       if (nSet >= 2) { // สุ่มทั้งชุด n เล่มในหมวดเดียว: คลังไอเดียของทีมก่อน แล้วเติมจากคลังหัวข้อสำเร็จรูป (ไม่ใช้ AI ไม่เสีย token)
-        const match = (t, c) => !lowHave.some((h) => h && String(t).toLowerCase().startsWith(h)) && (!hint || (t + ' ' + c).toLowerCase().includes(hint.toLowerCase()));
+        const match = (t, c) => !inLib(t) && !lowHave.some((h) => h && String(t).toLowerCase().startsWith(h)) && (!hint || (t + ' ' + c).toLowerCase().includes(hint.toLowerCase()));
         const out = [], seen = new Set();
         for (const b of bank.filter((x) => !x.used && match(x.title, x.category))) { if (out.length >= nSet || seen.has(b.title)) continue; seen.add(b.title); b.used = new Date().toISOString(); out.push({ title: b.title, category: b.category, pages: b.pages, price: b.price }); }
         const { IDEA_POOL } = await import('../lib/ideas.js');
         const pool = IDEA_POOL.filter((b) => match(b.t, b.cat) && !seen.has(b.t)).sort(() => Math.random() - 0.5);
         for (const b of pool) { if (out.length >= nSet) break; seen.add(b.t); out.push({ title: b.t, category: b.cat, pages: b.pages, price: b.price }); }
         if (bank.some((b) => seen.has(b.title))) await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'idea_bank', data: { list: bank }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }).catch(() => {});
-        return res.status(200).json({ ok: true, ideas: out, want: nSet });
+        const left = IDEA_POOL.filter((b) => (!hint || (b.t + ' ' + b.cat).toLowerCase().includes(hint.toLowerCase()))).length;
+        return res.status(200).json({ ok: true, ideas: out, want: nSet, pool: left });
       }
       const fresh = bank.find((b) => !b.used && !lowHave.some((h) => h && String(b.title).toLowerCase().startsWith(h)) && (!hint || (b.title + ' ' + b.category).toLowerCase().includes(hint.toLowerCase())));
       if (fresh) {
