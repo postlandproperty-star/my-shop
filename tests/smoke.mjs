@@ -327,9 +327,9 @@ try {
           const p = D.products.find((x) => x.type !== 'bundle'), keep = { headline: p.headline, faq: p.faq, status: p.status, price: p.price, previews: p.previews };
           p.faq = ''; p.previews = [];
           FAC.exports = [{ id: 'f1', status: 'done', listing: 'pending', fill_id: p.id, fill_need: 'faq,previews,headline', listing_copy: { headline: 'ใหม่', faq: 'Q|A' }, previews: ['https://x/pv3.jpg'] }]; SETI.exp = {}; facExportImport(); await new Promise((r) => setTimeout(r, 400));
-          const r = { bulk, faq: p.faq, pv: (p.previews || []).length, head: p.headline === keep.headline, st: p.status === keep.status, pr: p.price === keep.price, made: D.products.some((x) => x.fromJob === 'f1') };
-          Object.assign(p, keep); FAC.exports = []; return r; });
-        pass(`[${kind}] โรงงาน: ปุ่มลงร้านทุกเล่มที่ยังไม่มี + งานเติมรายละเอียดสินค้าเดิมเติมเฉพาะช่องที่ว่าง (ไม่แก้ข้อความเดิม/ราคา/สถานะ)`, fb.bulk && fb.faq === 'Q|A' && fb.pv === 1 && fb.head && fb.st && fb.pr && !fb.made, JSON.stringify(fb));
+          const dr = initDraft(p); const r = { bulk, untouched: p.faq === '' && !(p.previews || []).length, faq: dr.faq, pv: (dr.previews || []).length, head: dr.headline === keep.headline, st: p.status === keep.status, pr: p.price === keep.price, made: D.products.some((x) => x.fromJob === 'f1') };
+          Object.assign(p, keep); delete p.fillPending; FAC.exports = []; return r; });
+        pass(`[${kind}] โรงงาน: ปุ่มลงร้านทุกเล่มที่ยังไม่มี + งานเติมรายละเอียด: ไม่แก้สินค้าจนกว่าจะกดบันทึก เติมเฉพาะช่องที่ว่างในหน้าแก้`, fb.bulk && fb.untouched && fb.faq === 'Q|A' && fb.pv === 1 && fb.head && fb.st && fb.pr && !fb.made, JSON.stringify(fb));
         const ai = await page.evaluate(async () => { const mk = (id, no, price) => ({ id, status: 'done', listing: 'pending', title: 'Book ' + no, price, set_name: 'ชุดทดสอบ', set_no: no, images: ['https://x/' + id + '.jpg'], previews: ['https://x/p3.jpg', 'https://x/p4.jpg'], listing_copy: { name: 'Book ' + no, headline: 'H', desc: 'D', features: 'F' }, sku: 'SL-10' + no });
           FAC.all = [mk('j1', 1, 199), mk('j2', 2, 149)]; FAC.exports = FAC.all.slice(); SETI.exp = {}; SETI.bun = {}; facExportImport(); await new Promise((r) => setTimeout(r, 600));
           const a = D.products.find((p) => p.fromJob === 'j1'), bun = D.products.find((p) => p.fromSetName === 'ชุดทดสอบ');
@@ -404,6 +404,10 @@ try {
           await page.locator('[data-a="saveProduct"][data-status="published"]').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(500);
           const r = await page.evaluate((id) => { const p = getProduct(id), o = { st: p.status, ok: !!p.audioOk }; const i = D.products.findIndex((x) => x.id === id); D.products[i] = window.__ap; S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; render(false); return o; }, prep.id);
           pass(`[${kind}] เล่มมีไฟล์เสียง: มีช่องติ๊กยืนยัน Drive เป็นสาธารณะ ไม่ติ๊กกดเผยแพร่ไม่ได้ · ติ๊กแล้วเผยแพร่ได้`, prep.box && prep.link && /Google Drive/.test(blocked.err) && blocked.st === 'draft' && r.st === 'published' && r.ok, JSON.stringify({ ...prep, blocked, r })); }
+        { const r = await page.evaluate(() => { const b = D.products.find((x) => isBundle(x)); S.view = 'admin'; S.tab = 'products'; act('editProduct', { dataset: { id: b.id } }); const m = getProduct(b.items[0]), before = JSON.stringify(m);
+            m.bookCover = 'https://x/new.jpg'; bxUseCover(m, true); S.bxImg = 'all'; render(true); const stop = !!document.querySelector('[data-a="aiStop"]'); S.bxImg = '';
+            const dirty = bxDirty(); act('cancelEdit', { dataset: {} }); return { stop, dirty, undone: JSON.stringify(getProduct(m.id)) === before, snap: S.bxSnap === null }; });
+          pass(`[${kind}] หน้าแก้ชุด: มีปุ่มหยุดทำปก AI · ปก/รูปที่ทำไว้ไม่บันทึกจนกดบันทึก กดยกเลิกแล้วกลับเป็นแบบเดิม`, r.stop && r.dirty && r.undone && r.snap, JSON.stringify(r)); }
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);
