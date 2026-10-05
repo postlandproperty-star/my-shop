@@ -486,6 +486,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-body{border-top-left-radius:0;min-height:180px}.fqt-hint{margin:0 0 10px}.fqt-lab{display:block;font-weight:700;margin:0 0 6px}
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
+.sp-rv{display:inline-flex;gap:6px;align-items:center;background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}.sp-rv b{color:#E8A20C}.sp-rv span{color:#E8A20C;letter-spacing:1px}
 .st-bsold{display:inline-block;font-size:13px;font-weight:600;color:#B4471A;margin-top:4px}
 .aud{padding:12px 14px;margin-top:14px;border:1.5px solid #E9A23B;background:#FFF8EC}.aud.ok{border-color:#3f9a5a;background:#F1FAF3}.aud-steps{margin:6px 0 8px;padding-left:20px}.aud-ok{display:flex;gap:8px;align-items:flex-start;font-weight:600}.aud-ok input{width:20px;height:20px;flex:none;margin-top:2px}.aud-warn{display:block;margin-top:4px;color:#B4471A}
 .aud-chk{display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center;margin:0 0 8px}.aud-r{font-size:13px;font-weight:600}.aud-r.public{color:#2f7a45}.aud-r.private,.aud-r.missing{color:#B4471A}.fill-note{background:#F1F5FF;border-radius:10px;padding:8px 12px;margin:10px 0 0}
@@ -647,7 +648,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .sp-price{display:flex;align-items:baseline;gap:10px}.sp-price .now{font-family:var(--font-head);font-size:32px;line-height:1}.sp-price .old{text-decoration:line-through;opacity:.75;font-size:16px}
 .sp-cd{display:flex;align-items:center;gap:4px;font-size:13px}.sp-cd span{margin-right:4px;opacity:.9}.sp-cd b{background:#0F1B33;color:#fff;border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums;font-size:15px}.sp-cd i{font-style:normal;font-weight:700}
 .sp-info{padding-top:16px;padding-bottom:22px}.sp-info h1{font-size:clamp(21px,5.2vw,30px);line-height:1.3;color:var(--ink)}
-.sp-meta{display:flex;gap:14px;color:var(--muted);font-size:14px;margin-top:6px}
+.sp-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;color:var(--muted);font-size:14px;margin-top:6px}
 .sp-info .lead{margin-top:10px;color:var(--ink)}
 .paylogos{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:14px 0 6px}
 .paylogos.sm{justify-content:flex-start;margin:12px 0 0;gap:6px}
@@ -2114,7 +2115,7 @@ function bundleView(p){
     <div class="wrap sp-info">
       <span class="bx-kicker">📦 ชุด ${books.length} เล่ม${sum>minP?` · ราคาแยกเล่ม ${baht(sum)} ประหยัด ${baht(sum-minP)}`:''}</span>
       <h1>${esc(p.name)}</h1>
-      ${sold>=SOLD_MIN_SET?`<div class="sp-meta"><span>🔥 ขายแล้ว ${sold.toLocaleString('th-TH')} ชุด</span></div>`:''}
+      ${sold>=SOLD_MIN_SET||rvTop(p)?`<div class="sp-meta">${rvTop(p)}${sold>=SOLD_MIN_SET?`<span>🔥 ขายแล้ว ${sold.toLocaleString('th-TH')} ชุด</span>`:''}</div>`:''}
       ${p.headline&&p.headline!==p.name||p.desc?`<p class="lead" style="display:block">${p.headline&&p.headline!==p.name?`<b>${esc(p.headline)}</b>${p.desc?'<br>':''}`:''}${esc(p.desc||'')}</p>`:''}
       <div class="sp-perks"><span>⚡ รับไฟล์ทุกเล่มทันทีหลังชำระเงิน</span><span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${pvN?`<span>👀 ดูตัวอย่างได้ ${pvN} เล่ม</span>`:''}</div>
       <div class="hero-cta">
@@ -2202,9 +2203,11 @@ const CATS={notion:'Notion Template',grammar:'Grammar',vocab:'คำศัพท
 const STORE_MIN=2,CHAT_URL='https://m.me/1264839566720049';
 const REVIEWS=(()=>{try{return (window.__SHOP__&&window.__SHOP__.reviews)||{};}catch(e){return {};}})(); // รีวิวจากผู้ซื้อจริง {productId:{avg,count,items}}
 const starStr=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
+// ดาวรีวิวจากผู้ซื้อจริงใต้ชื่อสินค้าบนหน้าขาย (กดแล้วเลื่อนไปที่รีวิว)
+const rvTop=p=>{const r=REVIEWS[p.id];return r&&r.count?`<button type="button" class="sp-rv" data-a="rvJump"><b>★ ${r.avg.toFixed(1)}</b> <span>${starStr(r.avg)}</span> ${r.count} รีวิวจากผู้ซื้อจริง</button>`:'';};
 const rvLine=p=>{const r=REVIEWS[p.id];return r&&r.count?`<span class="st-rv" aria-label="คะแนน ${r.avg} จาก 5 จาก ${r.count} รีวิว"><b>★ ${r.avg.toFixed(1)}</b> (${r.count})</span>`:'';};
 function rvSection(p,cls){const r=REVIEWS[p.id];if(!r||!r.count)return '';
-  return `<section class="${cls}"><div class="${cls==='section'?'wrap':''}"><h2>รีวิวจากผู้ซื้อจริง</h2>
+  return `<section class="${cls}" id="reviews"><div class="${cls==='section'?'wrap':''}"><h2>รีวิวจากผู้ซื้อจริง</h2>
     <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ทุกรีวิวมาจากคนที่ซื้อจริง</span></div><p class="fine rv-note">ผู้รีวิวได้รับโค้ดส่วนลดเล่มถัดไปเป็นการขอบคุณ ไม่ว่าจะให้กี่ดาว</p>
     <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div><span class="rv-ver">✓ ผู้ซื้อจริง${x.em?` · ${esc(x.em)}`:''}</span>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
 const VIP_OPEN=(()=>{try{return !!(window.__SHOP__&&window.__SHOP__.vip&&window.__SHOP__.vip.open);}catch(e){return false;}})(); // เปิดรับสมาชิก VIP แล้ว (หน้าแรกโชว์การ์ด VIP)
@@ -2406,7 +2409,7 @@ function shopView(){
     </div></div>
     <div class="wrap sp-info">
       <h1>${esc(p.headline)}</h1>
-      ${sold>=SOLD_MIN||reviews.length?`<div class="sp-meta">${sold>=SOLD_MIN?`<span>ขายแล้ว ${sold.toLocaleString('th-TH')} ชิ้น</span>`:''}${reviews.length?`<span>รีวิว ${reviews.length}</span>`:''}</div>`:''}
+      ${sold>=SOLD_MIN||reviews.length||rvTop(p)?`<div class="sp-meta">${rvTop(p)}${sold>=SOLD_MIN?`<span>ขายแล้ว ${sold.toLocaleString('th-TH')} ชิ้น</span>`:''}${reviews.length&&!rvTop(p)?`<span>รีวิว ${reviews.length}</span>`:''}</div>`:''}
       ${p.desc?`<p class="lead">${esc(p.desc)}</p>`:''}
       <div class="sp-perks"><span>⚡ รับไฟล์ทันทีหลังชำระเงิน</span><span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${prev.length?`<span>👀 ดูตัวอย่างได้ ${prev.length} หน้า</span>`:''}</div>
       <div class="hero-cta">
@@ -5710,10 +5713,11 @@ function act(a,el){
     case 'rvReq':{const to=el.dataset.to,sid=el.dataset.sid;if(to==='customer'&&S.confirm!=='rv:'+sid){S.confirm='rv:'+sid;el.textContent='กดอีกครั้งเพื่อส่งถึงลูกค้า';break;}S.confirm='';el.disabled=true;toast('กำลังส่ง...');
       authFetch('/api/content?action=review_send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid,to})}).then(j=>{if(j&&j.ok){toast(to==='me'?'ส่งตัวอย่างไปที่อีเมลของคุณแดนแล้ว':'ส่งอีเมลขอรีวิวถึงลูกค้าแล้ว');if(to==='customer'){RVA.sentAt=RVA.sentAt||{};RVA.sentAt[sid]=new Date().toISOString();}}else toast((j&&j.error)||'ส่งไม่สำเร็จ');render(true);});break;}
     case 'rvopen':S.rvopen=!S.rvopen;break;
-    case 'rvf':S.rvf=el.dataset.v;break;
+    case 'rvJump':{const t=document.getElementById('reviews');if(t)window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'});break;}
+    case 'rvf':S.rvf=el.dataset.v;render(true);break;
     case 'rvdel':if(S.confirm!=='rvdel:'+id){S.confirm='rvdel:'+id;render(true);break;}S.confirm='';
       authFetch('/api/content?action=review_delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){RVA.list=(RVA.list||[]).filter(x=>x.id!==id);toast('ลบรีวิวแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ลบไม่สำเร็จ');render(true);});break;
-    case 'rvMailNow':if(S.confirm!=='rvmail'){S.confirm='rvmail';break;}S.confirm='';el.disabled=true;toast('กำลังส่งอีเมลขอรีวิว...');
+    case 'rvMailNow':if(S.confirm!=='rvmail'){S.confirm='rvmail';render(true);break;}S.confirm='';el.disabled=true;toast('กำลังส่งอีเมลขอรีวิว...');
       adminApi('/api/content?action=review_mail').then(j=>{toast(j&&j.ok?(j.skipped?'ยังไม่ได้ตั้งค่าอีเมลบน Vercel':`ส่งแล้ว ${j.sent} ฉบับ`):((j&&j.error)||'ส่งไม่สำเร็จ'));RVA.list=null;RVA.due=undefined;render(true);});break;
     case 'rvPreview':{const w=window.open('','_blank');adminApi('/api/content?action=review_mail&preview=1').then(j=>{if(j&&j.link){if(w)w.location=j.link;else location.href=j.link;}else{if(w)w.close();toast('ยังไม่มีออเดอร์ที่จ่ายแล้วให้ทำตัวอย่าง');}});break;}
     case 'soRefresh':loadSO(true);break;
