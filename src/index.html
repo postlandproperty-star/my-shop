@@ -486,6 +486,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-body{border-top-left-radius:0;min-height:180px}.fqt-hint{margin:0 0 10px}.fqt-lab{display:block;font-weight:700;margin:0 0 6px}
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
+.bx-sec .feat li,.bx-sec .pain li{font-weight:400}
 .sp-rv{display:inline-flex;gap:6px;align-items:center;background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}.sp-rv b{color:#E8A20C}.sp-rv span{color:#E8A20C;letter-spacing:1px}
 .st-bsold{display:inline-block;font-size:13px;font-weight:600;color:#B4471A;margin-top:4px}
 .aud{padding:12px 14px;margin-top:14px;border:1.5px solid #E9A23B;background:#FFF8EC}.aud.ok{border-color:#3f9a5a;background:#F1FAF3}.aud-steps{margin:6px 0 8px;padding-left:20px}.aud-ok{display:flex;gap:8px;align-items:flex-start;font-weight:600}.aud-ok input{width:20px;height:20px;flex:none;margin-top:2px}.aud-warn{display:block;margin-top:4px;color:#B4471A}
@@ -1803,6 +1804,8 @@ const isBundle=p=>p&&p.type==='bundle';
 const end90=x=>Math.max(90,Math.round((Number(x)-90)/100)*100+90); // ปัดเป็นราคาลงท้าย 90 ที่ใกล้ที่สุด (1,700×55% → 890)
 // เผยแพร่เล่มในชุดพร้อมชุด: ค่าเริ่มต้นติ๊กเมื่อชุดยังไม่เคยขาย (เช่นชุดใหม่จากโรงงาน) · ชุดที่ขายอยู่แล้วไม่ติ๊ก (กันเล่มที่ตั้งใจขายเฉพาะในชุดถูกเปิดขายเดี่ยว)
 const bxPubOn=()=>S.bxPubBooks!=null?S.bxPubBooks:!(S.edit&&S.edit!=='new'&&(getProduct(S.edit)||{}).status==='published');
+// หัวข้อของชุด: ใช้ที่เขียนไว้ในชุดก่อน ถ้ายังว่างรวมจากเล่มในชุด (ไม่ซ้ำ) จะได้ไม่มีหัวข้อหายจากหน้าขาย
+const setLines=(p,k,n)=>{const own=lines(p[k]);if(own.length)return own;const seen=new Set(),out=[];for(const b of bundleBooks(p))for(const x of lines(b[k])){const key=x.replace(/\s+/g,'').toLowerCase();if(!seen.has(key)){seen.add(key);out.push(x);}}return out.slice(0,n);};
 const setsOf=p=>D.products.filter(b=>isBundle(b)&&(b.items||[]).includes(p.id));
 function bundleBooks(p){return (p.items||[]).map(getProduct).filter(Boolean);}
 function bundlePlans(p){return (p.plans||[]).filter(x=>x.on!==false&&Number(x.price)>=1);}
@@ -2135,16 +2138,16 @@ function bundleView(p){
   </div></div></section>`;})()}
 
   <main class="wrap">
-    ${(()=>{const pn=lines(p.pains);return pn.length?`<section class="bx-sec"><h2>ถ้าคุณเคยเจอแบบนี้</h2><ul class="pain">${pn.map(x=>`<li><span class="cross"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><span>${esc(x)}</span></li>`).join('')}</ul></section>`:'';})()}
-    <section class="bx-sec"><h2>ในชุดมีอะไรบ้าง</h2>
+    ${(()=>{const pn=setLines(p,'pains',8);return pn.length?`<section class="bx-sec"><h2>ถ้าคุณเคยเจอแบบนี้</h2><ul class="pain">${pn.map(x=>`<li><span class="cross"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><span>${esc(x)}</span></li>`).join('')}</ul></section>`:'';})()}
+    <section class="bx-sec"><h2>ปกทุกเล่มในชุด</h2><p class="fine" style="margin:-4px 0 4px">กดที่ปกเพื่อดูหน้าตัวอย่างของเล่มนั้น</p>
       <div class="bx-books">${books.map((b,i)=>`<button class="bx-book" data-a="bxPv" data-v="${i}" title="ดูหน้าตัวอย่าง"><div class="bx-cover" ${cover(b,i)}>${p.freeItem===b.id?'<span class="bx-free">แถมฟรี</span>':''}${b.images&&b.images[0]?'':`<small>เล่ม ${i+1}</small><strong>${esc(b.name)}</strong>`}</div><div class="bx-meta">เล่ม ${i+1} · ${baht(b.price)} · ดูตัวอย่าง ›</div></button>`).join('')}</div>
     </section>
     ${(()=>{const ft=lines(p.features),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
       return ft.length?`<section class="bx-sec"><h2>ได้อะไรบ้างในชุดนี้</h2><ul class="feat">${ft.map(x=>`<li><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></section>`:'';})()}
-    ${(()=>{const own=lines(p.toc).map(pair),rows=own.length?own:books.map((b,i)=>[`เล่ม ${i+1} ${b.name}`,pfmt(b)==='notion'?'Notion':pagesOf(b)?String(pagesOf(b)):'']),tp=books.reduce((a,b)=>a+pagesOf(b),0);if(!rows.length)return '';
-      const row=t=>`<li><span>${esc(t[0])}</span><i class="dots"></i><span class="pg">${esc(t[1]||'')}</span></li>`;
-      return `<section class="bx-sec"><h2>ชุดนี้ประกอบด้วยอะไรบ้าง</h2>${own.length?'':`<p class="fine" style="margin:-4px 0 8px">${books.length} เล่ม${tp?` · รวม ${tp.toLocaleString('th-TH')} หน้า · ตัวเลขด้านขวา = จำนวนหน้าของแต่ละเล่ม`:''}</p>`}<div class="toc-card"><ul class="toc">${rows.slice(0,6).map(row).join('')}</ul>${rows.length>6?`<details><summary>ดูอีก ${rows.length-6} รายการ</summary><ul class="toc" style="margin-top:12px">${rows.slice(6).map(row).join('')}</ul></details>`:''}</div></section>`;})()}
-    ${(()=>{const fw=lines(p.forwho),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+    ${(()=>{const own=lines(p.toc).map(pair),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+      const rows=own.length?own.map(t=>t[0]):books.map(b=>b.name);if(!rows.length)return '';
+      return `<section class="bx-sec"><h2>ชุดนี้ประกอบด้วยอะไรบ้าง</h2><ul class="feat">${rows.map(x=>`<li><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></section>`;})()}
+    ${(()=>{const fw=setLines(p,'forwho',6),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
       return fw.length?`<section class="bx-sec"><h2>เหมาะกับใคร</h2><div class="who"><div class="card"><h3>เหมาะกับ</h3><ul class="feat">${fw.map(x=>`<li style="border:0;padding:0"><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></div></div></section>`:'';})()}
     <section class="bx-sec" id="bx-preview"><h2>ดูตัวอย่างเนื้อหา</h2>
       <p class="fine" style="margin:4px 0 10px">หน้าจริงจากในเล่ม เลือกเล่มแล้วปัดดู กดที่หน้าเพื่อขยาย</p>
