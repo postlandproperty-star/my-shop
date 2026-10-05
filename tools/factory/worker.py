@@ -10,7 +10,7 @@
 #        งานเติมรายละเอียดสินค้าเดิม (fill_id): ส่งเฉพาะช่องใน fill_need · ใส่ PDF ถ้าต้องทำหน้าตัวอย่าง (ไม่อัป PDF ซ้ำ)
 #   CONTENT_KEY=... python3 tools/factory/worker.py fail <job_id> "เหตุผลสั้นๆ"
 #
-# listing.json = ข้อความหน้าขาย {name, headline, desc, features, forwho, notfor, faq, specs, toc} (ห้ามใส่ราคา)
+# listing.json = ข้อความหน้าขาย {name, headline, desc, features, forwho, pains, faq, specs, toc} (ห้ามใส่ราคา · ไม่ใช้ notfor แล้ว)
 # ไฟล์เสียงไม่อัปขึ้นร้าน (อยู่ Google Drive ตาม QR ในเล่ม)
 import json, os, io, sys, argparse, subprocess, urllib.request
 

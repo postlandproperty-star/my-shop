@@ -438,6 +438,12 @@ try {
             RVA.list = [{ id: 'r1', stars: 5, status: 'live', name: 'ก', product_name: 'x' }, { id: 'r2', stars: 2, status: 'hidden', name: 'ข', product_name: 'x' }]; RVA.due = 0; S.view = 'admin'; S.tab = 'reviews'; render(false);
             act('rvf', { dataset: { v: 'hidden' } }); const cards = document.querySelectorAll('.rvt-card').length; delete REVIEWS[p.id]; RVA.list = null; S.rvf = 'all'; S.tab = 'products'; render(false); return { top, sec, cards }; });
           pass(`[${kind}] รีวิว: ดาวรีวิวผู้ซื้อจริงขึ้นใต้ชื่อสินค้า (กดไปที่รีวิว) · ตัวกรองในแท็บรีวิวกดแล้วเปลี่ยนจริง`, /4\.0/.test(r.top) && r.sec && r.cards === 1, JSON.stringify(r)); }
+        { const r = await page.evaluate(() => { const b = D.products.find((x) => isBundle(x) && x.status === 'published'), keep = JSON.stringify(b); b.pains = 'สับสน Tense\nทำข้อสอบไม่ทัน'; b.features = 'ครบ 10 เล่ม\nเฉลยละเอียด'; b.forwho = 'คนเตรียมสอบ TOEIC'; b.toc = '';
+            const p = D.products.find((x) => !isBundle(x) && x.status === 'published'), pk = p.notfor; p.notfor = 'คนที่ไม่อยากอ่าน';
+            S.view = 'shop'; S.edit = null; selectProduct(b.id); render(false); const h = [...document.querySelectorAll('.bx-sec h2')].map((x) => x.textContent);
+            selectProduct(p.id); render(false); const nf = /อาจยังไม่เหมาะกับ/.test(document.body.textContent);
+            Object.assign(b, JSON.parse(keep)); delete b.pains; if (!JSON.parse(keep).pains) delete b.pains; p.notfor = pk; S.view = 'admin'; S.tab = 'products'; render(false); return { h, nf }; });
+          pass(`[${kind}] หน้าชุด: มีถ้าคุณเคยเจอแบบนี้ · ได้อะไรบ้าง · สารบัญ · เหมาะกับใคร · หน้าเล่มไม่มี "อาจยังไม่เหมาะกับ"`, ['ถ้าคุณเคยเจอแบบนี้', 'ได้อะไรบ้างในชุดนี้', 'สารบัญ', 'เหมาะกับใคร'].every((t) => r.h.includes(t)) && !r.nf, JSON.stringify(r)); }
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);

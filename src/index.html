@@ -1941,6 +1941,10 @@ function bundleForm(){
       <div class="field"><label>สถานะตอนนี้</label><p style="margin:6px 0 0">${d.status==='published'?'<span class="badge ok">ขายอยู่</span>':'<span class="badge gray">ฉบับร่าง</span>'} <span class="fine">เลือกด้วยปุ่มบันทึกด้านล่าง</span></p></div>
     </div>
     ${sellPicker(d)}
+    <div class="field">${lb('b-pains','ถ้าคุณเคยเจอแบบนี้ (ปัญหาที่คนซื้อเจอ บรรทัดละข้อ)')}<textarea class="input" id="b-pains" data-d="pains" rows="4">${esc(d.pains||'')}</textarea></div>
+    <div class="field">${lb('b-features','ได้อะไรบ้างในชุดนี้ (บรรทัดละข้อ)')}<textarea class="input" id="b-features" data-d="features" rows="4">${esc(d.features||'')}</textarea></div>
+    <div class="field">${lb('b-forwho','เหมาะกับใคร (บรรทัดละข้อ)')}<textarea class="input" id="b-forwho" data-d="forwho" rows="3">${esc(d.forwho||'')}</textarea></div>
+    <div class="field">${lb('b-toc','สารบัญ (ไม่ใส่ = ระบบใช้รายชื่อเล่มและจำนวนหน้าให้เอง · รูปแบบ ชื่อ | หน้า)')}<textarea class="input" id="b-toc" data-d="toc" rows="3">${esc(d.toc||'')}</textarea></div>
     <div class="field">${lb('b-color','สีประจำชุด')}<select class="input" id="b-color" data-d="color">${COLORS.map(c=>`<option value="${c[0]}" ${d.color===c[0]?'selected':''}>${esc(c[1])}</option>`).join('')}</select></div>
   </div>
 
@@ -2032,7 +2036,7 @@ function bundleData(d){ // ชุดจากช่องที่กรอก�
   return {type:'bundle',sell:SELL[d.sell]?d.sell:'both',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
     plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
     sku:String(d.sku||'').trim().toUpperCase(),cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:'',
-    ...Object.fromEntries(['specs','toc','forwho','notfor','features','freshNote','copyDone','coverPrice','coverV','oldCovers','audioOk'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]))};
+    ...Object.fromEntries(['specs','toc','forwho','notfor','features','pains','freshNote','copyDone','coverPrice','coverV','oldCovers','audioOk'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]))};
 }
 /* เปลี่ยนเล่มในชุดเอง (เพิ่ม/เอาออก) → ทุกอย่างของชุดเปลี่ยนตาม (คุณแดนขอ 4 ต.ค. 69): จำนวนเล่มในชื่อ/ข้อความ · จำนวนหน้ารวม · ราคา (คงสัดส่วนส่วนลดเดิม)
    · หัวข้อขาย/คำโปรยที่ AI เขียน (ถ้ายังไม่ได้แก้เอง) · รูปชุดจัดใหม่จากปกตอนบันทึก (รูปเดิมเก็บใน oldCovers) — แล้วหยุดให้ตรวจก่อนกดบันทึกอีกครั้ง */
@@ -2131,9 +2135,17 @@ function bundleView(p){
   </div></div></section>`;})()}
 
   <main class="wrap">
+    ${(()=>{const pn=lines(p.pains);return pn.length?`<section class="bx-sec"><h2>ถ้าคุณเคยเจอแบบนี้</h2><ul class="pain">${pn.map(x=>`<li><span class="cross"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span><span>${esc(x)}</span></li>`).join('')}</ul></section>`:'';})()}
     <section class="bx-sec"><h2>ในชุดมีอะไรบ้าง</h2>
       <div class="bx-books">${books.map((b,i)=>`<button class="bx-book" data-a="bxPv" data-v="${i}" title="ดูหน้าตัวอย่าง"><div class="bx-cover" ${cover(b,i)}>${p.freeItem===b.id?'<span class="bx-free">แถมฟรี</span>':''}${b.images&&b.images[0]?'':`<small>เล่ม ${i+1}</small><strong>${esc(b.name)}</strong>`}</div><div class="bx-meta">เล่ม ${i+1} · ${baht(b.price)} · ดูตัวอย่าง ›</div></button>`).join('')}</div>
     </section>
+    ${(()=>{const ft=lines(p.features),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+      return ft.length?`<section class="bx-sec"><h2>ได้อะไรบ้างในชุดนี้</h2><ul class="feat">${ft.map(x=>`<li><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></section>`:'';})()}
+    ${(()=>{const own=lines(p.toc).map(pair),rows=own.length?own:books.map((b,i)=>[`เล่ม ${i+1} ${b.name}`,pagesOf(b)?String(pagesOf(b)):'']);if(!rows.length)return '';
+      const row=t=>`<li><span>${esc(t[0])}</span><i class="dots"></i><span class="pg">${esc(t[1]||'')}</span></li>`;
+      return `<section class="bx-sec"><h2>สารบัญ</h2>${own.length?'':'<p class="fine" style="margin:-4px 0 8px">ตัวเลขด้านขวา = จำนวนหน้าของแต่ละเล่ม</p>'}<div class="toc-card"><ul class="toc">${rows.slice(0,6).map(row).join('')}</ul>${rows.length>6?`<details><summary>ดูอีก ${rows.length-6} รายการ</summary><ul class="toc" style="margin-top:12px">${rows.slice(6).map(row).join('')}</ul></details>`:''}</div></section>`;})()}
+    ${(()=>{const fw=lines(p.forwho),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+      return fw.length?`<section class="bx-sec"><h2>เหมาะกับใคร</h2><div class="who"><div class="card"><h3>เหมาะกับ</h3><ul class="feat">${fw.map(x=>`<li style="border:0;padding:0"><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></div></div></section>`:'';})()}
     <section class="bx-sec" id="bx-preview"><h2>ดูตัวอย่างเนื้อหา</h2>
       <p class="fine" style="margin:4px 0 10px">หน้าจริงจากในเล่ม เลือกเล่มแล้วปัดดู กดที่หน้าเพื่อขยาย</p>
       <div class="bx-pvtabs">${books.map((b,i)=>`<button data-a="bxPv" data-v="${i}" aria-pressed="${i===pvSel}">เล่ม ${i+1}</button>`).join('')}</div>
@@ -2449,11 +2461,10 @@ function shopView(){
     ${toc.length>6?`<details><summary>ดูอีก ${toc.length-6} บท</summary><ul class="toc" style="margin-top:12px">${toc.slice(6).map(tocRow).join('')}</ul></details>`:''}</div>
   </div></section>`:''}
 
-  ${forwho.length||notfor.length?`<section class="section"><div class="wrap">
+  ${forwho.length?`<section class="section"><div class="wrap">
     <h2>เหมาะกับใคร</h2>
-    <div class="who ${forwho.length&&notfor.length?'two':''}">
-      ${forwho.length?`<div class="card"><h3>เหมาะกับ</h3><ul class="feat">${forwho.map(x=>`<li style="border:0;padding:0"><span class="tick">${TICK}</span><span>${esc(x)}</span></li>`).join('')}</ul></div>`:''}
-      ${notfor.length?`<div class="card"><h3>อาจยังไม่เหมาะกับ</h3><ul class="pain">${notfor.map(x=>`<li><span class="cross">${X}</span><span>${esc(x)}</span></li>`).join('')}</ul></div>`:''}
+    <div class="who">
+      <div class="card"><h3>เหมาะกับ</h3><ul class="feat">${forwho.map(x=>`<li style="border:0;padding:0"><span class="tick">${TICK}</span><span>${esc(x)}</span></li>`).join('')}</ul></div>
     </div>
   </div></section>`:''}
 
@@ -2870,7 +2881,6 @@ function productForm(){
     ${ta('e-specs','specs','ข้อมูลไฟล์ (บรรทัดละรายการ รูปแบบ ป้าย | ค่า)','รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | 96 หน้า')}
     ${ta('e-toc','toc','สารบัญ (บรรทัดละบท รูปแบบ ชื่อบท | หน้า)','อนุพันธ์ | 21')}
     ${ta('e-forwho','forwho','เหมาะกับใคร (บรรทัดละข้อ)')}
-    ${ta('e-notfor','notfor','อาจยังไม่เหมาะกับใคร (บรรทัดละข้อ บอกตรงๆ ช่วยลดการขอคืนเงิน)')}
     <div class="grid2">
       <div class="field">${lb('e-aname','ชื่อผู้เขียนหรือผู้จัดทำ')}<input class="input" id="e-aname" data-d="authorName" value="${esc(d.authorName)}"></div>
       <div class="field">${lb('e-sample','ลิงก์ไฟล์ตัวอย่างฟรี (ถ้ามี)')}<input class="input" id="e-sample" data-d="sampleLink" value="${esc(d.sampleLink)}" placeholder="https://"></div>
@@ -2967,7 +2977,7 @@ SETI.exp={};SETI.bun={};
 /* ทุกเล่มที่โรงงานทำเสร็จ (ผลิตใหม่ · จากคลัง · เล่มในชุด) → ฉบับร่างในแท็บ ✨ มาใหม่ กรอกรายละเอียดครบ (ข้อความหน้าขาย ปก หน้าตัวอย่าง SKU ราคาเสนอ)
    คุณแดนตรวจแล้วกดเผยแพร่เอง · Notion template / ขายต่างประเทศ ยังใช้การ์ดอนุมัติเดิม (ต้องใส่ลิงก์ Publish) */
 /* งานเติมรายละเอียดสินค้าเดิม (ระบบสร้างเองทุกชั่วโมง): เติมเฉพาะช่องที่ยังว่าง ไม่แก้ข้อความเดิม ไม่แก้ราคา ไม่เปลี่ยนสถานะ */
-const FILL_TH={headline:'หัวข้อขาย',desc:'คำอธิบาย',features:'สิ่งที่ได้',forwho:'เหมาะกับใคร',notfor:'ไม่เหมาะกับใคร',faq:'คำถามที่พบบ่อย',toc:'สารบัญ',specs:'รายละเอียดไฟล์',previews:'หน้าตัวอย่าง'};
+const FILL_TH={headline:'หัวข้อขาย',desc:'คำอธิบาย',features:'สิ่งที่ได้',forwho:'เหมาะกับใคร',pains:'ถ้าคุณเคยเจอแบบนี้',notfor:'ไม่เหมาะกับใคร',faq:'คำถามที่พบบ่อย',toc:'สารบัญ',specs:'รายละเอียดไฟล์',previews:'หน้าตัวอย่าง'};
 function facFill(js){const marks=[],got=[];
   for(const j of js){const p=D.products.find(x=>x.id===j.fill_id);marks.push({id:j.id,product_id:j.fill_id});if(!p)continue;
     const lc=j.listing_copy||{},f=[];
@@ -2995,7 +3005,7 @@ function facExportImport(){if(!sbSession||!D.products.length)return;facRepair();
     const note=[j.export_no?`จากคลังบน Mac${sku?' ('+sku+')':''} · ตั้งราคาก่อนเผยแพร่`:`ผลิตใหม่จากโรงงาน${sku?' ('+sku+')':''} · ราคาเสนอ ${Number(j.price)>=1?'฿'+j.price:'ยังไม่ตั้ง'}`,j.set_name?`เล่ม ${j.set_no||'?'} ในชุด "${j.set_name}"`:'',
       j.audio_path?`🎧 ไฟล์เสียงอยู่ใน Mac: ${j.audio_path}`:'',j.audio_drive?`เสียงอยู่ใน Google Drive แล้ว: ${j.audio_drive}`:j.audio_path?'ยังไม่ได้อัปเสียงขึ้น Drive → อัปไปที่ https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f แล้วแชร์แบบมีลิงก์':'',
       'อยากได้ภาพขาย 5 รูป: กด ✨ สร้างชุดภาพสินค้า ในหน้าแก้สินค้า'].filter(Boolean).join(' · ');
-    const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36)+Math.floor(Math.random()*99),name,headline:lc.headline||name,desc:lc.desc||String(j.summary||'').split('\n')[0].slice(0,300),features:lc.features||(pages?`ไฟล์ PDF ${pages} หน้า`:''),forwho:lc.forwho||'',notfor:lc.notfor||'',faq:lc.faq||'',specs:lc.specs||(pages?`รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | ${pages} หน้า`:''),toc:lc.toc||'',
+    const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36)+Math.floor(Math.random()*99),name,headline:lc.headline||name,desc:lc.desc||String(j.summary||'').split('\n')[0].slice(0,300),features:lc.features||(pages?`ไฟล์ PDF ${pages} หน้า`:''),forwho:lc.forwho||'',pains:lc.pains||'',notfor:lc.notfor||'',faq:lc.faq||'',specs:lc.specs||(pages?`รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | ${pages} หน้า`:''),toc:lc.toc||'',
       price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url||'',images:(j.images||[]).slice(0,5),previews:(j.previews||[]).slice(0,6),cat:guessCat(j.title+' '+(j.category||'')),slug:setSlug(name),sku,status:'draft',sell:'store',fresh:true,freshNote:note,fromJob:j.id,audio:!!(j.audio_path||j.audio_drive),audioDrive:j.audio_drive||''});
     D.products.push(p);if(!p.sku)ensureSkus();save();clearTimeout(saveTimer);
     flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=factory_list',{id:j.id,product_id:p.id});}).then(()=>{toast(`📗 ${p.sku||''} ${String(name).slice(0,40)} เข้าแท็บมาใหม่แล้ว`);FAC.exports=(FAC.exports||[]).filter(x=>x.id!==j.id);facSetBundles();render(true);}).catch(e=>{console.error(e);delete SETI.exp[j.id];});}
@@ -3024,15 +3034,16 @@ async function pdfCoverUrl(link){
 /* เปิดหน้าแก้ชุดจากโรงงาน: เตรียมให้ในหน้าแก้ (ยังไม่บันทึก) — ปกเล่มแนวตั้งจากหน้าแรก PDF · จำนวนเล่มในชื่อ · ข้อความขาย · รูปชุด */
 async function setPrep(id){const b0=getProduct(id),d=S.draft;if(!b0||!d||S.edit!==id||d.type!=='bundle')return;
   const books=d.items.map(getProduct).filter(x=>x&&!isBundle(x));if(books.length<2)return;
-  const needBook=books.some(x=>!x.bookCover&&x.link),needCount=nameCount(d.name)&&nameCount(d.name)!==books.length,needCover=!d.cover||(d.coverAuto&&d.coverV!==2)||needBook||needCount,
-    needCopy=!d.copyDone&&(!d.headline||d.headline===d.name||/^ครบ \d+ เล่มในชุดเดียว/.test(d.desc||''));
+  const fac=!!b0.fromSetName,needBook=fac&&books.some(x=>!x.bookCover&&x.link),needCount=nameCount(d.name)&&nameCount(d.name)!==books.length,needCover=fac&&(!d.cover||(d.coverAuto&&d.coverV!==2)||needBook||needCount), // รูป/ปกจัดให้เฉพาะชุดจากโรงงาน (ชุดที่ทำรูปเองไม่แตะ)
+    needCopy=(!d.copyDone&&(!d.headline||d.headline===d.name||/^ครบ \d+ เล่มในชุดเดียว/.test(d.desc||'')))||!lines(d.pains).length||!lines(d.forwho).length||!lines(d.features).length;
   if(!needCover&&!needCopy&&!needCount)return;const run=S.aiRun;S.bxImg='compose';render(true);
   try{
-    for(const x of books.filter(x=>!x.bookCover&&x.link)){try{const u=await pdfCoverUrl(x.link);if(run!==S.aiRun)return;x.bookCover=u;}catch(e){console.error('bookCover',x.sku,e);}}
+    for(const x of books.filter(x=>fac&&!x.bookCover&&x.link)){try{const u=await pdfCoverUrl(x.link);if(run!==S.aiRun)return;x.bookCover=u;}catch(e){console.error('bookCover',x.sku,e);}}
     if(needCount){const re=new RegExp('(^|[^\\d,])'+nameCount(d.name)+'(\\s*เล่ม)','g'),n=books.length;['name','headline','desc','freshNote'].forEach(k=>{if(d[k])d[k]=String(d[k]).replace(re,'$1'+n+'$2');});(d.plans||[]).forEach(p=>{p.name=String(p.name||'').replace(re,'$1'+n+'$2');});}
-    if(needCopy){const j=await adminPost('/api/content?action=set_copy',{name:d.name,books:books.map(x=>({name:x.name,headline:x.headline}))});if(run!==S.aiRun)return;if(j&&j.ok&&j.headline){d.headline=j.headline;if(j.desc)d.desc=j.desc;}d.copyDone=true;}
+    if(needCopy){const fresh=!d.copyDone&&(!d.headline||d.headline===d.name||/^ครบ \d+ เล่มในชุดเดียว/.test(d.desc||''));const j=await adminPost('/api/content?action=set_copy',{name:d.name,books:books.map(x=>({name:x.name,headline:x.headline,forwho:x.forwho,pains:x.pains,features:x.features}))});if(run!==S.aiRun)return;
+      if(j&&j.ok){if(fresh&&j.headline){d.headline=j.headline;if(j.desc)d.desc=j.desc;}for(const k of ['pains','features','forwho'])if(!lines(d[k]).length&&j[k])d[k]=j[k];}d.copyDone=true;}
     if(needCover){const u=await uploadImage(await bxCompose(d,books));if(run!==S.aiRun)return;d.cover=u;d.coverAuto=books.map(x=>x.id).join(',');d.coverV=2;d.coverPrice=bxPrice(d);}
-    toast('📦 เตรียมชุดให้แล้ว (ปกเล่ม · รูปชุด · ข้อความ) ตรวจแล้วกดบันทึกเพื่อใช้ · กดยกเลิก = ไม่เปลี่ยน');
+    toast(`📦 เตรียมชุดให้แล้ว (${[needCover?'ปกเล่ม · รูปชุด':'',needCopy?'ข้อความขาย':''].filter(Boolean).join(' · ')}) ตรวจแล้วกดบันทึกเพื่อใช้ · กดยกเลิก = ไม่เปลี่ยน`);
   }catch(e){console.error('setPrep',e);}finally{if(run===S.aiRun){S.bxImg='';render(true);}}}
 function setSlug(name){let s=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'set';let t=s,i=2;while(D.products.some(p=>p.slug===t))t=s+'-'+i++;return t;}
 function facBox(inFactory){
@@ -5869,7 +5880,7 @@ function act(a,el){
     case 'bxPlan':{S.bplan=S.bplan||{};S.bplan[el.dataset.slug]=el.dataset.v;S.qr=null;qrStop();render(true);break;}
     case 'bxPv':{S.bxPv=Number(el.dataset.v)||0;render(true);const t=document.getElementById('bx-preview');if(t)t.scrollIntoView({block:'start',behavior:'smooth'});break;}
     case 'editProduct':if(S.bxSnap&&S.draft&&S.draft.type==='bundle'&&!isBundle(getProduct(id))){if(bxDirty()){toast('มีปก/รูปในชุดที่ยังไม่บันทึก กดบันทึกชุดก่อน (หรือยกเลิก) แล้วค่อยแก้เล่มนี้');break;}S.bxSnap=null;}
-      S.bxSynced='';S.bxAddOpen=false;S.bxSel=[];S.bxPubBooks=null;if(isBundle(getProduct(id)))bxSnapStart();S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));if(isBundle(getProduct(id))&&getProduct(id).fromSetName)setTimeout(()=>setPrep(id),50);S.edit=id;S.err='';render(false);break;
+      S.bxSynced='';S.bxAddOpen=false;S.bxSel=[];S.bxPubBooks=null;if(isBundle(getProduct(id)))bxSnapStart();S.draft=isBundle(getProduct(id))?bundleDraft(getProduct(id)):initDraft(getProduct(id));if(isBundle(getProduct(id)))setTimeout(()=>setPrep(id),50);S.edit=id;S.err='';render(false);break;
     case 'cancelEdit':S.aiRun=(S.aiRun||0)+1;S.bxImg='';S.coverBusy=false;bxSnapUndo();S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}

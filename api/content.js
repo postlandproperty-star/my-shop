@@ -144,7 +144,7 @@ async function workerBeat({ note = '' } = {}) { try { await sb('shop_state?on_co
 //   2) สินค้าในร้านที่หน้าขายยังมีช่องว่าง → งาน fill (Mac อ่านไฟล์แล้วเติมเฉพาะช่องที่ว่าง ไม่แก้ข้อความเดิม ไม่แก้ราคา)
 // งานอัตโนมัติต่อท้ายคิวเสมอ (ใบสั่งของคุณแดนได้ก่อน) · ทำครั้งเดียวต่อเล่ม/สินค้า ถ้าคุณแดนยกเลิกก็ไม่สร้างซ้ำ
 const normT = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-const LIST_NEED = ['headline', 'desc', 'features', 'forwho', 'notfor', 'faq', 'toc', 'specs', 'previews'];
+const LIST_NEED = ['headline', 'desc', 'features', 'forwho', 'pains', 'faq', 'toc', 'specs', 'previews']; // ไม่ใช้ "ไม่เหมาะกับใคร" แล้ว (คุณแดน 5 ต.ค. 69)
 const listGaps = (p, link) => LIST_NEED.filter((k) => k === 'previews' ? (p.kind !== 'notion' && !isNotionUrl(link) && !(p.previews || []).length) : !String(p[k] || '').trim()); // Notion template ไม่มีหน้า PDF ให้ทำตัวอย่าง
 async function autoListings(books) {
   const [shop, jobs, links] = await Promise.all([loadShop(), loadJobs(), loadLinks().catch(() => ({}))]);
@@ -209,7 +209,7 @@ function cleanGlobal(g) {
 // Mac ส่งบางช่องเป็น list/object (features [..], faq [{q,a}], specs {k:v}) → แปลงเป็นข้อความรูปแบบเดียวกับหน้าแก้สินค้า (บรรทัดละข้อ · "คำถาม | คำตอบ" · "หัวข้อ | ค่า")
 const listText = (v, k) => Array.isArray(v) ? v.map((x) => x && typeof x === 'object' ? (k === 'faq' ? `${x.q ?? x.question ?? x.Q ?? ''} | ${x.a ?? x.answer ?? x.A ?? ''}` : Object.values(x).join(' | ')) : String(x ?? '')).map((x) => x.trim()).filter((x) => x && x !== '|').join('\n')
   : v && typeof v === 'object' ? Object.entries(v).map(([a, b]) => `${a} | ${b}`).join('\n') : String(v ?? '');
-function cleanListing(l) { const t = (k, n) => listText(l[k], k).trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
+function cleanListing(l) { const t = (k, n) => listText(l[k], k).trim().slice(0, n); return { name: t('name', 120), headline: t('headline', 160), desc: t('desc', 400), features: t('features', 1500), forwho: t('forwho', 800), pains: t('pains', 1000), notfor: t('notfor', 600), faq: t('faq', 2000), specs: t('specs', 600), toc: t('toc', 1500) }; }
 // คลิป Reels ที่ขึ้นเพจแล้ว ส่งขึ้น Instagram ที่ผูกกับเพจด้วย (ไม่ทำให้โพสต์เพจล้มเหลวถ้า IG ไม่ผ่าน)
 // คืนบรรทัดบันทึก: "IG ✓ <id>" / "IG รอประมวลผล ig_container:<id>" (รอบถัดไปเผยแพร่ต่อ) / "IG ไม่ผ่าน: ..."
 async function crossToIg(fb, p, resume = '') {
@@ -1301,22 +1301,26 @@ export default async function handler(req, res) {
     if (action === 'set_copy') { // ชุดจากโรงงาน: หัวข้อขาย + คำโปรยของชุด (หน้าร้าน/เซลเพจ) จากชื่อและหัวข้อของเล่มในชุด
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
-      const b = await readBody(req), books = (Array.isArray(b.books) ? b.books : []).slice(0, 20).map((x) => `- ${String(x.name || '').slice(0, 150)}${x.headline && x.headline !== x.name ? ' — ' + String(x.headline).slice(0, 200) : ''}`).join('\n');
+      const b = await readBody(req), books = (Array.isArray(b.books) ? b.books : []).slice(0, 20).map((x) => `- ${String(x.name || '').slice(0, 150)}${x.headline && x.headline !== x.name ? ' — ' + String(x.headline).slice(0, 200) : ''}${x.features ? '\n  สิ่งที่ได้: ' + String(x.features).split('\n').slice(0, 4).join(' / ').slice(0, 300) : ''}`).join('\n');
       let out = null;
       try {
         const G = process.env.GEMINI_API_KEY;
         if (G && books) {
           const prompt = `เขียนข้อความขายภาษาไทยของ "ชุดหนังสือเรียน" ชื่อ "${String(b.name || '').slice(0, 120)}" ของร้าน SheetLab (หนังสือ PDF ซื้อแล้วได้ไฟล์ทันที) จากรายชื่อเล่มจริงด้านล่าง
-ตอบเป็น JSON เท่านั้น: {"headline": "...", "desc": "..."}
+ตอบเป็น JSON เท่านั้น: {"headline": "...", "desc": "...", "pains": ["..."], "features": ["..."], "forwho": ["..."]}
 headline = 1 ประโยค ไม่เกิน 110 ตัวอักษร บอกเป้าหมายและว่าครบอะไรบ้าง (เช่น ครบ 4 ทักษะ) ใช้คำจากรายชื่อเล่ม
 desc = 1–2 ประโยค ไม่เกิน 220 ตัวอักษร บอกว่าเหมาะกับใคร และทำไมซื้อเป็นชุดคุ้มกว่า
+pains = 6–10 ข้อ ปัญหาที่คนเตรียมสอบเจอจริง ขึ้นต้นแบบ "จำไม่ได้ว่า…" "สับสน…" "ทำข้อสอบ…ไม่ทัน" สั้น ข้อละไม่เกิน 70 ตัวอักษร (หัวข้อ "ถ้าคุณเคยเจอแบบนี้")
+features = 6–10 ข้อ สิ่งที่ได้ในชุดนี้ ใช้ตัวเลขจริงจากรายชื่อเล่ม (หัวข้อ "ได้อะไรบ้างในชุดนี้")
+forwho = 4–6 ข้อ เหมาะกับใคร (เขียนแต่ด้านบวก ไม่ต้องบอกว่าไม่เหมาะกับใคร)
 ห้ามอ้างสิ่งที่ไม่มีในรายชื่อเล่ม ห้ามรับประกันคะแนน ห้ามใส่ราคา ห้ามคำว่า "เจ้าของภาษา"
 เล่มในชุด:
 ${books}`;
           const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json' } }) });
           const j = await r.json().catch(() => ({})); const t = (j?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join('');
           const o = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1));
-          if (o && o.headline) out = { headline: String(o.headline).replace(/\s+/g, ' ').trim().slice(0, 160), desc: String(o.desc || '').replace(/\s+/g, ' ').trim().slice(0, 300) };
+          const L = (v, n) => (Array.isArray(v) ? v : String(v || '').split('\n')).map((x) => String(x).replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, n).join('\n');
+          if (o && o.headline) out = { headline: String(o.headline).replace(/\s+/g, ' ').trim().slice(0, 160), desc: String(o.desc || '').replace(/\s+/g, ' ').trim().slice(0, 300), pains: L(o.pains, 10), features: L(o.features, 10), forwho: L(o.forwho, 6) };
         }
       } catch (e) { console.error('set_copy', e.message); }
       return res.status(200).json({ ok: true, ai: !!out, ...(out || {}) });
