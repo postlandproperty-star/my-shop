@@ -443,7 +443,7 @@ try {
             S.view = 'shop'; S.edit = null; selectProduct(b.id); render(false); const h = [...document.querySelectorAll('.bx-sec h2')].map((x) => x.textContent);
             selectProduct(p.id); render(false); const nf = /อาจยังไม่เหมาะกับ/.test(document.body.textContent);
             Object.assign(b, JSON.parse(keep)); delete b.pains; if (!JSON.parse(keep).pains) delete b.pains; p.notfor = pk; S.view = 'admin'; S.tab = 'products'; render(false); return { h, nf }; });
-          pass(`[${kind}] หน้าชุด: มีถ้าคุณเคยเจอแบบนี้ · ได้อะไรบ้าง · สารบัญ · เหมาะกับใคร · หน้าเล่มไม่มี "อาจยังไม่เหมาะกับ"`, ['ถ้าคุณเคยเจอแบบนี้', 'ได้อะไรบ้างในชุดนี้', 'สารบัญ', 'เหมาะกับใคร'].every((t) => r.h.includes(t)) && !r.nf, JSON.stringify(r)); }
+          pass(`[${kind}] หน้าชุด: มีถ้าคุณเคยเจอแบบนี้ · ได้อะไรบ้าง · ชุดนี้ประกอบด้วยอะไรบ้าง · เหมาะกับใคร · หน้าเล่มไม่มี "อาจยังไม่เหมาะกับ"`, ['ถ้าคุณเคยเจอแบบนี้', 'ได้อะไรบ้างในชุดนี้', 'ชุดนี้ประกอบด้วยอะไรบ้าง', 'เหมาะกับใคร'].every((t) => r.h.includes(t)) && !r.nf, JSON.stringify(r)); }
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);

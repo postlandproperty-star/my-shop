@@ -1944,7 +1944,7 @@ function bundleForm(){
     <div class="field">${lb('b-pains','ถ้าคุณเคยเจอแบบนี้ (ปัญหาที่คนซื้อเจอ บรรทัดละข้อ)')}<textarea class="input" id="b-pains" data-d="pains" rows="4">${esc(d.pains||'')}</textarea></div>
     <div class="field">${lb('b-features','ได้อะไรบ้างในชุดนี้ (บรรทัดละข้อ)')}<textarea class="input" id="b-features" data-d="features" rows="4">${esc(d.features||'')}</textarea></div>
     <div class="field">${lb('b-forwho','เหมาะกับใคร (บรรทัดละข้อ)')}<textarea class="input" id="b-forwho" data-d="forwho" rows="3">${esc(d.forwho||'')}</textarea></div>
-    <div class="field">${lb('b-toc','สารบัญ (ไม่ใส่ = ระบบใช้รายชื่อเล่มและจำนวนหน้าให้เอง · รูปแบบ ชื่อ | หน้า)')}<textarea class="input" id="b-toc" data-d="toc" rows="3">${esc(d.toc||'')}</textarea></div>
+    <div class="field">${lb('b-toc','ชุดนี้ประกอบด้วยอะไรบ้าง (ไม่ใส่ = ระบบใช้รายชื่อเล่มและจำนวนหน้าให้เอง · รูปแบบ ชื่อ | หน้า)')}<textarea class="input" id="b-toc" data-d="toc" rows="3">${esc(d.toc||'')}</textarea></div>
     <div class="field">${lb('b-color','สีประจำชุด')}<select class="input" id="b-color" data-d="color">${COLORS.map(c=>`<option value="${c[0]}" ${d.color===c[0]?'selected':''}>${esc(c[1])}</option>`).join('')}</select></div>
   </div>
 
@@ -2141,9 +2141,9 @@ function bundleView(p){
     </section>
     ${(()=>{const ft=lines(p.features),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
       return ft.length?`<section class="bx-sec"><h2>ได้อะไรบ้างในชุดนี้</h2><ul class="feat">${ft.map(x=>`<li><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></section>`:'';})()}
-    ${(()=>{const own=lines(p.toc).map(pair),rows=own.length?own:books.map((b,i)=>[`เล่ม ${i+1} ${b.name}`,pagesOf(b)?String(pagesOf(b)):'']);if(!rows.length)return '';
+    ${(()=>{const own=lines(p.toc).map(pair),rows=own.length?own:books.map((b,i)=>[`เล่ม ${i+1} ${b.name}`,pfmt(b)==='notion'?'Notion':pagesOf(b)?String(pagesOf(b)):'']),tp=books.reduce((a,b)=>a+pagesOf(b),0);if(!rows.length)return '';
       const row=t=>`<li><span>${esc(t[0])}</span><i class="dots"></i><span class="pg">${esc(t[1]||'')}</span></li>`;
-      return `<section class="bx-sec"><h2>สารบัญ</h2>${own.length?'':'<p class="fine" style="margin:-4px 0 8px">ตัวเลขด้านขวา = จำนวนหน้าของแต่ละเล่ม</p>'}<div class="toc-card"><ul class="toc">${rows.slice(0,6).map(row).join('')}</ul>${rows.length>6?`<details><summary>ดูอีก ${rows.length-6} รายการ</summary><ul class="toc" style="margin-top:12px">${rows.slice(6).map(row).join('')}</ul></details>`:''}</div></section>`;})()}
+      return `<section class="bx-sec"><h2>ชุดนี้ประกอบด้วยอะไรบ้าง</h2>${own.length?'':`<p class="fine" style="margin:-4px 0 8px">${books.length} เล่ม${tp?` · รวม ${tp.toLocaleString('th-TH')} หน้า · ตัวเลขด้านขวา = จำนวนหน้าของแต่ละเล่ม`:''}</p>`}<div class="toc-card"><ul class="toc">${rows.slice(0,6).map(row).join('')}</ul>${rows.length>6?`<details><summary>ดูอีก ${rows.length-6} รายการ</summary><ul class="toc" style="margin-top:12px">${rows.slice(6).map(row).join('')}</ul></details>`:''}</div></section>`;})()}
     ${(()=>{const fw=lines(p.forwho),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
       return fw.length?`<section class="bx-sec"><h2>เหมาะกับใคร</h2><div class="who"><div class="card"><h3>เหมาะกับ</h3><ul class="feat">${fw.map(x=>`<li style="border:0;padding:0"><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></div></div></section>`:'';})()}
     <section class="bx-sec" id="bx-preview"><h2>ดูตัวอย่างเนื้อหา</h2>
