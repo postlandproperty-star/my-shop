@@ -487,6 +487,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}
+.osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
 .deal-card{padding:14px 16px;margin:12px 0}
 .alt-mail{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin-top:8px;width:100%}.alt-mail .input{flex:1;min-width:200px;max-width:340px}.free-send{padding:12px 14px;margin:12px 0;display:grid;gap:2px}
 .sp-rv{display:inline-flex;gap:6px;align-items:center;background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}.sp-rv b{color:#E8A20C}.sp-rv span{color:#E8A20C;letter-spacing:1px}
@@ -2677,7 +2678,13 @@ function ordersTab(){
   const byProduct=D.products.map(p=>{const l=paidAll.filter(o=>o.productId===p.id);return{p,n:l.length,rev:sum(l)};}).filter(x=>x.n).sort((a,b)=>b.rev-a.rev);
   const byCamp={};paidAll.forEach(o=>{const k=o.campaign||'(ไม่ได้มาจากแอด)';byCamp[k]=byCamp[k]||{n:0,rev:0};byCamp[k].n++;byCamp[k].rev+=Number(o.amount)||0;});
   const pool=D.orders.filter(o=>S.pfilter==='all'||o.productId===S.pfilter);
-  const list=pool.filter(o=>S.filter==='test'?isTestOrd(o):!isTestOrd(o)&&(S.filter==='all'?true:S.filter==='paid'?o.status==='paid':o.status!=='paid')).filter(o=>!S.chartDay||ymd(o.paidAt||o.created)===S.chartDay).sort((a,b)=>(b.paidAt||b.created)-(a.paidAt||a.created));
+  // ค้นหาออเดอร์: อีเมล ชื่อ สินค้า เลขออเดอร์ (ท้าย 8 ตัว) แคมเปญ · ช่วงวันที่ · เรียงตามเวลา/ยอด
+  const oq=String(S.oq||'').toLowerCase().trim(),ofrom=S.ofrom?Date.parse(S.ofrom+'T00:00:00'):0,oto=S.oto?Date.parse(S.oto+'T23:59:59'):0;
+  const oMatch=o=>!oq||[o.email,o.name,o.pname,o.id,o.sid,o.campaign,(o.items||[]).map(it=>it.name).join(' ')].join(' ').toLowerCase().includes(oq);
+  const list=pool.filter(o=>S.filter==='test'?isTestOrd(o):!isTestOrd(o)&&(S.filter==='all'?true:S.filter==='paid'?o.status==='paid':o.status!=='paid')).filter(o=>!S.chartDay||ymd(o.paidAt||o.created)===S.chartDay)
+    .filter(oMatch).filter(o=>{const t=o.paidAt||o.created;return(!ofrom||t>=ofrom)&&(!oto||t<=oto);})
+    .sort((a,b)=>S.osort==='amt'?(Number(b.amount)||0)-(Number(a.amount)||0):S.osort==='old'?(a.paidAt||a.created)-(b.paidAt||b.created):(b.paidAt||b.created)-(a.paidAt||a.created));
+  const lsum=list.filter(o=>o.status==='paid').reduce((a,o)=>a+(Number(o.amount)||0),0);
   const chips=[['paid','ชำระแล้ว'],['unpaid','เปิดหน้าจ่ายแต่ยังไม่จ่าย'],['all','ทั้งหมด'],['test','ออเดอร์ทดสอบ']];
   const kpi=(v,l,sub)=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}${sub?` · <span class="muted">${sub}</span>`:''}</div></div>`;
   return `
@@ -2701,6 +2708,13 @@ function ordersTab(){
     ${byProduct.map(x=>`<div class="ticket"><span>${esc(x.p.name)} <span class="muted">· ${x.n} ออเดอร์</span></span><span class="val">${baht(x.rev)}</span></div>`).join('')}
     ${Object.keys(byCamp).length>1?`<h3 class="h3" style="margin-top:14px">แยกตามแคมเปญโฆษณา</h3>${Object.entries(byCamp).sort((a,b)=>b[1].rev-a[1].rev).map(([k,v])=>`<div class="ticket"><span>${esc(k)} <span class="muted">· ${v.n} ออเดอร์</span></span><span class="val">${baht(v.rev)}</span></div>`).join('')}`:''}
   </div>`:''}
+  <div class="osearch">
+    <input class="input" type="search" data-oq="1" value="${esc(S.oq||'')}" placeholder="🔍 ค้นหา อีเมล ชื่อ สินค้า หรือเลขออเดอร์" aria-label="ค้นหาออเดอร์">
+    <label class="fine">ตั้งแต่ <input class="input" type="date" data-ofrom="1" value="${esc(S.ofrom||'')}"></label><label class="fine">ถึง <input class="input" type="date" data-oto="1" value="${esc(S.oto||'')}"></label>
+    <select class="input" data-osort="1" aria-label="เรียงออเดอร์"><option value="new" ${!S.osort||S.osort==='new'?'selected':''}>ล่าสุดก่อน</option><option value="old" ${S.osort==='old'?'selected':''}>เก่าสุดก่อน</option><option value="amt" ${S.osort==='amt'?'selected':''}>ยอดเงินมากสุด</option></select>
+    ${S.oq||S.ofrom||S.oto?`<button class="chip" data-a="oClear">ล้างการค้นหา</button>`:''}
+    <span class="fine osearch-n">พบ ${list.length} ออเดอร์${lsum?` · ชำระแล้วรวม ${baht(lsum)}`:''}</span>
+  </div>
   <div class="filters">
     <select id="pf" aria-label="กรองตามสินค้า"><option value="all">ทุกสินค้า</option>${D.products.map(p=>`<option value="${p.id}" ${S.pfilter===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
     <div class="chips">${chips.map(c=>`<button class="chip" data-a="filter" data-v="${c[0]}" aria-pressed="${S.filter===c[0]}">${c[1]}</button>`).join('')}</div>
@@ -3638,10 +3652,13 @@ function productsTab(){
     const adFix=ADST.d&&ADST.d.ads?ADST.d.ads.filter(a=>a.group==='fix').length+(ADST.d.access&&!ADST.d.access.ok&&ADST.d.access.reason==='account'?1:0):0;
     const adN=(ADA.items||[]).filter(x=>['pending','failed','launching','live','paused'].includes(x.status)).length,adWait=(ADA.items||[]).filter(x=>['pending','failed'].includes(x.status)).length;
     const tabs=[['all','ทั้งหมด',all.length],['live','ขายอยู่',all.filter(x=>x.status==='published').length],['draft','ฉบับร่าง',all.filter(x=>x.status!=='published').length],['new','✨ มาใหม่',all.filter(x=>x.fresh&&x.status!=='published').length],['fix','ต้องแก้ไข',all.filter(pNeedsFix).length]];
-    let list=all.filter(x=>st==='all'||(st==='live'?x.status==='published':st==='draft'?x.status!=='published':st==='new'?(x.fresh&&x.status!=='published'):pNeedsFix(x))).filter(x=>k==='all'||pfmt(x)===k);
+    let list=all.filter(x=>st==='all'||(st==='live'?x.status==='published':st==='draft'?x.status!=='published':st==='new'?(x.fresh&&x.status!=='published'):pNeedsFix(x))).filter(x=>k==='all'||pfmt(x)===k).filter(x=>!S.pcat||(S.pcat==='_none'?!CATS[x.cat]:x.cat===S.pcat));
     const so=S.psort||'new';
     if(so==='sales')list=list.slice().sort((a,b)=>prodStats(b).paid-prodStats(a).paid);
     else if(so==='rev')list=list.slice().sort((a,b)=>prodStats(b).revenue-prodStats(a).revenue);
+    else if(so==='name')list=list.slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'th'));
+    else if(so==='sku'){const sk=x=>String(x.sku||'').replace(/(\d+)/,m=>m.padStart(5,'0'));list=list.slice().sort((a,b)=>sk(a).localeCompare(sk(b)));}
+    else if(so==='cat'){const ck=Object.keys(CATS),ci=x=>{const i=ck.indexOf(x.cat);return i<0?99:i;};list=list.slice().sort((a,b)=>ci(a)-ci(b)||(isBundle(b)-isBundle(a))||String(a.name).localeCompare(String(b.name),'th'));}
     else if(so==='hi'||so==='lo'){const pr=x=>isBundle(x)?Math.min(...bundlePlans(x).map(y=>y.price),1e9):Number(x.price)||0;list=list.slice().sort((a,b)=>so==='hi'?pr(b)-pr(a):pr(a)-pr(b));}
     const shown=list.filter(x=>!q||pq(x).includes(q));
     const tabBar=`<div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='fix'&&t[2]?' warn':''}${t[0]==='new'&&t[2]?' newt':''}" data-a="pstat" data-v="${t[0]}" aria-selected="${st===t[0]}">${t[1]} (${t[2]})</button>`).join('')}</div>`;
@@ -3650,7 +3667,8 @@ function productsTab(){
     ${tabBar}
     <div class="pt-tools">
       <input class="input pt-search" type="search" data-psearch="1" placeholder="ค้นหาด้วย ชื่อสินค้า, SKU, หมวด" aria-label="ค้นหาสินค้า" value="${esc(S.pq||'')}">
-      <select class="input pt-sel" data-psort="1" aria-label="เรียงสินค้า">${[['new','เรียง: ล่าสุด'],['sales','ขายดีที่สุด'],['rev','รายได้สูงสุด'],['hi','ราคาสูง → ต่ำ'],['lo','ราคาต่ำ → สูง']].map(o=>`<option value="${o[0]}" ${so===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
+      <select class="input pt-sel" data-psort="1" aria-label="เรียงสินค้า">${[['new','เรียง: ล่าสุด'],['sales','ขายดีที่สุด'],['rev','รายได้สูงสุด'],['hi','ราคาสูง → ต่ำ'],['lo','ราคาต่ำ → สูง'],['name','ชื่อ ก–ฮ / A–Z'],['sku','เลข SKU'],['cat','จัดกลุ่มตามหมวด']].map(o=>`<option value="${o[0]}" ${so===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
+      <select class="input pt-sel" data-pcat="1" aria-label="กรองตามหมวด"><option value="">ทุกหมวด</option>${Object.entries(CATS).filter(([k])=>D.products.some(p=>p.cat===k)).map(([k,v])=>`<option value="${k}" ${S.pcat===k?'selected':''}>${esc(v)} (${D.products.filter(p=>p.cat===k).length})</option>`).join('')}${D.products.some(p=>!CATS[p.cat])?`<option value="_none" ${S.pcat==='_none'?'selected':''}>ยังไม่ใส่หมวด</option>`:''}</select>
     </div>
     <div class="pt-sub"><b>สินค้า <span id="pcount">${shown.length}</span> รายการ</b>
       <span class="pt-kinds">${[['all','ทุกประเภท'],['pdf','📄 PDF'],['notion','📒 Notion'],['bundle','📦 ชุด']].filter(f=>f[0]==='all'||all.some(x=>pfmt(x)===f[0])).map(f=>`<button class="chip" data-a="pfilter" data-v="${f[0]}" aria-pressed="${k===f[0]}">${f[1]}</button>`).join('')}</span></div>
@@ -5619,6 +5637,7 @@ function act(a,el){
     case 'postMarkDone':updatePost(id,{status:'published',published_at:new Date().toISOString()}).then(()=>render(true));break;
     case 'postCopy':{const p=POSTS.find(x=>x.id===id);copyText(($('#pt-'+id)?$('#pt-'+id).value:p.text)||'','คัดลอกข้อความแล้ว');break;}
     case 'postNow':{toast('กำลังโพสต์...');adminApi('/api/content?action=publish&id='+encodeURIComponent(id)).then(async j=>{await loadPosts();render(true);const r=j.results&&j.results[0];toast(j.skipped?j.error:r&&r.ok?'โพสต์ขึ้นเพจแล้ว':'โพสต์ไม่สำเร็จ: '+(r&&r.error||j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'oClear':S.oq='';S.ofrom='';S.oto='';render(true);break;
     case 'altMailSend':{const sid=el.dataset.sid,to=String((S.altMail||{})[sid]||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}toast('กำลังส่งอีเมล...');
       adminApi('/api/order-email?session_id='+encodeURIComponent(sid)+'&to='+encodeURIComponent(to)).then(async j=>{if(j.ok){S.altMail[sid]='';await loadOrders();render(true);toast('ส่งไฟล์ไปที่ '+to+' แล้ว · พรุ่งนี้ขอรีวิวที่อีเมลนี้ให้เอง');}else toast('ส่งไม่สำเร็จ: '+(j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'freeSend':{const to=String(S.freeMail||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}S.freeBusy=true;render(true);
@@ -6020,6 +6039,8 @@ document.addEventListener('input',e=>{
   if(ds.fqe){S.fqe=S.fqe||{};S.fqe[ds.fqe]=t.value;return;}
   if(ds.bxs){bxStyleSet(ds.bxs,t.value);return;}
   if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
+  if(ds.oq){S.oq=t.value;clearTimeout(S.oqT);S.oqT=setTimeout(()=>{render(true);const i=document.querySelector('[data-oq]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},300);return;}
+  if(ds.ofrom!==undefined&&t.matches('[data-ofrom]')){S.ofrom=t.value;render(true);return;}if(t.matches('[data-oto]')){S.oto=t.value;render(true);return;}if(t.matches('[data-osort]')){S.osort=t.value;render(true);return;}
   if(ds.altmail){(S.altMail||(S.altMail={}))[ds.altmail]=t.value;return;}
   if(ds.freemail){S.freeMail=t.value;return;}
   if(ds.rvp){S.rvp=t.value;render(true);return;}
@@ -6027,6 +6048,7 @@ document.addEventListener('input',e=>{
   if(ds.flq){S.flq=t.value;const q=t.value.toLowerCase().trim();document.querySelectorAll('#flib [data-q]').forEach(e=>{e.hidden=!!q&&!e.dataset.q.includes(q);});return;}
   if(ds.psearch){S.pq=t.value;const q=t.value.toLowerCase().trim();let n=0;document.querySelectorAll('#plist [data-q]').forEach(e=>{const ok=!q||e.dataset.q.includes(q);e.hidden=!ok;if(ok)n++;});const z=document.getElementById('pnone');if(z)z.hidden=n>0;const c=document.getElementById('pcount');if(c)c.textContent=n;}
   else if(ds.psort){S.psort=t.value;render(true);}
+  else if(ds.pcat!==undefined){S.pcat=t.value;render(true);}
   if(ds.fpub){FAC.pub=Object.assign(FAC.pub||{},{[ds.fpub]:t.value});}
   if(ds.gl){const [gid,gf]=ds.gl.split('|');FAC.gl=FAC.gl||{};FAC.gl[gid]=Object.assign(FAC.gl[gid]||{},{[gf]:t.value.trim()});}
   if(ds.cp){S.coverPrompt=t.value;}
