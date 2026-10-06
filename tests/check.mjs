@@ -11,5 +11,8 @@ const html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8');
 const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 const tmp = path.join(os.tmpdir(), `sheetlab-main-${process.pid}.js`);
 fs.writeFileSync(tmp, scripts.sort((a, b) => b.length - a.length)[0] || ''); check(tmp, 'src/index.html (สคริปต์หลัก)'); fs.rmSync(tmp, { force: true });
+// Vercel แผนฟรีมีได้ไม่เกิน 12 ฟังก์ชัน (ไฟล์ใน api/) เกินแล้วขึ้นเว็บไม่ได้ทั้งเว็บ
+const fnN = fs.readdirSync(path.join(root, 'api')).filter((x) => /\.m?js$/.test(x)).length;
+if (fnN > 12) { bad++; console.log(`✗ api/ มี ${fnN} ไฟล์ เกิน 12 ฟังก์ชันของ Vercel แผนฟรี (ย้ายไปเป็นทางย่อยของไฟล์เดิมแทน)`); }
 console.log(bad ? `✗ โค้ดมีที่ผิด ${bad} ไฟล์` : '✓ โค้ดทุกไฟล์อ่านออก');
 process.exit(bad ? 1 : 0);

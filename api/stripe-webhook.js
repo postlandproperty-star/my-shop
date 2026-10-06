@@ -17,6 +17,7 @@ function rawBody(req) {
 }
 
 export default async function handler(req, res) {
+  if (req.query && req.query.mx) { const { messengerHook } = await import('../lib/messengerHook.js'); return messengerHook(req, res); } // /api/messenger (แชทบอทเพจ)
   if (req.method !== 'POST') return res.status(405).json({ ok: false });
   const secret = process.env.STRIPE_WEBHOOK_SECRET || '';
   const body = await rawBody(req);

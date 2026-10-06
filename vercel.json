@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/messenger",
+      "destination": "/api/stripe-webhook?mx=1"
+    },
+    {
       "source": "/favicon.ico",
       "destination": "/api/page?brand=favicon.ico"
     },
