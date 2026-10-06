@@ -5,6 +5,7 @@
 //   {type:'list', h, say, img?, items:[{x, sub?, say?, en?, v?, mark?:'ok'|'no'}]}   เผยทีละข้อ (en = เปิดเสียงอังกฤษก่อน แล้วครูอธิบาย)
 //   {type:'photo', h, img, say, s:[4 ประโยค], a, why, no:[เหตุผลข้อผิด]}               ฝึก Part 1: ฟัง 4 ประโยค เวลาคิด แล้วเฉลย
 //   {type:'qa', h, say, q, o:[3], a, why, no:[...]}                                     ฝึก Part 2
+//   {type:'read', h, say?, q:'ประโยคมีช่อง ___', o:[4], a, why, no:[...]}               ฝึก Reading (โจทย์และตัวเลือกขึ้นจอ ไม่อ่านออกเสียง) เวลาคิด 5 วินาที
 //   {type:'end', h, pts:[...], say}                                                     สรุปบท
 // คีย์ Google TTS อ่านจาก ~/Documents/Academic/.google_tts_key (ไม่พิมพ์ออกมา) · ผลงานเก็บที่ /Volumes/PortableSSD/Sheetlab/Courses/<course>/<id>/
 import fs from 'node:fs';
@@ -21,6 +22,10 @@ const SITE = 'sheetlabth.com';
 const spec = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const OUT = path.join('/Volumes/PortableSSD/Sheetlab/Courses', spec.course, spec.id);
 const W = path.join(OUT, 'work'); fs.mkdirSync(W, { recursive: true });
+fs.writeFileSync(path.join(OUT, 'spec.json'), JSON.stringify(spec, null, 1)); // worker.py done-lesson อ่านเลขบท/ชื่อบท/คอร์สจากไฟล์นี้
+// แถบความคืบหน้าในหลังบ้าน: ตั้ง JOB_ID + CONTENT_KEY แล้วสคริปต์บอกเว็บเอง (ไม่สำเร็จก็ทำต่อ)
+const JOB = process.env.JOB_ID || '', CK = process.env.CONTENT_KEY || ''; let lastP = -1;
+async function progress(pct, note) { if (!JOB || !CK || pct === lastP) return; lastP = pct; try { await fetch('https://sheetlabth.com/api/content?action=factory_progress', { method: 'POST', headers: { 'x-content-key': CK, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: JOB, pct, note }) }); } catch (e) {} }
 const KEY = fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_tts_key'), 'utf8').trim();
 const V = { th: ['th-TH', 'th-TH-Chirp3-HD-Kore'], q: ['en-US', 'en-US-Chirp3-HD-Kore'], r: ['en-AU', 'en-AU-Chirp3-HD-Puck'], n: ['en-US', 'en-US-Chirp3-HD-Charon'], m: ['en-GB', 'en-GB-Chirp3-HD-Fenrir'] };
 let chars = 0;
@@ -97,6 +102,13 @@ function steps(sl) {
     for (const n of [3, 2, 1]) S.push({ html: () => page(tHtml(n)), au: [{ sil: 1 }], short: true });
     S.push({ html: () => page(ans), au: [{ th: `เฉลยข้อ ${L[sl.a]}` }, { sil: 0.3 }, { en: opts[sl.a], v: P1 ? 'n' : 'r' }, { sil: 0.5 }, { th: sl.whySay || sl.why.replace(/\*\*/g, '') }, { sil: 1 }] });
   }
+  if (sl.type === 'read') {
+    const opts = sl.o, full = String(sl.q).replace(/_{2,}/, opts[sl.a]);
+    const body = (n, ans) => `<h2>${md(ans ? `เฉลย: ${L[sl.a]}` : sl.h || 'ลองทำ')}</h2><div class="dense"><p class="qq">${esc(sl.q).replace(/_{2,}/, ans ? `<u>${esc(opts[sl.a])}</u>` : '________')}</p>${opts.map((o, i) => `<div class="it ${ans ? (i === sl.a ? 'ok' : 'no') : ''}"><span class="k">${L[i]}</span><span><span class="en">${esc(o)}</span>${ans && i !== sl.a && sl.no?.[i] ? `<small>${md(sl.no[i])}</small>` : ''}</span></div>`).join('')}${ans ? `<div class="why">${md(sl.why)}</div>` : n ? `<div class="tm"><b>${n}</b>เลือกคำตอบในใจ</div>` : ''}</div>`;
+    S.push({ html: () => page(body(0)), au: [{ th: sl.say || 'อ่านประโยค แล้วเลือกคำที่เหมาะที่สุด' }, { sil: 1 }] });
+    for (const n of [5, 4, 3, 2, 1]) S.push({ html: () => page(body(n)), au: [{ sil: 1 }], short: true });
+    S.push({ html: () => page(body(0, true)), au: [{ th: `เฉลยข้อ ${L[sl.a]}` }, { sil: 0.3 }, { en: full, v: 'n' }, { sil: 0.5 }, { th: sl.whySay || String(sl.why).replace(/\*\*/g, '') }, { sil: 1 }] });
+  }
   return S;
 }
 
@@ -110,11 +122,12 @@ async function main() {
     const aud = st.short ? sil(1) : await audio(st.au, `a${String(i).padStart(3, '0')}`);
     const out = path.join(W, `g${String(i).padStart(3, '0')}-${h8(img + aud + probe(aud))}.mp4`);
     if (!fs.existsSync(out)) { const d = probe(aud).toFixed(2); ff('-loop', '1', '-framerate', '25', '-t', d, '-i', img, '-i', aud, '-t', d, '-c:v', 'libx264', '-tune', 'stillimage', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-r', '25', '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', out); }
-    segs.push(out); process.stdout.write(`\r${i + 1}/${all.length}`);
+    segs.push(out); process.stdout.write(`\r${i + 1}/${all.length}`); await progress(15 + Math.floor((i + 1) / all.length * 70), `เสียง+สไลด์ ${i + 1}/${all.length}`);
   }
   // ปกบท (16:9) ใช้เป็นรูปตัวอย่าง
   IDX = 0; await pg.setContent(steps(spec.slides[0])[0].html(), { waitUntil: 'load' }); await pg.screenshot({ path: path.join(OUT, 'cover.png') });
   await br.close();
+  await progress(88, 'รวมเป็นวิดีโอ');
   const list = path.join(W, 'all.txt'); fs.writeFileSync(list, segs.map((f) => `file '${f}'`).join('\n'));
   const mp4 = path.join(OUT, `${spec.id}.mp4`); ff('-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', '-movflags', '+faststart', mp4);
   try { const u = '/Volumes/PortableSSD/Sheetlab/_factory/tts_usage.json', m = new Date().toISOString().slice(0, 7); const d = fs.existsSync(u) ? JSON.parse(fs.readFileSync(u, 'utf8')) : {}; const o = d.month === m ? d : { month: m, chars: 0 }; o.chars += chars; fs.writeFileSync(u, JSON.stringify(o)); } catch (e) {}

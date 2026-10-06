@@ -9,6 +9,7 @@
 #   CONTENT_KEY=... python3 tools/factory/worker.py fill <job_id> [<ไฟล์.pdf>] --listing listing.json
 #        งานเติมรายละเอียดสินค้าเดิม (fill_id): ส่งเฉพาะช่องใน fill_need · ใส่ PDF ถ้าต้องทำหน้าตัวอย่าง (ไม่อัป PDF ซ้ำ)
 #   CONTENT_KEY=... python3 tools/factory/worker.py done-video <job_id> <โฟลเดอร์คลิป>   (มี <id>.mp4 thumbnail.png yt.json จาก tools/video/make.mjs)
+#   CONTENT_KEY=... python3 tools/factory/worker.py done-lesson <job_id> <โฟลเดอร์บท>   (มี <id>.mp4 cover.png จาก tools/video/lesson.mjs) → Drive Sheetlab/Courses/<คอร์ส> → เข้าคอร์สเป็น "รออนุมัติ"
 #   CONTENT_KEY=... python3 tools/factory/worker.py progress <job_id> <0-100> "ข้อความ"   → แถบความคืบหน้าในหลังบ้าน
 #   CONTENT_KEY=... python3 tools/factory/worker.py video-img <job_id> "prompt ภาษาอังกฤษ"   → พิมพ์ URL รูปประกอบ Part 1
 #   CONTENT_KEY=... python3 tools/factory/worker.py fail <job_id> "เหตุผลสั้นๆ"
@@ -41,6 +42,26 @@ def api(action, body=None, query=''):
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, headers={'x-content-key': KEY, 'Content-Type': 'application/json'}, method='POST' if data else 'GET')
     return json.load(urllib.request.urlopen(req, timeout=60))
+
+
+def to_drive(src, folder, name):
+    # คัดลอกไฟล์เข้า Google Drive ในเครื่อง แล้วรอจน Drive ให้ id จริง (สูงสุด 3 นาที) → ลิงก์ /view หรือ '' ถ้าไม่ได้
+    import shutil, time
+    gd = os.path.join(os.path.expanduser('~/Library/CloudStorage/GoogleDrive-postland.property@gmail.com/My Drive/Sheetlab'), folder)
+    os.makedirs(gd, exist_ok=True); dst = os.path.join(gd, name); shutil.copyfile(src, dst)
+    for _ in range(36):
+        try: fid = subprocess.run(['xattr', '-p', 'com.google.drivefs.item-id#S', dst], capture_output=True, text=True).stdout.strip()
+        except Exception: fid = ''
+        if fid and not fid.startswith('local'): return f'https://drive.google.com/file/d/{fid}/view'
+        time.sleep(5)
+    return ''
+
+
+def seconds_of(mp4):
+    try:
+        out = subprocess.run([os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'node_modules', 'ffmpeg-static', 'ffmpeg'), '-i', mp4], capture_output=True, text=True).stderr
+        import re; m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', out); return int(int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))) if m else 0
+    except Exception: return 0
 
 
 def upload(job, path, filename, ctype):
@@ -107,7 +128,7 @@ def main():
         sync()
         if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
         jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
-        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'auto', 'fill_id', 'fill_need', 'fill_url', 'video_part', 'video_n', 'video_product']} for x in jobs], ensure_ascii=False, indent=1))
+        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'auto', 'course_id', 'course_slug', 'lesson_section', 'lesson_title', 'lesson_brief', 'lesson_no', 'fill_id', 'fill_need', 'fill_url', 'video_part', 'video_n', 'video_product']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
         r = api('factory_claim', {'id': a.args[0], 'by': 'mac'}); print(json.dumps(r, ensure_ascii=False)[:300])
         if r.get('ok'):
@@ -163,6 +184,23 @@ def main():
             import re; m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', out); body['seconds'] = int(int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))) if m else 0
         except Exception: pass
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'drive': body.get('drive'), 'video': body.get('video')}, ensure_ascii=False))
+        if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
+        unlock()
+    elif a.cmd == 'done-lesson':
+        job, d = a.args[0], os.path.expanduser(a.args[1])
+        mp4 = next((os.path.join(d, f) for f in sorted(os.listdir(d)) if f.endswith('.mp4')), None)
+        if not mp4: sys.exit('ไม่พบไฟล์ .mp4')
+        sp = os.path.join(d, 'spec.json'); spec = json.load(open(sp, encoding='utf-8')) if os.path.exists(sp) else {}
+        info = {'lesson_no': spec.get('n'), 'lesson_title': spec.get('title'), 'course_slug': spec.get('course')}
+        api('factory_progress', {'id': job, 'pct': 92, 'note': 'คัดลอกวิดีโอเข้า Google Drive'})
+        safe = lambda t: ''.join(ch for ch in str(t) if ch not in '/\\:*?"<>|').strip()[:80]
+        name = f"บทที่ {info.get('lesson_no') or '?'} {safe(info.get('lesson_title') or os.path.basename(mp4))}.mp4"
+        drive = to_drive(mp4, os.path.join('Courses', safe(info.get('course_slug') or 'course')), name)
+        if not drive: sys.exit('Google Drive ยังไม่ให้ลิงก์ (Drive ในเครื่องไม่ทำงาน?) ลองใหม่รอบหน้า')
+        body = {'id': job, 'by': 'mac', 'drive': drive, 'seconds': seconds_of(mp4), 'summary': a.summary}
+        cv = os.path.join(d, 'cover.png')
+        if os.path.exists(cv): body['thumb'] = upload(job, cv, 'cover.png', 'image/png')
+        r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'drive': drive, 'seconds': body['seconds']}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
         unlock()
     elif a.cmd == 'progress':
