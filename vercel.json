@@ -53,6 +53,10 @@
       "destination": "/api/page?app=1"
     },
     {
+      "source": "/my-learning",
+      "destination": "/api/page?mylearn=1"
+    },
+    {
       "source": "/account",
       "destination": "/api/page?acct=1"
     },

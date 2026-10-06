@@ -165,6 +165,11 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const shop = await loadShop().catch(() => ({ settings: {} }));
     return res.status(200).send(appPage({ settings: shop.settings, site: NEW_SITE }));
   }
+  if (req.query.mylearn === '1') { // หน้าเรียนคอร์ส (แบบ Udemy): คอร์สของฉัน + หน้าเล่นวิดีโอ
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
+    const shop = await loadShop().catch(() => ({ settings: {} })); const { learnPage } = await import('../lib/learn.js');
+    return res.status(200).send(learnPage({ settings: shop.settings, site: NEW_SITE }));
+  }
   if (req.query.acct === '1') { // บัญชีของฉัน: บัญชีเดียวทุกบริการ (ข้อมูลโหลดหลังเข้าระบบ)
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));

@@ -22,6 +22,7 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 // หน้ารวมหัวข้อ SEO (เซิร์ฟเวอร์สร้าง): สร้างจาก lib/topics.js + ข้อมูลชุดทดสอบ ให้ตรวจหน้าตาเหมือนหน้าอื่น
 const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'lib/topics.js'));
 const { vipPage, accountPage, vipMockPage, appPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
+const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
@@ -35,6 +36,7 @@ const server = http.createServer((req, res) => {
   if (u === '/__free') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(freePage(FREEBIES[0], { site: BASE, upsell: SHOP.products.find((p) => p.status === 'published' && p.type !== 'bundle') })); }
   const fi = u.match(/^\/free-(img|file)\/([\w.-]+)$/); if (fi) { const f = path.join(SRC, 'free', fi[2]); if (fs.existsSync(f)) return res.end(fs.readFileSync(f)); res.statusCode = 404; return res.end(); }
   if (u === '/__app') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(appPage({ site: BASE })); }
+  if (u === '/__learn') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(learnPage({ site: BASE })); }
   if (u === '/__account' || u === '/__mock') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(u === '/__account' ? accountPage({ site: BASE }) : vipMockPage({ site: BASE })); }
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
@@ -82,6 +84,7 @@ async function newPage(kind) {
     if (/action=factory_bulk/.test(url)) { const b = JSON.parse(route.request().postData() || '{}'); BULK.push(b); return route.fulfill({ json: { ok: true, n: (b.ids || []).length } }); }
     if (/action=shopee_copy/.test(url)) return route.fulfill({ json: { ok: true, ai: true, text: '📘 หนังสือเล่มพิมพ์ A4 ทดสอบ' } });
     if (/action=factory_library/.test(url)) return route.fulfill({ json: { ok: true, at: new Date().toISOString(), ssd: true, running: { note: 'TOEIC Part 7 อ่านเร็ว\nabc', since: new Date().toISOString() }, books: [{ no: '046', day: '2026-10-04', title: 'HOME & DAILY LIFE VOCABULARY 600', cat: 'คลังคำศัพท์', pages: 91, mb: 2, where: 'SSD', audio: false, thumb: '' }, { no: '044', sku: 'SL-044', day: '2026-10-04', title: 'HEALTH & DOCTOR ENGLISH 400', cat: 'ฝึกพูด - สนทนา', pages: 80, mb: 3, where: 'Mac', audio: true, audio_path: '/Users/x/Documents/Academic/ฝึกพูด/HEALTH/audio', audio_drive: '', audio_target: 'https://drive.google.com/drive/folders/1BJ5' , thumb: '' }], sets: [{ name: 'TOEIC 750+ ครบชุด', n: 9, where: 'SSD' }] } });
+    if (/m=course_visit/.test(url)) return route.fulfill({ json: { ok: true } });
     if (/m=course_done/.test(url)) return route.fulfill({ json: { ok: true, done: ['l1'] } });
     if (/action=courses/.test(url)) return route.fulfill({ json: { ok: true, list: [{ id: 'c1', slug: 'toeic-course', title: 'TOEIC 750+ คอร์ส', desc: '', on: true, grants: [], lessons: [{ id: 'l1', section: 'Part 1', title: 'บทแรก', url: '', min: 10 }] }] } });
     if (/m=vip_acct/.test(url)) return route.fulfill({ json: { ok: true, email: 'buyer@test.co', courses: [{ id: 'c1', slug: 'toeic-course', title: 'TOEIC 750+ คอร์ส', desc: '', done: [], lessons: [{ id: 'l1', section: 'Listening Part 1', title: 'เทคนิคดูรูป', min: 10, embed: 'https://drive.google.com/file/d/abc/preview', file: '' }, { id: 'l2', section: 'Listening Part 2', title: 'คำถาม Wh-', min: 12, embed: '', file: '' }] }], orders: [{ at: '2026-10-01T03:00:00Z', name: 'ชุด TOEIC 750+', amount: 390, items: [{ name: 'TOEIC Grammar', link: 'https://x.supabase.co/storage/v1/object/public/files/a.pdf' }, { name: 'Study Planner', link: 'https://www.notion.so/x' }] }], more: false, vip: { active: true, until: '2026-11-04T00:00:00Z', card: false }, review: 3, settings: { open: true } } });
@@ -241,13 +244,17 @@ try {
       pass(`[${kind}] บัญชีของฉัน: ชีทที่ซื้อ (ปุ่มโหลดทุกไฟล์) + สถานะ VIP + ทางไปข้อสอบเสมือนจริง/สมุดจุดพลาด`, ac.dl === 2 && ac.mock && ac.review && ac.acc, JSON.stringify(ac));
       pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท ข้อสอบฟรี ความรู้ VIP)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
       await layout(page, `[${kind}] บัญชีของฉัน`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'account-mobile.png'), fullPage: true });
-      { const has = await page.evaluate(() => !!document.querySelector('.cs-go')); await page.locator('.cs-go').first().click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(200);
-        const v = await page.evaluate(() => ({ vid: !!document.querySelector('.cs-vid iframe'), list: document.querySelectorAll('.cs-l').length, tabs: document.querySelectorAll('.cs-tabs button').length }));
-        await page.locator('#cs-done').click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(300);
-        const after = await page.evaluate(() => ({ cur: (document.querySelector('.cs-l.on span:nth-child(2)') || {}).textContent || '', ck: document.querySelectorAll('.cs-l .cs-ck:not(:empty)').length }));
-        await page.locator('.cs-tabs button[data-t="prog"]').click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(150); const prog = await page.evaluate(() => document.querySelectorAll('.cs-sec').length);
-        await layout(page, `[${kind}] คอร์สเรียน (หน้าเรียน)`);
-        pass(`[${kind}] คอร์สของฉัน: เข้าเรียน วิดีโอ + รายการบท · เรียนจบแล้วไปบทถัดไป · แท็บความคืบหน้า`, has && v.vid && v.list === 2 && v.tabs === 2 && after.ck === 1 && /คำถาม Wh-/.test(after.cur) && prog === 2, JSON.stringify({ has, v, after, prog })); }
+      { const go = await page.evaluate(() => (document.querySelector('.cs-go') || {}).getAttribute?.('href') || '');
+        await page.goto(`${BASE}/__learn`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.lc', { timeout: 4000 });
+        const home = await page.evaluate(() => ({ cards: document.querySelectorAll('.lc').length, streak: !!document.querySelector('.ls-card .ls-ring svg'), h1: (document.querySelector('.lh h1') || {}).textContent }));
+        await layout(page, `[${kind}] คอร์สของฉัน (หน้าแรก)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'learn-home-mobile.png'), fullPage: true });
+        await page.locator('.lc').first().click(); await page.waitForSelector('.lp-side', { timeout: 3000 });
+        const v = await page.evaluate(() => ({ vid: !!document.querySelector('.lp-v iframe'), secs: document.querySelectorAll('.lp-side .sec').length, rows: document.querySelectorAll('.lp-side .li').length, sum: (document.querySelector('.sec summary span') || {}).textContent, nx: !!document.querySelector('#lp-nx'), url: location.search }));
+        await page.locator('#lp-done').click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(300);
+        const after = await page.evaluate(() => ({ cur: (document.querySelector('.li.on .n') || {}).textContent || '', ck: document.querySelectorAll('.li input:checked').length, url: location.search }));
+        await page.locator('.lp-tabs button[data-t="doc"]').click(); const doc = await page.evaluate(() => /ยังไม่มีเอกสาร/.test(document.querySelector('.lp-body').innerText));
+        await layout(page, `[${kind}] คอร์สของฉัน (หน้าเล่น)`); await page.screenshot({ path: path.join(OUT, `learn-player-${kind}.png`), fullPage: kind === 'mobile' });
+        pass(`[${kind}] คอร์สของฉันแบบ Udemy: การ์ดคอร์ส + สถิติเรียนต่อเนื่อง · หน้าเล่นวิดีโอ + เนื้อหาคอร์สแยกหมวด (x/y | นาที) · ติ๊กเรียนจบแล้วไปบทถัดไป · แท็บเอกสาร · บัญชีของฉันลิงก์มาที่นี่`, go === '/my-learning?c=toeic-course' && home.cards === 1 && home.streak && v.vid && v.secs === 2 && v.rows === 2 && /0 \/ 1 \| 10 นาที/.test(v.sum) && v.nx && /c=toeic-course/.test(v.url) && after.ck === 1 && /คำถาม Wh-/.test(after.cur) && /l=l2/.test(after.url) && doc, JSON.stringify({ go, home, v, after, doc })); }
       MARKS.length = 0; page.on('dialog', (d) => d.accept());
       await page.goto(`${BASE}/__mock`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.mk-go', { timeout: 4000 });
       await layout(page, `[${kind}] ข้อสอบเสมือนจริง (เลือกชุด)`);
