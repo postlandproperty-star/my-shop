@@ -488,6 +488,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
+.cbt{padding:14px 16px;margin:0 0 12px}.cbt-ans{background:#F1F5FF;border-radius:10px;padding:10px 12px;margin-top:8px}.cbt-ans p{margin:4px 0 0}.cbt-th{border-top:1px solid var(--line);padding:8px 0}.cbt-th.need{background:#FFF8EC}.cbt-m{margin:3px 0;font-size:14px}.cbt-m.b{color:#2440E8}.cbt-m.h{color:#3f9a5a}
 .deal-card{padding:14px 16px;margin:12px 0}
 .alt-mail{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin-top:8px;width:100%}.alt-mail .input{flex:1;min-width:200px;max-width:340px}.free-send{padding:12px 14px;margin:12px 0;display:grid;gap:2px}
 .sp-rv{display:inline-flex;gap:6px;align-items:center;background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}.sp-rv b{color:#E8A20C}.sp-rv span{color:#E8A20C;letter-spacing:1px}
@@ -3682,6 +3683,34 @@ function productsTab(){
 `;
 }
 
+/* 💬 แชทบอทเพจ Facebook: เปิด/ปิด · โหมด AI หรือคำสำคัญ · ข้อความตอบ (แก้ได้) · ส่วนลด 24 ชม. · ทดลองถาม · บทสนทนาล่าสุด · วิธีเชื่อม */
+const CBT={d:null,loading:false};
+function loadCBT(){if(CBT.loading)return;CBT.loading=true;adminApi('/api/content?action=chatbot').then(j=>{CBT.d=j&&j.ok?j:{ok:false,error:(j&&j.error)||'โหลดไม่ได้'};if(CBT.d.ok&&!CBT.f)CBT.f=Object.assign({},CBT.d.cfg);}).catch(()=>{CBT.d={ok:false,error:'เชื่อมต่อไม่ได้'};}).then(()=>{CBT.loading=false;render(true);});}
+function chatbotTab(){if(!CBT.d){loadCBT();return '<p class="fine">กำลังโหลด...</p>';}const d=CBT.d;if(!d.ok)return `<p class="err">${esc(d.error||'')}</p>`;
+  const f=CBT.f||d.cfg,ta=(k,l,rows,h)=>`<div class="field"><label>${l}</label><textarea class="input" rows="${rows}" data-cbf="${k}">${esc(f[k]||'')}</textarea>${h?`<span class="fine">${h}</span>`:''}</div>`;
+  const live=!!d.last&&Date.now()-Date.parse(d.last)<14*864e5;
+  return `<section class="card cbt"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><h3 class="h3" style="margin:0">💬 แชทบอทเพจ ${f.on?'<span class="badge ok">เปิดอยู่</span>':'<span class="badge gray">ปิดอยู่</span>'}</h3>
+      <label class="aud-ok" style="margin:0"><input type="checkbox" data-cbf="on" ${f.on?'checked':''}> เปิดให้บอทตอบลูกค้า</label></div>
+    <p class="fine" style="margin:4px 0 10px">${d.page?`เพจ: <b>${esc(d.page.name||d.page.id)}</b>`:'⚠️ ยังไม่ได้เชื่อมเพจ'} · ${live?`ข้อความล่าสุดเข้ามา ${fdt(Date.parse(d.last))}`:'ยังไม่มีข้อความจาก Messenger เข้ามา (ทำขั้นตอน "เชื่อมกับ Messenger" ด้านล่างก่อน)'} · คุณแดนตอบเองในกล่องข้อความเพจเมื่อไหร่ บอทจะเงียบกับลูกค้าคนนั้น ${esc(f.pauseHours||12)} ชม.</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 10px"><span class="fine">โหมด</span><button class="chip" data-a="cbMode" data-v="ai" aria-pressed="${f.mode==='ai'}">🤖 AI ตอบทุกคำถาม (จากข้อมูลสินค้าจริง)</button><button class="chip" data-a="cbMode" data-v="keywords" aria-pressed="${f.mode!=='ai'}">🔑 ตอบเฉพาะคำสำคัญ + ทักทาย</button>${d.ai?'':'<span class="fine" style="color:#B4471A">ยังไม่มีคีย์ AI</span>'}</div>
+    ${ta('keywords','คำสำคัญที่ลูกค้าถามส่วนลด (คั่นด้วย ,)',2)}
+    ${ta('dealReply','ข้อความตอบเมื่อถามส่วนลด',3,'{pct} = % ส่วนลด (ตั้งที่แท็บโค้ดส่วนลด) · {deal} = ลิงก์รับโค้ด 24 ชม. · ปรับ % และปิดโค้ดได้ที่ 🏷️ โค้ดส่วนลด')}
+    ${ta('greet','ข้อความทักทายครั้งแรก',4,'{free} = ลิงก์ชีทฟรี · {store} = ลิงก์ร้าน')}
+    ${ta('handoff','เมื่อลูกค้าแจ้งปัญหาออเดอร์/ไม่ได้รับไฟล์ (บอทขออีเมลแล้วส่งต่อคุณแดน)',2)}
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="fine">เงียบหลังคุณแดนตอบเอง <input class="input" type="number" min="1" max="72" data-cbf="pauseHours" value="${esc(f.pauseHours||12)}" style="width:70px;display:inline-block"> ชม.</label><button class="btn btn-dark btn-sm" data-a="cbSave" ${CBT.busy?'disabled':''}>บันทึก</button></div></section>
+  <section class="card cbt"><h3 class="h3" style="margin:0 0 6px">🧪 ลองถามบอท (ไม่ส่งจริง)</h3>
+    <div class="alt-mail"><input class="input" data-cbtest="1" value="${esc(CBT.q||'')}" placeholder="เช่น มีเล่ม IELTS Writing ไหมคะ / ขอส่วนลดหน่อย"><button class="btn btn-line btn-sm" data-a="cbTest" ${CBT.testing?'disabled':''}>${CBT.testing?'กำลังคิด...':'ถาม'}</button></div>
+    ${CBT.ans?`<div class="cbt-ans"><span class="fine">${esc(CBT.ans.why)}</span><p>${esc(CBT.ans.reply).replace(/\n/g,'<br>')}</p></div>`:''}</section>
+  <section class="card cbt"><h3 class="h3" style="margin:0 0 6px">💬 บทสนทนาล่าสุด</h3>
+    ${d.threads.length?d.threads.map(t=>`<div class="cbt-th${t.needsHuman?' need':''}"><div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span class="fine">${fdt(Date.parse(t.at))}${t.needsHuman?' · <b style="color:#B4471A">รอแอดมินตอบ</b>':''}${t.paused?' · บอทเงียบอยู่ (แอดมินตอบเอง)':''}${t.err?' · ⚠️ '+esc(t.err):''}</span>${t.paused||t.needsHuman?`<button class="chip" data-a="cbResume" data-id="${esc(t.psid)}">ให้บอทตอบต่อ</button>`:''}</div>
+      ${t.msgs.map(m=>`<p class="cbt-m ${m.r}"><b>${m.r==='u'?'ลูกค้า':m.r==='b'?'บอท':'แอดมิน'}:</b> ${esc(m.t)}</p>`).join('')}</div>`).join(''):'<p class="fine">ยังไม่มี</p>'}</section>
+  <details class="card cbt"><summary><b>🔌 เชื่อมกับ Messenger (ทำครั้งเดียว)</b></summary><ol class="fine" style="line-height:1.8">
+    <li>เปิด <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com/apps</a> → แอปที่ใช้โพสต์เพจอยู่ → Add product → <b>Messenger</b></li>
+    <li>Messenger → Webhooks → Callback URL: <code>${esc(d.webhook)}</code> <button class="chip" data-a="cbCopy" data-v="${esc(d.webhook)}">คัดลอก</button> · Verify token: <code>${esc(d.verifyToken)}</code> <button class="chip" data-a="cbCopy" data-v="${esc(d.verifyToken)}">คัดลอก</button></li>
+    <li>เลือกเพจ SheetLab → Add subscriptions: ติ๊ก <b>messages</b> และ <b>message_echoes</b></li>
+    <li>ช่วงทดสอบ: บอทตอบได้เฉพาะคนที่เป็นแอดมิน/ผู้ทดสอบของแอป ลองทักเพจจากบัญชีคุณแดนได้เลย</li>
+    <li>เปิดให้ลูกค้าทุกคน: App Review → ขอสิทธิ์ <b>pages_messaging</b> (Advanced access) แนบคลิปอัดหน้าจอตอนบอทตอบ ใช้เวลาประมาณ 1–5 วัน · ระหว่างรอใช้ข้อความตอบกลับอัตโนมัติของ Meta Business Suite ส่งลิงก์ /deal ไปก่อน</li>
+    <li>${d.signed?'✅ ตรวจลายเซ็นจาก Meta อยู่ (FB_APP_SECRET)':'⚠️ ยังไม่มี FB_APP_SECRET บน Vercel'} · โทเค็นเพจต้องมีสิทธิ์ pages_messaging (ถ้าบอทส่งไม่ได้ ให้เชื่อมเพจใหม่ในแท็บโพสต์ตอนติ๊กสิทธิ์นี้ด้วย)</li></ol></details>`;}
 function couponsTab(){
   const scopeName=s=>s==='all'?'ทุกสินค้า':(getProduct(s)?getProduct(s).name:'สินค้าที่ถูกลบ');
   return `
@@ -5253,7 +5282,7 @@ function homeTab(){
    ทุกบริการมีแถบ 4 ช่องแบบเดียวกัน (📊 ตัวเลข · ✅ ต้องทำ · ⚙️ ตั้งค่า · 👀 หน้าลูกค้า) · บริการใหม่ = เพิ่มใน SVC + svcFour */
 const SVC=[
   {k:'all',i:'📊',l:'ภาพรวม',tabs:[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์']]},
-  {k:'shop',i:'🛒',l:'ร้านชีท',tabs:[['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา'],['coupons','🏷️','โค้ดส่วนลด'],['reviews','⭐','รีวิว'],['pay','⚙️','ตั้งค่าร้าน']]},
+  {k:'shop',i:'🛒',l:'ร้านชีท',tabs:[['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา'],['coupons','🏷️','โค้ดส่วนลด'],['chatbot','💬','แชทบอทเพจ'],['reviews','⭐','รีวิว'],['pay','⚙️','ตั้งค่าร้าน']]},
   {k:'learn',i:'📚',l:'คอนเทนต์+SEO',tabs:[['seo','🔎','SEO'],['content','✍️','โพสต์'],['insights','📈','พฤติกรรม']]},
   {k:'vip',i:'👑',l:'สมาชิก',view:'vip'},
   {k:'factory',i:'🏭',l:'โรงงาน',view:'factory'},
@@ -5286,7 +5315,7 @@ function svcFour(k){
 function adminView(){
   if(S.tab==='pixel')S.tab='pay';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
+  const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,chatbot:chatbotTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     ${svcNav()}
     ${body}
@@ -5995,6 +6024,11 @@ function act(a,el){
     case 'delCoupon':{D.coupons=D.coupons.filter(x=>x.code!==el.dataset.code);if(S.coupon===el.dataset.code)S.coupon='';save();render(true);break;}
 
     /* pixel + reset */
+    case 'cbMode':CBT.f.mode=el.dataset.v;render(true);break;
+    case 'cbSave':CBT.busy=true;render(true);adminPost('/api/content?action=chatbot',CBT.f).then(j=>{if(j&&j.ok){CBT.f=Object.assign({},j.cfg);CBT.d.cfg=j.cfg;toast(j.cfg.on?'บันทึกแล้ว บอทเปิดอยู่':'บันทึกแล้ว (บอทปิดอยู่)');}else toast('บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{CBT.busy=false;render(true);});break;
+    case 'cbTest':CBT.testing=true;CBT.ans=null;render(true);adminPost('/api/content?action=chatbot_test',{text:CBT.q||''}).then(j=>{CBT.ans=j&&j.ok?{why:{deal:'ตอบด้วยข้อความส่วนลด',handoff:'ส่งต่อแอดมิน',ai:'AI ตอบ',greet:'ทักทาย','keywords only':'โหมดคำสำคัญ'}[j.why]||j.why,reply:j.reply}:{why:'ผิดพลาด',reply:(j&&j.error)||''};}).catch(()=>{CBT.ans={why:'ผิดพลาด',reply:'เชื่อมต่อไม่ได้'};}).then(()=>{CBT.testing=false;render(true);});break;
+    case 'cbResume':adminPost('/api/content?action=chatbot_resume',{psid:id}).then(()=>{CBT.d=null;render(true);toast('ให้บอทตอบลูกค้าคนนี้ต่อแล้ว');});break;
+    case 'cbCopy':copyText(el.dataset.v);break;
     case 'saveDeal':{const v=Math.round(Number($('#s-dealpct').value));if(!(v>=1&&v<=50)){toast('ส่วนลด 1-50%');break;}D.settings.dealPct=v;D.settings.dealOff=!!$('#s-dealoff').checked;save();render(true);toast(D.settings.dealOff?'ปิดโค้ดจากแชทชั่วคราวแล้ว':`บันทึกแล้ว ลูกค้าจากแชทได้ลด ${v}% ภายใน 24 ชม.`);break;}
     case 'copyDeal':copyText(location.origin+'/deal');break;
     case 'savePixel':{const id=$('#s-pixel').value.trim();if(id&&!/^\d{6,20}$/.test(id)){toast('Pixel ID ต้องเป็นตัวเลขล้วน');break;}D.settings.pixelId=id;save();render(true);toast('บันทึก Pixel ID แล้ว');break;}
@@ -6041,6 +6075,8 @@ document.addEventListener('input',e=>{
   if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
   if(ds.oq){S.oq=t.value;clearTimeout(S.oqT);S.oqT=setTimeout(()=>{render(true);const i=document.querySelector('[data-oq]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},300);return;}
   if(ds.ofrom!==undefined&&t.matches('[data-ofrom]')){S.ofrom=t.value;render(true);return;}if(t.matches('[data-oto]')){S.oto=t.value;render(true);return;}if(t.matches('[data-osort]')){S.osort=t.value;render(true);return;}
+  if(ds.cbf&&CBT.f){CBT.f[ds.cbf]=t.type==='checkbox'?t.checked:ds.cbf==='pauseHours'?Number(t.value)||12:t.value;if(t.type==='checkbox')render(true);return;}
+  if(ds.cbtest){CBT.q=t.value;return;}
   if(ds.altmail){(S.altMail||(S.altMail={}))[ds.altmail]=t.value;return;}
   if(ds.freemail){S.freeMail=t.value;return;}
   if(ds.rvp){S.rvp=t.value;render(true);return;}

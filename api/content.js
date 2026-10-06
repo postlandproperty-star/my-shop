@@ -1325,6 +1325,17 @@ ${books}`;
       } catch (e) { console.error('set_copy', e.message); }
       return res.status(200).json({ ok: true, ai: !!out, ...(out || {}) });
     }
+    if (action === 'chatbot' || action === 'chatbot_resume' || action === 'chatbot_test') { // แชทบอทเพจ (คุณแดนเท่านั้น)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const CB = await import('../lib/chatbot.js'), site = await siteUrl();
+      if (action === 'chatbot_test') { const b = await readBody(req); try { return res.status(200).json({ ok: true, ...(await CB.previewReply(String(b.text || '').slice(0, 500), site)) }); } catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e).slice(0, 200) }); } }
+      if (action === 'chatbot_resume') { const b = await readBody(req); const th = await CB.loadThreads(); const t = th.t[String(b.psid || '')]; if (t) { delete t.paused_until; delete t.needsHuman; await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'chatbot_threads', data: th, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); } return res.status(200).json({ ok: true }); }
+      if (req.method === 'POST') { const b = await readBody(req); const pick = {}; for (const k of ['on', 'mode', 'pauseHours', 'keywords', 'dealReply', 'greet', 'handoff']) if (b[k] !== undefined) pick[k] = typeof b[k] === 'string' ? b[k].slice(0, 1500) : b[k]; const cur = await CB.loadBot(); return res.status(200).json({ ok: true, cfg: await CB.saveBot({ ...cur, ...pick }) }); }
+      const [cfg, th, fb] = await Promise.all([CB.loadBot(), CB.loadThreads(), (await import('../lib/fb.js')).loadFb().catch(() => null)]);
+      const threads = Object.entries(th.t || {}).sort((a, b) => String(b[1].at).localeCompare(String(a[1].at))).slice(0, 30).map(([psid, t]) => ({ psid, at: t.at, paused: !!(t.paused_until && Date.parse(t.paused_until) > Date.now()), needsHuman: !!t.needsHuman, err: t.err || '', msgs: (t.msgs || []).slice(-6) }));
+      return res.status(200).json({ ok: true, cfg, verifyToken: CB.verifyToken(), webhook: `${site}/api/messenger`, last: th.last || null, page: fb ? { id: fb.pageId, name: fb.pageName || '' } : null, ai: !!(process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY), signed: !!process.env.FB_APP_SECRET, threads });
+    }
     if (action === 'deal_code') { // สาธารณะ: หน้า /deal ขอโค้ดส่วนลด 24 ชม. (เครื่องเดิมได้โค้ดเดิม)
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       res.setHeader('Cache-Control', 'no-store');
