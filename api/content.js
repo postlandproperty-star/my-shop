@@ -1325,6 +1325,17 @@ ${books}`;
       } catch (e) { console.error('set_copy', e.message); }
       return res.status(200).json({ ok: true, ai: !!out, ...(out || {}) });
     }
+    if (action === 'deal_code') { // สาธารณะ: หน้า /deal ขอโค้ดส่วนลด 24 ชม. (เครื่องเดิมได้โค้ดเดิม)
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      res.setHeader('Cache-Control', 'no-store');
+      const shop = await loadShop().catch(() => ({ settings: {} }));
+      if ((shop.settings || {}).dealOff) return res.status(200).json({ ok: false, error: 'ตอนนี้ยังไม่มีโค้ดส่วนลด ทักแชทร้านได้เลย' });
+      const { createHash } = await import('node:crypto');
+      const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
+      const who = createHash('sha256').update(ip + '|' + String(req.headers['user-agent'] || '').slice(0, 120)).digest('hex').slice(0, 24);
+      try { const RW = await import('../lib/rewards.js'); const r = await RW.issueDeal(who, Number((shop.settings || {}).dealPct) || 10); return res.status(200).json({ ok: true, code: r.code, pct: r.pct, expires: r.expires }); }
+      catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e).slice(0, 120) }); }
+    }
     if (action === 'free_send') { // คุณแดนส่งชีทฟรีเองไปอีเมลที่ลูกค้าแจ้งทางแชท (ข้ามตัวกันกดซ้ำ 10 นาที)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });

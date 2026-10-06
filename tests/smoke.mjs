@@ -453,6 +453,8 @@ try {
           await page.fill('[data-freemail]', 'free@example.co.th').catch(() => {}); await page.locator('[data-a="freeSend"]').click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(400);
           const got = MAILS.slice(m0);
           pass(`[${kind}] ออเดอร์: ส่งไฟล์ไปอีเมลอื่นที่ลูกค้าขอ + ส่งชีทฟรีเอง`, (!has || got.some((u) => /to=work%40example\.co\.th/.test(u))) && got.some((u) => /free@example\.co\.th/.test(u)), JSON.stringify({ has, got })); }
+        { const r = await page.evaluate(() => { S.view = 'admin'; S.tab = 'coupons'; render(false); const c = !!document.querySelector('.deal-card #s-dealpct'); document.getElementById('s-dealpct').value = '15'; act('saveDeal', { dataset: {} }); const o = { c, pct: D.settings.dealPct }; delete D.settings.dealPct; delete D.settings.dealOff; S.tab = 'products'; render(false); return o; });
+          pass(`[${kind}] โค้ดส่วนลดจากแชท: ตั้ง % ได้ที่แท็บโค้ดส่วนลด`, r.c && r.pct === 15, JSON.stringify(r)); }
         const gp = await page.evaluate(() => { const bks = D.products.filter((x) => !isBundle(x)).slice(0, 2); const keep = bks.map((x) => ({ x, st: x.status, fj: x.fromJob }));
           bks.forEach((x) => { x.status = 'draft'; x.fromJob = 'jx' + x.id; }); const b = Object.assign(blankBundle(), { id: 'bgrp', name: 'ชุดกลุ่ม', slug: 'set-grp', items: bks.map((x) => x.id), fromSetName: 'ชุดกลุ่ม', fresh: true, status: 'draft' }); D.products.push(b);
           S.edit = null; S.draft = null; S.view = 'admin'; S.tab = 'products'; S.pstat = 'all'; S.pq = ''; render(false);

@@ -141,6 +141,13 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     if (pdf) res.setHeader('Content-Disposition', `inline; filename="SheetLab-${ff}"`);
     return res.status(200).end(buf);
   }
+  if (req.query.deal) { // /deal ส่วนลดจากแชทเพจ 24 ชม.
+    const { dealPage } = await import('../lib/deal.js');
+    const shop = await loadShop().catch(() => ({ settings: {} }));
+    const pct = Number((shop.settings || {}).dealPct) || 10;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60');
+    return res.status(200).send(dealPage({ pct, site: NEW_SITE, settings: shop.settings || {} }));
+  }
   const freeQ = String(req.query.free || '');
   if (freeQ) { // หน้าแจกชีทฟรี /free และ /free/<slug>
     const f = freeQ === '_' ? FREEBIES[0] : freeBySlug(freeQ);

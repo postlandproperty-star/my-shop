@@ -17,6 +17,10 @@
       "destination": "/api/page?timg=:slug"
     },
     {
+      "source": "/deal",
+      "destination": "/api/page?deal=1"
+    },
+    {
       "source": "/free",
       "destination": "/api/page?free=_"
     },

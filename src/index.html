@@ -487,6 +487,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}
+.deal-card{padding:14px 16px;margin:12px 0}
 .alt-mail{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin-top:8px;width:100%}.alt-mail .input{flex:1;min-width:200px;max-width:340px}.free-send{padding:12px 14px;margin:12px 0;display:grid;gap:2px}
 .sp-rv{display:inline-flex;gap:6px;align-items:center;background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}.sp-rv b{color:#E8A20C}.sp-rv span{color:#E8A20C;letter-spacing:1px}
 .st-bsold{display:inline-block;font-size:13px;font-weight:600;color:#B4471A;margin-top:4px}
@@ -3667,6 +3668,11 @@ function couponsTab(){
   const scopeName=s=>s==='all'?'ทุกสินค้า':(getProduct(s)?getProduct(s).name:'สินค้าที่ถูกลบ');
   return `
   ${memberDesk('market')}
+  <section class="card deal-card"><h3 class="h3" style="margin:0 0 4px">💬 ส่วนลดจากแชทเพจ (หมดอายุใน 24 ชม.)</h3>
+    <p class="fine" style="margin:0 0 10px">ลูกค้าเปิดลิงก์ <code>${esc(location.host||'sheetlabth.com')}/deal</code> แล้วได้โค้ดส่วนตัว ใช้ได้ครั้งเดียวภายใน 24 ชม. มีนับถอยหลังให้รีบซื้อ · เอาลิงก์นี้ไปใส่ในข้อความตอบกลับอัตโนมัติของเพจ</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><label class="fine">ลด <input class="input" type="number" min="1" max="50" id="s-dealpct" value="${esc(D.settings.dealPct||10)}" style="width:80px;display:inline-block"> %</label>
+      <label class="fine"><input type="checkbox" id="s-dealoff" ${D.settings.dealOff?'checked':''}> ปิดชั่วคราว</label>
+      <button class="btn btn-dark btn-sm" data-a="saveDeal">บันทึก</button><button class="btn btn-line btn-sm" data-a="copyDeal">📋 คัดลอกลิงก์ /deal</button><a class="btn btn-line btn-sm" href="/deal" target="_blank" rel="noopener">เปิดดูหน้า</a></div></section>
   <h3 class="h3">สร้างโค้ดส่วนลด</h3>
   <div class="card" style="margin-bottom:16px">
     <div class="grid2">
@@ -5970,6 +5976,8 @@ function act(a,el){
     case 'delCoupon':{D.coupons=D.coupons.filter(x=>x.code!==el.dataset.code);if(S.coupon===el.dataset.code)S.coupon='';save();render(true);break;}
 
     /* pixel + reset */
+    case 'saveDeal':{const v=Math.round(Number($('#s-dealpct').value));if(!(v>=1&&v<=50)){toast('ส่วนลด 1-50%');break;}D.settings.dealPct=v;D.settings.dealOff=!!$('#s-dealoff').checked;save();render(true);toast(D.settings.dealOff?'ปิดโค้ดจากแชทชั่วคราวแล้ว':`บันทึกแล้ว ลูกค้าจากแชทได้ลด ${v}% ภายใน 24 ชม.`);break;}
+    case 'copyDeal':copyText(location.origin+'/deal');break;
     case 'savePixel':{const id=$('#s-pixel').value.trim();if(id&&!/^\d{6,20}$/.test(id)){toast('Pixel ID ต้องเป็นตัวเลขล้วน');break;}D.settings.pixelId=id;save();render(true);toast('บันทึก Pixel ID แล้ว');break;}
     case 'saveFbVerify':{let v=$('#s-fbverify').value.trim();const m=v.match(/content=["']([^"']+)/);if(m)v=m[1];D.settings.fbDomainVerify=v;save();render(true);toast('บันทึกรหัสยืนยันโดเมนแล้ว');break;}
     case 'savePay':{D.settings.shopName=$('#s-shop').value.trim();D.settings.refundPolicy=$('#s-refund').value.trim();D.settings.customKinds=$('#s-kinds').value.trim();let chat=$('#s-chat').value.trim();if(chat&&!/^https?:\/\//.test(chat))chat='https://'+chat;D.settings.chatLink=chat;D.settings.promptpayId=$('#s-pp').value.trim();D.settings.bankInfo=$('#s-bank').value.trim();D.settings.contactInfo=$('#s-contact').value.trim();save();toast('บันทึกข้อมูลรับเงินแล้ว');break;}
