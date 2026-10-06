@@ -346,6 +346,9 @@ async function checkFeedCategories() {
 const ADS_DEFAULT = { dailyTHB: 100, days: 7 };
 const ADS_SINCE = '2026-10-01T00:00:00Z'; // ร่างอัตโนมัติเฉพาะสินค้าที่เผยแพร่หลังเปิดระบบนี้
 async function loadAdsAuto() { const rows = await sb('shop_state?id=eq.ads_auto&select=data'); return rows?.[0]?.data?.items || []; }
+// ร่างแอดที่ระบบทำเองก่อนปิดการร่างอัตโนมัติ (คุณแดน 5 ต.ค. 69 "ไม่ได้สั่ง ปิดเลย") → เก็บออก ไม่เสียเงิน ไม่ได้ยิง
+const ADS_AUTO_OFF = '2026-10-05T12:00:00Z';
+function dropAutoDrafts(items) { let n = 0; for (const x of items) if (x.status === 'pending' && String(x.created_at || '') < ADS_AUTO_OFF && !x.picked) { x.status = 'dismissed'; x.note = 'ร่างอัตโนมัติก่อนปิดระบบ เก็บออกให้แล้ว'; x.updated_at = new Date().toISOString(); n++; } return n; }
 async function saveAdsAuto(items) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ads_auto', data: { items: items.slice(0, 100) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 const adsTestProduct = (p) => Number(p.price) < 30 || /ทดสอบ|แคลคูลัส|test/i.test(`${p.name} ${p.slug}`);
 function adCopy(p, site) {
@@ -371,7 +374,7 @@ async function draftAd(productId, { by = 'system', force = false } = {}) {
   const open = items.find((x) => x.productId === p.id && ['pending', 'launching', 'live'].includes(x.status));
   if (open && !force) return { item: open, existed: true };
   const { randomUUID } = await import('node:crypto');
-  const item = { id: randomUUID(), productId: p.id, name: p.name, price: Number(p.price) || 0, ...adCopy(p, await siteUrl()), ...ADS_DEFAULT, status: 'pending', by, created_at: new Date().toISOString() };
+  const item = { id: randomUUID(), picked: by === 'owner', productId: p.id, name: p.name, price: Number(p.price) || 0, ...adCopy(p, await siteUrl()), ...ADS_DEFAULT, status: 'pending', by, created_at: new Date().toISOString() };
   items.unshift(item); await saveAdsAuto(items);
   await addTodo({ text: `แอดสินค้าใหม่พร้อมแล้ว "${String(p.name).slice(0, 60)}" งบ ฿${item.dailyTHB}/วัน × ${item.days} วัน (รวม ฿${item.dailyTHB * item.days}) ตรวจข้อความแล้วกดตกลงที่แท็บโฆษณา (ยังไม่เสียเงินจนกว่าจะกดตกลง)`, type: 'decide', from: 'analyst' });
   return { item, existed: false };
@@ -2875,7 +2878,7 @@ ${books}`;
       const team = keyOk(req);
       if (!admin && !team) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       if (action === 'ads_auto') { // รายการแอดอัตโนมัติ + สถานะสิทธิ์ (แอดมิน) / ทีมอ่านได้อย่างเดียว
-        const items = await loadAdsAuto();
+        const items = await loadAdsAuto(); if (dropAutoDrafts(items)) await saveAdsAuto(items);
         let access = null; const fb = await loadFb().catch(() => null);
         if (admin) { access = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) })); }
         if (fb && fb.userToken && req.query.stats) for (const x of items.filter((y) => y.fb?.campaign && ['live', 'ended', 'paused'].includes(y.status)).slice(0, 8)) { try { x.stats = await campaignStats(fb, x.fb.campaign); } catch (e) {} }

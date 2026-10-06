@@ -2243,9 +2243,9 @@ function storeItems(){return D.products.filter(p=>p.status==='published'&&p.sell
 function storeMode(){return storeItems().length>=STORE_MIN;}
 function fromPrice(p){if(isBundle(p)){const pl=bundlePlans(p);return pl.length?Math.min(...pl.map(x=>x.price)):Number(p.price)||0;}return Number(p.price)||0;}
 /* หมวดบนหน้าร้าน (ชั้นวาง): เดาจากชื่อสินค้า + หมวดในหลังบ้าน สินค้าอยู่ได้หลายหมวด หมวดโผล่เองเมื่อมีสินค้า */
-const SHELVES=[['bundle','📦 ชุดสุดคุ้ม'],['toeic','TOEIC'],['ielts','IELTS'],['tgat','TGAT / A-Level'],['kp','สอบ ก.พ.'],['notion','Notion Template'],['work','ทำงาน / เที่ยว'],['other','อื่นๆ']];
+const SHELVES=[['bundle','📦 ชุดสุดคุ้ม'],['course','🎓 คอร์สเรียน'],['toeic','TOEIC'],['ielts','IELTS'],['tgat','TGAT / A-Level'],['kp','สอบ ก.พ.'],['notion','Notion Template'],['work','ทำงาน / เที่ยว'],['other','อื่นๆ']];
 function shelves(p){const t=(p.name+' '+(p.headline||'')).toLowerCase(),o=[];
-  if(isBundle(p))o.push('bundle');
+  if(isBundle(p))o.push('bundle');if(p.kind==='course')o.push('course');
   if(/toeic/.test(t))o.push('toeic');if(/ielts/.test(t)||p.cat==='ielts')o.push('ielts');if(/tgat|a-level/.test(t)||p.cat==='tgat')o.push('tgat');if(/ก\.พ|ราชการ/.test(t)||p.cat==='kp')o.push('kp');
   if(/notion/.test(t)||p.cat==='notion')o.push('notion');if(['work','speak'].includes(p.cat)||/business|travel|ทำงาน|เที่ยว/.test(t)&&!o.includes('toeic'))o.push('work');
   if(!o.filter(k=>k!=='bundle').length)o.push('other');return o;}
@@ -2321,6 +2321,7 @@ function storeView(catalog){
       <div class="st-svc">
         <a class="st-svcc" href="/quiz"><span class="st-svci" aria-hidden="true">📚</span><span><b>ฝึกฟรี</b><span class="fine">ข้อสอบพร้อมเฉลย ${QUIZZES.length} ชุด และบทความสรุปทุกหัวข้อ ไม่ต้องสมัคร</span><span class="st-go">เริ่มฝึกฟรี →</span></span></a>
         <a class="st-svcc" href="/store" data-go=""><span class="st-svci" aria-hidden="true">🛒</span><span><b>ร้านชีท</b><span class="fine">ชีทสรุป PDF ${all.length} รายการ ดูตัวอย่างก่อนซื้อ สแกนจ่ายแล้วได้ไฟล์ทันที</span><span class="st-go">เลือกซื้อชีท →</span></span></a>
+        ${all.some(p=>p.kind==='course')?`<a class="st-svcc" href="/store?cat=course" data-go=""><span class="st-svci" aria-hidden="true">🎓</span><span><b>คอร์สเรียน</b><span class="fine">วิดีโอสอนทีละพาร์ต เทคนิค กับดัก และฝึกทำพร้อมเฉลย เรียนในเว็บ ดูความคืบหน้าได้</span><span class="st-go">ดูคอร์สเรียน →</span></span></a>`:''}
         ${VIP_OPEN?`<a class="st-svcc" href="/vip"><span class="st-svci" aria-hidden="true">👑</span><span><b>สมาชิก VIP</b><span class="fine">ข้อสอบเสมือนจริงจับเวลา และสมุดจุดพลาดที่พาทวนจนแม่น</span><span class="st-go">ดูสิทธิ์ VIP →</span></span></a>`:`<a class="st-svcc" href="/free"><span class="st-svci" aria-hidden="true">🎁</span><span><b>ชีทแจกฟรี</b><span class="fine">TOEIC 50 คำศัพท์ที่คนไทยสับสน กรอกอีเมลรับไฟล์ทันที</span><span class="st-go">รับชีทฟรี →</span></span></a>`}
       </div></section>
     ${TOPICS_LIVE.length?`<section class="st-sec" aria-labelledby="st-t"><h2 id="st-t" class="st-h2">เตรียมสอบเรื่องไหนอยู่?</h2>
@@ -2383,7 +2384,7 @@ function route(){
   const m=location.pathname.match(/\/p\/([a-z0-9-]+)\/?$/i);
   if(m){const p=D.products.find(x=>x.slug===m[1]);if(p)selectProduct(p.id);S.view='shop';const c=curProduct();document.title=c?c.name:TITLE0;if(c)track('ViewContent',{content_name:c.name,value:c.price,currency:'THB'});}
   else if(location.pathname==='/order'){S.view='order';document.title='หาออเดอร์ของฉัน · SheetLab';}
-  else if(location.pathname==='/store'&&storeMode()){S.view='catalog';document.title='ร้านค้า · SheetLab';}
+  else if(location.pathname==='/store'&&storeMode()){S.view='catalog';document.title='ร้านค้า · SheetLab';const qc=new URLSearchParams(location.search).get('cat');if(qc)S.scat=qc;}
   else if(location.pathname==='/checkout'){S.view='cart';document.title='ชำระเงิน · SheetLab';if(!S.sessionId&&cartItems().length)track('InitiateCheckout',Object.assign({content_name:'เลือก '+cartItems().length+' เล่ม',value:cartTotal(),currency:'THB',num_items:cartItems().length},S.src?{campaign:S.src}:{}));}
   else{S.view=storeMode()?'store':'shop';document.title=TITLE0;}
   render(false);
@@ -4649,7 +4650,7 @@ function adsAutoBox(compact,noLive){
         <label class="adq-lbl adq-tl" for="adt-${x.id}">ข้อความแอด (แก้ได้)</label><textarea class="input adq-text" id="adt-${x.id}" rows="6" aria-label="ข้อความแอด">${esc(x.text)}</textarea></div>
       <div class="adq-side">
         <b class="adq-name">${esc(x.name)}</b>
-        <span class="fine adq-desc">แคมเปญยอดขาย · คนไทย (Facebook หาคนที่น่าจะซื้อเอง) · หยุดเองเมื่อครบวัน</span>
+        <span class="fine adq-desc">แคมเปญยอดขาย · คนไทย (Facebook หาคนที่น่าจะซื้อเอง) · หยุดเองเมื่อครบวัน${x.created_at?` · ร่างเมื่อ ${new Date(x.created_at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}${x.picked===false?' (ระบบร่างเอง)':''}`:''}</span>
         ${(()=>{const p=getProduct(x.productId)||{},imgs=[...new Set([...(x.extra||[]).slice().reverse(),...(p.images||[]).slice(0,9)])],busy=ADA.aiBusy===x.id;
           const sel=(x.multi&&x.multi.length?x.multi:[x.image]).filter(Boolean);
           return `<div><span class="adq-lbl">รูปที่ใช้ในแอด (ไม่กระทบรูปสินค้า) · เลือกได้ถึง 4 รูป Facebook จะส่งงบให้รูปที่ขายได้ดีกว่าเอง</span><div class="adq-imgs">${imgs.map(u=>{const k=sel.indexOf(u);return `<span class="adq-pw"><button class="adq-pick${k>=0?' on':''}" data-a="adsImg" data-id="${x.id}" data-v="${esc(u)}" aria-pressed="${k>=0}" title="${esc((x.labels||{})[u]||'')}"><img src="${esc(u)}" alt="" loading="lazy">${k>=0?`<b class="adq-n">${k+1}</b>`:''}${(x.labels||{})[u]?`<span class="adq-tag">${esc(x.labels[u])}</span>`:''}</button>${(x.extra||[]).includes(u)&&k<0?`<button class="adq-del" data-a="adsImgDel" data-id="${x.id}" data-v="${esc(u)}" aria-label="เอารูปนี้ออกจากรายการ">×</button>`:''}</span>`;}).join('')}</div>
@@ -5936,7 +5937,7 @@ function act(a,el){
       authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:x.aiModel||imgModel(),quality:imgQuality(),aspect:(x.aiStyle||'ugc')==='clean'?'':'4:5'})})
         .then(async j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');await adsUseImage(x,j.image);toast('ได้รูปแอดใหม่แล้ว ✨');})
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
-    case 'adsFilter':ADST.f=el.dataset.v;render(true);break;
+    case 'adsFilter':ADST.f=el.dataset.v;render(true);requestAnimationFrame(()=>{const t=document.querySelector(ADST.f==='pending'?'.adq-box':'.adst');if(t)t.scrollIntoView({block:'start'});});break;
     case 'adfSet':ADF.budget=Number(el.dataset.v)||0;render(true);break;
     case 'adsStRefresh':LIVEAT.ads=LIVEAT.adsdraft=Date.now();loadAdsStatus();loadAdsAuto();render(true);break;
     case 'adsSet':{const on=el.dataset.v==='ACTIVE';if(!confirm(on?'เปิดแอดนี้ต่อ? (จะเริ่มใช้งบอีกครั้ง)':'หยุดแอดนี้? (เปิดต่อได้ภายหลัง)'))break;ADST.busy=id;render(true);
@@ -6012,7 +6013,7 @@ function act(a,el){
         if(!j||!j.ok)throw new Error((j&&(j.error||(j.errors||[])[0]))||'ทำรูปไม่สำเร็จ');
         toast('ได้ร่างแอดรอบใหม่แล้ว (ผู้ชนะ + 2 รูปใหม่) ตรวจแล้วกดตกลง');ADA.items=null;loadAdsAuto();})().catch(e=>toast('ไม่สำเร็จ: '+(e.message||e))).then(()=>{ADA.remake='';render(true);});break;}
     case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
-    case 'adsDismissAll':{const L=(ADA.items||[]).filter(x=>x.status==='pending');if(!L.length)break;if(S.confirm!=='adsAll'){S.confirm='adsAll';render(true);break;}S.confirm='';ADA.bulk=true;render(true);
+    case 'adsDismissAll':{const L=(ADA.items||[]).filter(x=>x.status==='pending');if(!L.length)break;if(!confirm(`เอาร่างแอดออกทั้ง ${L.length} รายการ? (ยังไม่ได้ยิง ไม่เสียเงิน)`))break;S.confirm='';ADA.bulk=true;render(true);
       (async()=>{let n=0;for(const x of L){try{const j=await adminPost('/api/content?action=ads_auto_dismiss',{id:x.id});if(j&&j.ok){x.status='dismissed';n++;}}catch(e){}}ADA.bulk=false;render(true);toast(`เอาออกแล้ว ${n} รายการ (ไม่เสียเงิน)`);})();break;}
     case 'adsDismiss':{if(!confirm('ไม่ยิงแอดสินค้านี้?'))break;adminPost('/api/content?action=ads_auto_dismiss',{id}).then(j=>{if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status='dismissed';render(true);}else toast((j&&j.error)||'ไม่สำเร็จ');});break;}
     case 'adsStop':case 'adsResume':{const on=a==='adsResume';if(!on&&!confirm('หยุดแอดนี้? (เปิดต่อได้ภายหลัง)'))break;ADA.busy=id;render(true);adminPost('/api/content?action='+(on?'ads_auto_resume':'ads_auto_stop'),{id}).then(j=>{ADA.busy='';if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status=j.item.status;toast(on?'เปิดแอดต่อแล้ว':'หยุดแอดแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{ADA.busy='';toast('เชื่อมต่อไม่ได้');render(true);});break;}
@@ -6147,7 +6148,12 @@ function act(a,el){
       CRS.busy=true;render(true);adminPost('/api/content?action=courses',{list:CRS.list}).then(j=>{if(j&&j.ok){CRS.list=j.list;CRS.lt=null;toast('บันทึกคอร์สแล้ว');}else toast('บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{CRS.busy=false;render(true);});break;}
     case 'crsCopy':{const c=CRS.list[CRS.sel];if(c)copyText(location.origin+'/my-learning?c='+encodeURIComponent(c.slug||c.id));break;}
     case 'crsProduct':{const c=CRS.list[CRS.sel];if(!c||!c.title){toast('ตั้งชื่อคอร์สแล้วกดบันทึกก่อน');break;}const slug=c.slug||setSlug(c.title);
-      const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36),name:c.title,slug:setSlug(c.title+'-course'),kind:'course',headline:c.title,desc:c.desc||'',features:(c.lessons||[]).slice(0,8).map(l=>l.title).join('\n'),price:0,link:location.origin+'/my-learning?c='+encodeURIComponent(slug),status:'draft',fresh:true,freshNote:'สินค้าคอร์สเรียน · ตั้งราคา ใส่รูป แล้วกดเผยแพร่ · ผู้ซื้อเข้าเรียนที่บัญชีของฉัน'});
+      const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36),name:c.title,slug:setSlug(c.title+'-course'),kind:'course',headline:c.title,desc:c.desc||'',features:(c.lessons||[]).slice(0,8).map(l=>l.title).join('\n'),images:c.image?[c.image]:[],
+        ...(()=>{const L=c.lessons||[],tot=L.reduce((a,l)=>a+(Number(l.min)||0),0),secs=[...new Set(L.map(l=>l.section||'บทเรียน'))];
+          return {specs:`รูปแบบ | วิดีโอเรียนออนไลน์\nจำนวนบท | ${L.length} บท\nความยาวรวม | ${tot} นาที\nเรียนที่ | ${location.host}/my-learning (มือถือหรือคอม)\nเข้าเรียนได้ | ทันทีหลังชำระเงิน`,
+            toc:secs.map(sn=>sn+'\n'+L.filter(l=>(l.section||'บทเรียน')===sn).map((l,i)=>`  ${L.indexOf(l)+1}. ${l.title}${l.min?` (${l.min} นาที)`:''}`).join('\n')).join('\n'),
+            forwho:'คนที่อยากได้เทคนิคทำข้อสอบแบบเป็นขั้นตอน\nคนที่ฟังทันแต่ยังเลือกผิดเพราะกับดัก\nคนทำงานที่มีเวลาน้อย อยากเรียนทีละบทสั้นๆ'};})(),
+        price:0,link:location.origin+'/my-learning?c='+encodeURIComponent(slug),status:'draft',fresh:true,freshNote:'สินค้าคอร์สเรียน · ตั้งราคา ใส่รูป แล้วกดเผยแพร่ · ผู้ซื้อเข้าเรียนที่บัญชีของฉัน'});
       D.products.push(p);ensureSkus();save();c.grants=[...new Set([...(c.grants||[]),p.id])];adminPost('/api/content?action=courses',{list:CRS.list}).then(j=>{if(j&&j.ok)CRS.list=j.list;});toast('สร้างสินค้าคอร์สเป็นฉบับร่างแล้ว (แท็บสินค้า → มาใหม่) ตั้งราคาแล้วกดเผยแพร่');render(true);break;}
     case 'vidReload':VID.jobs=null;render(true);break;
     case 'vidCopy':{const j=(VID.jobs||[]).find(x=>x.id===id),yt=(j&&j.yt)||{};copyText(el.dataset.v==='title'?(yt.title||j.title):el.dataset.v==='tags'?(yt.tags||''):(yt.desc||''));break;}
@@ -6454,7 +6460,7 @@ function applyUrl(){
     }
     if(location.pathname==='/order')S.view='order';
     else if(location.pathname==='/checkout')S.view='cart';
-    else if(location.pathname==='/store'&&storeMode())S.view='catalog';
+    else if(location.pathname==='/store'&&storeMode()){S.view='catalog';const qc=new URLSearchParams(location.search).get('cat');if(qc)S.scat=qc;}
     else if(!m&&location.pathname==='/'&&S.view==='shop'&&!new URLSearchParams(location.search).has('session_id')&&storeMode())S.view='store';
     const q=new URLSearchParams(location.search);
     const camp=q.get('utm_campaign');
