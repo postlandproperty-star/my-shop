@@ -484,7 +484,7 @@ const AI_BILL = { google: 'Google AI (Nano Banana) เงินหมด: เต
   openai: 'OpenAI (GPT Image) เครดิตหมด: คุณแดนเติมเครดิตที่ platform.openai.com/settings/organization/billing แล้วกดใหม่ หรือเลือกโมเดล Nano Banana แทน' };
 function aiErr(provider, msg, status) {
   const m = String(msg || status || '');
-  if (status === 402 || status === 429 && /quota|billing|credit/i.test(m) || /spending cap|exceeded its monthly|no credits|insufficient_quota|billing_hard_limit|billing hard limit|exceeded your current quota|prepayment credits|credits are depleted/i.test(m)) { // 402 = เครดิตแบบเติมเงินล่วงหน้า (Prepay) หมด
+  if (status === 402 || status === 429 && /quota|billing|credit/i.test(m) || /spending cap|exceeded its monthly|no credits|insufficient_quota|billing_hard_limit|billing hard limit|exceeded your current quota|prepayment credits|credits are depleted|spend limit|enforced spend/i.test(m)) { // 402 = เครดิตแบบเติมเงินล่วงหน้า (Prepay) หมด
     const e = new Error(AI_BILL[provider]); e.billing = provider; return e;
   }
   return new Error(`${provider === 'google' ? 'Google' : 'OpenAI'}: ${m}`);
