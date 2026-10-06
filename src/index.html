@@ -372,6 +372,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rl-setup,.rl-plan{background:var(--bg);border-radius:12px;padding:8px 12px}.rl-setup summary,.rl-plan summary{cursor:pointer;font-weight:600}.rl-setup ol{margin:6px 0 0;padding-left:20px;line-height:1.7;font-size:14px}
 .post img.rl-by{width:22px!important;height:22px!important;min-width:0;border-radius:50%;object-fit:cover;margin:0;flex:none;aspect-ratio:auto}
 .rl-noimg{display:flex!important;align-items:center;justify-content:center;background:var(--bg);font-size:26px;opacity:.6}
+.sw-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;margin:4px 0 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}.sw-row>span{display:grid;gap:2px;min-width:0}.sw-row small{color:var(--muted);font-size:13px}
 .switch{position:relative;display:inline-block;width:52px;height:30px;flex-shrink:0}.switch input{opacity:0;width:0;height:0}.switch span{position:absolute;inset:0;background:var(--line);border-radius:999px;transition:.15s;cursor:pointer}.switch span:before{content:'';position:absolute;width:24px;height:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s}.switch input:checked+span{background:var(--ok)}.switch input:checked+span:before{transform:translateX(22px)}.switch input:focus-visible+span{outline:3px solid var(--brand);outline-offset:2px}
 .autobox.on{border:2px solid var(--ok)}.auto-sets{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:14.5px}.auto-sets label{display:flex;gap:6px;align-items:center}
 .prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:10px}.prog i{display:block;height:100%;background:var(--ok)}
@@ -1950,7 +1951,6 @@ function bundleForm(){
       <div class="field"><label>สถานะตอนนี้</label><p style="margin:6px 0 0">${d.status==='published'?'<span class="badge ok">ขายอยู่</span>':'<span class="badge gray">ฉบับร่าง</span>'} <span class="fine">เลือกด้วยปุ่มบันทึกด้านล่าง</span></p></div>
     </div>
     ${sellPicker(d)}
-    <label class="aud-ok" style="margin:0 0 10px"><input type="checkbox" data-a="bxShowCovers" ${d.hideCovers?'':'checked'}> แสดง "ปกทุกเล่มในชุด" บนหน้าเว็บ</label>
     <div class="field">${lb('b-pains','ถ้าคุณเคยเจอแบบนี้ (ปัญหาที่คนซื้อเจอ บรรทัดละข้อ)')}<textarea class="input" id="b-pains" data-d="pains" rows="4">${esc(d.pains||'')}</textarea></div>
     <div class="field">${lb('b-forwho','เหมาะกับใคร (บรรทัดละข้อ)')}<textarea class="input" id="b-forwho" data-d="forwho" rows="3">${esc(d.forwho||'')}</textarea></div>
     <div class="field">${lb('b-toc','ชุดนี้ประกอบด้วยอะไรบ้าง (ไม่ใส่ = ระบบใช้รายชื่อเล่มและจำนวนหน้าให้เอง · รูปแบบ ชื่อ | หน้า)')}<textarea class="input" id="b-toc" data-d="toc" rows="3">${esc(d.toc||'')}</textarea></div>
@@ -1979,6 +1979,7 @@ function bundleForm(){
     return `<div class="card" style="margin-top:14px">
     <div class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end;margin:0 0 4px">${zipBtn('dlSetImgs','⬇ โหลดรูปทั้งหมดของชุด (ZIP)')}</div>
     <h3 class="h3">3. รูปชุด <span class="fine" style="font-weight:400">ทำ 2 ขั้น: ปกเล่มเดี่ยวก่อน แล้วรูปใหญ่ของชุดจะจัดจากปกชุดเดียวกัน ให้ดูเป็นสินค้าเดียวกัน</span></h3>
+    <div class="sw-row"><span><b>แสดง "ปกทุกเล่มในชุด" บนหน้าเว็บ</b><small>${d.hideCovers?'ปิดอยู่ · ลูกค้าไม่เห็นตารางปกทุกเล่ม':'เปิดอยู่ · ลูกค้าเห็นตารางปกทุกเล่มในหน้าขาย'}</small></span><label class="switch"><input type="checkbox" data-a="bxShowCovers" ${d.hideCovers?'':'checked'} aria-label="แสดงปกทุกเล่มในชุดบนหน้าเว็บ"><span></span></label></div>
     <h4 class="bxi-step"><span>1</span> ปกเล่มเดี่ยว (ใช้ใน "ในชุดมีอะไรบ้าง")</h4>
     <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ได้แล้ว<b>ใช้เป็นรูปสินค้าของเล่มนั้นด้วย</b> รูปเดิมเก็บไว้เป็นรูปที่ 2 · กดที่รูปเพื่อดูใหญ่ เทียบกับรูปเดิม หรือสลับกลับ</p>
     ${(()=>{const left=chosen.filter(b=>b.bookCover&&(b.images||[])[0]!==b.bookCover);return left.length?`<div class="bxi-apply"><span>มีปกเรียบ ${left.length} เล่มที่ยังไม่ได้ใช้เป็นรูปสินค้า</span><button class="btn btn-cta btn-sm" data-a="bxUseAll">✓ ใช้ปกเรียบเป็นรูปสินค้าทั้ง ${left.length} เล่ม</button></div>`:'';})()}
