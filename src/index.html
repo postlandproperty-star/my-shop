@@ -488,6 +488,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
+.rc-box{padding:14px 16px;margin:0 0 12px}.rc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-height:520px;overflow:auto}.rc-it{display:grid;grid-template-columns:20px 1fr;gap:4px 8px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;background:var(--surface)}.rc-it.on{border-color:#2440E8;box-shadow:0 0 0 1px #2440E8}.rc-it input{width:18px;height:18px}.rc-imgs{display:flex;gap:6px;align-items:center}.rc-imgs img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:#fff;border:1px solid var(--line)}.rc-n{grid-column:1/-1;font-size:13px}
 .cbt{padding:14px 16px;margin:0 0 12px}.cbt-ans{background:#F1F5FF;border-radius:10px;padding:10px 12px;margin-top:8px}.cbt-ans p{margin:4px 0 0}.cbt-th{border-top:1px solid var(--line);padding:8px 0}.cbt-th.need{background:#FFF8EC}.cbt-m{margin:3px 0;font-size:14px}.cbt-m.b{color:#2440E8}.cbt-m.h{color:#3f9a5a}
 .deal-card{padding:14px 16px;margin:12px 0}
 .alt-mail{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin-top:8px;width:100%}.alt-mail .input{flex:1;min-width:200px;max-width:340px}.free-send{padding:12px 14px;margin:12px 0;display:grid;gap:2px}
@@ -3059,6 +3060,29 @@ function facSetBundles(){const all=FAC.all||[];
 /* ชุดจากโรงงาน (ฉบับร่าง): ทำให้เป็น listing เดียวแบบชุด TOEIC 750+ เอง — รูปชุดจัดจากปกทุกเล่ม + หัวข้อขาย/คำโปรยของชุด (ไม่แตะราคา) */
 SETI.pol={};
 /* ปกเล่มแนวตั้ง = หน้าแรกของไฟล์ PDF (ปกจริงของเล่ม) ใช้ใน "ในชุดมีอะไรบ้าง" และรูปชุด (ไม่ใช้ AI ไม่เสียเงิน) */
+/* 🖼 ใช้ปกจริงเป็นรูปแรก: ปกหน้าแรกของ PDF (หรือปกเรียบที่มีอยู่) วางตรงบนพื้นขาว 1200×1200 แบบร้านหนังสือทั่วไป ไม่มีฉาก ไม่มีเงา 3 มิติ
+   ทำรูปตัวอย่างก่อน → คุณแดนดู → กด "ใช้เป็นรูปแรก" ถึงเปลี่ยนจริง · รูปเดิมย้ายไปต่อท้าย ไม่ลบ */
+const RC={sel:{},prev:{},busy:'',open:false};
+async function pdfFirstPage(link){
+  if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
+  const buf=await fetch(link).then(r=>{if(!r.ok)throw new Error('เปิดไฟล์ไม่ได้ '+r.status);return r.arrayBuffer();});
+  const doc=await window.pdfjsLib.getDocument({data:buf}).promise,pg=await doc.getPage(1),v0=pg.getViewport({scale:1}),vp=pg.getViewport({scale:1100/v0.height});
+  const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);await pg.render({canvasContext:x,viewport:vp}).promise;return c;}
+async function flatCover(p){let src;
+  if(p.link&&/\.pdf(\?|$)|\/storage\/v1\/object\/public\//.test(p.link)&&pfmt(p)!=='notion'){try{src=await pdfFirstPage(p.link);}catch(e){}}
+  if(!src&&p.bookCover){src=await new Promise((ok,no)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>ok(im);im.onerror=no;im.src=p.bookCover+(p.bookCover.includes('?')?'&':'?')+'cv=1';});}
+  if(!src)throw new Error('ไม่มีไฟล์ PDF หรือปกเรียบ');
+  const W=1200,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,W);
+  const sw=src.width,sh=src.height,k=Math.min(W*0.8/sw,W*0.9/sh),w=sw*k,h=sh*k,X=(W-w)/2,Y=(W-h)/2;
+  x.save();x.shadowColor='rgba(15,27,51,.18)';x.shadowBlur=24;x.shadowOffsetY=8;x.fillStyle='#fff';x.fillRect(X,Y,w,h);x.restore();x.drawImage(src,X,Y,w,h);x.strokeStyle='rgba(15,27,51,.08)';x.strokeRect(X+.5,Y+.5,w-1,h-1);
+  return uploadImage(c.toDataURL('image/jpeg',.9));}
+function realCoverBox(){if(!RC.open)return '';const L=D.products.filter(p=>!isBundle(p)&&(p.link||p.bookCover)&&pfmt(p)!=='notion'),sel=L.filter(p=>RC.sel[p.id]),ready=sel.filter(p=>RC.prev[p.id]);
+  return `<section class="card rc-box"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b>🖼 ใช้ปกจริงเป็นรูปแรก</b><button class="chip" data-a="rcClose">ปิด</button></div>
+    <p class="fine" style="margin:4px 0 8px">ปกหน้าแรกของไฟล์วางตรงบนพื้นขาว (แบบร้านหนังสือทั่วไป) ดูเป็นของจริงกว่ารูปมีฉาก · เลือกสินค้า → ทำรูปตัวอย่าง → ตรวจ → กด "ใช้เป็นรูปแรก" ถึงจะเปลี่ยนจริง · รูปเดิมยังอยู่ (ย้ายไปต่อท้าย)</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 8px"><button class="chip" data-a="rcAll">เลือกทั้งหมด (${L.length})</button><button class="chip" data-a="rcNone">ไม่เลือก</button>
+      <button class="btn btn-dark btn-sm" data-a="rcMake" ${!sel.length||RC.busy?'disabled':''}>${RC.busy==='make'?`กำลังทำรูป ${RC.n||0}/${sel.length}...`:`ทำรูปตัวอย่าง (${sel.length})`}</button>
+      <button class="btn btn-cta btn-sm" data-a="rcUse" ${!ready.length||RC.busy?'disabled':''}>✓ ใช้เป็นรูปแรก (${ready.length} สินค้า)</button></div>
+    <div class="rc-grid">${L.map(p=>`<label class="rc-it${RC.sel[p.id]?' on':''}"><input type="checkbox" data-a="rcSel" data-id="${p.id}" ${RC.sel[p.id]?'checked':''}><span class="rc-imgs"><img src="${esc((p.images||[])[0]||'')}" alt="รูปตอนนี้" loading="lazy">${RC.prev[p.id]?`<span>→</span><img src="${esc(RC.prev[p.id])}" alt="รูปใหม่">`:RC.err&&RC.err[p.id]?`<span class="fine" style="color:#B4471A">${esc(RC.err[p.id])}</span>`:''}</span><span class="rc-n">${esc(p.sku||'')} ${esc(String(p.name).slice(0,46))}</span></label>`).join('')}</div></section>`;}
 async function pdfCoverUrl(link){
   if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
   const buf=await fetch(link).then(r=>{if(!r.ok)throw new Error('เปิดไฟล์ไม่ได้ '+r.status);return r.arrayBuffer();});
@@ -3671,7 +3695,8 @@ function productsTab(){
       <select class="input pt-sel" data-psort="1" aria-label="เรียงสินค้า">${[['new','เรียง: ล่าสุด'],['sales','ขายดีที่สุด'],['rev','รายได้สูงสุด'],['hi','ราคาสูง → ต่ำ'],['lo','ราคาต่ำ → สูง'],['name','ชื่อ ก–ฮ / A–Z'],['sku','เลข SKU'],['cat','จัดกลุ่มตามหมวด']].map(o=>`<option value="${o[0]}" ${so===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
       <select class="input pt-sel" data-pcat="1" aria-label="กรองตามหมวด"><option value="">ทุกหมวด</option>${Object.entries(CATS).filter(([k])=>D.products.some(p=>p.cat===k)).map(([k,v])=>`<option value="${k}" ${S.pcat===k?'selected':''}>${esc(v)} (${D.products.filter(p=>p.cat===k).length})</option>`).join('')}${D.products.some(p=>!CATS[p.cat])?`<option value="_none" ${S.pcat==='_none'?'selected':''}>ยังไม่ใส่หมวด</option>`:''}</select>
     </div>
-    <div class="pt-sub"><b>สินค้า <span id="pcount">${shown.length}</span> รายการ</b>
+    ${realCoverBox()}
+    <div class="pt-sub"><b>สินค้า <span id="pcount">${shown.length}</span> รายการ</b><button class="chip" data-a="rcOpen" style="margin-left:8px">🖼 ใช้ปกจริงเป็นรูปแรก</button>
       <span class="pt-kinds">${[['all','ทุกประเภท'],['pdf','📄 PDF'],['notion','📒 Notion'],['bundle','📦 ชุด']].filter(f=>f[0]==='all'||all.some(x=>pfmt(x)===f[0])).map(f=>`<button class="chip" data-a="pfilter" data-v="${f[0]}" aria-pressed="${k===f[0]}">${f[1]}</button>`).join('')}</span></div>
     ${all.length?`<div class="pt-table" id="plist">
       <div class="pt-th"><span>สินค้า</span><span>ราคา</span><span>ยอดขาย</span><span>สถานะ / คำแนะนำ</span><span>การดำเนินการ</span></div>
@@ -6024,6 +6049,15 @@ function act(a,el){
     case 'delCoupon':{D.coupons=D.coupons.filter(x=>x.code!==el.dataset.code);if(S.coupon===el.dataset.code)S.coupon='';save();render(true);break;}
 
     /* pixel + reset */
+    case 'rcOpen':RC.open=true;render(true);break;
+    case 'rcClose':RC.open=false;RC.prev={};RC.sel={};render(true);break;
+    case 'rcSel':RC.sel[id]=!!el.checked;render(true);break;
+    case 'rcAll':D.products.filter(p=>!isBundle(p)&&(p.link||p.bookCover)&&pfmt(p)!=='notion').forEach(p=>RC.sel[p.id]=true);render(true);break;
+    case 'rcNone':RC.sel={};render(true);break;
+    case 'rcMake':{const L=D.products.filter(p=>RC.sel[p.id]);RC.busy='make';RC.n=0;RC.err={};render(true);
+      (async()=>{for(const p of L){try{RC.prev[p.id]=await flatCover(p);}catch(e){RC.err[p.id]=String(e.message||e).slice(0,60);}RC.n++;render(true);}RC.busy='';render(true);toast('ทำรูปตัวอย่างแล้ว ตรวจแล้วกด "ใช้เป็นรูปแรก"');})();break;}
+    case 'rcUse':{let n=0;for(const p of D.products){const u=RC.sel[p.id]&&RC.prev[p.id];if(!u)continue;p.images=[u,...(p.images||[]).filter(x=>x!==u)].slice(0,8);n++;}
+      if(n){save();toast(`ใช้ปกจริงเป็นรูปแรกแล้ว ${n} สินค้า (รูปเดิมย้ายไปต่อท้าย)`);}RC.prev={};RC.sel={};RC.open=false;render(true);break;}
     case 'cbMode':CBT.f.mode=el.dataset.v;render(true);break;
     case 'cbSave':CBT.busy=true;render(true);adminPost('/api/content?action=chatbot',CBT.f).then(j=>{if(j&&j.ok){CBT.f=Object.assign({},j.cfg);CBT.d.cfg=j.cfg;toast(j.cfg.on?'บันทึกแล้ว บอทเปิดอยู่':'บันทึกแล้ว (บอทปิดอยู่)');}else toast('บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{CBT.busy=false;render(true);});break;
     case 'cbTest':CBT.testing=true;CBT.ans=null;render(true);adminPost('/api/content?action=chatbot_test',{text:CBT.q||''}).then(j=>{CBT.ans=j&&j.ok?{why:{deal:'ตอบด้วยข้อความส่วนลด',handoff:'ส่งต่อแอดมิน',ai:'AI ตอบ',greet:'ทักทาย','keywords only':'โหมดคำสำคัญ'}[j.why]||j.why,reply:j.reply}:{why:'ผิดพลาด',reply:(j&&j.error)||''};}).catch(()=>{CBT.ans={why:'ผิดพลาด',reply:'เชื่อมต่อไม่ได้'};}).then(()=>{CBT.testing=false;render(true);});break;
