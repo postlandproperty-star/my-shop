@@ -6670,7 +6670,7 @@ function applyUrl(){
     {const qc=q.get('code')||(()=>{try{return sessionStorage.getItem('sl_code');}catch(e){return '';}})();if(qc)setTimeout(()=>codeApply(qc,true),300);}
     if(q.get('cart')==='open'&&CART.length){S.cart=true;setTimeout(drawCart,50);history.replaceState(null,'',location.pathname);}
     const pi=q.get('pi'),pk=q.get('k');if(pi&&/^pi_[A-Za-z0-9]+$/.test(pi)&&pk){S.sessionId=pi;S.piKey=pk;}
-    if(q.has('admin')||location.hash==='#admin')S.view=hasAdminAccess()?'admin':'login';
+    if(q.has('admin')||location.hash==='#admin'){S.view=hasAdminAccess()?'admin':'login';if(['ads','courses','products','orders'].includes(q.get('admin')))S.tab=q.get('admin');}
     else if(location.hash==='#factory'||location.hash==='#vip')S.view=hasAdminAccess()?location.hash.slice(1):'login';
   }catch(e){}
 }

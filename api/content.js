@@ -456,6 +456,33 @@ async function adWatch() {
     }
     if (dirty) await saveAdsAuto(items);
   } catch (e) { console.error('ad test', e.message); }
+  // เตือนก่อนแอดจบ (ภายใน 36 ชม.) และเมื่อจบแล้ว พร้อมผลรวม → คุณแดนตัดสินใจยิงต่อ/เพิ่มงบ/หยุด (คุณแดนสั่ง 6 ต.ค. 69 "ถึงวันแล้วอย่าลืมเตือน")
+  try {
+    const items = await loadAdsAuto(); let dirty = false; const rate = Number(acc.limit?.rate) || 0, site = await siteUrl();
+    const thb = (v) => (rate ? Math.round(v / rate) : Math.round(v)), dd = (t) => new Date(t).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', timeZone: 'Asia/Bangkok' });
+    const sum = async (x) => { let t = null; try { t = x.fb?.campaign ? await campaignStats(fb, x.fb.campaign) : null; } catch (e) {} if (!t) return 'ยังดึงตัวเลขไม่ได้'; const spend = thb(t.spend), buy = t.purchases, rev = buy * (Number(x.price) || 0);
+      return `ใช้ไป ฿${spend.toLocaleString('th-TH')} · เห็น ${t.impressions.toLocaleString('th-TH')} · คลิก ${t.clicks.toLocaleString('th-TH')} · ซื้อ ${buy} ครั้ง (ตาม Facebook ≈ ฿${rev.toLocaleString('th-TH')}${spend ? ` ${rev >= spend ? 'กำไร' : 'ขาดทุน'} ≈ ฿${Math.abs(rev - spend).toLocaleString('th-TH')}` : ''})`; };
+    for (const x of items.filter((y) => ['live', 'ended'].includes(y.status) && y.ends_at)) {
+      const left = Date.parse(x.ends_at) - now, nm = String(x.name).slice(0, 60);
+      if (left > 0 && left < 36 * 36e5 && !x.endSoonAt) {
+        const line = await sum(x); x.endSoonAt = new Date().toISOString(); dirty = true;
+        await addTodo({ text: `แอด "${nm}" จะจบ ${dd(x.ends_at)} (ครบ ${x.days || 7} วัน) ตอนนี้: ${line} · ตัดสินใจ: ยิงต่อ / เพิ่มงบ / ปล่อยให้จบ (หลังบ้าน → โฆษณา)`, type: 'decide', from: 'analyst' });
+        await ownerMail(`📣 แอด "${nm}" จะจบ ${dd(x.ends_at)}`, `<p style="margin:0 0 8px">ผลตอนนี้: ${escH(line)}</p><p style="margin:0">จะยิงต่อ เพิ่มงบ หรือปล่อยให้จบ เลือกได้ที่หลังบ้าน → โฆษณา (ไม่ทำอะไร แอดจะหยุดเองเมื่อครบวัน ไม่เสียเงินเพิ่ม)</p>`, { button: ['เปิดหน้าโฆษณา', `${site}/?admin=ads`] });
+      }
+      if (left <= 0 && !x.endNotified) {
+        const line = await sum(x); x.endNotified = new Date().toISOString(); dirty = true;
+        await addTodo({ text: `แอด "${nm}" จบแล้ว (${dd(x.ends_at)}) ผลรวม: ${line} · ถ้าคุ้ม กดยิงต่อได้ที่หลังบ้าน → โฆษณา (ยิงใหม่ด้วยรูป/ข้อความเดิม)`, type: 'decide', from: 'analyst' });
+        await ownerMail(`📣 แอด "${nm}" ครบวันแล้ว`, `<p style="margin:0 0 8px">ผลรวม: ${escH(line)}</p><p style="margin:0">ถ้าคุ้ม ยิงต่อได้ที่หลังบ้าน → โฆษณา · ยอดที่เชื่อได้ที่สุดคือ "🧾 ร้านนับได้" ใต้แอด (นับจากออเดอร์จริง)</p>`, { button: ['เปิดหน้าโฆษณา', `${site}/?admin=ads`] });
+      }
+    }
+    if (dirty) { const cur = await loadAdsAuto(); for (const y of cur) { const z = items.find((q) => q.id === y.id); if (z) { if (z.endSoonAt) y.endSoonAt = z.endSoonAt; if (z.endNotified) y.endNotified = z.endNotified; } } await saveAdsAuto(cur); }
+    // วงเงินโฆษณาใกล้หมด (Account spending limit) → แอดจะหยุดเองเมื่อเงินหมด เตือนก่อนเหลือไม่ถึง 2 วัน (เตือนซ้ำทุก 2 วัน)
+    const daily = items.filter((y) => y.status === 'live').reduce((a, y) => a + (Number(y.dailyTHB) || 0), 0), lb = acc.limit?.leftTHB;
+    if (daily && lb != null && lb < daily * 2 && (!st.lowBal || now - st.lowBal > 2 * 864e5)) {
+      st.lowBal = now; warned.push('lowBal');
+      await addTodo({ text: `วงเงินโฆษณาเหลือ ฿${lb.toLocaleString('th-TH')} แอดที่วิ่งอยู่ใช้วันละประมาณ ฿${daily} (พอประมาณ ${Math.max(0, Math.floor(lb / daily))} วัน) ถ้าเงินหมด แอดจะหยุดเองจนกว่าจะเติม เพิ่มวงเงินได้ที่หน้าการชำระเงินของ Facebook`, type: 'do', from: 'analyst', link: acc.limit.page });
+    }
+  } catch (e) { console.error('ad end notify', e.message); }
   if (warned.length) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ads_watch', data: st, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); await chatEvent('analyst', `เจอแอดใช้เงินแต่ยังขายไม่ได้ ${warned.length} ตัวครับ ขึ้นเช็คลิสต์ให้คุณแดนตัดสินแล้ว`, 'ads'); }
   return { ok: true, warned };
 }
