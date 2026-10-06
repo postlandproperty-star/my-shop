@@ -502,15 +502,15 @@ async function genImage(opts) {
 // รายละเอียดสินค้า Shopee: ขายเป็นหนังสือเล่มพิมพ์ (แม่พิมพ์และส่งจากไทย) · กฎ Shopee: ห้ามคำว่าสินค้าดิจิทัล/ebook/PDF/ดาวน์โหลด ห้ามลิงก์และช่องทางติดต่อนอก Shopee
 const SHOPEE_FIX = [[/สินค้า\s*ดิจิ[ทต]ั?ล|digital\s*product/gi, 'หนังสือ'], [/e-?books?|อี-?บุ๊[กค]/gi, 'หนังสือ'], [/digital|ดิจิ[ทต]ั?ล/gi, ''], [/ไฟล์\s*PDF|PDF\s*ไฟล์|\bPDF\b|พีดีเอฟ/gi, 'หนังสือ'],
   [/ไฟล์เสียง/g, 'เสียงอ่าน'], [/ไฟล์/g, 'เล่ม'], [/ดาวน์โหลด|download/gi, 'สแกนฟัง'], [/(ส่ง|รับ)(ทาง|เข้า)\s*(อีเมล|e-?mail)\S*/gi, ''], [/https?:\/\/\S+|www\.\S+|\S+\.(com|net|co\.th)\S*/gi, ''],
-  [/\bline\s*(id|@)?\S*|ไลน์\s*(ไอดี)?\s*\S*|ทักแชท(นอก|ทาง)\S*/gi, ''], [/ได้รับ(ทันที|เลย)/g, 'ร้านแพ็กส่งตามรอบ']];
+  [/\bline\s*(id|@)?\S*|ไลน์\s*(ไอดี)?\s*\S*|ทักแชท(นอก|ทาง)\S*/gi, ''], [/ได้รับ(ทันที|เลย)/g, 'ร้านแพ็กส่งตามรอบ'], [/\s*[·,]?\s*(พิมพ์และ)?จัดส่งจาก(ประเทศ)?ไทย/g, '']];
 function shopeeClean(t) { let s = String(t || ''); for (const [re, to] of SHOPEE_FIX) s = s.replace(re, to); return s.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').replace(/ {2,}/g, ' ').trim().slice(0, 2900); }
 const shopeeSrc = (b) => { const t = (k, n) => String(b[k] || '').slice(0, n); return [`ชื่อ: ${t('name', 200)}`, `หัวข้อขาย: ${t('headline', 300)}`, `คำอธิบาย: ${t('desc', 600)}`, `สิ่งที่ได้: ${t('features', 1500)}`, `เหมาะกับ: ${t('forwho', 800)}`, `ไม่เหมาะกับ: ${t('notfor', 500)}`, `สารบัญ: ${t('toc', 1200)}`, `ข้อมูลเล่ม: ${t('specs', 500)}`, `คำถามที่พบบ่อย: ${t('faq', 1200)}`, b.pages ? `จำนวนหน้า: ${Number(b.pages)}` : '', Array.isArray(b.books) && b.books.length ? `ในชุดมี ${b.books.length} เล่ม: ${b.books.map((x) => String(x).slice(0, 120)).join(' | ')}` : '', b.audio ? 'มีเสียงอ่านฟังผ่าน QR code ในเล่ม' : ''].filter(Boolean).join('\n'); };
 async function shopeeAi(b) {
   const G = process.env.GEMINI_API_KEY; if (!G) return '';
-  const prompt = `เขียน "รายละเอียดสินค้า" ภาษาไทยสำหรับลงขายใน Shopee ของร้าน SheetLab สินค้าคือ "หนังสือเล่มพิมพ์ขนาด A4" (พิมพ์และจัดส่งจากประเทศไทย) จากข้อมูลจริงด้านล่าง
+  const prompt = `เขียน "รายละเอียดสินค้า" ภาษาไทยสำหรับลงขายใน Shopee ของร้าน SheetLab สินค้าคือ "หนังสือเล่มพิมพ์ขนาด A4" จากข้อมูลจริงด้านล่าง
 เป้าหมาย: คนอ่านแล้วอยากกดสั่งทันที อ่านง่ายบนมือถือ
 โครง: 1) ประโยคเปิดที่โดนใจ (ปัญหาที่ผู้อ่านเจอ) 2) เล่มนี้ช่วยอะไร 3) ✅ ในเล่มมีอะไร (ข้อละบรรทัด ใช้ตัวเลขจริงจากข้อมูล) 4) 🎯 เหมาะกับใคร 5) 📘 ข้อมูลเล่ม (A4 เล่มพิมพ์ จำนวนหน้า ถ้ามีเสียงบอกว่าสแกน QR ในเล่มฟังเสียงอ่านได้) 6) ❓ ถาม-ตอบสั้นๆ 2-3 ข้อ 7) ปิดท้ายชวนกดสั่ง/กดใส่ตะกร้า
-กฎเด็ดขาด (ผิดกฎ Shopee): ห้ามใช้คำว่า สินค้าดิจิทัล digital ebook อีบุ๊ก PDF ไฟล์ ดาวน์โหลด ส่งทางอีเมล · ห้ามใส่ลิงก์ เว็บไซต์ LINE เบอร์โทร หรือช่องทางติดต่อนอก Shopee · ห้ามใส่ราคา · ห้ามอ้างสิ่งที่ไม่มีในข้อมูล ห้ามรับประกันคะแนนสอบ · ห้ามคำว่า "เจ้าของภาษา"
+กฎเด็ดขาด (ผิดกฎ Shopee): ห้ามใช้คำว่า สินค้าดิจิทัล digital ebook อีบุ๊ก PDF ไฟล์ ดาวน์โหลด ส่งทางอีเมล · ห้ามใส่ลิงก์ เว็บไซต์ LINE เบอร์โทร หรือช่องทางติดต่อนอก Shopee · ห้ามใส่ราคา · ห้ามเขียนว่าจัดส่งจากที่ไหน (เช่น จัดส่งจากประเทศไทย) · ห้ามอ้างสิ่งที่ไม่มีในข้อมูล ห้ามรับประกันคะแนนสอบ · ห้ามคำว่า "เจ้าของภาษา"
 รูปแบบ: ข้อความล้วน ไม่ใช้ markdown (ไม่มี ** หรือ #) ใช้อีโมจิพอประมาณ ยาวไม่เกิน 2,200 ตัวอักษร ตอบเฉพาะรายละเอียดสินค้า
 
 ข้อมูล:
@@ -522,7 +522,7 @@ ${shopeeSrc(b)}`;
 function shopeeTemplate(b) { // สำรองตอน AI ใช้ไม่ได้: เรียงจากข้อมูลหน้าขายเดิม
   const L = (t) => String(t || '').split('\n').map((x) => x.replace(/^[-•✅\s]+/, '').trim()).filter(Boolean);
   return [b.headline || b.name, b.desc || '', Array.isArray(b.books) && b.books.length ? '📚 ในชุดมี\n' + b.books.map((x, i) => `${i + 1}. ${x}`).join('\n') : L(b.features).length ? '✅ ในเล่มมี\n' + L(b.features).map((x) => '✅ ' + x).join('\n') : '',
-    L(b.forwho).length ? '🎯 เหมาะกับ\n' + L(b.forwho).map((x) => '• ' + x).join('\n') : '', `📘 หนังสือเล่มพิมพ์ ขนาด A4${b.pages ? ` ${b.pages} หน้า` : ''} จัดส่งจากประเทศไทย`, b.audio ? '🎧 สแกน QR code ในเล่ม ฟังเสียงอ่านได้ทันที' : '', '🛒 กดใส่ตะกร้าได้เลย ร้านพิมพ์และแพ็กส่งตามรอบ มีคำถามทักแชท Shopee ได้เลย'].filter(Boolean).join('\n\n');
+    L(b.forwho).length ? '🎯 เหมาะกับ\n' + L(b.forwho).map((x) => '• ' + x).join('\n') : '', `📘 หนังสือเล่มพิมพ์ ขนาด A4${b.pages ? ` ${b.pages} หน้า` : ''}`, b.audio ? '🎧 สแกน QR code ในเล่ม ฟังเสียงอ่านได้ทันที' : '', '🛒 กดใส่ตะกร้าได้เลย ร้านพิมพ์และแพ็กส่งตามรอบ มีคำถามทักแชท Shopee ได้เลย'].filter(Boolean).join('\n\n');
 }
 async function genImageRaw({ model, prompt, quality, refs, aspect }) {
   const tall = aspect === '3:4' || aspect === '4:5'; // แนวตั้ง: ปกหน้าแรก PDF (3:4) · รูปแอดฟีด (4:5 · OpenAI ได้ 2:3 แล้วตัดเป็น 4:5)
@@ -1324,6 +1324,15 @@ ${books}`;
         }
       } catch (e) { console.error('set_copy', e.message); }
       return res.status(200).json({ ok: true, ai: !!out, ...(out || {}) });
+    }
+    if (action === 'free_send') { // คุณแดนส่งชีทฟรีเองไปอีเมลที่ลูกค้าแจ้งทางแชท (ข้ามตัวกันกดซ้ำ 10 นาที)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const b = await readBody(req), F = await import('../lib/free.js'), email = String(b.email || '').trim().toLowerCase();
+      if (!F.okEmail(email)) return res.status(400).json({ ok: false, error: 'อีเมลไม่ถูกต้อง' });
+      const f = F.freeBySlug(String(b.slug || '')) || F.FREEBIES[0];
+      try { const r = await F.claimFree(f, email, { src: 'manual', origin: await siteUrl(), force: true }); return res.status(200).json({ ok: !!r.ok, sheet: f.title }); }
+      catch (e) { return res.status(500).json({ ok: false, error: String(e.message || e).slice(0, 200) }); }
     }
     if (action === 'shopee_copy') { // คุณแดนกดในหน้าแก้สินค้า: รายละเอียดสินค้าสำหรับ Shopee (เล่มพิมพ์) ไว้คัดลอกไปวางเอง
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

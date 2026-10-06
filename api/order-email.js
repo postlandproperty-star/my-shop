@@ -14,8 +14,13 @@ export default async function handler(req, res) {
   if (!mailConfigured()) return res.status(500).json({ ok: false, error: 'ยังไม่ได้ตั้งค่า GMAIL_USER / GMAIL_APP_PASSWORD บน Vercel' });
   try {
     const s = id.startsWith('pi_') ? piToSession(await stripe('GET', `payment_intents/${id}`)) : await stripe('GET', `checkout/sessions/${id}`);
-    const r = await fulfill(s, { force: true, origin: `https://${req.headers.host}` });
-    res.status(r.sent ? 200 : 500).json({ ok: r.sent, to: r.to || null, error: r.sent ? null : r.reason });
+    const alt = String(req.query.to || '').trim().toLowerCase();
+    if (alt && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alt)) return res.status(400).json({ ok: false, error: 'อีเมลไม่ถูกต้อง' });
+    const r = await fulfill(s, { force: true, origin: `https://${req.headers.host}`, to: alt });
+    if (r.sent && alt) { // ส่งเองไปอีเมลอื่น: จดไว้ในออเดอร์ + ขอรีวิวที่อีเมลนั้น 1 วันหลังส่ง (ครั้งเดียว)
+      try { const RV = await import('../lib/reviews.js'); const d = await RV.loadReviews(); if (!d.sent[id] && !d.list.some((x) => x.order === id)) { d.follow[id] = { to: alt, at: new Date().toISOString() }; await RV.saveReviews(d); } } catch (e) { console.error('follow', e.message); }
+    }
+    res.status(r.sent ? 200 : 500).json({ ok: r.sent, to: r.to || null, alt: !!alt, error: r.sent ? null : r.reason });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: String(e.message || e) });

@@ -487,6 +487,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:30px 10px;color:var(--muted)}.fqt-empty b{color:var(--ink);font-size:17px}
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}
+.alt-mail{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center;margin-top:8px;width:100%}.alt-mail .input{flex:1;min-width:200px;max-width:340px}.free-send{padding:12px 14px;margin:12px 0;display:grid;gap:2px}
 .sp-rv{display:inline-flex;gap:6px;align-items:center;background:none;border:0;padding:0;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}.sp-rv b{color:#E8A20C}.sp-rv span{color:#E8A20C;letter-spacing:1px}
 .st-bsold{display:inline-block;font-size:13px;font-weight:600;color:#B4471A;margin-top:4px}
 .aud{padding:12px 14px;margin-top:14px;border:1.5px solid #E9A23B;background:#FFF8EC}.aud.ok{border-color:#3f9a5a;background:#F1FAF3}.aud-steps{margin:6px 0 8px;padding-left:20px}.aud-ok{display:flex;gap:8px;align-items:flex-start;font-weight:600}.aud-ok input{width:20px;height:20px;flex:none;margin-top:2px}.aud-warn{display:block;margin-top:4px;color:#B4471A}
@@ -2616,7 +2617,7 @@ function orderRow(o){
       <ul class="log">${o.log.map(l=>`<li><span class="muted">${fdt(l.t)}</span>${esc(l.text)}</li>`).join('')}</ul>
       <div class="acts">
         ${o.src==='stripe'?`<a class="btn btn-line btn-sm" href="https://dashboard.stripe.com/${o.paymentIntent?'payments/'+esc(o.paymentIntent):'payments'}" target="_blank" rel="noopener noreferrer">ดู/คืนเงินใน Stripe</a>
-          ${o.status==='paid'?`<button class="btn btn-line btn-sm" data-a="resendEmail" data-sid="${esc(o.sid)}" ${o.email?'':'disabled'}>${o.emailedAt?'ส่งอีเมลซ้ำ':'ส่งอีเมลลิงก์ไฟล์'}</button><span class="fine">${o.emailedAt?'อีเมลส่งแล้ว '+fdt(o.emailedAt):o.email?'ยังไม่ได้ส่งอีเมล':'ไม่มีอีเมลลูกค้า'}</span>`:''}${o.status==='paid'&&o.src==='stripe'?rvReqRow(o):''}`:''}
+          ${o.status==='paid'?`<button class="btn btn-line btn-sm" data-a="resendEmail" data-sid="${esc(o.sid)}" ${o.email?'':'disabled'}>${o.emailedAt?'ส่งอีเมลซ้ำ':'ส่งอีเมลลิงก์ไฟล์'}</button><span class="fine">${o.emailedAt?'อีเมลส่งแล้ว '+fdt(o.emailedAt):o.email?'ยังไม่ได้ส่งอีเมล':'ไม่มีอีเมลลูกค้า'}</span>`:''}${o.status==='paid'?`<div class="alt-mail"><input class="input" type="email" placeholder="ลูกค้าขอให้ส่งไปอีเมลอื่น? ใส่อีเมลที่นี่" data-altmail="${esc(o.sid)}" value="${esc((S.altMail||{})[o.sid]||'')}"><button class="btn btn-dark btn-sm" data-a="altMailSend" data-sid="${esc(o.sid)}">📧 ส่งไฟล์ไปอีเมลนี้</button><span class="fine">ส่งเองได้ทุกเมื่อ · พรุ่งนี้ระบบขอรีวิวที่อีเมลนี้ให้เอง</span></div>`:''}${o.status==='paid'&&o.src==='stripe'?rvReqRow(o):''}`:''}
         ${o.status==='paid'&&o.src!=='stripe'?`<button class="btn btn-line btn-sm" data-a="resend" data-id="${o.id}">ส่งลิงก์ซ้ำ</button>
           <button class="btn ${cf?'btn-danger':'btn-line'} btn-sm" data-a="refund" data-id="${o.id}">${cf?'กดอีกครั้งเพื่อยืนยันคืนเงิน':'คืนเงิน'}</button>`:''}
         ${o.status==='pending'&&o.src!=='stripe'?`<button class="btn btn-dark btn-sm" data-a="manualPaid" data-id="${o.id}">ยืนยันว่าชำระแล้ว</button>`:''}
@@ -2680,6 +2681,8 @@ function ordersTab(){
   const kpi=(v,l,sub)=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}${sub?` · <span class="muted">${sub}</span>`:''}</div></div>`;
   return `
   ${memberDesk('finance')}
+  <div class="card free-send"><b>🎁 ส่งชีทฟรีเอง</b><span class="fine">ลูกค้าทักแชทบอกว่าไม่ได้รับชีทฟรี หรือขอให้ส่งไปอีเมลอื่น</span>
+    <div class="alt-mail"><input class="input" type="email" placeholder="อีเมลลูกค้า" data-freemail="1" value="${esc(S.freeMail||'')}"><button class="btn btn-dark btn-sm" data-a="freeSend" ${S.freeBusy?'disabled':''}>${S.freeBusy?'กำลังส่ง...':'ส่งชีทฟรี'}</button></div></div>
   <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
     <span class="fine">${S.syncMsg?esc(S.syncMsg):(lastSync?'อัปเดตจาก Stripe ล่าสุด '+fdt(lastSync):'')}</span>
     <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="checkStatus">ตรวจสอบการเชื่อมต่อ</button><button class="btn btn-dark btn-sm" data-a="syncOrders">รีเฟรชออเดอร์</button></span>
@@ -2806,8 +2809,20 @@ function draftToProduct(d){
 function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/|\/Users\//.test(x)).slice(0,2).join(' · ')+(/🎧/.test(n)?' · 🎧 มีไฟล์เสียง (ดูในหน้าแก้สินค้า)':'');}
 /* 🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์): AI เขียนจากข้อมูลหน้าขาย คุณแดนคัดลอกไปวางเอง · กรองคำต้องห้ามของ Shopee (ดิจิทัล ebook PDF ไฟล์ ดาวน์โหลด ลิงก์) ที่เซิร์ฟเวอร์ */
 function shopeeBox(d){const x=S.shopee&&S.shopee.key===(d.id||'new')?S.shopee:null;
-  return `<section class="card shp"><div class="shp-h"><b>🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์)</b><button class="btn btn-sm ${x&&x.text?'btn-ghost':'btn-dark'}" data-a="shopeeCopy" ${x&&x.busy?'disabled':''}>${x&&x.busy?'กำลังเขียน...':x&&x.text?'↻ เขียนใหม่':'✍️ สร้างรายละเอียด'}</button></div>
+  return `<section class="card shp"><div class="shp-h"><b>🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์)</b><button class="btn btn-sm btn-line" data-a="shopeeImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy==='shopee'?'กำลังย่อรูป...':'⬇ รูปสำหรับ Shopee (ย่อแล้ว)'}</button><button class="btn btn-sm ${x&&x.text?'btn-ghost':'btn-dark'}" data-a="shopeeCopy" ${x&&x.busy?'disabled':''}>${x&&x.busy?'กำลังเขียน...':x&&x.text?'↻ เขียนใหม่':'✍️ สร้างรายละเอียด'}</button></div>
     ${x&&x.text?`<textarea class="input shp-t" id="shp-t" readonly>${esc(x.text)}</textarea><div class="shp-f"><button class="btn btn-sm btn-dark" data-a="shopeeCopyText">📋 คัดลอก</button><span class="fine">${x.text.length.toLocaleString('th-TH')} ตัวอักษร${x.ai?'':' · AI ใช้ไม่ได้ตอนนี้ ใช้ข้อความจากหน้าขายแทน'} · ไม่มีคำว่า ดิจิทัล / ebook / PDF / ไฟล์ / ดาวน์โหลด / ลิงก์ (ผิดกฎ Shopee)</span></div>`:x&&x.err?`<p class="fine" style="color:var(--danger,#c0392b)">${esc(x.err)}</p>`:`<p class="fine" style="margin:6px 0 0">กดแล้วได้ข้อความขายแบบเล่มพิมพ์ A4 จากข้อมูลหน้านี้ คัดลอกไปวางใน Shopee ได้เลย (ไม่บันทึกลงสินค้า)</p>`}</section>`;}
+/* รูปสำหรับ Shopee: จัตุรัส 1,000×1,000 JPEG ไม่เกินประมาณ 1MB (Shopee รับไม่เกิน 2MB/รูป) วางทั้งรูปบนพื้นขาว ไม่ตัดขอบ */
+async function shopeeImgs(){const d=S.draft;if(!d)return;const bun=isBundle(d)||d.type==='bundle',books=bun?(d.items||[]).map(getProduct).filter(Boolean):[];
+  const urls=[...(d.cover?[d.cover]:[]),...(d.images||[]),...(bun?books.map(b=>b.bookCover||(b.images||[])[0]):(d.previews||[]))].filter(Boolean).filter((u,i,a)=>a.indexOf(u)===i).slice(0,9);
+  if(!urls.length){toast('ยังไม่มีรูป');return;}if(S.zipBusy)return;S.zipBusy='shopee';render(true);
+  try{if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');const zip=new window.JSZip();let n=0;
+    for(const u of urls){try{const blob=await fetch(u).then(r=>{if(!r.ok)throw 0;return r.blob();});const bmp=await createImageBitmap(blob);
+      const W=1000,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,W);const k=Math.min(W/bmp.width,W/bmp.height),w=bmp.width*k,h=bmp.height*k;x.drawImage(bmp,(W-w)/2,(W-h)/2,w,h);
+      let q=.88,out=await new Promise(r=>c.toBlob(r,'image/jpeg',q));while(out&&out.size>1e6&&q>.5){q-=.1;out=await new Promise(r=>c.toBlob(r,'image/jpeg',q));}
+      n++;zip.file(`${dlName(d)}-${n}.jpg`,out);toast(`กำลังย่อรูป ${n}/${urls.length}...`);}catch(e){console.error(e);}}
+    if(!n)throw new Error('โหลดรูปไม่ได้');const z=await zip.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(z);a.download=dlName(d)+'-shopee.zip';document.body.appendChild(a);a.click();a.remove();
+    toast(`ได้รูปสำหรับ Shopee ${n} รูป (1000×1000 ไม่เกิน 1MB)`);}catch(e){toast('ทำรูปไม่สำเร็จ: '+(e.message||e));}
+  S.zipBusy='';render(true);}
 async function shopeeCopy(){const d=S.draft;if(!d)return;const key=d.id||'new',bun=isBundle(d),books=bun?(d.items||[]).map(getProduct).filter(Boolean):[d];
   S.shopee={key,busy:true};render(true);
   const pages=books.reduce((a,b)=>a+pagesOf(b),0),audio=books.some(b=>/MP3|ไฟล์เสียง|เสียงอ่าน|QR|🎧/i.test([b.specs,b.features,b.desc].join(' ')));
@@ -3557,7 +3572,7 @@ function exportShopee(){
     const im=[...(p.images||[]),...(bun?books.map(b=>b.bookCover||(b.images||[])[0]):(p.previews||[]))].filter(Boolean).slice(0,9);while(im.length<9)im.push('');
     const name=(bun?`${p.name} (เล่มพิมพ์ ${books.length} เล่ม)`:`${p.name} (เล่มพิมพ์ A4)`).slice(0,120);
     const desc=[bun?(p.headline||p.name):(p.headline||p.name),p.desc||'',bun?'ในชุดมี:\n'+books.map((b,i)=>`${i+1}. ${b.name}${pagesOf(b)?` (${pagesOf(b)} หน้า)`:''}`).join('\n'):L(p.features).map(x=>'✅ '+x).join('\n'),
-      '📦 สินค้าเป็นหนังสือเล่มพิมพ์ ขนาด A4'+(pages?` รวม ${pages} หน้า`:'')+' จัดส่งจากประเทศไทย',books.some(b=>/MP3|ไฟล์เสียง|QR/i.test(b.specs||b.features||''))?'🎧 ไฟล์เสียงฟังผ่าน QR code ในเล่ม':'',
+      '📦 สินค้าเป็นหนังสือเล่มพิมพ์ ขนาด A4'+(pages?` รวม ${pages} หน้า`:''),books.some(b=>/MP3|ไฟล์เสียง|QR/i.test(b.specs||b.features||''))?'🎧 ไฟล์เสียงฟังผ่าน QR code ในเล่ม':'',
       'สั่งแล้วร้านพิมพ์และแพ็กส่งตามรอบ ถ้ามีคำถามทักแชทได้เลย'].filter(Boolean).join('\n\n').replace(/สินค้า\s*ดิจิ[ทต]ั?ล|e-?books?|อี-?บุ๊[กค]|ไฟล์\s*PDF|\bPDF\b/gi,'หนังสือ').replace(/digital|ดิจิ[ทต]ั?ล/gi,'').replace(/ไฟล์เสียง/g,'เสียงอ่าน').replace(/ไฟล์/g,'เล่ม').replace(/ดาวน์โหลด|download/gi,'').replace(/https?:\/\/\S+/g,'').slice(0,3000); // กฎ Shopee: ห้ามคำดิจิทัล/ebook/PDF/ไฟล์/ลิงก์
     const pdf=bun?books.map(b=>b.link?b.link.split('?')[0]:'').filter(Boolean).join(' | '):(p.link||'').split('?')[0];
     return [(p.sku||p.slug)+'-P',name,desc,price,20,sp.kg,sp.w,sp.l,sp.h,...im,pages||'',pdf,location.origin+'/p/'+p.slug];});
@@ -5598,6 +5613,10 @@ function act(a,el){
     case 'postMarkDone':updatePost(id,{status:'published',published_at:new Date().toISOString()}).then(()=>render(true));break;
     case 'postCopy':{const p=POSTS.find(x=>x.id===id);copyText(($('#pt-'+id)?$('#pt-'+id).value:p.text)||'','คัดลอกข้อความแล้ว');break;}
     case 'postNow':{toast('กำลังโพสต์...');adminApi('/api/content?action=publish&id='+encodeURIComponent(id)).then(async j=>{await loadPosts();render(true);const r=j.results&&j.results[0];toast(j.skipped?j.error:r&&r.ok?'โพสต์ขึ้นเพจแล้ว':'โพสต์ไม่สำเร็จ: '+(r&&r.error||j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'altMailSend':{const sid=el.dataset.sid,to=String((S.altMail||{})[sid]||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}toast('กำลังส่งอีเมล...');
+      adminApi('/api/order-email?session_id='+encodeURIComponent(sid)+'&to='+encodeURIComponent(to)).then(async j=>{if(j.ok){S.altMail[sid]='';await loadOrders();render(true);toast('ส่งไฟล์ไปที่ '+to+' แล้ว · พรุ่งนี้ขอรีวิวที่อีเมลนี้ให้เอง');}else toast('ส่งไม่สำเร็จ: '+(j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'freeSend':{const to=String(S.freeMail||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}S.freeBusy=true;render(true);
+      adminPost('/api/content?action=free_send',{email:to}).then(j=>{if(j&&j.ok){S.freeMail='';toast('ส่งชีทฟรีไปที่ '+to+' แล้ว');}else toast('ส่งไม่สำเร็จ: '+((j&&j.error)||''));}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{S.freeBusy=false;render(true);});break;}
     case 'resendEmail':{toast('กำลังส่งอีเมล...');adminApi('/api/order-email?session_id='+encodeURIComponent(el.dataset.sid)).then(async j=>{if(j.ok){await loadOrders();render(true);toast('ส่งอีเมลไปที่ '+j.to+' แล้ว');}else toast('ส่งไม่สำเร็จ: '+(j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'range':S.range=Number(el.dataset.v);S.chartDay=null;render(true);break;
     case 'pickDay':S.chartDay=S.chartDay===el.dataset.d?null:el.dataset.d;render(true);break;
@@ -5619,6 +5638,7 @@ function act(a,el){
     case 'exportShopee':exportShopee();break;
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
     case 'shopeeCopy':shopeeCopy();break;
+    case 'shopeeImgs':shopeeImgs();break;
     case 'shopeeCopyText':{const t=(S.shopee||{}).text||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('คัดลอกแล้ว ไปวางใน Shopee ได้เลย')).catch(()=>{const ta=document.getElementById('shp-t');if(ta){ta.select();document.execCommand('copy');toast('คัดลอกแล้ว');}});break;}
     case 'dlImgs':{const d=S.draft;if(d)zipDownload((d.images||[]).map((u,i)=>({name:`${dlName(d)}-${i+1}${i?'':'-cover'}`,url:u})),dlName(d)+'-images','รูป');break;}
     case 'dlPvs':{const d=S.draft;if(d)zipDownload((d.previews||[]).map((u,i)=>({name:`${dlName(d)}-preview-${i+1}`,url:u})),dlName(d)+'-previews','หน้าตัวอย่าง');break;}
@@ -5992,6 +6012,8 @@ document.addEventListener('input',e=>{
   if(ds.fqe){S.fqe=S.fqe||{};S.fqe[ds.fqe]=t.value;return;}
   if(ds.bxs){bxStyleSet(ds.bxs,t.value);return;}
   if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
+  if(ds.altmail){(S.altMail||(S.altMail={}))[ds.altmail]=t.value;return;}
+  if(ds.freemail){S.freeMail=t.value;return;}
   if(ds.rvp){S.rvp=t.value;render(true);return;}
   if(ds.adsum){const id=ds.adsum,d=Number(($('#add-'+id)||{}).value)||0,n=Number(($('#adn-'+id)||{}).value)||0,e=document.getElementById('ads-sum-'+id);if(e)e.textContent='฿'+(d*n).toLocaleString('th-TH');}
   if(ds.flq){S.flq=t.value;const q=t.value.toLowerCase().trim();document.querySelectorAll('#flib [data-q]').forEach(e=>{e.hidden=!!q&&!e.dataset.q.includes(q);});return;}
