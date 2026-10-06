@@ -1,0 +1,129 @@
+{
+ "id": "TOEIC-Part1-01",
+ "title": "TOEIC Listening Part 1 ฝึกฟัง 10 ข้อ ดูรูปตอบ พร้อมเฉลยและคำแปล",
+ "part": 1,
+ "product": "toeic-listening-part-1-4-10",
+ "set": "toeic-750-10",
+ "items": [
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L01_1.jpg",
+   "s": [
+    "A woman is pointing at a chart.",
+    "Some people are leaving the room.",
+    "A man is erasing the whiteboard.",
+    "Some laptops are being packed into a bag."
+   ],
+   "a": 0,
+   "ath": "ผู้หญิงกำลังชี้ไปที่แผนภูมิ",
+   "why": "ดูการกระทำหลักของคนในรูป · B, C, D พูดถึงสิ่งที่ไม่ได้เกิดขึ้นในรูป"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L01_2.jpg",
+   "s": [
+    "A man is stacking boxes on a shelf.",
+    "Some shelves are being installed.",
+    "A man is pushing a cart loaded with boxes.",
+    "The warehouse is closed for repairs."
+   ],
+   "a": 2,
+   "ath": "ผู้ชายกำลังเข็นรถเข็นที่มีกล่องวางอยู่",
+   "why": "A ใช้คำว่า boxes กับ shelf หลอก แต่เขาไม่ได้วางกล่องขึ้นชั้น · ประโยค is being + V3 (B) ต้องมีคนกำลังทำอยู่จริง"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L01_3.jpg",
+   "s": [
+    "A man is riding a bicycle down the street.",
+    "A man is crouching next to some bicycles.",
+    "Some bicycles are being repaired in a shop.",
+    "People are entering the building through a door."
+   ],
+   "a": 1,
+   "ath": "ผู้ชายกำลังนั่งยองๆ ข้างจักรยาน",
+   "why": "crouch = นั่งยองๆ คำนี้ออกบ่อยใน Part 1 · A ใช้ bicycle หลอก แต่เขาไม่ได้ปั่น"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L01_4.jpg",
+   "s": [
+    "A woman is washing dishes in a sink.",
+    "The chef is taking off his apron.",
+    "Customers are waiting in line.",
+    "A chef is placing food on a plate."
+   ],
+   "a": 3,
+   "ath": "เชฟกำลังจัดอาหารลงจาน",
+   "why": "B ใช้คำว่า apron หลอก (เชฟใส่อยู่ ไม่ได้ถอด) · ระวัง taking off = กำลังถอด ต่างจาก wearing = สวมอยู่"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L01_5.jpg",
+   "s": [
+    "Two workers are looking at a document.",
+    "A man is driving an excavator.",
+    "The workers are taking off their helmets.",
+    "A car is being washed."
+   ],
+   "a": 0,
+   "ath": "คนงานสองคนกำลังดูเอกสาร",
+   "why": "เครื่องขุดอยู่ไกลๆ แต่ไม่เห็นคนขับ (B) · หมวกยังสวมอยู่ (C) · ตอบจากสิ่งที่เห็นชัดที่สุด"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L01_6.jpg",
+   "s": [
+    "A man is opening a suitcase.",
+    "Some plants are being watered.",
+    "Two men are exchanging something over a counter.",
+    "A receptionist is talking on the phone."
+   ],
+   "a": 2,
+   "ath": "ผู้ชายสองคนกำลังส่งของให้กันข้ามเคาน์เตอร์",
+   "why": "exchange something = ยื่น/รับของกัน · มีโทรศัพท์บนโต๊ะแต่ไม่มีใครคุย (D) · ต้นไม้ไม่ได้กำลังถูกรดน้ำ (B)"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L02_1.jpg",
+   "s": [
+    "A woman is buying a coffee.",
+    "Passengers are boarding a train.",
+    "A clock is being repaired.",
+    "A woman is using a machine."
+   ],
+   "a": 3,
+   "ath": "ผู้หญิงกำลังใช้เครื่อง (ตู้ขายตั๋ว)",
+   "why": "ตอบกว้างๆ ว่า using a machine ถูกเสมอ · ไม่เห็นรถไฟ (B) · นาฬิกาแขวนอยู่เฉยๆ (C)"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L02_2.jpg",
+   "s": [
+    "Workers are painting a wall.",
+    "Two men are carrying a wooden board.",
+    "Some bricks are being loaded onto a truck.",
+    "A man is climbing a ladder."
+   ],
+   "a": 1,
+   "ath": "ผู้ชายสองคนกำลังแบกแผ่นไม้",
+   "why": "board = แผ่นไม้ · มีอิฐกองอยู่แต่ไม่มีใครยก และไม่มีรถบรรทุก (C)"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L02_3.jpg",
+   "s": [
+    "A server is pouring water into a glass.",
+    "The women are reading menus.",
+    "Some plates are being cleared from the table.",
+    "A man is wiping a table."
+   ],
+   "a": 0,
+   "ath": "พนักงานกำลังรินน้ำใส่แก้ว",
+   "why": "เมนูวางอยู่บนโต๊ะแต่ไม่มีใครอ่าน (B) · pour = ริน/เท คำที่ออกบ่อยในฉากร้านอาหาร"
+  },
+  {
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L02_4.jpg",
+   "s": [
+    "People are swimming in a pool.",
+    "A bus is parked in a garage.",
+    "Some people are boarding a bus.",
+    "Some people are holding umbrellas."
+   ],
+   "a": 3,
+   "ath": "ผู้คนกำลังถือร่ม",
+   "why": "รถบัสกำลังมาแต่ยังไม่มีใครขึ้น (C) · ตอบสิ่งที่เห็นแน่นอนในรูป ไม่ใช่สิ่งที่อาจเกิดต่อจากนี้"
+  }
+ ]
+}
