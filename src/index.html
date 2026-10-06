@@ -1952,7 +1952,6 @@ function bundleForm(){
     ${sellPicker(d)}
     <label class="aud-ok" style="margin:0 0 10px"><input type="checkbox" data-a="bxShowCovers" ${d.hideCovers?'':'checked'}> แสดง "ปกทุกเล่มในชุด" บนหน้าเว็บ</label>
     <div class="field">${lb('b-pains','ถ้าคุณเคยเจอแบบนี้ (ปัญหาที่คนซื้อเจอ บรรทัดละข้อ)')}<textarea class="input" id="b-pains" data-d="pains" rows="4">${esc(d.pains||'')}</textarea></div>
-    <div class="field">${lb('b-features','ได้อะไรบ้างในชุดนี้ (บรรทัดละข้อ)')}<textarea class="input" id="b-features" data-d="features" rows="4">${esc(d.features||'')}</textarea></div>
     <div class="field">${lb('b-forwho','เหมาะกับใคร (บรรทัดละข้อ)')}<textarea class="input" id="b-forwho" data-d="forwho" rows="3">${esc(d.forwho||'')}</textarea></div>
     <div class="field">${lb('b-toc','ชุดนี้ประกอบด้วยอะไรบ้าง (ไม่ใส่ = ระบบใช้รายชื่อเล่มและจำนวนหน้าให้เอง · รูปแบบ ชื่อ | หน้า)')}<textarea class="input" id="b-toc" data-d="toc" rows="3">${esc(d.toc||'')}</textarea></div>
     <div class="field">${lb('b-color','สีประจำชุด')}<select class="input" id="b-color" data-d="color">${COLORS.map(c=>`<option value="${c[0]}" ${d.color===c[0]?'selected':''}>${esc(c[1])}</option>`).join('')}</select></div>
@@ -2149,8 +2148,6 @@ function bundleView(p){
     ${p.hideCovers?'':`<section class="bx-sec"><h2>ปกทุกเล่มในชุด</h2><p class="fine" style="margin:-4px 0 4px">กดที่ปกเพื่อดูหน้าตัวอย่างของเล่มนั้น</p>
       <div class="bx-books">${books.map((b,i)=>`<button class="bx-book" data-a="bxPv" data-v="${i}" title="ดูหน้าตัวอย่าง"><div class="bx-cover" ${cover(b,i)}>${p.freeItem===b.id?'<span class="bx-free">แถมฟรี</span>':''}${b.images&&b.images[0]?'':`<small>เล่ม ${i+1}</small><strong>${esc(b.name)}</strong>`}</div><div class="bx-meta">เล่ม ${i+1} · ${baht(b.price)} · ดูตัวอย่าง ›</div></button>`).join('')}</div>
     </section>`}
-    ${(()=>{const ft=lines(p.features),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
-      return ft.length?`<section class="bx-sec"><h2>ได้อะไรบ้างในชุดนี้</h2><ul class="feat">${ft.map(x=>`<li><span class="tick">${TK}</span><span>${esc(x)}</span></li>`).join('')}</ul></section>`:'';})()}
     ${(()=>{const own=lines(p.toc).map(pair),TK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
       const rows=own.length?own.map(t=>t[0]):books.map(b=>b.name);if(!rows.length)return '';
       return `<section class="bx-sec"><h2>ชุดนี้ประกอบด้วยอะไรบ้าง</h2>${own.length?'':'<p class="fine" style="margin:-4px 0 6px">กดที่ชื่อเล่มเพื่อดูหน้าตัวอย่างเนื้อหาของเล่มนั้น</p>'}<ul class="feat">${rows.map((x,i)=>own.length?`<li><span class="tick">${TK}</span><span>${esc(x)}</span></li>`:`<li class="bx-li" data-a="bxPv" data-v="${i}" role="button" tabindex="0"><span class="tick">${TK}</span><span>${esc(x)}</span><span class="bx-li-go">ดูตัวอย่าง ›</span></li>`).join('')}</ul></section>`;})()}

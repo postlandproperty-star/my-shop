@@ -458,7 +458,7 @@ try {
             S.view = 'shop'; S.edit = null; selectProduct(b.id); render(false); const h = [...document.querySelectorAll('.bx-sec h2')].map((x) => x.textContent);
             selectProduct(p.id); render(false); const nf = /อาจยังไม่เหมาะกับ/.test(document.body.textContent);
             Object.assign(b, JSON.parse(keep)); delete b.pains; if (!JSON.parse(keep).pains) delete b.pains; p.notfor = pk; S.view = 'admin'; S.tab = 'products'; render(false); return { h, nf }; });
-          pass(`[${kind}] หน้าชุด: มีถ้าคุณเคยเจอแบบนี้ · ได้อะไรบ้าง · ชุดนี้ประกอบด้วยอะไรบ้าง · เหมาะกับใคร · หน้าเล่มไม่มี "อาจยังไม่เหมาะกับ"`, ['ถ้าคุณเคยเจอแบบนี้', 'ได้อะไรบ้างในชุดนี้', 'ชุดนี้ประกอบด้วยอะไรบ้าง', 'เหมาะกับใคร'].every((t) => r.h.includes(t)) && !r.nf, JSON.stringify(r)); }
+          pass(`[${kind}] หน้าชุด: มีถ้าคุณเคยเจอแบบนี้ · ชุดนี้ประกอบด้วยอะไรบ้าง (กดไปดูตัวอย่าง) · เหมาะกับใคร · หน้าเล่มไม่มี "อาจยังไม่เหมาะกับ"`, ['ถ้าคุณเคยเจอแบบนี้', 'ชุดนี้ประกอบด้วยอะไรบ้าง', 'เหมาะกับใคร'].every((t) => r.h.includes(t)) && !r.h.includes('ได้อะไรบ้างในชุดนี้') && !r.nf, JSON.stringify(r)); }
         { await page.evaluate(() => { S.view = 'admin'; S.tab = 'orders'; S.edit = null; render(false); }); const m0 = MAILS.length;
           const inp = page.locator('[data-altmail]').first(); const has = await inp.count();
           if (has) { await inp.fill('work@example.co.th'); await page.locator('[data-a="altMailSend"]').first().click({ timeout: 3000 }).catch(() => {}); }
