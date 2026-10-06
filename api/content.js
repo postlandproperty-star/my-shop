@@ -176,7 +176,7 @@ async function autoVideo(jobs) {
   const parts = (c.parts || [2]).filter((n) => [1, 2].includes(Number(n))); const last = vids.filter((j) => j.auto).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
   const part = parts[(parts.indexOf(Number(last?.video_part)) + 1) % parts.length] || 2, no = vids.filter((j) => Number(j.video_part) === part).length + 1;
   const { randomUUID } = await import('node:crypto');
-  jobs.push({ id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', auto: true, prio: 9e12 + jobs.length, kind: 'video', lang: 'th', price: 0, title: `TOEIC Listening Part ${part} ฝึกฟัง 10 ข้อ #${no}`, video_part: String(part), video_n: '10', video_product: c.product || '', purpose: 'อัตโนมัติ: คลิป YouTube ดึงลูกค้าเข้าเว็บ' });
+  jobs.push({ id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', auto: true, prio: 9e12 + jobs.length, kind: 'video', lang: 'th', price: 0, title: `TOEIC Listening Part ${part} ฝึกฟัง 20 ข้อ #${no}`, video_part: String(part), video_n: '20', video_product: c.product || '', purpose: 'อัตโนมัติ: คลิป YouTube ดึงลูกค้าเข้าเว็บ' });
   await saveJobs(jobs); return part;
 }
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
@@ -2235,7 +2235,7 @@ ${books}`;
       await saveJobs(jobs);
       return res.status(200).json({ ok: true, job });
     }
-    if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel', 'factory_listing', 'factory_copy'].includes(action)) {
+    if (['factory_claim', 'factory_uploadurl', 'factory_done', 'factory_fail', 'factory_cancel', 'factory_listing', 'factory_copy', 'factory_progress'].includes(action)) {
       const admin = action === 'factory_cancel' && req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const body = await readBody(req);
@@ -2279,6 +2279,8 @@ ${books}`;
         if (body.audio_path) job.audio_path = String(body.audio_path).slice(0, 300); // ไฟล์เสียงอยู่ที่ไหนใน Mac
         if (job.kind === 'video') { // คลิป YouTube: ไฟล์ MP4 + ปกคลิป + ชื่อ/คำอธิบาย (คุณแดนอัปขึ้น YouTube เอง)
           if (String(body.video || '').startsWith(own)) job.video_url = String(body.video).slice(0, 500);
+          if (/^https:\/\/drive\.google\.com\//.test(String(body.drive || ''))) job.drive_url = String(body.drive).slice(0, 300); // ไฟล์ MP4 เก็บใน Google Drive (ไม่กินพื้นที่เว็บ)
+          job.progress = { pct: 100, note: 'เสร็จแล้ว', at: new Date().toISOString() };
           if (String(body.thumb || '').startsWith(own)) job.thumb = String(body.thumb).slice(0, 500);
           if (body.yt && typeof body.yt === 'object') job.yt = { title: String(body.yt.title || '').slice(0, 100), desc: String(body.yt.desc || '').slice(0, 4800), tags: String(body.yt.tags || '').slice(0, 400) };
           if (body.seconds) job.seconds = Number(body.seconds) || 0;
@@ -2301,6 +2303,8 @@ ${books}`;
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
         if (job.kind === 'notion' || job.lang === 'en') try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
         if (!job.auto && job.kind !== 'video') await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
+      } else if (action === 'factory_progress') { // Mac บอกความคืบหน้า (แถบในหลังบ้าน) ไม่แจ้งเตือน
+        job.progress = { pct: Math.max(0, Math.min(100, Math.round(Number(body.pct) || 0))), note: String(body.note || '').slice(0, 120), at: new Date().toISOString() };
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);

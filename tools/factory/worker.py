@@ -9,6 +9,7 @@
 #   CONTENT_KEY=... python3 tools/factory/worker.py fill <job_id> [<ไฟล์.pdf>] --listing listing.json
 #        งานเติมรายละเอียดสินค้าเดิม (fill_id): ส่งเฉพาะช่องใน fill_need · ใส่ PDF ถ้าต้องทำหน้าตัวอย่าง (ไม่อัป PDF ซ้ำ)
 #   CONTENT_KEY=... python3 tools/factory/worker.py done-video <job_id> <โฟลเดอร์คลิป>   (มี <id>.mp4 thumbnail.png yt.json จาก tools/video/make.mjs)
+#   CONTENT_KEY=... python3 tools/factory/worker.py progress <job_id> <0-100> "ข้อความ"   → แถบความคืบหน้าในหลังบ้าน
 #   CONTENT_KEY=... python3 tools/factory/worker.py video-img <job_id> "prompt ภาษาอังกฤษ"   → พิมพ์ URL รูปประกอบ Part 1
 #   CONTENT_KEY=... python3 tools/factory/worker.py fail <job_id> "เหตุผลสั้นๆ"
 #
@@ -139,16 +140,33 @@ def main():
         mp4 = next((os.path.join(d, f) for f in os.listdir(d) if f.endswith('.mp4')), None)
         if not mp4: sys.exit('ไม่พบไฟล์ .mp4')
         yt = json.load(open(os.path.join(d, 'yt.json'), encoding='utf-8')) if os.path.exists(os.path.join(d, 'yt.json')) else {}
-        body = {'id': job, 'by': 'mac', 'video': upload(job, mp4, 'clip.mp4', 'video/mp4'), 'yt': yt, 'summary': a.summary}
+        api('factory_progress', {'id': job, 'pct': 92, 'note': 'คัดลอกคลิปเข้า Google Drive'})
+        # เก็บ MP4 ใน Google Drive (ไม่กินพื้นที่เว็บ) · เว็บเก็บแค่ปกคลิป
+        import shutil, time
+        gd = os.path.expanduser('~/Library/CloudStorage/GoogleDrive-postland.property@gmail.com/My Drive/Sheetlab/YouTube Clips')
+        body = {'id': job, 'by': 'mac', 'yt': yt, 'summary': a.summary}
+        try:
+            os.makedirs(gd, exist_ok=True); dst = os.path.join(gd, os.path.basename(mp4)); shutil.copyfile(mp4, dst)
+            fid = ''
+            for _ in range(36):  # รอ Drive ในเครื่องอัปขึ้นจนได้ id จริง (สูงสุด 3 นาที)
+                try: fid = subprocess.run(['xattr', '-p', 'com.google.drivefs.item-id#S', dst], capture_output=True, text=True).stdout.strip()
+                except Exception: fid = ''
+                if fid and not fid.startswith('local'): break
+                time.sleep(5)
+            if fid and not fid.startswith('local'): body['drive'] = f'https://drive.google.com/file/d/{fid}/view'
+        except Exception as e: print('drive', e, file=sys.stderr)
+        if 'drive' not in body: body['video'] = upload(job, mp4, 'clip.mp4', 'video/mp4')  # Drive ใช้ไม่ได้: อัปขึ้นเว็บแทน
         th = os.path.join(d, 'thumbnail.png')
         if os.path.exists(th): body['thumb'] = upload(job, th, 'thumbnail.png', 'image/png')
         try:
             out = subprocess.run([os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'node_modules', 'ffmpeg-static', 'ffmpeg'), '-i', mp4], capture_output=True, text=True).stderr
             import re; m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', out); body['seconds'] = int(int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))) if m else 0
         except Exception: pass
-        r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'video': body['video']}, ensure_ascii=False))
+        r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'drive': body.get('drive'), 'video': body.get('video')}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
         unlock()
+    elif a.cmd == 'progress':
+        print(json.dumps(api('factory_progress', {'id': a.args[0], 'pct': int(a.args[1]), 'note': ' '.join(a.args[2:])}), ensure_ascii=False)[:200])
     elif a.cmd == 'video-img':
         r = api('video_img', {'id': a.args[0], 'prompt': ' '.join(a.args[1:])})
         if not r.get('ok'): sys.exit(f"ทำรูปไม่ได้: {r.get('error')}")

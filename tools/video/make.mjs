@@ -20,6 +20,9 @@ const W = path.join(OUT, 'work'); fs.mkdirSync(W, { recursive: true });
 const KEY = fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_tts_key'), 'utf8').trim();
 const V = { q: ['en-US', 'en-US-Chirp3-HD-Kore'], r: ['en-AU', 'en-AU-Chirp3-HD-Puck'], n: ['en-US', 'en-US-Chirp3-HD-Charon'] };
 let chars = 0;
+// แถบความคืบหน้าในหลังบ้าน: ตั้ง JOB_ID + CONTENT_KEY แล้วสคริปต์บอกเว็บเองทุกขั้น (ไม่สำเร็จก็ทำต่อ)
+const JOB = process.env.JOB_ID || '', CK = process.env.CONTENT_KEY || ''; let lastP = -1;
+async function progress(pct, note) { if (!JOB || !CK || pct === lastP) return; lastP = pct; try { await fetch('https://sheetlabth.com/api/content?action=factory_progress', { method: 'POST', headers: { 'x-content-key': CK, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: JOB, pct, note }) }); } catch (e) {} }
 const ff = (...a) => execFileSync(FFMPEG, ['-y', '-loglevel', 'error', ...a]);
 function probe(f) { try { execFileSync(FFMPEG, ['-i', f], { stdio: 'pipe' }); } catch (e) { const m = String(e.stderr).match(/Duration: (\d+):(\d+):([\d.]+)/); if (m) return +m[1] * 3600 + +m[2] * 60 + +m[3]; } return 0; }
 
@@ -53,14 +56,14 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 async function main() {
   const br = await chromium.launch({ executablePath: CHROME }); const pg = await br.newPage({ viewport: { width: 1920, height: 1080 } });
   const shot = async (html, file) => { if (!fs.existsSync(file)) { await pg.setContent(html, { waitUntil: 'load' }); await pg.screenshot({ path: file }); } return file; };
-  const N = spec.items.length, segs = [];
+  const N = spec.items.length, segs = []; await progress(15, 'เริ่มทำเสียงและสไลด์');
   const imgSrc = async (u, k) => { if (!u) return ''; if (/^https?:/.test(u)) { const f = path.join(W, `${k}-img.jpg`); if (!fs.existsSync(f)) fs.writeFileSync(f, Buffer.from(await (await fetch(u)).arrayBuffer())); u = f; } return 'data:image/jpeg;base64,' + fs.readFileSync(u).toString('base64'); };
   const seg = (img, aud, name) => { const out = path.join(W, name + '.mp4'); if (!fs.existsSync(out)) { const d = probe(aud).toFixed(2); ff('-loop', '1', '-framerate', '25', '-t', d, '-i', img, '-i', aud, '-t', d, '-c:v', 'libx264', '-tune', 'stillimage', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-r', '25', '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', out); } /* ความยาวเท่าเสียงพอดี (-shortest กับรูปนิ่งยาวเกินจริง) */ segs.push(out); };
   // บทนำ
   const introA = cat([await tts(PART === 1 ? `TOEIC Listening, Part 1. Photographs. ${N} questions. Look at the picture, listen to the four statements, then choose the one that best describes the picture.` : `TOEIC Listening, Part 2. Question and response. ${N} questions. Listen to the question and the three responses, then choose the best answer.`, V.n, path.join(W, 'intro.mp3')), sil(1, path.join(W, 's1.mp3'))], path.join(W, 'intro-full.mp3'));
   seg(await shot(page(`<div class="c"><h1>${esc(spec.title.replace(/ พร้อม.*/, ''))}</h1><p class="sub">${PART === 1 ? 'ดูรูป ฟังประโยค 4 ข้อ แล้วเลือกข้อที่บรรยายรูปได้ถูกที่สุด' : 'ฟังคำถาม + ตัวเลือก 3 ข้อ แล้วเลือกคำตอบที่เหมาะที่สุด'} · มีเวลาคิดข้อละ 5 วินาที · เฉลยพร้อมคำแปลทุกข้อ</p></div>`, '', true), path.join(W, 'intro.png')), introA, '00-intro');
   for (let i = 0; i < N; i++) {
-    const it = spec.items[i], k = String(i + 1).padStart(2, '0'), tag = `ข้อ ${i + 1} / ${N}`;
+    const it = spec.items[i], k = String(i + 1).padStart(2, '0'), tag = `ข้อ ${i + 1} / ${N}`; await progress(15 + Math.round((i / N) * 70), `ทำเสียง+สไลด์ ข้อ ${i + 1}/${N}`);
     const opts = PART === 1 ? it.s : it.o, nO = opts.length, img = PART === 1 ? await imgSrc(it.img, k) : '';
     const parts = [await tts(`Number ${i + 1}.${PART === 1 ? ' Look at the picture.' : ''}`, V.n, path.join(W, `${k}-n.mp3`)), sil(0.5, path.join(W, 's05.mp3'))];
     if (PART === 2) parts.push(await tts(it.q, V.q, path.join(W, `${k}-q.mp3`)), sil(0.8, path.join(W, 's08.mp3')));
@@ -84,6 +87,7 @@ async function main() {
   await pg.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;width:1280px;height:720px;background:#1e2b53;font-family:'Sukhumvit Set',sans-serif;color:#fff;display:flex;flex-direction:column;justify-content:center;padding:0 80px;box-sizing:border-box}.t{font-size:120px;font-weight:800;line-height:1}.y{color:#f0b400}.s{font-size:58px;font-weight:700;margin-top:18px}.p{position:absolute;right:70px;top:70px;background:#f0b400;color:#1e2b53;font-weight:800;font-size:44px;border-radius:24px;padding:14px 28px}</style></head><body><div class="p">${N} ข้อ + เฉลย</div><div class="t">TOEIC<br><span class="y">Listening</span><br>Part ${PART}</div><div class="s">${PART === 1 ? 'ดูรูป ฟัง ตอบให้ทันใน 5 วินาที 📷' : 'ฝึกฟัง ตอบให้ทันใน 5 วินาที 🎧'}</div></body></html>`);
   await pg.screenshot({ path: path.join(OUT, 'thumbnail.png') }); await br.close();
   // รวมคลิป
+  await progress(88, 'รวมเป็นไฟล์ MP4');
   const list = path.join(W, 'all.txt'); fs.writeFileSync(list, segs.map((f) => `file '${f}'`).join('\n'));
   const mp4 = path.join(OUT, `${spec.id}.mp4`); ff('-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', '-movflags', '+faststart', mp4);
   const desc = `${spec.title}
