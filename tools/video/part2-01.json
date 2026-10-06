@@ -1,0 +1,128 @@
+{
+ "id": "TOEIC-Part2-01",
+ "title": "TOEIC Listening Part 2 ฝึกฟัง 10 ข้อ พร้อมเฉลยและคำแปล",
+ "product": "toeic-listening-part-1-4-10",
+ "set": "toeic-750-10",
+ "items": [
+  {
+   "q": "Where should I put these boxes?",
+   "o": [
+    "Yes, I'll put them on.",
+    "In the storage room, please.",
+    "About ten boxes."
+   ],
+   "a": 1,
+   "qth": "ควรวางกล่องพวกนี้ไว้ที่ไหน",
+   "ath": "ไว้ในห้องเก็บของ",
+   "why": "ถาม Where (ที่ไหน) ต้องตอบเป็นสถานที่ · A ตอบ Yes ใช้กับคำถาม Where ไม่ได้ · C ตอบจำนวน"
+  },
+  {
+   "q": "When does the training session start?",
+   "o": [
+    "In Conference Room B.",
+    "It was very useful.",
+    "Right after lunch."
+   ],
+   "a": 2,
+   "qth": "การอบรมเริ่มเมื่อไหร่",
+   "ath": "หลังมื้อกลางวันเลย",
+   "why": "ถาม When (เมื่อไหร่) ต้องตอบเรื่องเวลา · A ตอบสถานที่ · B พูดถึงอดีต ไม่ตรงคำถาม"
+  },
+  {
+   "q": "Who's in charge of the new project?",
+   "o": [
+    "Ms. Tanaka is leading it.",
+    "It's a big project.",
+    "Yes, I charged it."
+   ],
+   "a": 0,
+   "qth": "ใครเป็นคนดูแลโปรเจกต์ใหม่",
+   "ath": "คุณทานากะเป็นคนนำ",
+   "why": "ถาม Who (ใคร) ต้องตอบเป็นคน · C ใช้คำเสียงคล้าย (charge) หลอก เป็นกับดักที่ออกบ่อย"
+  },
+  {
+   "q": "Why was the meeting postponed?",
+   "o": [
+    "At three o'clock.",
+    "The manager is out sick.",
+    "We met last week."
+   ],
+   "a": 1,
+   "qth": "ทำไมประชุมถึงถูกเลื่อน",
+   "ath": "ผู้จัดการป่วยลาหยุด",
+   "why": "ถาม Why (ทำไม) ต้องตอบเหตุผล ไม่จำเป็นต้องมีคำว่า because · A ตอบเวลา · C ใช้คำซ้ำ (met/meeting) หลอก"
+  },
+  {
+   "q": "Would you like me to print the report for you?",
+   "o": [
+    "Thanks, that would help.",
+    "It's a long report.",
+    "The printer is new."
+   ],
+   "a": 0,
+   "qth": "ให้ฉันพิมพ์รายงานให้ไหม",
+   "ath": "ขอบคุณ ช่วยได้มากเลย",
+   "why": "Would you like me to... = เสนอความช่วยเหลือ คำตอบที่ดีคือรับหรือปฏิเสธอย่างสุภาพ · B และ C ใช้คำซ้ำ (report, printer) หลอก"
+  },
+  {
+   "q": "How long will the repairs take?",
+   "o": [
+    "He's very tall.",
+    "The repair shop on Main Street.",
+    "About two days."
+   ],
+   "a": 2,
+   "qth": "ซ่อมจะใช้เวลานานแค่ไหน",
+   "ath": "ประมาณสองวัน",
+   "why": "How long = ระยะเวลา · A ใช้ long กับ tall หลอกเรื่องความยาว/ความสูง · B ตอบสถานที่"
+  },
+  {
+   "q": "Haven't you sent the invoice yet?",
+   "o": [
+    "She sent me an invitation.",
+    "I'll do it this afternoon.",
+    "Yes, it's expensive."
+   ],
+   "a": 1,
+   "qth": "ยังไม่ได้ส่งใบแจ้งหนี้อีกเหรอ",
+   "ath": "เดี๋ยวบ่ายนี้จะส่ง",
+   "why": "คำถามปฏิเสธ (Haven't you...) คำตอบที่ถูกมักไม่ตอบ Yes/No ตรงๆ แต่บอกว่าจะทำเมื่อไหร่ · A ใช้ sent ซ้ำหลอก"
+  },
+  {
+   "q": "Which bus goes to the airport?",
+   "o": [
+    "It takes about an hour.",
+    "I'd rather take a taxi.",
+    "The number fifteen."
+   ],
+   "a": 2,
+   "qth": "รถบัสสายไหนไปสนามบิน",
+   "ath": "สายสิบห้า",
+   "why": "Which bus = สายไหน ต้องระบุสาย · A ตอบระยะเวลา · B เปลี่ยนเรื่อง ไม่ได้ตอบคำถาม"
+  },
+  {
+   "q": "The copier on the second floor is out of order again.",
+   "o": [
+    "I'll call the technician.",
+    "Two copies, please.",
+    "On the second floor."
+   ],
+   "a": 0,
+   "qth": "เครื่องถ่ายเอกสารชั้นสองเสียอีกแล้ว",
+   "ath": "เดี๋ยวโทรเรียกช่างให้",
+   "why": "ประโยคบอกเล่า (ไม่ใช่คำถาม) คำตอบที่ดีคือการตอบสนองที่สมเหตุสมผล · B และ C ใช้คำซ้ำ (copies, second floor) หลอก"
+  },
+  {
+   "q": "Should we order lunch or go out to eat?",
+   "o": [
+    "Yes, we should.",
+    "Let's eat at the café downstairs.",
+    "The order arrived yesterday."
+   ],
+   "a": 1,
+   "qth": "จะสั่งอาหารกลางวันมาหรือออกไปกินข้างนอกดี",
+   "ath": "ไปกินที่คาเฟ่ชั้นล่างกันเถอะ",
+   "why": "คำถามแบบเลือก (A or B) ห้ามตอบ Yes/No · ต้องเลือกอย่างใดอย่างหนึ่ง · C ใช้ order ซ้ำหลอก"
+  }
+ ]
+}
