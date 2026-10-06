@@ -42,4 +42,6 @@ const at = '2026-10-03T01:00:00Z', R = (sid, ev, path, k = '', v = null, src = '
 const sm = I.summarize([R('s1', 'view', '/'), R('s1', 'view', '/p/a'), R('s1', 'click', '/p/a', 'cartAdd'), R('s1', 'click', '/p/a', 'qrOpen'), R('s1', 'read', '/p/a', 75, 40),
   R('s2', 'view', '/learn/x'), R('s2', 'read', '/learn/x', 100, 200), R('s2', 'quiz', '/quiz/q', 'q:0', 0), R('s2', 'quizdone', '/quiz/q', 'q', 50)], [{ campaign: 'fb' }]);
 ok('พฤติกรรม: สรุปคนเข้า ดูหน้าเดียว ขั้นการซื้อ อ่านนาน ออกจากเว็บ', sm.totals.sessions === 2 && sm.totals.bounce === 50 && sm.funnel.add === 1 && sm.funnel.pay === 1 && sm.funnel.paid === 1 && sm.articles[0].avg === 200 && sm.articles[0].pct100 === 100 && sm.pages.find((x) => x.p === '/p/a').exits === 1);
+{ const C = await import('../lib/courses.js'); const c = C.cleanCourse({ title: 'x', emails: 'Owner@Gmail.com, bad-email\nhelper@site.co owner@gmail.com', lessons: [] });
+  ok('คอร์ส: อีเมลเรียนฟรี เก็บเป็นตัวเล็ก ไม่ซ้ำ ตัดอีเมลผิดรูปแบบ', JSON.stringify(c.emails) === JSON.stringify(['owner@gmail.com', 'helper@site.co'])); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);

@@ -1,0 +1,161 @@
+{
+ "id": "toeic-L04",
+ "course": "toeic-750",
+ "n": 4,
+ "section": "Listening Part 2 · ถาม-ตอบ",
+ "title": "คำถาม Yes/No · ให้เลือก · บอกเล่า และคำตอบอ้อม",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 2 คำถามแบบอื่นๆ\nYes/No · ให้เลือก · บอกเล่า",
+   "sub": "และคำตอบอ้อมๆ ที่มักเป็นข้อถูก · ลองทำ 3 ข้อ",
+   "say": "บทที่แล้วเราจับคำแรกของคำถาม Wh กันไปแล้ว บทนี้มาดูคำถามแบบอื่นๆ ที่เจอใน Part 2 และคำตอบอ้อมๆ ที่หลายคนไม่กล้าเลือก ทั้งที่มักเป็นข้อที่ถูก"
+  },
+  {
+   "type": "list",
+   "h": "4 แบบที่ไม่ใช่ Wh- question",
+   "items": [
+    {
+     "x": "**Yes/No** : Do · Is · Have · Can ...",
+     "say": "แบบแรก คำถาม Yes No ขึ้นต้นด้วย Do Is Have หรือ Can คำตอบที่ถูกไม่จำเป็นต้องมีคำว่า Yes หรือ No เสมอไป",
+     "sub": "Have you finished the report? → Almost, give me ten minutes.",
+     "en": "Have you finished the report?",
+     "v": "q"
+    },
+    {
+     "x": "**ให้เลือก** : A or B?",
+     "say": "แบบที่สอง คำถามให้เลือก มีคำว่า or คำตอบมักเลือกหนึ่งอย่าง หรือบอกว่าอะไรก็ได้ ตอบ Yes หรือ No มักผิด",
+     "sub": "Tea or coffee? → Coffee, please. / Either is fine.",
+     "en": "Would you like tea or coffee?",
+     "v": "q"
+    },
+    {
+     "x": "**ขอร้อง/ชวน** : Could you · Why don't we ...",
+     "say": "แบบที่สาม ขอร้องหรือชวน ระวัง Why don't we ไม่ได้ถามเหตุผล แต่เป็นการชวน คำตอบจึงเป็น ได้เลย หรือ ความคิดดี",
+     "sub": "Why don't we order lunch? → Good idea.",
+     "en": "Why don't we order lunch?",
+     "v": "q"
+    },
+    {
+     "x": "**ประโยคบอกเล่า** : ไม่ใช่คำถาม",
+     "say": "แบบที่สี่ ไม่ใช่คำถามเลย เป็นประโยคบอกเล่า คำตอบที่ถูกคือการตอบสนองที่เข้ากัน เช่น แสดงความเห็น หรือเสนอทางแก้",
+     "sub": "The printer is out of paper. → I'll get some more.",
+     "en": "The printer is out of paper.",
+     "v": "q"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "คำตอบอ้อม มักเป็นข้อถูก",
+   "say": "ใน Part 2 คำตอบที่ถูก มักไม่ได้ตอบตรงๆ แต่ตอบแบบอ้อม เหมือนคนคุยกันจริงในที่ทำงาน",
+   "items": [
+    {
+     "x": "I'm not sure. / I don't know yet.",
+     "say": "ไม่แน่ใจ หรือยังไม่รู้",
+     "en": "I'm not sure yet.",
+     "v": "r"
+    },
+    {
+     "x": "Let me check. / I'll find out.",
+     "say": "ขอเช็กก่อน หรือเดี๋ยวไปหาคำตอบให้",
+     "en": "Let me check the schedule.",
+     "v": "r"
+    },
+    {
+     "x": "Ask Tom. / Ms. Lee would know.",
+     "say": "ให้ไปถามคนอื่น",
+     "en": "You should ask Tom in sales.",
+     "v": "r"
+    },
+    {
+     "x": "It hasn't been decided.",
+     "say": "ยังไม่ได้ตัดสินใจ คำตอบแบบนี้ใช้ได้กับคำถามเกือบทุกแบบ จึงเป็นข้อถูกบ่อยมาก",
+     "en": "It hasn't been decided yet.",
+     "v": "r",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "qa",
+   "h": "ลองทำ ข้อที่ 1",
+   "say": "มาลองทำกัน ฟังว่าเป็นคำถามแบบไหน",
+   "q": "Would you prefer a window seat or an aisle seat?",
+   "o": [
+    "Yes, I would.",
+    "An aisle seat, please.",
+    "The flight was delayed."
+   ],
+   "a": 1,
+   "no": [
+    "คำถาม **A or B** ตอบ Yes ไม่ได้",
+    null,
+    "เกี่ยวกับเที่ยวบิน แต่ไม่ได้ตอบคำถาม"
+   ],
+   "why": "คำถาม **ให้เลือก** → เลือกหนึ่งอย่าง: An aisle seat",
+   "whySay": "เป็นคำถามให้เลือก ระหว่างที่นั่งริมหน้าต่างกับริมทางเดิน คำตอบที่ถูกเลือกที่นั่งริมทางเดิน ข้อ A ตอบ Yes ซึ่งใช้กับคำถามให้เลือกไม่ได้"
+  },
+  {
+   "type": "qa",
+   "h": "ลองทำ ข้อที่ 2",
+   "say": "ข้อที่สอง",
+   "q": "Why don't we take a short break?",
+   "o": [
+    "Good idea. I need some coffee.",
+    "Because it's broken.",
+    "For about two hours."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**Why don't we** = ชวน ไม่ใช่ถามเหตุผล และ broken เสียงคล้าย break",
+    "ไม่เข้ากับการชวนพักสั้นๆ"
+   ],
+   "why": "**Why don't we** = ชวน → ตอบรับว่า Good idea",
+   "whySay": "Why don't we เป็นการชวน ไม่ได้ถามเหตุผล คำตอบที่ถูกจึงเป็นการตอบรับ ข้อ B ขึ้นต้นด้วย because เพื่อหลอกคนที่ได้ยินแค่คำว่า Why"
+  },
+  {
+   "type": "qa",
+   "h": "ลองทำ ข้อที่ 3",
+   "say": "ข้อสุดท้าย",
+   "q": "Has the shipment from Osaka arrived yet?",
+   "o": [
+    "Yes, it's a big ship.",
+    "From the Osaka office.",
+    "Let me check with the warehouse."
+   ],
+   "a": 2,
+   "no": [
+    "**ship** เสียงคล้าย shipment",
+    "มีคำ **Osaka** ซ้ำกับคำถาม",
+    null
+   ],
+   "why": "คำตอบอ้อม **Let me check** ใช้ได้กับคำถาม Yes/No",
+   "whySay": "คำตอบที่ถูกคือ ขอเช็กกับคลังสินค้าก่อน เป็นคำตอบอ้อมที่เจอบ่อย ส่วนข้อ A ใช้เสียงคล้าย และข้อ B ใช้คำซ้ำจากคำถาม"
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 4",
+   "items": [
+    {
+     "x": "Yes/No question ไม่ต้องมี Yes/No ในคำตอบเสมอไป",
+     "say": "คำถาม Yes No ไม่จำเป็นต้องตอบด้วย Yes หรือ No"
+    },
+    {
+     "x": "A or B? → เลือกหนึ่งอย่าง ตอบ Yes/No ผิด",
+     "say": "คำถามให้เลือก ตอบ Yes หรือ No มักผิด"
+    },
+    {
+     "x": "Why don't we = ชวน ไม่ใช่ถามเหตุผล",
+     "say": "Why don't we คือการชวน"
+    },
+    {
+     "x": "คำตอบอ้อม เช่น Let me check มักเป็นข้อถูก",
+     "say": "และคำตอบอ้อม เช่น ขอเช็กก่อน มักเป็นข้อที่ถูก"
+    }
+   ],
+   "outro": "บทหน้า เราจะสรุปกับดักทั้งหมดของ Part 2 และฝึกห้าข้อติดกัน กดทำเครื่องหมายว่าเรียนจบ แล้วไปต่อกันเลย"
+  }
+ ]
+}
