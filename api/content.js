@@ -1338,6 +1338,13 @@ ${books}`;
       } catch (e) { console.error('set_copy', e.message); }
       return res.status(200).json({ ok: true, ai: !!out, ...(out || {}) });
     }
+    if (action === 'courses') { // คอร์สเรียน (คุณแดน): GET รายการ · POST {list} บันทึกทั้งหมด
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const C = await import('../lib/courses.js');
+      if (req.method === 'POST') { const b = await readBody(req); return res.status(200).json({ ok: true, list: await C.saveCourses(Array.isArray(b.list) ? b.list : []) }); }
+      return res.status(200).json({ ok: true, list: await C.loadCourses() });
+    }
     if (action === 'video_img') { // Mac ขอรูปประกอบคลิป Part 1 (ภาพถ่ายสถานการณ์ ไม่มีตัวหนังสือ) · ใช้เงิน AI ทำรูปของร้าน
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });

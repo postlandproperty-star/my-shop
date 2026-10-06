@@ -488,7 +488,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}.bx-li{cursor:pointer}.bx-li:hover{border-color:#2440E8}.bx-li-go{margin-left:auto;font-size:13px;color:#2440E8;white-space:nowrap;padding-left:8px}
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
-.vid-c{padding:14px 16px;margin:0 0 12px}.vprog{border-top:1px solid var(--line);padding:10px 0 4px;display:grid;gap:6px}.vbar{height:12px;border-radius:99px;background:#E6EAF2;overflow:hidden}.vbar i{display:block;height:100%;background:linear-gradient(90deg,#2440E8,#5B8CFF);border-radius:99px;transition:width .4s}.vsteps{display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap;font-size:12px;color:#9AA3B5}.vsteps span.on{color:#2440E8;font-weight:700}.vid-media iframe,.vid-media img{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#000;object-fit:cover}.vid-list{display:grid;gap:12px}.vid-it{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:14px;padding:12px}.vid-media video{width:100%;border-radius:10px;background:#000;aspect-ratio:16/9}.vid-info{display:grid;gap:4px;align-content:start;min-width:0}@media(max-width:700px){.vid-it{grid-template-columns:1fr}}
+.vid-c{padding:14px 16px;margin:0 0 12px}.crs-grants{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:4px 10px;max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px}.vprog{border-top:1px solid var(--line);padding:10px 0 4px;display:grid;gap:6px}.vbar{height:12px;border-radius:99px;background:#E6EAF2;overflow:hidden}.vbar i{display:block;height:100%;background:linear-gradient(90deg,#2440E8,#5B8CFF);border-radius:99px;transition:width .4s}.vsteps{display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap;font-size:12px;color:#9AA3B5}.vsteps span.on{color:#2440E8;font-weight:700}.vid-media iframe,.vid-media img{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#000;object-fit:cover}.vid-list{display:grid;gap:12px}.vid-it{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:14px;padding:12px}.vid-media video{width:100%;border-radius:10px;background:#000;aspect-ratio:16/9}.vid-info{display:grid;gap:4px;align-content:start;min-width:0}@media(max-width:700px){.vid-it{grid-template-columns:1fr}}
 .rc-box{padding:14px 16px;margin:0 0 12px}.rc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-height:520px;overflow:auto}.rc-it{display:grid;grid-template-columns:20px 1fr;gap:4px 8px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;background:var(--surface)}.rc-it.on{border-color:#2440E8;box-shadow:0 0 0 1px #2440E8}.rc-it input{width:18px;height:18px}.rc-imgs{display:flex;gap:6px;align-items:center}.rc-imgs img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:#fff;border:1px solid var(--line)}.rc-n{grid-column:1/-1;font-size:13px}
 .cbt{padding:14px 16px;margin:0 0 12px}.cbt-ans{background:#F1F5FF;border-radius:10px;padding:10px 12px;margin-top:8px}.cbt-ans p{margin:4px 0 0}.cbt-th{border-top:1px solid var(--line);padding:8px 0}.cbt-th.need{background:#FFF8EC}.cbt-m{margin:3px 0;font-size:14px}.cbt-m.b{color:#2440E8}.cbt-m.h{color:#3f9a5a}
 .deal-card{padding:14px 16px;margin:12px 0}
@@ -3733,6 +3733,24 @@ function productsTab(){
 `;
 }
 
+/* 🎓 คอร์สเรียน: ลูกค้าเรียนในหน้า "บัญชีของฉัน" (ใส่อีเมลที่ซื้อ) · บทเรียน = ลิงก์วิดีโอ Google Drive/YouTube · เลือกว่าซื้ออะไรแล้วได้เรียน (สินค้าคอร์สแยก หรือชุด@แพ็กเกจ เช่น Pro) */
+const CRS={list:null,loading:false,sel:0};
+function loadCRS(){if(CRS.loading)return;CRS.loading=true;adminApi('/api/content?action=courses').then(j=>{CRS.list=(j&&j.list)||[];}).catch(()=>{CRS.list=[];}).then(()=>{CRS.loading=false;render(true);});}
+const lessonText=c=>(c.lessons||[]).map(l=>[l.section||'',l.title,l.url||'',l.min||'',l.file||''].join(' | ').replace(/( \| )+$/,'')).join('\n');
+function parseLessons(t,old){return String(t||'').split('\n').map(x=>x.trim()).filter(Boolean).map((x,i)=>{const p=x.split('|').map(y=>y.trim());const o=(old||[])[i]||{};return {id:o.title===p[1]&&o.id?o.id:'l'+(i+1)+'-'+Date.now().toString(36).slice(-3),section:p[0]||'',title:p[1]||p[0],url:p[2]||'',min:Number(p[3])||0,file:p[4]||''};});}
+function coursesTab(){if(!CRS.list){loadCRS();return '<p class="fine">กำลังโหลด...</p>';}
+  const L=CRS.list,c=L[CRS.sel];const grantOpts=[...D.products.filter(p=>!isBundle(p)).map(p=>[p.id,`${p.sku||''} ${p.name}`.trim()]),...D.products.filter(isBundle).flatMap(b=>(b.plans||[]).filter(x=>x.on!==false).map(pl=>[`${b.id}@${pl.key}`,`📦 ${b.name} · แพ็กเกจ ${pl.name||pl.key}${pl.price?' ('+baht(pl.price)+')':''}`]))];
+  return `<section class="card vid-c"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><h3 class="h3" style="margin:0">🎓 คอร์สเรียน</h3><button class="btn btn-dark btn-sm" data-a="crsNew">+ สร้างคอร์สใหม่</button></div>
+    <p class="fine" style="margin:6px 0 0">ลูกค้าเข้าเรียนที่ <b>บัญชีของฉัน</b> (${esc(location.host||'sheetlabth.com')}/account) ใส่อีเมลที่ใช้ซื้อ → เห็นคอร์ส มีแท็บบทเรียนและความคืบหน้า · วิดีโอฝากไว้ใน Google Drive (ตั้งแชร์เป็น "ทุกคนที่มีลิงก์") หรือ YouTube แบบไม่เป็นสาธารณะ</p>
+    ${L.length>1?`<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">${L.map((x,i)=>`<button class="chip" data-a="crsSel" data-v="${i}" aria-pressed="${i===CRS.sel}">${esc(x.title||'คอร์สใหม่')}</button>`).join('')}</div>`:''}</section>
+  ${c?`<section class="card vid-c crs-ed">
+    <div class="grid2"><div class="field"><label>ชื่อคอร์ส</label><input class="input" data-crs="title" value="${esc(c.title)}" placeholder="เช่น TOEIC 750+ คอร์สออนไลน์ 30 วัน"></div><div class="field"><label>ชื่อในลิงก์</label><input class="input" data-crs="slug" value="${esc(c.slug)}" placeholder="toeic-750-course"></div></div>
+    <div class="field"><label>คำอธิบายสั้นๆ (ลูกค้าเห็นในหน้าเรียน)</label><textarea class="input" rows="2" data-crs="desc">${esc(c.desc||'')}</textarea></div>
+    <div class="field"><label>บทเรียน (บรรทัดละบท: หมวด | ชื่อบท | ลิงก์วิดีโอ | นาที | ลิงก์เอกสาร ถ้ามี)</label><textarea class="input" rows="10" data-crs="lessons" placeholder="Listening Part 1 | เทคนิคดูรูปให้ทันใน 5 วินาที | https://drive.google.com/file/d/.../view | 10">${esc(CRS.lt!=null?CRS.lt:lessonText(c))}</textarea><span class="fine">${(c.lessons||[]).length} บท · ยังไม่มีวิดีโอก็ใส่ชื่อบทไว้ก่อนได้ ลูกค้าจะเห็นว่า "บทนี้ยังไม่มีวิดีโอ"</span></div>
+    <div class="field"><label>ซื้ออะไรแล้วได้เรียนคอร์สนี้ (ติ๊กได้หลายอัน)</label><div class="crs-grants">${grantOpts.map(([k,l])=>`<label class="fine"><input type="checkbox" data-a="crsGrant" data-v="${esc(k)}" ${(c.grants||[]).includes(k)?'checked':''}> ${esc(l)}</label>`).join('')||'<span class="fine">ยังไม่มีสินค้า</span>'}</div></div>
+    <label class="aud-ok" style="margin:0 0 10px"><input type="checkbox" data-a="crsOn" ${c.on!==false?'checked':''}> เปิดให้ผู้ซื้อเห็นคอร์สนี้</label>
+    <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="crsSave" ${CRS.busy?'disabled':''}>บันทึกคอร์ส</button><button class="btn btn-line btn-sm" data-a="crsProduct">🛍 สร้างสินค้าคอร์สขายแยก (ฉบับร่าง)</button><button class="btn btn-line btn-sm" data-a="crsCopy">📋 คัดลอกลิงก์เข้าเรียน</button></div>
+    <p class="fine" style="margin:8px 0 0">ใส่ในแพ็กเกจ Pro ของชุด: ติ๊ก "📦 ชุด... · แพ็กเกจ Pro" ด้านบน แล้วในหน้าแก้ชุด แพ็กเกจ Pro ใส่ไฟล์เพิ่มบรรทัด <code>เข้าเรียนคอร์ส | ${esc(location.origin)}/account?course=${esc(c.slug||'')}</code> ลูกค้าจะได้ปุ่มเข้าเรียนในอีเมล</p></section>`:'<div class="card vid-c"><p class="fine" style="margin:0">ยังไม่มีคอร์ส กด "+ สร้างคอร์สใหม่"</p></div>'}`;}
 /* 🎬 คลิป YouTube: สั่งโรงงานบน Mac ทำคลิปฝึกฟัง TOEIC (Part 1 รูปภาพ / Part 2 ถาม-ตอบ) เสียง Google TTS · ตั้งทำอัตโนมัติสัปดาห์ละ N คลิป
    คลิปเสร็จ: ดู/โหลด MP4 · ปกคลิป · คัดลอกชื่อและคำอธิบาย (มีลิงก์สินค้า) → คุณแดนอัปขึ้น YouTube เอง แล้ววางลิงก์กลับมา */
 const VID={jobs:null,cfg:null,loading:false};
@@ -5364,7 +5382,7 @@ function homeTab(){
    ทุกบริการมีแถบ 4 ช่องแบบเดียวกัน (📊 ตัวเลข · ✅ ต้องทำ · ⚙️ ตั้งค่า · 👀 หน้าลูกค้า) · บริการใหม่ = เพิ่มใน SVC + svcFour */
 const SVC=[
   {k:'all',i:'📊',l:'ภาพรวม',tabs:[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์']]},
-  {k:'shop',i:'🛒',l:'ร้านชีท',tabs:[['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา'],['coupons','🏷️','โค้ดส่วนลด'],['chatbot','💬','แชทบอทเพจ'],['reviews','⭐','รีวิว'],['pay','⚙️','ตั้งค่าร้าน']]},
+  {k:'shop',i:'🛒',l:'ร้านชีท',tabs:[['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา'],['coupons','🏷️','โค้ดส่วนลด'],['chatbot','💬','แชทบอทเพจ'],['courses','🎓','คอร์สเรียน'],['reviews','⭐','รีวิว'],['pay','⚙️','ตั้งค่าร้าน']]},
   {k:'learn',i:'📚',l:'คอนเทนต์+SEO',tabs:[['seo','🔎','SEO'],['content','✍️','โพสต์'],['videos','🎬','คลิป YouTube'],['insights','📈','พฤติกรรม']]},
   {k:'vip',i:'👑',l:'สมาชิก',view:'vip'},
   {k:'factory',i:'🏭',l:'โรงงาน',view:'factory'},
@@ -5397,7 +5415,7 @@ function svcFour(k){
 function adminView(){
   if(S.tab==='pixel')S.tab='pay';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,chatbot:chatbotTab,videos:videosTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
+  const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,chatbot:chatbotTab,videos:videosTab,courses:coursesTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     ${svcNav()}
     ${body}
@@ -6121,6 +6139,16 @@ function act(a,el){
       const n=String(f.n||'20');adminPost('/api/content?action=factory_order',{kind:'video',title:`TOEIC Listening Part ${f.part} ฝึกฟัง ${n} ข้อ #${no}`,video_part:f.part,video_n:n,video_product:f.product,price:0,purpose:'คลิป YouTube ดึงลูกค้าเข้าเว็บ'}).then(j=>{if(j&&j.ok){toast('สั่งทำคลิปแล้ว Mac จะทำภายในประมาณ 1 ชม.');VID.jobs=null;}else toast('สั่งไม่สำเร็จ: '+((j&&j.error)||''));}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{VID.busy=false;render(true);});break;}
     case 'vidCfg':{const c=Object.assign({},VID.cfg,VID.cf||{});c.parts=[c.p1!==undefined?c.p1:(VID.cfg.parts||[]).includes(1),c.p2!==undefined?c.p2:(VID.cfg.parts||[]).includes(2)].map((on,i)=>on?i+1:0).filter(Boolean);
       adminPost('/api/content?action=video_cfg',{auto:c.auto,perWeek:c.perWeek,parts:c.parts,product:c.product||''}).then(j=>{if(j&&j.ok){VID.cfg=j.cfg;VID.cf={};toast(j.cfg.auto?`เปิดทำคลิปอัตโนมัติ สัปดาห์ละ ${j.cfg.perWeek} คลิป`:'บันทึกแล้ว (ปิดอยู่)');render(true);}else toast('บันทึกไม่สำเร็จ');});break;}
+    case 'crsNew':CRS.list.push({id:'c'+Date.now().toString(36),slug:'',title:'',desc:'',on:true,grants:[],lessons:[]});CRS.sel=CRS.list.length-1;CRS.lt=null;render(true);break;
+    case 'crsSel':CRS.sel=Number(el.dataset.v)||0;CRS.lt=null;render(true);break;
+    case 'crsGrant':{const c=CRS.list[CRS.sel];if(!c)break;const g=new Set(c.grants||[]);if(el.checked)g.add(el.dataset.v);else g.delete(el.dataset.v);c.grants=[...g];break;}
+    case 'crsOn':{const c=CRS.list[CRS.sel];if(c)c.on=!!el.checked;break;}
+    case 'crsSave':{const c=CRS.list[CRS.sel];if(!c)break;if(CRS.lt!=null)c.lessons=parseLessons(CRS.lt,c.lessons);if(!String(c.title).trim()){toast('ใส่ชื่อคอร์สก่อน');break;}if(!c.slug)c.slug=setSlug(c.title)||c.id;
+      CRS.busy=true;render(true);adminPost('/api/content?action=courses',{list:CRS.list}).then(j=>{if(j&&j.ok){CRS.list=j.list;CRS.lt=null;toast('บันทึกคอร์สแล้ว');}else toast('บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{CRS.busy=false;render(true);});break;}
+    case 'crsCopy':{const c=CRS.list[CRS.sel];if(c)copyText(location.origin+'/account?course='+encodeURIComponent(c.slug||c.id));break;}
+    case 'crsProduct':{const c=CRS.list[CRS.sel];if(!c||!c.title){toast('ตั้งชื่อคอร์สแล้วกดบันทึกก่อน');break;}const slug=c.slug||setSlug(c.title);
+      const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36),name:c.title,slug:setSlug(c.title+'-course'),kind:'course',headline:c.title,desc:c.desc||'',features:(c.lessons||[]).slice(0,8).map(l=>l.title).join('\n'),price:0,link:location.origin+'/account?course='+encodeURIComponent(slug),status:'draft',fresh:true,freshNote:'สินค้าคอร์สเรียน · ตั้งราคา ใส่รูป แล้วกดเผยแพร่ · ผู้ซื้อเข้าเรียนที่บัญชีของฉัน'});
+      D.products.push(p);ensureSkus();save();c.grants=[...new Set([...(c.grants||[]),p.id])];adminPost('/api/content?action=courses',{list:CRS.list}).then(j=>{if(j&&j.ok)CRS.list=j.list;});toast('สร้างสินค้าคอร์สเป็นฉบับร่างแล้ว (แท็บสินค้า → มาใหม่) ตั้งราคาแล้วกดเผยแพร่');render(true);break;}
     case 'vidReload':VID.jobs=null;render(true);break;
     case 'vidCopy':{const j=(VID.jobs||[]).find(x=>x.id===id),yt=(j&&j.yt)||{};copyText(el.dataset.v==='title'?(yt.title||j.title):el.dataset.v==='tags'?(yt.tags||''):(yt.desc||''));break;}
     case 'vidPosted':{const u=String((VID.yt||{})[id]!=null?VID.yt[id]:'').trim();adminPost('/api/content?action=video_posted',{id,url:u}).then(j=>{if(j&&j.ok){const x=(VID.jobs||[]).find(y=>y.id===id);if(x)Object.assign(x,j.job);toast(u?'บันทึกลิงก์ YouTube แล้ว':'ลบลิงก์แล้ว');render(true);}else toast('บันทึกไม่สำเร็จ: '+((j&&j.error)||''));});break;}
@@ -6175,6 +6203,7 @@ document.addEventListener('input',e=>{
   if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
   if(ds.oq){S.oq=t.value;clearTimeout(S.oqT);S.oqT=setTimeout(()=>{render(true);const i=document.querySelector('[data-oq]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},300);return;}
   if(ds.ofrom!==undefined&&t.matches('[data-ofrom]')){S.ofrom=t.value;render(true);return;}if(t.matches('[data-oto]')){S.oto=t.value;render(true);return;}if(t.matches('[data-osort]')){S.osort=t.value;render(true);return;}
+  if(ds.crs&&CRS.list&&CRS.list[CRS.sel]){if(ds.crs==='lessons')CRS.lt=t.value;else CRS.list[CRS.sel][ds.crs]=t.value;return;}
   if(ds.vf){(VID.f||(VID.f={}))[ds.vf]=t.value;return;}
   if(ds.vc){const v=t.type==='checkbox'?t.checked:t.value;(VID.cf||(VID.cf={}))[ds.vc]=ds.vc==='perWeek'?Number(v)||2:v;return;}
   if(ds.vyt){(VID.yt||(VID.yt={}))[ds.vyt]=t.value;return;}

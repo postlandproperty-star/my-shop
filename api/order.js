@@ -42,6 +42,11 @@ async function vip(req, res, m) {
   }
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
   const b = json(req);
+  if (m === 'course_done') { // ทำเครื่องหมายเรียนจบบท (เฉพาะคนที่ยืนยันอีเมลแล้วและมีสิทธิ์เรียน)
+    if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบก่อน' });
+    try { const C = await import('../lib/courses.js'); return res.status(200).json({ ok: true, done: await C.markLesson(me, String(b.course || ''), String(b.lesson || ''), b.on !== false) }); }
+    catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e).slice(0, 120) }); }
+  }
   if (m === 'vip_login') { // ส่งลิงก์เข้าระบบ (ไม่บอกว่ามีบัญชีหรือไม่ · ส่งได้ทุก 1 นาที)
     const email = String(b.email || '').trim().toLowerCase();
     if (!V.okEmail(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง' });
