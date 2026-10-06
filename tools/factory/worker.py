@@ -8,6 +8,8 @@
 #   CONTENT_KEY=... python3 tools/factory/worker.py done-notion <job_id> <notion_url> [--cover cover.png] [--images a.png b.png] [--listing listing.json]
 #   CONTENT_KEY=... python3 tools/factory/worker.py fill <job_id> [<ไฟล์.pdf>] --listing listing.json
 #        งานเติมรายละเอียดสินค้าเดิม (fill_id): ส่งเฉพาะช่องใน fill_need · ใส่ PDF ถ้าต้องทำหน้าตัวอย่าง (ไม่อัป PDF ซ้ำ)
+#   CONTENT_KEY=... python3 tools/factory/worker.py done-video <job_id> <โฟลเดอร์คลิป>   (มี <id>.mp4 thumbnail.png yt.json จาก tools/video/make.mjs)
+#   CONTENT_KEY=... python3 tools/factory/worker.py video-img <job_id> "prompt ภาษาอังกฤษ"   → พิมพ์ URL รูปประกอบ Part 1
 #   CONTENT_KEY=... python3 tools/factory/worker.py fail <job_id> "เหตุผลสั้นๆ"
 #
 # listing.json = ข้อความหน้าขาย {name, headline, desc, features, forwho, pains, faq, specs, toc} (ห้ามใส่ราคา · ไม่ใช้ notfor แล้ว)
@@ -104,7 +106,7 @@ def main():
         sync()
         if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
         jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
-        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'auto', 'fill_id', 'fill_need', 'fill_url']} for x in jobs], ensure_ascii=False, indent=1))
+        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'auto', 'fill_id', 'fill_need', 'fill_url', 'video_part', 'video_n', 'video_product']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
         r = api('factory_claim', {'id': a.args[0], 'by': 'mac'}); print(json.dumps(r, ensure_ascii=False)[:300])
         if r.get('ok'):
@@ -132,6 +134,25 @@ def main():
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'previews': len(body.get('previews') or [])}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
         unlock()
+    elif a.cmd == 'done-video':
+        job, d = a.args[0], os.path.expanduser(a.args[1])
+        mp4 = next((os.path.join(d, f) for f in os.listdir(d) if f.endswith('.mp4')), None)
+        if not mp4: sys.exit('ไม่พบไฟล์ .mp4')
+        yt = json.load(open(os.path.join(d, 'yt.json'), encoding='utf-8')) if os.path.exists(os.path.join(d, 'yt.json')) else {}
+        body = {'id': job, 'by': 'mac', 'video': upload(job, mp4, 'clip.mp4', 'video/mp4'), 'yt': yt, 'summary': a.summary}
+        th = os.path.join(d, 'thumbnail.png')
+        if os.path.exists(th): body['thumb'] = upload(job, th, 'thumbnail.png', 'image/png')
+        try:
+            out = subprocess.run([os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'node_modules', 'ffmpeg-static', 'ffmpeg'), '-i', mp4], capture_output=True, text=True).stderr
+            import re; m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', out); body['seconds'] = int(int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))) if m else 0
+        except Exception: pass
+        r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'video': body['video']}, ensure_ascii=False))
+        if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
+        unlock()
+    elif a.cmd == 'video-img':
+        r = api('video_img', {'id': a.args[0], 'prompt': ' '.join(a.args[1:])})
+        if not r.get('ok'): sys.exit(f"ทำรูปไม่ได้: {r.get('error')}")
+        print(r['url'])
     elif a.cmd == 'done-notion':
         job, url = a.args[0], a.args[1]
         imgs = ([cover(job, os.path.expanduser(a.cover))] if a.cover else []) + [upload(job, os.path.expanduser(p), os.path.basename(p), 'image/png') for p in a.images]
@@ -143,7 +164,7 @@ def main():
         print(json.dumps(api('factory_fail', {'id': a.args[0], 'error': ' '.join(a.args[1:])[:400]}), ensure_ascii=False)[:300])
         unlock()
     else:
-        sys.exit('คำสั่ง: queue | claim | done | fill | done-notion | fail')
+        sys.exit('คำสั่ง: queue | claim | done | fill | done-video | video-img | done-notion | fail')
 
 
 if __name__ == '__main__':

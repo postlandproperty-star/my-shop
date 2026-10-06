@@ -488,6 +488,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
+.vid-c{padding:14px 16px;margin:0 0 12px}.vid-list{display:grid;gap:12px}.vid-it{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:14px;padding:12px}.vid-media video{width:100%;border-radius:10px;background:#000;aspect-ratio:16/9}.vid-info{display:grid;gap:4px;align-content:start;min-width:0}@media(max-width:700px){.vid-it{grid-template-columns:1fr}}
 .rc-box{padding:14px 16px;margin:0 0 12px}.rc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-height:520px;overflow:auto}.rc-it{display:grid;grid-template-columns:20px 1fr;gap:4px 8px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;background:var(--surface)}.rc-it.on{border-color:#2440E8;box-shadow:0 0 0 1px #2440E8}.rc-it input{width:18px;height:18px}.rc-imgs{display:flex;gap:6px;align-items:center}.rc-imgs img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:#fff;border:1px solid var(--line)}.rc-n{grid-column:1/-1;font-size:13px}
 .cbt{padding:14px 16px;margin:0 0 12px}.cbt-ans{background:#F1F5FF;border-radius:10px;padding:10px 12px;margin-top:8px}.cbt-ans p{margin:4px 0 0}.cbt-th{border-top:1px solid var(--line);padding:8px 0}.cbt-th.need{background:#FFF8EC}.cbt-m{margin:3px 0;font-size:14px}.cbt-m.b{color:#2440E8}.cbt-m.h{color:#3f9a5a}
 .deal-card{padding:14px 16px;margin:12px 0}
@@ -3339,7 +3340,7 @@ function loadFactoryJobs(silent){if(!silent){FJOBS=[];S.floading=true;}adminApi(
 function fqRow(j,n,qLen){
   const open=S.fqOpen===j.id,prod=j.status==='producing',e=open?(S.fqe||{}):{};const v=k=>esc(e[k]!=null?e[k]:(j[k]==null?'':j[k]));
   const meta=[j.category,j.pages?j.pages+' หน้า':'',j.export_no||j.fill_id?'':Number(j.price)>=1?baht(j.price):'แจกฟรี',j.ordered_by==='owner'?'':'สั่งโดย '+(j.ordered_by==='auto'?'ระบบอัตโนมัติ':member(j.ordered_by||'manager').name)].filter(Boolean).join(' · ');
-  const badge=(prod?'<span class="fq-b go">⚙️ กำลังผลิตในคอม</span>':j.paused?'<span class="fq-b pz">⏸ พักไว้</span>':n===1&&!FPAUSED?'<span class="fq-b nx">ถัดไป</span>':'')+(j.set_name?`<span class="fq-b">📚 ${esc(String(j.set_name).slice(0,24))}${j.set_no?' #'+esc(j.set_no):''}</span>`:'')+(j.export_no?'<span class="fq-b">📤 จากคลัง</span>':'')+(j.fill_id?'<span class="fq-b">📝 เติมรายละเอียด</span>':'')+(j.rush&&!j.auto?'<span class="fq-b go">⚡ เร่ง</span>':'');
+  const badge=(prod?'<span class="fq-b go">⚙️ กำลังผลิตในคอม</span>':j.paused?'<span class="fq-b pz">⏸ พักไว้</span>':n===1&&!FPAUSED?'<span class="fq-b nx">ถัดไป</span>':'')+(j.set_name?`<span class="fq-b">📚 ${esc(String(j.set_name).slice(0,24))}${j.set_no?' #'+esc(j.set_no):''}</span>`:'')+(j.kind==='video'?'<span class="fq-b">🎬 คลิป</span>':'')+(j.export_no?'<span class="fq-b">📤 จากคลัง</span>':'')+(j.fill_id?'<span class="fq-b">📝 เติมรายละเอียด</span>':'')+(j.rush&&!j.auto?'<span class="fq-b go">⚡ เร่ง</span>':'');
   const sel=(k,list)=>`<select class="input" data-fqe="${k}"><option value="">-</option>${list.map(o=>`<option ${String(e[k]!=null?e[k]:j[k]||'')===o?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
   return `<li class="fq-item${j.paused?' paused':''}${open?' open':''}${prod?' prod':''}" style="--c:${fqColor((j.category||'')+' '+j.title)}">
     <div class="fq-top">${prod?'':`<label class="fq-sel" aria-label="เลือก ${esc(j.title)}"><input type="checkbox" data-a="fqSel" data-id="${esc(j.id)}" ${(S.fqSel||[]).includes(j.id)?'checked':''}></label>`}<button class="fq-main" data-a="fqOpen" data-id="${esc(j.id)}" aria-expanded="${open}"><span class="fq-n">${prod?'⚙️':n}</span><span class="fq-mid"><span class="fq-t">${esc(j.title)}</span><span class="fq-m">${esc(meta)}</span></span>${badge}</button>
@@ -3708,6 +3709,32 @@ function productsTab(){
 `;
 }
 
+/* 🎬 คลิป YouTube: สั่งโรงงานบน Mac ทำคลิปฝึกฟัง TOEIC (Part 1 รูปภาพ / Part 2 ถาม-ตอบ) เสียง Google TTS · ตั้งทำอัตโนมัติสัปดาห์ละ N คลิป
+   คลิปเสร็จ: ดู/โหลด MP4 · ปกคลิป · คัดลอกชื่อและคำอธิบาย (มีลิงก์สินค้า) → คุณแดนอัปขึ้น YouTube เอง แล้ววางลิงก์กลับมา */
+const VID={jobs:null,cfg:null,loading:false};
+function loadVID(){if(VID.loading)return;VID.loading=true;Promise.all([adminApi('/api/content?action=factory'),adminApi('/api/content?action=video_cfg')]).then(([a,b])=>{VID.jobs=((a&&a.jobs)||[]).filter(j=>j.kind==='video');VID.cfg=(b&&b.cfg)||{auto:false,perWeek:2,parts:[1,2],product:''};}).catch(()=>{VID.jobs=[];VID.cfg={auto:false,perWeek:2,parts:[1,2],product:''};}).then(()=>{VID.loading=false;render(true);});}
+function videosTab(){if(!VID.jobs){loadVID();return '<p class="fine">กำลังโหลด...</p>';}
+  const pub=D.products.filter(p=>p.status==='published'),def=(pub.find(p=>/listening part 1-4/i.test(p.name))||pub[0]||{}).slug||'',c=VID.cfg,f=VID.f||(VID.f={part:'2',product:c.product||def});
+  const opt=(sel)=>pub.map(p=>`<option value="${esc(p.slug)}" ${sel===p.slug?'selected':''}>${esc(String(p.name).slice(0,60))}</option>`).join('');
+  const wait=VID.jobs.filter(j=>['queued','producing'].includes(j.status)),done=VID.jobs.filter(j=>j.status==='done').sort((a,b)=>String(b.done_at||'').localeCompare(String(a.done_at||''))),bad=VID.jobs.filter(j=>j.status==='failed').slice(0,3);
+  return `<section class="card vid-c"><h3 class="h3" style="margin:0 0 4px">🎬 สั่งทำคลิปฝึกฟัง TOEIC</h3>
+    <p class="fine" style="margin:0 0 10px">Mac ทำให้ภายในประมาณ 1 ชม.: โจทย์แต่งใหม่ 10 ข้อ · เสียง Google TTS · เฉลย+คำแปล · ท้ายคลิปชวนไปที่สินค้าที่เลือก · คลิปละประมาณ 5 นาที</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><select class="input" data-vf="part" style="width:auto"><option value="2" ${f.part==='2'?'selected':''}>Part 2 · ถาม-ตอบ (ไม่ใช้รูป)</option><option value="1" ${f.part==='1'?'selected':''}>Part 1 · รูปภาพ (ใช้เงินทำรูป AI ≈ ฿15/คลิป)</option></select>
+      <select class="input" data-vf="product" style="width:auto;max-width:360px"><option value="">ลิงก์ไปสินค้า...</option>${opt(f.product)}</select>
+      <button class="btn btn-dark btn-sm" data-a="vidOrder" ${VID.busy?'disabled':''}>🎬 สั่งทำคลิป</button></div></section>
+  <section class="card vid-c"><h3 class="h3" style="margin:0 0 4px">🤖 ทำคลิปอัตโนมัติ</h3>
+    <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center"><label class="aud-ok" style="margin:0"><input type="checkbox" data-vc="auto" ${c.auto?'checked':''}> เปิด</label>
+      <label class="fine">สัปดาห์ละ <input class="input" type="number" min="1" max="7" data-vc="perWeek" value="${esc(c.perWeek)}" style="width:64px;display:inline-block"> คลิป</label>
+      <label class="fine"><input type="checkbox" data-vc="p1" ${(c.parts||[]).includes(1)?'checked':''}> Part 1</label><label class="fine"><input type="checkbox" data-vc="p2" ${(c.parts||[]).includes(2)?'checked':''}> Part 2</label>
+      <select class="input" data-vc="product" style="width:auto;max-width:300px"><option value="">ลิงก์ไปสินค้า...</option>${opt(c.product||def)}</select>
+      <button class="btn btn-line btn-sm" data-a="vidCfg">บันทึก</button></div>
+    <p class="fine" style="margin:6px 0 0">เปิดแล้ว Mac ทำคลิปใหม่ให้เองทุกสัปดาห์ สลับ Part ตามที่ติ๊ก (ต่อท้ายคิว ใบสั่งของคุณแดนได้ก่อน) · คลิปเสร็จขึ้นที่ด้านล่างนี้ คุณแดนกดอัปขึ้น YouTube เอง</p></section>
+  ${wait.length?`<section class="card vid-c"><b>⏳ กำลังทำ / รอคิว (${wait.length})</b>${wait.map(j=>`<p class="fine" style="margin:6px 0 0">${j.status==='producing'?'⚙️ กำลังทำ':'⏳ รอคิว'} · ${esc(j.title)}${j.auto?' · อัตโนมัติ':''}</p>`).join('')}</section>`:''}
+  ${bad.length?`<section class="card vid-c"><b>⚠️ ทำไม่สำเร็จ</b>${bad.map(j=>`<p class="fine" style="margin:6px 0 0">${esc(j.title)}: ${esc(j.error||'')}</p>`).join('')}</section>`:''}
+  <section class="vid-list">${done.length?done.map(j=>{const yt=j.yt||{};return `<article class="card vid-it"><div class="vid-media">${j.video_url?`<video src="${esc(j.video_url)}" poster="${esc(j.thumb||'')}" controls preload="none"></video>`:''}</div>
+    <div class="vid-info"><b>${esc(yt.title||j.title)}</b><span class="fine">${j.seconds?Math.floor(j.seconds/60)+':'+String(j.seconds%60).padStart(2,'0')+' นาที · ':''}เสร็จ ${j.done_at?fdt(Date.parse(j.done_at)):''}${j.posted_at?' · <b style="color:#2f7a45">✅ อัปขึ้น YouTube แล้ว</b>':''}</span>
+      <div class="row" style="gap:6px;flex-wrap:wrap;margin:6px 0">${j.video_url?`<a class="btn btn-line btn-sm" href="${esc(j.video_url)}" download target="_blank" rel="noopener">⬇ MP4</a>`:''}${j.thumb?`<a class="btn btn-line btn-sm" href="${esc(j.thumb)}" download target="_blank" rel="noopener">⬇ ปกคลิป</a>`:''}<button class="btn btn-line btn-sm" data-a="vidCopy" data-id="${esc(j.id)}" data-v="title">📋 ชื่อคลิป</button><button class="btn btn-line btn-sm" data-a="vidCopy" data-id="${esc(j.id)}" data-v="desc">📋 คำอธิบาย</button><button class="btn btn-line btn-sm" data-a="vidCopy" data-id="${esc(j.id)}" data-v="tags">📋 แท็ก</button></div>
+      <div class="alt-mail"><input class="input" data-vyt="${esc(j.id)}" value="${esc((VID.yt||{})[j.id]!=null?VID.yt[j.id]:j.yt_url||'')}" placeholder="วางลิงก์ YouTube หลังอัปแล้ว"><button class="btn btn-dark btn-sm" data-a="vidPosted" data-id="${esc(j.id)}">บันทึก</button>${j.yt_url?`<a class="fine" href="${esc(j.yt_url)}" target="_blank" rel="noopener">เปิดใน YouTube ↗</a>`:''}</div></div></article>`;}).join(''):'<div class="card vid-c"><p class="fine" style="margin:0">ยังไม่มีคลิปที่เสร็จ สั่งทำด้านบน หรือเปิดทำอัตโนมัติ</p></div>'}</section>`;}
 /* 💬 แชทบอทเพจ Facebook: เปิด/ปิด · โหมด AI หรือคำสำคัญ · ข้อความตอบ (แก้ได้) · ส่วนลด 24 ชม. · ทดลองถาม · บทสนทนาล่าสุด · วิธีเชื่อม */
 const CBT={d:null,loading:false};
 function loadCBT(){if(CBT.loading)return;CBT.loading=true;adminApi('/api/content?action=chatbot').then(j=>{CBT.d=j&&j.ok?j:{ok:false,error:(j&&j.error)||'โหลดไม่ได้'};if(CBT.d.ok&&!CBT.f)CBT.f=Object.assign({},CBT.d.cfg);}).catch(()=>{CBT.d={ok:false,error:'เชื่อมต่อไม่ได้'};}).then(()=>{CBT.loading=false;render(true);});}
@@ -5308,7 +5335,7 @@ function homeTab(){
 const SVC=[
   {k:'all',i:'📊',l:'ภาพรวม',tabs:[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์']]},
   {k:'shop',i:'🛒',l:'ร้านชีท',tabs:[['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา'],['coupons','🏷️','โค้ดส่วนลด'],['chatbot','💬','แชทบอทเพจ'],['reviews','⭐','รีวิว'],['pay','⚙️','ตั้งค่าร้าน']]},
-  {k:'learn',i:'📚',l:'คอนเทนต์+SEO',tabs:[['seo','🔎','SEO'],['content','✍️','โพสต์'],['insights','📈','พฤติกรรม']]},
+  {k:'learn',i:'📚',l:'คอนเทนต์+SEO',tabs:[['seo','🔎','SEO'],['content','✍️','โพสต์'],['videos','🎬','คลิป YouTube'],['insights','📈','พฤติกรรม']]},
   {k:'vip',i:'👑',l:'สมาชิก',view:'vip'},
   {k:'factory',i:'🏭',l:'โรงงาน',view:'factory'},
   {k:'team',i:'👥',l:'ทีม',tabs:[['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก']]},
@@ -5340,7 +5367,7 @@ function svcFour(k){
 function adminView(){
   if(S.tab==='pixel')S.tab='pay';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
-  const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,chatbot:chatbotTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
+  const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,chatbot:chatbotTab,videos:videosTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     ${svcNav()}
     ${body}
@@ -6058,6 +6085,12 @@ function act(a,el){
       (async()=>{for(const p of L){try{RC.prev[p.id]=await flatCover(p);}catch(e){RC.err[p.id]=String(e.message||e).slice(0,60);}RC.n++;render(true);}RC.busy='';render(true);toast('ทำรูปตัวอย่างแล้ว ตรวจแล้วกด "ใช้เป็นรูปแรก"');})();break;}
     case 'rcUse':{let n=0;for(const p of D.products){const u=RC.sel[p.id]&&RC.prev[p.id];if(!u)continue;p.images=[u,...(p.images||[]).filter(x=>x!==u)].slice(0,8);n++;}
       if(n){save();toast(`ใช้ปกจริงเป็นรูปแรกแล้ว ${n} สินค้า (รูปเดิมย้ายไปต่อท้าย)`);}RC.prev={};RC.sel={};RC.open=false;render(true);break;}
+    case 'vidOrder':{const f=VID.f||{};if(!f.product){toast('เลือกสินค้าที่จะลิงก์ไปก่อน');break;}VID.busy=true;render(true);const no=(VID.jobs||[]).filter(j=>String(j.video_part)===f.part).length+1;
+      adminPost('/api/content?action=factory_order',{kind:'video',title:`TOEIC Listening Part ${f.part} ฝึกฟัง 10 ข้อ #${no}`,video_part:f.part,video_n:'10',video_product:f.product,price:0,purpose:'คลิป YouTube ดึงลูกค้าเข้าเว็บ'}).then(j=>{if(j&&j.ok){toast('สั่งทำคลิปแล้ว Mac จะทำภายในประมาณ 1 ชม.');VID.jobs=null;}else toast('สั่งไม่สำเร็จ: '+((j&&j.error)||''));}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{VID.busy=false;render(true);});break;}
+    case 'vidCfg':{const c=Object.assign({},VID.cfg,VID.cf||{});c.parts=[c.p1!==undefined?c.p1:(VID.cfg.parts||[]).includes(1),c.p2!==undefined?c.p2:(VID.cfg.parts||[]).includes(2)].map((on,i)=>on?i+1:0).filter(Boolean);
+      adminPost('/api/content?action=video_cfg',{auto:c.auto,perWeek:c.perWeek,parts:c.parts,product:c.product||''}).then(j=>{if(j&&j.ok){VID.cfg=j.cfg;VID.cf={};toast(j.cfg.auto?`เปิดทำคลิปอัตโนมัติ สัปดาห์ละ ${j.cfg.perWeek} คลิป`:'บันทึกแล้ว (ปิดอยู่)');render(true);}else toast('บันทึกไม่สำเร็จ');});break;}
+    case 'vidCopy':{const j=(VID.jobs||[]).find(x=>x.id===id),yt=(j&&j.yt)||{};copyText(el.dataset.v==='title'?(yt.title||j.title):el.dataset.v==='tags'?(yt.tags||''):(yt.desc||''));break;}
+    case 'vidPosted':{const u=String((VID.yt||{})[id]!=null?VID.yt[id]:'').trim();adminPost('/api/content?action=video_posted',{id,url:u}).then(j=>{if(j&&j.ok){const x=(VID.jobs||[]).find(y=>y.id===id);if(x)Object.assign(x,j.job);toast(u?'บันทึกลิงก์ YouTube แล้ว':'ลบลิงก์แล้ว');render(true);}else toast('บันทึกไม่สำเร็จ: '+((j&&j.error)||''));});break;}
     case 'cbMode':CBT.f.mode=el.dataset.v;render(true);break;
     case 'cbSave':CBT.busy=true;render(true);adminPost('/api/content?action=chatbot',CBT.f).then(j=>{if(j&&j.ok){CBT.f=Object.assign({},j.cfg);CBT.d.cfg=j.cfg;toast(j.cfg.on?'บันทึกแล้ว บอทเปิดอยู่':'บันทึกแล้ว (บอทปิดอยู่)');}else toast('บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{CBT.busy=false;render(true);});break;
     case 'cbTest':CBT.testing=true;CBT.ans=null;render(true);adminPost('/api/content?action=chatbot_test',{text:CBT.q||''}).then(j=>{CBT.ans=j&&j.ok?{why:{deal:'ตอบด้วยข้อความส่วนลด',handoff:'ส่งต่อแอดมิน',ai:'AI ตอบ',greet:'ทักทาย','keywords only':'โหมดคำสำคัญ'}[j.why]||j.why,reply:j.reply}:{why:'ผิดพลาด',reply:(j&&j.error)||''};}).catch(()=>{CBT.ans={why:'ผิดพลาด',reply:'เชื่อมต่อไม่ได้'};}).then(()=>{CBT.testing=false;render(true);});break;
@@ -6109,6 +6142,9 @@ document.addEventListener('input',e=>{
   if(ds.fqn){S[{title:'fqTitle',price:'fqPrice',cat:'fqCat'}[ds.fqn]]=t.value;return;}
   if(ds.oq){S.oq=t.value;clearTimeout(S.oqT);S.oqT=setTimeout(()=>{render(true);const i=document.querySelector('[data-oq]');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}},300);return;}
   if(ds.ofrom!==undefined&&t.matches('[data-ofrom]')){S.ofrom=t.value;render(true);return;}if(t.matches('[data-oto]')){S.oto=t.value;render(true);return;}if(t.matches('[data-osort]')){S.osort=t.value;render(true);return;}
+  if(ds.vf){(VID.f||(VID.f={}))[ds.vf]=t.value;return;}
+  if(ds.vc){const v=t.type==='checkbox'?t.checked:t.value;(VID.cf||(VID.cf={}))[ds.vc]=ds.vc==='perWeek'?Number(v)||2:v;return;}
+  if(ds.vyt){(VID.yt||(VID.yt={}))[ds.vyt]=t.value;return;}
   if(ds.cbf&&CBT.f){CBT.f[ds.cbf]=t.type==='checkbox'?t.checked:ds.cbf==='pauseHours'?Number(t.value)||12:t.value;if(t.type==='checkbox')render(true);return;}
   if(ds.cbtest){CBT.q=t.value;return;}
   if(ds.altmail){(S.altMail||(S.altMail={}))[ds.altmail]=t.value;return;}

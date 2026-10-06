@@ -133,9 +133,9 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 
 
 // โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
-const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'fill_id', 'fill_need']; // fill_id = เติมรายละเอียดหน้าขายที่ยังว่างของสินค้าเดิม (ไม่แก้ข้อความเดิม/ราคา) // export_no = ส่งเล่มที่ผลิตแล้วในคลังบน Mac ขึ้นร้าน (ไม่ผลิตใหม่) · sku = SL-NNN // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
+const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'fill_id', 'fill_need', 'video_part', 'video_n', 'video_product']; // fill_id = เติมรายละเอียดหน้าขายที่ยังว่างของสินค้าเดิม (ไม่แก้ข้อความเดิม/ราคา) // export_no = ส่งเล่มที่ผลิตแล้วในคลังบน Mac ขึ้นร้าน (ไม่ผลิตใหม่) · sku = SL-NNN // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
 // ประเภทงานโรงงาน: pdf (ชีท PDF ค่าเริ่มต้น) | notion (Notion template สร้างใน Notion ของคุณแดน คุณแดนกด Publish เอง)
-const jobKind = (b) => (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
+const jobKind = (b) => b.kind === 'video' ? 'video' : (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
 const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|app\.notion\.com)\//i.test(String(u || ''));
 // คอมคุณแดน (โรงงานหลัก) แวะมาเมื่อไหร่ล่าสุด → หน้าโรงงานบนเว็บแสดงสถานะ/เตือนถ้าหายไปนาน
 async function workerBeat({ note = '' } = {}) { try { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_worker', data: { last_seen: new Date().toISOString(), note }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {} }
@@ -167,6 +167,17 @@ async function autoListings(books) {
   }
   if (ex || fill) { await saveJobs(jobs); await logNote('factory', `ทำ listing อัตโนมัติ: ส่งเล่มในคลังลงร้าน ${ex} เล่ม · เติมรายละเอียดสินค้าเดิม ${fill} สินค้า`); }
   return { export: ex, fill };
+}
+// คลิป YouTube อัตโนมัติ: เปิดไว้ในหลังบ้าน → สัปดาห์ละ N คลิป สลับ Part ตามที่เลือก (ใบสั่ง auto ต่อท้ายคิว)
+async function autoVideo(jobs) {
+  const c = (await sb('shop_state?id=eq.video_cfg&select=data').catch(() => []))?.[0]?.data; if (!c || !c.auto) return null;
+  const vids = jobs.filter((j) => j.kind === 'video'); if (vids.some((j) => ['queued', 'producing'].includes(j.status))) return null;
+  if (vids.filter((j) => j.auto && Date.parse(j.created_at || 0) > Date.now() - 7 * 864e5).length >= (Number(c.perWeek) || 2)) return null;
+  const parts = (c.parts || [2]).filter((n) => [1, 2].includes(Number(n))); const last = vids.filter((j) => j.auto).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0];
+  const part = parts[(parts.indexOf(Number(last?.video_part)) + 1) % parts.length] || 2, no = vids.filter((j) => Number(j.video_part) === part).length + 1;
+  const { randomUUID } = await import('node:crypto');
+  jobs.push({ id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', auto: true, prio: 9e12 + jobs.length, kind: 'video', lang: 'th', price: 0, title: `TOEIC Listening Part ${part} ฝึกฟัง 10 ข้อ #${no}`, video_part: String(part), video_n: '10', video_product: c.product || '', purpose: 'อัตโนมัติ: คลิป YouTube ดึงลูกค้าเข้าเว็บ' });
+  await saveJobs(jobs); return part;
 }
 async function loadJobs() { const rows = await sb('shop_state?id=eq.factory&select=data'); return rows?.[0]?.data?.jobs || []; }
 // ชุดหนังสือและผลิตอัตโนมัติของโรงงาน (คุณแดนตั้งจากแท็บโรงงาน) · shop_state id=factory_cfg
@@ -377,6 +388,8 @@ async function ensureAdDrafts() {
     if (!AUTO_AD_DRAFTS) continue; // ปิดแล้ว (คุณแดน 5 ต.ค. 69: เลือกสินค้ายิงแอดเอง)
     try { await draftAd(p.id); made.push(p.name); } catch (e) {}
   }
+  // ร่างแอดที่ค้างเกิน 7 วันโดยไม่ได้กดอะไร → เก็บออกจากการ์ด (ไม่เสียเงิน ไม่ได้ยิง)
+  { const cut = new Date(Date.now() - 7 * 864e5).toISOString(); let n = 0; for (const x of items) if (x.status === 'pending' && String(x.created_at || '') < cut) { x.status = 'dismissed'; x.note = 'ร่างค้างเกิน 7 วัน เก็บให้อัตโนมัติ'; n++; } if (n) await saveAdsAuto(items); }
   // แอดที่ครบวันแล้ว → ปิดการ์ดเป็น "จบแล้ว"
   const now = new Date().toISOString(); let ended = false;
   for (const x of items) if (x.status === 'live' && x.ends_at && x.ends_at < now) { x.status = 'ended'; ended = true; }
@@ -1325,6 +1338,30 @@ ${books}`;
       } catch (e) { console.error('set_copy', e.message); }
       return res.status(200).json({ ok: true, ai: !!out, ...(out || {}) });
     }
+    if (action === 'video_img') { // Mac ขอรูปประกอบคลิป Part 1 (ภาพถ่ายสถานการณ์ ไม่มีตัวหนังสือ) · ใช้เงิน AI ทำรูปของร้าน
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const b = await readBody(req), jid = String(b.id || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 60), prompt = String(b.prompt || '').trim().slice(0, 1500);
+      if (!jid || prompt.length < 20) return res.status(400).json({ ok: false, error: 'ต้องมี id และ prompt' });
+      try {
+        const g = await genImage({ prompt: prompt + ' Realistic candid photo, natural light, no text, no letters, no logos, no watermark.', quality: 'medium' });
+        const path = `factory/${jid}/v-${Date.now().toString(36)}.${/png/.test(g.mime) ? 'png' : 'jpg'}`;
+        const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': g.mime, 'x-upsert': 'true' }, body: Buffer.from(g.b64, 'base64') });
+        if (!up.ok) throw new Error(`อัปโหลดรูปไม่ได้ (${up.status})`);
+        return res.status(200).json({ ok: true, url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
+      } catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e).slice(0, 200), billing: e.billing || null }); }
+    }
+    if (action === 'video_cfg' || action === 'video_posted') { // คลิป YouTube: ตั้งค่าทำอัตโนมัติ · บันทึกลิงก์ YouTube หลังอัปแล้ว (คุณแดน)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (action === 'video_posted') { const b = await readBody(req); const jobs = await loadJobs(); const j = jobs.find((x) => x.id === String(b.id || '') && x.kind === 'video'); if (!j) return res.status(404).json({ ok: false, error: 'ไม่พบคลิป' });
+        const u = String(b.url || '').trim(); if (u && !/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(u)) return res.status(400).json({ ok: false, error: 'ลิงก์ต้องเป็น YouTube' });
+        j.yt_url = u; j.posted_at = u ? new Date().toISOString() : null; await saveJobs(jobs); return res.status(200).json({ ok: true, job: j }); }
+      const cur = (await sb('shop_state?id=eq.video_cfg&select=data').catch(() => []))?.[0]?.data || { auto: false, perWeek: 2, parts: [1, 2], product: '' };
+      if (req.method === 'POST') { const b = await readBody(req); const c = { auto: !!b.auto, perWeek: Math.max(1, Math.min(7, Math.round(Number(b.perWeek) || 2))), parts: (Array.isArray(b.parts) ? b.parts : [1, 2]).map(Number).filter((n) => [1, 2].includes(n)), product: String(b.product || '').slice(0, 80) };
+        if (!c.parts.length) c.parts = [2]; await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'video_cfg', data: c, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); return res.status(200).json({ ok: true, cfg: c }); }
+      return res.status(200).json({ ok: true, cfg: cur });
+    }
     if (action === 'chatbot' || action === 'chatbot_resume' || action === 'chatbot_test') { // แชทบอทเพจ (คุณแดนเท่านั้น)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
@@ -1886,7 +1923,7 @@ ${books}`;
       const st = String(req.query.status || '');
       const all = await loadJobs();
       const cfg = await loadFacCfg().catch(() => ({ paused: false }));
-      if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
+      if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } try { await autoVideo(all); } catch (e) { console.error('autovideo', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
       let jobs = st === 'queued' ? queueOrder(all) : all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
       if (!admin && st === 'queued') jobs = cfg.paused ? [] : jobs.filter((j) => !j.paused); // คอม/ทีม: ข้ามเล่มที่พักไว้ และไม่ได้งานเลยตอนคุณแดนหยุดโรงงาน
       if (keyOk(req) && req.query.by === 'mac') await workerBeat({ note: cfg.paused ? 'เช็คคิว: คุณแดนหยุดโรงงานไว้' : `เช็คคิว ${jobs.length} งาน` }); // คอมคุณแดนมาเช็คคิว
@@ -2218,7 +2255,7 @@ ${books}`;
         job.status = 'producing'; job.started_at = new Date().toISOString(); if (body.by === 'mac') { job.made_on = 'mac'; await workerBeat({ note: `เริ่มผลิต: ${String(job.title).slice(0, 60)}` }); }
       } else if (action === 'factory_uploadurl') {
         const safe = String(body.filename || 'sheet.pdf').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || 'sheet.pdf';
-        const ctype = /\.png$/i.test(safe) ? 'image/png' : /\.jpe?g$/i.test(safe) ? 'image/jpeg' : 'application/pdf';
+        const ctype = /\.png$/i.test(safe) ? 'image/png' : /\.jpe?g$/i.test(safe) ? 'image/jpeg' : /\.mp4$/i.test(safe) ? 'video/mp4' : 'application/pdf';
         const path = `factory/${job.id}/${safe}`;
         // x-upsert: ทำรูปใหม่ทับชื่อไฟล์เดิมได้ (เช่น เปลี่ยนธีมรูปสินค้า) ลิงก์ในหน้าขายไม่ต้องเปลี่ยน
         const r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', 'x-upsert': 'true' }, body: '{}' });
@@ -2240,6 +2277,12 @@ ${books}`;
         if (/^SL-[A-Z0-9-]{2,12}$/.test(String(body.sku || ''))) job.sku = String(body.sku);
         if (Array.isArray(body.previews)) job.previews = body.previews.map(String).filter((u) => u.startsWith(own)).slice(0, 6); // หน้าตัวอย่าง 3-6 (Mac ทำ มีลายน้ำ)
         if (body.audio_path) job.audio_path = String(body.audio_path).slice(0, 300); // ไฟล์เสียงอยู่ที่ไหนใน Mac
+        if (job.kind === 'video') { // คลิป YouTube: ไฟล์ MP4 + ปกคลิป + ชื่อ/คำอธิบาย (คุณแดนอัปขึ้น YouTube เอง)
+          if (String(body.video || '').startsWith(own)) job.video_url = String(body.video).slice(0, 500);
+          if (String(body.thumb || '').startsWith(own)) job.thumb = String(body.thumb).slice(0, 500);
+          if (body.yt && typeof body.yt === 'object') job.yt = { title: String(body.yt.title || '').slice(0, 100), desc: String(body.yt.desc || '').slice(0, 4800), tags: String(body.yt.tags || '').slice(0, 400) };
+          if (body.seconds) job.seconds = Number(body.seconds) || 0;
+        }
         if (/^https:\/\/drive\.google\.com\//.test(String(body.audio_drive || ''))) job.audio_drive = String(body.audio_drive).slice(0, 200);
         if (Array.isArray(body.pins)) job.pin_images = body.pins.map(String).filter((u) => u.startsWith(own)).slice(0, 10);
         if (isNotionUrl(body.lite_url)) job.lite_url = String(body.lite_url).slice(0, 400);
@@ -2257,7 +2300,7 @@ ${books}`;
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
         if (job.kind === 'notion' || job.lang === 'en') try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
-        if (!job.auto) await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
+        if (!job.auto && job.kind !== 'video') await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)
         if (!body.listing || typeof body.listing !== 'object') return res.status(400).json({ ok: false, error: 'ต้องมี listing' });
         job.listing_copy = cleanListing(body.listing);
