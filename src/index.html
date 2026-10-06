@@ -3073,13 +3073,36 @@ async function flatCover(p){let src;
   if(p.link&&/\.pdf(\?|$)|\/storage\/v1\/object\/public\//.test(p.link)&&pfmt(p)!=='notion'){try{src=await pdfFirstPage(p.link);}catch(e){}}
   if(!src&&p.bookCover){src=await new Promise((ok,no)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>ok(im);im.onerror=no;im.src=p.bookCover+(p.bookCover.includes('?')?'&':'?')+'cv=1';});}
   if(!src)throw new Error('ไม่มีไฟล์ PDF หรือปกเรียบ');
-  const W=1200,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,W);
-  const sw=src.width,sh=src.height,k=Math.min(W*0.8/sw,W*0.9/sh),w=sw*k,h=sh*k,X=(W-w)/2,Y=(W-h)/2;
-  x.save();x.shadowColor='rgba(15,27,51,.18)';x.shadowBlur=24;x.shadowOffsetY=8;x.fillStyle='#fff';x.fillRect(X,Y,w,h);x.restore();x.drawImage(src,X,Y,w,h);x.strokeStyle='rgba(15,27,51,.08)';x.strokeRect(X+.5,Y+.5,w-1,h-1);
-  return uploadImage(c.toDataURL('image/jpeg',.9));}
+  return uploadImage(bookMock(src,RC.style||'flat').toDataURL('image/jpeg',.9));}
+/* ภาพหนังสือจากปกจริง (ไม่ใช้ AI): flat = ปกแบนบนพื้นขาว · book = เล่มหนังสือหันหน้าตรง มีสันเล่ม ความหนากระดาษ เงาที่พื้น · tilt = เล่มตั้งเอียงเห็นสัน (3 มิติ) */
+function bookMock(src,style){const W=1200,c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');const sw=src.width,sh=src.height;
+  if(style==='flat'){x.fillStyle='#fff';x.fillRect(0,0,W,W);const k=Math.min(W*0.8/sw,W*0.9/sh),w=sw*k,h=sh*k,X=(W-w)/2,Y=(W-h)/2;
+    x.save();x.shadowColor='rgba(15,27,51,.18)';x.shadowBlur=24;x.shadowOffsetY=8;x.fillStyle='#fff';x.fillRect(X,Y,w,h);x.restore();x.drawImage(src,X,Y,w,h);x.strokeStyle='rgba(15,27,51,.08)';x.strokeRect(X+.5,Y+.5,w-1,h-1);return c;}
+  const bg=x.createRadialGradient(W/2,W*0.42,W*0.1,W/2,W/2,W*0.75);bg.addColorStop(0,'#FBFAF8');bg.addColorStop(1,'#E9E6E1');x.fillStyle=bg;x.fillRect(0,0,W,W);
+  if(style==='book'){const k=Math.min(W*0.62/sw,W*0.78/sh),w=sw*k,h=sh*k,X=(W-w)/2-10,Y=(W-h)/2-20,T=Math.max(10,w*0.035);
+    const fl=x.createRadialGradient(W/2,Y+h+18,10,W/2,Y+h+18,w*0.75);fl.addColorStop(0,'rgba(40,35,30,.35)');fl.addColorStop(1,'rgba(40,35,30,0)');x.fillStyle=fl;x.beginPath();x.ellipse(W/2+10,Y+h+14,w*0.62,34,0,0,Math.PI*2);x.fill(); // เงาที่พื้น
+    x.fillStyle='#F3F0EA';x.beginPath();x.moveTo(X+w,Y+4);x.lineTo(X+w+T,Y+10);x.lineTo(X+w+T,Y+h+4);x.lineTo(X+w,Y+h);x.closePath();x.fill(); // สันกระดาษด้านขวา
+    x.strokeStyle='rgba(120,110,95,.25)';x.lineWidth=1;for(let i=1;i<T/2;i++){x.beginPath();x.moveTo(X+w+i*2,Y+6+i*0.6);x.lineTo(X+w+i*2,Y+h+2+i*0.2);x.stroke();}
+    x.fillStyle='#E7E2D8';x.beginPath();x.moveTo(X+4,Y+h);x.lineTo(X+w,Y+h);x.lineTo(X+w+T,Y+h+4);x.lineTo(X+T,Y+h+6);x.closePath();x.fill(); // ขอบกระดาษล่าง
+    x.save();x.shadowColor='rgba(30,25,20,.35)';x.shadowBlur=30;x.shadowOffsetX=8;x.shadowOffsetY=14;x.fillStyle='#fff';x.fillRect(X,Y,w,h);x.restore();x.drawImage(src,X,Y,w,h);
+    const sp=x.createLinearGradient(X,0,X+w*0.08,0);sp.addColorStop(0,'rgba(0,0,0,.28)');sp.addColorStop(0.35,'rgba(255,255,255,.18)');sp.addColorStop(0.55,'rgba(0,0,0,.10)');sp.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=sp;x.fillRect(X,Y,w*0.08,h); // รอยพับสันปก
+    const gl=x.createLinearGradient(X,Y,X+w,Y+h);gl.addColorStop(0,'rgba(255,255,255,.10)');gl.addColorStop(0.5,'rgba(255,255,255,0)');gl.addColorStop(1,'rgba(0,0,0,.06)');x.fillStyle=gl;x.fillRect(X,Y,w,h);return c;}
+  // tilt: เล่มเอียง เห็นสันด้านซ้าย วาดปกเป็นแถบแนวตั้งให้ด้านขวาเล็กลง (มุมมอง 3 มิติ)
+  const k=Math.min(W*0.56/sw,W*0.74/sh),w=sw*k,h=sh*k,X=(W-w)/2+40,Y=(W-h)/2-10,S=w*0.12,shrink=0.08;
+  const fl=x.createRadialGradient(W/2,Y+h+20,10,W/2,Y+h+20,w*0.8);fl.addColorStop(0,'rgba(40,35,30,.38)');fl.addColorStop(1,'rgba(40,35,30,0)');x.fillStyle=fl;x.beginPath();x.ellipse(W/2+10,Y+h+18,w*0.7,36,0,0,Math.PI*2);x.fill();
+  const tmp=document.createElement('canvas');tmp.width=Math.round(w);tmp.height=Math.round(h);tmp.getContext('2d').drawImage(src,0,0,w,h);
+  const edge=tmp.getContext("2d").getImageData(4,Math.round(h*0.04),1,1).data;
+  x.fillStyle=`rgb(${edge[0]*0.7|0},${edge[1]*0.7|0},${edge[2]*0.7|0})`;x.beginPath();x.moveTo(X-S,Y+h*0.03);x.lineTo(X,Y);x.lineTo(X,Y+h);x.lineTo(X-S,Y+h*0.97);x.closePath();x.fill(); // สันเล่ม
+  const sg=x.createLinearGradient(X-S,0,X,0);sg.addColorStop(0,'rgba(0,0,0,.25)');sg.addColorStop(1,'rgba(255,255,255,.12)');x.fillStyle=sg;x.fill();
+  x.save();x.shadowColor='rgba(30,25,20,.3)';x.shadowBlur=28;x.shadowOffsetX=14;x.shadowOffsetY=12;x.fillStyle='rgba(255,255,255,1)';x.beginPath();x.moveTo(X,Y);x.lineTo(X+w,Y+h*shrink/2);x.lineTo(X+w,Y+h*(1-shrink/2));x.lineTo(X,Y+h);x.closePath();x.fill();x.restore();
+  const N=Math.ceil(w);for(let i=0;i<N;i++){const t=i/N,hh=h*(1-shrink*t),yy=Y+(h-hh)/2;x.drawImage(tmp,i,0,1,h,X+i,yy,1.6,hh);}
+  const gl=x.createLinearGradient(X,0,X+w,0);gl.addColorStop(0,'rgba(0,0,0,.12)');gl.addColorStop(0.15,'rgba(255,255,255,.08)');gl.addColorStop(1,'rgba(0,0,0,.10)');x.fillStyle=gl;x.beginPath();x.moveTo(X,Y);x.lineTo(X+w,Y+h*shrink/2);x.lineTo(X+w,Y+h*(1-shrink/2));x.lineTo(X,Y+h);x.closePath();x.fill();
+  return c;}
+
 function realCoverBox(){if(!RC.open)return '';const L=D.products.filter(p=>!isBundle(p)&&(p.link||p.bookCover)&&pfmt(p)!=='notion'),sel=L.filter(p=>RC.sel[p.id]),ready=sel.filter(p=>RC.prev[p.id]);
-  return `<section class="card rc-box"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b>🖼 ใช้ปกจริงเป็นรูปแรก</b><button class="chip" data-a="rcClose">ปิด</button></div>
+  return `<section class="card rc-box"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center"><b>🖼 ใช้ปกจริงเป็นรูปแรก / ภาพหนังสือ mockup</b><button class="chip" data-a="rcClose">ปิด</button></div>
     <p class="fine" style="margin:4px 0 8px">ปกหน้าแรกของไฟล์วางตรงบนพื้นขาว (แบบร้านหนังสือทั่วไป) ดูเป็นของจริงกว่ารูปมีฉาก · เลือกสินค้า → ทำรูปตัวอย่าง → ตรวจ → กด "ใช้เป็นรูปแรก" ถึงจะเปลี่ยนจริง · รูปเดิมยังอยู่ (ย้ายไปต่อท้าย)</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 8px;align-items:center"><span class="fine">แบบรูป</span>${[['flat','📄 ปกแบนพื้นขาว'],['book','📕 หนังสือจริง (มีสัน+เงา)'],['tilt','📚 หนังสือตั้งเอียง 3 มิติ']].map(([k,l])=>`<button class="chip" data-a="rcStyle" data-v="${k}" aria-pressed="${(RC.style||'flat')===k}">${l}</button>`).join('')}</div>
     <div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 8px"><button class="chip" data-a="rcAll">เลือกทั้งหมด (${L.length})</button><button class="chip" data-a="rcNone">ไม่เลือก</button>
       <button class="btn btn-dark btn-sm" data-a="rcMake" ${!sel.length||RC.busy?'disabled':''}>${RC.busy==='make'?`กำลังทำรูป ${RC.n||0}/${sel.length}...`:`ทำรูปตัวอย่าง (${sel.length})`}</button>
       <button class="btn btn-cta btn-sm" data-a="rcUse" ${!ready.length||RC.busy?'disabled':''}>✓ ใช้เป็นรูปแรก (${ready.length} สินค้า)</button></div>
@@ -6078,6 +6101,7 @@ function act(a,el){
     /* pixel + reset */
     case 'rcOpen':RC.open=true;render(true);break;
     case 'rcClose':RC.open=false;RC.prev={};RC.sel={};render(true);break;
+    case 'rcStyle':RC.style=el.dataset.v;RC.prev={};render(true);break;
     case 'rcSel':RC.sel[id]=!!el.checked;render(true);break;
     case 'rcAll':D.products.filter(p=>!isBundle(p)&&(p.link||p.bookCover)&&pfmt(p)!=='notion').forEach(p=>RC.sel[p.id]=true);render(true);break;
     case 'rcNone':RC.sel={};render(true);break;
