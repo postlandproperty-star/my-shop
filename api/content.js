@@ -19,7 +19,7 @@ import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory } from '../lib/ads.js';
-import { checkPolicy, policyMark, policyState, POLICY_BOARD } from '../lib/policy.js';
+import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
 import { sendRecoveries } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
 
@@ -477,7 +477,7 @@ async function adWatch() {
     }
     if (dirty) { const cur = await loadAdsAuto(); for (const y of cur) { const z = items.find((q) => q.id === y.id); if (z) { if (z.endSoonAt) y.endSoonAt = z.endSoonAt; if (z.endNotified) y.endNotified = z.endNotified; } } await saveAdsAuto(cur); }
     // วงเงินโฆษณาใกล้หมด (Account spending limit) → แอดจะหยุดเองเมื่อเงินหมด เตือนก่อนเหลือไม่ถึง 2 วัน (เตือนซ้ำทุก 2 วัน)
-    const daily = items.filter((y) => y.status === 'live').reduce((a, y) => a + (Number(y.dailyTHB) || 0), 0), lb = acc.limit?.leftTHB;
+    const runAds = (r.ads || []).filter((a) => ['run', 'review', 'fix'].includes(a.group) && a.dailyTHB), daily = runAds.length ? runAds.reduce((a, x) => a + (Number(x.dailyTHB) || 0), 0) : items.filter((y) => y.status === 'live').reduce((a, y) => a + (Number(y.dailyTHB) || 0), 0), lb = acc.limit?.leftTHB; // ทุกแอดที่วิ่งอยู่ (รวมแคมเปญที่ตั้งเองใน Ads Manager)
     if (daily && lb != null && lb < daily * 2 && (!st.lowBal || now - st.lowBal > 2 * 864e5)) {
       st.lowBal = now; warned.push('lowBal');
       await addTodo({ text: `วงเงินโฆษณาเหลือ ฿${lb.toLocaleString('th-TH')} แอดที่วิ่งอยู่ใช้วันละประมาณ ฿${daily} (พอประมาณ ${Math.max(0, Math.floor(lb / daily))} วัน) ถ้าเงินหมด แอดจะหยุดเองจนกว่าจะเติม เพิ่มวงเงินได้ที่หน้าการชำระเงินของ Facebook`, type: 'do', from: 'analyst', link: acc.limit.page });
@@ -1901,7 +1901,7 @@ ${books}`;
       const ho = handoffBlock(tItems, cfg);
       let mailTask = '';
       try { const pr = await sb('shop_state?id=eq.private&select=data'); if (!pr?.[0]?.data?.mailTemplate?.by) mailTask = '== งานใหม่จากคุณแดน (29 ก.ย.) ถึงน้องคอม ==\nร่างเทมเพลตอีเมลเตือนลูกค้าที่กรอกอีเมลแล้วยังไม่จ่าย (ส่งครั้งเดียว สุภาพ สั้น ไม่เกิน 6 บรรทัด ไม่ใส่ส่วนลดหรือของแถม ไม่เร่งเร้า) แล้ว POST https://my-shop-lake-ten.vercel.app/api/content?action=mail_template JSON {subject, body, source:"community"} ใช้ตัวแทน {สินค้า} {ราคา} {ลิงก์} (body ต้องมี {ลิงก์}) ระบบใช้ข้อความนี้ส่งให้อัตโนมัติในนามน้องคอมทุกรอบ publish (คนละครั้ง หลังค้างจ่าย 1 ชม.) ทีมไม่เห็นอีเมลลูกค้าและไม่ต้องขอ คุณแดนดูผลที่ห้องเอกสาร GET action=mail_template ดูร่างปัจจุบันและจำนวนคนที่รอได้'; } catch (e) {}
-      const topBlock = [cfgBlock(cfg), POLICY_BOARD, FORMAT_BOARD, mailTask, ho.text].filter(Boolean).join('\n\n');
+      const topBlock = [cfgBlock(cfg), MARKET_PLAN, POLICY_BOARD, FORMAT_BOARD, mailTask, ho.text].filter(Boolean).join('\n\n');
       plan = plan ? { ...plan, text: `${topBlock}\n\n${plan.text}` } : { source: 'manual', kind: 'plan', text: topBlock, created_at: cfg.updated_at || new Date().toISOString() };
       const latest = {};
       for (const n of notes) { if (n.kind === 'plan' || n.kind === 'reply' || n.kind === 'chat' || n.kind === 'handoff' || n.status === 'log') continue; const k = n.source || 'manager'; if (!latest[k]) latest[k] = n; }
