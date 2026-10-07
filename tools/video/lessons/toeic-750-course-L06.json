@@ -1,0 +1,286 @@
+{
+ "id": "toeic-750-course-L06",
+ "course": "toeic-750-course",
+ "n": 6,
+ "section": "ฝึกทำข้อสอบ · Part 1",
+ "title": "Part 1 ชุดที่ 1: 12 ข้อ ดูรูปตอบ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 1 ชุดที่ 1\n12 ข้อ ดูรูปตอบ",
+   "sub": "ทำจริง 12 ข้อ พร้อมเฉลยทีละข้อ",
+   "say": "บทนี้เราจะฝึก Part 1 ดูรูปตอบ สิบสองข้อติดกัน ทุกข้อมีเฉลยและบอกว่าข้อผิดผิดเพราะอะไร ใช้สูตรเดิม ใคร ทำอะไร ที่ไหน ของเด่น แล้วเริ่มกันเลย"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 1",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L02_5.jpg",
+   "say": "ข้อแรก รูปคนทำงานในห้องที่กำลังซ่อม ดูว่าเขาใช้มือทำอะไรอยู่",
+   "s": [
+    "A man is climbing a ladder.",
+    "A man is putting on a pair of gloves.",
+    "A man is measuring a wall.",
+    "A wall is being painted."
+   ],
+   "a": 2,
+   "no": [
+    "มีบันได แต่เขา **ยืนอยู่บนพื้น** ไม่ได้ปีน",
+    "ถุงมือ **แขวนอยู่บนบันได** ไม่ได้กำลังใส่",
+    null,
+    "มีกระป๋องสี แต่ **ไม่มีใครกำลังทาสี**"
+   ],
+   "why": "ผู้ชายกำลัง **ใช้ตลับเมตรวัดผนัง** (measuring a wall)",
+   "whySay": "ผู้ชายกำลังใช้ตลับเมตรวัดผนัง ข้อ A มีบันไดจริง แต่กริยา climbing ผิด เพราะเขายืนอยู่บนพื้น"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 2",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L02_6.jpg",
+   "say": "ข้อสอง รูปอู่ซ่อมรถ ดูตำแหน่งของคนกับรถให้ดี",
+   "s": [
+    "A mechanic is working under a vehicle.",
+    "A car is being washed in a garage.",
+    "A man is changing a tire.",
+    "A man is taking off his work clothes."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**is being washed** ต้องมีคนกำลังล้าง ซึ่งไม่มี",
+    "เห็นล้อรถ แต่เขาไม่ได้ **เปลี่ยนยาง**",
+    "เขา **ใส่ชุดช่างอยู่แล้ว** ไม่ได้กำลังถอด"
+   ],
+   "why": "ช่างกำลัง **ทำงานอยู่ใต้รถ** ที่ยกขึ้น (working under a vehicle)",
+   "whySay": "ช่างกำลังยืนทำงานอยู่ใต้รถที่ถูกยกขึ้น ข้อ C มีล้อรถจริง แต่ไม่มีใครเปลี่ยนยาง ส่วนข้อ D คือกับดัก taking off เพราะเขาใส่ชุดอยู่เฉยๆ"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 3",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L03_1.jpg",
+   "say": "ข้อสาม รูปสนามบิน มีคนเยอะ ให้ดูว่าคนส่วนใหญ่กำลังทำอะไร",
+   "s": [
+    "Some passengers are boarding a plane.",
+    "A woman is packing a suitcase.",
+    "Some suitcases are being loaded onto a plane.",
+    "Some travelers are waiting in line."
+   ],
+   "a": 3,
+   "no": [
+    "เห็นเครื่องบินไกลๆ แต่ **ไม่มีใครขึ้นเครื่อง**",
+    "มีกระเป๋าเดินทาง แต่ **ไม่มีใครจัดกระเป๋า**",
+    "**is being loaded** ไม่มีใครกำลังขนกระเป๋าขึ้นเครื่อง",
+    null
+   ],
+   "why": "ผู้โดยสาร **ยืนต่อแถวรอ** ที่เคาน์เตอร์เช็กอิน",
+   "whySay": "ผู้โดยสารกำลังยืนต่อแถวรอเช็กอิน ข้อ A เป็นการเดาเกินรูป เพราะเครื่องบินอยู่ไกลข้างนอก ยังไม่มีใครขึ้นเครื่อง"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 4",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L03_2.jpg",
+   "say": "ข้อสี่ รูปท่าเรือ ดูว่ารถกำลังเคลื่อนไปทางไหน",
+   "s": [
+    "A ferry is sailing out to sea.",
+    "Some cars are coming off a ferry.",
+    "A car is being washed on the pier.",
+    "Some people are fishing from the dock."
+   ],
+   "a": 1,
+   "no": [
+    "เรือ **จอดเทียบท่าอยู่** ไม่ได้แล่นออกไป",
+    null,
+    "**is being washed** ไม่มีใครล้างรถ",
+    "คนยืนดูอยู่เฉยๆ **ไม่มีใครตกปลา**"
+   ],
+   "why": "รถกำลัง **ขับลงจากเรือเฟอร์รี่** ผ่านทางลาดขึ้นฝั่ง",
+   "whySay": "รถกำลังขับลงจากเรือเฟอร์รี่ขึ้นฝั่ง ข้อ A พูดถึงเรือที่อยู่ในรูปจริง แต่เรือจอดอยู่ ไม่ได้แล่นออกไป"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 5",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L04_1.jpg",
+   "say": "ข้อห้า รูปจุดจ่ายเงินในซูเปอร์มาร์เก็ต ดูทั้งคนและของบนเคาน์เตอร์",
+   "s": [
+    "A customer is putting on a jacket.",
+    "Groceries are being put into a paper bag.",
+    "A cashier is stocking some shelves.",
+    "A basket is filled with groceries."
+   ],
+   "a": 3,
+   "no": [
+    "ลูกค้า **ใส่เสื้อแจ็กเก็ตอยู่แล้ว** ไม่ได้กำลังใส่",
+    "ถุงกระดาษวางอยู่เฉยๆ **ไม่มีใครกำลังใส่ของ**",
+    "มีชั้นวางของข้างหลัง แต่แคชเชียร์ **อยู่ที่เคาน์เตอร์**",
+    null
+   ],
+   "why": "ตะกร้า **มีของชำอยู่เต็ม** (filled with groceries)",
+   "whySay": "ตะกร้าบนเคาน์เตอร์มีของชำอยู่เต็ม ข้อ A คือกับดัก putting on เพราะลูกค้าใส่เสื้อแจ็กเก็ตอยู่แล้ว ไม่ได้กำลังใส่"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 6",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L04_4.jpg",
+   "say": "ข้อหก รูปนี้ไม่มีคนตรงกลาง ให้ดูว่าในตู้โชว์มีอะไร",
+   "s": [
+    "A man is trying on a coat.",
+    "Some clothing is on display in a window.",
+    "Some jackets are being hung on a rack.",
+    "Snow is falling on the street."
+   ],
+   "a": 1,
+   "no": [
+    "นี่คือ **หุ่นโชว์** ไม่ใช่คนลองเสื้อ",
+    null,
+    "**is being hung** ไม่มีใครกำลังแขวนเสื้อ",
+    "เกล็ดหิมะเป็นแค่ **ของตกแต่ง** ไม่ได้ตกจริง"
+   ],
+   "why": "เสื้อผ้า **ถูกจัดโชว์อยู่ในตู้กระจก** (on display)",
+   "whySay": "เสื้อผ้าถูกจัดโชว์อยู่ในตู้กระจกหน้าร้าน ข้อ D เดาเกินรูป เพราะเกล็ดหิมะเป็นแค่ของตกแต่ง ไม่ได้มีหิมะตกจริง"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 7",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L04_5.jpg",
+   "say": "ข้อเจ็ด รูปแผนกผลไม้ ดูคนที่อยู่ใกล้ที่สุดก่อน",
+   "s": [
+    "A woman is putting fruit into a bag.",
+    "Some oranges are being stacked in boxes.",
+    "A woman is pushing a shopping cart.",
+    "A man is parking a car."
+   ],
+   "a": 2,
+   "no": [
+    "มีผลไม้และถุง แต่เธอ **ไม่ได้หยิบผลไม้ใส่ถุง**",
+    "**is being stacked** ไม่มีใครกำลังเรียงส้ม",
+    null,
+    "**car** เสียงคล้าย **cart** แต่ในรูปไม่มีรถยนต์"
+   ],
+   "why": "ผู้หญิงกำลัง **เข็นรถเข็นซื้อของ** (pushing a shopping cart)",
+   "whySay": "ผู้หญิงกำลังเข็นรถเข็นซื้อของ ข้อ D เป็นกับดักเสียงคล้าย car กับ cart ฟังให้จบคำ"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 8",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L04_6.jpg",
+   "say": "ข้อแปด รูปร้านของขวัญ ดูว่าพนักงานใช้มือทำอะไร",
+   "s": [
+    "A clerk is tying a ribbon on a gift.",
+    "A woman is putting on a scarf.",
+    "A gift is being opened at a table.",
+    "A woman is paying with a credit card."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ลูกค้า **พันผ้าพันคออยู่แล้ว** ไม่ได้กำลังใส่",
+    "ของขวัญกำลังถูก **ห่อ** ไม่ได้ถูก **เปิด**",
+    "ในรูป **ไม่มีบัตรเครดิต** เป็นการเดาเกินรูป"
+   ],
+   "why": "พนักงานกำลัง **ผูกริบบิ้นบนกล่องของขวัญ**",
+   "whySay": "พนักงานกำลังผูกริบบิ้นบนกล่องของขวัญ ข้อ C ใช้ is being ถูกรูปแบบ แต่กริยา opened ผิด เพราะของขวัญกำลังถูกห่อ"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 9",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L05_1.jpg",
+   "say": "ข้อเก้า รูปในออฟฟิศ สองคนนี้กำลังทำอะไรกัน",
+   "s": [
+    "Two women are shaking their heads.",
+    "Two women are shaking hands.",
+    "A woman is putting on a name badge.",
+    "Some files are being put in a cabinet."
+   ],
+   "a": 1,
+   "no": [
+    "**shaking heads** = ส่ายหัว แต่ทั้งคู่ยิ้มและจับมือกัน",
+    null,
+    "เธอ **คล้องป้ายชื่ออยู่แล้ว** ไม่ได้กำลังใส่",
+    "**is being put** ไม่มีใครเก็บแฟ้มเข้าตู้"
+   ],
+   "why": "ผู้หญิงสองคน **จับมือทักทายกัน** (shaking hands)",
+   "whySay": "ผู้หญิงสองคนกำลังจับมือทักทายกัน ข้อ A ใช้คำว่า shaking เหมือนกัน แต่ shaking heads แปลว่าส่ายหัว ต้องฟังคำหลังกริยาด้วย"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 10",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L05_2.jpg",
+   "say": "ข้อสิบ รูปเคาน์เตอร์ต้อนรับ ดูว่าผู้หญิงคนหน้ากำลังทำอะไร",
+   "s": [
+    "A woman is talking on the phone.",
+    "Some brochures are being handed out.",
+    "A woman is putting on a sweater.",
+    "A woman is filling out a form."
+   ],
+   "a": 3,
+   "no": [
+    "มีโทรศัพท์บนเคาน์เตอร์ แต่ **ไม่มีใครคุยโทรศัพท์**",
+    "แผ่นพับวางอยู่เฉยๆ **ไม่มีใครแจก**",
+    "เธอ **ใส่เสื้อคาร์ดิแกนอยู่แล้ว** ไม่ได้กำลังใส่",
+    null
+   ],
+   "why": "ผู้หญิงกำลัง **กรอกแบบฟอร์ม** บนคลิปบอร์ด (filling out a form)",
+   "whySay": "ผู้หญิงกำลังกรอกแบบฟอร์มบนคลิปบอร์ด ข้อ A มีโทรศัพท์อยู่ในรูปจริง แต่ไม่มีใครคุยโทรศัพท์ คำนามถูก กริยาผิด"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 11",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L05_3.jpg",
+   "say": "ข้อสิบเอ็ด รูปห้องประชุม ดูคนที่ยืนอยู่ก่อน",
+   "s": [
+    "A man is pointing at a screen.",
+    "Some people are leaving the meeting room.",
+    "A projector is being installed.",
+    "Some people are pouring water into glasses."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ทุกคน **นั่งอยู่ในห้อง** ไม่มีใครเดินออก",
+    "**is being installed** ไม่มีใครกำลังติดตั้ง",
+    "มีแก้วน้ำ แต่ **ไม่มีใครรินน้ำ**"
+   ],
+   "why": "ผู้ชายกำลัง **ชี้ไปที่จอ** ที่มีกราฟ (pointing at a screen)",
+   "whySay": "ผู้ชายกำลังชี้ไปที่จอที่มีกราฟ ข้อ D มีแก้วน้ำอยู่จริง แต่ไม่มีใครกำลังรินน้ำ"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 12",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L05_4.jpg",
+   "say": "ข้อสุดท้าย รูปออฟฟิศที่มีหลายคน ดูทั้งคนยืนและคนนั่ง",
+   "s": [
+    "A man is watering a plant.",
+    "A woman is putting on headphones.",
+    "A woman is seated at a desk.",
+    "Some computers are being repaired."
+   ],
+   "a": 2,
+   "no": [
+    "เขาแตะกระถางต้นไม้ แต่ **ไม่ได้รดน้ำ**",
+    "หูฟัง **วางอยู่บนโต๊ะ** ไม่มีใครกำลังใส่",
+    "**is being repaired** ไม่มีใครซ่อมคอมพิวเตอร์",
+    null
+   ],
+   "why": "ผู้หญิง **นั่งอยู่ที่โต๊ะทำงาน** (seated at a desk)",
+   "whySay": "ผู้หญิงนั่งอยู่ที่โต๊ะทำงาน ข้อ A มีต้นไม้จริง แต่ผู้ชายแค่แตะกระถาง ไม่ได้รดน้ำ"
+  },
+  {
+   "type": "end",
+   "h": "สรุป 3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**wearing** (ใส่อยู่) ≠ **putting on / taking off**",
+     "say": "จุดพลาดแรก ชุดนี้มีกับดัก putting on กับ taking off ถึงเจ็ดข้อ ถ้าในรูปแค่ใส่อยู่ ให้ตัดทิ้งเลย"
+    },
+    {
+     "x": "**is being + V3** ต้องเห็นคนกำลังทำ",
+     "say": "จุดพลาดที่สอง is being ต้องเห็นคนกำลังทำอยู่จริง ถ้าของวางอยู่เฉยๆ ประโยคนี้ผิด"
+    },
+    {
+     "x": "คำนามถูก แต่**กริยาผิด** · เสียงคล้าย car / cart",
+     "say": "จุดพลาดที่สาม ได้ยินคำที่อยู่ในรูป อย่าเพิ่งเลือก ต้องเช็กกริยาก่อน และระวังเสียงคล้ายแบบ car กับ cart"
+    }
+   ],
+   "outro": "ทำได้กี่ข้อจากสิบสอง ลองจดไว้ ข้อไหนพลาดให้ย้อนกลับไปดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปฝึกชุดต่อไปกันเลย"
+  }
+ ]
+}

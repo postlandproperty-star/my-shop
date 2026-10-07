@@ -1,0 +1,167 @@
+{
+ "id": "toeic-750-course-L10",
+ "course": "toeic-750-course",
+ "n": 10,
+ "section": "Listening Part 3 · บทสนทนา",
+ "title": "คำถามที่ออกบ่อย + บทสนทนา 3 คน และคำถามกราฟิก",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 3 บทสนทนา\nคำถามที่ออกบ่อย · 3 คน · กราฟิก",
+   "sub": "รู้ว่าคำถามแต่ละแบบต้องฟังตรงไหน แยกเสียง 3 คน อ่านตารางคู่กับเสียง แล้วลองทำจริง 3 ข้อ",
+   "say": "บทนี้เราจะเจาะคำถามที่ออกบ่อยใน Part 3 ว่าแต่ละแบบต้องฟังตรงไหน แล้วไปดูบทสนทนาสามคน กับคำถามกราฟิก ที่หลายคนกลัว ท้ายบทมีบทสนทนาสามคนให้ลองทำสามข้อ"
+  },
+  {
+   "type": "list",
+   "h": "คำถามที่ออกบ่อย 4 แบบ",
+   "say": "คำถามใน Part 3 วนอยู่ไม่กี่แบบ รู้แบบแล้วจะรู้ว่าต้องฟังช่วงไหน",
+   "items": [
+    {
+     "x": "**Main topic** → ฟัง 1–2 ประโยค **แรก**",
+     "sub": "What are the speakers mainly discussing?",
+     "en": "What are the speakers mainly discussing?",
+     "v": "n",
+     "say": "แบบแรก ถามหัวข้อหลัก คำตอบมักอยู่ในหนึ่งหรือสองประโยคแรก เพราะคนเปิดบทสนทนาจะบอกเรื่องเลย"
+    },
+    {
+     "x": "**Detail** → จำคำสำคัญในคำถาม แล้วรอฟัง",
+     "sub": "What does the woman say about the order? · ตัวเลือกมักใช้ **คำพ้องความหมาย**",
+     "en": "What does the woman say about the order?",
+     "v": "n",
+     "say": "แบบที่สอง ถามรายละเอียด ให้จำคำสำคัญในคำถาม เช่น order แล้วรอฟังตรงนั้น ระวัง ตัวเลือกที่ถูกมักใช้คำอื่นที่ความหมายเหมือนกัน ไม่ใช่คำเดิมเป๊ะ"
+    },
+    {
+     "x": "**What will … do next** → ฟัง **ท้าย** บทสนทนา",
+     "sub": "จับคำว่า I'll… · Let me… · I'm going to…",
+     "en": "What will the man probably do next?",
+     "v": "n",
+     "say": "แบบที่สาม ถามว่าจะทำอะไรต่อ คำตอบอยู่ช่วงท้าย ให้จับคำว่า I'll หรือ Let me ของคนที่ถูกถามถึง"
+    },
+    {
+     "x": "**What does the man imply / mean** → ดู **บริบท**",
+     "sub": "\"I've got a client meeting at three.\" = ไปช่วยไม่ได้",
+     "en": "I've got a client meeting at three.",
+     "v": "m",
+     "say": "แบบที่สี่ ถามความหมายแฝงของประโยคที่ยกมา อย่าแปลตรงตัว ประโยคนี้ถ้ามีคนชวนไปช่วยงานบ่ายสาม ความหมายจริงคือ ไปไม่ได้"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "บทสนทนา 3 คน แยกเสียงยังไง",
+   "items": [
+    {
+     "x": "ฟังประกาศ **with three speakers** ก่อนเริ่ม",
+     "sub": "Questions … refer to the following conversation with three speakers.",
+     "say": "ก่อนเริ่ม ข้อสอบจะบอกว่าเป็นบทสนทนาสามคน ได้ยินคำว่า three speakers ให้เตรียมใจแยกเสียงเลย"
+    },
+    {
+     "x": "มัก **หญิง 1 + ชาย 2** หรือกลับกัน · สำเนียงต่างกัน",
+     "sub": "แยกผู้ชาย 2 คนด้วยสำเนียง เช่น อังกฤษ กับ ออสเตรเลีย",
+     "say": "ส่วนใหญ่เป็นผู้หญิงหนึ่ง ผู้ชายสอง หรือกลับกัน คนเพศเดียวกันจะมีสำเนียงต่างกัน ให้จำว่าใครพูดอะไร"
+    },
+    {
+     "x": "ฟัง **ชื่อที่ถูกเรียก**",
+     "sub": "คนที่ถูกเรียกชื่อ = คนที่พูดต่อ หรือคนที่ต้องทำงานนั้น",
+     "en": "Marco, can you check the budget before Friday?",
+     "v": "q",
+     "say": "จุดสำคัญคือชื่อที่ถูกเรียก คนที่ถูกเรียกชื่อ มักเป็นคนพูดประโยคถัดไป หรือเป็นคนที่ต้องไปทำงานนั้น คำถามก็ชอบถามถึงคนนี้"
+    },
+    {
+     "x": "**the men** ≠ **one of the men**",
+     "sub": "the men = ทั้ง 2 คน · one of the men = คนใดคนหนึ่ง",
+     "say": "อ่านคำถามให้ดี ถ้าเขียนว่า the men หมายถึงผู้ชายทั้งสองคน แต่ถ้าเขียนว่า one of the men คือคนเดียวก็พอ"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "คำถามกราฟิก: Look at the graphic",
+   "items": [
+    {
+     "x": "มี **ตาราง/รายการ** พิมพ์ไว้ในข้อสอบ",
+     "sub": "ตารางราคา · ตารางเวลา · ผังชั้น · แผนที่",
+     "say": "ชุดท้ายๆ ของ Part 3 จะมีภาพพิมพ์ไว้ในข้อสอบ เช่น ตารางราคา ตารางเวลา หรือผังชั้น คำถามขึ้นต้นด้วย Look at the graphic ต้องดูตารางคู่กับเสียง"
+    },
+    {
+     "x": "ก่อนฟัง: ดูว่าตารางมี **2 คอลัมน์** อะไร",
+     "sub": "Floor 2 · Marketing | Floor 3 · Accounting | Floor 4 · HR",
+     "say": "ก่อนเสียงเริ่ม ให้ดูว่าตารางมีสองคอลัมน์อะไรบ้าง สมมติเป็นผังตึก มีเลขชั้น กับชื่อแผนก"
+    },
+    {
+     "x": "เสียงพูด **คอลัมน์หนึ่ง** → คำตอบอยู่ **อีกคอลัมน์**",
+     "sub": "ตัวเลือก = เลขชั้น · ได้ยิน Accounting → ตอบ **Floor 3**",
+     "en": "I'm here to see someone in Accounting.",
+     "v": "m",
+     "say": "ถ้าตัวเลือกเป็นเลขชั้น เสียงจะไม่พูดเลขชั้นตรงๆ แต่พูดชื่อแผนกแทน ได้ยิน Accounting ก็ไปดูตาราง แล้วตอบชั้นสาม"
+    },
+    {
+     "x": "ระวัง **ข้อมูลเปลี่ยน**: actually · instead",
+     "sub": "ตอบตามข้อมูล **ล่าสุด** → Floor 4",
+     "en": "Actually, Accounting moved to the fourth floor last month.",
+     "v": "q",
+     "say": "แต่ระวัง บางทีอีกคนจะแก้ข้อมูล เช่น บอกว่าแผนกนี้ย้ายไปชั้นสี่แล้ว ต้องตอบตามข้อมูลล่าสุดเสมอ"
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ลองทำ · บทสนทนา 3 คน",
+   "listenLabel": "ฟังบทสนทนา 3 คน (หญิง 1 · ชาย 2)",
+   "say": "ลองทำจริง บทสนทนาสามคน ผู้หญิงหนึ่ง ผู้ชายสอง อ่านคำถามสามข้อบนจอก่อน แล้วฟัง",
+   "lines": [
+    {"v": "q", "t": "Thanks for meeting with me, Daniel and Ken. We still need a venue for the team retreat in March."},
+    {"v": "m", "t": "I contacted the Lakeview Hotel. Its conference room is perfect, but it's fully booked on the weekend we wanted."},
+    {"v": "r", "t": "Why don't we move the retreat one week later? Most of the staff are free then."},
+    {"v": "q", "t": "That could work. Daniel, could you call the hotel this afternoon and ask about that weekend?"},
+    {"v": "m", "t": "Sure. I'll also ask if they offer a group rate for forty people."},
+    {"v": "r", "t": "Great. And I'll send everyone a short survey to confirm the new date."}
+   ],
+   "qs": [
+    {
+     "q": "What are the speakers mainly discussing?",
+     "o": ["Hiring new staff", "Planning a company event", "Renovating a conference room", "Choosing a new supplier"],
+     "a": 1,
+     "why": "ประโยคแรก: **a venue for the team retreat** = งานของบริษัท",
+     "no": ["ไม่มีการรับคนใหม่", null, "conference room เป็นห้องของโรงแรม ไม่ได้รีโนเวต", "ไม่มีการเลือกซัพพลายเออร์"],
+     "whySay": "ประโยคแรกบอกเลยว่ากำลังหาที่จัด team retreat ซึ่งก็คืองานของบริษัท ข้อ C มีคำว่า conference room ที่ได้ยิน แต่ไม่มีใครพูดถึงการรีโนเวต"
+    },
+    {
+     "q": "What does one of the men suggest?",
+     "o": ["Changing the date", "Finding a cheaper hotel", "Inviting fewer people", "Holding the event online"],
+     "a": 0,
+     "why": "Ken: **move the retreat one week later** = เลื่อนวัน",
+     "no": [null, "ไม่มีใครเสนอหาโรงแรมที่ถูกกว่า", "ไม่มีใครเสนอลดจำนวนคน", "ไม่ได้พูดถึงการจัดออนไลน์"],
+     "whySay": "เคนเสนอว่า Why don't we move the retreat one week later แปลว่าเลื่อนไปหนึ่งสัปดาห์ ตัวเลือกใช้คำใหม่ว่า changing the date"
+    },
+    {
+     "q": "What will Daniel do this afternoon?",
+     "o": ["Send a survey", "Visit a venue", "Book a flight", "Contact a hotel"],
+     "a": 3,
+     "why": "ผู้หญิงเรียกชื่อ **Daniel, could you call the hotel this afternoon** → Daniel ตอบ Sure",
+     "no": ["ส่งแบบสอบถามคืองานของ Ken", "ไม่มีใครไปดูสถานที่", "ไม่มีการจองเที่ยวบิน", null],
+     "whySay": "ผู้หญิงเรียกชื่อแดเนียล ให้โทรหาโรงแรมบ่ายนี้ แล้วเขาก็ตอบรับ ข้อ A ส่งแบบสอบถามเป็นงานของเคน ไม่ใช่แดเนียล นี่แหละกับดักของบทสนทนาสามคน"
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 10",
+   "items": [
+    {
+     "x": "Main topic ฟังต้น · Next ฟังท้าย · Imply ดูบริบท",
+     "say": "สรุป หัวข้อหลักฟังช่วงต้น จะทำอะไรต่อฟังช่วงท้าย ความหมายแฝงดูบริบท"
+    },
+    {
+     "x": "3 คน: ฟังชื่อที่ถูกเรียก อย่าสลับงานของใครกับใคร",
+     "say": "บทสนทนาสามคน ให้ฟังชื่อที่ถูกเรียก และจำให้ได้ว่าใครรับงานอะไร เหมือนข้อสามเมื่อกี้ ที่งานของเคนมาหลอกเป็นตัวเลือก"
+    },
+    {
+     "x": "กราฟิก: ได้ยินคอลัมน์หนึ่ง ตอบอีกคอลัมน์",
+     "say": "คำถามกราฟิก เสียงจะพูดคอลัมน์หนึ่ง แต่คำตอบอยู่อีกคอลัมน์ และต้องตอบตามข้อมูลล่าสุด"
+    }
+   ],
+   "outro": "ฝึกแบบนี้บ่อยๆ หูจะแยกคนพูดได้เร็วขึ้นเอง กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

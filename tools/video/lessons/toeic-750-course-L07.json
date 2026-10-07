@@ -1,0 +1,485 @@
+{
+ "id": "toeic-750-course-L07",
+ "course": "toeic-750-course",
+ "n": 7,
+ "section": "ฝึกทำข้อสอบ · Part 2",
+ "title": "Part 2 ชุดที่ 1: 25 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 2 ชุดที่ 1\nฝึกเต็ม 25 ข้อ",
+   "sub": "ผสมทุกประเภทเหมือนสอบจริง พร้อมเฉลยทีละข้อ",
+   "say": "บทนี้เราจะฝึก Part 2 เต็มชุด ยี่สิบห้าข้อ ผสมทุกแบบเหมือนข้อสอบจริง ฟังคำแรกให้ทัน ตัดกับดักทิ้ง แล้วเลือกในใจ เฉลยทีละข้อ เริ่มกันเลย"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 1 / 25",
+   "q": "Where can I find the visitor parking area?",
+   "o": [
+    "I parked there yesterday.",
+    "Behind the main building.",
+    "It's twenty dollars a day."
+   ],
+   "a": 1,
+   "no": [
+    "**parked** คำซ้ำ ไม่ได้บอกที่",
+    null,
+    "ตอบ **ราคา** ผิดประเภท"
+   ],
+   "why": "**Where** ถามสถานที่ → หลังตึกใหญ่",
+   "whySay": "Where ถามสถานที่ คำตอบคืออยู่หลังตึกใหญ่",
+   "say": "ข้อแรก"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 2 / 25",
+   "q": "Have you finished the sales report?",
+   "o": [
+    "The sales were up last month.",
+    "On the fourth floor.",
+    "I'm still waiting for the final figures."
+   ],
+   "a": 2,
+   "no": [
+    "**sales** คำซ้ำ ไม่ได้ตอบ",
+    "ตอบ **สถานที่** ผิดประเภท",
+    null
+   ],
+   "why": "คำตอบอ้อม = ยังไม่เสร็จ รอตัวเลขอยู่",
+   "whySay": "ข้อนี้ไม่มีคำว่า No แต่ความหมายคือยังไม่เสร็จ เพราะรอตัวเลขสุดท้ายอยู่"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 3 / 25",
+   "q": "When is the client meeting scheduled?",
+   "o": [
+    "Let me check the calendar.",
+    "In Conference Room B.",
+    "Yes, I met the client."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ตอบ **สถานที่** แต่ถาม When",
+    "ตอบ **Yes** กับ Wh- และ client ซ้ำ"
+   ],
+   "why": "คำตอบอ้อม **Let me check** ใช้ได้กับทุกคำถาม",
+   "whySay": "ถามว่าประชุมเมื่อไร คำตอบคือขอเช็กปฏิทินก่อน คำตอบอ้อมแบบนี้ถูกบ่อยมาก"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 4 / 25",
+   "q": "Would you like to pay by card or in cash?",
+   "o": [
+    "Card, please.",
+    "Yes, I'd like that.",
+    "The cashier is very kind."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ตอบ **Yes** กับคำถามให้เลือก",
+    "**cashier** เสียงคล้าย cash"
+   ],
+   "why": "ถาม **A or B** → เลือกบัตร",
+   "whySay": "คำถามให้เลือก ตอบด้วยการเลือกหนึ่งอย่าง คือจ่ายด้วยบัตร"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 5 / 25",
+   "q": "Who's responsible for ordering office supplies?",
+   "o": [
+    "Some pens and paper.",
+    "Yes, I ordered them.",
+    "That would be Karen in admin."
+   ],
+   "a": 2,
+   "no": [
+    "ตอบ **ของ** ไม่ใช่คน",
+    "ตอบ **Yes** กับ Wh- question",
+    null
+   ],
+   "why": "**Who** ถามคน → Karen ฝ่ายธุรการ",
+   "whySay": "Who ถามคน คำตอบคือคาเรนจากฝ่ายธุรการ"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 6 / 25",
+   "q": "I can't find my security badge.",
+   "o": [
+    "The security guard is new.",
+    "Did you check your desk drawer?",
+    "He found it last week."
+   ],
+   "a": 1,
+   "no": [
+    "**security** คำซ้ำ ไม่เกี่ยว",
+    null,
+    "**He** ไม่รู้ว่าใคร และเป็นอดีต"
+   ],
+   "why": "บอกปัญหา → ช่วยแนะ ลองดูลิ้นชักหรือยัง",
+   "whySay": "ประโยคบอกเล่าแจ้งปัญหา คำตอบที่ดีคือช่วยแนะ ว่าดูในลิ้นชักโต๊ะหรือยัง"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 7 / 25",
+   "q": "Why was the flight to Singapore delayed?",
+   "o": [
+    "Gate twelve, I think.",
+    "It's a direct flight.",
+    "Because of bad weather."
+   ],
+   "a": 2,
+   "no": [
+    "ตอบ **สถานที่** แต่ถาม Why",
+    "**flight** คำซ้ำ ไม่ได้ตอบ",
+    null
+   ],
+   "why": "**Why** ถามเหตุผล → เพราะอากาศไม่ดี",
+   "whySay": "Why ถามเหตุผล คำตอบคือเพราะอากาศไม่ดี"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 8 / 25",
+   "q": "Are you going to the trade show in Seoul next month?",
+   "o": [
+    "I haven't decided yet.",
+    "In the main exhibition hall.",
+    "It was a great show."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ตอบ **สถานที่** ไม่ได้ตอบว่าไปไหม",
+    "**show** คำซ้ำ และเป็นอดีต"
+   ],
+   "why": "คำตอบอ้อม = ยังไม่ได้ตัดสินใจ",
+   "whySay": "ถามว่าจะไปงานแสดงสินค้าไหม คำตอบคือยังไม่ได้ตัดสินใจ ไม่มี Yes หรือ No ก็ถูกได้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 9 / 25",
+   "q": "How do I get to the convention center?",
+   "o": [
+    "About three hundred people.",
+    "Take the subway to Central Station.",
+    "Yes, it's very convenient."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ **จำนวนคน** ผิดประเภท",
+    null,
+    "**convenient** เสียงคล้าย convention"
+   ],
+   "why": "**How** ถามวิธี → นั่งรถไฟใต้ดิน",
+   "whySay": "How ถามวิธีไป คำตอบคือนั่งรถไฟใต้ดินไปสถานีเซ็นทรัล"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 10 / 25",
+   "q": "Could you send me the updated price list?",
+   "o": [
+    "Prices went up last year.",
+    "Sure, I'll e-mail it this afternoon.",
+    "It's not on the list."
+   ],
+   "a": 1,
+   "no": [
+    "**price** คำซ้ำ ไม่ได้ตอบ",
+    null,
+    "**list** คำซ้ำ ไม่ได้ตอบ"
+   ],
+   "why": "ขอร้อง → รับปาก จะอีเมลให้บ่ายนี้",
+   "whySay": "ประโยคขอร้อง คำตอบคือได้เลย จะส่งอีเมลให้บ่ายนี้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 11 / 25",
+   "q": "Should we hold the party indoors or outside?",
+   "o": [
+    "It depends on the weather.",
+    "Yes, we should.",
+    "Please hold the door."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ตอบ **Yes** กับคำถามให้เลือก",
+    "**hold** คำซ้ำ ความหมายอื่น"
+   ],
+   "why": "คำตอบอ้อม = แล้วแต่อากาศ",
+   "whySay": "คำถามให้เลือก แต่คำตอบไม่เลือกทั้งสองอย่าง บอกว่าแล้วแต่อากาศ ซึ่งถูกได้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 12 / 25",
+   "q": "Isn't the cafeteria open on weekends?",
+   "o": [
+    "The window is open.",
+    "I usually have lunch at noon.",
+    "Only on Saturdays."
+   ],
+   "a": 2,
+   "no": [
+    "**open** คำซ้ำ ไม่เกี่ยว",
+    "เรื่อง **อาหาร** เกี่ยวข้อง แต่ไม่ได้ตอบ",
+    null
+   ],
+   "why": "ถาม Yes/No → เปิดแค่วันเสาร์",
+   "whySay": "ถามว่าโรงอาหารเปิดวันหยุดไม่ใช่เหรอ คำตอบคือเปิดแค่วันเสาร์"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 13 / 25",
+   "q": "How long will the renovation take?",
+   "o": [
+    "The lobby, mostly.",
+    "About three weeks.",
+    "It's a long hallway."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ **ที่ไหน** แต่ถามระยะเวลา",
+    null,
+    "**long** คำซ้ำ ความหมายอื่น"
+   ],
+   "why": "**How long** ถามระยะเวลา → 3 สัปดาห์",
+   "whySay": "How long ถามระยะเวลา คำตอบคือประมาณสามสัปดาห์"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 14 / 25",
+   "q": "Let's review the contract before the meeting.",
+   "o": [
+    "My contact number has changed.",
+    "It was a positive review.",
+    "Good idea. I'll print a copy."
+   ],
+   "a": 2,
+   "no": [
+    "**contact** เสียงคล้าย contract",
+    "**review** คำซ้ำ ความหมายอื่น",
+    null
+   ],
+   "why": "ชวน **Let's** → ตกลง จะพิมพ์มาให้",
+   "whySay": "Let's เป็นการชวน คำตอบคือดีเลย เดี๋ยวพิมพ์สำเนามาให้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 15 / 25",
+   "q": "Who's going to pick up the clients from the airport?",
+   "o": [
+    "I think Daniel is.",
+    "At Terminal 2.",
+    "They picked the blue one."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ตอบ **สถานที่** แต่ถาม Who",
+    "**picked** คำซ้ำ ความหมายอื่น"
+   ],
+   "why": "**Who** ถามคน → แดเนียล",
+   "whySay": "Who ถามคน คำตอบคือคิดว่าแดเนียลจะไปรับ"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 16 / 25",
+   "q": "Did the new interns arrive this morning?",
+   "o": [
+    "Internet access is free.",
+    "Every morning at eight.",
+    "Not yet. Their train is running late."
+   ],
+   "a": 2,
+   "no": [
+    "**Internet** เสียงคล้าย interns",
+    "**morning** คำซ้ำ ตอบความถี่",
+    null
+   ],
+   "why": "ถาม Yes/No → ยัง รถไฟมาช้า",
+   "whySay": "ถามว่าเด็กฝึกงานมาถึงหรือยัง คำตอบคือยัง เพราะรถไฟมาช้า"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 17 / 25",
+   "q": "Where did you put the extra chairs?",
+   "o": [
+    "For tomorrow's seminar.",
+    "In the storage room.",
+    "Sure, I'll share them."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ **เหตุผล** แต่ถาม Where",
+    null,
+    "**share** เสียงคล้าย chairs"
+   ],
+   "why": "**Where** ถามที่ → ห้องเก็บของ",
+   "whySay": "Where ถามที่ คำตอบคือในห้องเก็บของ"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 18 / 25",
+   "q": "Please submit your travel expenses by Friday.",
+   "o": [
+    "OK, I'll do that today.",
+    "The trip was expensive.",
+    "Every Friday morning."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**expensive** เสียงคล้าย expenses",
+    "**Friday** คำซ้ำ ตอบความถี่"
+   ],
+   "why": "ขอร้อง → รับปาก จะทำวันนี้",
+   "whySay": "ประโยคขอร้องให้ส่งค่าเดินทาง คำตอบคือได้ เดี๋ยวทำวันนี้เลย"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 19 / 25",
+   "q": "Do you want the report printed or sent by e-mail?",
+   "o": [
+    "Yes, the printer is working.",
+    "E-mail is fine.",
+    "I read the report yesterday."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ **Yes** และ printer เสียงคล้าย",
+    null,
+    "**report** คำซ้ำ ไม่ได้เลือก"
+   ],
+   "why": "ถาม **A or B** → เลือกอีเมล",
+   "whySay": "คำถามให้เลือก คำตอบคือส่งอีเมลก็ได้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 20 / 25",
+   "q": "When will the new software be installed?",
+   "o": [
+    "I'm not sure. Ask the IT team.",
+    "Yes, it was installed.",
+    "The software is expensive."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ตอบ **Yes** กับ Wh- question",
+    "**software** คำซ้ำ ไม่ได้ตอบ"
+   ],
+   "why": "คำตอบอ้อม **I'm not sure** + บอกคนที่รู้",
+   "whySay": "ถามว่าจะติดตั้งเมื่อไร คำตอบคือไม่แน่ใจ ลองถามทีมไอที คำตอบอ้อมแบบนี้ถูกบ่อย"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 21 / 25",
+   "q": "How much does it cost to ship this package?",
+   "o": [
+    "By express mail.",
+    "Yes, the package arrived.",
+    "It depends on the weight."
+   ],
+   "a": 2,
+   "no": [
+    "ตอบ **วิธีส่ง** แต่ถามราคา",
+    "ตอบ **Yes** และ package ซ้ำ",
+    null
+   ],
+   "why": "คำตอบอ้อม = แล้วแต่น้ำหนัก",
+   "whySay": "How much ถามราคา คำตอบคือแล้วแต่น้ำหนัก ยังบอกราคาไม่ได้ แต่ตอบตรงเรื่อง"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 22 / 25",
+   "q": "Is Mr. Tanaka coming to the meeting today?",
+   "o": [
+    "Yes, the meeting went well.",
+    "He's on a business trip this week.",
+    "In Meeting Room 4."
+   ],
+   "a": 1,
+   "no": [
+    "**meeting** ซ้ำ และพูดถึงอดีต",
+    null,
+    "ตอบ **สถานที่** ไม่ได้ตอบ"
+   ],
+   "why": "คำตอบอ้อม = ไม่มา เพราะไปทำงานต่างที่",
+   "whySay": "ถามว่าคุณทานากะจะมาประชุมไหม คำตอบคือเขาไปทำงานนอกสถานที่ทั้งสัปดาห์ แปลว่าไม่มา"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 23 / 25",
+   "q": "The air conditioner in the lobby is making a strange noise.",
+   "o": [
+    "Next to the elevator.",
+    "Yes, the lobby is large.",
+    "I'll report it to maintenance."
+   ],
+   "a": 2,
+   "no": [
+    "ตอบ **สถานที่** ไม่เกี่ยว",
+    "**lobby** คำซ้ำ ไม่ได้ตอบ",
+    null
+   ],
+   "why": "แจ้งปัญหา → จะแจ้งฝ่ายซ่อมบำรุง",
+   "whySay": "ประโยคบอกเล่าแจ้งปัญหา คำตอบคือจะแจ้งฝ่ายซ่อมบำรุงให้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 24 / 25",
+   "q": "What did you think of the new marketing plan?",
+   "o": [
+    "It looks very promising.",
+    "At the market downtown.",
+    "Yes, I planned it."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**market** เสียงคล้าย marketing",
+    "ตอบ **Yes** และ plan ซ้ำ"
+   ],
+   "why": "ถาม **ความเห็น** → ดูมีอนาคตมาก",
+   "whySay": "What did you think of ถามความเห็น คำตอบคือดูมีแววดีมาก"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 25 / 25",
+   "q": "Why is the main entrance closed today?",
+   "o": [
+    "It's close to the station.",
+    "They're repairing the doors.",
+    "Yes, it's closed."
+   ],
+   "a": 1,
+   "no": [
+    "**close** เสียงคล้าย closed",
+    null,
+    "ตอบ **Yes** และ closed ซ้ำ"
+   ],
+   "why": "**Why** ถามเหตุผล → กำลังซ่อมประตู",
+   "whySay": "Why ถามเหตุผล คำตอบคือกำลังซ่อมประตูอยู่"
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**เสียงคล้าย · คำซ้ำ** : cashier, contact, Internet",
+     "say": "จุดพลาดแรก เลือกข้อที่มีเสียงคล้ายหรือคำซ้ำกับคำถาม เช่น cashier contact และ Internet ข้อพวกนี้มักเป็นตัวหลอก"
+    },
+    {
+     "x": "**ผิดประเภท** : Wh- หรือ A or B ตอบ Yes ไม่ได้",
+     "say": "จุดพลาดที่สอง ตอบผิดประเภท ถามที่แต่ตอบเวลา หรือตอบ Yes กับคำถาม Wh และคำถามให้เลือก"
+    },
+    {
+     "x": "**คำตอบอ้อม** : Let me check · I'm not sure · It depends",
+     "say": "จุดพลาดที่สาม ไม่กล้าเลือกคำตอบอ้อม ในชุดนี้มีถึงเจ็ดข้อที่คำตอบอ้อมเป็นข้อถูก"
+    }
+   ],
+   "outro": "เก่งมาก จบชุดที่หนึ่งแล้ว นับดูว่าได้กี่ข้อ ถ้าได้ยี่สิบข้อขึ้นไปถือว่าพร้อมสำหรับเจ็ดร้อยห้าสิบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

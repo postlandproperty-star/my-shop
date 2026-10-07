@@ -1,0 +1,62 @@
+{"id":"toeic-750-course-L11","course":"toeic-750-course","n":11,"section":"ฝึกทำข้อสอบ · Part 3","title":"Part 3 ชุดที่ 1: 5 บทสนทนา 15 ข้อ","slides":[
+{"type":"cover","h":"Part 3 ชุดที่ 1\n5 บทสนทนา 15 ข้อ","sub":"ออฟฟิศ · ร้านค้า · โรงแรม · สายการบิน · ฝ่ายบุคคล","say":"บทนี้เราจะฝึก Part 3 ห้าบทสนทนา รวมสิบห้าข้อ ก่อนฟังแต่ละบท ให้อ่านคำถามสามข้อบนจอไว้ก่อน แล้วเลือกคำตอบในใจ เดี๋ยวเฉลยทีละข้อ เริ่มกันเลย"},
+{"type":"conv","h":"บทสนทนา 1 · ออฟฟิศ","say":"บทสนทนาที่หนึ่ง ในออฟฟิศ อ่านคำถามสามข้อก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Kevin, have you finished the slides for Friday's budget meeting with the finance director?"},
+ {"v":"m","t":"Almost. I'm still waiting for the sales figures from our Osaka branch. They were supposed to arrive this morning."},
+ {"v":"q","t":"Hmm, the meeting has been moved up to Thursday, so we really need them today."},
+ {"v":"m","t":"In that case, I'll call the Osaka manager directly after lunch."},
+ {"v":"q","t":"Good idea. And please send me the draft tonight so I can review it before the meeting."}],
+ "qs":[
+ {"q":"What are the speakers mainly discussing?","o":["Preparing for a meeting","Hiring a finance director","Opening a new branch","Planning a trip to Osaka"],"a":0,"why":"ทั้งบทคุยเรื่อง **ทำสไลด์ให้ทันประชุมงบประมาณ**","whySay":"ทั้งบทสนทนาคุยเรื่องทำสไลด์ให้ทันประชุมงบประมาณ คำถาม main topic ให้ดูภาพรวม ไม่ใช่คำที่ได้ยินแวบเดียว","no":[null,"finance director แค่คนเข้าประชุม","Osaka branch มีอยู่แล้ว","ไม่มีใครจะไป Osaka"]},
+ {"q":"What does the woman say about the meeting?","o":["It will be held online.","It has been moved to an earlier day.","It will include the Osaka manager.","It has been canceled."],"a":1,"why":"**moved up to Thursday** = เลื่อนมาเร็วขึ้น จากวันศุกร์","whySay":"ผู้หญิงบอกว่า moved up to Thursday คือเลื่อนเร็วขึ้นจากวันศุกร์เป็นวันพฤหัส move up แปลว่าเลื่อนให้เร็วขึ้น จำไว้เลย","no":["ไม่ได้พูดถึงออนไลน์",null,"ผู้จัดการ Osaka แค่จะถูกโทรหา","ไม่ได้ยกเลิก แค่เลื่อน"]},
+ {"q":"What will the man do after lunch?","o":["Review a draft","Visit a branch","Contact a manager","Revise a budget"],"a":2,"why":"**I'll call the Osaka manager** = Contact a manager","whySay":"ผู้ชายบอกว่าจะโทรหาผู้จัดการสาขาโอซาก้าหลังมื้อเที่ยง ส่วนตรวจร่างเป็นงานของผู้หญิง ระวังสลับคน","no":["คนตรวจร่างคือผู้หญิง","จะโทร ไม่ได้ไปที่สาขา",null,"ไม่ได้พูดถึงแก้งบ"]}]},
+{"type":"conv","h":"บทสนทนา 2 · ร้านค้า","say":"บทสนทนาที่สอง ที่ร้านเครื่องใช้ไฟฟ้า อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"r","t":"Excuse me, I bought this coffee maker here last week, but it stopped heating yesterday."},
+ {"v":"q","t":"I'm sorry to hear that. Do you have your receipt with you?"},
+ {"v":"r","t":"Yes, here it is. I'd rather have a replacement than a refund, if possible."},
+ {"v":"q","t":"Unfortunately, we're out of that model right now. We're expecting a delivery on Saturday, though."},
+ {"v":"r","t":"Saturday works. I live just around the corner."},
+ {"v":"q","t":"Great. I'll put one aside for you and call you when it arrives."}],
+ "qs":[
+ {"q":"What problem does the man mention?","o":["A price was incorrect.","A receipt is missing.","A delivery was late.","A product is not working."],"a":3,"why":"**stopped heating** = เครื่องเสีย ใช้งานไม่ได้","whySay":"ผู้ชายบอกว่าเครื่องชงกาแฟ stopped heating คือไม่ร้อนแล้ว แปลว่าสินค้าใช้งานไม่ได้","no":["ไม่มีเรื่องราคา","เขามีใบเสร็จมาด้วย","ของยังไม่ถึง แต่ไม่ได้บอกว่าช้า",null]},
+ {"q":"What does the man imply when he says, \"I live just around the corner\"?","o":["He can easily come back to the store.","He would like a home delivery.","He works at a nearby store.","He has just moved to the area."],"a":0,"why":"บ้านอยู่ใกล้ = **กลับมารับของวันเสาร์ได้สบาย**","whySay":"เขาพูดต่อจากว่าวันเสาร์ได้ บ้านอยู่แค่หัวมุม แปลว่ากลับมารับของได้ง่าย คำถามเจตนาต้องดูประโยคก่อนหน้าด้วย","no":[null,"ไม่ได้ขอให้ส่งถึงบ้าน","ไม่ได้พูดถึงที่ทำงาน","ไม่ได้บอกว่าเพิ่งย้ายมา"]},
+ {"q":"What does the woman say she will do?","o":["Give the man a refund","Reserve an item for him","Repair the coffee maker","Call another store"],"a":1,"why":"**put one aside for you** = เก็บไว้ให้ = Reserve","whySay":"ผู้หญิงบอกว่า I'll put one aside for you คือเก็บเครื่องไว้ให้หนึ่งเครื่อง ตรงกับ reserve an item","no":["ผู้ชายขอเปลี่ยน ไม่เอาเงินคืน",null,"ไม่ได้บอกว่าจะซ่อม","จะโทรหาลูกค้า ไม่ใช่ร้านอื่น"]}]},
+{"type":"conv","h":"บทสนทนา 3 · โรงแรม","say":"บทสนทนาที่สาม ที่โรงแรม อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Good evening, and welcome to the Harbor View Hotel. How may I help you?"},
+ {"v":"m","t":"Hi, I have a reservation under the name Daniel Price, for three nights."},
+ {"v":"q","t":"Yes, Mr. Price, your room is ready. I'm afraid the pool is closed for repairs this week, though."},
+ {"v":"m","t":"That's a shame. Is there a gym I could use instead?"},
+ {"v":"q","t":"Of course. The fitness center on the second floor is open twenty-four hours, and it's free for guests."},
+ {"v":"m","t":"Perfect. Could I also get a wake-up call at six tomorrow morning?"}],
+ "qs":[
+ {"q":"Why is the man speaking to the woman?","o":["To cancel a reservation","To ask for directions","To check in","To make a complaint"],"a":2,"why":"แจ้งชื่อที่จองไว้ + ห้องพร้อม = **เช็กอิน**","whySay":"ผู้ชายแจ้งชื่อที่จองไว้สามคืน แล้วพนักงานบอกว่าห้องพร้อม แปลว่ากำลังเช็กอิน","no":["ไม่ได้ยกเลิกการจอง","ไม่ได้ถามทาง",null,"แค่เสียดายเรื่องสระ ไม่ได้ร้องเรียน"]},
+ {"q":"What does the woman say about the fitness center?","o":["It is closed for repairs.","It charges a small fee.","It is on the top floor.","It is open all day and night."],"a":3,"why":"**open twenty-four hours** = open all day and night","whySay":"พนักงานบอกว่าฟิตเนสเปิดยี่สิบสี่ชั่วโมง ข้อสอบเปลี่ยนคำเป็น all day and night ข้อถูกมักพูดใหม่ด้วยคำอื่นแบบนี้","no":["ที่ปิดซ่อมคือสระว่ายน้ำ","ฟรีสำหรับแขก","อยู่ชั้นสอง",null]},
+ {"q":"What does the man ask for at the end of the conversation?","o":["A wake-up call","A room upgrade","A late checkout","A pool pass"],"a":0,"why":"**Could I also get a wake-up call at six**","whySay":"ประโยคสุดท้าย ผู้ชายขอให้โทรปลุกตอนหกโมงเช้า คือ wake-up call","no":[null,"ไม่ได้ขอเปลี่ยนห้อง","ไม่ได้พูดถึงเวลาเช็กเอาต์","สระปิดอยู่"]}]},
+{"type":"conv","h":"บทสนทนา 4 · สายการบิน","say":"บทสนทนาที่สี่ ที่ประตูขึ้นเครื่อง อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"r","t":"Hello, I'm on Flight 208 to Singapore. The board says it's delayed. Do you know why?"},
+ {"v":"q","t":"Yes, sir. The plane is arriving late from Hong Kong because of a storm there. We now expect to board at nine-forty."},
+ {"v":"r","t":"Hmm, I only have fifty minutes to make my connection in Singapore."},
+ {"v":"q","t":"Let me check. Your connecting flight is also delayed, so you should be fine."},
+ {"v":"r","t":"That's a relief. Thanks for checking."},
+ {"v":"q","t":"You're welcome. And please take this meal voucher. You can use it at any restaurant in the terminal."}],
+ "qs":[
+ {"q":"Why is Flight 208 delayed?","o":["A crew member is sick.","There was bad weather.","A part needs replacing.","The airport is crowded."],"a":1,"why":"**because of a storm** = อากาศไม่ดี","whySay":"เครื่องมาช้าจากฮ่องกงเพราะมีพายุ storm ข้อสอบเปลี่ยนเป็น bad weather","no":["ไม่ได้พูดถึงลูกเรือ",null,"ไม่มีเรื่องซ่อมเครื่อง","ไม่ได้บอกว่าสนามบินแน่น"]},
+ {"q":"Why does the man say, \"I only have fifty minutes to make my connection\"?","o":["He wants to change his destination.","He wants to buy some food.","He is worried about missing his next flight.","He is asking for a refund."],"a":2,"why":"เวลาต่อเครื่องน้อย = **กลัวตกเที่ยวบินต่อ**","whySay":"เครื่องดีเลย์ แล้วเขาบอกว่ามีเวลาต่อเครื่องแค่ห้าสิบนาที แปลว่ากังวลว่าจะตกเที่ยวบินถัดไป","no":["ยังไปสิงคโปร์เหมือนเดิม","คูปองอาหารมาทีหลัง เขาไม่ได้ขอ",null,"ไม่ได้ขอเงินคืน"]},
+ {"q":"What does the woman give the man?","o":["A hotel room","A refund","A lounge pass","A meal voucher"],"a":3,"why":"**please take this meal voucher**","whySay":"ท้ายบทสนทนา พนักงานให้คูปองอาหาร meal voucher ใช้ได้ทุกร้านในอาคาร","no":["ไม่ต้องค้างคืน","ไม่มีเรื่องเงินคืน","ใช้ได้ที่ร้านอาหาร ไม่ใช่เลานจ์",null]}]},
+{"type":"conv","h":"บทสนทนา 5 · ฝ่ายบุคคล","say":"บทสนทนาสุดท้าย คุยกับฝ่ายบุคคล อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Hi Mark, I'd like to ask about the leadership training program you announced last week."},
+ {"v":"m","t":"Sure. It runs every Tuesday afternoon for six weeks, starting next month."},
+ {"v":"q","t":"It sounds great, but I have client meetings most Tuesdays. Is there another option?"},
+ {"v":"m","t":"There's an online version you can complete at your own pace. You'd just need your manager's approval."},
+ {"v":"q","t":"Okay, I'll talk to my manager about it this afternoon."},
+ {"v":"m","t":"Great. Then just fill out the application form on the HR website by Friday."}],
+ "qs":[
+ {"q":"What is the conversation mainly about?","o":["A training program","A job interview","A client meeting","A company website"],"a":0,"why":"ถามเรื่อง **leadership training program** ตั้งแต่ประโยคแรก","whySay":"ประโยคแรกบอกเลยว่าอยากถามเรื่องคอร์สอบรมผู้นำ คำถามหัวข้อหลัก คำตอบมักอยู่ช่วงต้น","no":[null,"ไม่ใช่การสัมภาษณ์งาน","ประชุมลูกค้าเป็นแค่เหตุผลที่ไปไม่ได้","เว็บไซต์ HR แค่ที่กรอกฟอร์ม"]},
+ {"q":"Why is the woman concerned?","o":["The program is too expensive.","She has a schedule conflict.","She missed the announcement.","Her manager is on leave."],"a":1,"why":"อบรมวันอังคาร แต่ **มีประชุมลูกค้าเกือบทุกวันอังคาร**","whySay":"คอร์สจัดทุกวันอังคาร แต่เธอมีประชุมลูกค้าเกือบทุกวันอังคาร คือเวลาชนกัน schedule conflict","no":["ไม่ได้พูดถึงราคา",null,"เธอรู้ประกาศแล้ว","ไม่ได้บอกว่าหัวหน้าลา"]},
+ {"q":"What will the woman most likely do this afternoon?","o":["Fill out a form","Meet a client","Speak with her manager","Watch an online lesson"],"a":2,"why":"**I'll talk to my manager this afternoon**","whySay":"เธอบอกว่าบ่ายนี้จะคุยกับหัวหน้า ส่วนกรอกฟอร์มคือภายในวันศุกร์ ระวังเรื่องเวลา","no":["กรอกฟอร์มภายในวันศุกร์","ไม่ได้บอกว่าบ่ายนี้พบลูกค้า",null,"ยังไม่ได้เริ่มเรียน"]}]},
+{"type":"end","h":"3 จุดพลาดในชุดนี้","items":[
+ {"x":"**สลับคนพูด** : ใครจะทำอะไร ฟังให้ตรงคน","say":"จุดพลาดแรก สลับคนพูด เช่น บทแรก คนตรวจร่างคือผู้หญิง ไม่ใช่ผู้ชาย ฟังให้ดีว่าใครจะทำอะไร"},
+ {"x":"**ข้อถูกพูดใหม่** : 24 hours → all day and night","say":"จุดพลาดที่สอง มองหาคำที่ได้ยินตรงตัว ข้อถูกมักใช้คำใหม่ เช่น put one aside กลายเป็น reserve"},
+ {"x":"**คำถามเจตนา** : ดูประโยคก่อนหน้าด้วย","say":"จุดพลาดที่สาม คำถามว่าทำไมเขาพูดแบบนี้ ต้องดูบริบทรอบๆ ไม่ใช่แปลตรงตัว"}],
+ "outro":"ชุดแรกของ Part 3 จบแล้ว ได้กี่ข้อจากสิบห้าข้อ ลองจดไว้ แล้วไปชุดถัดไปกันเลย"}
+]}

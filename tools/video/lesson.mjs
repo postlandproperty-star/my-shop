@@ -150,6 +150,7 @@ async function main() {
   const mp4 = path.join(OUT, `${spec.id}.mp4`); ff('-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', '-movflags', '+faststart', mp4);
   try { const u = '/Volumes/PortableSSD/Sheetlab/_factory/tts_usage.json', m = new Date().toISOString().slice(0, 7); const d = fs.existsSync(u) ? JSON.parse(fs.readFileSync(u, 'utf8')) : {}; const o = d.month === m ? d : { month: m, chars: 0 }; o.chars += chars; fs.writeFileSync(u, JSON.stringify(o)); } catch (e) {}
   const sec = Math.round(probe(mp4));
+  fs.writeFileSync(path.join(OUT, 'meta.json'), JSON.stringify({ seconds: sec })); // worker.py done-lesson อ่านความยาวจากไฟล์นี้ถ้าวัดเองไม่ได้
   console.log('\n' + JSON.stringify({ mp4, seconds: sec, min: Math.max(1, Math.round(sec / 60)), mb: Math.round(fs.statSync(mp4).size / 1e5) / 10, ttsChars: chars }));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

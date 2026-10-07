@@ -1,0 +1,484 @@
+{
+ "id": "toeic-750-course-L08",
+ "course": "toeic-750-course",
+ "n": 8,
+ "section": "ฝึกทำข้อสอบ · Part 2",
+ "title": "Part 2 ชุดที่ 2: 25 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 2 ชุดที่ 2\nฝึก 25 ข้อ พร้อมเฉลย",
+   "sub": "คำถามปฏิเสธ · tag question · Why don't we · ประโยคบอกเล่า · คำตอบอ้อม",
+   "say": "บทนี้ฝึก Part 2 ชุดที่สอง ยี่สิบห้าข้อ ยากกว่าชุดแรก มีทั้งคำถามปฏิเสธ tag question คำชวน ประโยคบอกเล่า และคำตอบอ้อม ฟังแล้วเลือกในใจ ก่อนเฉลยทุกข้อ"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 1 / 25",
+   "q": "Didn't you reserve a room with an ocean view?",
+   "o": [
+    "Yes, but they gave us a garden view instead.",
+    "The ocean was very calm.",
+    "I'll review it tomorrow."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "คำซ้ำ **ocean** แต่ไม่ได้ตอบ",
+    "**review** เสียงคล้าย view"
+   ],
+   "why": "**คำถามปฏิเสธ** Didn't you = Did you → จองแล้ว แต่ได้วิวสวน",
+   "whySay": "คำถามปฏิเสธ ให้คิดเหมือนถามธรรมดาว่าจองไหม คำตอบคือจองแล้ว แต่ได้ห้องวิวสวนแทน"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 2 / 25",
+   "q": "The quarterly figures are due on Friday, aren't they?",
+   "o": [
+    "Yes, I'm free on Friday.",
+    "Actually, the deadline was moved to Monday.",
+    "About twelve percent higher."
+   ],
+   "a": 1,
+   "no": [
+    "มี Yes และคำซ้ำ **Friday** แต่ไม่ได้ตอบ",
+    null,
+    "เกี่ยวกับ **ตัวเลข** แต่ไม่ได้ตอบเรื่องกำหนดส่ง"
+   ],
+   "why": "**Tag question** ขอยืนยัน → แก้ข้อมูล: เลื่อนเป็นวันจันทร์",
+   "whySay": "tag question คือการขอให้ยืนยัน ไม่ต้องตอบ Yes หรือ No ก็ได้ ข้อนี้บอกว่าเลื่อนไปวันจันทร์แล้ว"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 3 / 25",
+   "q": "Why don't we upgrade the software over the weekend?",
+   "o": [
+    "Because it was on sale.",
+    "The newest version is 4.2.",
+    "Good idea. Fewer people will be online then."
+   ],
+   "a": 2,
+   "no": [
+    "ตอบ **Because** แต่นี่คือคำชวน ไม่ได้ถามเหตุผล",
+    "เกี่ยวกับซอฟต์แวร์ แต่ไม่ได้ตอบคำชวน",
+    null
+   ],
+   "why": "**Why don't we** = ชวน → ตอบรับ: ไอเดียดี",
+   "whySay": "Why don't we ไม่ได้ถามเหตุผล แต่เป็นการชวน คำตอบคือ ไอเดียดี ช่วงนั้นคนใช้ระบบน้อย"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 4 / 25",
+   "q": "We're running out of fresh basil in the kitchen.",
+   "o": [
+    "I'll pick some up at the market.",
+    "She runs every morning.",
+    "A table for four, please."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**runs** คำคล้าย running คนละความหมาย",
+    "เกี่ยวกับร้านอาหาร แต่ไม่ได้ตอบสนอง"
+   ],
+   "why": "**ประโยคบอกเล่า** แจ้งปัญหา → เสนอทางแก้: ไปซื้อเพิ่ม",
+   "whySay": "ประโยคบอกเล่าแจ้งว่าใบโหระพาจะหมด คำตอบที่เข้ากันคือ เดี๋ยวไปซื้อที่ตลาดให้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 5 / 25",
+   "q": "When will the shipment to Chiang Mai leave the warehouse?",
+   "o": [
+    "By truck, I think.",
+    "Ask Mr. Park. He's handling the schedule.",
+    "Yes, it's a large warehouse."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ **วิธีขนส่ง** แต่ถาม When",
+    null,
+    "ตอบ Yes กับ Wh- และคำซ้ำ **warehouse**"
+   ],
+   "why": "**คำตอบอ้อม** → ส่งต่อให้ถามคนที่รู้",
+   "whySay": "คำตอบไม่ได้บอกเวลาตรงๆ แต่ให้ไปถามคุณพาร์ค ซึ่งดูตารางอยู่ ข้อสอบชอบคำตอบอ้อมแบบนี้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 6 / 25",
+   "q": "Isn't the airport shuttle supposed to be here by now?",
+   "o": [
+    "Two suitcases and a backpack.",
+    "Yes, the airport is new.",
+    "There's heavy traffic on the main road."
+   ],
+   "a": 2,
+   "no": [
+    "เกี่ยวกับ **การเดินทาง** แต่ไม่ได้ตอบ",
+    "คำซ้ำ **airport** ไม่ได้ตอบ",
+    null
+   ],
+   "why": "**คำตอบอ้อม** → บอกเหตุที่รถยังไม่มา: รถติด",
+   "whySay": "ถามว่ารถรับส่งควรมาถึงแล้วไม่ใช่เหรอ คำตอบอ้อมคือ ถนนใหญ่รถติดมาก แปลว่ายังมาไม่ถึง"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 7 / 25",
+   "q": "Should I send the invoice by e-mail or by post?",
+   "o": [
+    "Yes, I sent it yesterday.",
+    "E-mail is faster.",
+    "The post office closes at five."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ Yes กับคำถาม **A or B**",
+    null,
+    "คำซ้ำ **post** ไม่ได้ตอบ"
+   ],
+   "why": "คำถาม **ให้เลือก** → เลือกอีเมล เพราะเร็วกว่า",
+   "whySay": "เป็นคำถามให้เลือก ระหว่างอีเมลกับไปรษณีย์ คำตอบเลือกอีเมล เพราะเร็วกว่า"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 8 / 25",
+   "q": "You've already changed your password, haven't you?",
+   "o": [
+    "Not yet. I'll do it after lunch.",
+    "Yes, I'd like some change.",
+    "The passport is in my bag."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**change** = เงินทอน คนละความหมาย",
+    "**passport** เสียงคล้าย password"
+   ],
+   "why": "**Tag question** → ตอบตามจริง: ยังไม่ได้เปลี่ยน",
+   "whySay": "tag question ถามยืนยันว่าเปลี่ยนรหัสผ่านแล้วใช่ไหม คำตอบคือ ยังเลย เดี๋ยวทำหลังกินข้าว"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 9 / 25",
+   "q": "Could you ask the chef if this soup contains nuts?",
+   "o": [
+    "He's the head chef.",
+    "It's very spicy.",
+    "Sure, I'll find out right away."
+   ],
+   "a": 2,
+   "no": [
+    "คำซ้ำ **chef** ไม่ได้ตอบ",
+    "เกี่ยวกับซุป แต่ไม่ได้ตอบคำขอ",
+    null
+   ],
+   "why": "**คำขอร้อง** Could you → ตอบรับ: ได้ เดี๋ยวไปถาม",
+   "whySay": "Could you เป็นการขอร้อง คำตอบคือ ได้เลย เดี๋ยวไปถามให้ทันที"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 10 / 25",
+   "q": "Why don't you use a different courier for overseas orders?",
+   "o": [
+    "Because they're overseas.",
+    "We've been thinking about that.",
+    "About three hundred orders."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ **Because** แต่นี่คือคำแนะนำ",
+    null,
+    "คำซ้ำ **orders** ตอบจำนวน"
+   ],
+   "why": "**Why don't you** = แนะนำ → กำลังคิดเรื่องนี้อยู่",
+   "whySay": "Why don't you เป็นการแนะนำ ไม่ได้ถามเหตุผล คำตอบคือ เรากำลังคิดเรื่องนี้อยู่เหมือนกัน"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 11 / 25",
+   "q": "The air conditioner in Room 512 is making a strange noise.",
+   "o": [
+    "I'll send someone from maintenance.",
+    "Breakfast is served until ten.",
+    "The air was fresh."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "เกี่ยวกับโรงแรม แต่ไม่ได้ตอบสนองปัญหา",
+    "คำซ้ำ **air** ไม่ได้ตอบ"
+   ],
+   "why": "**ประโยคบอกเล่า** แจ้งปัญหา → ส่งช่างไปดู",
+   "whySay": "แขกแจ้งว่าแอร์มีเสียงแปลกๆ คำตอบที่เหมาะคือ เดี๋ยวส่งช่างซ่อมบำรุงไปดู"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 12 / 25",
+   "q": "Haven't the expense reports been approved yet?",
+   "o": [
+    "Yes, it was very expensive.",
+    "Twice a month.",
+    "The director is still reviewing them."
+   ],
+   "a": 2,
+   "no": [
+    "**expensive** เสียงคล้าย expense",
+    "ตอบ **ความถี่** ไม่ได้ตอบ",
+    null
+   ],
+   "why": "**คำถามปฏิเสธ** + **คำตอบอ้อม** → ผอ.ยังตรวจอยู่",
+   "whySay": "ถามว่ายังไม่อนุมัติอีกเหรอ คำตอบอ้อมคือ ผู้อำนวยการยังตรวจอยู่ แปลว่ายังไม่อนุมัติ"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 13 / 25",
+   "q": "Where can I download the new security update?",
+   "o": [
+    "Around three o'clock.",
+    "Didn't you get the link from IT?",
+    "It's very secure."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ **เวลา** แต่ถาม Where",
+    null,
+    "**secure** คำคล้าย security"
+   ],
+   "why": "**ตอบด้วยคำถาม** → ใช้ลิงก์ที่ฝ่ายไอทีส่งมา",
+   "whySay": "คำตอบเป็นคำถามกลับ ว่าไม่ได้ลิงก์จากฝ่ายไอทีเหรอ แปลว่าดาวน์โหลดได้จากลิงก์นั้น"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 14 / 25",
+   "q": "This restaurant takes reservations, doesn't it?",
+   "o": [
+    "I'll take the fish.",
+    "It closes at ten.",
+    "Only for groups of six or more."
+   ],
+   "a": 2,
+   "no": [
+    "**take** คนละความหมาย",
+    "เกี่ยวกับร้าน แต่ไม่ได้ตอบเรื่องการจอง",
+    null
+   ],
+   "why": "**Tag question** → ตอบแบบมีเงื่อนไข: เฉพาะกลุ่ม 6 คนขึ้นไป",
+   "whySay": "tag question ถามยืนยันว่าร้านรับจองใช่ไหม คำตอบคือ รับเฉพาะกลุ่มหกคนขึ้นไป"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 15 / 25",
+   "q": "The delivery truck has a flat tire.",
+   "o": [
+    "Let's tell the customers it'll be late.",
+    "I'm a little tired.",
+    "Our delivery fee is five dollars."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**tired** เสียงคล้าย tire",
+    "คำซ้ำ **delivery** ไม่ได้ตอบ"
+   ],
+   "why": "**ประโยคบอกเล่า** แจ้งปัญหา → แจ้งลูกค้าว่าส่งช้า",
+   "whySay": "รถส่งของยางแบน คำตอบที่เข้ากันคือ งั้นแจ้งลูกค้าว่าของจะไปช้า"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 16 / 25",
+   "q": "Why don't I carry your bags up to your room?",
+   "o": [
+    "They're made of leather.",
+    "Thanks, that would be great.",
+    "I'd like a room with two beds."
+   ],
+   "a": 1,
+   "no": [
+    "เกี่ยวกับกระเป๋า แต่ไม่ได้ตอบข้อเสนอ",
+    null,
+    "คำซ้ำ **room** ไม่ได้ตอบ"
+   ],
+   "why": "**Why don't I** = เสนอช่วย → ตอบรับ: ขอบคุณ",
+   "whySay": "Why don't I เป็นการเสนอตัวช่วย คำตอบคือ ขอบคุณ แบบนั้นดีมากเลย"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 17 / 25",
+   "q": "Shouldn't we hire an outside auditor this year?",
+   "o": [
+    "The audio was too low.",
+    "Higher than last year.",
+    "The board will decide next month."
+   ],
+   "a": 2,
+   "no": [
+    "**audio** เสียงคล้าย auditor",
+    "คำซ้ำ **year** ไม่ได้ตอบ",
+    null
+   ],
+   "why": "**คำถามปฏิเสธ** + **คำตอบอ้อม** → บอร์ดจะตัดสินเดือนหน้า",
+   "whySay": "ถามว่าเราควรจ้างผู้ตรวจสอบภายนอกไม่ใช่เหรอ คำตอบอ้อมคือ บอร์ดจะตัดสินใจเดือนหน้า"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 18 / 25",
+   "q": "Who's responsible for backing up the customer database?",
+   "o": [
+    "That's done automatically every night.",
+    "At the back of the room.",
+    "Yes, he's very responsible."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**back** คำคล้าย backing ตอบสถานที่",
+    "ตอบ Yes กับ Wh- และคำซ้ำ"
+   ],
+   "why": "**คำตอบอ้อม** → ไม่ต้องมีคน ระบบทำเองทุกคืน",
+   "whySay": "ถามว่าใครดูแลการแบ็กอัพ คำตอบอ้อมคือ ระบบทำเองอัตโนมัติทุกคืน"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 19 / 25",
+   "q": "How did customers like the new lunch menu?",
+   "o": [
+    "I received it this morning.",
+    "Sales went up by twenty percent.",
+    "Every day from eleven to two."
+   ],
+   "a": 1,
+   "no": [
+    "ไม่ได้ตอบว่าลูกค้าชอบไหม",
+    null,
+    "ตอบ **เวลา** ไม่ได้ตอบ"
+   ],
+   "why": "**คำตอบอ้อม** → ยอดขายขึ้น 20% = ลูกค้าชอบ",
+   "whySay": "ถามว่าลูกค้าชอบเมนูใหม่ไหม คำตอบบอกว่ายอดขายขึ้นยี่สิบเปอร์เซ็นต์ แปลว่าลูกค้าชอบ"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 20 / 25",
+   "q": "Aren't you going to track the package online?",
+   "o": [
+    "On track three.",
+    "Please package them carefully.",
+    "I already did. It's arriving tomorrow."
+   ],
+   "a": 2,
+   "no": [
+    "**track** = ชานชาลา คนละความหมาย",
+    "คำซ้ำ **package** ไม่ได้ตอบ",
+    null
+   ],
+   "why": "**คำถามปฏิเสธ** → ตอบตามจริง: เช็กแล้ว พรุ่งนี้ถึง",
+   "whySay": "คิดเหมือนถามว่าจะเช็กพัสดุออนไลน์ไหม คำตอบคือ เช็กแล้ว ของจะถึงพรุ่งนี้"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 21 / 25",
+   "q": "I think the conference hall is too small for our event.",
+   "o": [
+    "The event starts at nine.",
+    "We could rent the ballroom instead.",
+    "Down the hall to the left."
+   ],
+   "a": 1,
+   "no": [
+    "คำซ้ำ **event** ไม่ได้ตอบ",
+    null,
+    "คำซ้ำ **hall** ตอบทาง"
+   ],
+   "why": "**ประโยคแสดงความเห็น** → เสนอทางเลือก: เช่าบอลรูม",
+   "whySay": "เป็นประโยคแสดงความเห็นว่าห้องเล็กไป คำตอบที่เข้ากันคือ เสนอเช่าห้องบอลรูมแทน"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 22 / 25",
+   "q": "You didn't get my receipts, did you?",
+   "o": [
+    "No. Could you send them again?",
+    "Please sign the receipt.",
+    "The recipe is online."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "คำซ้ำ **receipt** ไม่ได้ตอบ",
+    "**recipe** เสียงคล้าย receipt"
+   ],
+   "why": "**Tag question** → No = ไม่ได้รับ ขอให้ส่งใหม่",
+   "whySay": "ถามยืนยันว่าไม่ได้รับใบเสร็จใช่ไหม ตอบว่าไม่ได้รับ ช่วยส่งใหม่ได้ไหม"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 23 / 25",
+   "q": "Why don't we ask the vendor to fix the network problem?",
+   "o": [
+    "At a fixed price.",
+    "On the vendor's website.",
+    "I already sent them an e-mail."
+   ],
+   "a": 2,
+   "no": [
+    "**fixed** คำคล้าย fix",
+    "คำซ้ำ **vendor** ตอบสถานที่",
+    null
+   ],
+   "why": "**Why don't we** = ชวน → ส่งอีเมลไปแล้ว",
+   "whySay": "Why don't we เป็นการชวน คำตอบคือ ส่งอีเมลหาเขาแล้ว แปลว่าเห็นด้วยและทำไปแล้ว"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 24 / 25",
+   "q": "Is the staff dinner on Thursday or Friday?",
+   "o": [
+    "Yes, at an Italian restaurant.",
+    "It hasn't been decided yet.",
+    "About thirty staff members."
+   ],
+   "a": 1,
+   "no": [
+    "ตอบ Yes กับคำถาม **A or B**",
+    null,
+    "คำซ้ำ **staff** ตอบจำนวน"
+   ],
+   "why": "คำถาม **ให้เลือก** → ไม่เลือกทั้งคู่: ยังไม่ได้ตัดสิน",
+   "whySay": "คำถามให้เลือก ไม่จำเป็นต้องเลือกข้อใดข้อหนึ่ง คำตอบนี้บอกว่ายังไม่ได้ตัดสินใจ"
+  },
+  {
+   "type": "qa",
+   "h": "ข้อที่ 25 / 25",
+   "q": "The customs forms for the Singapore shipment are incomplete.",
+   "o": [
+    "I'll ask the supplier for the missing page.",
+    "It's a common custom here.",
+    "I've never been to Singapore."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "**custom** = ธรรมเนียม คนละความหมาย",
+    "คำซ้ำ **Singapore** ไม่ได้ตอบ"
+   ],
+   "why": "**ประโยคบอกเล่า** แจ้งปัญหา → ขอเอกสารที่ขาด",
+   "whySay": "เอกสารศุลกากรไม่ครบ คำตอบที่เข้ากันคือ เดี๋ยวขอหน้าที่ขาดจากซัพพลายเออร์"
+  },
+  {
+   "type": "end",
+   "h": "สรุป 3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**คำถามปฏิเสธ / tag** = คิดเหมือนถามธรรมดา",
+     "say": "จุดแรก คำถามปฏิเสธและ tag question ให้คิดเหมือนถามธรรมดา แล้วตอบตามความจริง"
+    },
+    {
+     "x": "**Why don't we / you / I** = ชวน → ตัด Because ทิ้ง",
+     "say": "จุดที่สอง Why don't we คือการชวนหรือเสนอ ข้อที่ขึ้นต้นด้วย Because มักเป็นตัวหลอก"
+    },
+    {
+     "x": "**คำตอบอ้อม** มักถูก: ถามกลับ · ส่งต่อ · ยังไม่ตัดสินใจ",
+     "say": "จุดที่สาม คำตอบอ้อม เช่น ถามกลับ ให้ไปถามคนอื่น หรือบอกว่ายังไม่ตัดสินใจ มักเป็นข้อที่ถูก"
+    }
+   ],
+   "outro": "เก่งมาก จบชุดที่สองแล้ว ข้อไหนพลาด ลองย้อนกลับไปฟังอีกรอบ แล้วเจอกันในบทถัดไป"
+  }
+ ]
+}

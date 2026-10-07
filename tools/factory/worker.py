@@ -197,7 +197,11 @@ def main():
         name = f"บทที่ {info.get('lesson_no') or '?'} {safe(info.get('lesson_title') or os.path.basename(mp4))}.mp4"
         drive = to_drive(mp4, os.path.join('Courses', safe(info.get('course_slug') or 'course')), name)
         if not drive: sys.exit('Google Drive ยังไม่ให้ลิงก์ (Drive ในเครื่องไม่ทำงาน?) ลองใหม่รอบหน้า')
-        body = {'id': job, 'by': 'mac', 'drive': drive, 'seconds': seconds_of(mp4), 'summary': a.summary}
+        sec = seconds_of(mp4)
+        if not sec:
+            try: sec = int(json.load(open(os.path.join(d, 'meta.json'))).get('seconds') or 0)
+            except Exception: sec = 0
+        body = {'id': job, 'by': 'mac', 'drive': drive, 'seconds': sec, 'summary': a.summary}
         cv = os.path.join(d, 'cover.png')
         if os.path.exists(cv): body['thumb'] = upload(job, cv, 'cover.png', 'image/png')
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok'), 'drive': drive, 'seconds': body['seconds']}, ensure_ascii=False))
