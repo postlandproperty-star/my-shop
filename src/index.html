@@ -6610,8 +6610,8 @@ function qrInner(slug,on,total){
       <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@gmail.com" value="${esc(S.form.qrEmail||(q&&q.email)||'')}" data-f="qrEmail">
       ${q&&q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:6px 0 0">${esc(q.err)}</p>`:''}
       ${slug==='__cart__'?'':codeRow()}
-      <button class="btn btn-buy btn-block" style="margin-top:10px" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}" data-track="InitiateCheckout">📱 สแกนจ่ายพร้อมเพย์ ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>
-      <p class="fine qr-why">✓ ทุกธนาคาร · ✓ ได้ไฟล์ทันทีบนหน้านี้และทางอีเมล · ✓ ไม่ต้องสมัครสมาชิก</p>
+      <button class="btn btn-buy btn-block" style="margin-top:10px" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}" data-track="InitiateCheckout">ชำระเงิน ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>
+      <p class="fine qr-why">สแกน QR พร้อมเพย์ได้ทุกธนาคาร · ✓ ได้ไฟล์ทันทีบนหน้านี้และทางอีเมล · ✓ ไม่ต้องสมัครสมาชิก</p>
     </div>`;
   }
   if(q.step==='loading')return `<div class="qpay center"><p class="muted">กำลังสร้าง QR…</p></div>`;
