@@ -3153,20 +3153,31 @@ function facExportImport(){if(!sbSession||!D.products.length)return;facRepair();
     const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36)+Math.floor(Math.random()*99),name,headline:lc.headline||name,desc:lc.desc||String(j.summary||'').split('\n')[0].slice(0,300),features:lc.features||(pages?`ไฟล์ PDF ${pages} หน้า`:''),forwho:lc.forwho||'',pains:lc.pains||'',notfor:lc.notfor||'',faq:lc.faq||'',specs:lc.specs||(pages?`รูปแบบ | ไฟล์ PDF\nจำนวนหน้า | ${pages} หน้า`:''),toc:lc.toc||'',
       price:Number(j.price)||0,fullPrice:0,kind:'sheet',link:j.file_url||'',images:(j.images||[]).slice(0,5),previews:(j.previews||[]).slice(0,6),cat:guessCat(j.title+' '+(j.category||'')),slug:setSlug(name),sku,status:'draft',sell:'store',fresh:true,freshNote:note,fromJob:j.id,audio:!!(j.audio_path||j.audio_drive),audioDrive:j.audio_drive||''});
     D.products.push(p);if(!p.sku)ensureSkus();save();clearTimeout(saveTimer);
-    flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=factory_list',{id:j.id,product_id:p.id});}).then(()=>{toast(`📗 ${p.sku||''} ${String(name).slice(0,40)} เข้าแท็บมาใหม่แล้ว`);FAC.exports=(FAC.exports||[]).filter(x=>x.id!==j.id);facSetBundles();render(true);}).catch(e=>{console.error(e);delete SETI.exp[j.id];});}
+    flushRemote().then(ok=>{if(!ok)throw new Error('บันทึกไม่สำเร็จ');return adminPost('/api/content?action=factory_list',{id:j.id,product_id:p.id});}).then(()=>{toast(j.set_name?`📦 เล่ม ${j.set_no||''} เข้าชุด "${String(j.set_name).slice(0,40)}" แล้ว`:`📗 ${p.sku||''} ${String(name).slice(0,40)} เข้าแท็บมาใหม่แล้ว`);FAC.exports=(FAC.exports||[]).filter(x=>x.id!==j.id);facSetBundles();render(true);}).catch(e=>{console.error(e);delete SETI.exp[j.id];});}
   facSetBundles();}
 /* ชุดที่สั่งผลิตครบทุกเล่มแล้ว → ฉบับร่างชุดขายในแท็บมาใหม่ (ราคาคิดตามสูตรเดียวกับ "คำนวณราคาตามสูตร" แก้ได้) */
-function facSetBundles(){const all=FAC.all||[];
+function facSetBundles(){const all=FAC.all||[];let dirty=false;
+  // คุณแดนสั่งหลายรอบ: สั่งเป็นชุด = ได้ listing ชุดเดียว (แบบชุด IELTS) · เล่มที่เสร็จเข้าไปอยู่ในชุดทันที ไม่ขึ้นแยกในมาใหม่ · ชุดเกิดตั้งแต่เล่มแรกเสร็จ แล้วเติมเล่มที่เสร็จทีหลังให้เอง (เฉพาะชุดที่ยังไม่เผยแพร่)
   for(const name of [...new Set(all.filter(j=>j.set_name).map(j=>j.set_name))]){
-    if(SETI.bun[name]||D.products.some(p=>isBundle(p)&&p.fromSetName===name))continue;
     const js=all.filter(j=>j.set_name===name&&!['cancelled','failed'].includes(j.status)).sort((a,b)=>(Number(a.set_no)||0)-(Number(b.set_no)||0));
-    if(js.length<2||js.some(j=>j.status!=='done'))continue;
-    const books=js.map(j=>D.products.find(p=>p.fromJob===j.id)).filter(Boolean);if(books.length!==js.length)continue;
-    SETI.bun[name]=1;const n=books.length,sum=books.reduce((a,b)=>a+(Number(b.price)||0),0),pct=n>=9?.5:n>=7?.55:.6,price=sum?end90(sum*pct):0,full=sum>price?sum:0;
-    const bd=Object.assign(blankBundle(),{id:'b'+Date.now().toString(36),name,slug:setSlug(name),headline:name,desc:`ครบ ${n} เล่มในชุดเดียว: ${books.map(b=>b.name).join(' · ')}`.slice(0,300),items:books.map(b=>b.id),status:'draft',planDefault:'basic',price,fullPrice:full,images:(books[0].images||[]).slice(0,1),fresh:true,fromSetName:name,
-      freshNote:`ชุดจากโรงงาน ${n} เล่ม · ราคาคิดตามสูตร ${Math.round(pct*100)}% ของราคาแยกรวม${sum?' ฿'+sum.toLocaleString('th-TH'):''} แก้ได้ · เปิดแก้แล้วกดบันทึก ระบบจัดรูปชุดจากปกให้เอง`});
-    bd.plans=bd.plans.map(pl=>pl.key==='basic'?Object.assign({},pl,{name:'ครบชุด '+n+' เล่ม',on:true,price,fullPrice:full}):Object.assign({},pl,{on:false}));
-    D.products.push(bd);ensureSkus();save();toast(`📦 ชุด "${name}" ครบ ${n} เล่ม เข้าแท็บมาใหม่แล้ว`);}}
+    const books=js.filter(j=>j.status==='done').map(j=>D.products.find(p=>p.fromJob===j.id)).filter(Boolean),pend=js.length-js.filter(j=>j.status==='done').length;
+    if(!books.length)continue;
+    let bd=D.products.find(p=>isBundle(p)&&p.fromSetName===name);
+    const fixName=n=>pend?name:name.replace(/\d+\s*เล่ม/,n+' เล่ม');
+    const priceOf=L=>{const n=L.length,sum=L.reduce((a,b)=>a+(Number(b.price)||0),0),pct=n>=9?.5:n>=7?.55:.6,price=sum?end90(sum*pct):0;return {n,sum,pct,price,full:sum>price?sum:0};};
+    const note=(n,pr)=>`ชุดจากโรงงาน ${n} เล่ม${pend?` · กำลังผลิตอีก ${pend} เล่ม (เข้าชุดเองเมื่อเสร็จ)`:''} · ราคาคิดตามสูตร ${Math.round(pr.pct*100)}% ของราคาแยกรวม${pr.sum?' ฿'+pr.sum.toLocaleString('th-TH'):''} แก้ได้ · เปิดแก้แล้วกดบันทึก ระบบจัดรูปชุดจากปกให้เอง`;
+    if(!bd){if(SETI.bun[name])continue;SETI.bun[name]=1;const pr=priceOf(books),nm=fixName(books.length);
+      bd=Object.assign(blankBundle(),{id:'b'+Date.now().toString(36),name:nm,slug:setSlug(nm),headline:nm,desc:`ครบ ${pr.n} เล่มในชุดเดียว: ${books.map(b=>b.name).join(' · ')}`.slice(0,300),items:books.map(b=>b.id),status:'draft',planDefault:'basic',price:pr.price,fullPrice:pr.full,images:(books[0].images||[]).slice(0,1),fresh:true,fromSetName:name,autoPrice:true,freshNote:note(pr.n,pr)});
+      bd.plans=bd.plans.map(pl=>pl.key==='basic'?Object.assign({},pl,{name:'ครบชุด '+pr.n+' เล่ม',on:true,price:pr.price,fullPrice:pr.full}):Object.assign({},pl,{on:false}));
+      D.products.push(bd);ensureSkus();dirty=true;toast(`📦 ชุด "${nm}" เข้าแท็บมาใหม่แล้ว (${pr.n} เล่ม${pend?` · รออีก ${pend} เล่ม`:''})`);}
+    else if(bd.status!=='published'){const add=books.filter(b=>!(bd.items||[]).includes(b.id));
+      if(add.length||(!pend&&bd.name!==fixName((bd.items||[]).length))){bd.items=[...(bd.items||[]),...add.map(b=>b.id)];const L=bd.items.map(getProduct).filter(Boolean),pr=priceOf(L);
+        if(bd.autoPrice){bd.price=pr.price;bd.fullPrice=pr.full;bd.plans=(bd.plans||[]).map(pl=>pl.key==='basic'?Object.assign({},pl,{name:'ครบชุด '+pr.n+' เล่ม',price:pr.price,fullPrice:pr.full}):pl);}
+        if(!pend&&/\d+\s*เล่ม/.test(bd.name)){bd.name=bd.name.replace(/\d+\s*เล่ม/,pr.n+' เล่ม');bd.headline=String(bd.headline||'').replace(/\d+\s*เล่ม/,pr.n+' เล่ม');}
+        bd.fresh=true;bd.freshNote=note(pr.n,pr);dirty=true;if(add.length)toast(`📦 เพิ่ม ${add.length} เล่มเข้าชุด "${bd.name}" แล้ว`);}}
+    for(const b of books)if(b.fresh&&b.status!=='published'&&(bd.items||[]).includes(b.id)){delete b.fresh;dirty=true;} // เล่มในชุดไม่ขึ้นแยกในมาใหม่ (ดู/แก้ได้ในหน้าแก้ชุด)
+  }
+  if(dirty)save();}
 /* ชุดจากโรงงาน (ฉบับร่าง): ทำให้เป็น listing เดียวแบบชุด TOEIC 750+ เอง — รูปชุดจัดจากปกทุกเล่ม + หัวข้อขาย/คำโปรยของชุด (ไม่แตะราคา) */
 SETI.pol={};
 /* ปกเล่มแนวตั้ง = หน้าแรกของไฟล์ PDF (ปกจริงของเล่ม) ใช้ใน "ในชุดมีอะไรบ้าง" และรูปชุด (ไม่ใช้ AI ไม่เสียเงิน) */
