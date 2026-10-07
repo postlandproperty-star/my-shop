@@ -1399,7 +1399,11 @@ ${books}`;
           const jobs = await loadJobs(); const open = jobs.filter((j) => j.kind === 'lesson' && j.course_id === c.id && ['queued', 'producing'].includes(j.status)).length; let k = 0;
           const top = !!b.order.top, base = top ? Math.min(Date.now(), ...queueOrder(jobs).map(qPrio)) - 1e7 : 0; // top = ทำก่อนงานอื่นในคิว (เช่น ผลิตคอร์สให้เสร็จในวันเดียว)
           if (top) for (const j of jobs.filter((x) => x.kind === 'lesson' && x.course_id === c.id && x.status === 'queued').sort((a, b2) => Number(a.lesson_no) - Number(b2.lesson_no))) { j.prio = base - 1e5 + Number(j.lesson_no || 0); j.rush = '1'; }
-          for (const it of items) { if (lessonUsed(c, jobs, it.title)) continue; const j = lessonJob(c, it, c.lessons.length + open + (++k), false); if (top) j.prio = base + k; jobs.push(j); }
+          for (const it of items) {
+            const dead = jobs.find((j) => j.kind === 'lesson' && j.course_id === c.id && j.lesson_title === it.title && j.status === 'cancelled');
+            if (dead && !c.lessons.some((l) => l.title === it.title) && !jobs.some((j) => j !== dead && j.kind === 'lesson' && j.course_id === c.id && j.lesson_title === it.title && j.status !== 'cancelled')) { // คุณแดนสั่งใหม่หลังลบออกจากคิว → เอากลับเข้าคิว
+              dead.status = 'queued'; delete dead.cancelled_at; delete dead.cancel_note; delete dead.dup; dead.rush = '1'; dead.ordered_by = 'owner'; dead.auto = false; k++; if (top) dead.prio = base + k; continue; }
+            if (lessonUsed(c, jobs, it.title)) continue; const j = lessonJob(c, it, c.lessons.length + open + (++k), false); if (top) j.prio = base + k; jobs.push(j); }
           // เรียงเลขบทของบทที่ยังรอผลิตตามลำดับในแผน (เลขบทอยู่ในวิดีโอด้วย จึงต้องตรงกับลำดับในคอร์ส)
           let ren = 0;
           if (b.order.renumber || top) {
