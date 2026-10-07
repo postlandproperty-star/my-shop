@@ -1394,11 +1394,13 @@ ${books}`;
       if (req.method === 'POST') { const b = await readBody(req);
         if (b.order) { // สั่งโรงงานผลิตบทเรียน (บรรทัดละบท) → คิวโรงงาน kind=lesson
           const list = await C.loadCourses(); const c = list.find((x) => x.id === String(b.order.course || '')); if (!c) return res.status(404).json({ ok: false, error: 'ไม่พบคอร์ส' });
-          const items = (Array.isArray(b.order.items) ? b.order.items : []).map((x) => ({ section: String(x.section || '').trim(), title: String(x.title || '').trim(), brief: String(x.brief || '').trim() })).filter((x) => x.title).slice(0, 20);
+          const items = (Array.isArray(b.order.items) ? b.order.items : []).map((x) => ({ section: String(x.section || '').trim(), title: String(x.title || '').trim(), brief: String(x.brief || '').trim() })).filter((x) => x.title).slice(0, 60);
           if (!items.length) return res.status(400).json({ ok: false, error: 'ใส่ชื่อบทอย่างน้อย 1 บท' });
           const jobs = await loadJobs(); const open = jobs.filter((j) => j.kind === 'lesson' && j.course_id === c.id && ['queued', 'producing'].includes(j.status)).length; let k = 0;
-          for (const it of items) { if (lessonUsed(c, jobs, it.title)) continue; jobs.push(lessonJob(c, it, c.lessons.length + open + (++k), false)); }
-          if (k) await saveJobs(jobs); return res.status(200).json({ ok: true, queued: k, skipped: items.length - k });
+          const top = !!b.order.top, base = top ? Math.min(Date.now(), ...queueOrder(jobs).map(qPrio)) - 1e7 : 0; // top = ทำก่อนงานอื่นในคิว (เช่น ผลิตคอร์สให้เสร็จในวันเดียว)
+          if (top) for (const j of jobs.filter((x) => x.kind === 'lesson' && x.course_id === c.id && x.status === 'queued').sort((a, b2) => Number(a.lesson_no) - Number(b2.lesson_no))) { j.prio = base - 1e5 + Number(j.lesson_no || 0); j.rush = '1'; }
+          for (const it of items) { if (lessonUsed(c, jobs, it.title)) continue; const j = lessonJob(c, it, c.lessons.length + open + (++k), false); if (top) j.prio = base + k; jobs.push(j); }
+          if (k) await saveJobs(jobs); return res.status(200).json({ ok: true, queued: k, skipped: items.length - k, top });
         }
         return res.status(200).json({ ok: true, list: await C.saveCourses(Array.isArray(b.list) ? b.list : []) }); }
       const [list, jobs] = await Promise.all([C.loadCourses(), loadJobs().catch(() => [])]);
