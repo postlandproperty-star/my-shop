@@ -6,6 +6,8 @@
 //   {type:'photo', h, img, say, s:[4 ประโยค], a, why, no:[เหตุผลข้อผิด]}               ฝึก Part 1: ฟัง 4 ประโยค เวลาคิด แล้วเฉลย
 //   {type:'qa', h, say, q, o:[3], a, why, no:[...]}                                     ฝึก Part 2
 //   {type:'read', h, say?, q:'ประโยคมีช่อง ___', o:[4], a, why, no:[...]}               ฝึก Reading (โจทย์และตัวเลือกขึ้นจอ ไม่อ่านออกเสียง) เวลาคิด 5 วินาที
+//   {type:'conv', h, say?, lines:[{v:'q'|'r'|'m', t}], qs:[{q, o:[4], a, why, no?}]}     ฝึก Part 3/4: ฟังบทสนทนา/ข้อความพูด แล้วตอบ 3 ข้อ (คำถามขึ้นจอเหมือนข้อสอบจริง)
+//   {type:'passage', h, say?, text:'บทความอังกฤษ ≤ 120 คำ', qs:[{q, o:[4], a, why, no?}]}  ฝึก Part 6/7: บทความซ้าย คำถามขวา
 //   {type:'end', h, pts:[...], say}                                                     สรุปบท
 // คีย์ Google TTS อ่านจาก ~/Documents/Academic/.google_tts_key (ไม่พิมพ์ออกมา) · ผลงานเก็บที่ /Volumes/PortableSSD/Sheetlab/Courses/<course>/<id>/
 import fs from 'node:fs';
@@ -74,6 +76,7 @@ h2{font-size:64px;line-height:1.2;margin-bottom:34px}
 .tm{display:flex;align-items:center;gap:28px;margin-top:40px;font-size:44px;color:#56637D}.tm b{width:150px;height:150px;border-radius:50%;background:#f0b400;color:#1e2b53;display:grid;place-items:center;font-size:90px}
 .why{margin-top:22px;font-size:36px;background:#FFF6DB;border-left:10px solid #f0b400;padding:16px 26px;border-radius:14px;line-height:1.45}
 .qq{font-size:46px;font-weight:700;margin-bottom:14px;font-family:'Helvetica Neue',Arial,sans-serif}
+.psg{font-family:'Helvetica Neue',Arial,sans-serif;font-size:29px;line-height:1.5;background:#fff;border:4px solid #e3e8f2;border-radius:22px;padding:24px 30px;max-height:800px;overflow:hidden}.wrap.pv2{grid-template-columns:1fr 1fr;gap:40px}.pv2 .it{font-size:30px}
 .sum .it{font-size:40px}.cta{margin-top:34px;background:#1e2b53;color:#fff;border-radius:26px;padding:28px 40px;font-size:38px;line-height:1.4}.cta b{color:#f0b400}`;
 let TOTAL = 1, IDX = 0;
 const page = (inner, cls = '') => `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body><div class="top"><span>${esc(spec.section)} · <b>บทที่ ${spec.n}</b></span><span>SheetLab คอร์ส TOEIC</span></div><div class="c ${cls}">${inner}</div><div class="foot"><span>${IDX === 0 || IDX === TOTAL - 1 ? 'เนื้อหาและแบบฝึกแต่งขึ้นใหม่ · TOEIC เป็นเครื่องหมายการค้าของ ETS' : ''}</span><span>${SITE}</span></div><div class="bar"><i style="width:${Math.round((IDX + 1) / TOTAL * 100)}%"></i></div></body></html>`;
@@ -108,6 +111,21 @@ function steps(sl) {
     S.push({ html: () => page(body(0)), au: [{ th: sl.say || 'อ่านประโยค แล้วเลือกคำที่เหมาะที่สุด' }, { sil: 1 }] });
     for (const n of [5, 4, 3, 2, 1]) S.push({ html: () => page(body(n)), au: [{ sil: 1 }], short: true });
     S.push({ html: () => page(body(0, true)), au: [{ th: `เฉลยข้อ ${L[sl.a]}` }, { sil: 0.3 }, { en: full, v: 'n' }, { sil: 0.5 }, { th: sl.whySay || String(sl.why).replace(/\*\*/g, '') }, { sil: 1 }] });
+  }
+  if (sl.type === 'conv' || sl.type === 'passage') {
+    const CV = sl.type === 'conv', Q = sl.qs || [];
+    const left = CV ? `<div class="ear" style="margin:0 0 14px"><span>🎧</span>${md(sl.listenLabel || 'ฟังบทสนทนา')}</div>` : `<div class="psg">${esc(sl.text).replace(/\n/g, '<br>')}</div>`;
+    const qHtml = (qi, n, ans) => { const x = Q[qi]; return `<h2>${md(ans ? `เฉลยข้อ ${qi + 1}: ${L[x.a]}` : `${sl.h || 'ลองทำ'} · ข้อ ${qi + 1}/${Q.length}`)}</h2><div class="wrap ${CV ? '' : 'pv2'}">${CV ? '' : left}<div class="dense"><p class="qq">${esc(x.q)}</p>${x.o.map((o, i) => `<div class="it ${ans ? (i === x.a ? 'ok' : 'no') : ''}"><span class="k">${L[i]}</span><span><span class="en">${esc(o)}</span>${ans && i !== x.a && x.no?.[i] ? `<small>${md(x.no[i])}</small>` : ''}</span></div>`).join('')}${ans ? `<div class="why">${md(x.why)}</div>` : n ? `<div class="tm"><b>${n}</b>เลือกคำตอบในใจ</div>` : ''}</div></div>`; };
+    if (CV) { // ฟังก่อน: คำถามทั้งหมดขึ้นจอ (ข้อสอบจริงให้อ่านคำถามได้)
+      const intro = `<h2>${md(sl.h || 'ลองทำ')}</h2>${left}<div class="dense">${Q.map((x, i) => `<div class="it"><span class="k">${i + 1}</span><span class="en">${esc(x.q)}</span></div>`).join('')}</div>`;
+      const au = []; if (sl.say) au.push({ th: sl.say }, { sil: 0.8 }); for (const ln of sl.lines || []) au.push({ en: ln.t, v: ln.v || 'q' }, { sil: 0.35 });
+      S.push({ html: () => page(intro), au });
+    } else if (sl.say) S.push({ html: () => page(`<h2>${md(sl.h || 'ลองทำ')}</h2><div class="wrap">${left}</div>`), au: [{ th: sl.say }, { sil: 1.5 }] });
+    Q.forEach((x, qi) => {
+      S.push({ html: () => page(qHtml(qi, 0)), au: CV ? [{ en: x.q, v: 'n' }, { sil: 0.5 }] : [{ sil: 1.5 }] });
+      for (const n of CV ? [3, 2, 1] : [5, 4, 3, 2, 1]) S.push({ html: () => page(qHtml(qi, n)), au: [{ sil: 1 }], short: true });
+      S.push({ html: () => page(qHtml(qi, 0, true)), au: [{ th: `เฉลยข้อ ${L[x.a]}` }, { sil: 0.3 }, { en: x.o[x.a], v: 'n' }, { sil: 0.5 }, { th: x.whySay || String(x.why).replace(/\*\*/g, '') }, { sil: 1 }] });
+    });
   }
   return S;
 }
