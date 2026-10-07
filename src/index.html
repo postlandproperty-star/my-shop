@@ -1446,7 +1446,7 @@ async function drvCheck(){const d=S.draft;if(!d)return;const urls=[...new Set(au
     const bad=((j&&j.results)||[]).filter(r=>r.state!=='public').length;toast(bad?`🔒 ยังเปิดไม่ได้ ${bad} โฟลเดอร์ ตั้งเป็น "ทุกคนที่มีลิงก์" ก่อน`:'✅ ทุกโฟลเดอร์เปิดได้ ติ๊กยืนยันแล้วเผยแพร่ได้');}
   catch(e){toast('ตรวจไม่สำเร็จ: '+(e.message||e));}S.drvBusy=false;render(true);}
 function initDraft(p){
-  const d={};d.fillFrom=Object.keys(p.fillPending||{});d.audioOk=!!p.audioOk;d.audioDrive=p.audioDrive||'';d.audio=!!p.audio;d.freshNote=p.freshNote||'';
+  const d={};d.fillFrom=Object.keys(p.fillPending||{});d.audioOk=!!p.audioOk;d.videoOk=!!p.videoOk;d.audioDrive=p.audioDrive||'';d.audio=!!p.audio;d.freshNote=p.freshNote||'';
   ['name','slug','sku','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
   d.bumpPrice=p.bumpPrice||0;
   for(const [k,v] of Object.entries(p.fillPending||{})){if(k==='previews')continue;else if(!String(d[k]||'').trim())d[k]=v;} // รายละเอียดที่โรงงานเตรียมไว้ ใช้จริงเมื่อกดบันทึก
@@ -2843,7 +2843,7 @@ function draftToProduct(d){
   return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
     proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
-    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
+    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
 function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/|\/Users\//.test(x)).slice(0,2).join(' · ')+(/🎧/.test(n)?' · 🎧 มีไฟล์เสียง (ดูในหน้าแก้สินค้า)':'');}
@@ -2897,6 +2897,20 @@ function crsAccessHtml(c,pid){const opts=D.products.filter(isBundle).flatMap(b=>
     <div class="field"><label>ใส่คอร์สนี้ในแพ็กเกจของชุดด้วย (ติ๊กได้หลายอัน)</label><div class="crs-grants">${opts.map(([k,l])=>`<label class="fine"><input type="checkbox" data-a="crsGrant" data-v="${esc(k)}" ${(c.grants||[]).includes(k)?'checked':''}> ${esc(l)}</label>`).join('')||'<span class="fine">ยังไม่มีชุดที่มีแพ็กเกจ</span>'}</div></div>
     <div class="field"><label>อีเมลที่เข้าเรียนได้เลยไม่ต้องซื้อ (คั่นด้วยเว้นวรรคหรือขึ้นบรรทัดใหม่)</label><textarea class="input" rows="2" data-crs="emails" placeholder="you@gmail.com">${esc(Array.isArray(c.emails)?c.emails.join('\n'):(c.emails||''))}</textarea></div>
     <div class="sw-row" style="margin:0"><span><b>เปิดสอน</b><small>${c.on!==false?'ผู้ที่มีสิทธิ์เห็นคอร์สนี้ในหน้าเรียน':'ปิดอยู่ · ไม่มีใครเห็นคอร์สนี้ในหน้าเรียน'}</small></span><label class="switch"><input type="checkbox" data-a="crsOn" ${c.on!==false?'checked':''} aria-label="เปิดสอนคอร์สนี้"><span></span></label></div>`;}
+/* วิดีโอบทเรียนเล่นจาก Google Drive โดยตรง (หน้าเรียนฝัง drive.google.com/.../preview) → ต้องแชร์ "ทุกคนที่มีลิงก์" ลูกค้าถึงดูได้
+   ตรวจแบบไม่ล็อกอินทีละบท · ติ๊กยืนยันก่อนเผยแพร่ (แบบเดียวกับไฟล์เสียง) · ทุกบทเปิดได้ = ติ๊กให้เอง */
+const COURSE_DRIVE='https://drive.google.com/drive/folders/1spsnn51glpHH5H9x__D2Oo024YQ0RFvR';
+const VIDEO_ERR='วิดีโอคอร์สอยู่ใน Google Drive: แชร์โฟลเดอร์ Courses เป็น "ทุกคนที่มีลิงก์" แล้วกดตรวจ/ติ๊กยืนยันในกล่อง 🎥 ก่อนเผยแพร่';
+const vidUrls=c=>[...new Set((c.lessons||[]).filter(l=>l.status!=='draft').map(l=>{const m=String(l.url||'').match(/drive\.google\.com\/file\/d\/([\w-]+)/);return m?`https://drive.google.com/file/d/${m[1]}/view`:'';}).filter(Boolean))];
+function videoBox(c,d){const U=vidUrls(c),R=S.vdrv||{},ok=!!d.videoOk,bad=U.filter(u=>R[u]==='private').length,checked=U.filter(u=>R[u]).length;if(!U.length)return '';
+  return `<section class="card aud${ok?' ok':''}" style="margin:12px 0 0"><b>🎥 วิดีโอบทเรียนเล่นจาก Google Drive (${U.length} บท)</b>
+    <ol class="fine aud-steps"><li>เปิดโฟลเดอร์: <a href="${COURSE_DRIVE}" target="_blank" rel="noopener noreferrer">Sheetlab / Courses</a> (บทใหม่จากโรงงานจะอยู่ในโฟลเดอร์นี้เสมอ แชร์ครั้งเดียวพอ)</li><li>กด แชร์ → การเข้าถึงทั่วไป → <b>ทุกคนที่มีลิงก์</b> (ผู้มีสิทธิ์อ่าน)</li><li>กดตรวจด้านล่าง ระบบลองเปิดทุกบทแบบไม่ล็อกอิน (เหมือนลูกค้า)</li></ol>
+    <div class="aud-chk"><button class="btn btn-sm btn-line" data-a="vidCheck" ${S.vidBusy?'disabled':''}>${S.vidBusy?'กำลังตรวจ...':'🔎 ตรวจวิดีโอทุกบท (เปิดแบบไม่ล็อกอิน)'}</button>${checked?`<span class="fine">${bad?`🔒 ยังเป็นส่วนตัว ${bad} บท`:`✅ เปิดได้ทุกบท (${checked}/${U.length})`}</span>`:''}</div>
+    <label class="aud-ok"><input type="checkbox" data-a="videoOk" ${ok?'checked':''}> แชร์เป็น "ทุกคนที่มีลิงก์" แล้ว ลูกค้าเปิดวิดีโอได้</label>${ok?'':'<span class="fine aud-warn">ยังไม่ติ๊ก: เผยแพร่ไม่ได้ (บันทึกฉบับร่างได้)</span>'}</section>`;}
+async function vidCheck(c,d){const urls=vidUrls(c);if(!urls.length)return null;S.vidBusy=true;render(true);
+  try{const j=await adminPost('/api/content?action=drive_check',{urls});const res=(j&&j.results)||[];S.vdrv=Object.assign({},S.vdrv,Object.fromEntries(res.map(r=>[r.url,r.state])));
+    const bad=res.filter(r=>r.state!=='public').length;if(d&&res.length&&!bad)d.videoOk=true;toast(bad?`🔒 ยังเปิดไม่ได้ ${bad} บท แชร์โฟลเดอร์ Courses เป็น "ทุกคนที่มีลิงก์" ก่อน`:'✅ วิดีโอทุกบทเปิดได้แบบไม่ล็อกอิน');return {bad,n:res.length};}
+  catch(e){toast('ตรวจไม่สำเร็จ ลองใหม่');return null;}finally{S.vidBusy=false;render(true);}}
 function courseProductForm(d){let c=CRS.ed;
   if(!c||!(c.grants||[]).includes(S.edit)){if(!CRS.list){loadCRS();return '<p class="fine">กำลังโหลดคอร์ส...</p>';}const x=crsOfProduct(S.edit);if(!x)return '';c=CRS.ed=JSON.parse(JSON.stringify(x));}
   const lb=(id,t)=>`<label for="${id}">${t}</label>`;
@@ -2914,6 +2928,7 @@ function courseProductForm(d){let c=CRS.ed;
     ${sellPicker(d)}
     <hr class="sep"><h3 class="h3">2. บทเรียนในคอร์ส</h3>${crsLessonsHtml(c)}
     <div class="field" style="margin-top:12px">${lb('e-free','บทให้ดูฟรีบนหน้าขาย (ปุ่ม "ดูตัวอย่างเนื้อหา") · ช่วยให้คนตัดสินใจซื้อง่ายขึ้น')}<select class="input" id="e-free" data-d="sampleLink"><option value="">ไม่มี</option>${live.map(l=>`<option value="${esc(l.url)}" ${d.sampleLink===l.url?'selected':''}>${esc(l.title)}</option>`).join('')}</select><span class="fine">ไฟล์วิดีโอใน Google Drive ต้องแชร์แบบ "ทุกคนที่มีลิงก์" ลูกค้าถึงจะเปิดได้</span></div>
+    ${videoBox(c,d)}
     <hr class="sep"><h3 class="h3">3. รูปคอร์ส</h3>
     <div class="field"><span class="lbl" id="lbl-img">${(d.images||[]).length?zipBtn('dlImgs','⬇ โหลดรูปทั้งหมด (ZIP)'):''} ภาพปกและตัวอย่างหน้า (สูงสุด 5 ภาพ ขนาด 1200×1200 พิกเซล) — ภาพแรกจะใช้เป็นรูปพรีวิวตอนแชร์ลิงก์ใน Facebook/LINE</span>
       <div class="thumbs" aria-labelledby="lbl-img">${d.images.map((src,i)=>`<div class="thumb"><img src="${esc(src)}" alt="ภาพที่ ${i+1}"><button class="x" data-a="rmImg" data-i="${i}" aria-label="ลบภาพที่ ${i+1}">×</button>${i===0?'<span class="th-cover">ปก</span>':''}${d.images.length>1?`<span class="mv">${i>0?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="-1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางซ้าย">‹</button>`:''}${i<d.images.length-1?`<button data-a="mvImg" data-k="images" data-i="${i}" data-d="1" aria-label="เลื่อนภาพที่ ${i+1} ไปทางขวา">›</button>`:''}</span>`:''}</div>`).join('')}
@@ -6250,6 +6265,8 @@ function act(a,el){
     case 'bxPubBooks':S.bxPubBooks=!!el.checked;render(true);break;
     case 'aiStop':S.aiRun=(S.aiRun||0)+1;S.coverBusy=false;S.imgSet=null;S.bxImg='';S.bxImgN=0;render(true);toast('หยุดสร้างรูปแล้ว รูปที่ยังไม่เสร็จไม่ถูกใช้ (รูปที่ส่งไปสร้างแล้วอาจยังคิดเงินตามรูป)');break;
     case 'drvCheck':drvCheck();break;
+    case 'vidCheck':{const c=CRS.ed;if(c)vidCheck(c,S.draft);break;}
+    case 'videoOk':if(S.draft){S.draft.videoOk=!!el.checked;render(true);}break;
     case 'audioOk':{if(S.draft){S.draft.audioOk=!!el.checked;S.err='';render(true);}break;}
     case 'saveProduct':{
       // รูปที่ AI สร้างไว้แต่ยังไม่ได้กด "ใช้เป็นปก"/"ใช้รูปที่เลือก": ใส่ให้ก่อนแล้วค่อยบันทึก (เดิมรูปหายถ้ากดบันทึกเลย)
@@ -6261,6 +6278,7 @@ function act(a,el){
       if(el.dataset.status)d.status=el.dataset.status;
       const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase(),price=Number(d.price),full=Number(d.fullPrice)||0,link=String(d.link).trim(),sample=String(d.sampleLink).trim();
       if(!name){S.err='กรอกชื่อสินค้า';render(true);break;}
+      if(d.status==='published'&&d.kind==='course'&&!d.videoOk){d.status=getProduct(selfId)?getProduct(selfId).status:'draft';S.err=VIDEO_ERR;render(true);break;}
       if(d.status==='published'&&hasAudio(d)&&!d.audioOk){d.status=getProduct(selfId)?getProduct(selfId).status:'draft';S.err=AUDIO_ERR;render(true);break;}
       if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)){S.err='ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น calculus-1-summary';render(true);break;}
       if(slugTaken(slug,selfId)){S.err='ชื่อในลิงก์นี้ถูกใช้แล้ว เลือกชื่ออื่น';render(true);break;}
@@ -6341,10 +6359,11 @@ function act(a,el){
     case 'fcrSavePlan':{const c=CRS.list.find(x=>x.id===FCR.cid);if(c)fcrSaveCourse(c,'บันทึกแผนบทเรียนแล้ว');break;}
     case 'crsSellNow':{const c=CRS.list.find(x=>x.id===el.dataset.id),price=Math.round(Number(CRS.price[el.dataset.id])||0);if(!c)break;
       if(!(price>=1)){toast('ใส่ราคาก่อน (บาท)');break;}if(!crsLive(c).length){toast('คอร์สยังไม่มีบทที่เผยแพร่ อนุมัติบทก่อน');break;}
+      if(!el.dataset.vok&&vidUrls(c).length){vidCheck(c,null).then(r=>{if(r&&r.bad){toast(`🔒 วิดีโอยังเปิดไม่ได้ ${r.bad} บท: แชร์โฟลเดอร์ Courses ใน Google Drive เป็น "ทุกคนที่มีลิงก์" ก่อนเปิดขาย`);return;}if(r){el.dataset.vok='1';act('crsSellNow',el);}});break;}
       if(!confirm(`เปิดขาย "${c.title}" ราคา ${baht(price)} ในหน้าร้าน?\nลูกค้าซื้อแล้วเข้าเรียนที่ /my-learning ได้ทันที`))break;
       const L=c.lessons.filter(l=>l.status!=='draft'),tot=L.reduce((a,l)=>a+(Number(l.min)||0),0),secs=[...new Set(L.map(l=>l.section||'บทเรียน'))],slug=c.slug||setSlug(c.title);
-      const ex=D.products.find(x=>x.kind==='course'&&(c.grants||[]).includes(x.id));if(ex){Object.assign(ex,{price,status:'published',publishedAt:ex.publishedAt||Date.now()});delete ex.fresh;const dd={toc:ex.toc,specs:ex.specs,link:ex.link};crsSalesSync(c,dd);Object.assign(ex,dd);save();const ed=JSON.parse(JSON.stringify(c));ed.on=true;CRS.ed=ed;(crsSaveNow(`เปิดขาย "${c.title}" ในร้านแล้ว ${baht(price)}`)||Promise.resolve()).then(()=>{CRS.ed=null;render(true);});break;}
-      const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36),name:c.title,slug:setSlug(c.title+'-course'),kind:'course',cat:/ielts/i.test(c.title)?'ielts':'',headline:c.title,desc:c.desc||'',price,fullPrice:0,status:'published',publishedAt:Date.now(),
+      const ex=D.products.find(x=>x.kind==='course'&&(c.grants||[]).includes(x.id));if(ex){Object.assign(ex,{price,status:'published',videoOk:true,publishedAt:ex.publishedAt||Date.now()});delete ex.fresh;const dd={toc:ex.toc,specs:ex.specs,link:ex.link};crsSalesSync(c,dd);Object.assign(ex,dd);save();const ed=JSON.parse(JSON.stringify(c));ed.on=true;CRS.ed=ed;(crsSaveNow(`เปิดขาย "${c.title}" ในร้านแล้ว ${baht(price)}`)||Promise.resolve()).then(()=>{CRS.ed=null;render(true);});break;}
+      const p=Object.assign(blankProduct(),{id:'p'+Date.now().toString(36),name:c.title,slug:setSlug(c.title+'-course'),kind:'course',cat:/ielts/i.test(c.title)?'ielts':'',headline:c.title,desc:c.desc||'',price,fullPrice:0,status:'published',videoOk:true,publishedAt:Date.now(),
         images:[c.poster,c.image].filter(Boolean),features:L.slice(0,8).map(l=>l.title).join('\n'),link:location.origin+'/my-learning?c='+encodeURIComponent(slug),
         specs:`รูปแบบ | วิดีโอเรียนออนไลน์\nจำนวนบท | ${L.length} บท (มีบทใหม่เพิ่มเรื่อยๆ)\nความยาวรวม | ${tot} นาที\nเรียนที่ | ${location.host}/my-learning (มือถือหรือคอม)\nเข้าเรียนได้ | ทันทีหลังชำระเงิน`,
         toc:secs.map(sn=>sn+'\n'+L.filter(l=>(l.section||'บทเรียน')===sn).map(l=>`  ${L.indexOf(l)+1}. ${l.title}${l.min?` (${l.min} นาที)`:''}`).join('\n')).join('\n'),

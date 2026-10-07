@@ -1355,9 +1355,9 @@ export default async function handler(req, res) {
     if (action === 'drive_check') { // โฟลเดอร์เสียงใน Google Drive เปิดได้โดยไม่ล็อกอินไหม (200 = ทุกคนที่มีลิงก์ · 302 ไปหน้าล็อกอิน = ส่วนตัว)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
-      const b = await readBody(req), urls = [...new Set((Array.isArray(b.urls) ? b.urls : []).map(String).filter((u) => /^https:\/\/drive\.google\.com\/drive\/folders\/[\w-]+$/.test(u)))].slice(0, 20);
+      const b = await readBody(req), urls = [...new Set((Array.isArray(b.urls) ? b.urls : []).map(String).filter((u) => /^https:\/\/drive\.google\.com\/(drive\/folders\/[\w-]+|file\/d\/[\w-]+\/view)$/.test(u)))].slice(0, 60); // โฟลเดอร์เสียง + วิดีโอบทเรียนคอร์ส (ไฟล์ส่วนตัวตอบ 401)
       const out = await Promise.all(urls.map(async (url) => { try { const r = await fetch(url, { redirect: 'manual', headers: { 'User-Agent': 'Mozilla/5.0' } });
-        return { url, state: r.status === 200 ? 'public' : r.status >= 300 && r.status < 400 && /accounts\.google\.com/.test(r.headers.get('location') || '') ? 'private' : r.status === 404 ? 'missing' : 'unknown' }; } catch (e) { return { url, state: 'unknown' }; } }));
+        return { url, state: r.status === 200 ? 'public' : (r.status === 401 || r.status === 403) || (r.status >= 300 && r.status < 400 && /accounts\.google\.com/.test(r.headers.get('location') || '')) ? 'private' : r.status === 404 ? 'missing' : 'unknown' }; } catch (e) { return { url, state: 'unknown' }; } }));
       return res.status(200).json({ ok: true, results: out });
     }
     if (action === 'set_copy') { // ชุดจากโรงงาน: หัวข้อขาย + คำโปรยของชุด (หน้าร้าน/เซลเพจ) จากชื่อและหัวข้อของเล่มในชุด
