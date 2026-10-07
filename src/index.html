@@ -489,6 +489,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}.bx-li{cursor:pointer}.bx-li:hover{border-color:#2440E8}.bx-li-go{margin-left:auto;font-size:13px;color:#2440E8;white-space:nowrap;padding-left:8px}
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
+.paycard{text-align:center;margin:12px 0 4px;font-size:14px}.paycard a{color:var(--muted);text-decoration:underline}.qr-why{text-align:center;margin:8px 0 0}.qr-back{background:var(--warnbg);color:var(--ink);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:14px}
 .mkt{margin-bottom:12px;padding:14px 16px}.mkt summary{cursor:pointer}.mkt-f{margin:10px 0 0;padding-left:20px;display:grid;gap:8px}.mkt-f li b{display:block}
 .ccur{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}.ccur details+details{border-top:1px solid var(--line)}.ccur summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 16px;background:var(--bg)}.ccur summary::-webkit-details-marker{display:none}.ccur summary span{font-size:13px;color:var(--muted);white-space:nowrap}.ccur ul{list-style:none;margin:0;padding:4px 16px 10px}.ccur li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:15px}.ccur li:first-child{border-top:0}.ccur li em{font-style:normal;color:var(--muted);font-size:13px;white-space:nowrap}
 .crs-row,.stu-row{display:grid;grid-template-columns:minmax(0,3fr) 1fr .7fr .7fr 1.7fr 1fr;gap:12px;padding:14px;border-top:1px solid var(--line);align-items:start}.crs-row.pt-th,.stu-row.pt-th{border-top:0}.stu-row{grid-template-columns:minmax(0,1.6fr) minmax(0,2fr) 1.2fr .8fr}.stu-em{word-break:break-all}.stu-p{display:flex;align-items:center;gap:8px;margin:6px 0}.stu-p .vbar{flex:1;margin:0}
@@ -2177,7 +2178,7 @@ function bundleView(p){
         <div class="bx-sum"><span>ยอดชำระ <span class="fine">· แพ็กเกจ ${esc(sel?sel.name:'')}</span></span><b>${baht(payTotal)}</b></div>
         ${qrBox(p,false,payTotal)}
         ${cartBtn(p)}
-        <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}&plan=${encodeURIComponent(sel?sel.key:'')}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>
+        ${cardLink(`/api/checkout?card=1&p=${encodeURIComponent(p.slug)}&plan=${encodeURIComponent(sel?sel.key:'')}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}`)}
         ${payLogos(1)}${paySafe()}
         <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทุกเล่มทันทีบนหน้านี้และทางอีเมล</p>
       </div>
@@ -2360,7 +2361,7 @@ function cartView(){
       <div class="ct-sum"><span>รวม ${L.length} รายการ</span><b>${S.code?`<s class="ct-was">${baht(tot)}</s> `:''}${baht(codeOff(tot))}</b></div>
       ${codeRow()}
       ${qrBox({slug:'__cart__'},false,tot)}
-      <a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(cartCardHref())}">จ่ายด้วยบัตรเครดิต / เดบิต</a>
+      ${cardLink(cartCardHref())}
       ${payLogos(1)}${paySafe()}
       <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทุกเล่มบนหน้านี้ทันที และส่งเข้าอีเมลด้วย</p>
     </div>
@@ -2521,7 +2522,7 @@ function shopView(){
       ${bp2?`<div class="bump"><input type="checkbox" id="f-bump" data-f="bump" ${on?'checked':''} aria-describedby="bump-txt"><label for="f-bump" id="bump-txt"><b>ซื้อคู่กับ ${esc(bp2.name)} <span class="was">${baht(bp2.price)}</span> ${baht(p.bumpPrice)}${pct>0?` <span class="badge ok">ลด ${pct}%</span>`:''}</b><p>ติ๊กเพิ่มแล้วจ่ายรวมครั้งเดียว ได้ไฟล์ทั้งสองทันทีหลังชำระเงิน</p></label></div>`:''}
       <p class="amount" style="text-align:center;margin-bottom:16px">${baht(total)}${on?` <span class="fine">(${baht(p.price)} + ${baht(p.bumpPrice)})</span>`:''}</p>
       ${qrBox(p,on,total)}
-      <a class="btn btn-line btn-block" style="margin-top:10px" href="/api/checkout?card=1&p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}" data-track="InitiateCheckout">จ่ายด้วยบัตรเครดิต / เดบิต</a>`;})()}
+      ${cardLink(`/api/checkout?card=1&p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}`)}`;})()}
       ${cartBtn(p)}
       ${payLogos(1)}${paySafe()}
       <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
@@ -6388,6 +6389,11 @@ document.addEventListener('click',e=>{
   const g=!PV&&e.target.closest('a[data-go]');
   if(g&&e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(S.cart){S.cart=false;drawCart();}if(g.dataset.go&&!S.src)S.src='store';navTo(g.getAttribute('href'));return;}
   const tr=e.target.closest('[data-track]');
+  if(tr&&tr.dataset.card){e.preventDefault();if(tr.dataset.busy)return;tr.dataset.busy='1';setTimeout(()=>{delete tr.dataset.busy;},4000);
+    const em=String(qrEmailGuess()).trim(),ok=/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(em),href=tr.getAttribute('href')+(ok&&!/[?&]e=/.test(tr.getAttribute('href'))?'&e='+encodeURIComponent(em):'');
+    if(ok){try{localStorage.setItem('sl_email',em);}catch(x){}}
+    const p=curProduct();if(p)track('InitiateCheckout',Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));
+    setTimeout(()=>{location.href=href;},pixelReady?350:0);return;}
   if(tr){const p=curProduct();if(p)track(tr.dataset.track,Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));
     // ลิงก์ไปหน้าจ่ายเงิน: รอให้ Pixel ส่งเหตุการณ์ออกไปก่อนเปลี่ยนหน้า ไม่งั้นเบราว์เซอร์ตัดคำขอทิ้ง (Meta ไม่เห็น InitiateCheckout)
     const href=tr.tagName==='A'&&tr.getAttribute('href');
@@ -6492,6 +6498,10 @@ function codeRow(){return S.code?`<div class="code-row ok">🎟 โค้ด <b>
 async function codeApply(c,quiet){c=String(c||'').trim();if(!c)return;S.codeBusy=true;S.codeErr='';if(!quiet)render(true);
   try{const j=await fetch('/api/checkout?m=code&code='+encodeURIComponent(c)).then(r=>r.json());if(j.ok){S.code={code:j.code,pct:j.pct};try{sessionStorage.setItem('sl_code',j.code);}catch(e){}if(!quiet)toast('ใช้โค้ดแล้ว ลด '+j.pct+'%');}else S.codeErr=j.error||'ใช้โค้ดไม่ได้';}
   catch(e){S.codeErr='ตรวจโค้ดไม่ได้ ลองใหม่';}S.codeBusy=false;render(true);if(S.cart)drawCart();}
+/* หน้าจ่ายเงิน (7 ต.ค. 69): QR พร้อมเพย์เป็นทางหลัก (จ่ายจริง ~67%) บัตรเป็นลิงก์รอง (เปิดหน้า Stripe แล้วทิ้ง ~97%)
+   กดบัตรแล้วส่งอีเมลที่กรอกไว้ไปด้วย → Stripe กรอกให้ และระบบส่งอีเมลเตือนได้ถ้าจ่ายไม่เสร็จ · กันกดซ้ำสร้างหน้าจ่ายเงิน 2 อัน */
+const cardLink=href=>`<p class="paycard"><a href="${esc(href)}" data-track="InitiateCheckout" data-card="1">ไม่สะดวกสแกน? จ่ายด้วยบัตรเครดิต / เดบิต</a></p>`;
+function qrEmailGuess(){let em=S.form.qrEmail||'';if(!em){try{em=localStorage.getItem('sl_email')||'';}catch(e){}}return em;}
 function qrBox(p,on,total){return `<div id="qrslot" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">${qrInner(p.slug,on,total)}</div>`;}
 function qrPaint(focus){ // วาดใหม่เฉพาะกล่อง QR ไม่แตะส่วนอื่นของหน้า
   const el=document.getElementById('qrslot');if(!el)return render(true);
@@ -6503,15 +6513,16 @@ function qrInner(slug,on,total){
   const p={slug};
   const q=S.qr&&S.qr.slug===slug&&S.qr.total===total?S.qr:null;
   if(!q||q.step==='email'||q.step==='err'){
-    const open=!!q;
-    return open?`<div class="qpay" id="qrbox">
-      <label for="qr-email"><b>อีเมลสำหรับรับสินค้า</b></label>
-      <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" value="${esc(S.form.qrEmail||q.email||'')}" data-f="qrEmail">
-      <p class="fine" style="margin:6px 0 10px">ธนาคารต้องใช้อีเมลนี้ยืนยันการจ่ายผ่าน PromptPay ระบบจะส่งลิงก์ดาวน์โหลดไปที่อีเมลนี้ และแสดงบนหน้านี้ทันทีหลังจ่าย</p>
-      ${q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:0 0 8px">${esc(q.err)}</p>`:''}
+    if(!S.form.qrEmail)S.form.qrEmail=qrEmailGuess();
+    return `<div class="qpay" id="qrbox">
+      ${S.unpaidHint?`<p class="qr-back" role="status">ยังไม่ได้ชำระเงิน · <b>สแกนจ่ายพร้อมเพย์ง่ายกว่า</b> ใช้แอปธนาคารไหนก็ได้ ไม่ถึง 1 นาที</p>`:''}
+      <label for="qr-email"><b>อีเมลรับไฟล์</b></label>
+      <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@gmail.com" value="${esc(S.form.qrEmail||(q&&q.email)||'')}" data-f="qrEmail">
+      ${q&&q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:6px 0 0">${esc(q.err)}</p>`:''}
       ${slug==='__cart__'?'':codeRow()}
-      <button class="btn btn-buy btn-block" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}">แสดง QR ชำระเงิน ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>
-    </div>`:`<button class="btn btn-buy btn-block" data-a="qrOpen" data-slug="${esc(slug)}" data-total="${total}" data-track="InitiateCheckout">สแกนจ่าย PromptPay ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>`;
+      <button class="btn btn-buy btn-block" style="margin-top:10px" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}" data-track="InitiateCheckout">📱 สแกนจ่ายพร้อมเพย์ ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>
+      <p class="fine qr-why">✓ ทุกธนาคาร · ✓ ได้ไฟล์ทันทีบนหน้านี้และทางอีเมล · ✓ ไม่ต้องสมัครสมาชิก</p>
+    </div>`;
   }
   if(q.step==='loading')return `<div class="qpay center"><p class="muted">กำลังสร้าง QR…</p></div>`;
   return `<div class="qpay center" id="qrbox">
@@ -6681,6 +6692,7 @@ function applyUrl(){
     try{if(S.src)sessionStorage.setItem('sl_src',S.src);else S.src=sessionStorage.getItem('sl_src')||'';}catch(e){}
     const sid=q.get('session_id');if(sid&&/^cs_(live|test)_[A-Za-z0-9]+$/.test(sid))S.sessionId=sid;
     // มาจากแอดที่เคยลิงก์ไปหน้าบัตรตรงๆ (?buy=1): เลื่อนไปส่วนชำระเงิน (QR พร้อมเพย์อยู่บนสุด) ให้เลย
+    if(q.get('unpaid')==='1'){S.unpaidHint=true;try{const u=new URL(location.href);u.searchParams.delete('unpaid');history.replaceState(null,'',u.pathname+u.search+u.hash);}catch(e){}setTimeout(()=>{try{glideTo('checkout');}catch(e){}},700);}
     if(q.get('buy')==='1'&&m){const pl=q.get('plan');if(pl){S.bplan=S.bplan||{};S.bplan[m[1]]=pl;}setTimeout(()=>{try{glideTo('checkout');}catch(e){}},700);}
     {const qc=q.get('code')||(()=>{try{return sessionStorage.getItem('sl_code');}catch(e){return '';}})();if(qc)setTimeout(()=>codeApply(qc,true),300);}
     if(q.get('cart')==='open'&&CART.length){S.cart=true;setTimeout(drawCart,50);history.replaceState(null,'',location.pathname);}

@@ -26,7 +26,7 @@ const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
-const CRSPOST = []; const BULK = [];
+const CARDHITS = []; const CRSPOST = []; const BULK = [];
 const MAILS = [];
 const { freePage, FREEBIES } = await import(path.join(ROOT, '..', 'lib/free.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
@@ -68,6 +68,7 @@ async function newPage(kind) {
     if (/\/storage\/v1\/object\/public\//.test(url) || /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url)) return route.fulfill({ status: 200, contentType: 'image/png', body: PNG });
     if (/fonts\.(googleapis|gstatic)\.com|connect\.facebook\.net|googletagmanager|facebook\.com\/tr/.test(url)) return route.fulfill({ status: 200, body: '' });
     if (/\/api\/checkout\?m=code/.test(url)) { const c = new URL(url).searchParams.get('code'); return route.fulfill({ json: c === CODE ? { ok: true, code: CODE, pct: 20 } : { ok: false, error: 'ไม่พบโค้ดนี้' } }); }
+    if (/\/api\/checkout\?card=1/.test(url)) { CARDHITS.push(url); return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>stripe</title>card' }); }
     if (/\/api\/checkout\?m=qr/.test(url)) return route.fulfill({ json: { ok: true, pi: 'pi_test', k: 'pi_test_secret', png: `${BASE}/qr.png`, amount: 1 } });
     if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD, LIVE], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอด 2 รูป + แอดทดสอบ 3 รูปที่วิ่งมา 6 วัน
     if (/action=ads_auto_status/.test(url) && AD) return route.fulfill({ json: { ok: true, access: { ok: true }, currency: 'AUD', rate: 0.04, history: [], ads: LIVE_ADS } });
@@ -208,6 +209,15 @@ try {
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: แถบบนมีปุ่ม "ดูสินค้าทั้งหมด" ไป /store`, await page.locator('.sp-topbar a[href="/store"]').count() === 1);
       await page.locator('#checkout').scrollIntoViewIfNeeded().catch(() => {});
       await layout(page, `[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}`);
+      if (p.type !== 'bundle') { // หน้าจ่ายเงิน: QR เป็นทางหลัก กรอกอีเมลได้ทันที · บัตรเป็นลิงก์รอง ส่งอีเมลไปด้วย · กดซ้ำไม่สร้างหน้าจ่ายเงิน 2 อัน · กลับมาจาก Stripe แล้วมีข้อความชวนสแกน
+        const box = await page.evaluate(() => ({ email: !!document.querySelector('#checkout #qr-email'), qr: !!document.querySelector('#checkout [data-a="qrMake"]'), cardBig: !!document.querySelector('#checkout a.btn[href*="card=1"]'), card: !!document.querySelector('#checkout .paycard a[data-card]') }));
+        await page.fill('#checkout #qr-email', 'buyer@test.co'); CARDHITS.length = 0;
+        await page.evaluate(() => { const a = document.querySelector('#checkout .paycard a[data-card]'); a.click(); a.click(); }); await page.waitForTimeout(1200);
+        const hits = CARDHITS.slice(); await page.goto(`${BASE}/p/${p.slug}?unpaid=1`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(900);
+        await page.locator('#checkout .card').first().screenshot({ path: path.join(OUT, `checkout-${kind}.png`) }).catch(() => {});
+        const back = await page.evaluate(() => ({ hint: !!document.querySelector('#checkout .qr-back'), url: location.search, prefill: (document.querySelector('#checkout #qr-email') || {}).value }));
+        pass(`[${kind}] หน้าจ่ายเงิน: กรอกอีเมล + ปุ่มสแกนพร้อมเพย์ขึ้นทันที · บัตรเป็นลิงก์รองส่งอีเมลไปด้วย กดซ้ำได้หน้าเดียว · กลับจาก Stripe มีข้อความชวนสแกน (จำอีเมลไว้)`,
+          box.email && box.qr && !box.cardBig && box.card && hits.length === 1 && /[?&]e=buyer%40test\.co/.test(hits[0]) && back.hint && !/unpaid/.test(back.url) && back.prefill === 'buyer@test.co', JSON.stringify({ box, hits, back })); }
       await page.context().close();
     } catch (e) { pass(`[${kind}] หน้าขาย ${p.slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 

@@ -95,7 +95,7 @@ async function cartCheckout(req, res) {
     adaptive_pricing: { enabled: false },
     allow_promotion_codes: true,
     success_url: `${origin}/checkout?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/checkout`,
+    cancel_url: `${origin}/checkout?unpaid=1`,
     metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign, cart: ps.map((p) => p.id).join(','), cartPlans: cartPlans(ps), plan: '', bumpProductId: '', bumpProductName: '', ...capiMeta(req) },
     payment_intent_data: { description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) },
   };
@@ -168,7 +168,7 @@ export default async function handler(req, res) {
       adaptive_pricing: { enabled: false }, // แสดงเป็นบาทเสมอ PromptPay จะได้ขึ้นทุกครั้ง
       allow_promotion_codes: true,
       success_url: `${origin}/p/${p.slug}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/p/${p.slug}`,
+      cancel_url: `${origin}/p/${p.slug}?unpaid=1`,
       metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '', ...capiMeta(req) },
       payment_intent_data: { description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})` },
     };
