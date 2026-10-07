@@ -1,0 +1,65 @@
+{"id":"toeic-750-course-L12","course":"toeic-750-course","n":12,"section":"ฝึกทำข้อสอบ · Part 3","title":"Part 3 ชุดที่ 2: 5 บทสนทนา 15 ข้อ (มีบทสนทนา 3 คน)","slides":[
+{"type":"cover","h":"Part 3 ชุดที่ 2\n5 บทสนทนา 15 ข้อ","sub":"ร้านอาหาร · งานอีเวนต์ · ซ่อมบำรุง · การเงิน · การตลาด","say":"ชุดที่สองของ Part 3 มาแล้ว ห้าบทสนทนา สิบห้าข้อ รอบนี้มีบทสนทนาสามคนด้วย ผู้ชายสองคนเสียงต่างกัน ฟังให้ดีว่าใครพูดอะไร อ่านคำถามบนจอก่อนฟังทุกครั้ง แล้วเลือกคำตอบในใจ เริ่มเลย"},
+{"type":"conv","h":"บทสนทนา 1 · ร้านอาหาร","listenLabel":"ฟังบทสนทนา **3 คน**","say":"บทสนทนาที่หนึ่ง ในร้านอาหาร มีสามคน อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Marco, Ben, thanks for staying after the lunch rush. We have a large group booked for Saturday night."},
+ {"v":"m","t":"How many people are we talking about?"},
+ {"v":"q","t":"Forty. It's a retirement party for a local bank manager, and they've asked for a set menu."},
+ {"v":"r","t":"Forty? Our main dining room only seats thirty-two."},
+ {"v":"q","t":"I know. That's why I'm thinking of opening the patio, if the weather holds."},
+ {"v":"m","t":"Then I'll need to order extra fish by Wednesday. Our supplier doesn't deliver on weekends."}],
+ "qs":[
+ {"q":"What event is being planned?","o":["A product launch","A retirement party","A cooking class","A grand opening"],"a":1,"why":"**a retirement party for a local bank manager**","whySay":"ผู้หญิงบอกตรงๆ ว่าเป็นงานเลี้ยงเกษียณของผู้จัดการธนาคาร ส่วนคำว่า bank เป็นแค่คำหลอก","no":["ไม่มีการเปิดตัวสินค้า",null,"ไม่ได้สอนทำอาหาร","ร้านเปิดอยู่แล้ว"]},
+ {"q":"Why does one of the men say, \"Our main dining room only seats thirty-two\"?","o":["To recommend a different restaurant","To request additional servers","To point out that the room is too small","To complain about a reservation policy"],"a":2,"why":"แขก 40 คน แต่ห้องนั่งได้ 32 = **ที่ไม่พอ**","whySay":"แขกมาสี่สิบคน แต่ห้องนั่งได้แค่สามสิบสอง เขากำลังบอกว่าห้องเล็กไป ผู้หญิงเลยเสนอเปิดลานด้านนอก","no":["ไม่ได้แนะนำร้านอื่น","ไม่ได้พูดถึงพนักงานเสิร์ฟเพิ่ม",null,"ไม่ได้บ่นเรื่องนโยบายจอง"]},
+ {"q":"What does one of the men say he must do by Wednesday?","o":["Place an order","Prepare a menu","Contact a bank","Set up the patio"],"a":0,"why":"**I'll need to order extra fish by Wednesday**","whySay":"ผู้ชายคนแรกบอกว่าต้องสั่งปลาเพิ่มภายในวันพุธ เพราะซัพพลายเออร์ไม่ส่งของวันเสาร์อาทิตย์","no":[null,"ลูกค้าขอเซ็ตเมนู แต่ไม่ได้บอกว่าต้องทำวันพุธ","ธนาคารเป็นแค่ที่ทำงานของแขก","ผู้หญิงแค่คิดจะเปิดลาน"]}]},
+{"type":"conv","h":"บทสนทนา 2 · งานอีเวนต์","say":"บทสนทนาที่สอง เรื่องงานแสดงสินค้า อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Hi, this is Laura from Brightside Events. I'm calling about the trade fair booth your company reserved for next month."},
+ {"v":"r","t":"Oh, hi Laura. Is there a problem with our booking?"},
+ {"v":"q","t":"Not at all. Actually, a larger booth near the main entrance has just become available. Would you be interested?"},
+ {"v":"r","t":"Definitely. More visitors would see our products there. How much extra would it cost?"},
+ {"v":"q","t":"It's an additional four hundred dollars, but that includes two extra chairs and a display screen."},
+ {"v":"r","t":"Let me check with my manager first. Can I get back to you by tomorrow afternoon?"}],
+ "qs":[
+ {"q":"Why is the woman calling?","o":["To confirm a payment","To cancel a reservation","To invite a guest speaker","To offer a different booth"],"a":3,"why":"**a larger booth ... has just become available**","whySay":"เธอโทรมาเสนอบูธที่ใหญ่กว่าใกล้ทางเข้า คำถามว่าโทรมาทำไม คำตอบอยู่ช่วงต้นบทสนทนา","no":["ยังไม่มีการจ่ายเงิน","ไม่ได้ยกเลิก การจองไม่มีปัญหา","ไม่มีวิทยากร",null]},
+ {"q":"What does the woman say is included in the additional fee?","o":["Additional furniture and equipment","Free parking for staff","Lunch for booth workers","An advertisement in a brochure"],"a":0,"why":"**two extra chairs and a display screen** = furniture + equipment","whySay":"ค่าเพิ่มรวมเก้าอี้สองตัวกับจอแสดงผล ข้อสอบเปลี่ยนคำเป็น furniture and equipment","no":[null,"ไม่ได้พูดถึงที่จอดรถ","ไม่ได้พูดถึงอาหาร","ไม่ได้พูดถึงโฆษณา"]},
+ {"q":"What does the man say he will do?","o":["Visit the venue","Pay a deposit","Speak with his manager","Send some product samples"],"a":2,"why":"**Let me check with my manager first**","whySay":"ผู้ชายยังไม่ตัดสินใจ บอกว่าขอเช็กกับหัวหน้าก่อน แล้วจะโทรกลับพรุ่งนี้บ่าย","no":["ไม่ได้บอกว่าจะไปดูสถานที่","ยังไม่ได้ตกลงจ่าย",null,"ไม่ได้พูดถึงตัวอย่างสินค้า"]}]},
+{"type":"conv","h":"บทสนทนา 3 · ซ่อมบำรุง","listenLabel":"ฟังบทสนทนา **3 คน**","say":"บทสนทนาที่สาม เรื่องแอร์เสีย มีสามคน อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Hi, are you from Reliable Repairs? The air conditioning on the fourth floor stopped working this morning."},
+ {"v":"m","t":"Yes, we got your call. Have you noticed any strange noises from the unit?"},
+ {"v":"q","t":"There was a loud rattling sound yesterday afternoon, and this morning it was completely silent."},
+ {"v":"r","t":"That sounds like the fan motor. Steve, did we bring a replacement in the van?"},
+ {"v":"m","t":"No, we only have filters with us. We'll have to pick one up from our warehouse."},
+ {"v":"r","t":"And it's across town. In the meantime, you might want to move your staff to the conference room downstairs."},
+ {"v":"q","t":"Good idea. That room has a separate air conditioning system."}],
+ "qs":[
+ {"q":"Who most likely are the men?","o":["Office workers","Delivery drivers","Repair technicians","Building inspectors"],"a":2,"why":"มาจาก **Reliable Repairs** + วิเคราะห์อาการแอร์","whySay":"ผู้หญิงถามว่ามาจาก Reliable Repairs ใช่ไหม แล้วสองคนนี้ก็วิเคราะห์อาการแอร์ แปลว่าเป็นช่างซ่อม","no":["ผู้หญิงต่างหากที่ทำงานในออฟฟิศ","มีรถตู้ แต่ไม่ได้มาส่งของ",null,"ไม่ได้มาตรวจอาคาร"]},
+ {"q":"What does the woman say happened yesterday?","o":["The unit made a loud noise.","The power went out.","A filter was replaced.","Some staff left early."],"a":0,"why":"**a loud rattling sound yesterday afternoon**","whySay":"เมื่อวานบ่ายแอร์มีเสียงดังแกรกๆ ส่วนเช้านี้เงียบไปเลย ระวังสับสนเวลา เมื่อวานกับเช้านี้","no":[null,"ไฟไม่ได้ดับ","ฟิลเตอร์แค่มีอยู่ในรถ","ไม่ได้พูดถึงพนักงานกลับก่อน"]},
+ {"q":"Why does one of the men say, \"it's across town\"?","o":["To give directions to the warehouse","To recommend a different company","To complain about a delivery service","To explain that the repair will take time"],"a":3,"why":"โกดังอยู่ไกล = **ไปเอาอะไหล่ต้องใช้เวลา**","whySay":"ต้องไปเอามอเตอร์ที่โกดัง และโกดังอยู่อีกฝั่งเมือง แปลว่าซ่อมไม่เสร็จเร็วๆ นี้ เขาเลยแนะนำให้ย้ายพนักงานไปห้องอื่นก่อน","no":["ไม่ได้บอกทางให้ใคร","ไม่ได้แนะนำบริษัทอื่น","ไม่มีบริษัทขนส่ง",null]}]},
+{"type":"conv","h":"บทสนทนา 4 · การเงิน","say":"บทสนทนาที่สี่ คุยกับฝ่ายบัญชี อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"m","t":"Hi Grace, I submitted my travel expense report two weeks ago, but I still haven't been reimbursed."},
+ {"v":"q","t":"Let me look it up. Ah, I see. Your hotel receipt wasn't attached, so the report was put on hold."},
+ {"v":"m","t":"Really? I was sure I'd scanned it. I'll e-mail it to you right away."},
+ {"v":"q","t":"Thanks. Once I have it, payments usually go out within three business days."},
+ {"v":"m","t":"That's fine. By the way, is the new expense software still launching next month?"},
+ {"v":"q","t":"Actually, it's been pushed back to January. There'll be a training session for everyone before then."}],
+ "qs":[
+ {"q":"What is the man's problem?","o":["He was overcharged by a hotel.","He has not received a payment.","He lost his company credit card.","He missed a training session."],"a":1,"why":"**I still haven't been reimbursed** = ยังไม่ได้เงินคืน","whySay":"ผู้ชายส่งใบเบิกค่าเดินทางไปสองอาทิตย์แล้ว แต่ยังไม่ได้เงินคืน reimbursed คือได้รับเงินที่สำรองจ่ายคืน","no":["ไม่ได้บอกว่าโรงแรมคิดเงินเกิน",null,"ไม่ได้ทำบัตรหาย","อบรมยังไม่เกิดขึ้น"]},
+ {"q":"Why was the man's report put on hold?","o":["A receipt was missing.","It was submitted late.","The amount was too high.","It lacked a manager's approval."],"a":0,"why":"**Your hotel receipt wasn't attached**","whySay":"ใบเสร็จโรงแรมไม่ได้แนบมา เลยถูกพักเรื่องไว้ ข้อสอบเปลี่ยน wasn't attached เป็น missing","no":[null,"ไม่ได้บอกว่าส่งช้า","ไม่ได้พูดถึงยอดเงิน","ไม่ได้พูดถึงการอนุมัติ"]},
+ {"q":"What does the woman say about the new expense software?","o":["It is difficult to use.","Its launch has been delayed.","It was installed last week.","It no longer requires training."],"a":1,"why":"**pushed back to January** = เลื่อนออกไป","whySay":"เธอบอกว่าเลื่อนไปเดือนมกราคม push back แปลว่าเลื่อนให้ช้าลง ตรงข้ามกับ move up ในชุดที่แล้ว","no":["ไม่ได้บอกว่าใช้ยาก",null,"ยังไม่ได้ติดตั้ง","ยังมีการอบรมทุกคน"]}]},
+{"type":"conv","h":"บทสนทนา 5 · การตลาด","listenLabel":"ฟังบทสนทนา **3 คน**","say":"บทสนทนาสุดท้าย ประชุมทีมการตลาด สามคน อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"So, the results from our summer social media campaign are in. Online sales went up by fifteen percent."},
+ {"v":"m","t":"That's great news. Which type of post brought in the most customers?"},
+ {"v":"r","t":"Mostly the short video ads. The photo posts didn't perform nearly as well."},
+ {"v":"q","t":"Then let's put more of the budget into videos for the holiday campaign."},
+ {"v":"m","t":"We'd need a bigger production team, though. Our designer is already working overtime."},
+ {"v":"q","t":"Well, the agency we used last spring is very reasonable."},
+ {"v":"r","t":"I'll get in touch with them today and ask for a quote."}],
+ "qs":[
+ {"q":"What does the woman say about the summer campaign?","o":["It ended earlier than planned.","It went over budget.","It increased online sales.","It attracted new employees."],"a":2,"why":"**Online sales went up by fifteen percent**","whySay":"ประโยคแรก ผู้หญิงบอกว่ายอดขายออนไลน์เพิ่มขึ้นสิบห้าเปอร์เซ็นต์","no":["ไม่ได้บอกว่าจบก่อนกำหนด","ไม่ได้บอกว่าใช้งบเกิน",null,"ไม่ได้พูดถึงพนักงานใหม่"]},
+ {"q":"Why does the woman say, \"the agency we used last spring is very reasonable\"?","o":["To complain about a recent bill","To suggest hiring outside help","To praise the designer's work","To recommend canceling a campaign"],"a":1,"why":"ทีมไม่พอ → เอเจนซี่ราคาไม่แพง = **เสนอจ้างคนนอก**","whySay":"ผู้ชายบอกว่าทีมไม่พอ ดีไซเนอร์ทำโอทีอยู่แล้ว เธอเลยบอกว่าเอเจนซี่เดิมราคาไม่แพง คือเสนอให้จ้างคนนอกมาช่วย reasonable ตรงนี้แปลว่าราคาสมเหตุสมผล","no":["ไม่ได้บ่นเรื่องบิล",null,"ไม่ได้ชมดีไซเนอร์","ยังจะทำแคมเปญต่อ"]},
+ {"q":"What will one of the men do today?","o":["Film a video","Update a website","Hire a designer","Request a price estimate"],"a":3,"why":"**ask for a quote** = request a price estimate","whySay":"ผู้ชายอีกคนบอกว่าวันนี้จะติดต่อเอเจนซี่และขอใบเสนอราคา quote คือราคาประเมิน ตรงกับ price estimate","no":["ยังไม่ได้ถ่ายวิดีโอ","ไม่ได้พูดถึงเว็บไซต์","จะติดต่อเอเจนซี่ ไม่ใช่จ้างดีไซเนอร์",null]}]},
+{"type":"end","h":"3 จุดพลาดในชุดนี้","items":[
+ {"x":"**บทสนทนา 3 คน** : one of the men = ฟังให้ออกว่าผู้ชายคนไหน","say":"จุดพลาดแรก บทสนทนาสามคน คำถามมักใช้ one of the men ต้องแยกเสียงผู้ชายสองคนให้ออก ว่าใครสั่งของ ใครจะโทรหาเอเจนซี่"},
+ {"x":"**คำถามเจตนา** : across town = ซ่อมช้า · reasonable = จ้างคนนอก","say":"จุดพลาดที่สอง คำถามว่าทำไมเขาพูดแบบนี้ อย่าแปลตรงตัว ดูว่าประโยคนั้นตอบปัญหาอะไรก่อนหน้า"},
+ {"x":"**ข้อถูกพูดใหม่** : quote → price estimate · pushed back → delayed","say":"จุดพลาดที่สาม ข้อถูกมักใช้คำใหม่ เช่น ask for a quote กลายเป็น request a price estimate อย่าเลือกข้อที่มีคำซ้ำกับที่ได้ยินอย่างเดียว"}],
+ "outro":"ชุดที่สองของ Part 3 จบแล้ว รอบนี้ได้กี่ข้อ เทียบกับชุดแรกดู ถ้าบทสามคนยังพลาด ลองฟังซ้ำอีกรอบ แล้วไปบทถัดไปกันเลย"}
+]}

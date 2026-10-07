@@ -1,0 +1,354 @@
+{
+ "id": "toeic-750-course-L27",
+ "course": "toeic-750-course",
+ "n": 27,
+ "section": "ฝึกทำข้อสอบ · Part 6",
+ "title": "Part 6 ชุดที่ 2: 4 บทความ 16 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 6 ชุดที่ 2\n4 บทความ 16 ข้อ",
+   "sub": "จดหมายเสนองาน · memo ภายใน · รีวิวบริการ · คู่มือการใช้งาน",
+   "say": "บทนี้ฝึก Part 6 ชุดที่สอง สี่บทความ สิบหกข้อ เป็นจดหมายเสนองาน บันทึกภายใน รีวิวบริการ และคู่มือการใช้งาน ทุกบทความมีข้อเติมประโยคหนึ่งข้อ อย่าลืมอ่านประโยคก่อนและหลังช่องว่างทุกครั้ง ข้อละห้าวินาที แล้วเฉลยทันที จดคะแนนไว้ด้วย เริ่มเลย"
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 1/4",
+   "say": "บทความแรก เป็นจดหมายจากฝ่ายบุคคล เสนองานให้ผู้สมัคร อ่านให้จบก่อน แล้วค่อยดูคำถาม ถ้าอยากอ่านนานกว่านี้ กดหยุดวิดีโอได้เลย",
+   "text": "Dear Ms. Tanaka,\nThank you for interviewing with Harbor Point Logistics last week. We are pleased to offer you the position of Customer Service Supervisor. Your ___(1)___ experience in the shipping industry impressed everyone on the hiring panel.\n\nAs discussed, your starting salary will be $52,000 per year. ___(2)___ The details of these benefits are attached to this letter.\n\nPlease confirm your decision ___(3)___ Friday, May 9. If you accept, your first day will be Monday, June 2. ___(4)___ you have any questions, please contact me directly at 555-0148.\n\nSincerely, Daniel Ortiz, HR Manager",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "extend",
+      "extensive",
+      "extensively",
+      "extension"
+     ],
+     "a": 1,
+     "why": "**Your ___ experience** → หน้าคำนามต้องเป็น **adjective**",
+     "no": [
+      "กริยา วางหน้าคำนามไม่ได้",
+      null,
+      "adverb ขยายคำนามไม่ได้",
+      "คำนาม ไม่ได้ใช้คู่กับ experience แบบนี้"
+     ],
+     "whySay": "ช่องว่างอยู่ระหว่าง Your กับคำนาม experience ต้องใช้คำคุณศัพท์ extensive ที่แปลว่ามากมาย กว้างขวาง ข้อนี้ตอบได้จากประโยคเดียว"
+    },
+    {
+     "q": "Which sentence best fits blank (2)?",
+     "o": [
+      "The interview will take place in our main office.",
+      "We regret that the position has already been filled.",
+      "You will also receive health insurance and 15 days of paid vacation.",
+      "Your application arrived after the deadline."
+     ],
+     "a": 2,
+     "why": "ประโยคถัดไปพูดถึง **these benefits** → ช่องนี้ต้องบอกสวัสดิการ",
+     "no": [
+      "สัมภาษณ์ไปแล้วเมื่อสัปดาห์ก่อน",
+      "ขัดกับที่เพิ่งเสนองานให้",
+      null,
+      "ไม่เข้ากับจดหมายเสนองาน"
+     ],
+     "whySay": "ประโยคหลังช่องว่างบอกว่า รายละเอียดของสวัสดิการเหล่านี้แนบมากับจดหมาย คำว่า these benefits ต้องอ้างถึงอะไรบางอย่าง ข้อ C ที่พูดถึงประกันสุขภาพและวันลาพักร้อน จึงต่อกันพอดี"
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "by",
+      "until",
+      "since",
+      "within"
+     ],
+     "a": 0,
+     "why": "**confirm** ทำครั้งเดียว + วันกำหนดส่ง → **by** = ภายใน ไม่เกิน",
+     "no": [
+      null,
+      "until ใช้กับสิ่งที่ทำต่อเนื่อง",
+      "since ใช้กับจุดเริ่มในอดีต",
+      "within ตามด้วยช่วงเวลา เช่น within 5 days"
+     ],
+     "whySay": "ยืนยันคำตอบเป็นการทำครั้งเดียว และ Friday May 9 คือวันกำหนดส่ง จึงใช้ by ที่แปลว่าภายใน ไม่เกินวันนั้น ถ้าเป็น until ต้องเป็นสิ่งที่ทำต่อเนื่องไปจนถึงวันนั้น"
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "Unless",
+      "Whether",
+      "Although",
+      "Should"
+     ],
+     "a": 3,
+     "why": "**Should you have...** = If you have... (กลับประโยค)",
+     "no": [
+      "= ถ้าไม่ ความหมายกลับกัน",
+      "ต้องมี or not ความหมายไม่เข้า",
+      "= แม้ว่า ความหมายไม่เข้า",
+      null
+     ],
+     "whySay": "Should ขึ้นต้นประโยค แล้วตามด้วย you have คือการกลับประโยคของ If you have แปลว่าถ้าคุณมีคำถาม ประโยคนี้เจอบ่อยมากในท้ายจดหมาย จำไว้เลย"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 2/4",
+   "say": "บทความที่สอง เป็นบันทึกภายในบริษัท หรือ memo จากฝ่ายการเงิน สังเกตวันที่ด้านบนไว้ด้วย จะช่วยตอบบางข้อได้",
+   "text": "MEMO · To: All Sales Staff · From: Priya Desai, Finance\nDate: March 3 · Re: Changes to expense reports\n\nStarting April 1, all travel expenses must be submitted through our online system. Paper forms will no longer be ___(1)___.\n\nPlease upload a photo of each receipt within 10 days of returning from a trip. ___(2)___, your reimbursement may be delayed until the following month.\n\nThe finance team ___(3)___ a short demonstration of the system on March 20 at 2 P.M. in Conference Room B. ___(4)___ Thank you for your cooperation.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "accept",
+      "accepting",
+      "acceptance",
+      "accepted"
+     ],
+     "a": 3,
+     "why": "**Paper forms** รับเองไม่ได้ → ถูกรับ → **be + V3** (passive)",
+     "no": [
+      "หลัง be ใช้กริยาช่องหนึ่งไม่ได้",
+      "แปลว่าแบบฟอร์มเป็นคนรับเอง ผิดความหมาย",
+      "คำนาม ไม่ได้บอกว่าแบบฟอร์มถูกทำอะไร",
+      null
+     ],
+     "whySay": "ประธานคือ Paper forms แบบฟอร์มกระดาษไม่ได้รับอะไรเอง แต่ถูกรับ จึงต้องเป็น passive คือ be accepted แปลว่าจะไม่รับแบบฟอร์มกระดาษอีกแล้ว"
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "Otherwise",
+      "Moreover",
+      "Similarly",
+      "For instance"
+     ],
+     "a": 0,
+     "why": "ถ้า**ไม่**ส่งใบเสร็จใน 10 วัน → เงินคืนช้า → **Otherwise** = มิฉะนั้น",
+     "no": [
+      null,
+      "ไม่ได้เพิ่มข้อมูลไปทางเดียวกัน",
+      "ไม่ได้เทียบว่าเหมือนกัน",
+      "ประโยคหลังไม่ใช่ตัวอย่าง"
+     ],
+     "whySay": "ประโยคก่อนบอกให้ส่งรูปใบเสร็จภายในสิบวัน ประโยคหลังบอกว่าเงินคืนอาจช้า เป็นผลที่เกิดถ้าไม่ทำตาม จึงใช้ Otherwise ที่แปลว่ามิฉะนั้น"
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "gave",
+      "has given",
+      "will give",
+      "was giving"
+     ],
+     "a": 2,
+     "why": "memo ลงวันที่ **March 3** · สาธิต **March 20** = ยังไม่เกิด → อนาคต",
+     "no": [
+      "อดีต แต่ยังไม่ถึงวันสาธิต",
+      "แปลว่าทำไปแล้ว ผิดเวลา",
+      null,
+      "อดีตกำลังทำ ไม่เข้ากับเรื่อง"
+     ],
+     "whySay": "ดูวันที่บน memo คือวันที่สามมีนาคม แต่การสาธิตคือวันที่ยี่สิบมีนาคม แปลว่ายังไม่เกิดขึ้น ต้องใช้อนาคต will give ข้อนี้ถ้าไม่ดูวันที่ด้านบนจะพลาดง่ายมาก"
+    },
+    {
+     "q": "Which sentence best fits blank (4)?",
+     "o": [
+      "The conference room was recently repainted.",
+      "Staff who cannot attend can watch a recording online.",
+      "Paper forms remain the fastest way to submit expenses.",
+      "Sales rose by 12 percent last quarter."
+     ],
+     "a": 1,
+     "why": "ต่อจากเรื่อง**การสาธิต** → คนที่มาไม่ได้ดูวิดีโอย้อนหลังได้",
+     "no": [
+      "เรื่องห้องประชุม ไม่เกี่ยวกับการสาธิต",
+      null,
+      "ขัดกับที่ยกเลิกแบบฟอร์มกระดาษ",
+      "เรื่องยอดขาย ไม่เกี่ยวกับ memo นี้"
+     ],
+     "whySay": "ประโยคก่อนช่องว่างพูดถึงการสาธิตระบบในห้องประชุม ข้อ B บอกว่าคนที่มาไม่ได้ ดูวิดีโอย้อนหลังได้ จึงต่อเรื่องเดียวกันพอดี ส่วนข้อ C ขัดกับที่บอกว่าจะไม่รับแบบฟอร์มกระดาษแล้ว"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 3/4",
+   "say": "บทความที่สาม เป็นรีวิวบริการจัดเลี้ยงจากลูกค้า รีวิวแบบนี้มักชมก่อน แล้วค่อยติ สังเกตว่าตรงไหนที่เรื่องเปลี่ยนทิศ",
+   "text": "★★★★☆ Reviewed by Kevin Moore\n\nOur company hired Brightway Catering for our annual awards dinner in October, and the results were impressive. The food was fresh, and the staff served more than 200 guests ___(1)___. Several colleagues asked me for the caterer's contact information afterward.\n\n___(2)___, there was one problem. The desserts arrived 30 minutes late because the delivery van broke down. ___(3)___ The manager apologized and gave us a 10 percent discount on our final bill.\n\nOverall, I would ___(4)___ recommend Brightway to any business planning a large event.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "efficiently",
+      "efficient",
+      "efficiency",
+      "more efficient"
+     ],
+     "a": 0,
+     "why": "**served + 200 guests + ___** → ขยายกริยา served → **adverb**",
+     "no": [
+      null,
+      "adjective ขยายกริยาไม่ได้",
+      "คำนาม วางหลังกรรมแบบนี้ไม่ได้",
+      "ขั้นกว่า แต่ไม่มี than และยังเป็น adjective"
+     ],
+     "whySay": "ประโยคครบแล้วว่าพนักงานเสิร์ฟแขกสองร้อยคน ช่องว่างท้ายประโยคบอกว่าเสิร์ฟอย่างไร จึงต้องใช้ adverb คือ efficiently แปลว่าอย่างมีประสิทธิภาพ"
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "Therefore",
+      "In addition",
+      "As a result",
+      "However"
+     ],
+     "a": 3,
+     "why": "ย่อหน้าแรก**ชม** · ย่อหน้านี้ **there was one problem** → ขัดกัน → **However**",
+     "no": [
+      "ไม่ใช่ผลของย่อหน้าก่อน",
+      "ไม่ได้เพิ่มข้อดีไปทางเดียวกัน",
+      "ปัญหาไม่ได้เป็นผลจากอาหารดี",
+      null
+     ],
+     "whySay": "ย่อหน้าแรกชมว่าอาหารสดและบริการดี แต่ประโยคนี้บอกว่ามีปัญหาอยู่หนึ่งอย่าง เรื่องเปลี่ยนจากชมเป็นติ จึงใช้ However ที่แปลว่าอย่างไรก็ตาม"
+    },
+    {
+     "q": "Which sentence best fits blank (3)?",
+     "o": [
+      "As a result, we canceled the dinner.",
+      "Fortunately, Brightway handled the situation professionally.",
+      "The van was bought by our company last year.",
+      "Next year's dinner will be held in March."
+     ],
+     "a": 1,
+     "why": "ต่อกับประโยคถัดไป: ผู้จัดการ**ขอโทษและลดราคา** = จัดการปัญหาอย่างมืออาชีพ",
+     "no": [
+      "ขัดกับที่ชมว่างานออกมาดี",
+      null,
+      "รถเป็นของร้านจัดเลี้ยง ไม่ใช่ของบริษัทผู้เขียน",
+      "ไม่เกี่ยวกับปัญหาของหวานมาช้า"
+     ],
+     "whySay": "ประโยคหลังช่องว่างบอกว่า ผู้จัดการขอโทษและให้ส่วนลดสิบเปอร์เซ็นต์ ข้อ B ที่บอกว่าโชคดีที่ร้านจัดการปัญหาอย่างมืออาชีพ จึงเชื่อมระหว่างปัญหากับการแก้ไขได้ลื่นที่สุด"
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "high",
+      "higher",
+      "highly",
+      "highness"
+     ],
+     "a": 2,
+     "why": "**would ___ recommend** → adverb ขยายกริยา · **highly recommend** = แนะนำอย่างยิ่ง",
+     "no": [
+      "adjective ขยายกริยาไม่ได้",
+      "ขั้นกว่า ไม่มีการเปรียบเทียบ",
+      null,
+      "คำนาม วางตรงนี้ไม่ได้"
+     ],
+     "whySay": "ช่องว่างอยู่หน้ากริยา recommend ต้องใช้ adverb คือ highly แปลว่าอย่างยิ่ง highly recommend เป็นคำคู่ที่ออกบ่อยมาก จำเป็นชุดไว้เลย"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 4/4",
+   "say": "บทความสุดท้าย เป็นคู่มือการใช้งานเครื่องพิมพ์ เขียนเป็นขั้นตอนหนึ่งถึงสี่ ข้อเติมประโยคในบทความแบบนี้ ต้องดูว่าเข้ากับลำดับขั้นตอนหรือเปล่า",
+   "text": "Setting Up Your AirMax 300 Printer\n\nThank you for purchasing the AirMax 300. Follow these steps to connect it to your office network.\n\n1. Place the printer near your wireless router and turn it on.\n2. Press and hold the Wi-Fi button ___(1)___ the blue light begins to flash.\n3. Select your network from the list on the screen and enter the password. ___(2)___\n4. Install the AirMax app on your computer to complete the ___(3)___.\n\nIf the printer does not connect, restart your router and repeat steps 2 and 3. For further assistance, ___(4)___ our support team at help@airmax.com.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "during",
+      "unless",
+      "until",
+      "since"
+     ],
+     "a": 2,
+     "why": "กดค้าง**ไปจนกว่า**ไฟจะกะพริบ → **until** + ประโยค",
+     "no": [
+      "during ตามด้วยคำนาม ไม่ใช่ประโยค",
+      "= ถ้าไม่ ความหมายไม่เข้า",
+      null,
+      "= ตั้งแต่ หรือ เพราะ ความหมายไม่เข้า"
+     ],
+     "whySay": "กดปุ่มค้างไว้ ไปจนกว่าไฟสีฟ้าจะกะพริบ เป็นการทำต่อเนื่องจนถึงจุดหนึ่ง จึงใช้ until และหลังช่องว่างเป็นประโยค ใช้ during ไม่ได้"
+    },
+    {
+     "q": "Which sentence best fits blank (2)?",
+     "o": [
+      "Once the printer is connected, the blue light will stop flashing.",
+      "This printer is available in three colors.",
+      "Your order has been shipped to your address.",
+      "Our stores are closed on national holidays."
+     ],
+     "a": 0,
+     "why": "ต่อจากขั้น**ใส่รหัส Wi-Fi** → บอกผลว่าเชื่อมต่อสำเร็จ และเชื่อมกับไฟฟ้าในขั้นที่ 2",
+     "no": [
+      null,
+      "เรื่องสีเครื่อง ไม่เกี่ยวกับขั้นตอน",
+      "เรื่องการส่งสินค้า ไม่ใช่คู่มือ",
+      "เรื่องร้านปิด ไม่เกี่ยวกับการติดตั้ง"
+     ],
+     "whySay": "ขั้นที่สองบอกว่าไฟสีฟ้าจะกะพริบ พอใส่รหัสในขั้นที่สามแล้ว ข้อ A บอกว่าเมื่อเชื่อมต่อได้ ไฟจะหยุดกะพริบ ต่อเรื่องไฟสีฟ้าพอดี ตัวเลือกอื่นไม่เกี่ยวกับขั้นตอนเลย"
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "install",
+      "installed",
+      "installs",
+      "installation"
+     ],
+     "a": 3,
+     "why": "**the + ___** → ต้องเป็น**คำนาม**",
+     "no": [
+      "กริยา วางหลัง the ไม่ได้",
+      "กริยาช่องสาม ไม่ใช่คำนาม",
+      "กริยาเติม s วางหลัง the ไม่ได้",
+      null
+     ],
+     "whySay": "ช่องว่างอยู่หลัง the และเป็นกรรมของ complete ต้องใช้คำนาม installation ที่แปลว่าการติดตั้ง"
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "contacting",
+      "contact",
+      "contacted",
+      "contacts"
+     ],
+     "a": 1,
+     "why": "ประโยค**คำสั่ง**ไม่มีประธาน → ขึ้นต้นด้วย**กริยาช่องหนึ่ง**",
+     "no": [
+      "ประโยคไม่มีกริยาหลัก",
+      null,
+      "อดีต ใช้ในประโยคคำสั่งไม่ได้",
+      "ไม่มีประธานให้เติม s"
+     ],
+     "whySay": "หลังลูกน้ำ ประโยคไม่มีประธาน เป็นประโยคคำสั่งเหมือนขั้นตอนอื่นๆ ในคู่มือ จึงขึ้นต้นด้วยกริยาช่องหนึ่ง contact แปลว่าติดต่อทีมช่วยเหลือของเรา"
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**วันที่บน memo บอก tense** : Date: March 3 → สาธิต March 20 = **will give**",
+     "say": "จุดพลาดแรก อย่ามองข้ามวันที่ด้านบน memo หรืออีเมล ถ้าเหตุการณ์อยู่หลังวันที่เขียน ต้องใช้อนาคต"
+    },
+    {
+     "x": "**คำเชื่อมดูความสัมพันธ์** : ไม่ทำตาม → **Otherwise** · ชมแล้วติ → **However**",
+     "say": "จุดพลาดที่สอง คำเชื่อมต้นประโยค ถ้าประโยคหลังบอกผลที่เกิดเมื่อไม่ทำตาม ใช้ Otherwise ถ้าเปลี่ยนจากชมเป็นติ ใช้ However"
+    },
+    {
+     "x": "**ข้อเติมประโยค ดูประโยคถัดไป** : these benefits · ผู้จัดการขอโทษ · ไฟหยุดกะพริบ",
+     "say": "จุดพลาดที่สาม ข้อเติมประโยค คำใบ้มักอยู่ในประโยคถัดไป อย่าง these benefits หรือผู้จัดการขอโทษ อ่านต่ออีกหนึ่งประโยคก่อนตอบเสมอ"
+    }
+   ],
+   "outro": "ชุดที่สองจบแล้ว ได้กี่ข้อจากสิบหก ถ้าได้สิบสามข้อขึ้นไปถือว่าพร้อมมาก ข้อที่พลาดย้อนดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

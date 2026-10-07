@@ -1,0 +1,65 @@
+{"id":"toeic-750-course-L16","course":"toeic-750-course","n":16,"section":"ฝึกทำข้อสอบ · Part 4","title":"Part 4 ชุดที่ 2: 5 ข้อความพูด 15 ข้อ","slides":[
+{"type":"cover","h":"Part 4 ชุดที่ 2\n5 ข้อความพูด 15 ข้อ","sub":"ข่าวและอากาศ · แนะนำวิทยากร · ข้อความเสียงลูกค้า · ประกาศพิพิธภัณฑ์ · ปฐมนิเทศพนักงานใหม่","say":"ชุดที่สองของ Part 4 มาแล้ว ห้าข้อความพูด สิบห้าข้อ รอบนี้มีรายงานข่าว แนะนำวิทยากร ข้อความเสียงจากลูกค้า ประกาศในพิพิธภัณฑ์ และปฐมนิเทศพนักงานใหม่ อ่านคำถามบนจอก่อนฟังทุกครั้ง แล้วเลือกคำตอบในใจ เริ่มเลย"},
+{"type":"conv","h":"ข้อความ 1 · ข่าวและพยากรณ์อากาศ","listenLabel":"ฟังข้อความพูด","say":"ข้อความแรก รายงานข่าวทางวิทยุ อ่านสามคำถามก่อน แล้วฟัง","lines":[
+ {"v":"r","t":"You're listening to City Radio. I'm Pete Nolan with the morning business and weather report."},
+ {"v":"r","t":"First, the business news. Harper Foods announced yesterday that it will open a new factory in Greenville next spring."},
+ {"v":"r","t":"The company says the plant will create around three hundred local jobs."},
+ {"v":"r","t":"Now for the weather. Heavy rain is expected this afternoon, so drivers should allow extra time on the way home."},
+ {"v":"r","t":"The Riverside Market, which was planned for this Saturday, has been moved to Sunday because of the storm."},
+ {"v":"r","t":"Stay tuned. After the break, we'll talk with the mayor about the new bike lanes downtown."}],
+ "qs":[
+ {"q":"What did Harper Foods announce?","o":["A merger with a competitor","A new line of products","Plans to build a factory","A change in leadership"],"a":2,"why":"**will open a new factory in Greenville**","whySay":"ข่าวบอกว่า Harper Foods จะเปิดโรงงานใหม่ที่ Greenville ปีหน้า ตัวเลือกเปลี่ยนคำเป็น plans to build a factory","no":["ไม่ได้พูดถึงการควบรวม","ไม่ได้พูดถึงสินค้าใหม่",null,"ไม่ได้เปลี่ยนผู้บริหาร"]},
+ {"q":"Why has an event been rescheduled?","o":["Bad weather is expected.","A venue is being repaired.","Not enough vendors signed up.","The mayor is unavailable."],"a":0,"why":"**moved to Sunday because of the storm**","whySay":"ตลาด Riverside เลื่อนจากเสาร์ไปอาทิตย์เพราะพายุ storm กับ heavy rain ในข้อสอบเปลี่ยนเป็น bad weather","no":[null,"ไม่ได้พูดถึงการซ่อมสถานที่","ไม่ได้พูดถึงจำนวนร้านค้า","นายกฯ มาให้สัมภาษณ์หลังเบรก ไม่เกี่ยวกับตลาด"]},
+ {"q":"What will listeners hear after the break?","o":["A traffic report","A weather forecast","Some music","An interview"],"a":3,"why":"**we'll talk with the mayor** = interview","whySay":"ประโยคสุดท้ายบอกว่าหลังเบรกจะคุยกับนายกเทศมนตรี การคุยกับแขกในรายการก็คือการสัมภาษณ์","no":["มีแค่คำเตือนคนขับรถ ไม่ใช่รายงานจราจร","พยากรณ์อากาศจบไปแล้ว","ไม่ได้พูดถึงเพลง",null]}]},
+{"type":"conv","h":"ข้อความ 2 · แนะนำวิทยากร","listenLabel":"ฟังข้อความพูด","say":"ข้อความที่สอง แนะนำวิทยากรในงานสัมมนา อ่านคำถามก่อน ข้อสามเป็นคำถามเจตนา แล้วฟัง","lines":[
+ {"v":"q","t":"Good afternoon, everyone, and welcome to the second day of the Small Business Growth Conference."},
+ {"v":"q","t":"It's my pleasure to introduce our keynote speaker, Ms. Helen Cho."},
+ {"v":"q","t":"Ms. Cho started her online stationery shop at her kitchen table ten years ago."},
+ {"v":"q","t":"Today, her company ships to more than forty countries."},
+ {"v":"q","t":"This afternoon, she'll be sharing how she used customer reviews to improve her products."},
+ {"v":"q","t":"Her book is on sale at the registration desk. And yes, she has agreed to sign copies."},
+ {"v":"q","t":"Please join me in welcoming Ms. Cho."}],
+ "qs":[
+ {"q":"Where is the talk most likely taking place?","o":["At a bookstore","At a business conference","At a product launch","At a staff meeting"],"a":1,"why":"**the Small Business Growth Conference**","whySay":"ประโยคแรกบอกชื่องานเลย ว่าเป็นวันที่สองของงานประชุมธุรกิจขนาดเล็ก คำถามสถานที่ ฟังต้นข้อความ","no":["มีขายหนังสือ แต่ไม่ได้อยู่ร้านหนังสือ",null,"ไม่ได้เปิดตัวสินค้า","ไม่ใช่ประชุมพนักงานบริษัท"]},
+ {"q":"What will Ms. Cho talk about?","o":["Hiring new employees","Shipping products overseas","Opening a second store","Using customer feedback"],"a":3,"why":"**how she used customer reviews** = customer feedback","whySay":"เธอจะเล่าว่าใช้รีวิวลูกค้าปรับปรุงสินค้ายังไง ส่วนส่งของไปสี่สิบประเทศเป็นแค่ประวัติ เป็นตัวหลอก","no":["ไม่ได้พูดถึงการจ้างคน","ส่งของต่างประเทศเป็นแค่ประวัติของเธอ","ไม่ได้พูดถึงสาขาใหม่",null]},
+ {"q":"Why does the speaker say, \"she has agreed to sign copies\"?","o":["To encourage listeners to buy a book","To explain a schedule change","To thank a volunteer","To announce a contest"],"a":0,"why":"หนังสือขายที่โต๊ะลงทะเบียน + มีลายเซ็น = **ชวนซื้อหนังสือ**","whySay":"ก่อนหน้านั้นบอกว่าหนังสือวางขายที่โต๊ะลงทะเบียน แล้วเสริมว่าเธอยอมเซ็นให้ด้วย เจตนาคือชวนให้คนฟังไปซื้อหนังสือ",
+  "no":[null,"ตารางไม่ได้เปลี่ยน","ไม่มีอาสาสมัคร","ไม่มีการประกวด"]}]},
+{"type":"conv","h":"ข้อความ 3 · ข้อความเสียงจากลูกค้า","listenLabel":"ฟังข้อความพูด","say":"ข้อความที่สาม ลูกค้าฝากข้อความเสียงถึงฝ่ายบริการลูกค้า อ่านคำถามก่อน ข้อสองเป็นคำถามเจตนา แล้วฟัง","lines":[
+ {"v":"m","t":"Hello, this message is for the customer service department at Clearview Appliances."},
+ {"v":"m","t":"My name is Robert Hayes, and I bought one of your dishwashers online last month."},
+ {"v":"m","t":"A technician was supposed to install it this morning between nine and eleven, but nobody came."},
+ {"v":"m","t":"I took the whole morning off work for this."},
+ {"v":"m","t":"I'd like to arrange a new appointment, but it has to be on a Saturday this time."},
+ {"v":"m","t":"Please call me back on my mobile as soon as possible. Thank you."}],
+ "qs":[
+ {"q":"Why is the speaker calling?","o":["To complain about a missed appointment","To order a new appliance","To ask about a refund","To report a damaged product"],"a":0,"why":"ช่างนัดมาติดตั้ง **but nobody came**","whySay":"ช่างนัดมาติดตั้งเครื่องล้างจานเช้านี้ แต่ไม่มีใครมา เขาโทรมาร้องเรียนเรื่องนัดที่ถูกเบี้ยว","no":[null,"ซื้อไปแล้วเมื่อเดือนก่อน","ไม่ได้ขอเงินคืน","ไม่ได้บอกว่าของเสียหาย"]},
+ {"q":"What does the speaker imply when he says, \"I took the whole morning off work for this\"?","o":["He enjoys his new job.","He will be late for a meeting.","He is upset that his time was wasted.","He needs a letter for his employer."],"a":2,"why":"ลางานรอทั้งเช้า แต่ช่างไม่มา = **ไม่พอใจที่เสียเวลา**","whySay":"เขาลางานทั้งเช้าเพื่อรอช่าง แต่ช่างไม่มา ประโยคนี้บอกว่าเขาไม่พอใจที่เสียเวลาไปเปล่าๆ ไม่ได้พูดเรื่องงานจริงๆ","no":["ไม่ได้พูดถึงงานใหม่","ไม่ได้พูดถึงประชุม",null,"ไม่ได้ขอจดหมาย"]},
+ {"q":"What does the speaker request?","o":["A discount on his next purchase","A weekend appointment","A different technician","An e-mail confirmation"],"a":1,"why":"**it has to be on a Saturday** = weekend","whySay":"เขาขอนัดใหม่ และต้องเป็นวันเสาร์ ข้อสอบเปลี่ยน Saturday เป็น weekend","no":["ไม่ได้ขอส่วนลด",null,"ไม่ได้ขอเปลี่ยนช่าง","ขอให้โทรกลับ ไม่ใช่อีเมล"]}]},
+{"type":"conv","h":"ข้อความ 4 · ประกาศในพิพิธภัณฑ์","listenLabel":"ฟังข้อความพูด","say":"ข้อความที่สี่ ประกาศในพิพิธภัณฑ์ อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Attention, visitors. Thank you for coming to the Westbrook Museum of Science."},
+ {"v":"q","t":"Please note that the dinosaur hall on the second floor is closed today while a new display is being installed."},
+ {"v":"q","t":"It will reopen tomorrow morning."},
+ {"v":"q","t":"In the meantime, our planetarium show will begin in twenty minutes in the east wing."},
+ {"v":"q","t":"The show is free for members, so please have your membership card ready at the entrance."},
+ {"v":"q","t":"Also, please remember that the museum will close an hour early today, at four o'clock, for a private event."}],
+ "qs":[
+ {"q":"Why is the dinosaur hall closed?","o":["It is being cleaned.","It is reserved for a private event.","It has a problem with the lighting.","A new exhibit is being set up."],"a":3,"why":"**a new display is being installed** = new exhibit","whySay":"ห้องไดโนเสาร์ปิดเพราะกำลังติดตั้งนิทรรศการใหม่ ส่วนงานส่วนตัวเป็นเหตุที่พิพิธภัณฑ์ปิดเร็ว ไม่ใช่เหตุที่ห้องปิด","no":["ไม่ได้พูดถึงการทำความสะอาด","งานส่วนตัวคือเหตุที่ปิดเร็ว ไม่ใช่ห้องนี้","ไม่ได้พูดถึงไฟ",null]},
+ {"q":"According to the speaker, who can see the planetarium show for free?","o":["Children","Members","Students","Groups"],"a":1,"why":"**free for members**","whySay":"โชว์ท้องฟ้าจำลองฟรีสำหรับสมาชิก ให้เตรียมบัตรสมาชิกไว้ที่ทางเข้า","no":["ไม่ได้พูดถึงเด็ก",null,"ไม่ได้พูดถึงนักเรียน","ไม่ได้พูดถึงกรุ๊ป"]},
+ {"q":"What does the speaker say about the museum today?","o":["It opened later than usual.","It will stay open longer.","It will close earlier than usual.","It is open only to members."],"a":2,"why":"**close an hour early today** = close earlier","whySay":"วันนี้พิพิธภัณฑ์ปิดเร็วขึ้นหนึ่งชั่วโมง ตอนสี่โมง เพราะมีงานส่วนตัว","no":["ไม่ได้บอกว่าเปิดสาย","ตรงข้าม ปิดเร็วขึ้น",null,"สมาชิกได้ดูโชว์ฟรีเท่านั้น"]}]},
+{"type":"conv","h":"ข้อความ 5 · ปฐมนิเทศพนักงานใหม่","listenLabel":"ฟังข้อความพูด","say":"ข้อความสุดท้าย การอบรมพนักงานใหม่ อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"r","t":"Okay, everyone, welcome to your first day at Summit Bank. I'm Jason, and I'll be leading your orientation this morning."},
+ {"v":"r","t":"First, you'll each get a laptop and an ID badge. Please wear your badge at all times in the building."},
+ {"v":"r","t":"After that, we'll go over the customer privacy rules. This part is really important, so take notes."},
+ {"v":"r","t":"Now, the schedule on your handout says lunch is at one o'clock."},
+ {"v":"r","t":"But the cafeteria gets very crowded then, so we'll take our break at twelve instead."},
+ {"v":"r","t":"This afternoon, you'll meet your team leaders and work alongside an experienced teller."}],
+ "qs":[
+ {"q":"Who most likely are the listeners?","o":["New employees","Bank customers","Team leaders","Job applicants"],"a":0,"why":"**your first day** + **orientation**","whySay":"เขาต้อนรับสู่วันแรกที่ธนาคาร และจะนำปฐมนิเทศ แปลว่าผู้ฟังเป็นพนักงานใหม่ ไม่ใช่ผู้สมัครงาน เพราะได้งานแล้ว","no":[null,"ลูกค้าถูกพูดถึงแค่เรื่องกฎความเป็นส่วนตัว","หัวหน้าทีมคือคนที่จะได้เจอตอนบ่าย","ได้งานแล้ว ไม่ใช่ผู้สมัคร"]},
+ {"q":"What are the listeners asked to do?","o":["Bring their own laptops","Wear their ID badges","Sign a privacy form","Meet in the cafeteria"],"a":1,"why":"**Please wear your badge at all times**","whySay":"เขาขอให้ติดบัตรพนักงานตลอดเวลาในอาคาร ส่วนแล็ปท็อปบริษัทแจกให้ ไม่ต้องเอามาเอง","no":["บริษัทแจกแล็ปท็อปให้",null,"ไม่ได้ให้เซ็นแบบฟอร์ม","โรงอาหารถูกพูดถึงแค่ว่าคนเยอะ"]},
+ {"q":"Why will the lunch break be earlier than scheduled?","o":["A team leader has a meeting.","The training is running behind.","Some laptops have not arrived.","The cafeteria is busy later."],"a":3,"why":"**the cafeteria gets very crowded then**","whySay":"ตารางบอกพักเที่ยงตอนบ่ายโมง แต่ตอนนั้นโรงอาหารคนแน่น เลยพักเร็วขึ้นเป็นเที่ยง crowded เปลี่ยนเป็น busy","no":["ไม่ได้พูดถึงประชุมของหัวหน้า","ไม่ได้บอกว่าอบรมล่าช้า","ไม่ได้บอกว่าแล็ปท็อปมาไม่ครบ",null]}]},
+{"type":"end","h":"3 จุดพลาดในชุดนี้","items":[
+ {"x":"**ตัวหลอกจากข้อมูลข้างเคียง** : private event = เหตุที่ปิดเร็ว ไม่ใช่เหตุที่ห้องปิด","say":"จุดพลาดแรก ตัวหลอกมักเป็นข้อมูลที่ได้ยินจริง แต่ตอบคนละคำถาม เช่น งานส่วนตัวเป็นเหตุที่พิพิธภัณฑ์ปิดเร็ว ไม่ใช่เหตุที่ห้องไดโนเสาร์ปิด"},
+ {"x":"**คำถามเจตนา** : took the morning off = ไม่พอใจ · sign copies = ชวนซื้อ","say":"จุดพลาดที่สอง คำถามว่าทำไมเขาพูดแบบนี้ อย่าแปลตรงตัว ดูว่าประโยคนั้นต่อจากเรื่องอะไร"},
+ {"x":"**ข้อถูกพูดใหม่** : Saturday → weekend · storm → bad weather","say":"จุดพลาดที่สาม ข้อถูกมักใช้คำใหม่ เช่น Saturday กลายเป็น weekend หรือ storm กลายเป็น bad weather"}],
+ "outro":"ชุดที่สองของ Part 4 จบแล้ว ได้กี่ข้อจากสิบห้าข้อ เทียบกับชุดแรกดู ข้อไหนพลาด ลองย้อนฟังข้อความนั้นอีกรอบ แล้วไปบทถัดไปกันเลย"}
+]}

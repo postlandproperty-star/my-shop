@@ -1,0 +1,202 @@
+{
+ "id": "toeic-750-course-L19",
+ "course": "toeic-750-course",
+ "n": 19,
+ "section": "Reading Part 5 · เติมประโยค",
+ "title": "Word form: คำนาม กริยา คุณศัพท์ กริยาวิเศษณ์",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Word form\nคำนาม กริยา คุณศัพท์ กริยาวิเศษณ์",
+   "sub": "ดูตำแหน่งในประโยค + ดูคำลงท้าย ตอบข้อรูปคำได้ในไม่กี่วินาที แล้วลองทำจริง 5 ข้อ",
+   "say": "บทนี้เราจะเจาะข้อแบบที่เจอบ่อยที่สุดใน Part 5 คือข้อ word form ที่ตัวเลือกเป็นคำเดียวกันแต่คนละรูป จะสอนสองขั้น ดูตำแหน่งในประโยค แล้วดูคำลงท้าย ท้ายบทมีให้ลองทำจริงห้าข้อ"
+  },
+  {
+   "type": "list",
+   "h": "ขั้นที่ 1: ดูตำแหน่งของช่องว่าง",
+   "say": "ขั้นแรก ไม่ต้องแปลทั้งประโยค ให้ดูว่าช่องว่างอยู่ตรงไหน คำรอบๆ จะบอกเองว่าต้องใช้คำชนิดไหน",
+   "items": [
+    {
+     "x": "หลัง **a / the / his / your** → **คำนาม**",
+     "sub": "the approval of the budget",
+     "en": "We are still waiting for the approval of the budget.",
+     "say": "หนึ่ง ถ้าอยู่หลัง a the หรือคำบอกความเป็นเจ้าของ อย่าง his your their ช่องนั้นต้องเป็นคำนาม อย่าง approval ในประโยคนี้"
+    },
+    {
+     "x": "หน้า **คำนาม** → **คุณศัพท์**",
+     "sub": "a clear explanation",
+     "en": "Mr. Brown gave a clear explanation of the new policy.",
+     "say": "สอง ถ้าช่องว่างอยู่หน้าคำนาม ทำหน้าที่ขยายคำนาม ต้องใช้คุณศัพท์ อย่าง clear ที่ขยาย explanation"
+    },
+    {
+     "x": "ขยาย **กริยา / คุณศัพท์** → **กริยาวิเศษณ์ -ly**",
+     "sub": "responded quickly · extremely busy",
+     "en": "The support team responded quickly to the complaint.",
+     "say": "สาม ถ้าช่องว่างขยายกริยา หรือขยายคุณศัพท์อีกที ต้องใช้กริยาวิเศษณ์ ส่วนมากลงท้ายด้วย แอลวาย อย่าง quickly ที่ขยาย responded"
+    },
+    {
+     "x": "หลัง **to / will / can** หรือช่องกริยา → **กริยา**",
+     "sub": "to expand our team",
+     "en": "We plan to expand our sales team next year.",
+     "say": "สี่ ถ้าอยู่หลัง to หรือ will can must หรือประโยคยังไม่มีกริยาหลัก ช่องนั้นต้องเป็นกริยา อย่าง expand"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "ขั้นที่ 2: ดูคำลงท้าย",
+   "say": "ขั้นที่สอง พอรู้แล้วว่าต้องการคำชนิดไหน ให้ดูคำลงท้ายของตัวเลือก จะเลือกได้ทันทีโดยไม่ต้องรู้ความหมาย",
+   "items": [
+    {
+     "x": "**-tion -ment -ness** = คำนาม",
+     "sub": "decision · agreement · awareness",
+     "en": "The final decision will be made on Monday.",
+     "say": "ลงท้าย ชั่น เมนท์ หรือ เนส เป็นคำนาม เช่น decision agreement awareness"
+    },
+    {
+     "x": "**-ive -ful -able -ous** = คุณศัพท์",
+     "sub": "creative · helpful · reliable · generous",
+     "en": "We are looking for a reliable supplier.",
+     "say": "ลงท้าย อีฟ ฟูล เอเบิล หรือ อัส เป็นคุณศัพท์ เช่น creative helpful reliable generous"
+    },
+    {
+     "x": "**-ly** = กริยาวิเศษณ์",
+     "sub": "regularly · recently · clearly",
+     "en": "Please check your email regularly.",
+     "say": "ลงท้าย แอลวาย ส่วนใหญ่เป็นกริยาวิเศษณ์ เช่น regularly recently clearly"
+    },
+    {
+     "x": "**-ize -en** = กริยา",
+     "sub": "organize · finalize · strengthen",
+     "en": "The manager will organize a meeting with the new clients.",
+     "say": "ลงท้าย ไอซ์ หรือ เอิน เป็นกริยา เช่น organize finalize strengthen"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กับดักที่คนไทยพลาดบ่อย",
+   "say": "ก่อนลองทำ มาดูสามกับดักที่คนไทยเสียคะแนนบ่อย",
+   "items": [
+    {
+     "x": "**friendly · costly · timely** ลงท้าย -ly แต่เป็น **คุณศัพท์**",
+     "sub": "a friendly receptionist",
+     "en": "The hotel has a very friendly receptionist.",
+     "say": "หนึ่ง ไม่ใช่ทุกคำที่ลงท้าย แอลวาย จะเป็นกริยาวิเศษณ์ friendly costly timely เป็นคุณศัพท์ ใช้ขยายคำนามได้",
+     "mark": "no"
+    },
+    {
+     "x": "หลัง **be** (is / are / was) → มักเป็น **คุณศัพท์**",
+     "sub": "The new system is reliable.",
+     "en": "The new booking system is very reliable.",
+     "say": "สอง หลัง verb to be อย่าง is are was ถ้าบอกลักษณะ ให้ใช้คุณศัพท์ ไม่ใช่กริยาวิเศษณ์"
+    },
+    {
+     "x": "คำนาม **คน vs สิ่ง** : applicant ↔ application",
+     "sub": "-er -or -ant = คน",
+     "en": "Each applicant must submit an application by Friday.",
+     "say": "สาม ถ้ามีคำนามสองตัวในตัวเลือก ดูว่าประโยคพูดถึงคน หรือสิ่งของ คำลงท้าย เออร์ ออร์ แอนท์ มักเป็นคน"
+    }
+   ]
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 1",
+   "say": "มาลองทำจริงกัน ดูคำหน้าช่องว่างก่อน แล้วค่อยดูคำลงท้าย",
+   "q": "Thank you for your ___ in the customer satisfaction survey.",
+   "o": ["participate", "participation", "participated", "participatory"],
+   "a": 1,
+   "no": [
+    "participate เป็นกริยา วางหลัง your ไม่ได้",
+    null,
+    "participated เป็นกริยาช่องสอง วางหลัง your ไม่ได้",
+    "participatory เป็นคุณศัพท์ ต้องมีคำนามตามหลัง"
+   ],
+   "why": "หลัง **your** ต้องเป็นคำนาม · ลงท้าย **-tion** = **participation**",
+   "whySay": "ช่องอยู่หลัง your ต้องเป็นคำนาม ตัวเลือกที่ลงท้ายด้วย ชั่น คือ participation แปลว่าการเข้าร่วม"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 2",
+   "say": "ข้อที่สอง ดูคำหลังช่องว่าง",
+   "q": "Our Bangkok branch offers ___ prices on all office furniture this month.",
+   "o": ["compete", "competition", "competitively", "competitive"],
+   "a": 3,
+   "no": [
+    "compete เป็นกริยา ประโยคมีกริยา offers แล้ว",
+    "competition เป็นคำนาม ความหมายไม่เข้ากับ prices",
+    "competitively เป็นวิเศษณ์ ขยายคำนามไม่ได้",
+    null
+   ],
+   "why": "หน้าคำนาม **prices** ต้องเป็นคุณศัพท์ · ลงท้าย **-ive** = **competitive**",
+   "whySay": "ช่องอยู่หน้าคำนาม prices ต้องใช้คุณศัพท์ ลงท้าย อีฟ คือ competitive แปลว่าราคาที่สู้คู่แข่งได้"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 3",
+   "say": "ข้อที่สาม ช่องว่างอยู่ระหว่าง is กับ located ดูว่ามันขยายอะไร",
+   "q": "The new parking garage is ___ located next to the main entrance.",
+   "o": ["conveniently", "convenient", "convenience", "more convenient"],
+   "a": 0,
+   "no": [
+    null,
+    "convenient เป็นคุณศัพท์ ขยายกริยา located ไม่ได้",
+    "convenience เป็นคำนาม วางตรงนี้ไม่ได้",
+    "more convenient ยังเป็นคุณศัพท์"
+   ],
+   "why": "ขยายกริยา **located** ต้องใช้กริยาวิเศษณ์ **conveniently**",
+   "whySay": "ช่องนี้ขยาย located ซึ่งเป็นกริยา จึงต้องใช้กริยาวิเศษณ์ conveniently located แปลว่าตั้งอยู่ในที่สะดวก เป็นวลีที่ออกสอบบ่อยมาก"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 4",
+   "say": "ข้อที่สี่ ดูคำที่อยู่หน้าช่องว่าง",
+   "q": "The company plans to ___ its online ordering system early next year.",
+   "o": ["modern", "modernization", "modernize", "modernly"],
+   "a": 2,
+   "no": [
+    "modern เป็นคุณศัพท์ ไม่ใช่กริยา",
+    "modernization เป็นคำนาม ตามหลัง to ในที่นี้ไม่ได้",
+    null,
+    "modernly เป็นวิเศษณ์ ไม่มีกริยาให้ขยาย"
+   ],
+   "why": "หลัง **to** ต้องเป็นกริยา · ลงท้าย **-ize** = **modernize**",
+   "whySay": "ช่องอยู่หลัง to และตามด้วยกรรม its online ordering system จึงต้องเป็นกริยา ลงท้าย ไอซ์ คือ modernize แปลว่าทำให้ทันสมัย"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 5",
+   "say": "ข้อสุดท้าย ช่องว่างอยู่หลัง is always นึกถึงกับดักข้อสอง",
+   "q": "Our customer support team is always ___ to client requests.",
+   "o": ["response", "responsive", "responsively", "respond"],
+   "a": 1,
+   "no": [
+    "response เป็นคำนาม ทีมไม่ได้เป็นคำตอบ",
+    null,
+    "responsively เป็นวิเศษณ์ ใช้หลัง be บอกลักษณะไม่ได้",
+    "respond เป็นกริยา ซ้อนกับ is ไม่ได้"
+   ],
+   "why": "หลัง **is** บอกลักษณะ ต้องเป็นคุณศัพท์ **responsive** (ตอบสนองไว)",
+   "whySay": "หลัง is ต้องการคำที่บอกลักษณะของทีม จึงใช้คุณศัพท์ responsive ข้อ A response เป็นคำนาม ถ้าใส่จะแปลว่าทีมคือคำตอบ ซึ่งไม่เข้าความหมาย"
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 19",
+   "items": [
+    {
+     "x": "ดูตำแหน่ง: the/your → นาม · หน้านาม → คุณศัพท์",
+     "say": "สรุปบทนี้ ขั้นแรกดูตำแหน่ง หลัง the หรือ your ใช้คำนาม หน้าคำนามใช้คุณศัพท์"
+    },
+    {
+     "x": "ขยายกริยา → -ly · หลัง to → กริยา · หลัง be → คุณศัพท์",
+     "say": "ขยายกริยาใช้กริยาวิเศษณ์ หลัง to ใช้กริยา และหลัง verb to be มักใช้คุณศัพท์"
+    },
+    {
+     "x": "คำลงท้าย: -tion -ment -ness · -ive -ful -able -ous · -ly · -ize -en",
+     "say": "ขั้นที่สอง ดูคำลงท้าย แล้วระวัง friendly กับ costly ที่ลงท้าย แอลวาย แต่เป็นคุณศัพท์"
+    }
+   ],
+   "outro": "บทหน้า เราจะเจาะ Part 5 กันต่อ กดทำเครื่องหมายว่าเรียนจบ แล้วไปต่อกันเลย"
+  }
+ ]
+}

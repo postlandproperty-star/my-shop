@@ -1,0 +1,664 @@
+{
+ "id": "toeic-750-course-L18",
+ "course": "toeic-750-course",
+ "n": 18,
+ "section": "ฝึกทำข้อสอบ · Part 5",
+ "title": "Part 5 ชุดที่ 1: 30 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 5 ชุดที่ 1\nฝึก 30 ข้อ พร้อมเฉลย",
+   "sub": "word form · tense · preposition · คำเชื่อม · pronoun · คำศัพท์",
+   "say": "บทนี้ฝึก Part 5 สามสิบข้อ ข้อละห้าวินาที แล้วเฉลยทันที จดคะแนนไว้ด้วย เริ่มเลย"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 1/30",
+   "say": "ข้อ 1",
+   "q": "The new software has made the billing process much more ___.",
+   "o": [
+    "efficiency",
+    "efficient",
+    "efficiently",
+    "efficiencies"
+   ],
+   "a": 1,
+   "why": "**make + กรรม + adj** → more efficient",
+   "no": [
+    "คำนาม ใช้หลัง more ไม่ได้",
+    null,
+    "adverb ขยายคำนามไม่ได้",
+    "คำนามพหูพจน์"
+   ],
+   "whySay": "make อะไรให้เป็นยังไง ตามด้วยคุณศัพท์"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 2/30",
+   "say": "ข้อ 2",
+   "q": "Ms. Tanaka ___ the regional sales team since last March.",
+   "o": [
+    "leads",
+    "led",
+    "has led",
+    "will lead"
+   ],
+   "a": 2,
+   "why": "**since + จุดเวลา** → present perfect",
+   "no": [
+    "present simple ไม่ใช้กับ since",
+    "past simple ไม่ใช้กับ since",
+    null,
+    "อนาคต ขัดกับ since last March"
+   ],
+   "whySay": "เห็น since กับจุดเวลา ใช้ has กริยาช่องสาม"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 3/30",
+   "say": "ข้อ 3",
+   "q": "All expense reports must be submitted ___ Friday at 5 P.M.",
+   "o": [
+    "by",
+    "until",
+    "within",
+    "since"
+   ],
+   "a": 0,
+   "why": "**by** = ไม่เกินเส้นตาย",
+   "no": [
+    null,
+    "until = ทำต่อเนื่องจนถึง ไม่ใช่เส้นตาย",
+    "within + ช่วงเวลา เช่น within 3 days",
+    "since ใช้กับ perfect"
+   ],
+   "whySay": "ส่งทันเส้นตาย ใช้ by"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 4/30",
+   "say": "ข้อ 4",
+   "q": "___ the flight was delayed by two hours, Mr. Ortiz arrived in time for the conference.",
+   "o": [
+    "Despite",
+    "Because",
+    "However",
+    "Although"
+   ],
+   "a": 3,
+   "why": "หลังช่องเป็น **ประโยค** + ความหมาย **ขัดแย้ง** → Although",
+   "no": [
+    "Despite + คำนาม ไม่ใช่ประโยค",
+    "ความหมายไม่ใช่เหตุผล",
+    "However เชื่อมสองประโยคแบบนี้ไม่ได้",
+    null
+   ],
+   "whySay": "หลังช่องเป็นประโยค และความหมายขัดกัน ใช้ Although"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 5/30",
+   "say": "ข้อ 5",
+   "q": "Employees who wish to attend the workshop should register ___ names with Ms. Patel by Wednesday.",
+   "o": [
+    "they",
+    "them",
+    "their",
+    "theirs"
+   ],
+   "a": 2,
+   "why": "หน้าคำนาม names → **คำแสดงความเป็นเจ้าของ** their",
+   "no": [
+    "ประธาน วางหน้าคำนามไม่ได้",
+    "กรรม วางหน้าคำนามไม่ได้",
+    null,
+    "theirs ใช้แทนคำนาม ไม่วางหน้าคำนาม"
+   ],
+   "whySay": "หน้าคำนาม names ใช้ their"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 6/30",
+   "say": "ข้อ 6",
+   "q": "Please keep your receipt, as it is required for any ___ or exchange.",
+   "o": [
+    "refund",
+    "discount",
+    "deposit",
+    "payment"
+   ],
+   "a": 0,
+   "why": "ใบเสร็จใช้ขอ **คืนเงิน** หรือเปลี่ยนของ → refund",
+   "no": [
+    null,
+    "ส่วนลด ไม่ต้องใช้ใบเสร็จเก่า",
+    "เงินมัดจำ ไม่เข้ากับ exchange",
+    "การจ่ายเงิน ไม่เข้ากับบริบท"
+   ],
+   "whySay": "เก็บใบเสร็จไว้ขอคืนเงิน คู่ refund or exchange"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 7/30",
+   "say": "ข้อ 7",
+   "q": "The marketing team worked ___ to finish the campaign before the product launch.",
+   "o": [
+    "diligent",
+    "diligence",
+    "diligently",
+    "more diligent"
+   ],
+   "a": 2,
+   "why": "ขยายกริยา **worked** → adverb",
+   "no": [
+    "adj ขยายกริยาไม่ได้",
+    "คำนาม",
+    null,
+    "adj ขั้นกว่า ขยายกริยาไม่ได้"
+   ],
+   "whySay": "ขยายกริยา worked ใช้ adverb"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 8/30",
+   "say": "ข้อ 8",
+   "q": "If the shipment arrives late, we ___ the client immediately.",
+   "o": [
+    "notified",
+    "will notify",
+    "would notify",
+    "had notified"
+   ],
+   "a": 1,
+   "why": "**If + present** → will + V1",
+   "no": [
+    "อดีต ไม่เข้ากับ if แบบนี้",
+    null,
+    "would ใช้กับ if + past",
+    "past perfect ใช้กับ if + had"
+   ],
+   "whySay": "if กับ present ประโยคหลักใช้ will"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 9/30",
+   "say": "ข้อ 9",
+   "q": "Our new branch will open ___ Chiang Mai next month.",
+   "o": [
+    "at",
+    "in",
+    "on",
+    "to"
+   ],
+   "a": 1,
+   "why": "เมือง / ประเทศ → **in**",
+   "no": [
+    "at ใช้กับจุดเฉพาะ เช่น at the station",
+    null,
+    "on ใช้กับถนนหรือพื้นผิว",
+    "to ใช้กับการเคลื่อนที่ไป"
+   ],
+   "whySay": "ชื่อเมืองใช้ in"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 10/30",
+   "say": "ข้อ 10",
+   "q": "Applicants must have at least three years of ___ in project management.",
+   "o": [
+    "experience",
+    "experienced",
+    "experiencing",
+    "experiences"
+   ],
+   "a": 0,
+   "why": "**years of + คำนามนับไม่ได้** → experience",
+   "no": [
+    null,
+    "adj ตามหลัง of ไม่ได้",
+    "ไม่ใช้รูป ing ในความหมายนี้",
+    "ประสบการณ์ทำงานนับไม่ได้ ไม่เติม s"
+   ],
+   "whySay": "หลัง of ใช้คำนาม และประสบการณ์ไม่เติม s"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 11/30",
+   "say": "ข้อ 11",
+   "q": "Either the manager ___ her assistant will greet the visitors at the entrance.",
+   "o": [
+    "and",
+    "or",
+    "nor",
+    "but"
+   ],
+   "a": 1,
+   "why": "คู่ตายตัว **either ... or**",
+   "no": [
+    "both คู่กับ and",
+    null,
+    "neither คู่กับ nor",
+    "but ไม่คู่กับ either"
+   ],
+   "whySay": "either คู่กับ or"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 12/30",
+   "say": "ข้อ 12",
+   "q": "All visitors must show a valid form of ___ at the front desk.",
+   "o": [
+    "identify",
+    "identification",
+    "identifiable",
+    "identified"
+   ],
+   "a": 1,
+   "why": "**a valid form of + คำนาม** → identification",
+   "no": [
+    "กริยา",
+    null,
+    "adj",
+    "กริยาช่อง 3"
+   ],
+   "whySay": "หลัง of ใช้คำนาม identification"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 13/30",
+   "say": "ข้อ 13",
+   "q": "The board members are considering ___ a second factory in Vietnam.",
+   "o": [
+    "open",
+    "to open",
+    "opening",
+    "opened"
+   ],
+   "a": 2,
+   "why": "**consider + V-ing**",
+   "no": [
+    "ต้องเติม ing",
+    "consider ไม่ตามด้วย to",
+    null,
+    "ต้องเป็น V-ing"
+   ],
+   "whySay": "consider ตามด้วย ing"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 14/30",
+   "say": "ข้อ 14",
+   "q": "Mr. Kim prefers to prepare the presentation slides ___ rather than ask his assistant.",
+   "o": [
+    "he",
+    "his",
+    "him",
+    "himself"
+   ],
+   "a": 3,
+   "why": "ทำ **ด้วยตัวเอง** → himself",
+   "no": [
+    "ประธาน ไม่อยู่ท้ายแบบนี้",
+    "ต้องมีคำนามตาม",
+    "กรรม ไม่ได้ความหมายด้วยตัวเอง",
+    null
+   ],
+   "whySay": "ทำเองไม่ให้ผู้ช่วยทำ ใช้ himself"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 15/30",
+   "say": "ข้อ 15",
+   "q": "The company's ___ to customer service has earned it several industry awards.",
+   "o": [
+    "commit",
+    "committed",
+    "committing",
+    "commitment"
+   ],
+   "a": 3,
+   "why": "หลัง **company's** ต้องเป็นคำนาม",
+   "no": [
+    "กริยา",
+    "adj หรือกริยาช่อง 3",
+    "V-ing ไม่ใช้หลัง 's ในความหมายนี้",
+    null
+   ],
+   "whySay": "หลัง company's ใช้คำนาม commitment"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 16/30",
+   "say": "ข้อ 16",
+   "q": "The museum will be closed to the public ___ the renovation period.",
+   "o": [
+    "while",
+    "among",
+    "during",
+    "between"
+   ],
+   "a": 2,
+   "why": "หลังช่องเป็น **คำนาม** ช่วงเวลา → during",
+   "no": [
+    "while + ประโยค",
+    "among = ท่ามกลางหลายสิ่ง",
+    null,
+    "between ใช้กับสองสิ่ง"
+   ],
+   "whySay": "หลังช่องเป็นคำนาม ใช้ during"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 17/30",
+   "say": "ข้อ 17",
+   "q": "Ms. Lee was asked to ___ the new interns to the other members of the department.",
+   "o": [
+    "introduce",
+    "inform",
+    "explain",
+    "notify"
+   ],
+   "a": 0,
+   "why": "**introduce A to B** = แนะนำ A ให้ B รู้จัก",
+   "no": [
+    null,
+    "inform ใช้ inform A of B",
+    "explain ไม่ใช้กับคน",
+    "notify ไม่ใช้กับ to แบบนี้"
+   ],
+   "whySay": "แนะนำใครให้ใครรู้จัก ใช้ introduce to"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 18/30",
+   "say": "ข้อ 18",
+   "q": "The training session was ___ informative, so many employees asked for a follow-up.",
+   "o": [
+    "surprise",
+    "surprising",
+    "surprisingly",
+    "surprised"
+   ],
+   "a": 2,
+   "why": "ขยาย **adj** informative → adverb",
+   "no": [
+    "คำนาม",
+    "adj ซ้อน adj ไม่ได้",
+    null,
+    "adj ซ้อน adj ไม่ได้"
+   ],
+   "whySay": "หน้าคุณศัพท์ ใช้ adverb"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 19/30",
+   "say": "ข้อ 19",
+   "q": "By the time Ms. Reyes arrived at the reception, most of the guests ___.",
+   "o": [
+    "leave",
+    "have left",
+    "will leave",
+    "had left"
+   ],
+   "a": 3,
+   "why": "**By the time + อดีต** → had + V3",
+   "no": [
+    "present ไม่เข้ากับอดีต",
+    "present perfect ไม่ใช้เทียบเหตุการณ์อดีต",
+    "อนาคต ขัดกับ arrived",
+    null
+   ],
+   "whySay": "by the time กับอดีต ใช้ had left"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 20/30",
+   "say": "ข้อ 20",
+   "q": "Please send the signed contract back to us ___ email.",
+   "o": [
+    "by",
+    "with",
+    "on",
+    "at"
+   ],
+   "a": 0,
+   "why": "ส่งทาง → **by** email / by mail",
+   "no": [
+    null,
+    "with ไม่ใช้กับช่องทางส่ง",
+    "on ใช้กับ on the phone",
+    "at ใช้กับสถานที่"
+   ],
+   "whySay": "ส่งทางอีเมล ใช้ by email"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 21/30",
+   "say": "ข้อ 21",
+   "q": "The staff lounge will be repainted next week, ___ employees should use the cafeteria instead.",
+   "o": [
+    "so",
+    "because",
+    "although",
+    "unless"
+   ],
+   "a": 0,
+   "why": "ผลที่ตามมา → **so**",
+   "no": [
+    null,
+    "ความหมายกลับด้าน",
+    "ไม่ได้ขัดแย้งกัน",
+    "ไม่ใช่เงื่อนไข"
+   ],
+   "whySay": "ผลที่ตามมา ใช้ so"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 22/30",
+   "say": "ข้อ 22",
+   "q": "Each department will submit ___ own budget proposal by Friday.",
+   "o": [
+    "it",
+    "its",
+    "it's",
+    "itself"
+   ],
+   "a": 1,
+   "why": "**own** ต้องมีคำแสดงเจ้าของนำหน้า → its",
+   "no": [
+    "ต้องเป็นรูปเจ้าของ",
+    null,
+    "it's = it is",
+    "itself ไม่วางหน้า own"
+   ],
+   "whySay": "หน้า own ใช้ its"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 23/30",
+   "say": "ข้อ 23",
+   "q": "Please read the instructions ___ before installing the software.",
+   "o": [
+    "carefully",
+    "careful",
+    "care",
+    "caring"
+   ],
+   "a": 0,
+   "why": "ขยายกริยา **read** → adverb",
+   "no": [
+    null,
+    "adj ขยายกริยาไม่ได้",
+    "คำนามหรือกริยา",
+    "ความหมายไม่ใช่"
+   ],
+   "whySay": "ขยายกริยา read ใช้ carefully"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 24/30",
+   "say": "ข้อ 24",
+   "q": "The annual report ___ to all shareholders next Monday.",
+   "o": [
+    "sends",
+    "will be sent",
+    "sent",
+    "is sending"
+   ],
+   "a": 1,
+   "why": "รายงาน **ถูกส่ง** + next Monday → will be sent",
+   "no": [
+    "active รายงานส่งเองไม่ได้",
+    null,
+    "อดีต ขัดกับ next Monday",
+    "active รายงานส่งเองไม่ได้"
+   ],
+   "whySay": "รายงานถูกส่งในอนาคต ใช้ will be sent"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 25/30",
+   "say": "ข้อ 25",
+   "q": "The manager approved the ___ to extend the store's opening hours.",
+   "o": [
+    "invoice",
+    "attendance",
+    "proposal",
+    "agenda"
+   ],
+   "a": 2,
+   "why": "**proposal to + V** = ข้อเสนอให้ทำ",
+   "no": [
+    "ใบแจ้งหนี้ ไม่ได้ความ",
+    "การเข้าร่วม ไม่ได้ความ",
+    null,
+    "วาระประชุม ไม่ใช้กับ to extend"
+   ],
+   "whySay": "อนุมัติข้อเสนอ ใช้ proposal"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 26/30",
+   "say": "ข้อ 26",
+   "q": "Mr. Sato gave a very ___ presentation on the company's expansion plans.",
+   "o": [
+    "inform",
+    "information",
+    "informatively",
+    "informative"
+   ],
+   "a": 3,
+   "why": "**a very + adj + คำนาม** → informative",
+   "no": [
+    "กริยา",
+    "คำนาม ไม่ขยายคำนามแบบนี้",
+    "adverb ขยายคำนามไม่ได้",
+    null
+   ],
+   "whySay": "ระหว่าง very กับคำนาม ใช้คุณศัพท์"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 27/30",
+   "say": "ข้อ 27",
+   "q": "Mr. Lopez has worked at the firm ___ fifteen years.",
+   "o": [
+    "since",
+    "during",
+    "from",
+    "for"
+   ],
+   "a": 3,
+   "why": "**for + ระยะเวลา**",
+   "no": [
+    "since + จุดเวลา เช่น since 2010",
+    "during + คำนามเหตุการณ์",
+    "from ต้องคู่ to",
+    null
+   ],
+   "whySay": "ระยะเวลาใช้ for"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 28/30",
+   "say": "ข้อ 28",
+   "q": "___ the budget is approved, we cannot hire additional staff.",
+   "o": [
+    "Unless",
+    "Because",
+    "Despite",
+    "If"
+   ],
+   "a": 0,
+   "why": "**Unless** = ถ้าไม่",
+   "no": [
+    null,
+    "ความหมายไม่เข้ากัน",
+    "Despite + คำนาม",
+    "If ทำให้ความหมายกลับ"
+   ],
+   "whySay": "Unless แปลว่าถ้าไม่"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 29/30",
+   "say": "ข้อ 29",
+   "q": "The maintenance team is currently ___ the air conditioning system on the fifth floor.",
+   "o": [
+    "inspection",
+    "inspecting",
+    "inspect",
+    "inspected"
+   ],
+   "a": 1,
+   "why": "**is + V-ing** + currently",
+   "no": [
+    "คำนาม",
+    null,
+    "ต้องเติม ing",
+    "passive รับกรรมต่อไม่ได้"
+   ],
+   "whySay": "is กับ currently ใช้ inspecting"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 30/30",
+   "say": "ข้อ 30",
+   "q": "Please ___ the attached document and let me know if you have any questions.",
+   "o": [
+    "remind",
+    "respond",
+    "reply",
+    "review"
+   ],
+   "a": 3,
+   "why": "**review** = ตรวจดู เอกสาร",
+   "no": [
+    "remind = เตือน ไม่ได้ความ",
+    "respond ต้องมี to",
+    "reply ต้องมี to",
+    null
+   ],
+   "whySay": "ตรวจดูเอกสาร ใช้ review"
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ดูคำรอบช่องว่าง** : more/very + adj · กริยา + adv · of/'s + คำนาม",
+     "say": "จุดแรก word form ดูคำหน้าและหลังช่องก่อน ไม่ต้องแปลทั้งประโยค"
+    },
+    {
+     "x": "**คำบอกเวลาคือคีย์** : since → has · by the time → had · next → will",
+     "say": "จุดที่สอง tense หาคำบอกเวลา since by the time หรือ next"
+    },
+    {
+     "x": "**ประโยค vs คำนาม** : Although/while + ประโยค · Despite/during + คำนาม",
+     "say": "จุดที่สาม ดูว่าหลังช่องเป็นประโยคหรือคำนาม ก่อนเลือกคำเชื่อมหรือบุพบท"
+    }
+   ],
+   "outro": "ได้กี่ข้อจากสามสิบ ข้อที่พลาดย้อนดูเฉลยอีกรอบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

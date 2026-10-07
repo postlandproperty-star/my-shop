@@ -1,0 +1,207 @@
+{
+ "id": "toeic-750-course-L23",
+ "course": "toeic-750-course",
+ "n": 23,
+ "section": "Reading Part 5 · เติมประโยค",
+ "title": "คำเชื่อม และ Preposition ที่ออกบ่อย",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "คำเชื่อม และ\nPreposition ที่ออกบ่อย",
+   "sub": "ดูหลังช่องว่างว่าเป็นประโยคหรือคำนาม + คำเชื่อมคู่ + by/until, in/on/at แล้วลองทำจริง 5 ข้อ",
+   "say": "บทนี้เราจะเจาะข้อคำเชื่อมกับ preposition ใน Part 5 ซึ่งออกทุกชุด จะสอนวิธีดูหลังช่องว่าง ว่าต้องใช้คำเชื่อมหรือ preposition แล้วต่อด้วยคำเชื่อมคู่ และ preposition บอกเวลาที่ออกบ่อย ท้ายบทมีให้ลองทำจริงห้าข้อ"
+  },
+  {
+   "type": "list",
+   "h": "ขั้นที่ 1: ดูหลังช่องว่าง ประโยค หรือ คำนาม",
+   "say": "ถ้าตัวเลือกความหมายคล้ายกัน อย่าง although กับ despite อย่าเพิ่งแปล ให้ดูสิ่งที่ตามหลังช่องว่างก่อน ถ้ามีประธานและกริยา คือประโยค ใช้คำเชื่อม ถ้าเป็นคำนามล้วนๆ ใช้ preposition",
+   "items": [
+    {
+     "x": "**although** + ประโยค · **despite** + คำนาม",
+     "sub": "แม้ว่า · in spite of = despite",
+     "en": "Although the train was late, we arrived on time.",
+     "say": "หนึ่ง although กับ even though แปลว่าแม้ว่า ตามด้วยประโยค ส่วน despite กับ in spite of ความหมายเดียวกัน แต่ตามด้วยคำนาม เช่น despite the delay"
+    },
+    {
+     "x": "**because** + ประโยค · **because of** + คำนาม",
+     "sub": "due to = because of",
+     "en": "The event was canceled because of the storm.",
+     "say": "สอง because ตามด้วยประโยค ส่วน because of และ due to ตามด้วยคำนาม ประโยคนี้หลังช่องว่างคือ the storm เป็นคำนาม จึงใช้ because of"
+    },
+    {
+     "x": "**while** + ประโยค · **during** + คำนาม",
+     "sub": "ระหว่างที่ · ระหว่าง",
+     "en": "Please turn off your phone during the meeting.",
+     "say": "สาม while แปลว่าระหว่างที่ ตามด้วยประโยค ส่วน during แปลว่าระหว่าง ตามด้วยคำนาม อย่าง during the meeting"
+    },
+    {
+     "x": "**despite of** ไม่มีในภาษาอังกฤษ",
+     "sub": "✗ despite of · ✓ despite / in spite of",
+     "say": "กับดักที่คนไทยพลาดบ่อย คือเติม of หลัง despite ไม่มีคำนี้ ถ้าเห็นในตัวเลือก ตัดทิ้งได้เลย",
+     "mark": "no"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "ขั้นที่ 2: คำเชื่อมคู่ ต้องเข้าคู่ให้ถูก",
+   "say": "ขั้นที่สอง คำเชื่อมคู่ ข้อสอบมักเว้นช่องไว้ฝั่งเดียว แล้วให้อีกฝั่งเป็นตัวบอกใบ้ ให้มองหาคำคู่ที่อยู่ไกลออกไปในประโยค",
+   "items": [
+    {
+     "x": "**both** A **and** B",
+     "sub": "ทั้ง A และ B",
+     "en": "The hotel offers both free parking and breakfast.",
+     "say": "หนึ่ง both คู่กับ and แปลว่าทั้งสองอย่าง"
+    },
+    {
+     "x": "**either** A **or** B · **neither** A **nor** B",
+     "sub": "อย่างใดอย่างหนึ่ง · ไม่ทั้งคู่",
+     "en": "You can pay either by credit card or in cash.",
+     "say": "สอง either คู่กับ or แปลว่าอย่างใดอย่างหนึ่ง ส่วน neither คู่กับ nor แปลว่าไม่ทั้งคู่ ห้ามสลับคู่กัน"
+    },
+    {
+     "x": "**not only** A **but also** B",
+     "sub": "ไม่เพียงแต่ A แต่ยัง B",
+     "en": "The workshop is not only practical but also affordable.",
+     "say": "สาม not only คู่กับ but also แปลว่าไม่เพียงแต่ แต่ยัง"
+    },
+    {
+     "x": "เห็น **and / or / nor / but also** → ย้อนหาคู่",
+     "sub": "and → both · or → either · nor → neither",
+     "say": "เทคนิคคือ ถ้าเห็น and or nor หรือ but also อยู่หลังช่องว่าง ให้เลือกคู่ของมันได้ทันที ไม่ต้องแปลทั้งประโยค",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "ขั้นที่ 3: preposition ที่ออกบ่อย",
+   "say": "ขั้นสุดท้าย preposition บอกเวลาและที่มา ที่ออกบ่อยใน Part 5 จำความหมายให้แม่น แล้วจะตอบได้ในไม่กี่วินาที",
+   "items": [
+    {
+     "x": "**by** = ไม่เกิน · **until** = ต่อเนื่องถึง",
+     "sub": "The store is open until 9 p.m.",
+     "en": "Please send the report by Friday.",
+     "say": "หนึ่ง by แปลว่าภายในหรือไม่เกิน ใช้กับงานที่ทำครั้งเดียวให้เสร็จ อย่างส่งรายงาน ส่วน until แปลว่าจนถึง ใช้กับสิ่งที่ต่อเนื่อง อย่างร้านเปิดจนถึงสามทุ่ม"
+    },
+    {
+     "x": "**in** เดือน/ปี · **on** วัน/วันที่ · **at** เวลา",
+     "sub": "in May · on Monday · at 10 a.m.",
+     "en": "The meeting starts at 10 a.m. on Monday.",
+     "say": "สอง in ใช้กับเดือนและปี on ใช้กับวันและวันที่ at ใช้กับเวลาที่เป็นจุด อย่างสิบโมง"
+    },
+    {
+     "x": "**within** + ช่วงเวลา",
+     "sub": "ภายใน 5 วันทำการ",
+     "en": "Refunds are processed within five business days.",
+     "say": "สาม within แปลว่าภายในช่วงเวลา ตามด้วยระยะเวลา อย่าง within five days หรือ within 24 hours"
+    },
+    {
+     "x": "**prior to** = before · **according to** = ตามที่ระบุ",
+     "sub": "prior to departure · according to the schedule",
+     "en": "According to the schedule, the bus leaves at noon.",
+     "say": "สี่ prior to แปลว่าก่อน เหมือน before ส่วน according to แปลว่าตามที่ อะไรระบุไว้ อย่างตามตาราง หรือตามสัญญา ทั้งสองตัวตามด้วยคำนาม"
+    }
+   ]
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 1",
+   "say": "มาลองทำจริงกัน ดูหลังช่องว่างก่อน",
+   "q": "The client meeting was moved to Thursday ___ the director's business trip to Seoul.",
+   "o": ["because", "because of", "although", "so that"],
+   "a": 1,
+   "no": [
+    "because ต้องตามด้วยประโยค",
+    null,
+    "although ต้องตามด้วยประโยค และความหมายไม่เข้า",
+    "so that ต้องตามด้วยประโยค"
+   ],
+   "why": "หลังช่องว่างเป็น **คำนาม** (the director's business trip) → **because of**",
+   "whySay": "หลังช่องว่างคือ the director's business trip เป็นคำนาม ไม่มีกริยา จึงต้องใช้ because of"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 2",
+   "say": "ข้อที่สอง หลังช่องว่างมีกริยาไหม",
+   "q": "Ms. Grant reviewed the contract carefully ___ she was waiting for her flight.",
+   "o": ["during", "despite", "due to", "while"],
+   "a": 3,
+   "no": [
+    "during ต้องตามด้วยคำนาม",
+    "despite ต้องตามด้วยคำนาม",
+    "due to ต้องตามด้วยคำนาม",
+    null
+   ],
+   "why": "หลังช่องว่างเป็น **ประโยค** (she was waiting) → **while**",
+   "whySay": "หลังช่องว่างมีประธาน she และกริยา was waiting เป็นประโยค ตัวเลือกเดียวที่เป็นคำเชื่อมคือ while"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 3",
+   "say": "ข้อที่สาม มองหาคำคู่ในประโยค",
+   "q": "The new accounting software is ___ easy to install and inexpensive to maintain.",
+   "o": ["both", "either", "not only", "neither"],
+   "a": 0,
+   "no": [
+    null,
+    "either คู่กับ or",
+    "not only คู่กับ but also",
+    "neither คู่กับ nor"
+   ],
+   "why": "เห็น **and** → คู่คือ **both**",
+   "whySay": "ในประโยคมีคำว่า and เชื่อมสองอย่าง คู่ของ and คือ both จึงตอบ both"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 4",
+   "say": "ข้อที่สี่ งานนี้ทำครั้งเดียว หรือทำต่อเนื่อง",
+   "q": "Applicants must submit their portfolios ___ March 15 to be considered for the position.",
+   "o": ["until", "during", "by", "since"],
+   "a": 2,
+   "no": [
+    "until ใช้กับสิ่งที่ต่อเนื่อง แต่การส่งทำครั้งเดียว",
+    "during ใช้กับช่วงเวลา ไม่ใช่วันที่",
+    null,
+    "since ใช้กับ present perfect"
+   ],
+   "why": "ส่งครั้งเดียวให้ทัน **วันกำหนด** → **by**",
+   "whySay": "การส่งผลงานเป็นการกระทำครั้งเดียว ต้องทำให้ทันภายในวันที่สิบห้ามีนาคม จึงใช้ by ไม่ใช่ until"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 5",
+   "say": "ข้อสุดท้าย ดูความหมายกับคำที่ตามหลัง",
+   "q": "___ the terms of the agreement, all payments must be made within 30 days of delivery.",
+   "o": ["Prior to", "According to", "Because", "Although"],
+   "a": 1,
+   "no": [
+    "prior to = ก่อน ความหมายไม่เข้า",
+    null,
+    "Because ต้องตามด้วยประโยค",
+    "Although ต้องตามด้วยประโยค"
+   ],
+   "why": "**according to** + คำนาม = ตามที่ข้อตกลงระบุ",
+   "whySay": "หลังช่องว่างเป็นคำนาม the terms of the agreement และความหมายคือ ตามเงื่อนไขในข้อตกลง จึงตอบ according to"
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 23",
+   "items": [
+    {
+     "x": "ประโยค → although / because / while · คำนาม → despite / because of / during",
+     "say": "สรุปบทนี้ ขั้นแรกดูหลังช่องว่าง ถ้าเป็นประโยคใช้ although because while ถ้าเป็นคำนามใช้ despite because of during"
+    },
+    {
+     "x": "both–and · either–or · neither–nor · not only–but also",
+     "say": "ขั้นที่สอง คำเชื่อมคู่ ให้ย้อนหาคำคู่ในประโยค แล้วเลือกให้ตรงกัน"
+    },
+    {
+     "x": "by = ไม่เกิน · until = ต่อเนื่อง · in/on/at · within · prior to · according to",
+     "say": "และขั้นที่สาม by ใช้กับกำหนดส่ง until ใช้กับสิ่งที่ต่อเนื่อง in on at ใช้กับเดือน วัน และเวลา"
+    }
+   ],
+   "outro": "บทหน้า เป็นฝึก Part 5 ชุดที่ 4 รวมทุกแบบที่เรียนมา กดทำเครื่องหมายว่าเรียนจบ แล้วไปต่อกันเลย"
+  }
+ ]
+}

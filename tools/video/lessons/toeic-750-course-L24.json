@@ -1,0 +1,664 @@
+{
+ "id": "toeic-750-course-L24",
+ "course": "toeic-750-course",
+ "n": 24,
+ "section": "ฝึกทำข้อสอบ · Part 5",
+ "title": "Part 5 ชุดที่ 4: 30 ข้อ รวมทุกแบบ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 5 ชุดที่ 4\nฝึก 30 ข้อ รวมทุกแบบ",
+   "sub": "word form · tense · คำเชื่อม · pronoun · ศัพท์ · comparison · relative",
+   "say": "Part 5 สามสิบข้อ รวมทุกแบบ ยากขึ้นกว่าเดิม ข้อละห้าวินาที เริ่มเลย"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 1/30",
+   "say": "ข้อ 1",
+   "q": "The merger negotiations were conducted ___ to avoid unsettling investors.",
+   "o": [
+    "discreet",
+    "discreetly",
+    "discretion",
+    "more discreet"
+   ],
+   "a": 1,
+   "why": "**were conducted + ___** → adverb ขยายกริยา",
+   "no": [
+    "adj ขยายกริยาไม่ได้",
+    null,
+    "คำนาม วางหลัง passive ไม่ได้",
+    "ขั้นกว่า แต่ไม่มี than"
+   ],
+   "whySay": "หลังกริยา were conducted ใช้ adverb"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 2/30",
+   "say": "ข้อ 2",
+   "q": "By the time the auditors arrive on Monday, the accounting team ___ all of the receipts.",
+   "o": [
+    "organizes",
+    "had organized",
+    "will have organized",
+    "organized"
+   ],
+   "a": 2,
+   "why": "**By the time + present (อนาคต)** → will have + V3",
+   "no": [
+    "ไม่บอกว่าเสร็จก่อน",
+    "past perfect ใช้กับอดีต",
+    null,
+    "อดีต ขัดกับ arrive on Monday"
+   ],
+   "whySay": "by the time ที่เป็นอนาคต ใช้ will have"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 3/30",
+   "say": "ข้อ 3",
+   "q": "Ms. Novak will remain in charge of the Lisbon office ___ a permanent replacement is found.",
+   "o": [
+    "until",
+    "whereas",
+    "despite",
+    "so that"
+   ],
+   "a": 0,
+   "why": "**remain ... until** = อยู่ต่อจนกว่า",
+   "no": [
+    null,
+    "whereas ใช้เทียบความต่าง",
+    "despite + คำนาม ไม่ใช่ประโยค",
+    "so that บอกจุดประสงค์ ความหมายไม่เข้า"
+   ],
+   "whySay": "อยู่ต่อจนกว่าจะได้คนใหม่ ใช้ until"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 4/30",
+   "say": "ข้อ 4",
+   "q": "The marketing department will use our conference room, since ___ is being renovated.",
+   "o": [
+    "they",
+    "theirs",
+    "their",
+    "them"
+   ],
+   "a": 1,
+   "why": "**___ is** ไม่มีคำนามตาม → theirs = their room",
+   "no": [
+    "they = พวกเขา ไม่ใช่ห้อง",
+    null,
+    "their ต้องมีคำนามตาม",
+    "them เป็นกรรม เป็นประธานไม่ได้"
+   ],
+   "whySay": "ไม่มีคำนามตาม ใช้ theirs แปลว่าห้องของเขา"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 5/30",
+   "say": "ข้อ 5",
+   "q": "To ___ for the reimbursement, employees must submit original receipts within 30 days.",
+   "o": [
+    "qualify",
+    "deserve",
+    "permit",
+    "allow"
+   ],
+   "a": 0,
+   "why": "**qualify for** = มีสิทธิ์ได้รับ",
+   "no": [
+    null,
+    "deserve ไม่ใช้กับ for",
+    "permit ต้องมีกรรม",
+    "allow ต้องมีกรรม"
+   ],
+   "whySay": "qualify for แปลว่ามีสิทธิ์ได้รับ"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 6/30",
+   "say": "ข้อ 6",
+   "q": "Of all the proposals submitted, Mr. Dunn's was by far the ___ to implement.",
+   "o": [
+    "cheap",
+    "cheaper",
+    "cheapest",
+    "most cheaply"
+   ],
+   "a": 2,
+   "why": "**Of all + by far the** → ขั้นสุด",
+   "no": [
+    "by far the ต้องขั้นสุด",
+    "ขั้นกว่าใช้กับ than",
+    null,
+    "adverb ใช้หลัง was ไม่ได้"
+   ],
+   "whySay": "of all กับ the ใช้ขั้นสุด"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 7/30",
+   "say": "ข้อ 7",
+   "q": "The conference center, ___ was completed only last year, already hosts more than 200 events annually.",
+   "o": [
+    "that",
+    "where",
+    "what",
+    "which"
+   ],
+   "a": 3,
+   "why": "**ลูกน้ำ + สิ่ง + ประธานของ was** → which",
+   "no": [
+    "that ใช้หลังลูกน้ำไม่ได้",
+    "where ต้องตามด้วยประโยคครบ",
+    "what ไม่ใช้ขยายคำนาม",
+    null
+   ],
+   "whySay": "หลังลูกน้ำห้ามใช้ that ใช้ which"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 8/30",
+   "say": "ข้อ 8",
+   "q": "Ms. Chandra was praised for her ___ in resolving the dispute between the two suppliers.",
+   "o": [
+    "persist",
+    "persistent",
+    "persistently",
+    "persistence"
+   ],
+   "a": 3,
+   "why": "**her + ___ + in** → คำนาม",
+   "no": [
+    "กริยา วางหลัง her ไม่ได้",
+    "adj ต้องมีคำนามตาม",
+    "adverb วางหลัง her ไม่ได้",
+    null
+   ],
+   "whySay": "หลัง her ต้องเป็นคำนาม"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 9/30",
+   "say": "ข้อ 9",
+   "q": "Ms. Okafor ___ the Jakarta account for nearly a decade when she was promoted to vice president.",
+   "o": [
+    "managed",
+    "has managed",
+    "had been managing",
+    "is managing"
+   ],
+   "a": 2,
+   "why": "**for + ช่วงเวลา ก่อนเหตุการณ์อดีต** → had been + V-ing",
+   "no": [
+    "ไม่บอกว่าทำต่อเนื่องมาก่อน",
+    "present perfect ใช้กับ was promoted ไม่ได้",
+    null,
+    "ปัจจุบัน ขัดกับ was promoted"
+   ],
+   "whySay": "ทำต่อเนื่องก่อนเหตุการณ์อดีต ใช้ had been managing"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 10/30",
+   "say": "ข้อ 10",
+   "q": "Shipping fees will be waived for all orders ___ excess of $200.",
+   "o": [
+    "on",
+    "at",
+    "in",
+    "over"
+   ],
+   "a": 2,
+   "why": "**in excess of** = เกิน",
+   "no": [
+    "ไม่มี on excess of",
+    "ไม่มี at excess of",
+    null,
+    "ไม่มี over excess of"
+   ],
+   "whySay": "in excess of แปลว่าเกิน"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 11/30",
+   "say": "ข้อ 11",
+   "q": "The new HR software will ___ managers to track employee leave more accurately.",
+   "o": [
+    "enable",
+    "make",
+    "let",
+    "assist"
+   ],
+   "a": 0,
+   "why": "**enable + คน + to V** = ทำให้สามารถ",
+   "no": [
+    null,
+    "make + คน + V1 ไม่มี to",
+    "let + คน + V1 ไม่มี to",
+    "assist + คน + with/in"
+   ],
+   "whySay": "enable คน to กริยา make กับ let ไม่มี to"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 12/30",
+   "say": "ข้อ 12",
+   "q": "Feedback from the pilot program was so ___ that the company decided to launch it nationwide.",
+   "o": [
+    "encourage",
+    "encouraging",
+    "encouraged",
+    "encouragement"
+   ],
+   "a": 1,
+   "why": "**สิ่งที่ทำให้รู้สึก** → -ing",
+   "no": [
+    "กริยา วางหลัง so ไม่ได้",
+    null,
+    "-ed ใช้กับคนที่รู้สึก",
+    "คำนาม วางหลัง so ไม่ได้"
+   ],
+   "whySay": "สิ่งที่ทำให้รู้สึก ใช้ ing"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 13/30",
+   "say": "ข้อ 13",
+   "q": "Mr. Varga, with ___ I worked on the Osaka project, has joined a rival firm.",
+   "o": [
+    "who",
+    "whose",
+    "which",
+    "whom"
+   ],
+   "a": 3,
+   "why": "**preposition + ___ (คน)** → whom",
+   "no": [
+    "หลัง preposition ใช้ who ไม่ได้",
+    "whose ต้องมีคำนามตาม",
+    "which ใช้กับสิ่งของ",
+    null
+   ],
+   "whySay": "หลัง preposition ที่เป็นคน ใช้ whom"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 14/30",
+   "say": "ข้อ 14",
+   "q": "Had the shipment arrived on time, we ___ the order by last Friday.",
+   "o": [
+    "fill",
+    "would fill",
+    "will have filled",
+    "would have filled"
+   ],
+   "a": 3,
+   "why": "**Had + S + V3** (= If ... had) → would have + V3",
+   "no": [
+    "ไม่เข้ากับเงื่อนไขอดีต",
+    "would fill ใช้สมมติปัจจุบัน",
+    "will have ใช้กับอนาคตจริง",
+    null
+   ],
+   "whySay": "Had ขึ้นต้นคือ if แบบที่สาม ใช้ would have"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 15/30",
+   "say": "ข้อ 15",
+   "q": "The upgraded printers not only print faster ___ use less ink.",
+   "o": [
+    "and",
+    "or",
+    "but also",
+    "as well"
+   ],
+   "a": 2,
+   "why": "**not only ... but also**",
+   "no": [
+    "not only ไม่คู่กับ and",
+    "not only ไม่คู่กับ or",
+    null,
+    "as well ไม่ใช้เชื่อมกลางประโยค"
+   ],
+   "whySay": "not only คู่กับ but also"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 16/30",
+   "say": "ข้อ 16",
+   "q": "The prices at our new store are lower than ___ at our downtown location.",
+   "o": [
+    "that",
+    "those",
+    "them",
+    "it"
+   ],
+   "a": 1,
+   "why": "**prices (พหูพจน์)** → those = the prices",
+   "no": [
+    "that แทนนามเอกพจน์",
+    null,
+    "them ไม่ใช้แทนคำนามที่มีส่วนขยาย",
+    "it เป็นเอกพจน์"
+   ],
+   "whySay": "prices พหูพจน์ ใช้ those"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 17/30",
+   "say": "ข้อ 17",
+   "q": "The lease on our warehouse is ___ for renewal at the end of the fiscal year.",
+   "o": [
+    "due",
+    "owed",
+    "expired",
+    "valid"
+   ],
+   "a": 0,
+   "why": "**due for renewal** = ถึงกำหนดต่ออายุ",
+   "no": [
+    null,
+    "owed = ติดค้าง ใช้กับเงิน",
+    "expired for ไม่ใช้แบบนี้",
+    "valid for + ช่วงเวลา"
+   ],
+   "whySay": "due for renewal แปลว่าถึงกำหนดต่อสัญญา"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 18/30",
+   "say": "ข้อ 18",
+   "q": "Online sales this quarter were ___ higher than analysts had predicted.",
+   "o": [
+    "very",
+    "much",
+    "more",
+    "most"
+   ],
+   "a": 1,
+   "why": "**___ + higher than** → much ขยายขั้นกว่า",
+   "no": [
+    "very ขยายขั้นกว่าไม่ได้",
+    null,
+    "more ซ้อนกับ higher ไม่ได้",
+    "most ใช้กับขั้นสุด"
+   ],
+   "whySay": "หน้าขั้นกว่าใช้ much"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 19/30",
+   "say": "ข้อ 19",
+   "q": "Applicants must submit ___ copies of their university diplomas.",
+   "o": [
+    "certify",
+    "certified",
+    "certifying",
+    "certifiably"
+   ],
+   "a": 1,
+   "why": "**สำเนาถูกรับรอง** → V3 ขยายคำนาม",
+   "no": [
+    "กริยา ขยายคำนามไม่ได้",
+    null,
+    "-ing = สำเนารับรองเอง ผิดความหมาย",
+    "adverb ขยายคำนามไม่ได้"
+   ],
+   "whySay": "สำเนาถูกรับรอง ใช้ certified"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 20/30",
+   "say": "ข้อ 20",
+   "q": "The east wing of the hotel is closed at present because it ___.",
+   "o": [
+    "renovates",
+    "is renovating",
+    "is being renovated",
+    "has renovated"
+   ],
+   "a": 2,
+   "why": "**ตอนนี้ + ถูกกระทำ** → is being + V3",
+   "no": [
+    "active ตึกซ่อมเองไม่ได้",
+    "active ตึกซ่อมเองไม่ได้",
+    null,
+    "active และไม่มีกรรม"
+   ],
+   "whySay": "กำลังถูกซ่อม ใช้ is being renovated"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 21/30",
+   "say": "ข้อ 21",
+   "q": "___ completion of their probation period, employees are eligible for health insurance.",
+   "o": [
+    "Upon",
+    "Within",
+    "Among",
+    "Toward"
+   ],
+   "a": 0,
+   "why": "**Upon completion of** = เมื่อทำเสร็จ",
+   "no": [
+    null,
+    "within + ระยะเวลา",
+    "among ใช้กับกลุ่ม",
+    "toward = ไปทาง"
+   ],
+   "whySay": "upon completion of แปลว่าเมื่อเสร็จ"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 22/30",
+   "say": "ข้อ 22",
+   "q": "The trade show will be held at the Grand Pavilion, ___ last year's product launch took place.",
+   "o": [
+    "which",
+    "that",
+    "when",
+    "where"
+   ],
+   "a": 3,
+   "why": "**สถานที่ + ประโยคครบ** → where",
+   "no": [
+    "หลังช่องครบแล้ว ไม่ขาดประธาน/กรรม",
+    "that ใช้หลังลูกน้ำไม่ได้",
+    "when ใช้กับเวลา",
+    null
+   ],
+   "whySay": "สถานที่ และหลังช่องครบ ใช้ where"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 23/30",
+   "say": "ข้อ 23",
+   "q": "The new budget will be finalized ___ the board approves the revised figures.",
+   "o": [
+    "once",
+    "during",
+    "despite",
+    "meanwhile"
+   ],
+   "a": 0,
+   "why": "**once + ประโยค** = ทันทีที่",
+   "no": [
+    null,
+    "during + คำนาม",
+    "despite + คำนาม",
+    "meanwhile เชื่อมประโยคไม่ได้"
+   ],
+   "whySay": "once แปลว่าทันทีที่ ตามด้วยประโยคได้"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 24/30",
+   "say": "ข้อ 24",
+   "q": "The proposal was rejected because the projected costs were ___ high.",
+   "o": [
+    "prohibit",
+    "prohibitive",
+    "prohibitively",
+    "prohibition"
+   ],
+   "a": 2,
+   "why": "**___ + high (adj)** → adverb",
+   "no": [
+    "กริยา วางตรงนี้ไม่ได้",
+    "adj ขยาย adj ไม่ได้",
+    null,
+    "คำนาม วางหน้า high ไม่ได้"
+   ],
+   "whySay": "ขยายคุณศัพท์ high ใช้ adverb"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 25/30",
+   "say": "ข้อ 25",
+   "q": "Ms. Byrne usually ___ by train, but this week she is driving because of the rail strike.",
+   "o": [
+    "commutes",
+    "is commuting",
+    "has commuted",
+    "commuted"
+   ],
+   "a": 0,
+   "why": "**usually** → present simple",
+   "no": [
+    null,
+    "usually ไม่ใช้ continuous",
+    "perfect ไม่ใช้กับ usually",
+    "อดีต ขัดกับ this week"
+   ],
+   "whySay": "usually บอกกิจวัตร ใช้ present simple"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 26/30",
+   "say": "ข้อ 26",
+   "q": "The prize will be awarded to ___ submits the most creative design.",
+   "o": [
+    "who",
+    "whomever",
+    "anyone",
+    "whoever"
+   ],
+   "a": 3,
+   "why": "**to + ___ + submits** → whoever = ใครก็ตามที่",
+   "no": [
+    "who ต้องมีคำนามนำหน้า",
+    "whomever เป็นกรรม แต่ช่องเป็นประธาน",
+    "anyone ต้องมี who ตาม",
+    null
+   ],
+   "whySay": "ไม่มีคำนามนำและเป็นประธาน ใช้ whoever"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 27/30",
+   "say": "ข้อ 27",
+   "q": "Mr. Ito was asked to ___ the visiting clients during their tour of the plant.",
+   "o": [
+    "attend",
+    "participate",
+    "accompany",
+    "consist"
+   ],
+   "a": 2,
+   "why": "**accompany + คน** = ไปด้วย / พาไป",
+   "no": [
+    "attend ใช้กับงาน ไม่ใช่คน",
+    "participate ต้องมี in",
+    null,
+    "consist of = ประกอบด้วย"
+   ],
+   "whySay": "accompany แปลว่าไปด้วย ตามด้วยคนได้เลย"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 28/30",
+   "say": "ข้อ 28",
+   "q": "The new laptops are twice as ___ as the models we purchased three years ago.",
+   "o": [
+    "light",
+    "lighter",
+    "lightest",
+    "lightly"
+   ],
+   "a": 0,
+   "why": "**twice as + adj + as** → รูปปกติ",
+   "no": [
+    null,
+    "as...as ไม่ใช้ขั้นกว่า",
+    "as...as ไม่ใช้ขั้นสุด",
+    "adverb วางหลัง are ไม่ได้"
+   ],
+   "whySay": "as กับ as ใช้รูปธรรมดา"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 29/30",
+   "say": "ข้อ 29",
+   "q": "Employees ___ to work remotely must notify their supervisors in advance.",
+   "o": [
+    "wish",
+    "wishing",
+    "wished",
+    "who wishes"
+   ],
+   "a": 1,
+   "why": "**Employees ___** = who wish → V-ing",
+   "no": [
+    "มีกริยาหลัก must notify แล้ว",
+    null,
+    "V3 = ถูกปรารถนา ผิดความหมาย",
+    "employees พหูพจน์ ต้อง who wish"
+   ],
+   "whySay": "ย่อจาก who wish เป็น wishing"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 30/30",
+   "say": "ข้อ 30",
+   "q": "The seminar will be rescheduled ___ the keynote speaker is unable to attend.",
+   "o": [
+    "so that",
+    "as though",
+    "whereas",
+    "in the event that"
+   ],
+   "a": 3,
+   "why": "**in the event that** = ถ้าเกิดกรณีที่",
+   "no": [
+    "so that บอกจุดประสงค์",
+    "as though = ราวกับว่า",
+    "whereas ใช้เทียบความต่าง",
+    null
+   ],
+   "whySay": "in the event that ใช้แทน if"
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ขยาย adj / ขั้นกว่า** : prohibitively high · much higher (ห้าม very)",
+     "say": "จุดแรก ขยายคุณศัพท์ใช้ adverb หน้าขั้นกว่าใช้ much"
+    },
+    {
+     "x": "**relative ดูข้างหน้าและข้างหลัง** : , which · with whom · , where + ประโยคครบ",
+     "say": "จุดที่สอง หลังลูกน้ำห้าม that หลัง preposition ใช้ whom ประโยคครบใช้ where"
+    },
+    {
+     "x": "**เงื่อนไข & เวลาอนาคต** : Had + V3 → would have V3 · By the time → will have V3",
+     "say": "จุดที่สาม Had ขึ้นต้นคือ if แบบที่สาม by the time อนาคตใช้ will have"
+    }
+   ],
+   "outro": "ชุดที่สี่จบแล้ว ข้อที่พลาดย้อนดูเฉลยอีกรอบ แล้วไปบทถัดไปกัน"
+  }
+ ]
+}

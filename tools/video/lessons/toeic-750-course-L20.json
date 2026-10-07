@@ -1,0 +1,664 @@
+{
+ "id": "toeic-750-course-L20",
+ "course": "toeic-750-course",
+ "n": 20,
+ "section": "ฝึกทำข้อสอบ · Part 5",
+ "title": "Part 5 ชุดที่ 2: 30 ข้อ เน้น word form",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 5 ชุดที่ 2\nฝึก 30 ข้อ เน้น word form",
+   "sub": "word form 20 ข้อ · ผสมอื่นๆ 10 ข้อ",
+   "say": "บทนี้ฝึก Part 5 อีกสามสิบข้อ เน้น word form คือตัวเลือกเป็นคำเดียวกันคนละรูป ดูคำหน้าและหลังช่องให้ดี ข้อละห้าวินาที แล้วเฉลยทันที เริ่มกันเลย"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 1/30",
+   "say": "ข้อ 1",
+   "q": "The company's ___ in the Asian market depends on strong local partnerships.",
+   "o": [
+    "successful",
+    "success",
+    "succeed",
+    "successfully"
+   ],
+   "a": 1,
+   "why": "**'s + คำนาม** → success",
+   "no": [
+    "คุณศัพท์ ไม่ใช่คำนาม",
+    null,
+    "กริยา ใช้หลัง 's ไม่ได้",
+    "adverb ใช้หลัง 's ไม่ได้"
+   ],
+   "whySay": "หลัง company's ต้องเป็นคำนาม จึงตอบ success"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 2/30",
+   "say": "ข้อ 2",
+   "q": "The new assistant manager handled the customer complaint very ___.",
+   "o": [
+    "professional",
+    "profession",
+    "professionally",
+    "professionalism"
+   ],
+   "a": 2,
+   "why": "**handled + very + adverb**",
+   "no": [
+    "คุณศัพท์ ขยายกริยาไม่ได้",
+    "คำนาม ใช้หลัง very ไม่ได้",
+    null,
+    "คำนาม ใช้หลัง very ไม่ได้"
+   ],
+   "whySay": "very ตรงนี้ขยายกริยา handled ต้องใช้ adverb คือ professionally"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 3/30",
+   "say": "ข้อ 3",
+   "q": "Ms. Garcia will call you back as soon as she ___ from the meeting.",
+   "o": [
+    "returns",
+    "return",
+    "will return",
+    "returned"
+   ],
+   "a": 0,
+   "why": "**as soon as + present simple** แทนอนาคต",
+   "no": [
+    null,
+    "ประธาน she ต้องเติม s",
+    "หลัง as soon as ไม่ใช้ will",
+    "อดีต ไม่เข้ากับ will call"
+   ],
+   "whySay": "หลัง as soon as ใช้ปัจจุบันแทนอนาคต และ she ต้องเติม s จึงตอบ returns"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 4/30",
+   "say": "ข้อ 4",
+   "q": "Ms. Wong is ___ for organizing the annual sales conference.",
+   "o": [
+    "responsibly",
+    "responsibility",
+    "responsibilities",
+    "responsible"
+   ],
+   "a": 3,
+   "why": "**be responsible for** = รับผิดชอบ",
+   "no": [
+    "adverb ตามหลัง is ลอยๆ ไม่ได้",
+    "คำนาม คนไม่ใช่ความรับผิดชอบ",
+    "คำนามพหูพจน์ ไม่เข้า",
+    null
+   ],
+   "whySay": "โครงสร้าง be responsible for แปลว่ารับผิดชอบงานอะไร จึงตอบ responsible"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 5/30",
+   "say": "ข้อ 5",
+   "q": "Please submit your ___ for the marketing position before the end of the month.",
+   "o": [
+    "apply",
+    "applicant",
+    "application",
+    "applied"
+   ],
+   "a": 2,
+   "why": "**your + คำนาม** ที่ส่งได้ = ใบสมัคร",
+   "no": [
+    "กริยา ใช้หลัง your ไม่ได้",
+    "คำนามคน ส่งคนไม่ได้",
+    null,
+    "กริยาช่อง 3"
+   ],
+   "whySay": "หลัง your ต้องเป็นคำนาม และของที่ส่งได้คือใบสมัคร application ไม่ใช่ตัวคน"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 6/30",
+   "say": "ข้อ 6",
+   "q": "The conference room is available ___ 9 A.M. and noon.",
+   "o": [
+    "between",
+    "from",
+    "among",
+    "until"
+   ],
+   "a": 0,
+   "why": "**between A and B**",
+   "no": [
+    null,
+    "from คู่กับ to",
+    "among ใช้กับ 3 สิ่งขึ้นไป",
+    "until ไม่ใช้คู่กับ and"
+   ],
+   "whySay": "เห็น and เชื่อมสองเวลา ให้นึกถึง between ก่อนเลย"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 7/30",
+   "say": "ข้อ 7",
+   "q": "The hotel offers ___ rates for guests who stay more than five nights.",
+   "o": [
+    "compete",
+    "competitively",
+    "competition",
+    "competitive"
+   ],
+   "a": 3,
+   "why": "**คุณศัพท์ + คำนาม** rates",
+   "no": [
+    "กริยา ขยายคำนามไม่ได้",
+    "adverb ขยายคำนามไม่ได้",
+    "คำนาม ความหมายไม่เข้า",
+    null
+   ],
+   "whySay": "ช่องอยู่หน้าคำนาม rates ต้องใช้คุณศัพท์ competitive แปลว่าราคาที่สู้ได้"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 8/30",
+   "say": "ข้อ 8",
+   "q": "Sales of the new smartphone have increased ___ since the price was reduced.",
+   "o": [
+    "significant",
+    "significantly",
+    "significance",
+    "signify"
+   ],
+   "a": 1,
+   "why": "**กริยา increased + adverb**",
+   "no": [
+    "คุณศัพท์ ขยายกริยาไม่ได้",
+    null,
+    "คำนาม",
+    "กริยา"
+   ],
+   "whySay": "ช่องอยู่หลังกริยา increased ต้องใช้ adverb คือ significantly"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 9/30",
+   "say": "ข้อ 9",
+   "q": "Please contact Mr. Silva, ___ is in charge of the new project.",
+   "o": [
+    "who",
+    "which",
+    "whose",
+    "whom"
+   ],
+   "a": 0,
+   "why": "**คน + ประธานของ is** → who",
+   "no": [
+    null,
+    "which ใช้กับสิ่งของ",
+    "whose ต้องตามด้วยคำนาม",
+    "whom เป็นกรรม ตามด้วย is ไม่ได้"
+   ],
+   "whySay": "Mr. Silva เป็นคน และช่องทำหน้าที่ประธานของ is จึงตอบ who"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 10/30",
+   "say": "ข้อ 10",
+   "q": "The ___ of the new factory is expected to create 300 jobs.",
+   "o": [
+    "construct",
+    "constructive",
+    "construction",
+    "constructed"
+   ],
+   "a": 2,
+   "why": "**The ___ of** → คำนาม",
+   "no": [
+    "กริยา",
+    "คุณศัพท์",
+    null,
+    "กริยาช่อง 3"
+   ],
+   "whySay": "ระหว่าง the กับ of ต้องเป็นคำนาม จึงตอบ construction"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 11/30",
+   "say": "ข้อ 11",
+   "q": "Mr. Park's ___ to the project was praised by the entire team.",
+   "o": [
+    "contribute",
+    "contributed",
+    "contributor",
+    "contribution"
+   ],
+   "a": 3,
+   "why": "**'s + คำนาม** ที่ถูกชม = ผลงาน",
+   "no": [
+    "กริยา",
+    "กริยาช่อง 3",
+    "คำนามคน ความหมายไม่เข้า",
+    null
+   ],
+   "whySay": "หลัง Park's ต้องเป็นคำนาม และสิ่งที่ทีมชมคือการมีส่วนร่วม contribution"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 12/30",
+   "say": "ข้อ 12",
+   "q": "The new policy will ___ effect on July 1.",
+   "o": [
+    "make",
+    "take",
+    "do",
+    "bring"
+   ],
+   "a": 1,
+   "why": "**take effect** = มีผลบังคับใช้",
+   "no": [
+    "ไม่ใช้กับ effect แบบนี้",
+    null,
+    "ไม่ใช้กับ effect",
+    "ไม่ใช้กับ effect แบบนี้"
+   ],
+   "whySay": "วลีตายตัวคือ take effect แปลว่ามีผลบังคับใช้"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 13/30",
+   "say": "ข้อ 13",
+   "q": "The customer survey results were ___ positive this quarter.",
+   "o": [
+    "overwhelming",
+    "overwhelmingly",
+    "overwhelm",
+    "overwhelmed"
+   ],
+   "a": 1,
+   "why": "**adverb + คุณศัพท์** positive",
+   "no": [
+    "คุณศัพท์ ขยายคุณศัพท์ไม่ได้",
+    null,
+    "กริยา",
+    "กริยาช่อง 3 ไม่เข้ากับ positive"
+   ],
+   "whySay": "ช่องอยู่หน้าคุณศัพท์ positive ต้องใช้ adverb คือ overwhelmingly"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 14/30",
+   "say": "ข้อ 14",
+   "q": "All staff must follow the safety ___ when working in the warehouse.",
+   "o": [
+    "regulate",
+    "regulatory",
+    "regulated",
+    "regulations"
+   ],
+   "a": 3,
+   "why": "**follow + the + คำนาม**",
+   "no": [
+    "กริยา",
+    "คุณศัพท์ ต้องมีคำนามตาม",
+    "กริยาช่อง 3",
+    null
+   ],
+   "whySay": "หลัง the safety ต้องเป็นคำนาม ที่ทำตามได้คือ regulations กฎระเบียบ"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 15/30",
+   "say": "ข้อ 15",
+   "q": "Last year, the company ___ two new branches in the northern region.",
+   "o": [
+    "opened",
+    "opens",
+    "has opened",
+    "will open"
+   ],
+   "a": 0,
+   "why": "**Last year** → past simple",
+   "no": [
+    null,
+    "ปัจจุบัน ไม่เข้ากับ last year",
+    "has ใช้กับเวลาในอดีตที่ระบุไม่ได้",
+    "อนาคต ไม่เข้ากับ last year"
+   ],
+   "whySay": "เห็น last year บอกเวลาอดีตชัดเจน ใช้อดีตธรรมดา opened"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 16/30",
+   "say": "ข้อ 16",
+   "q": "The board took ___ action to reduce costs after the first-quarter losses.",
+   "o": [
+    "decide",
+    "decision",
+    "decisive",
+    "decisively"
+   ],
+   "a": 2,
+   "why": "**คุณศัพท์ + คำนาม** action",
+   "no": [
+    "กริยา",
+    "คำนาม ซ้อนกับ action ไม่ได้",
+    null,
+    "adverb ขยายคำนามไม่ได้"
+   ],
+   "whySay": "ช่องอยู่หน้าคำนาม action ต้องใช้คุณศัพท์ decisive แปลว่าเด็ดขาด"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 17/30",
+   "say": "ข้อ 17",
+   "q": "Customers can ___ their orders online up to 24 hours before delivery.",
+   "o": [
+    "modify",
+    "modification",
+    "modified",
+    "modifiable"
+   ],
+   "a": 0,
+   "why": "**can + กริยาช่อง 1**",
+   "no": [
+    null,
+    "คำนาม",
+    "หลัง can ใช้ช่อง 3 ไม่ได้",
+    "คุณศัพท์"
+   ],
+   "whySay": "หลัง can ต้องเป็นกริยารูปธรรมดา คือ modify"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 18/30",
+   "say": "ข้อ 18",
+   "q": "The shipment was delayed ___ bad weather at the port.",
+   "o": [
+    "because",
+    "due to",
+    "although",
+    "since"
+   ],
+   "a": 1,
+   "why": "**due to + คำนาม**",
+   "no": [
+    "because ต้องตามด้วยประโยค",
+    null,
+    "although ต้องตามด้วยประโยค และความหมายขัด",
+    "since + คำนาม หมายถึงเวลา"
+   ],
+   "whySay": "หลังช่องเป็นแค่คำนาม bad weather จึงใช้ due to"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 19/30",
+   "say": "ข้อ 19",
+   "q": "Please make sure the documents are ___ arranged before the auditors arrive.",
+   "o": [
+    "neat",
+    "neater",
+    "neatness",
+    "neatly"
+   ],
+   "a": 3,
+   "why": "**are + adverb + กริยาช่อง 3**",
+   "no": [
+    "คุณศัพท์ ขยายกริยาไม่ได้",
+    "คุณศัพท์ขั้นกว่า",
+    "คำนาม",
+    null
+   ],
+   "whySay": "ช่องอยู่ระหว่าง are กับ arranged ต้องใช้ adverb คือ neatly"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 20/30",
+   "say": "ข้อ 20",
+   "q": "Ms. Chen's ___ to regional director surprised no one in the office.",
+   "o": [
+    "promote",
+    "promotional",
+    "promotion",
+    "promoted"
+   ],
+   "a": 2,
+   "why": "**'s + คำนาม** promotion",
+   "no": [
+    "กริยา",
+    "คุณศัพท์",
+    null,
+    "กริยาช่อง 3"
+   ],
+   "whySay": "หลัง Chen's ต้องเป็นคำนาม คือ promotion การเลื่อนตำแหน่ง"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 21/30",
+   "say": "ข้อ 21",
+   "q": "Mr. Brown has worked at the branch ___ than anyone else in the department.",
+   "o": [
+    "long",
+    "longer",
+    "longest",
+    "length"
+   ],
+   "a": 1,
+   "why": "**than** → ขั้นกว่า",
+   "no": [
+    "ขั้นธรรมดา ใช้กับ than ไม่ได้",
+    null,
+    "ขั้นสุด ใช้กับ than ไม่ได้",
+    "คำนาม"
+   ],
+   "whySay": "เห็น than ต้องใช้ขั้นกว่า คือ longer"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 22/30",
+   "say": "ข้อ 22",
+   "q": "All ___ must present their invitation cards at the entrance.",
+   "o": [
+    "attendees",
+    "attendance",
+    "attend",
+    "attended"
+   ],
+   "a": 0,
+   "why": "**คำนามคน** ที่ยื่นบัตรได้",
+   "no": [
+    null,
+    "คำนามสิ่ง ยื่นบัตรไม่ได้",
+    "กริยา",
+    "กริยาช่อง 3"
+   ],
+   "whySay": "คนที่ยื่นบัตรได้ต้องเป็นคน จึงตอบ attendees ผู้เข้าร่วม"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 23/30",
+   "say": "ข้อ 23",
+   "q": "The new parking system has been very ___ to employees.",
+   "o": [
+    "benefit",
+    "beneficially",
+    "beneficiary",
+    "beneficial"
+   ],
+   "a": 3,
+   "why": "**very + คุณศัพท์** หลัง has been",
+   "no": [
+    "คำนามหรือกริยา ใช้หลัง very ไม่ได้",
+    "adverb ใช้หลัง be ลอยๆ ไม่ได้",
+    "คำนามคน",
+    null
+   ],
+   "whySay": "หลัง has been very ต้องเป็นคุณศัพท์ คือ beneficial"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 24/30",
+   "say": "ข้อ 24",
+   "q": "Employees are encouraged ___ public transportation to reduce traffic near the office.",
+   "o": [
+    "use",
+    "using",
+    "to use",
+    "used"
+   ],
+   "a": 2,
+   "why": "**be encouraged + to V**",
+   "no": [
+    "ต้องมี to",
+    "encourage ไม่ตามด้วย ing",
+    null,
+    "กริยาช่อง 3"
+   ],
+   "whySay": "encourage ตามด้วย to V เสมอ จึงตอบ to use"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 25/30",
+   "say": "ข้อ 25",
+   "q": "Mr. Adams prefers to work ___ rather than as part of a team.",
+   "o": [
+    "independently",
+    "independent",
+    "independence",
+    "depend"
+   ],
+   "a": 0,
+   "why": "**work + adverb**",
+   "no": [
+    null,
+    "คุณศัพท์ ขยายกริยาไม่ได้",
+    "คำนาม",
+    "กริยา"
+   ],
+   "whySay": "ช่องขยายกริยา work ต้องใช้ adverb คือ independently"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 26/30",
+   "say": "ข้อ 26",
+   "q": "The team leader gave a ___ explanation of the new procedures.",
+   "o": [
+    "clearly",
+    "clear",
+    "clarity",
+    "clarify"
+   ],
+   "a": 1,
+   "why": "**a + คุณศัพท์ + คำนาม**",
+   "no": [
+    "adverb ขยายคำนามไม่ได้",
+    null,
+    "คำนาม ซ้อนกับ explanation ไม่ได้",
+    "กริยา"
+   ],
+   "whySay": "ช่องอยู่ระหว่าง a กับคำนาม explanation ต้องใช้คุณศัพท์ clear"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 27/30",
+   "say": "ข้อ 27",
+   "q": "Please ___ the meeting room at least one day in advance.",
+   "o": [
+    "remain",
+    "attend",
+    "approve",
+    "reserve"
+   ],
+   "a": 3,
+   "why": "**reserve** = จองห้อง",
+   "no": [
+    "remain ไม่มีกรรม",
+    "attend ใช้กับการประชุม ไม่ใช่ห้อง",
+    "approve ห้องไม่ได้",
+    null
+   ],
+   "whySay": "in advance บอกว่าทำล่วงหน้า สิ่งที่ทำกับห้องประชุมล่วงหน้าคือจอง reserve"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 28/30",
+   "say": "ข้อ 28",
+   "q": "Orders ___ after 3 P.M. will be shipped the next business day.",
+   "o": [
+    "placed",
+    "place",
+    "placing",
+    "placement"
+   ],
+   "a": 0,
+   "why": "**คำนาม + V3** = ถูกกระทำ",
+   "no": [
+    null,
+    "มีกริยาหลัก will be แล้ว",
+    "ing = ทำเอง คำสั่งซื้อสั่งเองไม่ได้",
+    "คำนาม"
+   ],
+   "whySay": "คำสั่งซื้อถูกสั่ง จึงใช้ช่อง 3 placed ขยาย orders"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 29/30",
+   "say": "ข้อ 29",
+   "q": "Ms. Davis is known for her ___ approach to solving problems.",
+   "o": [
+    "create",
+    "creation",
+    "creative",
+    "creatively"
+   ],
+   "a": 2,
+   "why": "**her + คุณศัพท์ + คำนาม**",
+   "no": [
+    "กริยา",
+    "คำนาม ซ้อนกับ approach ไม่ได้",
+    null,
+    "adverb ขยายคำนามไม่ได้"
+   ],
+   "whySay": "ช่องอยู่หน้าคำนาม approach ต้องใช้คุณศัพท์ creative"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 30/30",
+   "say": "ข้อ 30",
+   "q": "The training materials will be sent to ___ who registered for the workshop.",
+   "o": [
+    "them",
+    "those",
+    "these",
+    "they"
+   ],
+   "a": 1,
+   "why": "**those who** = คนที่…",
+   "no": [
+    "them ไม่ตามด้วย who",
+    null,
+    "these ไม่ใช้กับ who",
+    "they เป็นประธาน ใช้หลัง to ไม่ได้"
+   ],
+   "whySay": "วลีที่ใช้บ่อยคือ those who แปลว่าคนที่ทำอะไร"
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**คำนามคน vs สิ่ง** : applicant/application · attendees/attendance",
+     "say": "จุดพลาดแรก ช่องที่ต้องเป็นคำนาม มักมีทั้งคำนามคนและสิ่ง ให้ดูความหมายว่าเป็นคนหรือของ"
+    },
+    {
+     "x": "**ขยายกริยา/คุณศัพท์ ใช้ adverb** : handled professionally · overwhelmingly positive",
+     "say": "จุดพลาดที่สอง ถ้าช่องขยายกริยา คุณศัพท์ หรืออยู่ระหว่าง be กับกริยาช่องสาม ต้องใช้ ly"
+    },
+    {
+     "x": "**หน้าคำนามใช้ adj** : competitive rates · decisive action · clear explanation",
+     "say": "จุดพลาดที่สาม ช่องหน้าคำนามต้องเป็นคุณศัพท์ อย่าเลือกคำนามหรือ ly มาซ้อน"
+    }
+   ],
+   "outro": "ชุดที่สองจบแล้ว ได้กี่ข้อจากสามสิบ ข้อที่พลาดลองย้อนดูเฉลยอีกรอบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

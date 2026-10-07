@@ -8,7 +8,7 @@
 //   {type:'read', h, say?, q:'ประโยคมีช่อง ___', o:[4], a, why, no:[...]}               ฝึก Reading (โจทย์และตัวเลือกขึ้นจอ ไม่อ่านออกเสียง) เวลาคิด 5 วินาที
 //   {type:'conv', h, say?, lines:[{v:'q'|'r'|'m', t}], qs:[{q, o:[4], a, why, no?}]}     ฝึก Part 3/4: ฟังบทสนทนา/ข้อความพูด แล้วตอบ 3 ข้อ (คำถามขึ้นจอเหมือนข้อสอบจริง)
 //   {type:'passage', h, say?, text:'บทความอังกฤษ ≤ 120 คำ', qs:[{q, o:[4], a, why, no?}]}  ฝึก Part 6/7: บทความซ้าย คำถามขวา
-//   {type:'end', h, pts:[...], say}                                                     สรุปบท
+//   {type:'end', h, pts:[...], say, cta?}   cta = ข้อความแถบท้าย (บทสุดท้ายของคอร์สใส่เอง)                                                     สรุปบท
 // คีย์ Google TTS อ่านจาก ~/Documents/Academic/.google_tts_key (ไม่พิมพ์ออกมา) · ผลงานเก็บที่ /Volumes/PortableSSD/Sheetlab/Courses/<course>/<id>/
 import fs from 'node:fs';
 import os from 'node:os';
@@ -89,7 +89,7 @@ function steps(sl) {
   if (sl.type === 'cover') S.push({ html: () => page(`<span class="kick">บทที่ ${spec.n}</span><h1>${md(sl.h)}</h1>${sl.sub ? `<p>${md(sl.sub)}</p>` : ''}`, 'cov'), au: [{ th: sl.say }] });
   if (sl.type === 'list' || sl.type === 'end') {
     const its = sl.type === 'end' ? (sl.items || (sl.pts || []).map((x) => ({ x }))).map((x) => ({ ...x, mark: 'ok' })) : sl.items || [];
-    const box = (upto, all) => `<h2>${md(sl.h)}</h2><div class="wrap${sl.img ? ' im' : ''}"><div class="${its.length > 4 ? 'dense' : ''}">${its.map((it, i) => i > upto ? '' : `<div class="it ${it.mark && (all || i < upto) ? it.mark : i === upto && !all ? 'cur' : all ? '' : 'old'}"><span class="k">${it.mark === 'ok' && (all || i < upto) ? '✓' : it.mark === 'no' && (all || i < upto) ? '✗' : i + 1}</span><span><span class="${it.en && it.en === it.x ? 'en' : ''}">${md(it.x)}</span>${it.sub ? `<small>${md(it.sub)}</small>` : ''}</span></div>`).join('')}${sl.type === 'end' && all ? `<div class="cta">ฝึกต่อด้วยข้อสอบเสมือนจริงในชุดหนังสือ · ทำเครื่องหมาย <b>✓ เรียนจบ</b> แล้วไปบทถัดไปได้เลย</div>` : ''}</div>${sl.img ? `<img src="${imgData(sl.img)}">` : ''}</div>`;
+    const box = (upto, all) => `<h2>${md(sl.h)}</h2><div class="wrap${sl.img ? ' im' : ''}"><div class="${its.length > 4 ? 'dense' : ''}">${its.map((it, i) => i > upto ? '' : `<div class="it ${it.mark && (all || i < upto) ? it.mark : i === upto && !all ? 'cur' : all ? '' : 'old'}"><span class="k">${it.mark === 'ok' && (all || i < upto) ? '✓' : it.mark === 'no' && (all || i < upto) ? '✗' : i + 1}</span><span><span class="${it.en && it.en === it.x ? 'en' : ''}">${md(it.x)}</span>${it.sub ? `<small>${md(it.sub)}</small>` : ''}</span></div>`).join('')}${sl.type === 'end' && all ? `<div class="cta">${sl.cta ? md(sl.cta) : 'ฝึกต่อด้วยข้อสอบเสมือนจริงในชุดหนังสือ · ทำเครื่องหมาย <b>✓ เรียนจบ</b> แล้วไปบทถัดไปได้เลย'}</div>` : ''}</div>${sl.img ? `<img src="${imgData(sl.img)}">` : ''}</div>`;
     if (sl.say) S.push({ html: () => page(box(-1, false)), au: [{ th: sl.say }] });
     its.forEach((it, i) => { const au = []; if (it.en) au.push({ en: it.en, v: it.v || 'n' }, { sil: 0.5 }); if (it.say) au.push({ th: it.say }); if (!au.length) au.push({ sil: 1.5 }); S.push({ html: () => page(box(i, false)), au }); });
     if (sl.type === 'end') S.push({ html: () => page(box(its.length, true)), au: [{ th: sl.outro || 'จบบทนี้แล้ว เก่งมาก กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย' }, { sil: 1.5 }] });

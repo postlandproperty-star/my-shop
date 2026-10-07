@@ -1,0 +1,502 @@
+{
+ "id": "toeic-750-course-L38",
+ "course": "toeic-750-course",
+ "n": 38,
+ "section": "ฝึกทำข้อสอบ · Part 4",
+ "title": "Part 4 ชุดที่ 3: 5 ข้อความพูด 15 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 4 ชุดที่ 3\n5 ข้อความพูด 15 ข้อ",
+   "sub": "พอดแคสต์ธุรกิจ · ประกาศนโยบายใหม่ · ข้อความเสียงผู้จัดการโครงการ · ทัวร์ชมเมือง · รายงานยอดขาย",
+   "say": "ชุดที่สามของ Part 4 รอบนี้ยากขึ้น ห้าข้อความพูด สิบห้าข้อ มีพอดแคสต์ธุรกิจ ประกาศนโยบายใหม่ ข้อความเสียงจากผู้จัดการโครงการ ทัวร์ชมเมือง และรายงานยอดขายในที่ประชุม มีคำถามเจตนาสองข้อ อ่านคำถามก่อนฟังทุกครั้ง แล้วเลือกคำตอบในใจ เริ่มเลย"
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความ 1 · พอดแคสต์ธุรกิจ",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความที่หนึ่ง พอดแคสต์ธุรกิจ อ่านคำถามสามข้อก่อน แล้วฟัง",
+   "lines": [
+    {
+     "v": "r",
+     "t": "Welcome back to Market Minutes, the weekly podcast for small business owners. I'm your host, Grant Ellis."
+    },
+    {
+     "v": "r",
+     "t": "Today's guest is Priya Nair, who turned a single food truck into a chain of twelve cafés."
+    },
+    {
+     "v": "r",
+     "t": "But first, a quick thank-you to our sponsor, Ledgerly, the accounting app that sends your invoices automatically."
+    },
+    {
+     "v": "r",
+     "t": "Priya is going to talk about one decision that changed everything for her business: closing every Monday."
+    },
+    {
+     "v": "r",
+     "t": "It sounds strange, but she says giving her staff a guaranteed long weekend cut employee turnover by more than half."
+    },
+    {
+     "v": "r",
+     "t": "Later in the show, she'll answer questions that listeners sent in last week."
+    },
+    {
+     "v": "r",
+     "t": "If you'd like to submit a question for next week's guest, just fill out the form on our website."
+    }
+   ],
+   "qs": [
+    {
+     "q": "Who most likely is Priya Nair?",
+     "o": [
+      "A podcast producer",
+      "A business owner",
+      "An accounting expert",
+      "A food critic"
+     ],
+     "a": 1,
+     "why": "**turned a single food truck into a chain of twelve cafés** = เจ้าของธุรกิจ",
+     "whySay": "พิธีกรแนะนำว่าเธอขยายรถขายอาหารคันเดียวจนเป็นร้านกาแฟสิบสองสาขา แปลว่าเป็นเจ้าของธุรกิจ ส่วนแอปบัญชีเป็นแค่สปอนเซอร์ อย่าสับสน",
+     "no": [
+      "พิธีกรคือ Grant ไม่มีพูดถึงโปรดิวเซอร์",
+      null,
+      "แอปบัญชีคือสปอนเซอร์ ไม่ใช่ตัวเธอ",
+      "เธอเปิดร้าน ไม่ได้วิจารณ์อาหาร"
+     ]
+    },
+    {
+     "q": "According to the speaker, what was the result of Ms. Nair's decision?",
+     "o": [
+      "Weekend sales increased.",
+      "Customers visited more often.",
+      "Operating costs went down.",
+      "Fewer employees left the company."
+     ],
+     "a": 3,
+     "why": "**cut employee turnover by more than half** = พนักงานลาออกน้อยลง",
+     "whySay": "turnover คืออัตราพนักงานลาออก พอลดลงเกินครึ่ง ก็คือพนักงานออกน้อยลง ข้อสอบพูดใหม่เป็น fewer employees left",
+     "no": [
+      "ไม่มีการพูดถึงยอดขาย",
+      "ไม่มีการพูดถึงลูกค้ามาบ่อยขึ้น",
+      "ไม่มีการพูดถึงต้นทุน",
+      null
+     ]
+    },
+    {
+     "q": "How can listeners submit questions?",
+     "o": [
+      "By filling out an online form",
+      "By calling the studio",
+      "By e-mailing the host",
+      "By posting on social media"
+     ],
+     "a": 0,
+     "why": "**fill out the form on our website**",
+     "whySay": "ท้ายข้อความบอกว่าถ้าอยากส่งคำถาม ให้กรอกฟอร์มบนเว็บไซต์ ตรงกับ online form",
+     "no": [
+      null,
+      "ไม่มีการพูดถึงโทรเข้ารายการ",
+      "ไม่ได้ให้อีเมลพิธีกร",
+      "ไม่มีการพูดถึงโซเชียลมีเดีย"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความ 2 · ประกาศนโยบายใหม่",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความที่สอง ประกาศเปลี่ยนนโยบายของบริษัท ข้อสองเป็นคำถามเจตนา อ่านประโยคในคำถามไว้ แล้วฟังว่าอยู่ตรงไหน",
+   "lines": [
+    {
+     "v": "q",
+     "t": "Attention, all staff. This is Karen Woods from Human Resources with an update on our travel policy."
+    },
+    {
+     "v": "q",
+     "t": "Starting July 1, all business trips must be booked through our new online system, TripDesk, instead of through our travel agency."
+    },
+    {
+     "v": "q",
+     "t": "The reason is simple. Last year, we spent nearly twenty percent more on flights than other companies of our size."
+    },
+    {
+     "v": "q",
+     "t": "With TripDesk, you'll be able to compare fares and see right away whether a ticket is within budget."
+    },
+    {
+     "v": "q",
+     "t": "Now, some of you have asked whether you'll still be able to choose your own hotel."
+    },
+    {
+     "v": "q",
+     "t": "Well, the list of approved hotels now includes over three hundred locations."
+    },
+    {
+     "v": "q",
+     "t": "Instructions for setting up your account will be sent by e-mail this afternoon."
+    },
+    {
+     "v": "q",
+     "t": "And if you already have a trip booked before July 1, there's no need to change it."
+    }
+   ],
+   "qs": [
+    {
+     "q": "What is the announcement mainly about?",
+     "o": [
+      "A new travel agency",
+      "A schedule for business trips",
+      "A change in how trips are booked",
+      "A reduction in hotel budgets"
+     ],
+     "a": 2,
+     "why": "**must be booked through our new online system** = เปลี่ยนวิธีจอง",
+     "whySay": "ประกาศบอกว่าตั้งแต่หนึ่งกรกฎา ต้องจองทริปผ่านระบบออนไลน์ใหม่แทนเอเจนซี่ หัวข้อหลักคือเปลี่ยนวิธีจองการเดินทาง",
+     "no": [
+      "เลิกใช้เอเจนซี่ ไม่ใช่เอเจนซี่ใหม่",
+      "ไม่ได้ประกาศตารางทริป",
+      null,
+      "ไม่ได้ลดงบโรงแรม"
+     ]
+    },
+    {
+     "q": "Why does the speaker say, \"the list of approved hotels now includes over three hundred locations\"?",
+     "o": [
+      "To reassure staff that they will still have many choices",
+      "To explain why travel costs have increased",
+      "To announce that the company is expanding",
+      "To ask employees to recommend hotels"
+     ],
+     "a": 0,
+     "why": "ก่อนหน้า: **still be able to choose your own hotel?** → ยังเลือกได้เยอะ",
+     "whySay": "ประโยคก่อนหน้าคือ มีคนถามว่ายังเลือกโรงแรมเองได้ไหม แล้วตอบว่ามีโรงแรมให้เลือกกว่าสามร้อยแห่ง เจตนาคือบอกว่ายังมีตัวเลือกเยอะ ไม่ต้องกังวล",
+     "no": [
+      null,
+      "ค่าใช้จ่ายสูงเพราะตั๋วเครื่องบิน ไม่เกี่ยวกับรายชื่อโรงแรม",
+      "ไม่ได้พูดถึงการขยายบริษัท",
+      "ไม่ได้ขอให้แนะนำโรงแรม"
+     ]
+    },
+    {
+     "q": "What does the speaker say about trips booked before July 1?",
+     "o": [
+      "They must be approved again.",
+      "They will be paid for by the agency.",
+      "They should be rebooked on TripDesk.",
+      "They do not need to be changed."
+     ],
+     "a": 3,
+     "why": "**there's no need to change it**",
+     "whySay": "ประโยคสุดท้ายบอกว่าถ้าจองทริปไว้ก่อนหนึ่งกรกฎาแล้ว ไม่ต้องเปลี่ยน ข้อ C เป็นกับดัก เพราะ TripDesk ใช้กับทริปใหม่เท่านั้น",
+     "no": [
+      "ไม่ต้องขออนุมัติใหม่",
+      "ไม่มีการพูดว่าเอเจนซี่จ่าย",
+      "TripDesk ใช้กับการจองใหม่ ไม่ต้องจองซ้ำ",
+      null
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความ 3 · ข้อความเสียงผู้จัดการโครงการ",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความที่สาม ข้อความเสียงจากผู้จัดการโครงการรีโนเวทร้าน ระวังตัวเลขวันที่ อ่านคำถามก่อน แล้วฟัง",
+   "lines": [
+    {
+     "v": "m",
+     "t": "Hi, Sofia, it's Martin Hale calling about the renovation of your restaurant on Baker Street."
+    },
+    {
+     "v": "m",
+     "t": "I've just got back from the site, and I'm afraid we've run into a problem with the kitchen floor."
+    },
+    {
+     "v": "m",
+     "t": "When we removed the old tiles, we found water damage underneath, so the floor has to be replaced before we can install the new ovens."
+    },
+    {
+     "v": "m",
+     "t": "That'll add about a week to the job, so we're now looking at finishing on the twenty-third rather than the sixteenth."
+    },
+    {
+     "v": "m",
+     "t": "On the bright side, the electrical work in the dining area is already done, which is ahead of schedule."
+    },
+    {
+     "v": "m",
+     "t": "I've put together a revised cost estimate, and I'll e-mail it to you within the hour."
+    },
+    {
+     "v": "m",
+     "t": "Could you give me a call once you've had a look at it? I'd like your approval before we order any materials."
+    }
+   ],
+   "qs": [
+    {
+     "q": "Why is the speaker calling?",
+     "o": [
+      "To request a payment",
+      "To report an unexpected problem",
+      "To recommend a new supplier",
+      "To cancel an appointment"
+     ],
+     "a": 1,
+     "why": "**we've run into a problem with the kitchen floor**",
+     "whySay": "ต้นข้อความบอกเลยว่าเจอปัญหาที่พื้นครัว พอรื้อกระเบื้องเจอความเสียหายจากน้ำ จุดประสงค์คือแจ้งปัญหาที่ไม่คาดคิด",
+     "no": [
+      "ส่งใบประเมินราคา แต่ไม่ได้ทวงเงิน",
+      null,
+      "ไม่มีการแนะนำผู้ขายใหม่",
+      "ไม่ได้ยกเลิกนัด"
+     ]
+    },
+    {
+     "q": "When will the work most likely be completed?",
+     "o": [
+      "On the sixth",
+      "On the sixteenth",
+      "On the twenty-third",
+      "On the thirtieth"
+     ],
+     "a": 2,
+     "why": "**the twenty-third rather than the sixteenth**",
+     "whySay": "ได้ยินสองวันที่ ระวังนะ rather than แปลว่าแทนที่จะเป็น วันใหม่คือยี่สิบสาม ส่วนสิบหกคือวันเดิม เป็นตัวหลอก",
+     "no": [
+      "ไม่มีการพูดถึงวันที่หก",
+      "สิบหกคือกำหนดเดิม",
+      null,
+      "ไม่มีการพูดถึงวันที่สามสิบ"
+     ]
+    },
+    {
+     "q": "What does the speaker ask the listener to do?",
+     "o": [
+      "Return his call",
+      "Visit the restaurant",
+      "Order some new ovens",
+      "Sign a contract"
+     ],
+     "a": 0,
+     "why": "**Could you give me a call** = โทรกลับ",
+     "whySay": "ท้ายข้อความขอให้โทรกลับหลังดูใบประเมินราคา เพราะต้องได้รับอนุมัติก่อนสั่งวัสดุ give me a call ก็คือ return his call",
+     "no": [
+      null,
+      "คนพูดเพิ่งไปที่ร้านเอง ไม่ได้ขอให้ไป",
+      "เตาอบรอติดตั้ง ไม่ได้ขอให้สั่ง",
+      "ขออนุมัติ ไม่ได้ให้เซ็นสัญญา"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความ 4 · ทัวร์ชมเมือง",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความที่สี่ ไกด์ทัวร์เดินชมเมือง อ่านคำถามก่อน ข้อสามถามเหตุผล ฟังคำว่า because ให้ดี",
+   "lines": [
+    {
+     "v": "r",
+     "t": "Good morning, everyone, and welcome to the Old Town Walking Tour. My name's Sam, and I'll be your guide for the next two hours."
+    },
+    {
+     "v": "r",
+     "t": "We're starting here at the clock tower, which was built in 1868 and is the oldest building in the city."
+    },
+    {
+     "v": "r",
+     "t": "From here, we'll walk along the river to the central market, where you'll have thirty minutes of free time."
+    },
+    {
+     "v": "r",
+     "t": "The market is famous for its seafood, so if you're hungry, that's the place to try something local."
+    },
+    {
+     "v": "r",
+     "t": "Normally, we'd finish the tour by taking a ferry across the harbor."
+    },
+    {
+     "v": "r",
+     "t": "Unfortunately, the ferry isn't running this morning because of strong winds, so we'll walk back over the old stone bridge instead."
+    },
+    {
+     "v": "r",
+     "t": "Oh, and the streets in the old town are quite narrow, so please stay close to me and watch out for bicycles."
+    }
+   ],
+   "qs": [
+    {
+     "q": "What is mentioned about the clock tower?",
+     "o": [
+      "It was recently repaired.",
+      "It is next to the market.",
+      "It has a viewing platform.",
+      "It is the oldest building in the city."
+     ],
+     "a": 3,
+     "why": "**the oldest building in the city**",
+     "whySay": "ไกด์บอกว่าหอนาฬิกาสร้างปีหนึ่งแปดหกแปด และเป็นอาคารที่เก่าที่สุดในเมือง ส่วนตลาดต้องเดินเลียบแม่น้ำไป ไม่ได้อยู่ติดกัน",
+     "no": [
+      "ไม่มีการพูดถึงการซ่อม",
+      "ต้องเดินเลียบแม่น้ำไปตลาด",
+      "ไม่มีการพูดถึงจุดชมวิว",
+      null
+     ]
+    },
+    {
+     "q": "What does the speaker recommend doing at the central market?",
+     "o": [
+      "Buying souvenirs",
+      "Trying local seafood",
+      "Meeting the other guides",
+      "Taking photographs"
+     ],
+     "a": 1,
+     "why": "**famous for its seafood … try something local**",
+     "whySay": "ไกด์บอกว่าตลาดขึ้นชื่อเรื่องอาหารทะเล ถ้าหิวให้ลองของท้องถิ่นที่นั่น ตรงกับลองอาหารทะเลท้องถิ่น",
+     "no": [
+      "ไม่มีการพูดถึงของที่ระลึก",
+      null,
+      "ไม่มีไกด์คนอื่น",
+      "ไม่มีการพูดถึงถ่ายรูป"
+     ]
+    },
+    {
+     "q": "Why has the tour route been changed?",
+     "o": [
+      "A bridge is being repaired.",
+      "A market is closed today.",
+      "A ferry is not operating.",
+      "A street is too crowded."
+     ],
+     "a": 2,
+     "why": "**the ferry isn't running** = not operating",
+     "whySay": "ปกติจบทัวร์ด้วยการนั่งเรือข้ามฟาก แต่วันนี้เรือไม่วิ่งเพราะลมแรง เลยต้องเดินข้ามสะพานแทน ข้อสอบเปลี่ยน isn't running เป็น not operating",
+     "no": [
+      "สะพานคือทางที่จะเดินแทน ไม่ได้ซ่อม",
+      "ตลาดยังเปิด มีเวลาว่างสามสิบนาที",
+      null,
+      "ถนนแคบ แต่ไม่ใช่เหตุที่เปลี่ยนเส้นทาง"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความ 5 · รายงานยอดขาย",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความสุดท้าย รายงานยอดขายในที่ประชุม ข้อสองเป็นคำถามเจตนาอีกข้อ ฟังตัวเลขก่อนประโยคนั้นให้ดี",
+   "lines": [
+    {
+     "v": "q",
+     "t": "Okay, let's move on to the sales figures for the second quarter."
+    },
+    {
+     "v": "q",
+     "t": "Overall, sales were up eight percent from the first quarter, mainly thanks to our new line of portable air purifiers."
+    },
+    {
+     "v": "q",
+     "t": "Online orders grew by fifteen percent after we redesigned our product pages."
+    },
+    {
+     "v": "q",
+     "t": "Store sales, on the other hand, stayed about the same."
+    },
+    {
+     "v": "q",
+     "t": "So far this year, we're up six percent, and our goal for the full year is ten percent."
+    },
+    {
+     "v": "q",
+     "t": "Well, we've still got two quarters left."
+    },
+    {
+     "v": "q",
+     "t": "To help us get there, I'd like each regional manager to suggest one in-store promotion for the fall."
+    },
+    {
+     "v": "q",
+     "t": "Please send me your ideas by next Friday, and we'll go over them at our next meeting."
+    }
+   ],
+   "qs": [
+    {
+     "q": "What contributed most to the sales increase?",
+     "o": [
+      "A new product line",
+      "A price reduction",
+      "A larger sales team",
+      "A television advertisement"
+     ],
+     "a": 0,
+     "why": "**mainly thanks to our new line of portable air purifiers**",
+     "whySay": "ยอดขายโตขึ้นแปดเปอร์เซ็นต์ ส่วนใหญ่เพราะเครื่องฟอกอากาศพกพารุ่นใหม่ คำว่า mainly thanks to คือคีย์บอกสาเหตุหลัก",
+     "no": [
+      null,
+      "ไม่มีการพูดถึงการลดราคา",
+      "ไม่มีการพูดถึงทีมขาย",
+      "ปรับหน้าเว็บ ไม่ใช่โฆษณาทีวี"
+     ]
+    },
+    {
+     "q": "What does the speaker imply when she says, \"we've still got two quarters left\"?",
+     "o": [
+      "The report is not finished yet.",
+      "Some of the figures may be incorrect.",
+      "The company should lower its goal.",
+      "The target can still be reached."
+     ],
+     "a": 3,
+     "why": "ก่อนหน้า: **up six percent … goal is ten percent** → ยังทัน",
+     "whySay": "ประโยคก่อนหน้าบอกว่าตอนนี้โตหกเปอร์เซ็นต์ เป้าคือสิบ แล้วพูดว่ายังเหลืออีกสองไตรมาส เจตนาคือยังมีเวลาไปถึงเป้า แล้วต่อด้วยการขอไอเดียโปรโมชั่น",
+     "no": [
+      "รายงานไตรมาสสองจบแล้ว",
+      "ไม่มีการพูดว่าตัวเลขผิด",
+      "ตรงข้าม เธออยากไปให้ถึงเป้า",
+      null
+     ]
+    },
+    {
+     "q": "What are the regional managers asked to do?",
+     "o": [
+      "Visit the online store",
+      "Propose a promotion",
+      "Train new staff",
+      "Prepare a budget"
+     ],
+     "a": 1,
+     "why": "**suggest one in-store promotion** = propose",
+     "whySay": "ขอให้ผู้จัดการภาคแต่ละคนเสนอโปรโมชั่นในร้านหนึ่งอย่างสำหรับฤดูใบไม้ร่วง ส่งภายในศุกร์หน้า suggest กลายเป็น propose",
+     "no": [
+      "ร้านออนไลน์เป็นแค่ข้อมูลยอดขาย",
+      null,
+      "ไม่มีการพูดถึงอบรม",
+      "ไม่มีการพูดถึงงบประมาณ"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ตัวเลขหลอก** : the 23rd **rather than** the 16th → วันใหม่คือ 23",
+     "say": "จุดพลาดแรก ตัวเลขหลอก ได้ยินสองวันที่ ต้องฟังคำเชื่อม rather than หรือ instead of ว่าอันไหนใหม่ อันไหนเดิม"
+    },
+    {
+     "x": "**คำถามเจตนา** : ดูประโยค **ก่อนหน้า** · 300 hotels = ยังเลือกได้ · two quarters left = ยังทัน",
+     "say": "จุดพลาดที่สอง คำถามเจตนา อย่าแปลตรงตัว ดูว่าประโยคนั้นตอบเรื่องอะไรก่อนหน้า เช่น โรงแรมสามร้อยแห่ง ตอบความกังวลว่ายังเลือกได้ไหม"
+    },
+    {
+     "x": "**ข้อถูกพูดใหม่** : isn't running → not operating · suggest → propose",
+     "say": "จุดพลาดที่สาม ข้อถูกมักใช้คำใหม่ เช่น isn't running กลายเป็น not operating หรือ turnover ลดลง กลายเป็นพนักงานออกน้อยลง"
+    }
+   ],
+   "outro": "ชุดที่สามของ Part 4 จบแล้ว ได้กี่ข้อจากสิบห้าข้อ เทียบกับสองชุดก่อนดู ข้อไหนพลาด ย้อนฟังข้อความนั้นอีกรอบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

@@ -1,0 +1,208 @@
+{
+ "id": "toeic-750-course-L21",
+ "course": "toeic-750-course",
+ "n": 21,
+ "section": "Reading Part 5 · เติมประโยค",
+ "title": "Tense และ Subject-Verb Agreement",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Tense และ\nSubject-Verb Agreement",
+   "sub": "ใช้คำบอกเวลาเลือก tense + หาประธานตัวจริงให้เจอ แล้วลองทำจริง 5 ข้อ",
+   "say": "บทนี้เราจะเจาะข้อกริยาใน Part 5 ซึ่งมีสองเรื่องที่ออกบ่อยมาก คือการเลือก tense กับการทำให้กริยาตรงกับประธาน จะสอนวิธีใช้คำบอกเวลาเป็นตัวช่วย และวิธีหาประธานตัวจริง ท้ายบทมีให้ลองทำจริงห้าข้อ"
+  },
+  {
+   "type": "list",
+   "h": "ขั้นที่ 1: หาคำบอกเวลา แล้วเลือก tense",
+   "say": "ถ้าตัวเลือกเป็นกริยาตัวเดียวกันแต่คนละ tense อย่าเพิ่งแปลทั้งประโยค ให้หาคำบอกเวลาก่อน มันจะชี้ tense ให้เอง",
+   "items": [
+    {
+     "x": "**since / for** → **has / have + V3**",
+     "sub": "has worked … for six years",
+     "en": "Ms. Lin has worked in the finance department for six years.",
+     "say": "หนึ่ง เจอ since หรือ for บอกช่วงเวลา ให้ใช้ present perfect คือ has หรือ have ตามด้วยกริยาช่องสาม"
+    },
+    {
+     "x": "**by next month / by the end of** → **will have + V3**",
+     "sub": "by the time + อดีต → **had + V3**",
+     "en": "By next month, we will have hired five new engineers.",
+     "say": "สอง เจอ by ตามด้วยเวลาในอนาคต อย่าง by next month ให้ใช้ will have กริยาช่องสาม แต่ถ้า by the time ตามด้วยเหตุการณ์ในอดีต ให้ใช้ had กริยาช่องสาม"
+    },
+    {
+     "x": "**next week / tomorrow** → **will + V1**",
+     "sub": "will launch next week",
+     "en": "The restaurant will launch its new menu next week.",
+     "say": "สาม เจอ next week tomorrow หรือ next year เป็นอนาคต ใช้ will ตามด้วยกริยาช่องหนึ่ง"
+    },
+    {
+     "x": "**last / ago / yesterday** → **V2**",
+     "sub": "moved … two months ago",
+     "en": "We moved to the new office two months ago.",
+     "say": "สี่ เจอ last ago หรือ yesterday เป็นอดีตที่จบไปแล้ว ใช้กริยาช่องสอง ห้ามใช้ has หรือ have กับ ago"
+    },
+    {
+     "x": "**currently / now** → **is / are + V-ing**",
+     "sub": "is currently upgrading",
+     "en": "The IT team is currently upgrading the servers.",
+     "say": "ห้า เจอ currently now หรือ at the moment แปลว่ากำลังทำอยู่ ใช้ is หรือ are ตามด้วยกริยาเติม ไอเอ็นจี"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "ขั้นที่ 2: ประธานเอกพจน์หรือพหูพจน์",
+   "say": "ขั้นที่สอง ถ้าตัวเลือกต่างกันแค่ เติม เอส หรือไม่เติม หรือ is กับ are ให้ดูประธาน ว่าเป็นเอกพจน์หรือพหูพจน์",
+   "items": [
+    {
+     "x": "ประธาน **เอกพจน์** + กริยา **-s** (ปัจจุบัน)",
+     "sub": "The manager reviews …",
+     "en": "The manager reviews every invoice before payment.",
+     "say": "หนึ่ง ประธานเอกพจน์ในปัจจุบัน กริยาต้องเติม เอส อย่าง reviews คนไทยลืมเติมกันบ่อย เพราะภาษาไทยไม่มี"
+    },
+    {
+     "x": "**each / every** → **เอกพจน์**",
+     "sub": "Every employee receives …",
+     "en": "Every employee receives a parking card on the first day.",
+     "say": "สอง each กับ every ถือเป็นเอกพจน์เสมอ แม้จะหมายถึงทุกคน ก็ใช้ receives"
+    },
+    {
+     "x": "**the number of** → เอกพจน์ · **a number of** → **พหูพจน์**",
+     "sub": "The number … has · A number … have",
+     "en": "A number of clients have asked for a discount.",
+     "say": "สาม the number of แปลว่าจำนวน เป็นเอกพจน์ ส่วน a number of แปลว่าหลายๆ เป็นพหูพจน์ ต่างกันแค่ the กับ a ข้อสอบชอบออกมาก"
+    },
+    {
+     "x": "มี **วลีคั่น** → ดูคำ **หน้า of / with**",
+     "sub": "The cost of the repairs **is** …",
+     "en": "The cost of the repairs is higher than expected.",
+     "say": "สี่ ถ้าประธานมีวลีคั่น อย่าง of the repairs ให้ดูคำหน้า of ประธานตัวจริงคือ cost เป็นเอกพจน์ จึงใช้ is ไม่ใช่ are",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กับดักที่คนไทยพลาดบ่อย",
+   "say": "ก่อนลองทำ มาดูสามกับดักที่ทำให้เสียคะแนนบ่อย",
+   "items": [
+    {
+     "x": "ใช้ **has + V3** กับ **ago / last**",
+     "sub": "✗ has opened two years ago",
+     "say": "หนึ่ง ใช้ present perfect กับ ago หรือ last ผิดทันที เพราะ ago บอกจุดเวลาในอดีตที่จบแล้ว ต้องใช้กริยาช่องสอง",
+     "mark": "no"
+    },
+    {
+     "x": "ดูคำ **ติดช่องว่าง** แทนประธานตัวจริง",
+     "sub": "The list of suppliers ___ → list = เอกพจน์",
+     "say": "สอง ดูแค่คำที่อยู่ติดช่องว่าง อย่าง suppliers แล้วเลือกกริยาพหูพจน์ ทั้งที่ประธานตัวจริงคือ list ซึ่งเป็นเอกพจน์",
+     "mark": "no"
+    },
+    {
+     "x": "ตัดทีละเรื่อง: **เวลา** ก่อน แล้ว **เอกพจน์/พหูพจน์**",
+     "sub": "เหลือข้อเดียวที่ผ่านทั้งสองเรื่อง",
+     "say": "วิธีที่ปลอดภัยคือ ตัดทีละเรื่อง เช็กคำบอกเวลาก่อน แล้วเช็กประธาน ข้อที่ผ่านทั้งสองด่านคือคำตอบ",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 1",
+   "say": "มาลองทำจริงกัน หาคำบอกเวลาก่อน",
+   "q": "Mr. Henderson ___ as the hotel's general manager since 2019.",
+   "o": ["works", "worked", "has worked", "will work"],
+   "a": 2,
+   "no": [
+    "ปัจจุบันธรรมดา ใช้กับ since ไม่ได้",
+    "ช่องสอง ใช้กับ since ไม่ได้",
+    null,
+    "อนาคต ไม่เข้ากับ since 2019"
+   ],
+   "why": "**since 2019** → present perfect = **has worked**",
+   "whySay": "เจอ since 2019 บอกว่าเริ่มในอดีตและยังทำอยู่ ต้องใช้ present perfect คือ has worked"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 2",
+   "say": "ข้อที่สอง ดูคำที่ขึ้นต้นประโยค",
+   "q": "By the end of next month, the construction crew ___ the new warehouse.",
+   "o": ["will have completed", "has completed", "completed", "completes"],
+   "a": 0,
+   "no": [
+    null,
+    "present perfect ไม่ใช้กับเวลาในอนาคต",
+    "อดีต ไม่เข้ากับ next month",
+    "ปัจจุบันธรรมดา ไม่เข้ากับ by + อนาคต"
+   ],
+   "why": "**by + เวลาในอนาคต** → **will have + V3**",
+   "whySay": "By the end of next month คือเสร็จก่อนจุดเวลาในอนาคต ต้องใช้ future perfect คือ will have completed"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 3",
+   "say": "ข้อที่สาม ข้อนี้ไม่มีคำบอกเวลาชัดๆ ให้ดูประธาน",
+   "q": "Each of the sales representatives ___ a monthly performance review.",
+   "o": ["receive", "are receiving", "have received", "receives"],
+   "a": 3,
+   "no": [
+    "ไม่เติม -s ใช้กับประธานพหูพจน์",
+    "are ใช้กับพหูพจน์",
+    "have ใช้กับพหูพจน์",
+    null
+  ],
+   "why": "**Each of …** = เอกพจน์ → **receives**",
+   "whySay": "ประธานคือ Each ซึ่งเป็นเอกพจน์ แม้จะตามด้วย representatives ก็ต้องใช้ receives"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 4",
+   "say": "ข้อที่สี่ ดูคำแรกของประธานให้ดี",
+   "q": "A number of passengers ___ complaints about the delayed flight to Singapore.",
+   "o": ["has filed", "have filed", "files", "is filing"],
+   "a": 1,
+   "no": [
+    "has ใช้กับเอกพจน์",
+    null,
+    "เติม -s ใช้กับเอกพจน์",
+    "is ใช้กับเอกพจน์"
+   ],
+   "why": "**A number of** = หลายๆ → พหูพจน์ = **have filed**",
+   "whySay": "A number of แปลว่าหลายๆ เป็นพหูพจน์ ตัวเลือกเดียวที่เป็นพหูพจน์คือ have filed"
+  },
+  {
+   "type": "read",
+   "h": "ลองทำ ข้อที่ 5",
+   "say": "ข้อสุดท้าย ใช้ทั้งสองขั้น เวลาและประธาน",
+   "q": "The list of approved suppliers ___ updated by the purchasing department two weeks ago.",
+   "o": ["were", "is", "was", "are"],
+   "a": 2,
+   "no": [
+    "พหูพจน์ ประธานตัวจริงคือ list",
+    "ปัจจุบัน ไม่เข้ากับ two weeks ago",
+    null,
+    "ปัจจุบันและพหูพจน์ ผิดทั้งสองเรื่อง"
+   ],
+   "why": "**ago** → อดีต · ประธาน **list** = เอกพจน์ → **was**",
+   "whySay": "two weeks ago บอกว่าเป็นอดีต และประธานตัวจริงคือ list ซึ่งเป็นเอกพจน์ จึงตอบ was"
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 21",
+   "items": [
+    {
+     "x": "since/for → has V3 · by + อนาคต → will have V3 · ago → V2",
+     "say": "สรุปบทนี้ ขั้นแรกหาคำบอกเวลา since กับ for ใช้ has V3 by กับเวลาในอนาคตใช้ will have V3 และ ago กับ last ใช้ช่องสอง"
+    },
+    {
+     "x": "each / every / the number of = เอกพจน์ · a number of = พหูพจน์",
+     "say": "ขั้นที่สองดูประธาน each every และ the number of เป็นเอกพจน์ ส่วน a number of เป็นพหูพจน์"
+    },
+    {
+     "x": "มีวลีคั่น → ประธานตัวจริงคือคำหน้า of",
+     "say": "และถ้ามีวลีคั่น ให้ดูคำหน้า of อย่าหลงไปดูคำที่ติดช่องว่าง"
+    }
+   ],
+   "outro": "บทหน้า เป็นฝึก Part 5 ชุดที่ 3 เน้น tense ได้ใช้เทคนิคบทนี้กันเต็มๆ กดทำเครื่องหมายว่าเรียนจบ แล้วไปต่อกันเลย"
+  }
+ ]
+}

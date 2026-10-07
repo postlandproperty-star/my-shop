@@ -1,0 +1,354 @@
+{
+ "id": "toeic-750-course-L26",
+ "course": "toeic-750-course",
+ "n": 26,
+ "section": "ฝึกทำข้อสอบ · Part 6",
+ "title": "Part 6 ชุดที่ 1: 4 บทความ 16 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 6 ชุดที่ 1\n4 บทความ 16 ข้อ",
+   "sub": "อีเมลถึงลูกค้า · ประกาศพนักงาน · จดหมายข่าว · โฆษณา",
+   "say": "บทนี้เราจะฝึก Part 6 สี่บทความ รวมสิบหกข้อ แต่ละบทความมีช่องว่างสี่ช่อง และจะมีหนึ่งช่องที่ต้องเติมทั้งประโยค อ่านบทความบนจอ เลือกคำตอบในใจ แล้วเดี๋ยวเฉลยทีละข้อ เริ่มกันเลย"
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 1 · อีเมลถึงลูกค้า",
+   "say": "บทความที่หนึ่ง เป็นอีเมลจากฝ่ายบริการลูกค้า ถึงลูกค้าที่สั่งของไว้ ลองอ่านให้จบทั้งเรื่องก่อน แล้วค่อยทำทีละช่อง",
+   "text": "Dear Ms. Patel,\nThank you for your recent order from Greenleaf Office Supply. Unfortunately, the ergonomic chairs you selected are ___(1)___ out of stock. Our supplier expects a new shipment by May 14. ___(2)___ We will ship the rest of your order, including the desk lamps, tomorrow at no extra cost. If you would prefer a refund for the chairs, simply reply to this e-mail. We ___(3)___ your request within two business days. We apologize for the ___(4)___.\nSincerely,\nDaniel Ruiz, Customer Service",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "temporarily",
+      "temporary",
+      "temporariness",
+      "more temporary"
+     ],
+     "a": 0,
+     "why": "ขยาย **out of stock** ต้องใช้ adverb **temporarily**",
+     "whySay": "ช่องนี้อยู่หน้า out of stock ซึ่งทำหน้าที่เหมือนคำคุณศัพท์ คำที่มาขยายต้องเป็น adverb ลงท้าย ly คือ temporarily แปลว่าหมดชั่วคราว",
+     "no": [
+      null,
+      "adjective ขยาย out of stock ไม่ได้",
+      "เป็นคำนาม",
+      "เป็น adjective ขั้นกว่า"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "Your chairs have already been shipped.",
+      "Our store will close early on Friday.",
+      "However, your other items will not be delayed.",
+      "Please return the desk lamps by May 14."
+     ],
+     "a": 2,
+     "why": "ประโยคถัดไปบอกว่า **ส่งของที่เหลือพรุ่งนี้** จึงต่อกันพอดี",
+     "whySay": "ประโยคถัดไปบอกว่า จะส่งของที่เหลือ รวมถึงโคมไฟให้พรุ่งนี้ ประโยค C บอกว่าของอื่นจะไม่ล่าช้า จึงเชื่อมกันพอดี ส่วนข้อ A ขัดกับที่บอกว่าเก้าอี้หมด",
+     "no": [
+      "ขัดกับ เก้าอี้หมดสต็อก",
+      "ไม่เกี่ยวกับเรื่องคำสั่งซื้อ",
+      null,
+      "โคมไฟกำลังจะส่ง ไม่ใช่ให้คืน"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "processed",
+      "have processed",
+      "were processing",
+      "will process"
+     ],
+     "a": 3,
+     "why": "ลูกค้ายังไม่ได้ขอ + **within two business days** = อนาคต",
+     "whySay": "ลูกค้ายังไม่ได้ส่งคำขอคืนเงินเลย และมีคำว่า within two business days คือภายในสองวันทำการข้างหน้า จึงต้องใช้อนาคต will process",
+     "no": [
+      "อดีต แต่ยังไม่มีคำขอ",
+      "บอกว่าทำเสร็จแล้ว ไม่ตรงเวลา",
+      "อดีตกำลังทำ ไม่เข้าเรื่อง",
+      null
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "convenience",
+      "inconvenience",
+      "inconvenient",
+      "inconveniently"
+     ],
+     "a": 1,
+     "why": "apologize for the + คำนาม → **inconvenience** = ความไม่สะดวก",
+     "whySay": "หลัง the ต้องเป็นคำนาม เหลือ convenience กับ inconvenience แต่เราขอโทษเพราะความไม่สะดวก จึงตอบ inconvenience ข้อนี้ดูทั้งไวยากรณ์และความหมาย",
+     "no": [
+      "คำนามแต่ความหมายตรงข้าม",
+      null,
+      "เป็น adjective",
+      "เป็น adverb"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 2 · ประกาศพนักงาน",
+   "say": "บทความที่สอง เป็นประกาศถึงพนักงานทุกคน จากฝ่ายอาคารสถานที่ เรื่องที่จอดรถ อ่านทั้งเรื่องก่อน แล้วทำทีละช่อง",
+   "text": "To: All staff\nFrom: Facilities Department\nStarting Monday, June 3, the east section of the parking garage will be closed for resurfacing. The work is expected to ___(1)___ about three weeks. During this period, employees who usually park there should use the west section ___(2)___. ___(3)___ A shuttle bus will run every fifteen minutes between that lot and the main entrance. Staff who cycle to work may continue to use the bike racks, ___(4)___ will remain open throughout the project. Thank you for your patience.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "spend",
+      "last",
+      "pass",
+      "hold"
+     ],
+     "a": 1,
+     "why": "**The work is expected to last** + ระยะเวลา = ใช้เวลานาน…",
+     "whySay": "last เป็นกริยาแปลว่า กินเวลา ใช้กับงานหรือกิจกรรมตามด้วยระยะเวลาได้เลย The work will last three weeks ส่วน spend ต้องมีคนเป็นผู้ใช้เวลา",
+     "no": [
+      "ต้องมีคนเป็นผู้ใช้เวลา",
+      null,
+      "pass ใช้กับเวลาที่ผ่านไป",
+      "hold = จัดงาน ไม่ใช่กินเวลา"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "although",
+      "because of",
+      "in addition to",
+      "instead"
+     ],
+     "a": 3,
+     "why": "ท้ายประโยคไม่มีอะไรตาม ใช้ adverb **instead** = แทน",
+     "whySay": "ช่องนี้อยู่ท้ายประโยค ไม่มีคำนามหรือประโยคตามมา ต้องใช้ adverb คือ instead แปลว่า ไปจอดฝั่งตะวันตกแทน ตัวเลือกอื่นต้องมีอะไรตามหลังเสมอ",
+     "no": [
+      "ต้องตามด้วยประโยค",
+      "ต้องตามด้วยคำนาม",
+      "ต้องตามด้วยคำนาม",
+      null
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "If it is full, you may park at the Kent Street lot.",
+      "The garage first opened ten years ago.",
+      "Bicycles may not be parked on site.",
+      "The east section will reopen tomorrow."
+     ],
+     "a": 0,
+     "why": "ประโยคถัดไปพูดถึง **that lot** ต้องมีลานจอดถูกพูดถึงก่อน",
+     "whySay": "ประโยคถัดไปพูดว่า that lot คือลานจอดนั้น แปลว่าก่อนหน้าต้องมีลานจอดถูกพูดถึงแล้ว ข้อ A พูดถึง Kent Street lot จึงเชื่อมกันพอดี",
+     "no": [
+      null,
+      "ไม่เกี่ยวกับการซ่อม",
+      "ขัดกับเรื่องที่จอดจักรยาน",
+      "ขัดกับ ซ่อมสามสัปดาห์"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "who",
+      "they",
+      "which",
+      "where"
+     ],
+     "a": 2,
+     "why": "ขยาย **the bike racks** (สิ่งของ) และทำหน้าที่ประธาน → **which**",
+     "whySay": "ช่องนี้ขยายคำว่า the bike racks ซึ่งเป็นสิ่งของ และทำหน้าที่เป็นประธานของ will remain open จึงใช้ which ส่วน they ทำให้เป็นสองประโยคต่อกันด้วยคอมม่า ผิดไวยากรณ์",
+     "no": [
+      "who ใช้กับคน",
+      "they เชื่อมประโยคไม่ได้",
+      null,
+      "where ต้องตามด้วยประโยคที่มีประธาน"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 3 · จดหมายข่าวบริษัท",
+   "say": "บทความที่สาม เป็นจดหมายข่าวของบริษัท แนะนำพนักงานดีเด่นประจำเดือน อ่านทั้งเรื่องก่อน แล้วทำทีละช่อง",
+   "text": "Brightline Foods Monthly: Employee Spotlight\nThis month we are pleased to feature Hana Kimura, a quality control specialist at our Penang plant. Since she joined Brightline eight years ago, Ms. Kimura ___(1)___ several programs that reduce waste. Her latest project, a system for tracking ingredient freshness, cut spoilage by 30 percent last year. ___(2)___ Colleagues describe her as patient and ___(3)___, always willing to explain new procedures. Ms. Kimura will present her ideas at our annual conference in October. Employees ___(4)___ in attending her session should register by September 20.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "introduces",
+      "will introduce",
+      "is introducing",
+      "has introduced"
+     ],
+     "a": 3,
+     "why": "**Since** + อดีต → ประโยคหลักใช้ **has + V3**",
+     "whySay": "ประโยคขึ้นต้นด้วย Since she joined eight years ago คือตั้งแต่ตอนนั้นจนถึงตอนนี้ ประโยคหลักต้องเป็น present perfect คือ has introduced",
+     "no": [
+      "since ไม่ใช้ present simple",
+      "ไม่ใช่อนาคต",
+      "ไม่ใช้กับ since",
+      null
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "However, the system was never used.",
+      "Our other two plants now use it as well.",
+      "Applications for her job close on Friday.",
+      "As a result, spoilage rose sharply."
+     ],
+     "a": 1,
+     "why": "ต่อจากผลงานที่ **ลดของเสีย 30%** → ขยายไปใช้ที่โรงงานอื่น",
+     "whySay": "ประโยคก่อนหน้าบอกว่าระบบนี้ลดของเสียได้สามสิบเปอร์เซ็นต์ ข้อ B บอกว่าโรงงานอื่นก็ใช้แล้ว ต่อกันได้เป็นเรื่องดี ส่วน A กับ D ขัดกับผลงานที่เพิ่งบอก",
+     "no": [
+      "ขัดกับ ลดของเสีย 30%",
+      null,
+      "ไม่มีการรับสมัครงาน",
+      "ของเสียลดลง ไม่ใช่เพิ่ม"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "helpful",
+      "helpfully",
+      "help",
+      "helpfulness"
+     ],
+     "a": 0,
+     "why": "**patient and ___** ต้องเป็น adjective คู่กัน → **helpful**",
+     "whySay": "and เชื่อมคำชนิดเดียวกัน patient เป็น adjective ช่องนี้จึงต้องเป็น adjective ด้วยคือ helpful แปลว่าใจดีช่วยเหลือคนอื่น",
+     "no": [
+      null,
+      "adverb คู่กับ patient ไม่ได้",
+      "เป็นกริยาหรือคำนาม",
+      "เป็นคำนาม"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "interesting",
+      "interest",
+      "interested",
+      "interests"
+     ],
+     "a": 2,
+     "why": "คนที่สนใจ = **interested** in + V-ing",
+     "whySay": "Employees interested in attending แปลว่าพนักงานที่สนใจเข้าฟัง คนรู้สึกสนใจใช้ ed ส่วน interesting แปลว่าน่าสนใจ ใช้กับสิ่งของ คนไทยสลับสองคำนี้บ่อยมาก",
+     "no": [
+      "= น่าสนใจ ใช้กับสิ่งของ",
+      "เป็นคำนามหรือกริยา",
+      null,
+      "ประโยคมีกริยา should register แล้ว"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 4 · โฆษณาบริการ",
+   "say": "บทความสุดท้าย เป็นโฆษณาบริการรับส่งพัสดุสำหรับธุรกิจ อ่านทั้งเรื่องก่อน แล้วทำทีละช่อง",
+   "text": "Tired of spending your lunch break in line at the post office? Let SwiftBox handle your business shipping. We pick up packages directly from your office, ___(1)___ you never have to leave your desk. Our drivers work Monday through Saturday, and same-day delivery is available ___(2)___ the city. ___(3)___ Simply schedule a pickup on our Web site or mobile app. New customers who sign up before March 31 will receive a 20 percent discount ___(4)___ their first three shipments. Visit www.swiftbox.com to learn more.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "but",
+      "unless",
+      "so",
+      "although"
+     ],
+     "a": 2,
+     "why": "มารับถึงออฟฟิศ **so** (ดังนั้น) ไม่ต้องลุกจากโต๊ะ",
+     "whySay": "ครึ่งแรกบอกว่าเรามารับพัสดุถึงออฟฟิศ ครึ่งหลังเป็นผลคือคุณไม่ต้องลุกจากโต๊ะ ความสัมพันธ์แบบเหตุและผลใช้ so",
+     "no": [
+      "ไม่ได้ขัดแย้งกัน",
+      "= ถ้าไม่ ความหมายไม่เข้า",
+      null,
+      "ไม่ได้ขัดแย้งกัน"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "throughout",
+      "among",
+      "between",
+      "along"
+     ],
+     "a": 0,
+     "why": "**throughout the city** = ทั่วทั้งเมือง",
+     "whySay": "throughout the city แปลว่าทั่วทั้งเมือง ส่วน among ต้องตามด้วยคำนามพหูพจน์ และ between ใช้กับสองสิ่ง จึงไม่เข้ากับ the city",
+     "no": [
+      null,
+      "ต้องตามด้วยพหูพจน์",
+      "ใช้กับสองสิ่ง",
+      "ใช้กับถนนหรือแม่น้ำ"
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "Packages must be brought to our counter.",
+      "We no longer offer same-day delivery.",
+      "Our new store opens next spring.",
+      "Booking a pickup takes under a minute."
+     ],
+     "a": 3,
+     "why": "ต่อด้วย **Simply schedule a pickup** → พูดเรื่องการจองรับพัสดุ",
+     "whySay": "ประโยคถัดไปบอกว่า แค่จองรับพัสดุทางเว็บหรือแอป ข้อ D บอกว่าจองใช้เวลาไม่ถึงนาที จึงเชื่อมกันพอดี ส่วน A กับ B ขัดกับที่โฆษณาไว้",
+     "no": [
+      "ขัดกับ มารับถึงออฟฟิศ",
+      "ขัดกับ same-day delivery",
+      "ไม่เกี่ยวกับการจองรับพัสดุ",
+      null
+     ]
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "at",
+      "on",
+      "by",
+      "of"
+     ],
+     "a": 1,
+     "why": "**a discount on** + สินค้า/บริการ",
+     "whySay": "discount on คือส่วนลดสำหรับสินค้าหรือบริการ จำคู่นี้ไว้เลย a discount on your first order ข้อนี้เป็น collocation ออกบ่อยมาก",
+     "no": [
+      "discount ไม่ใช้ at",
+      null,
+      "discount ไม่ใช้ by",
+      "discount of ใช้กับจำนวน เช่น of 20 percent"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ช่องเติมประโยค** : ดูประโยคถัดไปเสมอ เช่น that lot",
+     "say": "จุดพลาดแรก ช่องเติมประโยค หลายคนดูแค่ประโยคก่อนหน้า แต่คำใบ้มักอยู่ประโยคถัดไป เช่น that lot ในประกาศเรื่องที่จอดรถ"
+    },
+    {
+     "x": "**Tense ดูทั้งบทความ** : since → has + V3 · ยังไม่ขอ → will",
+     "say": "จุดพลาดที่สอง tense ต้องดูเรื่องราวทั้งบทความ ไม่ใช่แค่ประโยคเดียว เช่น since ใช้ has introduced และคำขอที่ยังไม่เกิดใช้ will process"
+    },
+    {
+     "x": "**ถูกไวยากรณ์ แต่ผิดความหมาย** : convenience · interesting",
+     "say": "จุดพลาดที่สาม ตัวเลือกที่ถูกไวยากรณ์อาจผิดความหมาย เช่น convenience กับ interesting ต้องแปลให้เข้ากับเรื่องด้วย"
+    }
+   ],
+   "outro": "ชุดแรกของ Part 6 จบแล้ว ได้กี่ข้อจากสิบหกข้อ ลองจดไว้ แล้วไปชุดถัดไปกันเลย"
+  }
+ ]
+}

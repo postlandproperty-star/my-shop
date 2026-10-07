@@ -1,0 +1,354 @@
+{
+ "id": "toeic-750-course-L39",
+ "course": "toeic-750-course",
+ "n": 39,
+ "section": "ฝึกทำข้อสอบ · Part 6",
+ "title": "Part 6 ชุดที่ 3: 4 บทความ 16 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 6 ชุดที่ 3\n4 บทความ 16 ข้อ",
+   "sub": "ใบแจ้งแก้ไขสัญญา · ข่าวประชาสัมพันธ์ · อีเมลขอโทษลูกค้า · ประกาศงานอบรม",
+   "say": "บทนี้ฝึก Part 6 ชุดที่สาม สี่บทความ สิบหกข้อ ชุดนี้ยากขึ้นอีกนิด เป็นใบแจ้งแก้ไขสัญญา ข่าวประชาสัมพันธ์ อีเมลขอโทษลูกค้า และประกาศงานอบรม ทุกบทความมีข้อเติมประโยคหนึ่งข้อ อ่านให้จบทั้งเรื่องก่อนตอบ ข้อละห้าวินาที แล้วเฉลยทันที เตรียมกระดาษจดคะแนนไว้ได้เลย"
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 1/4",
+   "say": "บทความแรก เป็นใบแจ้งแก้ไขสัญญาบริการ ส่งถึงลูกค้าของบริษัททำความสะอาดอาคาร เอกสารแบบนี้มีคำทางการเยอะ อ่านช้าๆ ถ้าอยากอ่านนานกว่านี้ กดหยุดวิดีโอได้เลย",
+   "text": "NOTICE OF AMENDMENT · Vantage Facility Services\nTo: All Contract Clients\n\nEffective July 1, several terms of your service agreement will be revised. Clients must now give 30 days' notice before ___(1)___ their contract; previously, 14 days was sufficient. ___(2)___ In return, all clients will receive one additional inspection visit per quarter at no charge.\n\nThe revised agreement ___(3)___ to you by e-mail last week. Clients who continue service after July 1 will be considered to have accepted the new terms ___(4)___ they notify us otherwise in writing.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "terminate",
+      "termination",
+      "terminating",
+      "terminated"
+     ],
+     "a": 2,
+     "why": "**before** เป็นบุพบท + ตามด้วยกรรม **their contract** → **V-ing**",
+     "no": [
+      "before ในที่นี้ไม่มีประธาน ใช้กริยาช่อง 1 ไม่ได้",
+      "คำนาม ตามด้วย their contract ทันทีไม่ได้",
+      null,
+      "V3 ไม่มีกริยาช่วย ไม่ถูกโครงสร้าง"
+     ],
+     "whySay": "หลัง before ถ้าไม่มีประธานตามมา ให้ใช้กริยาเติม ing แล้วยังมีกรรม their contract ต่อท้าย จึงต้องเป็น terminating ที่แปลว่ายกเลิก ถ้าเลือกคำนาม termination ต้องมี of ก่อน their contract"
+    },
+    {
+     "q": "Which sentence best fits blank (2)?",
+     "o": [
+      "In addition, monthly fees will rise by 5 percent.",
+      "As a result, the notice period has been shortened.",
+      "Our head office will be closed on July 1.",
+      "Inspection visits will no longer be offered."
+     ],
+     "a": 0,
+     "why": "ประโยคถัดไป **In return** = เป็นการตอบแทน → ก่อนหน้าต้องเป็นข้อเสียของลูกค้า",
+     "no": [
+      null,
+      "ขัดกับบทความ ระยะแจ้งยาวขึ้น ไม่ใช่สั้นลง",
+      "ไม่เกี่ยวกับการแก้สัญญา",
+      "ขัดกับประโยคถัดไปที่ให้ตรวจเพิ่ม"
+     ],
+     "whySay": "คำใบ้อยู่ที่ In return ในประโยคถัดไป แปลว่าเพื่อเป็นการตอบแทน แปลว่าก่อนหน้านั้นลูกค้าต้องเสียอะไรบางอย่าง ข้อ A บอกว่าค่าบริการขึ้นห้าเปอร์เซ็นต์ บริษัทเลยให้ตรวจเพิ่มฟรีเป็นการชดเชย"
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "sent",
+      "was sent",
+      "has sent",
+      "will be sent"
+     ],
+     "a": 1,
+     "why": "สัญญา **ถูก** ส่ง + **last week** → **was sent** (passive อดีต)",
+     "no": [
+      "ไม่มี was ประโยคขาดกริยาหลัก",
+      null,
+      "active สัญญาส่งเองไม่ได้ และ last week ใช้ past",
+      "อนาคต ขัดกับ last week"
+     ],
+     "whySay": "สัญญาส่งตัวเองไม่ได้ ต้องเป็นรูปถูกกระทำ และมี last week บอกอดีต จึงเป็น was sent ข้อ has sent กับดักคนไทยบ่อย เพราะดูเหมือนเพิ่งส่ง แต่ทั้งรูป active และคำว่า last week ไม่เข้า"
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "provided",
+      "whether",
+      "despite",
+      "unless"
+     ],
+     "a": 3,
+     "why": "ถือว่ายอมรับ **เว้นแต่** แจ้งเป็นอย่างอื่น → **unless**",
+     "no": [
+      "= ถ้า ความหมายกลับกัน",
+      "ต้องมี or not ความหมายไม่เข้า",
+      "ตามด้วยคำนาม ไม่ใช่ประโยค",
+      null
+     ],
+     "whySay": "ลูกค้าที่ใช้บริการต่อจะถือว่ายอมรับเงื่อนไขใหม่ เว้นแต่จะแจ้งเป็นลายลักษณ์อักษรว่าไม่ยอมรับ คำว่า otherwise เป็นคำใบ้ ต้องใช้ unless ส่วน provided แปลว่าถ้า ความหมายจะกลับกันทันที"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 2/4",
+   "say": "บทความที่สอง เป็นข่าวประชาสัมพันธ์ของบริษัทขายอุปกรณ์เดินป่า ข่าวแบบนี้มักมีคำพูดของผู้บริหารอยู่ในเครื่องหมายคำพูด ระวังเรื่อง tense ด้วย",
+   "text": "FOR IMMEDIATE RELEASE\n\nSEATTLE (April 14) — Corvel Outdoor Gear announced today that it will open its first store in Asia next spring. The Singapore location, ___(1)___ will cover 1,200 square meters, is expected to create about 60 jobs.\n\n\"Demand for our products in the region ___(2)___ steadily for the past three years,\" said CEO Martin Hale. ___(3)___ The company currently sells its jackets and tents only online and through partner retailers. Corvel ___(4)___ additional stores in Malaysia and Thailand if the Singapore launch proves successful.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "where",
+      "which",
+      "who",
+      "what"
+     ],
+     "a": 1,
+     "why": "ช่องต้องเป็น **ประธาน** ของ will cover + หลัง **,** ขยายสิ่งของ → **which**",
+     "no": [
+      "where ต้องตามด้วยประโยคที่มีประธานครบ",
+      null,
+      "who ใช้กับคน",
+      "what ไม่ใช้หลังคำนามและจุลภาค"
+     ],
+     "whySay": "หลายคนเห็นคำว่า location แล้วเลือก where ทันที แต่ดูหลังช่องว่าง will cover ไม่มีประธาน ช่องนี้ต้องทำหน้าที่ประธานเอง และขยายร้านซึ่งเป็นสิ่งของ จึงใช้ which"
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "rises",
+      "rose",
+      "will rise",
+      "has risen"
+     ],
+     "a": 3,
+     "why": "**for the past three years** = ต่อเนื่องจนถึงตอนนี้ → **has risen**",
+     "no": [
+      "present simple ไม่บอกช่วงเวลาต่อเนื่อง",
+      "past จบไปแล้ว ไม่เข้ากับ for the past",
+      "อนาคต ขัดกับ past three years",
+      null
+     ],
+     "whySay": "for the past three years แปลว่าตลอดสามปีที่ผ่านมาจนถึงตอนนี้ เป็นคำบอกเวลาของ present perfect จึงตอบ has risen ส่วน rose ใช้กับเรื่องที่จบในอดีตแล้ว"
+    },
+    {
+     "q": "Which sentence best fits blank (3)?",
+     "o": [
+      "\"A store will let shoppers there try our products in person,\" he added.",
+      "Sales at the Singapore store fell sharply last quarter.",
+      "The company will stop selling its products online next week.",
+      "Customers may return used tents for a full refund."
+     ],
+     "a": 0,
+     "why": "ประโยคถัดไป **currently sells only online** → ช่องนี้ต้องบอกข้อดีของร้านจริง",
+     "no": [
+      null,
+      "ร้านยังไม่เปิด ยอดขายตกไม่ได้",
+      "ขัดกับ currently sells online",
+      "ไม่เกี่ยวกับการเปิดร้าน"
+     ],
+     "whySay": "ประโยคถัดไปบอกว่าตอนนี้บริษัทขายแค่ออนไลน์และผ่านร้านพาร์ทเนอร์ ข้อ A บอกว่าร้านจริงจะให้ลูกค้าได้ลองของด้วยตัวเอง ต่อกันพอดี ข้อ B กับดัก ร้านสิงคโปร์ยังไม่เปิดเลย จะมียอดขายได้ยังไง"
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "opened",
+      "has opened",
+      "may open",
+      "was opening"
+     ],
+     "a": 2,
+     "why": "**if ... proves successful** = ยังไม่เกิด → อนาคต/ความเป็นไปได้ **may open**",
+     "no": [
+      "อดีต ขัดกับเงื่อนไขที่ยังไม่เกิด",
+      "เปิดไปแล้ว ขัดกับ if",
+      null,
+      "อดีตต่อเนื่อง ไม่เข้ากับเงื่อนไขอนาคต"
+     ],
+     "whySay": "ร้านสิงคโปร์ยังไม่เปิด และถ้าประสบความสำเร็จ จึงจะเปิดเพิ่มที่มาเลเซียและไทย เป็นเรื่องในอนาคตที่อาจจะเกิด จึงใช้ may open"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 3/4",
+   "say": "บทความที่สาม เป็นอีเมลขอโทษลูกค้าจากโรงแรม อีเมลแบบนี้มักเรียงว่า ขอโทษ บอกว่าแก้ไขอะไรแล้ว แล้วชดเชยให้ ลองจับลำดับนี้ไว้",
+   "text": "Subject: Your recent stay\n\nDear Mr. Fischer,\nThank you for telling us about your stay at the Marlow Hotel last weekend. I was sorry to learn that the air conditioning in your room failed and that our staff did not respond to your calls ___(1)___.\n\n___(2)___ We have also reviewed our procedures for handling repair requests at night. To make up for the inconvenience, we have refunded the cost of one night ___(3)___ your credit card. We hope you will give us another opportunity ___(4)___ you.\n\nSincerely, Hannah Lee, Guest Relations",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "promptly",
+      "prompt",
+      "promptness",
+      "more prompt"
+     ],
+     "a": 0,
+     "why": "ขยายกริยา **respond** → **adverb** promptly",
+     "no": [
+      null,
+      "adjective ขยายกริยาไม่ได้",
+      "คำนาม วางท้ายประโยคแบบนี้ไม่ได้",
+      "adjective ขั้นกว่า ขยายกริยาไม่ได้"
+     ],
+     "whySay": "ประโยคครบแล้ว พนักงานไม่ตอบรับสายของคุณ ช่องท้ายประโยคบอกว่าตอบอย่างไร ต้องเป็นคำกริยาวิเศษณ์ promptly ที่แปลว่าทันที รวดเร็ว"
+    },
+    {
+     "q": "Which sentence best fits blank (2)?",
+     "o": [
+      "Please let us know the dates of your next visit.",
+      "The faulty unit has since been replaced.",
+      "Unfortunately, we cannot offer any compensation.",
+      "Our pool will reopen on Monday after repairs."
+     ],
+     "a": 1,
+     "why": "ประโยคถัดไปมี **also** = ทำอะไรไปแล้วอีกอย่าง → ช่องนี้คือ **สิ่งที่แก้ไข**",
+     "no": [
+      "ยังไม่ถึงตอนเชิญกลับมา และไม่เข้ากับ also",
+      null,
+      "ขัดกับการคืนเงินในประโยคต่อมา",
+      "ไม่เกี่ยวกับแอร์ที่เสีย"
+     ],
+     "whySay": "ประโยคถัดไปบอกว่า เราได้ทบทวนขั้นตอนรับแจ้งซ่อมตอนกลางคืนด้วย คำว่า also บอกว่าก่อนหน้านี้ต้องมีการแก้ไขอีกเรื่อง ข้อ B บอกว่าเปลี่ยนเครื่องที่เสียแล้ว ส่วนข้อ C ขัดกับการคืนเงินที่ตามมา"
+    },
+    {
+     "q": "Choose the best answer for blank (3).",
+     "o": [
+      "at",
+      "with",
+      "for",
+      "to"
+     ],
+     "a": 3,
+     "why": "**refund** เงิน **to** บัตร/บัญชี = คืนเข้าไปที่",
+     "no": [
+      "ใช้กับสถานที่หรือเวลา",
+      "= ด้วย ความหมายไม่เข้า",
+      "= สำหรับ ความหมายไม่เข้า",
+      null
+     ],
+     "whySay": "คืนเงินเข้าบัตรเครดิต ใช้ refund something to your credit card บุพบท to บอกปลายทางที่เงินเข้าไป ข้อนี้ต้องจำเป็นคู่คำ"
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "serve",
+      "served",
+      "to serve",
+      "serving"
+     ],
+     "a": 2,
+     "why": "**opportunity + to V** = โอกาสที่จะทำ",
+     "no": [
+      "กริยาช่อง 1 ตามคำนามตรงๆ ไม่ได้",
+      "V3 ไม่เข้าความหมาย",
+      null,
+      "ต้องเป็น opportunity of serving ถึงจะได้"
+     ],
+     "whySay": "คำนาม opportunity ตามด้วย to บวกกริยาช่องหนึ่ง แปลว่าโอกาสที่จะได้ทำ จึงเป็น to serve you โอกาสได้ให้บริการคุณอีกครั้ง ประโยคปิดอีเมลขอโทษแบบนี้เจอบ่อย"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 4/4",
+   "say": "บทความสุดท้าย เป็นประกาศงานอบรมสำหรับผู้จัดการ ประกาศแบบนี้มักบอกหัวข้อ วิทยากร จำนวนที่นั่ง และวิธีลงทะเบียน ข้อสุดท้ายแล้ว สู้ๆ",
+   "text": "Workshop: Leading Remote Teams\nThursday, November 13 · 1:00–4:30 P.M. · Room 5B\n\nManagers who supervise employees working from home are encouraged to attend. Participants will learn how to run productive online meetings and keep team members ___(1)___. The session will be led by Dr. Alan Brooks. He has trained managers at over 200 companies ___(2)___ he founded his consulting firm in 2005.\n\nSpace is limited to 25 people. ___(3)___ Those who register by October 31 will receive a free copy of Dr. Brooks's book. ___(4)___ registering, please get approval from your department head.",
+   "qs": [
+    {
+     "q": "Choose the best answer for blank (1).",
+     "o": [
+      "motivate",
+      "motivating",
+      "motivation",
+      "motivated"
+     ],
+     "a": 3,
+     "why": "**keep + คน + V3/adj** = ทำให้คงอยู่ในสภาพ → **motivated** (คนรู้สึก)",
+     "no": [
+      "keep + คน ตามด้วยกริยาช่อง 1 ไม่ได้",
+      "V-ing = เป็นฝ่ายทำให้คนอื่นมีแรงจูงใจ ความหมายไม่เข้า",
+      "คำนาม ไม่ได้บอกสภาพของคน",
+      null
+     ],
+     "whySay": "keep ตามด้วยคน แล้วตามด้วยคำบอกสภาพ เช่น keep them happy ในที่นี้คือทำให้ลูกทีมรู้สึกมีแรงจูงใจ คนเป็นผู้รู้สึก จึงใช้ motivated ถ้าเป็น motivating จะกลายเป็นลูกทีมไปจูงใจคนอื่น"
+    },
+    {
+     "q": "Choose the best answer for blank (2).",
+     "o": [
+      "during",
+      "until",
+      "since",
+      "while"
+     ],
+     "a": 2,
+     "why": "**has trained** + จุดเริ่มในอดีต **in 2005** → **since**",
+     "no": [
+      "ตามด้วยคำนาม ไม่ใช่ประโยค",
+      "= จนถึง ไม่เข้ากับ present perfect",
+      null,
+      "= ขณะที่ ไม่บอกจุดเริ่ม"
+     ],
+     "whySay": "ประโยคหน้าเป็น present perfect has trained และหลังช่องบอกจุดเริ่มในอดีต ปีสองพันห้า จึงใช้ since แปลว่าตั้งแต่ ข้อ during ตามด้วยคำนามเท่านั้น ตามด้วยประโยคไม่ได้"
+    },
+    {
+     "q": "Which sentence best fits blank (3)?",
+     "o": [
+      "The workshop has been canceled due to low interest.",
+      "To reserve a seat, sign up on the HR portal.",
+      "Remote employees may not attend online meetings.",
+      "Last year's session was held in Room 3A."
+     ],
+     "a": 1,
+     "why": "ที่นั่งจำกัด → **วิธีจอง** → ประโยคถัดไป **Those who register** ต่อพอดี",
+     "no": [
+      "ขัดกับประกาศเชิญเข้าร่วม",
+      null,
+      "ขัดกับเนื้อหาอบรมเรื่องประชุมออนไลน์",
+      "ไม่เกี่ยวกับการลงทะเบียน"
+     ],
+     "whySay": "ก่อนช่องว่างบอกว่าที่นั่งจำกัดยี่สิบห้าคน หลังช่องว่างพูดถึงคนที่ลงทะเบียนก่อนวันที่สามสิบเอ็ด ช่องนี้จึงต้องเป็นวิธีจองที่นั่ง ข้อ B ลงทะเบียนผ่านเว็บฝ่ายบุคคล ต่อกันพอดี"
+    },
+    {
+     "q": "Choose the best answer for blank (4).",
+     "o": [
+      "Before",
+      "Prior",
+      "Since",
+      "Unless"
+     ],
+     "a": 0,
+     "why": "**Before + V-ing** ✓ · Prior ต้องเป็น **Prior to** registering",
+     "no": [
+      null,
+      "ขาด to ต้องเป็น Prior to",
+      "ความหมายไม่เข้ากับคำสั่งให้ขออนุมัติ",
+      "ความหมายไม่เข้า"
+     ],
+     "whySay": "ก่อนลงทะเบียน ให้ขออนุมัติจากหัวหน้าแผนก ใช้ Before บวก V ing ได้เลย ข้อ Prior เป็นกับดัก เพราะความหมายเหมือนกัน แต่ต้องมี to เสมอ เป็น prior to registering"
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**บุพบท + V-ing** : before **terminating** · **Prior to** registering",
+     "say": "จุดพลาดแรก หลังบุพบทอย่าง before ใช้กริยาเติม ing และ prior ต้องมี to ตามเสมอ ถ้าไม่มี to ตอบไม่ได้"
+    },
+    {
+     "x": "**คำบอกเวลา + ถูกกระทำ** : last week → **was sent** · for the past 3 years → **has risen**",
+     "say": "จุดพลาดที่สอง ดูคำบอกเวลาในประโยค last week ใช้อดีต for the past three years ใช้ present perfect และเช็กด้วยว่าประธานทำเองได้ไหม สัญญาส่งตัวเองไม่ได้ ต้องเป็น was sent"
+    },
+    {
+     "x": "**ข้อเติมประโยค ดูคำเชื่อมข้างหลัง** : **In return** · **also** · **Those who register**",
+     "say": "จุดพลาดที่สาม ข้อเติมประโยค คำใบ้อยู่ที่ประโยคถัดไป อย่าง In return ต้องมีข้อเสียก่อน also ต้องมีการแก้ไขก่อน อ่านต่ออีกหนึ่งประโยคทุกครั้ง"
+    }
+   ],
+   "outro": "ชุดที่สามจบแล้ว ได้กี่ข้อจากสิบหก ชุดนี้ยากกว่าสองชุดแรก ถ้าได้สิบสองข้อขึ้นไปถือว่าเก่งมาก ข้อที่พลาดย้อนดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

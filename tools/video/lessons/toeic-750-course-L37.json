@@ -1,0 +1,65 @@
+{"id":"toeic-750-course-L37","course":"toeic-750-course","n":37,"section":"ฝึกทำข้อสอบ · Part 3","title":"Part 3 ชุดที่ 3: 5 บทสนทนา 15 ข้อ","slides":[
+{"type":"cover","h":"Part 3 ชุดที่ 3\n5 บทสนทนา 15 ข้อ","sub":"ร้านขายยา · ธนาคาร · อสังหาฯ · บริษัทขนส่ง · แผนกไอที","say":"ชุดที่สามของ Part 3 ห้าบทสนทนา สิบห้าข้อ รอบนี้ยากขึ้น มีบทสนทนาสามคนสองบท และคำถามว่าทำไมเขาพูดแบบนี้หลายข้อ อ่านคำถามบนจอก่อนฟังทุกครั้ง แล้วเลือกคำตอบในใจ เริ่มเลย"},
+{"type":"conv","h":"บทสนทนา 1 · ร้านขายยา","say":"บทสนทนาที่หนึ่ง ที่ร้านขายยา อ่านคำถามสามข้อก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Hi, I'm here to pick up a prescription for my father. Dr. Patel sent it over this morning."},
+ {"v":"m","t":"Let me check. Yes, I see it, but we only have half of the tablets in stock right now."},
+ {"v":"q","t":"Oh no. He's leaving on a business trip on Friday, and he needs enough for two weeks."},
+ {"v":"m","t":"I can give you a seven-day supply now. The rest should come in on Friday morning."},
+ {"v":"q","t":"That's cutting it close. His flight is at noon."},
+ {"v":"m","t":"Then I'll have the remaining tablets delivered to your home by ten. There's no extra charge."}],
+ "qs":[
+ {"q":"Who most likely is the man?","o":["A pharmacist","A doctor","A travel agent","A delivery driver"],"a":0,"why":"เช็กใบสั่งยา มียาในสต็อก = **เภสัชกร**","whySay":"ผู้ชายเช็กใบสั่งยา และบอกว่ามียาในสต็อกแค่ครึ่งเดียว เขาคือเภสัชกร ส่วนหมอคือ Dr. Patel ที่ส่งใบสั่งยามา อย่าเลือกคำที่ได้ยินอย่างเดียว","no":[null,"หมอคือ Dr. Patel คนส่งใบสั่งยา","ทริปเป็นของพ่อ ไม่ได้จองตั๋ว","เขาจะให้คนไปส่ง ไม่ได้ขับเอง"]},
+ {"q":"Why does the woman say, \"That's cutting it close\"?","o":["She thinks the price is too high.","She is worried there will not be enough time.","She wants to change the flight.","She agrees with the man's plan."],"a":1,"why":"ยามาเช้าวันศุกร์ บินเที่ยง = **เวลาเฉียดฉิว**","whySay":"ยาส่วนที่เหลือมาเช้าวันศุกร์ แต่พ่อบินเที่ยงวันศุกร์ cutting it close แปลว่าเวลาเฉียดฉิว เธอกังวลว่าจะไม่ทัน","no":["ไม่ได้พูดเรื่องราคา",null,"ไม่ได้ขอเปลี่ยนไฟลต์","เธอยังกังวล ไม่ได้เห็นด้วย"]},
+ {"q":"What does the man offer to do?","o":["Call the doctor","Recommend a different medicine","Send the medicine to a home","Lower the price"],"a":2,"why":"**delivered to your home by ten** = ส่งยาถึงบ้าน","whySay":"ผู้ชายเสนอส่งยาที่เหลือถึงบ้านก่อนสิบโมง no extra charge แค่แปลว่าไม่คิดค่าส่ง ไม่ใช่ลดราคา","no":["ไม่ได้จะโทรหาหมอ","ยังเป็นยาตัวเดิม",null,"ไม่คิดค่าส่ง ≠ ลดราคา"]}]},
+{"type":"conv","h":"บทสนทนา 2 · ธนาคาร","say":"บทสนทนาที่สอง ที่ธนาคาร อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"r","t":"Good morning. I run a small bakery, and I'd like to apply for a loan to buy a second oven."},
+ {"v":"q","t":"Certainly. Do you already have a business account with us?"},
+ {"v":"r","t":"Yes, for about three years. My accountant told me to bring my tax returns, so I have them here."},
+ {"v":"q","t":"Great. We'll also need your sales records from the last twelve months."},
+ {"v":"r","t":"Oh, those are on my laptop at the shop. I didn't think to print them."},
+ {"v":"q","t":"That's fine. You can upload them through our online banking portal tonight, and I'll review your application tomorrow."}],
+ "qs":[
+ {"q":"Why is the man at the bank?","o":["To open a new account","To close an account","To report a lost card","To apply for a loan"],"a":3,"why":"**apply for a loan to buy a second oven**","whySay":"ผู้ชายบอกตั้งแต่ประโยคแรกว่าอยากขอสินเชื่อไปซื้อเตาอบเครื่องที่สอง เขามีบัญชีอยู่แล้ว ไม่ได้มาเปิดใหม่","no":["มีบัญชีอยู่แล้วสามปี","ไม่ได้ปิดบัญชี","ไม่ได้ทำบัตรหาย",null]},
+ {"q":"What did the man's accountant tell him to do?","o":["Bring some tax documents","Hire more staff","Buy a new laptop","Change banks"],"a":0,"why":"**tax returns** = tax documents","whySay":"นักบัญชีบอกให้เอาแบบแสดงรายการภาษีมา tax returns ในข้อสอบพูดใหม่เป็น tax documents","no":[null,"ไม่ได้พูดถึงจ้างคน","laptop มีอยู่แล้วที่ร้าน","ไม่ได้แนะนำให้ย้ายธนาคาร"]},
+ {"q":"What does the woman suggest?","o":["Coming back the next day","Submitting records online","Printing documents at the bank","Speaking with a manager"],"a":1,"why":"**upload them through our online banking portal**","whySay":"ผู้หญิงบอกให้อัปโหลดยอดขายผ่านเว็บธนาคารคืนนี้ ส่วนพรุ่งนี้คือวันที่เธอจะตรวจใบสมัคร ไม่ได้ให้เขากลับมา","no":["พรุ่งนี้เธอตรวจเอง ไม่ได้ให้กลับมา",null,"ไม่ได้ให้ปริ้นที่ธนาคาร","ไม่ได้พูดถึงผู้จัดการ"]}]},
+{"type":"conv","h":"บทสนทนา 3 · อสังหาฯ","listenLabel":"ฟังบทสนทนา **3 คน**","say":"บทสนทนาที่สาม ดูออฟฟิศให้เช่า มีสามคน นายหน้าผู้หญิงหนึ่งคน กับลูกค้าผู้ชายสองคน อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"So, this is the space on the third floor. It's about two hundred square meters, and it's available from June."},
+ {"v":"m","t":"It's bright, and I like the view. But Sam, didn't we say we need room for at least twenty desks?"},
+ {"v":"r","t":"We did. And we're hiring five more designers in the fall."},
+ {"v":"q","t":"There's also a unit on the fifth floor that's a bit bigger. The owner is renovating it right now, though."},
+ {"v":"r","t":"When will the work be finished?"},
+ {"v":"q","t":"By the end of July. I could show it to you on Monday, if you don't mind the dust."},
+ {"v":"m","t":"Monday's fine. Our current lease doesn't run out until September anyway."}],
+ "qs":[
+ {"q":"What concern do the men have about the third-floor space?","o":["It is too expensive.","It is too dark.","It may be too small.","It is far from a station."],"a":2,"why":"ต้องการ 20 โต๊ะ + จ้างเพิ่ม 5 คน = **ที่อาจไม่พอ**","whySay":"ผู้ชายถามว่าเราต้องใช้อย่างน้อยยี่สิบโต๊ะไม่ใช่เหรอ อีกคนบอกว่าจะจ้างเพิ่มอีกห้าคน แปลว่ากลัวที่จะเล็กไป ส่วนเรื่องแสงเขาชมว่าสว่างดี","no":["ไม่ได้พูดเรื่องราคา","เขาชมว่า bright = สว่าง",null,"ไม่ได้พูดถึงสถานี"]},
+ {"q":"What does the woman say about the fifth-floor unit?","o":["It is being renovated.","It has already been rented.","It is cheaper.","It does not have an elevator."],"a":0,"why":"**The owner is renovating it right now**","whySay":"นายหน้าบอกว่าเจ้าของกำลังรีโนเวตห้องชั้นห้าอยู่ เสร็จปลายเดือนกรกฎาคม ส่วนที่ว่าใหญ่กว่า ไม่ได้แปลว่าถูกกว่า","no":[null,"ยังว่าง พาไปดูได้วันจันทร์","บอกว่าใหญ่กว่า ไม่ได้บอกว่าถูกกว่า","ไม่ได้พูดถึงลิฟต์"]},
+ {"q":"Why does one of the men say, \"Our current lease doesn't run out until September anyway\"?","o":["To ask for a lower rent","To explain that they are not in a hurry","To complain about their landlord","To suggest signing a contract today"],"a":1,"why":"ห้องเสร็จก.ค. สัญญาเดิมหมดก.ย. = **รอได้ ไม่รีบ**","whySay":"ห้องชั้นห้าเสร็จปลายกรกฎาคม แต่สัญญาเช่าเดิมหมดกันยายน เขากำลังบอกว่ารอได้ ไม่ต้องรีบ คำถามเจตนาต้องดูเหตุผลรอบๆ ประโยคนั้น","no":["ไม่ได้ต่อรองค่าเช่า",null,"ไม่ได้บ่นเจ้าของตึก","เขาแค่นัดดูห้องวันจันทร์"]}]},
+{"type":"conv","h":"บทสนทนา 4 · บริษัทขนส่ง","say":"บทสนทนาที่สี่ โทรหาบริษัทขนส่ง อ่านคำถามก่อน แล้วฟัง","lines":[
+ {"v":"q","t":"Hi, this is Anna Lim from Crestwood Furniture. Our shipment of chairs was supposed to reach our warehouse yesterday, but nothing has arrived."},
+ {"v":"m","t":"Let me look up the tracking number. Ah, I see. The truck was held at the port because a customs form was missing."},
+ {"v":"q","t":"Missing? Our office sent all the paperwork last Monday."},
+ {"v":"m","t":"We did receive most of it, but the certificate of origin wasn't included."},
+ {"v":"q","t":"I'll e-mail it to you right away. We're opening a new store on Saturday, and we need those chairs."},
+ {"v":"m","t":"Once I have it, I'll forward it to customs. The chairs should reach you within two days."}],
+ "qs":[
+ {"q":"Where does the man most likely work?","o":["At a furniture store","At a shipping company","At a customs office","At a factory"],"a":1,"why":"เช็ก **tracking number** รถบรรทุก = บริษัทขนส่ง","whySay":"ผู้ชายเช็กเลขพัสดุ และจะส่งเอกสารต่อให้ศุลกากร แปลว่าเขาอยู่บริษัทขนส่ง ไม่ใช่ศุลกากรเอง ร้านเฟอร์นิเจอร์คือที่ทำงานของผู้หญิง","no":["ร้านเฟอร์นิเจอร์คือฝั่งผู้หญิง",null,"เขาจะส่งต่อให้ศุลกากร","ไม่ได้พูดถึงโรงงาน"]},
+ {"q":"What caused the delay?","o":["Bad weather","A mechanical problem","A missing document","An incorrect address"],"a":2,"why":"**the certificate of origin wasn't included** = เอกสารขาด","whySay":"รถติดอยู่ที่ท่าเรือ เพราะใบรับรองถิ่นกำเนิดสินค้าไม่ได้แนบมา ข้อถูกพูดรวมๆ ว่า a missing document","no":["ไม่ได้พูดถึงอากาศ","รถไม่ได้เสีย",null,"ที่อยู่ไม่ได้ผิด"]},
+ {"q":"What does the woman say will happen on Saturday?","o":["A store will open.","A truck will be inspected.","A sale will end.","A new manager will start."],"a":0,"why":"**We're opening a new store on Saturday**","whySay":"ผู้หญิงบอกว่าจะเปิดร้านใหม่วันเสาร์ เลยต้องได้เก้าอี้ก่อน ฟังคำบอกวันให้ดี เพราะคำถามมักถามว่าวันนั้นเกิดอะไร","no":[null,"ไม่ได้พูดถึงตรวจรถวันเสาร์","ไม่มีเซลลดราคา","ไม่มีผู้จัดการใหม่"]}]},
+{"type":"conv","h":"บทสนทนา 5 · แผนกไอที","listenLabel":"ฟังบทสนทนา **3 คน**","say":"บทสนทนาสุดท้าย ที่แผนกไอที มีสามคน พนักงานผู้หญิง กับเจ้าหน้าที่ไอทีผู้ชายสองคน ฟังให้ดีว่าใครจะทำอะไร","lines":[
+ {"v":"q","t":"Hi, I can't log in to the sales database. It keeps saying my password has expired."},
+ {"v":"m","t":"That's because of the new security policy. Everyone has to change their password every sixty days now."},
+ {"v":"q","t":"But when I try to reset it, the page just freezes."},
+ {"v":"r","t":"That often happens with older browsers. Which one are you using?"},
+ {"v":"q","t":"Whatever was installed on this laptop when I joined. I've never changed anything."},
+ {"v":"r","t":"Well, that explains it. I'll update it for you now. It'll take about ten minutes."},
+ {"v":"m","t":"And while he does that, I'll unlock your account so you can log in afterward."}],
+ "qs":[
+ {"q":"What problem does the woman have?","o":["Her laptop will not turn on.","She has lost a file.","She forgot her e-mail address.","She cannot access a database."],"a":3,"why":"**can't log in to the sales database**","whySay":"ผู้หญิงบอกตั้งแต่ประโยคแรกว่าเข้าฐานข้อมูลฝ่ายขายไม่ได้ log in ไม่ได้ ข้อสอบพูดใหม่ว่า cannot access","no":["laptop เปิดได้ แค่หน้าเว็บค้าง","ไม่ได้ทำไฟล์หาย","ปัญหาคือรหัสผ่านหมดอายุ",null]},
+ {"q":"What does the woman imply when she says, \"Whatever was installed on this laptop when I joined\"?","o":["She recently bought a new laptop.","She prefers a different browser.","She is not sure which browser she uses.","She would like a new computer."],"a":2,"why":"ถูกถามว่าใช้ตัวไหน ตอบว่า \"อะไรก็ได้ที่ติดเครื่องมา\" = **ไม่รู้ว่าใช้ตัวไหน**","whySay":"ไอทีถามว่าใช้เบราว์เซอร์ตัวไหน เธอตอบว่าตัวที่ติดมากับเครื่องตอนเข้างาน แปลว่าเธอไม่รู้ว่าใช้ตัวไหน และไม่เคยอัปเดตด้วย","no":["เครื่องได้มาตอนเข้างาน ไม่ใช่เพิ่งซื้อ","ไม่ได้บอกว่าชอบตัวอื่น",null,"ไม่ได้ขอเครื่องใหม่"]},
+ {"q":"What will one of the men do?","o":["Change the security policy","Order a new laptop","Call the sales manager","Update some software"],"a":3,"why":"**I'll update it for you now** = อัปเดตเบราว์เซอร์","whySay":"ผู้ชายคนที่สองจะอัปเดตเบราว์เซอร์ให้ ใช้เวลาสิบนาที ส่วนอีกคนจะปลดล็อกบัญชี เบราว์เซอร์คือซอฟต์แวร์ เลยพูดใหม่ว่า update some software","no":["นโยบายใหม่ ไม่มีใครจะเปลี่ยน","อัปเดตเครื่องเดิม ไม่ได้สั่งใหม่","ไม่ได้พูดถึงหัวหน้าฝ่ายขาย",null]}]},
+{"type":"end","h":"3 จุดพลาดในชุดนี้","items":[
+ {"x":"**คำถามอาชีพ/สถานที่** : Dr. Patel ≠ ผู้ชาย · customs ≠ ที่ทำงานเขา","say":"จุดพลาดแรก คำถามว่าเขาเป็นใคร ทำงานที่ไหน อย่าเลือกคำที่ได้ยิน อย่าง doctor หรือ customs ให้ดูว่าเขาทำอะไรในบทสนทนา"},
+ {"x":"**คำถามเจตนา** : cutting it close = เวลาเฉียดฉิว · lease ยังไม่หมด = ไม่รีบ","say":"จุดพลาดที่สอง คำถามว่าทำไมเขาพูดแบบนี้ ต้องเอาประโยคนั้นไปเทียบกับเรื่องก่อนหน้า เช่น ยามาเช้า แต่บินเที่ยง แปลว่ากลัวไม่ทัน"},
+ {"x":"**บทสนทนา 3 คน** : one of the men = ใครอัปเดต ใครปลดล็อก","say":"จุดพลาดที่สาม บทสามคน ผู้ชายสองคนมักแบ่งงานกัน ฟังให้ออกว่าใครจะทำอะไร แล้วดูว่าข้อถูกพูดใหม่ เช่น browser กลายเป็น software"}],
+ "outro":"ชุดที่สามของ Part 3 จบแล้ว ได้กี่ข้อจากสิบห้า ถ้าข้อเจตนายังพลาด ลองฟังบทนั้นซ้ำอีกรอบ แล้วไปบทถัดไปกันเลย"}
+]}

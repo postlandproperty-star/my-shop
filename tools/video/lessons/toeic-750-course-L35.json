@@ -1,0 +1,286 @@
+{
+ "id": "toeic-750-course-L35",
+ "course": "toeic-750-course",
+ "n": 35,
+ "section": "ฝึกทำข้อสอบ · Part 1",
+ "title": "Part 1 ชุดที่ 2: 12 ข้อ ดูรูปตอบ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 1 ชุดที่ 2\n12 ข้อ ดูรูปตอบ",
+   "sub": "ฝึก 12 ข้อ พร้อมเฉลยทีละข้อ",
+   "say": "ชุดที่สองของ Part 1 มาแล้ว สิบสองข้อ รูปใหม่ทั้งหมด ทั้งธนาคาร ร้านค้า คลินิก และออฟฟิศ ดูรูปก่อนเสียงมา จับให้ได้ว่าใคร ทำอะไร อยู่ที่ไหน แล้วเริ่มกันเลย"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 1",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L05_5.jpg",
+   "say": "ข้อแรก รูปห้องอบรม ดูคนที่ยืนอยู่หน้าห้องว่าถืออะไร",
+   "s": [
+    "A woman is hanging a poster on the wall.",
+    "A woman is showing a first-aid kit to a group.",
+    "Some people are stacking chairs.",
+    "A man is pouring water from a pitcher."
+   ],
+   "a": 1,
+   "no": [
+    "โปสเตอร์ **ติดอยู่บนผนังแล้ว** ไม่มีใครกำลังติด",
+    null,
+    "ทุกคน **นั่งอยู่บนเก้าอี้** ไม่มีใครเก็บเก้าอี้",
+    "มีเหยือกน้ำ แต่ **ไม่มีใครรินน้ำ**"
+   ],
+   "why": "ผู้หญิงกำลัง **โชว์กล่องปฐมพยาบาล** ให้ผู้เข้าอบรมดู",
+   "whySay": "ผู้หญิงหน้าห้องกำลังถือกล่องปฐมพยาบาลโชว์ให้ทุกคนดู ข้อ A มีโปสเตอร์จริง แต่มันติดอยู่บนผนังแล้ว ไม่มีใครกำลังติด"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 2",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L05_6.jpg",
+   "say": "ข้อสอง รูปห้องพักพนักงาน ดูว่าสามคนที่โต๊ะกำลังทำอะไร",
+   "s": [
+    "Some coworkers are making coffee.",
+    "A man is wiping the table.",
+    "Some paper cups are being stacked.",
+    "Some colleagues are having a meal together."
+   ],
+   "a": 3,
+   "no": [
+    "มีเครื่องชงกาแฟข้างหลัง แต่ **ไม่มีใครชงกาแฟ**",
+    "เขาถือส้อมกินข้าว **ไม่ได้เช็ดโต๊ะ**",
+    "แก้วกระดาษ **ซ้อนกันอยู่แล้ว** ไม่มีใครกำลังซ้อน",
+    null
+   ],
+   "why": "เพื่อนร่วมงานสามคน **กำลังกินข้าวด้วยกัน** (having a meal)",
+   "whySay": "ทั้งสามคนกำลังนั่งกินข้าวกลางวันด้วยกัน ข้อ A ใช้ของในรูปมาหลอก เครื่องชงกาแฟมีจริง แต่ไม่มีใครกำลังชง"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 3",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L06_1.jpg",
+   "say": "ข้อสาม รูปเคาน์เตอร์ธนาคาร ดูมือของพนักงานหลังกระจก",
+   "s": [
+    "A bank clerk is counting some money.",
+    "A customer is opening her purse.",
+    "A woman is using a calculator.",
+    "The glass partition is being cleaned."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ลูกค้าถือกระดาษอยู่ **ไม่ได้เปิดกระเป๋า**",
+    "เครื่องคิดเลข **วางอยู่เฉยๆ** ไม่มีใครใช้",
+    "**is being cleaned** ไม่มีใครกำลังเช็ดกระจก"
+   ],
+   "why": "พนักงานธนาคาร **กำลังนับธนบัตร** (counting money)",
+   "whySay": "พนักงานหลังกระจกกำลังนับธนบัตรอยู่ ข้อ C มีเครื่องคิดเลขจริง แต่วางอยู่บนเคาน์เตอร์เฉยๆ ไม่มีใครกด"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 4",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L06_2.jpg",
+   "say": "ข้อสี่ รูปริมถนน ดูผู้ชายที่อยู่ใกล้ผนังที่สุด",
+   "s": [
+    "A man is taking off his hat.",
+    "Some vehicles are being parked on the street.",
+    "A man is using a cash machine.",
+    "A woman is filling a shopping bag."
+   ],
+   "a": 2,
+   "no": [
+    "เขา **ใส่หมวกไหมพรมอยู่แล้ว** ไม่ได้กำลังถอด",
+    "รถ **จอดอยู่แล้ว** ไม่มีใครกำลังจอด",
+    null,
+    "เธอแค่ **ถือถุง** ไม่ได้ใส่ของลงถุง"
+   ],
+   "why": "ผู้ชาย **กำลังกดตู้เอทีเอ็ม** (using a cash machine)",
+   "whySay": "ผู้ชายกำลังใช้ตู้เอทีเอ็ม มีคนต่อแถวอยู่ข้างหลัง ข้อ A คือกับดัก taking off เพราะเขาแค่ใส่หมวกอยู่"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 5",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L06_3.jpg",
+   "say": "ข้อห้า รูปโต๊ะทำงาน ดูว่าผู้หญิงเขียนอะไรอยู่",
+   "s": [
+    "A woman is putting on her glasses.",
+    "A woman is writing a check.",
+    "Some papers are being thrown away.",
+    "A woman is opening a window."
+   ],
+   "a": 1,
+   "no": [
+    "เธอ **ใส่แว่นอยู่แล้ว** ไม่ได้กำลังใส่",
+    null,
+    "**is being thrown away** กองเอกสารวางอยู่เฉยๆ",
+    "มีหน้าต่าง แต่ **ไม่มีใครเปิด**"
+   ],
+   "why": "ผู้หญิงกำลัง **เขียนเช็ค** ในสมุดเช็ค (writing a check)",
+   "whySay": "ผู้หญิงกำลังเขียนเช็คในสมุดเช็ค ข้อ A คือกับดัก putting on อีกแล้ว เธอใส่แว่นอยู่แล้ว ไม่ได้กำลังใส่"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 6",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L06_4.jpg",
+   "say": "ข้อหก รูปสองคนในออฟฟิศ ดูว่าทั้งคู่มองไปที่ไหน",
+   "s": [
+    "A man is adjusting his glasses.",
+    "A woman is typing on a keyboard.",
+    "Some monitors are being installed.",
+    "Two coworkers are looking at a monitor."
+   ],
+   "a": 3,
+   "no": [
+    "เขา **ใส่แว่นอยู่เฉยๆ** มือกำลังชี้จอ",
+    "เธอ **ถือปากกา** ไม่ได้พิมพ์",
+    "**is being installed** ไม่มีใครติดตั้งจอ",
+    null
+   ],
+   "why": "เพื่อนร่วมงานสองคน **กำลังดูจอคอมพิวเตอร์** ด้วยกัน",
+   "whySay": "ทั้งสองคนกำลังมองจอคอมพิวเตอร์ด้วยกัน ข้อ B ผิดเพราะผู้หญิงถือปากกา ไม่ได้พิมพ์คีย์บอร์ด"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 7",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L06_5.jpg",
+   "say": "ข้อเจ็ด รูปร้านขายของชำ ดูมือของสองคนที่เคาน์เตอร์",
+   "s": [
+    "A customer is paying at a counter.",
+    "A woman is slicing a loaf of bread.",
+    "Some apples are being put into a box.",
+    "A man is taking off his cap."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "ขนมปัง **วางอยู่บนเคาน์เตอร์** ไม่มีใครหั่น",
+    "**is being put** แอปเปิลวางอยู่เฉยๆ",
+    "เขา **ใส่หมวกอยู่แล้ว** ไม่ได้กำลังถอด"
+   ],
+   "why": "ลูกค้ากำลัง **จ่ายเงินที่เคาน์เตอร์** (paying at a counter)",
+   "whySay": "ลูกค้ากำลังจ่ายเงินให้คนขายที่เคาน์เตอร์ ข้อ B มีขนมปังจริง แต่ไม่มีใครกำลังหั่น คำนามถูก กริยาผิด"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 8",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L06_6.jpg",
+   "say": "ข้อแปด รูปช่องบริการ ดูว่าผู้ชายส่งอะไรให้พนักงาน",
+   "s": [
+    "A man is opening an envelope.",
+    "A woman is hanging a calendar on the wall.",
+    "A man is handing over an envelope at a counter.",
+    "A security camera is being installed."
+   ],
+   "a": 2,
+   "no": [
+    "เขา **ยื่นซองให้พนักงาน** ไม่ได้เปิดซอง",
+    "ปฏิทิน **ตั้งอยู่บนโต๊ะ** ไม่มีใครแขวน",
+    null,
+    "**is being installed** กล้องติดอยู่แล้ว"
+   ],
+   "why": "ผู้ชาย **กำลังยื่นซองจดหมาย** ให้พนักงานผ่านช่อง",
+   "whySay": "ผู้ชายกำลังยื่นซองจดหมายให้พนักงานผ่านช่องใต้กระจก ข้อ A มีคำว่า envelope เหมือนกัน แต่กริยา opening ผิด"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 9",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L07_1.jpg",
+   "say": "ข้อเก้า รูปห้องตรวจ ดูท่าทางของคนไข้กับอุปกรณ์ในมือหมอ",
+   "s": [
+    "A man is lying on an examination table.",
+    "A woman is writing on a clipboard.",
+    "A patient is taking off his shirt.",
+    "A woman is examining a patient with a stethoscope."
+   ],
+   "a": 3,
+   "no": [
+    "คนไข้ **นั่งอยู่** บนเตียง ไม่ได้นอน",
+    "คลิปบอร์ด **แขวนอยู่บนผนัง** ไม่มีใครเขียน",
+    "เขา **ใส่เสื้ออยู่** ไม่ได้กำลังถอด",
+    null
+   ],
+   "why": "ผู้หญิงกำลัง **ใช้หูฟังตรวจคนไข้** (stethoscope)",
+   "whySay": "ผู้หญิงกำลังใช้หูฟังแพทย์ตรวจหลังคนไข้ ข้อ A มีเตียงตรวจจริง แต่คนไข้นั่งอยู่ ไม่ได้นอน ท่าทางต้องตรงกับรูป"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 10",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L07_2.jpg",
+   "say": "ข้อสิบ รูปร้านขายยา ดูสิ่งที่อยู่ระหว่างสองคน",
+   "s": [
+    "A man is putting on a jacket.",
+    "A pharmacist is handing a bag to a customer.",
+    "Some boxes are being stocked on the shelves.",
+    "A woman is stapling some papers."
+   ],
+   "a": 1,
+   "no": [
+    "เขา **ใส่แจ็กเก็ตอยู่แล้ว** ไม่ได้กำลังใส่",
+    null,
+    "**is being stocked** ไม่มีใครกำลังจัดของขึ้นชั้น",
+    "แม็กเย็บกระดาษ **วางอยู่เฉยๆ** ไม่มีใครใช้"
+   ],
+   "why": "เภสัชกร **กำลังยื่นถุงยาให้ลูกค้า** (handing a bag)",
+   "whySay": "เภสัชกรกำลังยื่นถุงกระดาษให้ลูกค้า ข้อ C มีกล่องยาเต็มชั้นจริง แต่ไม่มีใครกำลังจัดของขึ้นชั้น"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 11",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L07_3.jpg",
+   "say": "ข้อสิบเอ็ด รูปวัดความดัน ดูว่าพยาบาลทำอะไรกับแขนผู้ชาย",
+   "s": [
+    "A nurse is wrapping a cuff around a man's arm.",
+    "A man is rolling up his sleeves.",
+    "A woman is opening a door.",
+    "Some people are standing in a waiting area."
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "เขาใส่ **เสื้อแขนสั้น** ไม่มีแขนเสื้อให้พับ",
+    "มีประตูข้างหลัง แต่ **ปิดอยู่** ไม่มีใครเปิด",
+    "คนข้างหลัง **นั่งรออยู่** ไม่ได้ยืน"
+   ],
+   "why": "พยาบาลกำลัง **พันผ้าวัดความดันรอบแขน** (wrapping a cuff)",
+   "whySay": "พยาบาลกำลังพันผ้าวัดความดันรอบแขนผู้ชาย ข้อ D ระวังให้ดี คนข้างหลังนั่งอยู่ ไม่ได้ยืน"
+  },
+  {
+   "type": "photo",
+   "h": "ข้อที่ 12",
+   "img": "/Users/danaipongkhanwong/Documents/Academic/_image_test/part1/L07_4.jpg",
+   "say": "ข้อสุดท้าย รูปสวนสาธารณะ ดูคนที่อยู่ด้านหน้าสุด",
+   "s": [
+    "A woman is sitting on a bench.",
+    "Some leaves are being raked.",
+    "A woman is jogging along a path.",
+    "A man is riding a bicycle across a bridge."
+   ],
+   "a": 2,
+   "no": [
+    "ม้านั่ง **ว่างอยู่** ผู้หญิงกำลังวิ่ง",
+    "**is being raked** ใบไม้ร่วงอยู่เฉยๆ",
+    null,
+    "มีคนปั่นจักรยานจริง แต่ **ไม่มีสะพาน**"
+   ],
+   "why": "ผู้หญิงกำลัง **วิ่งไปตามทางเดิน** ในสวน (jogging along a path)",
+   "whySay": "ผู้หญิงกำลังวิ่งไปตามทางเดินในสวน ข้อ D ถูกแค่ครึ่งเดียว มีคนปั่นจักรยานจริง แต่ไม่มีสะพาน ผิดคำเดียวก็ผิดทั้งข้อ"
+  },
+  {
+   "type": "end",
+   "h": "สรุป 3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**is being + V3** ต้องเห็นคนกำลังทำ",
+     "say": "จุดพลาดแรก ชุดนี้มีกับดัก is being เกือบทุกข้อ ถ้าของวางอยู่เฉยๆ ไม่มีคนกำลังทำ ให้ตัดทิ้งเลย"
+    },
+    {
+     "x": "ใส่อยู่ ≠ **putting on / taking off / adjusting**",
+     "say": "จุดพลาดที่สอง แว่น หมวก เสื้อ ที่คนใส่อยู่แล้ว ประโยคที่บอกว่ากำลังใส่ กำลังถอด หรือกำลังจับแว่น ผิดหมด"
+    },
+    {
+     "x": "**ท่าทาง** นั่ง/ยืน/นอน · ถูกครึ่งเดียว = ผิด",
+     "say": "จุดพลาดที่สาม เช็กท่าทางให้ดี นั่ง ยืน หรือนอน และระวังประโยคที่ถูกครึ่งเดียว อย่างจักรยานกับสะพาน ผิดคำเดียวก็ผิดทั้งข้อ"
+    }
+   ],
+   "outro": "ชุดนี้ได้กี่ข้อจากสิบสอง จดคะแนนไว้เทียบกับชุดแรก ข้อไหนพลาดให้ย้อนดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทต่อไปกันเลย"
+  }
+ ]
+}

@@ -1,0 +1,498 @@
+{
+ "id": "toeic-750-course-L15",
+ "course": "toeic-750-course",
+ "n": 15,
+ "section": "ฝึกทำข้อสอบ · Part 4",
+ "title": "Part 4 ชุดที่ 1: 5 ข้อความพูด 15 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 4 ชุดที่ 1\n5 ข้อความพูด 15 ข้อ",
+   "sub": "สนามบิน · ข้อความเสียง · โฆษณา · ทัวร์โรงงาน · ประชุมพนักงาน",
+   "say": "บทนี้เราจะฝึก Part 4 ห้าข้อความพูด รวมสิบห้าข้อ ก่อนฟังแต่ละข้อความ อ่านคำถามสามข้อบนจอไว้ก่อน แล้วเลือกคำตอบในใจ เดี๋ยวเฉลยทีละข้อ เริ่มกันเลย"
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความพูด 1 · สนามบิน",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความพูดที่หนึ่ง ประกาศในสนามบิน อ่านคำถามสามข้อก่อน แล้วฟัง",
+   "lines": [
+    {
+     "v": "m",
+     "t": "Good afternoon. This is an announcement for passengers on Skyline Airways Flight 512 to Vancouver."
+    },
+    {
+     "v": "m",
+     "t": "Please note that your flight will now depart from Gate 27 instead of Gate 14."
+    },
+    {
+     "v": "m",
+     "t": "This is because maintenance work is being carried out at the original gate."
+    },
+    {
+     "v": "m",
+     "t": "Boarding will begin at 4:40, about twenty minutes later than planned."
+    },
+    {
+     "v": "m",
+     "t": "Gate 27 is located in the north terminal, so please allow at least ten minutes to walk there."
+    },
+    {
+     "v": "m",
+     "t": "If you need help getting to the new gate, please speak to any staff member wearing a green vest."
+    },
+    {
+     "v": "m",
+     "t": "Thank you for your patience, and we apologize for the inconvenience."
+    }
+   ],
+   "qs": [
+    {
+     "q": "What is the purpose of the announcement?",
+     "o": [
+      "To announce a flight cancellation",
+      "To report a gate change",
+      "To introduce a new airline service",
+      "To ask passengers to take a later flight"
+     ],
+     "a": 1,
+     "why": "**depart from Gate 27 instead of Gate 14** = เปลี่ยนประตู",
+     "whySay": "ต้นข้อความบอกว่าเที่ยวบินจะออกจากประตูยี่สิบเจ็ดแทนประตูสิบสี่ จุดประสงค์คือแจ้งเปลี่ยนประตู ไม่ใช่ยกเลิก แค่บอร์ดช้าลงยี่สิบนาที",
+     "no": [
+      "เที่ยวบินยังบินอยู่ แค่ช้าลง",
+      null,
+      "ไม่มีบริการใหม่",
+      "ไม่ได้ขอให้เปลี่ยนเที่ยวบิน"
+     ]
+    },
+    {
+     "q": "What does the speaker say about Gate 27?",
+     "o": [
+      "It is closed for maintenance.",
+      "It is next to Gate 14.",
+      "It has a new waiting area.",
+      "It is in the north terminal."
+     ],
+     "a": 3,
+     "why": "**Gate 27 is located in the north terminal**",
+     "whySay": "คนพูดบอกว่าประตูยี่สิบเจ็ดอยู่ที่อาคารฝั่งเหนือ ต้องเดินอย่างน้อยสิบนาที ส่วนงานซ่อมอยู่ที่ประตูเดิม คือประตูสิบสี่",
+     "no": [
+      "งานซ่อมอยู่ที่ประตูเดิม (Gate 14)",
+      "ต้องเดินสิบนาที ไม่ได้อยู่ติดกัน",
+      "ไม่มีการพูดถึงที่นั่งรอ",
+      null
+     ]
+    },
+    {
+     "q": "According to the speaker, who can help passengers?",
+     "o": [
+      "Staff members in green vests",
+      "Pilots at the boarding gate",
+      "Agents at the check-in counter",
+      "Workers at the information desk"
+     ],
+     "a": 0,
+     "why": "**staff member wearing a green vest**",
+     "whySay": "ท้ายประกาศบอกว่า ถ้าต้องการความช่วยเหลือ ให้ติดต่อพนักงานที่ใส่เสื้อกั๊กสีเขียว",
+     "no": [
+      null,
+      "ไม่มีการพูดถึงนักบิน",
+      "ไม่มีการพูดถึงเคาน์เตอร์เช็กอิน",
+      "ไม่มีการพูดถึงจุดประชาสัมพันธ์"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความพูด 2 · ข้อความเสียง",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความพูดที่สอง ข้อความเสียงโทรศัพท์ ข้อสองเป็นคำถามเจตนา อ่านประโยคในคำถามไว้ แล้วฟังว่ามันอยู่ตรงไหน",
+   "lines": [
+    {
+     "v": "q",
+     "t": "Hi, Mr. Okafor. This is Linda Choi from the Riverside Conference Center."
+    },
+    {
+     "v": "q",
+     "t": "I'm calling about the sales workshop your team booked with us for March 18."
+    },
+    {
+     "v": "q",
+     "t": "You reserved a room for forty people, but your registration list now has fifty-five names."
+    },
+    {
+     "v": "q",
+     "t": "Our Lakeview Room only holds forty-five, so I'd like to move you to the Grand Hall on the second floor."
+    },
+    {
+     "v": "q",
+     "t": "I know you mentioned that your budget is tight."
+    },
+    {
+     "v": "q",
+     "t": "Well, the price difference is only thirty dollars."
+    },
+    {
+     "v": "q",
+     "t": "Please e-mail me by Friday to confirm the change, and I'll send you an updated contract."
+    }
+   ],
+   "qs": [
+    {
+     "q": "Why is the speaker calling?",
+     "o": [
+      "To cancel a reservation",
+      "To promote a new service",
+      "To suggest a different room",
+      "To request a late payment"
+     ],
+     "a": 2,
+     "why": "**I'd like to move you to the Grand Hall** = เสนอห้องใหม่",
+     "whySay": "คนพูดบอกว่าห้องเดิมจุได้แค่สี่สิบห้าคน แต่มีคนสมัครห้าสิบห้าคน เลยอยากย้ายไปห้อง Grand Hall คือเสนอห้องใหม่ให้",
+     "no": [
+      "ยังจัดงานเหมือนเดิม ไม่ได้ยกเลิก",
+      "ไม่ได้ขายบริการใหม่",
+      null,
+      "พูดถึงส่วนต่างราคา ไม่ได้ทวงเงิน"
+     ]
+    },
+    {
+     "q": "What does the speaker imply when she says, \"the price difference is only thirty dollars\"?",
+     "o": [
+      "The change will not cost much more.",
+      "The listener was charged incorrectly.",
+      "A discount is no longer available.",
+      "The workshop fee has been reduced."
+     ],
+     "a": 0,
+     "why": "ก่อนหน้าพูดว่า **budget is tight** → ห้องใหม่แพงขึ้นนิดเดียว",
+     "whySay": "ประโยคก่อนหน้าคือ งบของคุณค่อนข้างจำกัด แล้วต่อด้วย ส่วนต่างแค่สามสิบดอลลาร์ เจตนาคือบอกว่าเปลี่ยนห้องแล้วจ่ายเพิ่มไม่มาก คำว่า only คือคำใบ้สำคัญ",
+     "no": [
+      null,
+      "ไม่ได้บอกว่าคิดเงินผิด",
+      "ไม่มีการพูดถึงส่วนลด",
+      "ราคาเพิ่มขึ้น ไม่ได้ลดลง"
+     ]
+    },
+    {
+     "q": "What does the speaker ask the listener to do by Friday?",
+     "o": [
+      "Sign a contract",
+      "Send a list of participants",
+      "Visit the conference center",
+      "Confirm a change by e-mail"
+     ],
+     "a": 3,
+     "why": "**Please e-mail me by Friday to confirm the change**",
+     "whySay": "ท้ายข้อความขอให้อีเมลกลับภายในวันศุกร์เพื่อยืนยันการเปลี่ยนห้อง ส่วนสัญญาใหม่ คนพูดจะเป็นคนส่งให้เอง",
+     "no": [
+      "คนพูดจะเป็นคนส่งสัญญาใหม่ให้",
+      "รายชื่อมีอยู่แล้ว คนพูดเห็นแล้ว",
+      "ไม่ได้ขอให้มาที่ศูนย์ประชุม",
+      null
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความพูด 3 · โฆษณาร้านค้า",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความพูดที่สาม โฆษณาร้านค้า อ่านคำถามสามข้อก่อน แล้วฟัง",
+   "lines": [
+    {
+     "v": "m",
+     "t": "Is your home office ready for the new year?"
+    },
+    {
+     "v": "m",
+     "t": "This Saturday, Pinewood Electronics is celebrating the grand reopening of our downtown store."
+    },
+    {
+     "v": "m",
+     "t": "We've doubled our floor space, so we now carry more laptops, monitors, and printers than ever before."
+    },
+    {
+     "v": "m",
+     "t": "All weekend, every printer in the store will be thirty percent off."
+    },
+    {
+     "v": "m",
+     "t": "And the first fifty customers through the door on Saturday will receive a free wireless mouse."
+    },
+    {
+     "v": "m",
+     "t": "Our technicians will also set up any new computer you buy at no extra charge."
+    },
+    {
+     "v": "m",
+     "t": "Pinewood Electronics, on Fifth Avenue next to City Hall. We'll see you there!"
+    }
+   ],
+   "qs": [
+    {
+     "q": "What is the store celebrating?",
+     "o": [
+      "Its tenth anniversary",
+      "A grand reopening",
+      "The launch of an online shop",
+      "The release of a new product"
+     ],
+     "a": 1,
+     "why": "**celebrating the grand reopening**",
+     "whySay": "ประโยคที่สองบอกตรงๆ ว่าร้านกำลังฉลองการเปิดร้านใหม่อีกครั้ง หลังขยายพื้นที่เป็นสองเท่า",
+     "no": [
+      "ไม่มีการพูดถึงครบรอบ",
+      null,
+      "เป็นร้านหน้าร้าน ไม่ใช่ร้านออนไลน์",
+      "มีสินค้ามากขึ้น แต่ไม่ได้เปิดตัวสินค้าใหม่"
+     ]
+    },
+    {
+     "q": "What items are on sale this weekend?",
+     "o": [
+      "Laptops",
+      "Monitors",
+      "Printers",
+      "Desks"
+     ],
+     "a": 2,
+     "why": "**every printer ... thirty percent off**",
+     "whySay": "แล็ปท็อปกับจอได้ยินก็จริง แต่เป็นแค่ของที่ร้านมีขาย ของที่ลดราคาสามสิบเปอร์เซ็นต์คือเครื่องพิมพ์",
+     "no": [
+      "มีขาย แต่ไม่ได้ลดราคา",
+      "มีขาย แต่ไม่ได้ลดราคา",
+      null,
+      "ไม่มีการพูดถึงโต๊ะ"
+     ]
+    },
+    {
+     "q": "How can customers receive a free gift?",
+     "o": [
+      "By arriving early on Saturday",
+      "By spending a certain amount",
+      "By joining a membership program",
+      "By buying a new computer"
+     ],
+     "a": 0,
+     "why": "**the first fifty customers** = มาถึงก่อน",
+     "whySay": "ห้าสิบคนแรกที่เข้าร้านวันเสาร์ได้เมาส์ไร้สายฟรี ข้อสอบพูดใหม่ว่ามาถึงเช้าในวันเสาร์ ส่วนซื้อคอมพิวเตอร์ ได้บริการติดตั้งฟรี ไม่ใช่ของแถม",
+     "no": [
+      null,
+      "ไม่มีการพูดถึงยอดซื้อขั้นต่ำ",
+      "ไม่มีการพูดถึงสมาชิก",
+      "ซื้อคอมได้บริการติดตั้งฟรี ไม่ใช่ของแถม"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความพูด 4 · ทัวร์โรงงาน",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความพูดที่สี่ ทัวร์ชมโรงงาน อ่านคำถามสามข้อก่อน แล้วฟัง",
+   "lines": [
+    {
+     "v": "q",
+     "t": "Welcome to Golden Leaf Tea Company, and thank you for joining today's factory tour."
+    },
+    {
+     "v": "q",
+     "t": "My name is Rosa, and I'll be your guide for the next hour."
+    },
+    {
+     "v": "q",
+     "t": "We'll start in the sorting room, where leaves from local farms are checked by hand."
+    },
+    {
+     "v": "q",
+     "t": "Then we'll visit the drying area and finish in the packing room."
+    },
+    {
+     "v": "q",
+     "t": "Before we go in, please put on the hairnets and shoe covers in the basket by the door."
+    },
+    {
+     "v": "q",
+     "t": "Photography is not allowed in the drying area, but feel free to take pictures anywhere else."
+    },
+    {
+     "v": "q",
+     "t": "At the end of the tour, everyone will receive a sample box of our newest green tea."
+    }
+   ],
+   "qs": [
+    {
+     "q": "Where most likely are the listeners?",
+     "o": [
+      "At a coffee shop",
+      "At a farm",
+      "At a packaging supplier",
+      "At a tea factory"
+     ],
+     "a": 3,
+     "why": "**Golden Leaf Tea Company ... factory tour**",
+     "whySay": "ประโยคแรกบอกชื่อบริษัทชา และพูดว่าทัวร์โรงงาน ผู้ฟังจึงอยู่ที่โรงงานชา ส่วนฟาร์มเป็นแค่ที่มาของใบชา",
+     "no": [
+      "เป็นชา ไม่ใช่กาแฟ",
+      "ใบชามาจากฟาร์ม แต่ทัวร์อยู่ที่โรงงาน",
+      "ห้องแพ็กเป็นแค่ส่วนหนึ่งของโรงงาน",
+      null
+     ]
+    },
+    {
+     "q": "What are the listeners asked to do before entering?",
+     "o": [
+      "Turn off their phones",
+      "Put on protective items",
+      "Sign a visitor form",
+      "Leave their bags by the door"
+     ],
+     "a": 1,
+     "why": "**put on the hairnets and shoe covers** = ของป้องกัน",
+     "whySay": "ก่อนเข้าไป ขอให้ใส่หมวกคลุมผมกับถุงคลุมรองเท้า ข้อสอบรวมเป็นคำกว้างๆ ว่า protective items",
+     "no": [
+      "ไม่ได้ให้ปิดโทรศัพท์ แค่ห้ามถ่ายรูปบางจุด",
+      null,
+      "ไม่มีการพูดถึงแบบฟอร์ม",
+      "ตะกร้าที่ประตูใส่ของให้หยิบ ไม่ใช่ที่วางกระเป๋า"
+     ]
+    },
+    {
+     "q": "What will the listeners receive at the end of the tour?",
+     "o": [
+      "A discount coupon",
+      "A company brochure",
+      "A sample of tea",
+      "A group photo"
+     ],
+     "a": 2,
+     "why": "**a sample box of our newest green tea**",
+     "whySay": "ท้ายข้อความบอกว่าจบทัวร์ทุกคนจะได้กล่องตัวอย่างชาเขียวรุ่นใหม่ ตรงกับ a sample of tea",
+     "no": [
+      "ไม่มีการพูดถึงคูปอง",
+      "ไม่มีการพูดถึงโบรชัวร์",
+      null,
+      "พูดเรื่องถ่ายรูป แต่ไม่ได้แจกรูปหมู่"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ข้อความพูด 5 · ประชุมพนักงาน",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ข้อความพูดที่ห้า ประชุมพนักงาน ข้อสองเป็นคำถามเจตนาอีกข้อ อ่านคำถามก่อน แล้วฟัง",
+   "lines": [
+    {
+     "v": "m",
+     "t": "Good morning, everyone. Before we start, I want to update you on our new customer service software."
+    },
+    {
+     "v": "m",
+     "t": "As you know, a small group has been testing it for the past month."
+    },
+    {
+     "v": "m",
+     "t": "The results have been great. Our response times dropped by almost half."
+    },
+    {
+     "v": "m",
+     "t": "So starting next Monday, the whole department will switch to the new system."
+    },
+    {
+     "v": "m",
+     "t": "Now, I know some of you are worried about learning it so quickly."
+    },
+    {
+     "v": "m",
+     "t": "Well, Daniel's team used it for just two days before they felt comfortable."
+    },
+    {
+     "v": "m",
+     "t": "Daniel will also lead a one-hour training session this Thursday afternoon."
+    },
+    {
+     "v": "m",
+     "t": "Please sign up on the sheet outside my office by Wednesday."
+    }
+   ],
+   "qs": [
+    {
+     "q": "What is the main topic of the meeting?",
+     "o": [
+      "A new software system",
+      "A customer complaint",
+      "A department move",
+      "A hiring plan"
+     ],
+     "a": 0,
+     "why": "ทั้งข้อความพูดเรื่อง **new customer service software**",
+     "whySay": "ทั้งข้อความพูดเรื่องโปรแกรมบริการลูกค้าตัวใหม่ ที่ทั้งแผนกจะเปลี่ยนมาใช้วันจันทร์หน้า",
+     "no": [
+      null,
+      "พูดถึงลูกค้า แต่ไม่มีคำร้องเรียน",
+      "switch คือเปลี่ยนระบบ ไม่ใช่ย้ายแผนก",
+      "ไม่มีการพูดถึงรับคนใหม่"
+     ]
+    },
+    {
+     "q": "Why does the speaker say, \"Daniel's team used it for just two days before they felt comfortable\"?",
+     "o": [
+      "To praise Daniel's leadership",
+      "To explain a delay in the project",
+      "To ask for volunteers",
+      "To reassure the listeners"
+     ],
+     "a": 3,
+     "why": "ก่อนหน้าพูดว่า **some of you are worried** → ทำให้สบายใจ",
+     "whySay": "ประโยคก่อนหน้าคือ รู้ว่าบางคนกังวลว่าจะเรียนไม่ทัน แล้วตามด้วย ทีมแดเนียลใช้แค่สองวันก็คล่อง เจตนาคือทำให้ผู้ฟังสบายใจว่าระบบนี้เรียนง่าย",
+     "no": [
+      "ไม่ได้ชมฝีมือการนำทีม แต่บอกว่าระบบใช้ง่าย",
+      "โครงการไม่ได้ล่าช้า",
+      "ไม่ได้ขออาสาสมัคร",
+      null
+     ]
+    },
+    {
+     "q": "What are the listeners asked to do by Wednesday?",
+     "o": [
+      "Install the software",
+      "Register for a training session",
+      "Send feedback to Daniel",
+      "Finish a customer report"
+     ],
+     "a": 1,
+     "why": "**sign up on the sheet** = ลงชื่อเข้าอบรม",
+     "whySay": "ท้ายข้อความขอให้ลงชื่อในแผ่นหน้าห้องภายในวันพุธ เพื่อเข้าอบรมวันพฤหัส ข้อสอบเปลี่ยน sign up เป็น register",
+     "no": [
+      "ไม่ได้ให้ติดตั้งเอง",
+      null,
+      "ไม่ได้ขอความเห็น",
+      "ไม่มีการพูดถึงรายงาน"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ได้ยินคำ ≠ ข้อถูก** : laptops มีขาย แต่ที่ลดคือ printers",
+     "say": "จุดพลาดแรก เลือกเพราะได้ยินคำนั้น เช่น โฆษณาพูดถึงแล็ปท็อป แต่ของที่ลดราคาคือเครื่องพิมพ์ ฟังให้ตรงกับที่คำถามถาม"
+    },
+    {
+     "x": "**ข้อถูกพูดใหม่** : first fifty customers → arriving early",
+     "say": "จุดพลาดที่สอง มองหาคำตรงตัว ข้อถูกมักพูดใหม่ เช่น ห้าสิบคนแรก กลายเป็นมาถึงเช้า หรือ sign up กลายเป็น register"
+    },
+    {
+     "x": "**คำถามเจตนา** : ฟังประโยค **ก่อนหน้า** เสมอ",
+     "say": "จุดพลาดที่สาม คำถามเจตนา อย่าแปลตรงตัว ดูประโยคก่อนหน้า เช่น งบจำกัด แล้วตามด้วย ส่วนต่างแค่สามสิบดอลลาร์ แปลว่าไม่แพงขึ้นมาก"
+    }
+   ],
+   "outro": "ชุดแรกของ Part 4 จบแล้ว ได้กี่ข้อจากสิบห้าข้อ ลองจดไว้ แล้วไปชุดถัดไปกันเลย"
+  }
+ ]
+}

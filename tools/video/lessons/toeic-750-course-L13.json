@@ -1,0 +1,175 @@
+{
+ "id": "toeic-750-course-L13",
+ "course": "toeic-750-course",
+ "n": 13,
+ "section": "Listening Part 4 · ข้อความพูด",
+ "title": "รู้จัก Part 4 + ประเภทข้อความพูด",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 4 ข้อความพูด\nรู้จักข้อสอบ + ประเภทที่ออกบ่อย",
+   "sub": "รู้ว่าข้อความแต่ละแบบมักถามอะไร แล้วลองทำจริง 1 ข้อความพูด 3 ข้อ",
+   "say": "บทนี้เราเข้าสู่ Listening Part 4 พาร์ทสุดท้ายของการฟังกันแล้ว จะมาดูว่าข้อสอบหน้าตาเป็นยังไง ข้อความพูดแบบไหนออกบ่อย และแต่ละแบบมักถามอะไร ท้ายบทมีให้ลองทำจริงหนึ่งข้อความ สามข้อ"
+  },
+  {
+   "type": "list",
+   "h": "Part 4 คืออะไร",
+   "items": [
+    {
+     "x": "**10 ข้อความพูด** รวม **30 ข้อ** (ข้อ 71–100)",
+     "say": "Part 4 มีสิบข้อความพูด รวมสามสิบข้อ คือข้อเจ็ดสิบเอ็ดถึงร้อย เป็นช่วงปิดท้ายของ Listening"
+    },
+    {
+     "x": "พูด **คนเดียว** ไม่มีคนโต้ตอบ",
+     "say": "ต่างจาก Part 3 ตรงที่มีคนพูดแค่คนเดียว ไม่มีใครโต้ตอบ ข้อมูลจึงมาต่อเนื่อง ไม่มีจังหวะหยุดพักเลย"
+    },
+    {
+     "x": "บทละ **3 คำถาม** 4 ตัวเลือก **พิมพ์ไว้ในข้อสอบ**",
+     "say": "แต่ละข้อความมีสามคำถาม คำถามละสี่ตัวเลือก พิมพ์ไว้ในข้อสอบเหมือน Part 3 เทคนิคอ่านคำถามล่วงหน้าจึงใช้ได้เต็มที่"
+    },
+    {
+     "x": "ข้อความยาว **~30–45 วินาที** ฟังได้ **ครั้งเดียว**",
+     "say": "ข้อความแต่ละอันยาวประมาณสามสิบถึงสี่สิบห้าวินาที และเปิดให้ฟังแค่ครั้งเดียว"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "ข้อความพูด 5 แบบที่ออกบ่อย",
+   "say": "ข่าวดีคือ Part 4 มีไม่กี่แบบที่ออกซ้ำๆ ฟังประโยคแรกก็มักรู้แล้วว่าเป็นแบบไหน",
+   "items": [
+    {
+     "x": "**ประกาศ** สนามบิน สถานี ห้าง ออฟฟิศ",
+     "sub": "Attention, all passengers on the 3:15 train to Leeds.",
+     "en": "Attention, all passengers on the 3:15 train to Leeds.",
+     "v": "m",
+     "say": "แบบแรก ประกาศ เช่นที่สนามบิน สถานีรถไฟ หรือในออฟฟิศ มักเปิดด้วยคำว่า Attention และมักถามว่าประกาศที่ไหน และมีปัญหาอะไร"
+    },
+    {
+     "x": "**ข้อความเสียงโทรศัพท์**",
+     "sub": "Hi, this is Anna from Westfield Dental. I'm calling about...",
+     "en": "Hi, this is Anna from Westfield Dental. I'm calling about your appointment.",
+     "v": "q",
+     "say": "แบบที่สอง ข้อความฝากเสียงทางโทรศัพท์ คนพูดจะบอกชื่อ บอกบริษัท แล้วบอกว่าโทรมาเรื่องอะไร มักถามว่าคนพูดเป็นใคร และขอให้ทำอะไร"
+    },
+    {
+     "x": "**โฆษณา** สินค้า ร้านค้า บริการ",
+     "sub": "Are you tired of slow internet? Visit us this weekend!",
+     "en": "Are you tired of slow internet? Visit us this weekend!",
+     "v": "m",
+     "say": "แบบที่สาม โฆษณา มักเปิดด้วยคำถาม แล้วบอกส่วนลด มักถามว่าขายอะไร และต้องทำยังไงถึงได้ส่วนลด"
+    },
+    {
+     "x": "**ทัวร์** พิพิธภัณฑ์ โรงงาน เมือง",
+     "sub": "Welcome to the Riverside Chocolate Factory.",
+     "en": "Welcome to the Riverside Chocolate Factory. Before we begin, please stay with the group.",
+     "v": "q",
+     "say": "แบบที่สี่ ไกด์นำทัวร์ มักเปิดด้วย Welcome to แล้วบอกกฎ เช่น ห้ามถ่ายรูป มักถามว่าผู้ฟังอยู่ที่ไหน และห้ามทำอะไร"
+    },
+    {
+     "x": "**ประชุม / แนะนำวิทยากร**",
+     "sub": "I'm pleased to introduce our guest speaker, Dr. Lin.",
+     "en": "I'm pleased to introduce our guest speaker, Dr. Lin.",
+     "v": "m",
+     "say": "แบบที่ห้า การประชุม หรือแนะนำวิทยากร มักถามว่าวิทยากรเป็นใคร มีผลงานอะไร และจะพูดเรื่องอะไร"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "3 คำถามที่เจอแทบทุกข้อความ",
+   "say": "ไม่ว่าข้อความจะเป็นแบบไหน คำถามมักวนอยู่สามเรื่องนี้ จำไว้ แล้วจะรู้ว่าต้องฟังตรงไหน",
+   "items": [
+    {
+     "x": "**ใครพูด / ใครฟัง** → ฟัง **ต้นข้อความ**",
+     "sub": "Who most likely is the speaker?",
+     "en": "Who most likely is the speaker?",
+     "v": "q",
+     "say": "หนึ่ง ใครพูด หรือใครฟัง คำตอบมักอยู่ในประโยคแรกๆ ที่คนพูดแนะนำตัว หรือทักทายผู้ฟัง"
+    },
+    {
+     "x": "**ฟังอยู่ที่ไหน** → ฟัง **คำบอกสถานที่**",
+     "sub": "Where is the announcement most likely being made?",
+     "en": "Where is the announcement most likely being made?",
+     "v": "q",
+     "say": "สอง ฟังอยู่ที่ไหน ให้จับคำบอกสถานที่ เช่น passengers แปลว่าอยู่สนามบินหรือสถานี shoppers แปลว่าอยู่ในห้าง"
+    },
+    {
+     "x": "**ขอให้ทำอะไร** → ฟัง **ท้ายข้อความ**",
+     "sub": "What are the listeners asked to do?",
+     "en": "What are the listeners asked to do?",
+     "v": "q",
+     "say": "สาม ขอให้ผู้ฟังทำอะไร มักอยู่ท้ายข้อความ ให้ดักฟังคำว่า please, make sure หรือ could you"
+    },
+    {
+     "x": "อ่าน 3 คำถามก่อน แล้วฟังตาม **ต้น → กลาง → ท้าย**",
+     "say": "เหมือน Part 3 คำตอบมักเรียงตามลำดับคำถาม ข้อแรกอยู่ต้น ข้อสองอยู่กลาง ข้อสามอยู่ท้าย ตอบไประหว่างฟังได้เลย",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ลองทำจริง",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ลองทำจริงกัน นี่คือข้อความเสียงโทรศัพท์ อ่านสามคำถามก่อน ข้อหนึ่ง ถามว่าคนพูดเป็นใคร ข้อสอง มีปัญหาอะไร ข้อสาม ขอให้ผู้ฟังทำอะไร พร้อมแล้ว ฟังได้เลย",
+   "lines": [
+    {"v": "m", "t": "Hello, Ms. Patel. This is Graham Lewis calling from Brightway Office Furniture."},
+    {"v": "m", "t": "I'm calling about the twelve desks you ordered for your new office."},
+    {"v": "m", "t": "Unfortunately, the light oak color you chose is temporarily out of stock."},
+    {"v": "m", "t": "We could deliver the same desks in dark walnut this Thursday, or you could wait about two weeks for light oak."},
+    {"v": "m", "t": "Could you please call me back by tomorrow afternoon and let me know which option you'd prefer?"},
+    {"v": "m", "t": "Thank you, and have a great day."}
+   ],
+   "qs": [
+    {
+     "q": "Who most likely is the speaker?",
+     "o": ["A real estate agent", "A furniture company employee", "An interior designer", "An office manager"],
+     "a": 1,
+     "why": "ประโยคแรก **calling from Brightway Office Furniture**",
+     "whySay": "ประโยคแรก คนพูดบอกว่าโทรมาจาก Brightway Office Furniture จึงเป็นพนักงานบริษัทเฟอร์นิเจอร์ คำถามใครพูด คำตอบอยู่ต้นข้อความตามที่เรียนไป",
+     "no": ["ไม่มีการพูดถึงการขายหรือเช่าอาคาร", null, "ไม่มีการพูดถึงการออกแบบห้อง", "คนที่ซื้อโต๊ะให้ออฟฟิศคือผู้ฟัง ไม่ใช่คนพูด"]
+    },
+    {
+     "q": "What problem does the speaker mention?",
+     "o": ["An order was damaged.", "A price has increased.", "An invoice is incorrect.", "A color is not available."],
+     "a": 3,
+     "why": "**light oak ... out of stock** = สีที่เลือกไม่มีของ",
+     "whySay": "คนพูดบอกว่าสี light oak หมดสต็อกชั่วคราว ในตัวเลือกเปลี่ยนคำ out of stock เป็น not available ซึ่งความหมายเดียวกัน",
+     "no": ["ไม่ได้บอกว่าของเสียหาย", "ไม่มีการพูดถึงราคา", "ไม่มีการพูดถึงใบแจ้งหนี้", null]
+    },
+    {
+     "q": "What does the speaker ask the listener to do?",
+     "o": ["Return his call", "Visit a showroom", "Pay a deposit", "Measure an office"],
+     "a": 0,
+     "why": "ท้ายข้อความ **Could you please call me back**",
+     "whySay": "ท้ายข้อความ คนพูดขอว่า could you please call me back คือให้โทรกลับไปบอกว่าเลือกแบบไหน ตรงกับ return his call",
+     "no": [null, "ไม่มีการพูดถึงโชว์รูม", "ไม่มีการพูดถึงเงินมัดจำ", "ไม่ได้ขอให้วัดขนาดห้อง"]
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 13",
+   "items": [
+    {
+     "x": "Part 4: 10 ข้อความ 30 ข้อ พูดคนเดียว คำถามพิมพ์ไว้",
+     "say": "สรุปบทนี้ Part 4 มีสิบข้อความพูด สามสิบข้อ คนพูดคนเดียว และคำถามพิมพ์ไว้ให้อ่านก่อนได้"
+    },
+    {
+     "x": "5 แบบ: ประกาศ · ข้อความเสียง · โฆษณา · ทัวร์ · ประชุม",
+     "say": "ข้อความที่ออกบ่อยมีห้าแบบ ประกาศ ข้อความเสียงโทรศัพท์ โฆษณา ทัวร์ และการประชุมหรือแนะนำวิทยากร"
+    },
+    {
+     "x": "ใครพูด → ต้น · ขอให้ทำอะไร → ท้าย",
+     "say": "คำถามใครพูด ใครฟัง ให้ฟังต้นข้อความ ส่วนคำถามขอให้ทำอะไร ให้ฟังท้ายข้อความ"
+    },
+    {
+     "x": "คำในเสียงมักถูก **เปลี่ยนคำ** ในตัวเลือก",
+     "say": "และระวังการเปลี่ยนคำ อย่าง out of stock ในเสียง กลายเป็น not available ในตัวเลือก"
+    }
+   ],
+   "outro": "บทหน้า เราจะไปต่อกับ Part 4 ให้ลึกขึ้น กดทำเครื่องหมายว่าเรียนจบ แล้วไปต่อกันเลย"
+  }
+ ]
+}

@@ -1,0 +1,664 @@
+{
+ "id": "toeic-750-course-L22",
+ "course": "toeic-750-course",
+ "n": 22,
+ "section": "ฝึกทำข้อสอบ · Part 5",
+ "title": "Part 5 ชุดที่ 3: 30 ข้อ เน้น tense",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 5 ชุดที่ 3\nฝึก 30 ข้อ เน้น tense",
+   "sub": "tense · verb form · passive 20 ข้อ · ผสมอื่นๆ 10 ข้อ",
+   "say": "บทนี้ฝึก Part 5 อีกสามสิบข้อ เน้นกริยา ทั้ง tense รูปกริยา ประธานกับกริยา และ passive ดูคำบอกเวลากับประธานให้ดี ข้อละห้าวินาที แล้วเฉลยทันที เริ่มกันเลย"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 1/30",
+   "say": "ข้อ 1",
+   "q": "Over the past five years, Delmont Foods ___ its exports to Europe.",
+   "o": [
+    "increases",
+    "has increased",
+    "will increase",
+    "is increasing"
+   ],
+   "a": 1,
+   "why": "**over the past + เวลา** → present perfect",
+   "no": [
+    "present simple ใช้กับ over the past ไม่ได้",
+    null,
+    "อนาคต ขัดกับ past five years",
+    "ช่วงเวลาที่ผ่านมา ต้อง have + V3"
+   ],
+   "whySay": "over the past five years คือช่วงจากอดีตถึงตอนนี้ ใช้ present perfect has increased"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 2/30",
+   "say": "ข้อ 2",
+   "q": "The sales team ___ the new product line at the trade fair next month.",
+   "o": [
+    "presented",
+    "has presented",
+    "will present",
+    "presenting"
+   ],
+   "a": 2,
+   "why": "**next month** → will + V1",
+   "no": [
+    "อดีต ขัดกับ next month",
+    "perfect ใช้กับ next month ไม่ได้",
+    null,
+    "ไม่มี be ทำเป็นกริยาหลักไม่ได้"
+   ],
+   "whySay": "เจอ next month คืออนาคต ตอบ will present"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 3/30",
+   "say": "ข้อ 3",
+   "q": "Please send the invoice to Ms. Ortega, ___ handles all supplier payments.",
+   "o": [
+    "who",
+    "which",
+    "whose",
+    "whom"
+   ],
+   "a": 0,
+   "why": "**คน + ประธานของ handles** → who",
+   "no": [
+    null,
+    "ใช้กับสิ่งของ ไม่ใช่คน",
+    "ต้องตามด้วยคำนาม",
+    "กรรม ใช้หน้ากริยา handles ไม่ได้"
+   ],
+   "whySay": "หน้าช่องเป็นคน และหลังช่องเป็นกริยาเลย ต้องใช้ who"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 4/30",
+   "say": "ข้อ 4",
+   "q": "Ms. Ruiz will review the figures before she ___ the report to the director.",
+   "o": [
+    "will send",
+    "sent",
+    "sending",
+    "sends"
+   ],
+   "a": 3,
+   "why": "**before + present** แทนอนาคต",
+   "no": [
+    "หลัง before ห้ามใช้ will",
+    "อดีต ขัดกับประโยคหลักที่เป็นอนาคต",
+    "ไม่มี be ทำเป็นกริยาหลักไม่ได้",
+    null
+   ],
+   "whySay": "หลังคำบอกเวลาอย่าง before ใช้ present แทนอนาคต ห้ามใส่ will"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 5/30",
+   "say": "ข้อ 5",
+   "q": "The marketing director ___ the new advertising budget two days ago.",
+   "o": [
+    "approved",
+    "approves",
+    "has approved",
+    "will approve"
+   ],
+   "a": 0,
+   "why": "**ago** → past simple",
+   "no": [
+    null,
+    "present ขัดกับ ago",
+    "perfect ใช้กับ ago ไม่ได้",
+    "อนาคต ขัดกับ ago"
+   ],
+   "whySay": "เจอ ago ต้องเป็น past simple เสมอ ห้ามใช้ has approved"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 6/30",
+   "say": "ข้อ 6",
+   "q": "Mr. Hassan ___ with a client on the phone when the fire alarm went off.",
+   "o": [
+    "speaks",
+    "has spoken",
+    "was speaking",
+    "will speak"
+   ],
+   "a": 2,
+   "why": "**กำลังทำ + when + อดีต** → past continuous",
+   "no": [
+    "present ขัดกับ went off",
+    "perfect ไม่ใช้กับเหตุการณ์ถูกขัดจังหวะ",
+    null,
+    "อนาคต ขัดกับ went off"
+   ],
+   "whySay": "กำลังคุยอยู่แล้วมีเหตุการณ์แทรกเข้ามา ใช้ was speaking"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 7/30",
+   "say": "ข้อ 7",
+   "q": "Customer complaints ___ by the service team within 24 hours.",
+   "o": [
+    "handle",
+    "are handled",
+    "are handling",
+    "handling"
+   ],
+   "a": 1,
+   "why": "**ถูกจัดการ + by** → are + V3",
+   "no": [
+    "มี by ต้องเป็น passive",
+    null,
+    "active มี by ตามมาไม่ได้",
+    "ไม่มี be ทำเป็นกริยาหลักไม่ได้"
+   ],
+   "whySay": "คำร้องเรียนจัดการเองไม่ได้ มันถูกจัดการ ใช้ passive are handled"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 8/30",
+   "say": "ข้อ 8",
+   "q": "The quarterly meeting has been moved ___ Thursday afternoon.",
+   "o": [
+    "at",
+    "in",
+    "for",
+    "to"
+   ],
+   "a": 3,
+   "why": "**move A to + วันใหม่**",
+   "no": [
+    "ใช้กับเวลาเป๊ะๆ ไม่ใช่วัน",
+    "ใช้กับเดือน ปี ไม่ใช่วัน",
+    "moved for ไม่ได้แปลว่าย้ายไป",
+    null
+   ],
+   "whySay": "ย้ายประชุมไปเป็นวันพฤหัส ใช้ moved to"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 9/30",
+   "say": "ข้อ 9",
+   "q": "The quarterly budget has not ___ by the finance committee yet.",
+   "o": [
+    "been approved",
+    "approved",
+    "approving",
+    "be approved"
+   ],
+   "a": 0,
+   "why": "**has + been + V3** = passive perfect",
+   "no": [
+    null,
+    "มี by ต้องมี been",
+    "has not approving ผิดโครงสร้าง",
+    "หลัง has ต้องเป็น been"
+   ],
+   "whySay": "งบถูกอนุมัติ และหน้าช่องมี has ต้องใช้ been approved"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 10/30",
+   "say": "ข้อ 10",
+   "q": "The results of the customer survey ___ very encouraging.",
+   "o": [
+    "is",
+    "are",
+    "was being",
+    "has been"
+   ],
+   "a": 1,
+   "why": "**ประธาน = results** (พหูพจน์) → are",
+   "no": [
+    "ประธานคือ results พหูพจน์",
+    null,
+    "เอกพจน์ และ being ไม่ใช้ตรงนี้",
+    "has ใช้กับประธานเอกพจน์"
+   ],
+   "whySay": "ประธานจริงคือ results ไม่ใช่ survey ต้องใช้กริยาพหูพจน์ are"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 11/30",
+   "say": "ข้อ 11",
+   "q": "The printer in the lobby is quite old, ___ it still works well.",
+   "o": [
+    "so",
+    "or",
+    "because",
+    "but"
+   ],
+   "a": 3,
+   "why": "**เก่า แต่ ยังใช้ได้ดี** → but",
+   "no": [
+    "แปลว่าดังนั้น ความหมายไม่ขัดกัน",
+    "แปลว่าหรือ ไม่เข้ากับความหมาย",
+    "แปลว่าเพราะ เหตุผลไม่เข้ากัน",
+    null
+   ],
+   "whySay": "สองท่อนขัดแย้งกัน เครื่องเก่าแต่ยังดี ใช้ but"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 12/30",
+   "say": "ข้อ 12",
+   "q": "Neither the manager nor the employees ___ aware of the schedule change.",
+   "o": [
+    "was",
+    "is",
+    "were",
+    "has been"
+   ],
+   "a": 2,
+   "why": "**neither A nor B** → ตาม B",
+   "no": [
+    "ตามคำที่ใกล้สุด employees พหูพจน์",
+    "เอกพจน์ และกาลไม่ตรง",
+    null,
+    "has ใช้กับเอกพจน์"
+   ],
+   "whySay": "neither nor ให้กริยาตามคำที่อยู่ใกล้สุด คือ employees จึงตอบ were"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 13/30",
+   "say": "ข้อ 13",
+   "q": "The client ___ the contract before the price increase was announced.",
+   "o": [
+    "has signed",
+    "had signed",
+    "signs",
+    "will sign"
+   ],
+   "a": 1,
+   "why": "**เกิดก่อนอีกเหตุการณ์ในอดีต** → had + V3",
+   "no": [
+    "present perfect ใช้กับเรื่องในอดีตไม่ได้",
+    null,
+    "present ขัดกับ was announced",
+    "อนาคต ขัดกับอดีต"
+   ],
+   "whySay": "เซ็นสัญญาก่อนประกาศขึ้นราคา ซึ่งเป็นอดีตอยู่แล้ว ใช้ past perfect had signed"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 14/30",
+   "say": "ข้อ 14",
+   "q": "We look forward to ___ with you on the upcoming project.",
+   "o": [
+    "working",
+    "work",
+    "worked",
+    "be working"
+   ],
+   "a": 0,
+   "why": "**look forward to + V-ing**",
+   "no": [
+    null,
+    "to ตรงนี้เป็นบุพบท ต้องตามด้วย V-ing",
+    "V3 ใช้หลัง to ไม่ได้",
+    "to ตรงนี้ไม่ใช่ to + V1"
+   ],
+   "whySay": "look forward to ตัว to เป็นบุพบท ต้องตามด้วย ing คือ working"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 15/30",
+   "say": "ข้อ 15",
+   "q": "Ms. Kaur asked that all questions be sent directly to ___.",
+   "o": [
+    "she",
+    "hers",
+    "her",
+    "herself"
+   ],
+   "a": 2,
+   "why": "**หลังบุพบท to** → กรรม her",
+   "no": [
+    "ประธาน ใช้หลัง to ไม่ได้",
+    "แปลว่าของเธอ ไม่ใช่ตัวเธอ",
+    null,
+    "ไม่ได้ทำกับตัวเองในประโยคเดียวกัน"
+   ],
+   "whySay": "หลังบุพบทต้องใช้รูปกรรม คือ her"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 16/30",
+   "say": "ข้อ 16",
+   "q": "The consultant recommended that the company ___ its delivery routes.",
+   "o": [
+    "reviews",
+    "reviewed",
+    "reviewing",
+    "review"
+   ],
+   "a": 3,
+   "why": "**recommend that + ประธาน + V1**",
+   "no": [
+    "หลัง recommend that ไม่เติม s",
+    "หลัง recommend that ใช้ V1",
+    "ไม่มี be ทำเป็นกริยาหลักไม่ได้",
+    null
+   ],
+   "whySay": "หลัง recommend that ใช้กริยาช่องหนึ่งเปล่าๆ เสมอ ไม่เติม s"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 17/30",
+   "say": "ข้อ 17",
+   "q": "Updated parking permits ___ to all staff members starting next Monday.",
+   "o": [
+    "will be distributed",
+    "distribute",
+    "will distribute",
+    "distributing"
+   ],
+   "a": 0,
+   "why": "**ถูกแจก + อนาคต** → will be + V3",
+   "no": [
+    null,
+    "บัตรแจกเองไม่ได้ ต้อง passive",
+    "active ต้องมีกรรมตามหลัง",
+    "ไม่มี be ทำเป็นกริยาหลักไม่ได้"
+   ],
+   "whySay": "บัตรจอดรถถูกแจก และเริ่มจันทร์หน้า ใช้ will be distributed"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 18/30",
+   "say": "ข้อ 18",
+   "q": "Please ___ that all windows are closed before leaving the office.",
+   "o": [
+    "assure",
+    "ensure",
+    "insure",
+    "measure"
+   ],
+   "a": 1,
+   "why": "**ensure that** = ทำให้แน่ใจว่า",
+   "no": [
+    "ต้องมีคนเป็นกรรม เช่น assure you",
+    null,
+    "แปลว่าทำประกัน",
+    "แปลว่าวัดขนาด"
+   ],
+   "whySay": "ทำให้แน่ใจว่าปิดหน้าต่างแล้ว ใช้ ensure"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 19/30",
+   "say": "ข้อ 19",
+   "q": "Ms. Ito cannot take your call because she ___ a presentation at the moment.",
+   "o": [
+    "gives",
+    "gave",
+    "is giving",
+    "has given"
+   ],
+   "a": 2,
+   "why": "**at the moment** → present continuous",
+   "no": [
+    "present simple ไม่ใช้กับ at the moment",
+    "อดีต ขัดกับ at the moment",
+    null,
+    "ทำเสร็จแล้ว ไม่ใช่กำลังทำ"
+   ],
+   "whySay": "at the moment คือกำลังทำอยู่ตอนนี้ ใช้ is giving"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 20/30",
+   "say": "ข้อ 20",
+   "q": "Every product in our catalog ___ with a two-year warranty.",
+   "o": [
+    "come",
+    "coming",
+    "have come",
+    "comes"
+   ],
+   "a": 3,
+   "why": "**every + นามเอกพจน์** → V + s",
+   "no": [
+    "every ใช้กริยาเอกพจน์",
+    "ไม่มี be ทำเป็นกริยาหลักไม่ได้",
+    "have ใช้กับพหูพจน์",
+    null
+   ],
+   "whySay": "every นับทีละชิ้น ใช้กริยาเอกพจน์ comes"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 21/30",
+   "say": "ข้อ 21",
+   "q": "The elevator in Building B is ___ out of order, so please use the stairs.",
+   "o": [
+    "temporary",
+    "temporarily",
+    "temporariness",
+    "temporize"
+   ],
+   "a": 1,
+   "why": "**is + adverb + out of order**",
+   "no": [
+    "adj ขยาย out of order ไม่ได้",
+    null,
+    "คำนาม ไม่เข้าตำแหน่งนี้",
+    "กริยา ใช้หลัง is ไม่ได้"
+   ],
+   "whySay": "ช่องนี้ขยายวลี out of order ต้องใช้ adverb คือ temporarily"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 22/30",
+   "say": "ข้อ 22",
+   "q": "Passengers ___ to Tokyo should proceed to Gate 12.",
+   "o": [
+    "traveling",
+    "travel",
+    "travels",
+    "traveled"
+   ],
+   "a": 0,
+   "why": "**คน + V-ing** = ผู้โดยสารที่เดินทาง",
+   "no": [
+    null,
+    "มีกริยาหลัก should proceed แล้ว",
+    "มีกริยาหลักแล้ว และประธานพหูพจน์",
+    "ผู้โดยสารเป็นคนเดินทางเอง ไม่ใช่ถูกกระทำ"
+   ],
+   "whySay": "กริยาหลักคือ should proceed ช่องนี้ขยายผู้โดยสารที่เดินทางเอง ใช้ traveling"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 23/30",
+   "say": "ข้อ 23",
+   "q": "Ms. Ford is the ___ candidate we have interviewed for the position.",
+   "o": [
+    "qualified",
+    "more qualified",
+    "qualifying",
+    "most qualified"
+   ],
+   "a": 3,
+   "why": "**the + most + adj** ขั้นสุด",
+   "no": [
+    "the ... we have interviewed ต้องเป็นขั้นสุด",
+    "ไม่มี than ใช้ขั้นกว่าไม่ได้",
+    "แปลว่ารอบคัดเลือก ความหมายไม่ตรง",
+    null
+   ],
+   "whySay": "มี the และเทียบกับทุกคนที่สัมภาษณ์ ใช้ขั้นสุด most qualified"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 24/30",
+   "say": "ข้อ 24",
+   "q": "The hotel plans ___ its rooftop restaurant in early December.",
+   "o": [
+    "reopen",
+    "reopening",
+    "to reopen",
+    "reopened"
+   ],
+   "a": 2,
+   "why": "**plan + to V1**",
+   "no": [
+    "plan ต้องตามด้วย to",
+    "plan ไม่ตามด้วย V-ing",
+    null,
+    "มีกริยาหลัก plans แล้ว"
+   ],
+   "whySay": "plan ตามด้วย to กับกริยาช่องหนึ่ง คือ to reopen"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 25/30",
+   "say": "ข้อ 25",
+   "q": "The supplier ___ products we ordered last month has raised its prices.",
+   "o": [
+    "whose",
+    "who",
+    "which",
+    "whom"
+   ],
+   "a": 0,
+   "why": "**whose + คำนาม** = ...ของซัพพลายเออร์",
+   "no": [
+    null,
+    "หลังช่องเป็นคำนาม ไม่ใช่กริยา",
+    "ต้องการความเป็นเจ้าของ",
+    "กรรม ไม่ใช้หน้าคำนาม"
+   ],
+   "whySay": "หลังช่องเป็นคำนาม products ที่เป็นของซัพพลายเออร์ ใช้ whose"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 26/30",
+   "say": "ข้อ 26",
+   "q": "If we ___ more staff, we could open the store on Sundays.",
+   "o": [
+    "have",
+    "had",
+    "will have",
+    "would have"
+   ],
+   "a": 1,
+   "why": "**If + V2, could + V1** สมมติ",
+   "no": [
+    "ประโยคหลังใช้ could ต้องเป็นอดีต",
+    null,
+    "หลัง if ห้ามใช้ will",
+    "would ใช้ในท่อน if ไม่ได้"
+   ],
+   "whySay": "ท่อนหลังเป็น could open แปลว่าสมมติ ท่อน if ใช้อดีต had"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 27/30",
+   "say": "ข้อ 27",
+   "q": "___ the heavy rain, the outdoor product launch drew a large crowd.",
+   "o": [
+    "Although",
+    "Because",
+    "Unless",
+    "Despite"
+   ],
+   "a": 3,
+   "why": "**Despite + คำนาม** = แม้จะ",
+   "no": [
+    "ต้องตามด้วยประโยค",
+    "ต้องตามด้วยประโยค และความหมายผิด",
+    "แปลว่าถ้าไม่ ความหมายไม่เข้า",
+    null
+   ],
+   "whySay": "หลังช่องเป็นแค่คำนาม heavy rain และความหมายขัดกัน ใช้ Despite"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 28/30",
+   "say": "ข้อ 28",
+   "q": "The award ceremony ___ because of the heavy storm.",
+   "o": [
+    "postponed",
+    "has postponing",
+    "was postponed",
+    "postpones"
+   ],
+   "a": 2,
+   "why": "**ถูกเลื่อน** → was + V3",
+   "no": [
+    "งานเลื่อนตัวเองไม่ได้ ต้อง passive",
+    "ผิดโครงสร้าง",
+    null,
+    "active และไม่มีกรรม"
+   ],
+   "whySay": "งานพิธีถูกเลื่อน ไม่ได้เลื่อนเอง ใช้ passive was postponed"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 29/30",
+   "say": "ข้อ 29",
+   "q": "There are only ___ seats left for the evening tour, so please book soon.",
+   "o": [
+    "a few",
+    "a little",
+    "much",
+    "every"
+   ],
+   "a": 0,
+   "why": "**a few + นามพหูพจน์** seats",
+   "no": [
+    null,
+    "ใช้กับนามนับไม่ได้",
+    "ใช้กับนามนับไม่ได้",
+    "ตามด้วยนามเอกพจน์"
+   ],
+   "whySay": "seats นับได้และเป็นพหูพจน์ ใช้ a few"
+  },
+  {
+   "type": "read",
+   "h": "Part 5 · ข้อ 30/30",
+   "say": "ข้อ 30",
+   "q": "The number of online orders ___ sharply every December.",
+   "o": [
+    "rise",
+    "rises",
+    "are rising",
+    "have risen"
+   ],
+   "a": 1,
+   "why": "**the number of** → เอกพจน์ + every → present",
+   "no": [
+    "the number of ใช้กริยาเอกพจน์",
+    null,
+    "พหูพจน์ และไม่ใช่กำลังทำ",
+    "พหูพจน์ และขัดกับ every December"
+   ],
+   "whySay": "the number of คือจำนวน ใช้เอกพจน์ และ every December คือทุกปี จึงตอบ rises"
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ago / before / when** : ago → V2 · หลัง before, if ห้าม will",
+     "say": "จุดพลาดแรก คำบอกเวลา เจอ ago ใช้อดีตเสมอ และหลัง before when if ห้ามใส่ will"
+    },
+    {
+     "x": "**ประธานจริงอยู่ไหน** : results of the survey → are · the number of → is",
+     "say": "จุดพลาดที่สอง หาประธานจริงก่อน อย่าดูแค่คำที่ติดกับช่อง the number of ใช้เอกพจน์ neither nor ตามคำใกล้สุด"
+    },
+    {
+     "x": "**มี by / ของถูกกระทำ → passive** : are handled · has been approved",
+     "say": "จุดพลาดที่สาม ถ้าประธานทำเองไม่ได้ หรือมี by ตามหลัง ต้องเป็น passive คือ be กับกริยาช่องสาม"
+    }
+   ],
+   "outro": "ชุดที่สามจบแล้ว ได้กี่ข้อจากสามสิบ ข้อที่พลาดลองย้อนดูเฉลยอีกรอบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

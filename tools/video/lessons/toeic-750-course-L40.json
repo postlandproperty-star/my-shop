@@ -1,0 +1,380 @@
+{
+ "id": "toeic-750-course-L40",
+ "course": "toeic-750-course",
+ "n": 40,
+ "section": "ฝึกทำข้อสอบ · Part 7",
+ "title": "Part 7 ชุดที่ 4: บทความสาม 1 ชุด + บทความสั้น 4 บท 17 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 7 ชุดที่ 4\nบทความสาม 1 ชุด + บทความสั้น 4 บท 17 ข้อ",
+   "sub": "บันทึกย้ายออฟฟิศ · เว็บเช่ารถ · อีเมลต่ออายุนิตยสาร · ข้อความแชท · บทความสาม",
+   "say": "บทนี้ฝึก Part 7 ชุดที่สี่ สิบเจ็ดข้อ เริ่มจากบทความสั้นสี่บท บทละสามข้อ มีบันทึกย้ายออฟฟิศ หน้าเว็บเช่ารถ อีเมลต่ออายุนิตยสาร และข้อความแชท แล้วปิดท้ายด้วยบทความสามอีกห้าข้อ ซึ่งมีข้อเชื่อมข้อมูลข้ามบทความสองข้อ ข้อละห้าวินาที อยากอ่านนานกว่านี้กดหยุดได้เลย จดคะแนนไว้ด้วย เริ่มกัน"
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 1/5 · บันทึกภายใน (Memo)",
+   "say": "บทความแรกเป็นบันทึกภายในบริษัท ดูหัวก่อนว่าใครส่งถึงใคร แล้วจับว่าบันทึกนี้สั่งให้ทำอะไร",
+   "text": "MEMO\nTo: Accounting Department staff\nFrom: Rachel Kim, Office Manager\nDate: March 3\n\nOur department will move from the fourth floor to the seventh floor on Saturday, March 15. Movers will transport desks and computers, but each employee is responsible for packing personal items and files. Boxes and labels can be picked up from the supply room starting Monday. Please have everything packed by 5:00 P.M. on Friday, March 14. Our phone numbers and extensions will remain the same.",
+   "qs": [
+    {
+     "q": "What is the purpose of the memo?",
+     "o": [
+      "To announce a new office manager",
+      "To introduce a new phone system",
+      "To give instructions about a move",
+      "To request new office furniture"
+     ],
+     "a": 2,
+     "why": "**will move to the seventh floor** + บอกให้แพ็กของ → instructions about a move",
+     "whySay": "บันทึกแจ้งว่าแผนกจะย้ายขึ้นชั้นเจ็ด แล้วบอกขั้นตอนว่าต้องทำอะไรบ้าง จุดประสงค์จึงเป็นการให้คำแนะนำเรื่องย้ายออฟฟิศ",
+     "no": [
+      "Rachel Kim เป็นผู้จัดการอยู่แล้ว ไม่ใช่คนใหม่",
+      "เบอร์โทร **remain the same** ไม่มีระบบใหม่",
+      null,
+      "โต๊ะเดิมถูกขนไป ไม่ได้ขอใหม่"
+     ]
+    },
+    {
+     "q": "What are employees asked to do?",
+     "o": [
+      "Pack their own belongings",
+      "Move their computers",
+      "Order boxes from a supplier",
+      "Update their phone extensions"
+     ],
+     "a": 0,
+     "why": "**each employee is responsible for packing personal items and files**",
+     "whySay": "พนักงานต้องแพ็กของส่วนตัวกับแฟ้มเอง ข้อ B เป็นกับดัก คอมพิวเตอร์ให้คนขนของย้าย ไม่ใช่พนักงาน",
+     "no": [
+      null,
+      "**Movers** เป็นคนขนคอมพิวเตอร์",
+      "รับกล่องที่ **supply room** ไม่ต้องสั่ง",
+      "เบอร์ต่อ **remain the same**"
+     ]
+    },
+    {
+     "q": "The word \"remain\" in the memo is closest in meaning to",
+     "o": [
+      "change",
+      "return",
+      "appear",
+      "stay"
+     ],
+     "a": 3,
+     "why": "**remain the same** = ยังเหมือนเดิม → **stay** the same",
+     "whySay": "remain the same แปลว่ายังเหมือนเดิม ลองแทนด้วย stay the same ความหมายตรงกันพอดี ข้อ A ตรงข้ามเลย",
+     "no": [
+      "ความหมายตรงข้าม",
+      "return = กลับมา ไม่เข้าประโยค",
+      "appear = ปรากฏ ไม่เข้าประโยค",
+      null
+     ]
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 2/5 · หน้าเว็บบริการเช่ารถ",
+   "say": "บทความที่สองเป็นหน้าเว็บบริษัทเช่ารถ ข้อแรกเป็นข้อ NOT ให้หาตัวเลือกในบทความทีละตัวแล้วตัดทิ้ง",
+   "text": "Brennan Car Rental · Airport Service\n\nPicking up a car after a long flight? Our counter at Terminal 2 is open 24 hours a day. Members of our Brennan Plus program can skip the line and go directly to their vehicle. Every rental includes unlimited mileage, basic insurance, and free cancellation up to 24 hours before pickup. Child seats and GPS units are available for a small daily fee. Returning the car to a different location? A one-way fee may apply.",
+   "qs": [
+    {
+     "q": "What is NOT included in every rental?",
+     "o": [
+      "Unlimited mileage",
+      "A GPS unit",
+      "Basic insurance",
+      "Free cancellation"
+     ],
+     "a": 1,
+     "why": "GPS **available for a small daily fee** = ต้องจ่ายเพิ่ม ไม่ได้รวม",
+     "whySay": "ประโยคที่บอกว่าทุกการเช่ารวมอะไรบ้าง มีไมล์ไม่จำกัด ประกันพื้นฐาน และยกเลิกฟรี ส่วน GPS ต้องจ่ายค่าเช่ารายวันเพิ่ม จึงไม่ได้รวมอยู่",
+     "no": [
+      "มี **unlimited mileage**",
+      null,
+      "มี **basic insurance**",
+      "มี **free cancellation**"
+     ]
+    },
+    {
+     "q": "What is a benefit of the Brennan Plus program?",
+     "o": [
+      "Lower daily rates",
+      "Free child seats",
+      "No waiting in line",
+      "Free one-way returns"
+     ],
+     "a": 2,
+     "why": "**skip the line** = ไม่ต้องต่อคิว",
+     "whySay": "สมาชิก Brennan Plus ข้ามคิวไปที่รถได้เลย ข้อสอบเปลี่ยนคำจาก skip the line เป็น no waiting in line",
+     "no": [
+      "ไม่มีพูดถึงราคาถูกลง",
+      "child seats ต้องจ่าย **small daily fee**",
+      null,
+      "คืนต่างสาขาอาจมี **one-way fee**"
+     ]
+    },
+    {
+     "q": "What is suggested about returning a car to another location?",
+     "o": [
+      "It is not allowed.",
+      "It must be booked 24 hours ahead.",
+      "It is only for members.",
+      "It may cost extra."
+     ],
+     "a": 3,
+     "why": "**A one-way fee may apply** = อาจเสียเงินเพิ่ม",
+     "whySay": "บทความบอกว่าถ้าคืนรถคนละที่ อาจมีค่าธรรมเนียม one-way ก็คือ may cost extra ข้อ B เป็นกับดัก ยี่สิบสี่ชั่วโมงเป็นเรื่องยกเลิกฟรี",
+     "no": [
+      "คืนได้ แค่อาจเสียค่าธรรมเนียม",
+      "24 ชั่วโมง = เงื่อนไข **ยกเลิกฟรี**",
+      "ไม่ได้บอกว่าเฉพาะสมาชิก",
+      null
+     ]
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 3/5 · อีเมลต่ออายุสมาชิก",
+   "say": "บทความที่สามเป็นอีเมลจากนิตยสาร มีข้อแทรกประโยคด้วย ให้หาคำชี้ทางในประโยคที่ให้มา แล้ววางลงไปอ่านก่อนหลัง",
+   "text": "To: Alan Brooks\nFrom: Trade Monthly Subscriptions\nSubject: Your subscription\n\nDear Mr. Brooks,\nYour one-year subscription to Trade Monthly will end on May 31. [1] Starting in June, the annual price will rise from $48 to $54 because of higher printing costs. [2] However, if you renew before May 31, you can keep the current rate for another year. [3] Simply click the link below or call us at 555-0182. [4] We hope you will continue reading with us.",
+   "qs": [
+    {
+     "q": "Why was the e-mail sent?",
+     "o": [
+      "To confirm a recent payment",
+      "To encourage an early renewal",
+      "To announce that a magazine will close",
+      "To apologize for a late delivery"
+     ],
+     "a": 1,
+     "why": "**if you renew before May 31, you can keep the current rate** → ชวนต่ออายุก่อน",
+     "whySay": "อีเมลเตือนว่าสมาชิกจะหมดอายุ แล้วบอกว่าถ้าต่อก่อนสิ้นเดือนพฤษภา จะได้ราคาเดิม จุดประสงค์คือชวนให้ต่ออายุเร็วๆ",
+     "no": [
+      "ยังไม่มีการจ่ายเงิน",
+      null,
+      "นิตยสารยังพิมพ์ต่อ แค่ขึ้นราคา",
+      "ไม่มีเรื่องส่งช้า"
+     ]
+    },
+    {
+     "q": "According to the e-mail, why will the price increase?",
+     "o": [
+      "Printing has become more expensive.",
+      "The magazine will add more pages.",
+      "Shipping fees have gone up.",
+      "A digital edition will be included."
+     ],
+     "a": 0,
+     "why": "**because of higher printing costs** → printing more expensive",
+     "whySay": "เหตุผลอยู่หลังคำว่า because คือค่าพิมพ์แพงขึ้น ข้อ A พูดใหม่ด้วยคำว่า more expensive",
+     "no": [
+      null,
+      "ไม่มีพูดถึงจำนวนหน้า",
+      "ไม่มีพูดถึงค่าส่ง",
+      "ไม่มีพูดถึงฉบับดิจิทัล"
+     ]
+    },
+    {
+     "q": "Where does this sentence best belong?\n\"That way, you will save $6.\"",
+     "o": [
+      "[1]",
+      "[2]",
+      "[3]",
+      "[4]"
+     ],
+     "a": 2,
+     "why": "**That way** = ต่อก่อนกำหนด → **keep the current rate** ($54 − $48 = $6)",
+     "whySay": "คำชี้ทางคือ that way ต้องมีวิธีอยู่ข้างหน้า และเงินหกดอลลาร์คือส่วนต่างระหว่างห้าสิบสี่กับสี่สิบแปด ประโยคที่บอกวิธีประหยัดคือ ต่ออายุก่อนเพื่อได้ราคาเดิม ซึ่งอยู่ก่อนช่องสามพอดี",
+     "no": [
+      "ยังไม่รู้ราคาใหม่ ไม่มีอะไรให้ประหยัด",
+      "ตรงนี้เพิ่งบอกว่าขึ้นราคา ยังไม่มีวิธี",
+      null,
+      "ต่อจากเบอร์โทร ไม่เข้ากัน"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 4/5 · ข้อความแชท",
+   "say": "บทความที่สี่เป็นข้อความแชทสองคน ข้อสองเป็นคำถามเจตนา ให้อ่านข้อความก่อนหน้าและข้อความถัดไปด้วย",
+   "text": "Nadia Perez (8:40 A.M.)\nMy train to Brookfield is stuck outside the station. I might miss our 10:00 meeting with Hollis Medical.\n\nGreg Lowe (8:42 A.M.)\nDo you want me to start the presentation? I have the slides on my laptop.\n\nNadia Perez (8:43 A.M.)\nThat would be great. The pricing section is the only part they really care about.\n\nGreg Lowe (8:45 A.M.)\nGot it. I'll keep the rest short and leave time for questions. Text me when you're on your way.",
+   "qs": [
+    {
+     "q": "Why did Ms. Perez contact Mr. Lowe?",
+     "o": [
+      "She left her laptop at the office.",
+      "A client canceled a meeting.",
+      "She needs a copy of the slides.",
+      "Her train has been delayed."
+     ],
+     "a": 3,
+     "why": "**train is stuck outside the station** = รถไฟติด ล่าช้า",
+     "whySay": "ข้อความแรกบอกว่ารถไฟติดอยู่นอกสถานี อาจไปประชุมไม่ทัน ข้อ D พูดใหม่ว่ารถไฟล่าช้า",
+     "no": [
+      "slides อยู่ในโน้ตบุ๊กของ **Greg**",
+      "ประชุมยังมี แค่เธออาจไปสาย",
+      "Greg เป็นคนมี slides เธอไม่ได้ขอ",
+      null
+     ]
+    },
+    {
+     "q": "What does Ms. Perez mean when she writes, \"The pricing section is the only part they really care about\"?",
+     "o": [
+      "She thinks the prices are too high.",
+      "Mr. Lowe should focus on the prices.",
+      "The client has already seen the slides.",
+      "The pricing section should be removed."
+     ],
+     "a": 1,
+     "why": "Greg ตอบ **keep the rest short** → ให้เน้นราคา",
+     "whySay": "เธอบอกว่าลูกค้าสนใจแค่ส่วนราคา ความหมายคือให้เกร็กเน้นตรงนั้น ดูได้จากข้อความถัดไปที่เกร็กตอบว่าจะพูดส่วนที่เหลือสั้นๆ",
+     "no": [
+      "ไม่ได้บอกว่าราคาแพง",
+      null,
+      "ไม่มีพูดว่าลูกค้าเคยเห็น slides",
+      "ตรงข้าม ส่วนนี้สำคัญที่สุด"
+     ]
+    },
+    {
+     "q": "What does Mr. Lowe ask Ms. Perez to do?",
+     "o": [
+      "Send him a message when she is coming",
+      "Call the client directly",
+      "E-mail him the presentation",
+      "Take a taxi to the meeting"
+     ],
+     "a": 0,
+     "why": "**Text me when you're on your way**",
+     "whySay": "ข้อความสุดท้ายเกร็กบอกว่า ถ้ากำลังมาแล้วให้ส่งข้อความบอก ตรงกับข้อ A",
+     "no": [
+      null,
+      "ไม่ได้ให้โทรหาลูกค้า",
+      "slides อยู่กับ Greg แล้ว",
+      "ไม่มีพูดถึงแท็กซี่"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 5/5 · บทความสาม (ประกาศ + ฟอร์ม + อีเมล)",
+   "say": "ชุดสุดท้ายเป็นบทความสาม มีประกาศราคาห้อง ฟอร์มจองห้อง และอีเมลตอบกลับ ห้าข้อ มีข้อเชื่อมข้อมูลสองข้อ ดูหัวเอกสารทั้งสามก่อน แล้วดูว่าแต่ละข้อต้องใช้บทความไหน",
+   "text": "[Notice]\nHarlow Arts Center · Room Rentals\nStudio A (up to 20 people) · $40/hour\nStudio B (up to 50 people) · $65/hour\nMain Hall (up to 120 people) · $150/hour\nNonprofit groups receive 20% off.\n[Form]\nName: Owen Fisher\nGroup: Riverside Youth Choir (nonprofit)\nEvent: Spring concert · Guests: 90\nDate: April 18 · 2:00–5:00 P.M.\n[Email]\nDear Mr. Fisher,\nUnfortunately, the room you requested will be closed on April 18 for floor repairs. It is available at the same time on April 19. Please confirm the new date by April 8.",
+   "qs": [
+    {
+     "q": "What is indicated about Harlow Arts Center?",
+     "o": [
+      "It is closed on weekends.",
+      "It recently opened a new hall.",
+      "It requires a deposit for bookings.",
+      "It offers lower rates to some groups."
+     ],
+     "a": 3,
+     "why": "ประกาศ **Nonprofit groups receive 20% off** → lower rates to some groups",
+     "whySay": "ประกาศบอกว่าองค์กรไม่แสวงกำไรได้ลดยี่สิบเปอร์เซ็นต์ ข้อ D เปลี่ยนเป็นคำกว้างๆ ว่าบางกลุ่มได้ราคาถูกลง ข้ออื่นไม่มีในบทความเลย",
+     "no": [
+      "ไม่มีพูดถึงวันหยุด",
+      "ไม่ได้บอกว่าห้องโถงเพิ่งเปิด",
+      "ไม่มีพูดถึงเงินมัดจำ",
+      null
+     ]
+    },
+    {
+     "q": "Which room did Mr. Fisher most likely request?",
+     "o": [
+      "The Main Hall",
+      "Studio B",
+      "Studio A",
+      "The lobby"
+     ],
+     "a": 0,
+     "why": "ฟอร์ม **Guests: 90** + ประกาศ Studio B รับได้แค่ **50** → ต้องเป็น **Main Hall**",
+     "whySay": "ข้อนี้เป็นข้อเชื่อมข้อมูล อีเมลไม่บอกชื่อห้อง ต้องดูฟอร์มว่ามีแขกเก้าสิบคน แล้วกลับไปดูประกาศ ห้องเดียวที่รับเก้าสิบคนได้คือ Main Hall",
+     "no": [
+      null,
+      "รับได้แค่ 50 คน ไม่พอ 90",
+      "รับได้แค่ 20 คน",
+      "ไม่มีห้องนี้ในประกาศ"
+     ]
+    },
+    {
+     "q": "How much per hour will the choir most likely pay?",
+     "o": [
+      "$150",
+      "$65",
+      "$120",
+      "$52"
+     ],
+     "a": 2,
+     "why": "Main Hall **$150** − **20%** (nonprofit) = **$120**",
+     "whySay": "ข้อเชื่อมข้อมูลข้อที่สอง ต้องใช้สามบทความ ห้องคือ Main Hall ราคาหนึ่งร้อยห้าสิบดอลลาร์ และฟอร์มบอกว่าคณะนักร้องเป็นองค์กรไม่แสวงกำไร ได้ลดยี่สิบเปอร์เซ็นต์ เหลือหนึ่งร้อยยี่สิบดอลลาร์",
+     "no": [
+      "ราคาเต็ม **ลืมส่วนลด** nonprofit",
+      "ราคา Studio B",
+      "Studio B หักส่วนลดแล้ว ผิดห้อง",
+      null
+     ]
+    },
+    {
+     "q": "According to the e-mail, what will happen on April 18?",
+     "o": [
+      "A concert will be held.",
+      "Repair work will be done.",
+      "A booking deadline will pass.",
+      "A new studio will open."
+     ],
+     "a": 1,
+     "why": "**closed on April 18 for floor repairs** → มีงานซ่อมพื้น",
+     "whySay": "อีเมลบอกว่าห้องปิดวันที่สิบแปดเพราะซ่อมพื้น ข้อ A เป็นกับดัก คอนเสิร์ตเคยจะจัดวันนั้น แต่ต้องย้ายไปวันที่สิบเก้าแล้ว",
+     "no": [
+      "คอนเสิร์ตถูกเสนอให้ย้ายไป **April 19**",
+      null,
+      "วันตอบกลับคือ **April 8**",
+      "ไม่มีพูดถึงสตูดิโอใหม่"
+     ]
+    },
+    {
+     "q": "By what date must Mr. Fisher respond?",
+     "o": [
+      "April 8",
+      "April 18",
+      "April 19",
+      "April 10"
+     ],
+     "a": 0,
+     "why": "**Please confirm the new date by April 8**",
+     "whySay": "ประโยคสุดท้ายของอีเมลขอให้ยืนยันวันใหม่ภายในวันที่แปดเมษา ระวังสับสนกับวันที่สิบแปดและสิบเก้า ซึ่งเป็นวันจัดงาน",
+     "no": [
+      null,
+      "วันเดิมที่ห้องปิดซ่อม",
+      "วันใหม่ที่เสนอให้จัดงาน",
+      "ไม่มีวันนี้ในบทความ"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ข้อ NOT** : เจอในบทความ = ตัดทิ้ง · ระวังของที่ **ต้องจ่ายเพิ่ม** (GPS small daily fee)",
+     "say": "จุดพลาดแรก ข้อ NOT ของเช่ารถ GPS อยู่ในบทความก็จริง แต่ต้องจ่ายเพิ่ม ไม่ได้รวมในทุกการเช่า อ่านเงื่อนไขให้ครบก่อนตัดทิ้ง"
+    },
+    {
+     "x": "**คำถามเจตนาในแชท** : ดูข้อความ **ถัดไป** เช่น keep the rest short → ให้เน้นราคา",
+     "say": "จุดพลาดที่สอง คำถามเจตนาในแชท อย่าแปลประโยคตรงตัว ให้ดูว่าอีกคนตอบอะไร เกร็กตอบว่าจะพูดส่วนอื่นสั้นๆ แปลว่านาเดียอยากให้เน้นส่วนราคา"
+    },
+    {
+     "x": "**บทความสาม** : ตัวเลขต้องใช้ **ทุกบท** · 90 คน → Main Hall · nonprofit → ลด 20% = $120",
+     "say": "จุดพลาดที่สาม บทความสาม ข้อราคาต้องเอาข้อมูลจากทั้งฟอร์มและประกาศ ใครตอบหนึ่งร้อยห้าสิบคือลืมส่วนลด ใครตอบหกสิบห้าคือลืมดูจำนวนแขก"
+    }
+   ],
+   "outro": "ชุดที่สี่ของ Part 7 จบแล้ว ได้กี่ข้อจากสิบเจ็ด ถ้าได้สิบสี่ข้อขึ้นไปถือว่าพร้อมมาก ข้อที่พลาดย้อนดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

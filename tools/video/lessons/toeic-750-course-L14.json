@@ -1,0 +1,173 @@
+{
+ "id": "toeic-750-course-L14",
+ "course": "toeic-750-course",
+ "n": 14,
+ "section": "Listening Part 4 · ข้อความพูด",
+ "title": "คำถาม \"ผู้พูดหมายความว่าอะไร\" + จับใจความ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 4 ข้อความพูด\nคำถาม \"ผู้พูดหมายความว่าอะไร\"",
+   "sub": "ฟังบริบทก่อน-หลัง ไม่แปลตรงตัว + จับใจความต้น/ท้าย แล้วลองทำ 3 ข้อ",
+   "say": "บทนี้เราจะมาเจาะคำถามที่คนไทยพลาดบ่อยที่สุดใน Part 4 คือคำถามว่า ผู้พูดหมายความว่าอะไร หรือที่เรียกกันว่าคำถาม intent จะสอนวิธีฟังบริบท แทนการแปลตรงตัว แล้วต่อด้วยเทคนิคจับใจความข้อความพูด ท้ายบทมีให้ลองทำจริงหนึ่งข้อความ สามข้อ"
+  },
+  {
+   "type": "list",
+   "h": "คำถาม intent หน้าตาแบบนี้",
+   "items": [
+    {
+     "x": "ยกประโยคมาในเครื่องหมาย **\"...\"**",
+     "sub": "Why does the speaker say, \"We're a little short on staff\"?",
+     "en": "Why does the speaker say, \"We're a little short on staff this week\"?",
+     "v": "q",
+     "say": "คำถามแบบนี้จะยกประโยคหนึ่งจากข้อความมาให้ในเครื่องหมายคำพูด แล้วถามว่าทำไมคนพูดถึงพูดประโยคนี้ เจอทั้งใน Part 3 และ Part 4"
+    },
+    {
+     "x": "อีกแบบ: **What does the speaker mean when...**",
+     "sub": "What does the woman mean when she says, \"I'll leave that to you\"?",
+     "en": "What does the woman mean when she says, \"I'll leave that to you\"?",
+     "v": "q",
+     "say": "อีกแบบหนึ่งถามว่า คนพูดหมายความว่าอะไร ตอนพูดประโยคนี้ สองแบบนี้ใช้วิธีคิดเหมือนกันเลย"
+    },
+    {
+     "x": "**ห้ามแปลตรงตัว** ความหมายจริงขึ้นกับสถานการณ์",
+     "say": "จุดสำคัญคือ ห้ามแปลตรงตัว ประโยคเดียวกัน ถ้าอยู่คนละสถานการณ์ ความหมายก็ต่างกัน และตัวเลือกที่แปลตรงตัวมักเป็นกับดัก",
+     "mark": "no"
+    },
+    {
+     "x": "ฟังประโยค **ก่อน + หลัง** ประโยคนั้น",
+     "sub": "ก่อน = สถานการณ์ / ปัญหา · หลัง = คนพูดทำอะไรต่อ",
+     "say": "ให้ฟังประโยคก่อนหน้า เพื่อรู้ว่ากำลังพูดถึงสถานการณ์อะไร แล้วฟังประโยคหลัง เพื่อดูว่าคนพูดทำอะไรต่อ สองส่วนนี้จะบอกเจตนาจริง",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "ประโยคเดียว ความหมายจริงไม่ตรงตัว",
+   "say": "มาดูตัวอย่างสามแบบ ฟังประโยคภาษาอังกฤษพร้อมบริบท แล้วดูว่าความหมายจริงคืออะไร",
+   "items": [
+    {
+     "x": "\"You can't miss it.\"",
+     "sub": "ความหมายจริง = **หาง่ายมาก** ไม่ใช่ ห้ามพลาด",
+     "en": "The café is right next to the main entrance. You can't miss it.",
+     "v": "m",
+     "say": "ประโยคแรก You can't miss it ถ้าแปลตรงตัวคือ คุณพลาดไม่ได้ แต่ประโยคก่อนหน้ากำลังบอกทางไปร้านกาแฟ ความหมายจริงคือ หาง่ายมาก เห็นแน่นอน"
+    },
+    {
+     "x": "\"I'll be in Tokyo all next week.\"",
+     "sub": "ความหมายจริง = **ไปนำอบรมไม่ได้** ปฏิเสธอ้อมๆ",
+     "en": "Many of you asked me to lead Tuesday's training. I'll be in Tokyo all next week, though.",
+     "v": "q",
+     "say": "ประโยคที่สอง ฟังเผินๆ เหมือนแค่บอกว่าจะไปโตเกียว แต่บริบทก่อนหน้าคือมีคนขอให้นำอบรมวันอังคาร ความหมายจริงจึงเป็นการปฏิเสธ ว่าไปไม่ได้"
+    },
+    {
+     "x": "\"That's easier said than done.\"",
+     "sub": "ความหมายจริง = **ทำได้ยาก** ไม่ค่อยเป็นไปได้",
+     "en": "Some of you suggested finishing the report by Monday. That's easier said than done.",
+     "v": "r",
+     "say": "ประโยคที่สาม easier said than done แปลว่าพูดง่ายกว่าทำ ในบริบทนี้คือ ส่งรายงานภายในวันจันทร์น่ะ ทำได้ยาก ไม่ได้แปลว่าเห็นด้วย"
+    },
+    {
+     "x": "ตัวเลือกที่ถูก มักขึ้นต้น **To ...**",
+     "sub": "To decline · To suggest · To point out a problem · To reassure",
+     "say": "เวลาเลือกคำตอบ ให้ถามตัวเองว่า คนพูดอยากทำอะไร ปฏิเสธ เสนอแนะ ชี้ปัญหา หรือทำให้ผู้ฟังสบายใจ แล้วหาตัวเลือกที่ตรงกับเจตนานั้น",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "จับใจความข้อความพูด: ต้น · กลาง · ท้าย",
+   "say": "นอกจากคำถาม intent แล้ว อีกสองข้อในชุดมักถามใจความหลัก ใช้แผนนี้ฟังได้ทุกข้อความ",
+   "items": [
+    {
+     "x": "**ต้นข้อความ** = ใครพูด + พูดเพื่ออะไร",
+     "sub": "Good morning, everyone. I'd like to update you on our office move.",
+     "en": "Good morning, everyone. I'd like to update you on our move to the new office.",
+     "v": "m",
+     "say": "ต้นข้อความ คนพูดจะบอกว่าตัวเองเป็นใคร และพูดเพื่ออะไร ดักฟังคำอย่าง I'd like to หรือ I'm calling to คำถามเรื่องหัวข้อหลักตอบได้จากตรงนี้"
+    },
+    {
+     "x": "**กลางข้อความ** = รายละเอียด ปัญหา ตัวเลข วันเวลา",
+     "say": "กลางข้อความเป็นรายละเอียด เช่น ปัญหาที่เกิดขึ้น ตัวเลข หรือวันเวลา และคำถาม intent มักโผล่ตรงกลางนี้ ระวังว่าในตัวเลือกมักเปลี่ยนคำ"
+    },
+    {
+     "x": "**ท้ายข้อความ** = ขอให้ผู้ฟังทำอะไร",
+     "sub": "please... · make sure... · don't forget to...",
+     "en": "Please remember to pack up your desks by Thursday evening.",
+     "v": "m",
+     "say": "ท้ายข้อความมักเป็นคำขอ ดักฟังคำว่า please, make sure หรือ don't forget to คำถามว่าขอให้ผู้ฟังทำอะไร คำตอบอยู่ตรงนี้"
+    },
+    {
+     "x": "ข้อ intent: **จำประโยคในคำถามไว้** รอฟังจังหวะนั้น",
+     "say": "ตอนอ่านคำถามล่วงหน้า ถ้าเจอข้อ intent ให้จำประโยคในเครื่องหมายคำพูดไว้ พอได้ยินประโยคนั้น ให้ตั้งใจฟังต่ออีกหนึ่งถึงสองประโยค ห้ามรีบตอบทันที",
+     "mark": "ok"
+    }
+   ]
+  },
+  {
+   "type": "conv",
+   "h": "ลองทำจริง",
+   "listenLabel": "ฟังข้อความพูด",
+   "say": "ลองทำจริงกัน นี่คือหัวหน้ากำลังประกาศในที่ประชุมพนักงาน อ่านสามคำถามก่อน ข้อหนึ่งถามว่าประกาศเรื่องอะไร ข้อสองเป็นคำถาม intent จำประโยค That lot fills up by eight-thirty ไว้ แล้วฟังก่อนและหลังประโยคนั้น ข้อสามถามว่าขอให้ผู้ฟังทำอะไร พร้อมแล้ว ฟังได้เลย",
+   "lines": [
+    {"v": "q", "t": "Good morning, everyone. Before we start today's staff meeting, I have some news about our building."},
+    {"v": "q", "t": "Starting next Monday, the parking garage will be closed for three weeks while the floors are repaved."},
+    {"v": "q", "t": "During that time, you'll need to use the public lot on Hill Street."},
+    {"v": "q", "t": "Now, I know what some of you are thinking. That lot fills up by eight-thirty."},
+    {"v": "q", "t": "So the company has arranged a free shuttle bus from Central Station. It'll run every fifteen minutes in the morning."},
+    {"v": "q", "t": "If you'd like to use the shuttle, please sign up with Rachel at the front desk by this Friday."}
+   ],
+   "qs": [
+    {
+     "q": "What is the speaker mainly announcing?",
+     "o": ["A change to a train schedule", "A move to a new office", "A parking garage closure", "A new front desk employee"],
+     "a": 2,
+     "why": "ต้นข้อความ **the parking garage will be closed for three weeks**",
+     "whySay": "ช่วงต้นข้อความ คนพูดบอกว่าลานจอดรถจะปิดสามสัปดาห์ นี่คือเรื่องหลักที่ประกาศ ตรงกับตัวเลือก C",
+     "no": ["ไม่ได้บอกว่าตารางรถไฟเปลี่ยน", "ไม่มีการย้ายออฟฟิศ", null, "Rachel ทำงานอยู่แล้ว ไม่ใช่พนักงานใหม่"]
+    },
+    {
+     "q": "Why does the speaker say, \"That lot fills up by eight-thirty\"?",
+     "o": ["To tell staff when the lot opens", "To point out that parking spaces are limited", "To explain why the garage is being repaired", "To complain about a parking fee"],
+     "a": 1,
+     "why": "ก่อน = ต้องไปจอดลาน Hill Street · หลัง = **บริษัทจัดรถรับส่งฟรี** → ชี้ว่า **ที่จอดไม่พอ**",
+     "whySay": "ประโยคก่อนหน้าบอกให้ไปจอดที่ลานบนถนน Hill ส่วนประโยคหลังบอกว่าบริษัทจัดรถรับส่งให้ แปลว่าคนพูดกำลังชี้ปัญหาว่าที่จอดเต็มเร็ว ไม่พอ ข้อ A คือกับดักแปลตรงตัว fills up แปลว่าเต็ม ไม่ใช่เปิด",
+     "no": ["**fills up** = เต็ม ไม่ใช่เวลาเปิด (กับดักแปลตรงตัว)", null, "ลานจอดปิดเพราะปูพื้นใหม่ ไม่เกี่ยวกับประโยคนี้", "ไม่มีการพูดถึงค่าจอดรถ"]
+    },
+    {
+     "q": "What does the speaker ask interested listeners to do?",
+     "o": ["Arrive before eight-thirty", "Share rides with coworkers", "Pay for a parking pass", "Sign up for a shuttle"],
+     "a": 3,
+     "why": "ท้ายข้อความ **please sign up with Rachel ... by this Friday**",
+     "whySay": "ท้ายข้อความ คนพูดขอว่า ถ้าอยากใช้รถรับส่ง please sign up with Rachel ภายในวันศุกร์ คำขออยู่ท้ายข้อความตามที่เรียนไป",
+     "no": ["ไม่ได้ขอให้มาก่อนแปดโมงครึ่ง", "ไม่มีการพูดถึงการนั่งรถไปด้วยกัน", "รถรับส่งฟรี ไม่ต้องจ่ายเงิน", null]
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 14",
+   "items": [
+    {
+     "x": "คำถาม intent: **Why does the speaker say \"...\"?**",
+     "say": "สรุปบทนี้ คำถาม intent จะยกประโยคมาในเครื่องหมายคำพูด แล้วถามว่าคนพูดหมายความว่าอะไร"
+    },
+    {
+     "x": "ห้ามแปลตรงตัว ฟังประโยค **ก่อน + หลัง**",
+     "say": "ห้ามแปลตรงตัว ให้ฟังประโยคก่อนและหลังประโยคนั้น เพื่อหาเจตนาจริง"
+    },
+    {
+     "x": "เจตนาที่เจอบ่อย: ปฏิเสธ · เสนอ · ชี้ปัญหา · ทำให้สบายใจ",
+     "say": "เจตนาที่เจอบ่อยคือ ปฏิเสธ เสนอแนะ ชี้ปัญหา และทำให้ผู้ฟังสบายใจ"
+    },
+    {
+     "x": "ต้น = ใคร/เพื่ออะไร · ท้าย = ขอให้ทำอะไร",
+     "say": "และจับใจความด้วยแผนต้น กลาง ท้าย ต้นข้อความบอกว่าใครพูดและพูดเพื่ออะไร ท้ายข้อความบอกว่าขอให้ผู้ฟังทำอะไร"
+    }
+   ],
+   "outro": "บทหน้า เราจะฝึก Part 4 กันต่อ กดทำเครื่องหมายว่าเรียนจบ แล้วไปต่อกันเลย"
+  }
+ ]
+}

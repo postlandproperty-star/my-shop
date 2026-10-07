@@ -1,0 +1,230 @@
+{
+ "id": "toeic-750-course-L31",
+ "course": "toeic-750-course",
+ "n": 31,
+ "section": "ฝึกทำข้อสอบ · Part 7",
+ "title": "Part 7 ชุดที่ 2: บทความคู่ 2 ชุด 10 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 7 ชุดที่ 2\nบทความคู่ 2 ชุด 10 ข้อ",
+   "sub": "โฆษณา + อีเมล · ประกาศรับสมัครงาน + อีเมล",
+   "say": "บทนี้ฝึก Part 7 แบบบทความคู่ สองชุด สิบข้อ บทความคู่คือมีสองบทความที่เกี่ยวกัน เช่น โฆษณากับอีเมลตอบกลับ แต่ละชุดจะมีอย่างน้อยหนึ่งข้อที่ต้องเอาข้อมูลจากสองบทความมาต่อกัน วิธีทำคือ อ่านคำถามก่อน ดูว่าข้อนี้ตอบจากบทความไหน ถ้าเป็นตัวเลข วันที่ หรือเงื่อนไข ให้เดาไว้ก่อนว่าต้องเทียบสองบทความ ข้อละห้าวินาทีแล้วเฉลย อยากอ่านนานกว่านี้กดหยุดได้เลย จดคะแนนไว้ด้วย เริ่มกันเลย"
+  },
+  {
+   "type": "passage",
+   "h": "ชุด 1/2 · โฆษณา + อีเมล",
+   "text": "[Advertisement]\nGreenleaf Catering: office lunches delivered downtown\nSandwich Box $12 · Hot Buffet $18 (per person)\nFree delivery on orders of 30 meals or more.\nPlease order at least 48 hours in advance.\n\n[E-mail]\nFrom: Diane Moss · Subject: Friday lunch\nHello, I'd like to order the Hot Buffet for 35 people this Friday for our quarterly sales meeting. Please include at least ten meat-free portions. Could you also bring plates and utensils? Please deliver to the Carver Building, 3rd floor, by 11:45 A.M. Thanks, Diane",
+   "say": "ชุดแรกเป็นโฆษณาร้านจัดเลี้ยง กับอีเมลสั่งอาหารจากลูกค้า ดูโฆษณาก่อน มีราคาสองแบบ และเงื่อนไขส่งฟรี ส่วนอีเมลบอกจำนวนคน เมนูที่เลือก และคำขอพิเศษ จำไว้ว่าเงื่อนไขในโฆษณามักถูกเอามาเทียบกับรายละเอียดในอีเมล",
+   "qs": [
+    {
+     "q": "Why did Ms. Moss send the e-mail?",
+     "o": [
+      "To complain about a late delivery",
+      "To place an order for an event",
+      "To ask about menu prices",
+      "To cancel a reservation"
+     ],
+     "a": 1,
+     "why": "**I'd like to order the Hot Buffet ... for our sales meeting** → สั่งอาหารสำหรับงาน",
+     "no": [
+      "ไม่มีเรื่องส่งช้า",
+      null,
+      "ราคามีในโฆษณาแล้ว ไม่ได้ถาม",
+      "ไม่มีการยกเลิก"
+     ],
+     "whySay": "ประโยคแรกของอีเมลบอกเลยว่า อยากสั่งบุฟเฟต์ร้อนสำหรับประชุมฝ่ายขาย จุดประสงค์ของอีเมลมักอยู่ประโยคแรก ข้อ B ใช้คำว่า place an order for an event"
+    },
+    {
+     "q": "What is indicated about Ms. Moss's order?",
+     "o": [
+      "It will be picked up by Ms. Moss",
+      "It was placed one week in advance",
+      "It includes dessert for every guest",
+      "It qualifies for free delivery"
+     ],
+     "a": 3,
+     "why": "อีเมล **35 people** + โฆษณา **free delivery on orders of 30 meals or more** → ส่งฟรี",
+     "no": [
+      "ขอให้ **deliver** ไม่ได้มารับเอง",
+      "ไม่ได้บอกว่าสั่งล่วงหน้ากี่วัน",
+      "ไม่มีของหวาน",
+      null
+     ],
+     "whySay": "ข้อนี้ต้องต่อข้อมูลสองบทความ อีเมลบอกว่าสั่งสามสิบห้าคน โฆษณาบอกว่าสั่งสามสิบที่ขึ้นไปส่งฟรี เพราะฉะนั้นออเดอร์นี้ได้ส่งฟรี"
+    },
+    {
+     "q": "What does Ms. Moss request?",
+     "o": [
+      "Some meals without meat",
+      "A discount for a large group",
+      "A later delivery time",
+      "Staff to serve the food"
+     ],
+     "a": 0,
+     "why": "**meat-free portions** → meals without meat",
+     "no": [
+      null,
+      "ไม่ได้ขอส่วนลด",
+      "ขอส่ง **by 11:45** ไม่ได้ขอเลื่อน",
+      "ขอแค่ **plates and utensils**"
+     ],
+     "whySay": "ในอีเมลขออาหารไม่มีเนื้อสัตว์อย่างน้อยสิบที่ คำว่า meat-free ถูกเปลี่ยนเป็น without meat ระวังข้อ D เพราะเธอขอจานกับช้อนส้อม ไม่ได้ขอคนมาเสิร์ฟ"
+    },
+    {
+     "q": "How much will Ms. Moss most likely pay per person?",
+     "o": [
+      "$12",
+      "$15",
+      "$18",
+      "$35"
+     ],
+     "a": 2,
+     "why": "สั่ง **Hot Buffet** → โฆษณา **$18 per person**",
+     "no": [
+      "$12 คือ **Sandwich Box**",
+      "ไม่มีราคานี้",
+      null,
+      "35 คือ **จำนวนคน** ไม่ใช่ราคา"
+     ],
+     "whySay": "อีเมลบอกว่าสั่งบุฟเฟต์ร้อน แล้วไปดูราคาในโฆษณา บุฟเฟต์ร้อนคนละสิบแปดดอลลาร์ ระวังข้อ D เลขสามสิบห้าคือจำนวนคน ข้อสอบชอบเอาตัวเลขในบทความมาหลอก"
+    },
+    {
+     "q": "What is suggested about the meeting on Friday?",
+     "o": [
+      "It is a training session for new staff",
+      "It takes place every three months",
+      "It will be held outdoors",
+      "It was moved to a different day"
+     ],
+     "a": 1,
+     "why": "**quarterly** = ทุกสามเดือน → every three months",
+     "no": [
+      "เป็น **sales meeting** ไม่ใช่อบรม",
+      null,
+      "ส่งไปที่ **3rd floor** ในอาคาร",
+      "ไม่มีการเลื่อนวัน"
+     ],
+     "whySay": "คำว่า quarterly แปลว่าทุกไตรมาส คือทุกสามเดือน ข้อ B ใช้คำใหม่แต่ความหมายตรง คำศัพท์แบบนี้ต้องรู้ เพราะ Part 7 ชอบเปลี่ยนคำแบบนี้มาก"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "ชุด 2/2 · ประกาศรับสมัครงาน + อีเมล",
+   "text": "[Job Posting]\nClearwater Hotel: Front Desk Supervisor\nRequires at least two years of hotel experience, fluent English and Japanese, and weekend availability.\nE-mail your résumé by May 20. Interviews: week of May 27.\n\n[E-mail]\nFrom: Kenji Arai · Date: May 16\nI am applying for the position advertised on your Web site. I have worked at the front desk of the Bayview Inn for three years, and I speak English and Japanese. I can work any day of the week. However, I will be traveling from May 26 to 29, so I would prefer an interview after I return. Kenji Arai",
+   "say": "ชุดที่สองเป็นประกาศรับสมัครงานของโรงแรม กับอีเมลสมัครงาน แบบนี้ออกบ่อยมาก ให้เทียบคุณสมบัติในประกาศกับสิ่งที่ผู้สมัครบอก แล้วดูวันที่ให้ดี ทั้งวันปิดรับสมัคร และวันสัมภาษณ์",
+   "qs": [
+    {
+     "q": "What is the purpose of the e-mail?",
+     "o": [
+      "To recommend a coworker",
+      "To reserve a hotel room",
+      "To apply for a job",
+      "To ask about a salary"
+     ],
+     "a": 2,
+     "why": "**I am applying for the position** → สมัครงาน",
+     "no": [
+      "สมัครเอง ไม่ได้แนะนำคนอื่น",
+      "คำว่า hotel ในบทความเป็นกับดัก",
+      null,
+      "ไม่มีเรื่องเงินเดือน"
+     ],
+     "whySay": "ประโยคแรกบอกว่า I am applying for the position คือสมัครงาน ข้อ B มีคำว่าโรงแรม ฟังดูเข้ากัน แต่ไม่ได้ตอบคำถาม"
+    },
+    {
+     "q": "What is indicated about Mr. Arai?",
+     "o": [
+      "He has more experience than the job requires",
+      "He currently works at Clearwater Hotel",
+      "He is unable to work on weekends",
+      "He speaks three languages"
+     ],
+     "a": 0,
+     "why": "อีเมล **three years** > ประกาศ **at least two years** → มีประสบการณ์เกิน",
+     "no": [
+      null,
+      "ทำงานที่ **Bayview Inn**",
+      "**can work any day of the week**",
+      "พูด **English and Japanese** สองภาษา"
+     ],
+     "whySay": "ข้อนี้ต้องเทียบสองบทความ ประกาศต้องการประสบการณ์อย่างน้อยสองปี เขาทำมาแล้วสามปี เพราะฉะนั้นมีประสบการณ์มากกว่าที่ต้องการ"
+    },
+    {
+     "q": "According to the job posting, how should people apply?",
+     "o": [
+      "By visiting the hotel in person",
+      "By calling the front desk",
+      "By completing an online test",
+      "By sending a résumé by e-mail"
+     ],
+     "a": 3,
+     "why": "**E-mail your résumé** → ส่งเรซูเม่ทางอีเมล",
+     "no": [
+      "ไม่ได้ให้ไปที่โรงแรม",
+      "ไม่ได้ให้โทร",
+      "ไม่มีแบบทดสอบ",
+      null
+     ],
+     "whySay": "ในประกาศเขียนว่า ส่งเรซูเม่ทางอีเมลภายในวันที่ยี่สิบพฤษภาคม ข้อ D ตรงกับประกาศ ข้อที่บอกว่า according to แปลว่าให้ไปดูบทความนั้นบทความเดียว"
+    },
+    {
+     "q": "What problem might Mr. Arai have?",
+     "o": [
+      "He missed the application deadline",
+      "He may be away during the interview period",
+      "He does not have enough experience",
+      "He cannot speak Japanese"
+     ],
+     "a": 1,
+     "why": "ไม่อยู่ **May 26 to 29** ชนกับ **Interviews: week of May 27**",
+     "no": [
+      "ส่ง **May 16** ก่อนปิดรับ **May 20**",
+      null,
+      "มี **three years** เกินที่ต้องการ",
+      "พูด **Japanese** ได้"
+     ],
+     "whySay": "เขาจะเดินทางช่วงยี่สิบหกถึงยี่สิบเก้าพฤษภาคม แต่ประกาศบอกว่าสัมภาษณ์สัปดาห์ของวันที่ยี่สิบเจ็ด ช่วงเวลาชนกัน ระวังข้อ A เพราะเขาส่งวันที่สิบหก ยังไม่เลยวันปิดรับ"
+    },
+    {
+     "q": "In the e-mail, the word \"position\" is closest in meaning to",
+     "o": [
+      "job",
+      "location",
+      "opinion",
+      "posture"
+     ],
+     "a": 0,
+     "why": "**applying for the position** → position = **ตำแหน่งงาน** = job",
+     "no": [
+      null,
+      "location = สถานที่ ไม่เข้ากับ applying for",
+      "opinion = ความคิดเห็น",
+      "posture = ท่าทาง"
+     ],
+     "whySay": "คำว่า position มีหลายความหมาย แต่ในประโยค applying for the position แปลว่าตำแหน่งงาน เลยตรงกับ job ลองแทนคำลงในประโยคก่อนเลือกทุกครั้ง"
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ข้อเชื่อมสองบทความ** : 35 คน + ส่งฟรี 30 ขึ้นไป · 3 ปี vs 2 ปี",
+     "say": "จุดพลาดแรก ข้อที่ต้องต่อข้อมูลสองบทความ คนมักตอบจากบทความเดียวแล้วพลาด ถ้าเห็นตัวเลขหรือเงื่อนไขในบทความแรก ให้หาตัวเลขคู่กันในบทความที่สองเสมอ"
+    },
+    {
+     "x": "**ตัวเลขหลอก + วันที่ชนกัน** : $35 = จำนวนคน · May 26–29 vs week of May 27",
+     "say": "จุดพลาดที่สอง ตัวเลขหลอก อย่างสามสิบห้าที่เป็นจำนวนคน ไม่ใช่ราคา และวันที่ต้องเทียบให้ดี ส่งก่อนวันปิดรับก็จริง แต่ไม่อยู่ช่วงสัมภาษณ์"
+    },
+    {
+     "x": "**คำเปลี่ยนรูป** : quarterly = every three months · position = job",
+     "say": "จุดพลาดที่สาม ข้อถูกมักใช้คำใหม่ อย่าง quarterly กลายเป็นทุกสามเดือน หรือ position กลายเป็น job ต้องรู้ความหมายตามบริบท ไม่ใช่ความหมายแรกที่นึกออก"
+    }
+   ],
+   "outro": "บทความคู่ชุดนี้จบแล้ว ได้กี่ข้อจากสิบ ถ้าได้แปดข้อขึ้นไปถือว่าดีมาก ข้อที่พลาดย้อนดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

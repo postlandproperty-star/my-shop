@@ -1,0 +1,344 @@
+{
+ "id": "toeic-750-course-L33",
+ "course": "toeic-750-course",
+ "n": 33,
+ "section": "ฝึกทำข้อสอบ · Part 7",
+ "title": "Part 7 ชุดที่ 3: 5 บทความ 15 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 7 ชุดที่ 3\n5 บทความ 15 ข้อ",
+   "sub": "ข่าวธุรกิจ · จดหมายร้องเรียน · ตารางงาน · รับสมัครงาน · แชทกลุ่ม",
+   "say": "บทนี้ฝึก Part 7 ชุดที่สาม ห้าบทความ สิบห้าข้อ มีข่าวธุรกิจ จดหมายร้องเรียน ตารางงานสัมมนา ประกาศรับสมัครงาน และแชทกลุ่ม ชุดนี้มีคำถามยากจากบทที่แล้วปนอยู่ด้วย ทั้งคำศัพท์ในบริบท ข้อ NOT และข้อแทรกประโยค ข้อละห้าวินาที แล้วเฉลยทันที อยากอ่านนานกว่านี้ กดหยุดวิดีโอได้เลย จดคะแนนไว้ด้วย เริ่มกันเลย"
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 1/5 · ข่าวธุรกิจ",
+   "say": "บทความแรกเป็นข่าวธุรกิจสั้นๆ ใจความหลักของข่าวอยู่ประโยคแรกเสมอ ข้อนี้มีข้อแทรกประโยคด้วย ให้หาคำชี้ทางในประโยคที่ให้มา แล้ววางลงไปอ่านก่อนหลัง",
+   "text": "BUSINESS BRIEFS\nHalvorsen Foods to Open Plant in Riverton\n\nRIVERTON (May 4) — Halvorsen Foods announced on Tuesday that it will open a packaging plant in Riverton next spring. [1] Company president Ingrid Halvorsen said the site was chosen because of its access to major highways and the local rail line. [2] The company, best known for its frozen soups, will use the plant to package a new line of fresh salads. [3] Construction will begin in August, and the plant is expected to create about 250 jobs once it opens. [4]",
+   "qs": [
+    {
+     "q": "What is the article mainly about?",
+     "o": [
+      "A merger between two food companies",
+      "A company's plan to open a new facility",
+      "The opening of a new rail line",
+      "A change in company leadership"
+     ],
+     "a": 1,
+     "why": "ประโยคแรก **will open a packaging plant** → plan to open a new facility",
+     "no": [
+      "มีบริษัทเดียว ไม่มีการควบรวม",
+      null,
+      "rail line มีอยู่แล้ว เป็นเหตุผลที่เลือกที่ตั้ง",
+      "president ถูกพูดถึง แต่ไม่ได้เปลี่ยนตัว"
+     ],
+     "whySay": "ข่าวบอกตั้งแต่ประโยคแรกว่า บริษัทจะเปิดโรงงานบรรจุภัณฑ์ที่ริเวอร์ตัน ข้อ B เปลี่ยน plant เป็นคำกว้างๆ ว่า facility ข้อ C เป็นกับดัก ทางรถไฟมีอยู่แล้ว ไม่ได้เปิดใหม่"
+    },
+    {
+     "q": "Where does this sentence best belong?\n\"Most of these positions will be filled by local residents.\"",
+     "o": [
+      "[1]",
+      "[2]",
+      "[3]",
+      "[4]"
+     ],
+     "a": 3,
+     "why": "**these positions** = ตำแหน่งงาน → ต่อจาก **create about 250 jobs**",
+     "no": [
+      "ยังไม่มีเรื่องตำแหน่งงาน",
+      "เป็นเรื่องที่ตั้งโรงงาน",
+      "เป็นเรื่องสินค้าใหม่",
+      null
+     ],
+     "whySay": "คำชี้ทางคือ these positions ต้องมีเรื่องตำแหน่งงานอยู่ข้างหน้า ประโยคเดียวที่พูดถึงงานคือ สร้างงานประมาณสองร้อยห้าสิบตำแหน่ง ซึ่งอยู่ก่อนช่องสี่พอดี"
+    },
+    {
+     "q": "What is indicated about Halvorsen Foods?",
+     "o": [
+      "It is well known for one type of frozen food",
+      "It is moving its headquarters to Riverton",
+      "It already operates a plant in Riverton",
+      "It will stop selling soups next spring"
+     ],
+     "a": 0,
+     "why": "**best known for its frozen soups** → well known for one type of frozen food",
+     "no": [
+      null,
+      "เปิด **โรงงาน** ไม่ได้ย้ายสำนักงานใหญ่",
+      "โรงงานที่ริเวอร์ตันยัง **ไม่ได้สร้าง**",
+      "เพิ่มสินค้าใหม่ ไม่ได้เลิกขายซุป"
+     ],
+     "whySay": "ข่าวบอกว่าบริษัทนี้ขึ้นชื่อเรื่องซุปแช่แข็ง ข้อ A เปลี่ยน frozen soups เป็น one type of frozen food ข้อ C เป็นกับดัก โรงงานที่นั่นจะเริ่มสร้างเดือนสิงหาคม ยังไม่มี"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 2/5 · จดหมายร้องเรียน",
+   "say": "บทความที่สองเป็นจดหมายร้องเรียน ย่อหน้าแรกมักเล่าปัญหา ย่อหน้าหลังบอกว่าอยากให้ทำอะไร ข้อนี้มีทั้งข้อคำศัพท์และข้อ NOT",
+   "text": "Dear Customer Service Manager,\n\nOn October 3, I ordered a standing desk (model SD-40) from your Web site. It arrived on October 10, two days later than promised, and one of the legs was bent. I called your support line twice, and each time I was told that a supervisor would return my call. No one did.\n\nI would like a replacement desk delivered by October 24, when my new office opens. If this is not possible, please issue a full refund. My order number is 58312.\n\nSincerely,\nPaul Moreno",
+   "qs": [
+    {
+     "q": "Why did Mr. Moreno write the letter?",
+     "o": [
+      "To place an order for office furniture",
+      "To ask about a delivery fee",
+      "To complain about a damaged item and poor service",
+      "To invite a manager to his new office"
+     ],
+     "a": 2,
+     "why": "**legs was bent** + **No one did** (ไม่มีใครโทรกลับ) → damaged item + poor service",
+     "no": [
+      "สั่งไปแล้วตั้งแต่ **October 3**",
+      "ไม่มีเรื่องค่าส่ง",
+      null,
+      "พูดถึงออฟฟิศใหม่ แต่ไม่ได้เชิญใคร"
+     ],
+     "whySay": "จดหมายเล่าว่าโต๊ะมาช้า ขาโต๊ะงอ แล้วโทรไปสองรอบก็ไม่มีใครโทรกลับ ข้อ C รวบสองปัญหานี้เป็นคำใหม่ คือ damaged item กับ poor service"
+    },
+    {
+     "q": "The word \"issue\" in paragraph 2 is closest in meaning to",
+     "o": [
+      "provide",
+      "publish",
+      "discuss",
+      "postpone"
+     ],
+     "a": 0,
+     "why": "**issue a full refund** = ให้เงินคืน → **provide**",
+     "no": [
+      null,
+      "publish ใช้กับ issue a magazine",
+      "discuss มาจาก issue ที่เป็นคำนาม = ประเด็น",
+      "postpone = เลื่อน ไม่เข้าความหมาย"
+     ],
+     "whySay": "ในประโยคนี้ issue a full refund แปลว่าคืนเงินเต็มจำนวนให้ ลองแทนด้วย provide ความหมายเข้ากันพอดี ข้อ C เป็นกับดัก เพราะคนไทยคุ้นกับ issue ที่แปลว่าประเด็นปัญหา"
+    },
+    {
+     "q": "What is NOT mentioned as a problem with the order?",
+     "o": [
+      "The desk arrived late",
+      "Part of the desk was damaged",
+      "Phone calls were not returned",
+      "The wrong model was sent"
+     ],
+     "a": 3,
+     "why": "เจอ **two days later** · **bent** · **No one did** → ตัดทิ้ง เหลือ **ส่งผิดรุ่น** ที่ไม่มี",
+     "no": [
+      "มี **two days later than promised**",
+      "มี **one of the legs was bent**",
+      "มี **No one did** (ไม่มีใครโทรกลับ)",
+      null
+     ],
+     "whySay": "ตัดทีละข้อ โต๊ะมาช้ามี ขาโต๊ะงอมี ไม่มีใครโทรกลับก็มี เหลือข้อ D ส่งผิดรุ่น จดหมายบอกรุ่น SD-40 ก็จริง แต่ไม่ได้บอกว่าส่งผิด"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 3/5 · ตารางงานสัมมนา",
+   "say": "บทความที่สามเป็นตารางงานสัมมนา ไม่ต้องอ่านทุกบรรทัด อ่านคำถามก่อน แล้วกวาดตาหาเวลา ห้อง หรือชื่อหัวข้อ และอย่าลืมหมายเหตุด้านล่างตาราง",
+   "text": "Lakeside Business Expo\nSaturday, March 8 · Lakeside Convention Center\n\n9:00 A.M. · Registration and coffee (Main Lobby)\n10:00 A.M. · Keynote: Growing Your Brand Online, Dana Whitfield\n11:30 A.M. · Workshop: Social Media for Small Shops (Room B)\n12:30 P.M. · Lunch (included with ticket)\n2:00 P.M. · Panel: Hiring Your First Employee (Room C)\n4:00 P.M. · Networking reception\n\nTickets: $45 in advance, $60 at the door.\nWorkshop seats are limited to 30. Sign up when you register.",
+   "qs": [
+    {
+     "q": "Who would most likely attend the event?",
+     "o": [
+      "Factory workers",
+      "Small business owners",
+      "Hotel guests",
+      "University professors"
+     ],
+     "a": 1,
+     "why": "**Small Shops** · **Hiring Your First Employee** · **Growing Your Brand** → เจ้าของธุรกิจเล็ก",
+     "no": [
+      "ไม่มีหัวข้อเรื่องโรงงาน",
+      null,
+      "จัดที่ **Convention Center** ไม่ใช่โรงแรม",
+      "ไม่มีเรื่องการสอนหรือมหาวิทยาลัย"
+     ],
+     "whySay": "ข้อนี้ต้องอนุมานจากหัวข้อ โซเชียลมีเดียสำหรับร้านเล็ก การจ้างพนักงานคนแรก การสร้างแบรนด์ออนไลน์ ทุกหัวข้อเหมาะกับคนที่เพิ่งเริ่มทำธุรกิจของตัวเอง ข้อ B จึงถูก"
+    },
+    {
+     "q": "What is indicated about the workshop?",
+     "o": [
+      "It will be held in the Main Lobby",
+      "It will be led by Dana Whitfield",
+      "It has a limited number of seats",
+      "It costs an extra $15"
+     ],
+     "a": 2,
+     "why": "**Workshop seats are limited to 30**",
+     "no": [
+      "Main Lobby คือที่ **ลงทะเบียน** · workshop อยู่ **Room B**",
+      "Dana Whitfield พูด **Keynote**",
+      null,
+      "$15 คือส่วนต่าง **ซื้อล่วงหน้า กับ หน้างาน**"
+     ],
+     "whySay": "หมายเหตุใต้ตารางบอกว่าเวิร์กช็อปรับแค่สามสิบที่ ข้อ C ถูก ข้อ D เป็นกับดักตัวเลข สิบห้าดอลลาร์คือส่วนต่างราคาตั๋ว ไม่ใช่ค่าเวิร์กช็อป"
+    },
+    {
+     "q": "What is included in the ticket price?",
+     "o": [
+      "A meal",
+      "A parking pass",
+      "A copy of a book",
+      "A one-year membership"
+     ],
+     "a": 0,
+     "why": "**Lunch (included with ticket)** → a meal",
+     "no": [
+      null,
+      "ไม่มีเรื่องที่จอดรถ",
+      "ไม่มีเรื่องหนังสือ",
+      "ไม่มีเรื่องสมาชิก"
+     ],
+     "whySay": "ในตารางตอนเที่ยงครึ่งเขียนว่า อาหารกลางวันรวมอยู่ในตั๋วแล้ว ข้อ A เปลี่ยน lunch เป็นคำกว้างๆ ว่า a meal"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 4/5 · ประกาศรับสมัครงาน",
+   "say": "บทความที่สี่เป็นประกาศรับสมัครงาน มักแบ่งเป็นสามส่วน งานที่ต้องทำ คุณสมบัติ และสวัสดิการ ระวังให้ดี คุณสมบัติที่ต้องมี กับคุณสมบัติที่มีแล้วดี ไม่เหมือนกัน",
+   "text": "Now Hiring: Customer Support Specialist\nNorvik Software, Austin Office\n\nNorvik Software is looking for a full-time specialist to help clients set up and use our accounting programs. The successful candidate will answer questions by phone and e-mail and train new users in online sessions.\n\nRequirements: a bachelor's degree, at least one year of customer service experience, and strong writing skills. Knowledge of Spanish is a plus.\n\nWe offer flexible hours and the option to work from home two days a week. Send a résumé and cover letter to jobs@norviksoft.com by July 15.",
+   "qs": [
+    {
+     "q": "What is one responsibility of the position?",
+     "o": [
+      "Designing accounting software",
+      "Selling products to new clients",
+      "Managing a team of specialists",
+      "Teaching customers how to use software"
+     ],
+     "a": 3,
+     "why": "**train new users in online sessions** → teaching customers",
+     "no": [
+      "ช่วยลูกค้า **ใช้** โปรแกรม ไม่ได้ออกแบบ",
+      "ไม่มีเรื่องขายของ",
+      "ไม่มีเรื่องคุมทีม",
+      null
+     ],
+     "whySay": "ประกาศบอกว่าต้องตอบคำถามลูกค้า และอบรมผู้ใช้ใหม่ทางออนไลน์ ข้อ D เปลี่ยน train new users เป็น teaching customers ข้อ A ลอกคำว่า accounting มา แต่งานนี้ไม่ได้เขียนโปรแกรม"
+    },
+    {
+     "q": "The word \"plus\" in paragraph 2 is closest in meaning to",
+     "o": [
+      "requirement",
+      "advantage",
+      "payment",
+      "total"
+     ],
+     "a": 1,
+     "why": "**Knowledge of Spanish is a plus** = มีแล้วดี → **advantage**",
+     "no": [
+      "requirement = ต้องมี ความหมายตรงข้าม",
+      null,
+      "ไม่เกี่ยวกับเงินเพิ่ม",
+      "plus ในคณิตศาสตร์ ไม่เข้าบริบท"
+     ],
+     "whySay": "a plus ในประกาศงาน แปลว่าข้อได้เปรียบ มีแล้วดี ไม่มีก็สมัครได้ ลองแทนด้วย advantage ความหมายพอดี ข้อ A เป็นกับดัก เพราะประโยคอยู่ในหัวข้อ Requirements"
+    },
+    {
+     "q": "What is indicated about the job?",
+     "o": [
+      "It is a part-time position",
+      "It requires the ability to speak Spanish",
+      "It allows some remote work",
+      "It must be applied for in person"
+     ],
+     "a": 2,
+     "why": "**work from home two days a week** → some remote work",
+     "no": [
+      "เป็นงาน **full-time**",
+      "ภาษาสเปนแค่ **a plus** ไม่ได้บังคับ",
+      null,
+      "สมัครทาง **อีเมล**"
+     ],
+     "whySay": "ประกาศบอกว่าทำงานจากบ้านได้สัปดาห์ละสองวัน ข้อ C เปลี่ยน work from home เป็น remote work ส่วนข้อ B ผิด เพราะเพิ่งเฉลยไปว่าภาษาสเปนแค่มีแล้วดี ไม่ได้บังคับ"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 5/5 · แชทกลุ่ม",
+   "say": "บทความสุดท้ายเป็นแชทกลุ่มสามคน จดไว้ก่อนว่าใครพูดอะไร เพราะข้อสอบชอบถามว่าคนไหนจะทำอะไรต่อ และข้อความนี้หมายถึงอะไร",
+   "text": "Mia Torres (2:05 P.M.)\nThe projector in Conference Room 2 isn't working, and our sales meeting starts at 3:00.\n\nBen Clarke (2:07 P.M.)\nRoom 4 has one, but the marketing team booked it until 3:30.\n\nRavi Nair (2:08 P.M.)\nI can bring my portable projector from my desk.\n\nMia Torres (2:09 P.M.)\nThat would be great. Does it connect to laptops?\n\nRavi Nair (2:10 P.M.)\nIt does. I'll set it up in Room 2 at 2:45.\n\nBen Clarke (2:11 P.M.)\nThanks, Ravi. I'll let IT know about the broken one.",
+   "qs": [
+    {
+     "q": "What problem does Ms. Torres mention?",
+     "o": [
+      "Some equipment is not working",
+      "A meeting has been canceled",
+      "A room is too small",
+      "A laptop is missing"
+     ],
+     "a": 0,
+     "why": "**The projector ... isn't working** → equipment is not working",
+     "no": [
+      null,
+      "ประชุมยังเริ่ม **3:00** ตามเดิม",
+      "ไม่มีเรื่องขนาดห้อง",
+      "laptop ถูกถามแค่เรื่องต่อสาย"
+     ],
+     "whySay": "ข้อความแรกบอกว่าโปรเจกเตอร์ห้องสองเสีย ข้อ A เปลี่ยน projector เป็นคำกว้างๆ ว่า equipment ข้อสอบชอบเปลี่ยนของเฉพาะเป็นคำกลางแบบนี้"
+    },
+    {
+     "q": "At 2:09 P.M., what does Ms. Torres mean when she writes, \"That would be great\"?",
+     "o": [
+      "She wants to move the meeting to Room 4",
+      "She is glad the marketing team will finish early",
+      "She will contact the IT department",
+      "She accepts Mr. Nair's offer"
+     ],
+     "a": 3,
+     "why": "ตอบข้อความก่อนหน้า **I can bring my portable projector**",
+     "no": [
+      "ห้อง 4 ไม่ว่างถึง **3:30**",
+      "ไม่มีใครบอกว่าเสร็จเร็ว",
+      "คนแจ้ง IT คือ **Ben**",
+      null
+     ],
+     "whySay": "That would be great ตอบข้อความก่อนหน้าทันที ที่ราวีบอกว่าจะเอาโปรเจกเตอร์พกพามาให้ แปลว่าเธอรับข้อเสนอนั้น ข้อ D จึงถูก"
+    },
+    {
+     "q": "What will Mr. Clarke most likely do next?",
+     "o": [
+      "Book Conference Room 4",
+      "Report an equipment problem",
+      "Lead the sales meeting",
+      "Bring a portable projector"
+     ],
+     "a": 1,
+     "why": "**I'll let IT know about the broken one** → report a problem",
+     "no": [
+      "ห้อง 4 มีคนจองแล้ว",
+      null,
+      "ไม่มีข้อมูลว่าใครนำประชุม",
+      "คนเอาโปรเจกเตอร์มาคือ **Ravi**"
+     ],
+     "whySay": "เบนพิมพ์ข้อความสุดท้ายว่า จะแจ้งฝ่ายไอทีเรื่องเครื่องที่เสีย ข้อ B เปลี่ยน let IT know เป็น report ข้อ D เป็นกับดัก เพราะคนที่เอาโปรเจกเตอร์มาคือราวี ไม่ใช่เบน"
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**แทรกประโยค** : หาคำชี้ทาง เช่น **these positions** → ต้องมี jobs อยู่ข้างหน้า",
+     "say": "จุดพลาดแรก ข้อแทรกประโยค อย่าเดาจากความรู้สึก ให้หาคำชี้ทางอย่าง these positions แล้วหาว่าข้างหน้ามีเรื่องตำแหน่งงานตรงไหน"
+    },
+    {
+     "x": "**คำศัพท์ในบริบท** : issue ≠ ประเด็น · a plus ≠ บวก → **แทนคำลงในประโยค**",
+     "say": "จุดพลาดที่สอง ข้อคำศัพท์ คำอย่าง issue กับ plus มีหลายความหมาย อย่าเลือกความหมายที่คุ้นที่สุด ให้แทนตัวเลือกลงในประโยคก่อนทุกครั้ง"
+    },
+    {
+     "x": "**ใครทำอะไร** : ตาราง = ห้องไหน · แชท = คนไหน → เช็กชื่อก่อนตอบ",
+     "say": "จุดพลาดที่สาม ตัวเลือกชอบเอาข้อมูลของคนอื่นหรือห้องอื่นมาหลอก อย่าง Dana Whitfield พูด keynote ไม่ใช่เวิร์กช็อป และคนเอาโปรเจกเตอร์มาคือราวี ไม่ใช่เบน เช็กชื่อก่อนตอบเสมอ"
+    }
+   ],
+   "outro": "ชุดที่สามของ Part 7 จบแล้ว ได้กี่ข้อจากสิบห้า ถ้าได้สิบสองข้อขึ้นไปถือว่าพร้อมมาก ข้อที่พลาดย้อนดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

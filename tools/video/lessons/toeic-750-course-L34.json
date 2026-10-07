@@ -1,0 +1,387 @@
+{
+ "id": "toeic-750-course-L34",
+ "course": "toeic-750-course",
+ "n": 34,
+ "section": "คำศัพท์ · ศัพท์ธุรกิจ",
+ "title": "40 คำศัพท์ธุรกิจที่ออกบ่อย",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "40 คำศัพท์ธุรกิจ\nที่ออกบ่อยใน TOEIC",
+   "sub": "4 กลุ่ม กลุ่มละ 10 คำ: ประชุม · การเงิน · บุคคล · การส่งของ แล้วฝึก 5 ข้อ",
+   "say": "บทนี้เป็นบทคำศัพท์ เราจะเก็บสี่สิบคำธุรกิจที่เจอบ่อยมากใน TOEIC แบ่งเป็นสี่กลุ่ม กลุ่มละสิบคำ ฟังตัวอย่างไปด้วย ท้ายบทมีฝึกห้าข้อ"
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 1 · ประชุม / นัดหมาย (1–5)",
+   "say": "กลุ่มแรก คำเรื่องประชุมและนัดหมาย เจอได้ทั้ง Listening และ Reading",
+   "items": [
+    {
+     "x": "**agenda** = วาระการประชุม",
+     "say": "agenda คือรายการหัวข้อที่จะคุยในประชุม",
+     "en": "The agenda will be sent out tomorrow.",
+     "sub": "The agenda will be sent out tomorrow."
+    },
+    {
+     "x": "**minutes** = บันทึกการประชุม",
+     "say": "minutes ในบริบทประชุม ไม่ได้แปลว่านาที แต่คือบันทึกการประชุม",
+     "en": "Kevin will take the minutes today.",
+     "sub": "Kevin will take the minutes today."
+    },
+    {
+     "x": "**attendee** = ผู้เข้าร่วม",
+     "say": "attendee คือคนที่มาร่วมงาน มาจากกริยา attend"
+    },
+    {
+     "x": "**venue** = สถานที่จัดงาน",
+     "say": "venue คือสถานที่จัดงาน เช่น โรงแรม หรือห้องประชุม",
+     "en": "The venue can hold two hundred guests.",
+     "sub": "The venue can hold two hundred guests."
+    },
+    {
+     "x": "**handout** = เอกสารแจก",
+     "say": "handout คือเอกสารที่แจกให้ผู้ฟังระหว่างประชุมหรือสัมมนา"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 1 · ประชุม / นัดหมาย (6–10)",
+   "items": [
+    {
+     "x": "**reschedule** = เปลี่ยนวันเวลานัด",
+     "say": "reschedule คือเปลี่ยนเวลานัดใหม่ เลื่อนเร็วขึ้นหรือช้าลงก็ได้",
+     "en": "Can we reschedule our call to Friday?",
+     "sub": "Can we reschedule our call to Friday?"
+    },
+    {
+     "x": "**postpone** = เลื่อนออกไป",
+     "say": "postpone คือเลื่อนออกไปทีหลัง ใช้คู่กับ until ได้"
+    },
+    {
+     "x": "**confirm** = ยืนยัน",
+     "say": "confirm คือยืนยัน เช่น ยืนยันการจอง หรือยืนยันเวลานัด",
+     "en": "Please confirm your booking by email.",
+     "sub": "Please confirm your booking by email."
+    },
+    {
+     "x": "**adjourn** = ปิดการประชุม / พักประชุม",
+     "say": "adjourn คือปิดหรือพักการประชุม คำนี้ดูยาก แต่ออกสอบบ่อย"
+    },
+    {
+     "x": "**conference call** = ประชุมทางโทรศัพท์",
+     "say": "conference call คือประชุมทางโทรศัพท์หรือออนไลน์ หลายคนพร้อมกัน"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 2 · การเงิน / บัญชี (1–5)",
+   "say": "กลุ่มที่สอง เรื่องเงิน เจอบ่อยในอีเมลและใบแจ้งหนี้ของ Part 6 และ 7",
+   "items": [
+    {
+     "x": "**budget** = งบประมาณ",
+     "say": "budget คืองบประมาณ ใช้ว่า over budget แปลว่าเกินงบ",
+     "en": "The project is already over budget.",
+     "sub": "The project is already over budget."
+    },
+    {
+     "x": "**invoice** = ใบแจ้งหนี้",
+     "say": "invoice คือใบแจ้งหนี้ ที่บอกว่าต้องจ่ายเท่าไหร่ เมื่อไหร่"
+    },
+    {
+     "x": "**receipt** = ใบเสร็จ",
+     "say": "receipt คือใบเสร็จ ได้หลังจ่ายเงินแล้ว ต่างจาก invoice ที่ได้ก่อนจ่าย",
+     "en": "Keep your receipt for any returns.",
+     "sub": "Keep your receipt for any returns."
+    },
+    {
+     "x": "**expense** = ค่าใช้จ่าย",
+     "say": "expense คือค่าใช้จ่าย เช่น travel expenses ค่าเดินทาง"
+    },
+    {
+     "x": "**reimburse** = คืนเงินที่สำรองจ่าย",
+     "say": "reimburse คือบริษัทคืนเงินให้พนักงานที่ออกเงินไปก่อน",
+     "en": "We will reimburse your taxi fare.",
+     "sub": "We will reimburse your taxi fare."
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 2 · การเงิน / บัญชี (6–10)",
+   "items": [
+    {
+     "x": "**revenue** = รายได้",
+     "say": "revenue คือรายได้ทั้งหมดที่บริษัทได้รับ",
+     "en": "Revenue rose by ten percent this year.",
+     "sub": "Revenue rose by ten percent this year."
+    },
+    {
+     "x": "**profit** = กำไร",
+     "say": "profit คือกำไร หลังหักค่าใช้จ่ายแล้ว ระวังสับสนกับ revenue"
+    },
+    {
+     "x": "**quote** = ใบเสนอราคา",
+     "say": "quote หรือ quotation คือใบเสนอราคา ขอได้ก่อนตัดสินใจซื้อ",
+     "en": "Could you send us a quote for the repairs?",
+     "sub": "Could you send us a quote for the repairs?"
+    },
+    {
+     "x": "**audit** = การตรวจสอบบัญชี",
+     "say": "audit คือการตรวจสอบบัญชี คนที่ตรวจเรียกว่า auditor"
+    },
+    {
+     "x": "**deposit** = เงินมัดจำ / ฝากเงิน",
+     "say": "deposit แปลได้สองแบบ เงินมัดจำ หรือการฝากเงินเข้าบัญชี"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 3 · บุคคล / รับสมัครงาน (1–5)",
+   "say": "กลุ่มที่สาม เรื่องคนและการรับสมัครงาน ประกาศรับสมัครงานเจอใน Part 7 แทบทุกชุด",
+   "items": [
+    {
+     "x": "**applicant** = ผู้สมัคร",
+     "say": "applicant คือผู้สมัคร ส่วน application คือใบสมัคร อย่าสลับกัน",
+     "en": "Each applicant will be contacted by phone.",
+     "sub": "Each applicant will be contacted by phone."
+    },
+    {
+     "x": "**résumé** = ประวัติย่อ",
+     "say": "résumé คือประวัติย่อ ที่ส่งไปพร้อมใบสมัคร"
+    },
+    {
+     "x": "**qualifications** = คุณสมบัติ",
+     "say": "qualifications คือคุณสมบัติ เช่น วุฒิการศึกษาและประสบการณ์",
+     "en": "She has excellent qualifications for the role.",
+     "sub": "She has excellent qualifications for the role."
+    },
+    {
+     "x": "**job opening** = ตำแหน่งว่าง",
+     "say": "job opening คือตำแหน่งงานที่ว่างอยู่ ใช้คำว่า vacancy ก็ได้"
+    },
+    {
+     "x": "**recruit** = รับสมัคร / หาคนใหม่",
+     "say": "recruit คือหาคนเข้ามาทำงาน คนที่ทำหน้าที่นี้เรียกว่า recruiter"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 3 · บุคคล / รับสมัครงาน (6–10)",
+   "items": [
+    {
+     "x": "**hire** = จ้าง",
+     "say": "hire คือจ้างคนเข้าทำงาน คำตรงข้ามคือ fire หรือ lay off",
+     "en": "We plan to hire five new engineers.",
+     "sub": "We plan to hire five new engineers."
+    },
+    {
+     "x": "**promote** = เลื่อนตำแหน่ง",
+     "say": "promote คือเลื่อนตำแหน่ง แต่ในการตลาด แปลว่าโปรโมตสินค้าได้ด้วย"
+    },
+    {
+     "x": "**resign** = ลาออก",
+     "say": "resign คือลาออก คำนามคือ resignation",
+     "en": "Mr. Lee resigned to start his own firm.",
+     "sub": "Mr. Lee resigned to start his own firm."
+    },
+    {
+     "x": "**benefits** = สวัสดิการ",
+     "say": "benefits ในงานบุคคล คือสวัสดิการ เช่น ประกันสุขภาพ และวันลา"
+    },
+    {
+     "x": "**supervisor** = หัวหน้างาน",
+     "say": "supervisor คือหัวหน้างานโดยตรง ใช้คล้ายกับ manager"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 4 · การส่งของ / สั่งซื้อ (1–5)",
+   "say": "กลุ่มสุดท้าย เรื่องสั่งซื้อและส่งของ เจอบ่อยมากใน Part 3 และ Part 7",
+   "items": [
+    {
+     "x": "**place an order** = สั่งซื้อ",
+     "say": "place an order คือสั่งซื้อ ใช้กริยา place ไม่ใช่ make",
+     "en": "I'd like to place an order for ten chairs.",
+     "sub": "I'd like to place an order for ten chairs."
+    },
+    {
+     "x": "**supplier** = ผู้จัดหาสินค้า",
+     "say": "supplier คือบริษัทที่ส่งสินค้าหรือวัตถุดิบให้เรา"
+    },
+    {
+     "x": "**shipment** = ของที่ส่ง / การจัดส่ง",
+     "say": "shipment คือของที่ส่งมาหนึ่งรอบ",
+     "en": "The shipment should arrive on Monday.",
+     "sub": "The shipment should arrive on Monday."
+    },
+    {
+     "x": "**warehouse** = โกดังสินค้า",
+     "say": "warehouse คือโกดังเก็บสินค้า ก่อนส่งออกไปให้ลูกค้า"
+    },
+    {
+     "x": "**inventory** = สินค้าคงคลัง",
+     "say": "inventory คือจำนวนสินค้าที่มีเก็บไว้ ใช้คล้าย stock"
+    }
+   ]
+  },
+  {
+   "type": "list",
+   "h": "กลุ่ม 4 · การส่งของ / สั่งซื้อ (6–10)",
+   "items": [
+    {
+     "x": "**out of stock** = สินค้าหมด",
+     "say": "out of stock คือของหมด ตรงข้ามกับ in stock ที่แปลว่ามีของ",
+     "en": "That model is currently out of stock.",
+     "sub": "That model is currently out of stock."
+    },
+    {
+     "x": "**track** = ติดตามพัสดุ",
+     "say": "track คือติดตามสถานะพัสดุ ใช้กับ tracking number"
+    },
+    {
+     "x": "**expedite** = เร่งให้เร็วขึ้น",
+     "say": "expedite คือเร่งให้เร็วขึ้น เช่น เร่งการจัดส่ง",
+     "en": "We can expedite delivery for a small fee.",
+     "sub": "We can expedite delivery for a small fee."
+    },
+    {
+     "x": "**defective** = ชำรุด / มีตำหนิ",
+     "say": "defective คือสินค้ามีตำหนิ ใช้งานไม่ได้ เป็นเหตุให้ขอเปลี่ยนสินค้า"
+    },
+    {
+     "x": "**replacement** = ของที่ส่งมาแทน",
+     "say": "replacement คือของชิ้นใหม่ที่ส่งมาแทนชิ้นที่เสีย"
+    }
+   ]
+  },
+  {
+   "type": "read",
+   "h": "ฝึก ข้อที่ 1",
+   "say": "มาฝึกกันห้าข้อ ทุกข้อเป็นคำศัพท์จากบทนี้ ข้อแรก ดูคำว่า until ท้ายประโยค",
+   "q": "The board meeting has been ___ until next Thursday because the director is traveling.",
+   "o": [
+    "attended",
+    "postponed",
+    "confirmed",
+    "submitted"
+   ],
+   "a": 1,
+   "no": [
+    "attended = เข้าร่วม ไม่ใช้คู่กับ until",
+    null,
+    "confirmed = ยืนยัน แต่ until บอกว่าเลื่อนไป",
+    "submitted = ส่ง ใช้กับเอกสาร ไม่ใช่ประชุม"
+   ],
+   "why": "**postponed until** + วัน = **เลื่อนออกไปจนถึง** วันนั้น",
+   "whySay": "postpone แปลว่าเลื่อนออกไป ใช้คู่กับ until และเหตุผลว่าผู้อำนวยการไม่อยู่ ก็บอกว่าต้องเลื่อน"
+  },
+  {
+   "type": "read",
+   "h": "ฝึก ข้อที่ 2",
+   "say": "ข้อที่สอง ประธานคือพนักงาน ดูว่าบริษัททำอะไรให้พนักงาน",
+   "q": "Employees who travel for work will be ___ for meals and hotel costs within two weeks.",
+   "o": [
+    "estimated",
+    "budgeted",
+    "audited",
+    "reimbursed"
+   ],
+   "a": 3,
+   "no": [
+    "estimated = ประมาณการ ใช้กับตัวเลข ไม่ใช่คน",
+    "budgeted = ตั้งงบ ใช้กับเงิน ไม่ใช่พนักงาน",
+    "audited = ตรวจบัญชี ไม่เข้ากับ for meals",
+    null
+   ],
+   "why": "**be reimbursed for** + ค่าใช้จ่าย = **ได้รับเงินคืน** ค่านั้น",
+   "whySay": "พนักงานออกเงินค่าอาหารและโรงแรมไปก่อน แล้วบริษัทคืนให้ จึงใช้ be reimbursed for"
+  },
+  {
+   "type": "read",
+   "h": "ฝึก ข้อที่ 3",
+   "say": "ข้อที่สาม เรื่องรับสมัครงาน ดูว่าใครถูกสัมภาษณ์",
+   "q": "The hiring committee will interview the three most qualified ___ next week.",
+   "o": [
+    "applicants",
+    "benefits",
+    "openings",
+    "résumés"
+   ],
+   "a": 0,
+   "no": [
+    null,
+    "benefits = สวัสดิการ สัมภาษณ์ไม่ได้",
+    "openings = ตำแหน่งว่าง ไม่ใช่คน",
+    "résumés = ประวัติย่อ เป็นเอกสาร สัมภาษณ์ไม่ได้"
+   ],
+   "why": "สัมภาษณ์ได้ต้องเป็น **คน** = **applicants** ผู้สมัคร",
+   "whySay": "คนที่ถูกสัมภาษณ์ได้ต้องเป็นคน ในตัวเลือกมีคำเดียวที่เป็นคน คือ applicants ที่แปลว่าผู้สมัคร"
+  },
+  {
+   "type": "read",
+   "h": "ฝึก ข้อที่ 4",
+   "say": "ข้อที่สี่ ดูท้ายประโยค ว่าทำไมต้องส่งของมาแทน",
+   "q": "Because the printer arrived ___, the supplier agreed to send a replacement at no extra cost.",
+   "o": [
+    "qualified",
+    "available",
+    "defective",
+    "profitable"
+   ],
+   "a": 2,
+   "no": [
+    "qualified = มีคุณสมบัติ ใช้กับคน",
+    "available = มีให้ใช้ ไม่ใช่เหตุให้เปลี่ยนของ",
+    null,
+    "profitable = ทำกำไร ไม่ใช้กับเครื่องพิมพ์"
+   ],
+   "why": "ของ **ชำรุด (defective)** → ผู้ขายส่ง **replacement** มาแทน",
+   "whySay": "เครื่องพิมพ์มาถึงแบบชำรุด ผู้ขายจึงส่งเครื่องใหม่มาแทน คำว่า replacement ท้ายประโยคเป็นคำใบ้"
+  },
+  {
+   "type": "read",
+   "h": "ฝึก ข้อที่ 5",
+   "say": "ข้อสุดท้าย ดูว่าเอกสารอะไรบอกหัวข้อที่จะคุยในประชุม",
+   "q": "Please review the ___ before the meeting so you know which topics will be discussed.",
+   "o": [
+    "receipt",
+    "agenda",
+    "inventory",
+    "warehouse"
+   ],
+   "a": 1,
+   "no": [
+    "receipt = ใบเสร็จ ไม่ได้บอกหัวข้อประชุม",
+    null,
+    "inventory = สินค้าคงคลัง ไม่เกี่ยวกับประชุม",
+    "warehouse = โกดัง ไม่ใช่เอกสาร"
+   ],
+   "why": "**agenda** = รายการ **หัวข้อที่จะคุย** ในประชุม",
+   "whySay": "เอกสารที่บอกว่าประชุมจะคุยหัวข้ออะไร คือ agenda หรือวาระการประชุม"
+  },
+  {
+   "type": "end",
+   "h": "สรุปบทที่ 34",
+   "items": [
+    {
+     "x": "**minutes** ในประชุม = บันทึกการประชุม ไม่ใช่นาที",
+     "say": "สรุปจุดที่พลาดบ่อย คำว่า minutes ในบริบทประชุม แปลว่าบันทึกการประชุม ไม่ใช่นาที"
+    },
+    {
+     "x": "**invoice** ก่อนจ่าย · **receipt** หลังจ่าย · **revenue** ≠ **profit**",
+     "say": "invoice ได้ก่อนจ่าย receipt ได้หลังจ่าย และ revenue คือรายได้ ส่วน profit คือกำไร"
+    },
+    {
+     "x": "**applicant** = คน · **application** = ใบสมัคร",
+     "say": "applicant คือคน application คือใบสมัคร ข้อสอบชอบเอาสองคำนี้มาหลอก"
+    }
+   ],
+   "outro": "คำไหนยังไม่แม่น ให้จดไว้ทบทวน แล้วลองแต่งประโยคเองสักประโยค กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}

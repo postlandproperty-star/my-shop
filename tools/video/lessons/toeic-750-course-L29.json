@@ -1,0 +1,344 @@
+{
+ "id": "toeic-750-course-L29",
+ "course": "toeic-750-course",
+ "n": 29,
+ "section": "ฝึกทำข้อสอบ · Part 7",
+ "title": "Part 7 ชุดที่ 1: 5 บทความสั้น 15 ข้อ",
+ "slides": [
+  {
+   "type": "cover",
+   "h": "Part 7 ชุดที่ 1\n5 บทความสั้น 15 ข้อ",
+   "sub": "อีเมล · โฆษณา · ประกาศ · แชท · ใบแจ้งหนี้",
+   "say": "บทนี้ฝึก Part 7 ชุดแรก ห้าบทความสั้น สิบห้าข้อ มีอีเมล โฆษณา ประกาศ แชท และใบแจ้งหนี้ ใช้วิธีจากบทที่แล้ว อ่านคำถามก่อน กวาดตาหาคำสำคัญ แล้วเลือกข้อที่ใช้คำใหม่แต่ความหมายตรง ข้อละห้าวินาที แล้วเฉลยทันที ถ้าอยากอ่านนานกว่านี้ กดหยุดวิดีโอได้เลย จดคะแนนไว้ด้วย เริ่มกันเลย"
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 1/5 · อีเมล",
+   "say": "บทความแรกเป็นอีเมลจากโรงพิมพ์ถึงลูกค้า ดูก่อนว่าใครส่งถึงใคร หัวเรื่องคืออะไร ใจความหลักของอีเมลมักอยู่ช่วงต้น แล้วคำขอให้ทำอะไรมักอยู่ท้ายอีเมล",
+   "text": "From: Laura Chen, Brightwave Printing\nTo: Marcus Webb\nSubject: Your order #4471\n\nDear Mr. Webb,\n\nThank you for ordering 500 brochures from Brightwave Printing. Unfortunately, the glossy paper you selected is out of stock until March 18, which would delay your order by about one week.\n\nAlternatively, we can use our premium matte paper at the same price and ship by March 11 as originally planned. Please tell me which option you prefer by tomorrow afternoon.\n\nLaura Chen",
+   "qs": [
+    {
+     "q": "Why did Ms. Chen send the e-mail?",
+     "o": [
+      "To request payment for an order",
+      "To report a supply problem and offer an alternative",
+      "To introduce a new type of paper",
+      "To ask Mr. Webb to revise a design"
+     ],
+     "a": 1,
+     "why": "**out of stock** + **Alternatively** → แจ้งปัญหา + เสนอทางเลือก",
+     "no": [
+      "ไม่มีเรื่องเก็บเงิน",
+      null,
+      "matte เป็นทางเลือก ไม่ใช่สินค้าใหม่",
+      "ไม่มีเรื่องแก้แบบ"
+     ],
+     "whySay": "อีเมลบอกว่ากระดาษมันที่ลูกค้าเลือกหมด แล้วเสนอกระดาษด้านแทน ข้อ B พูดเรื่องเดียวกันด้วยคำใหม่ คือ supply problem กับ alternative"
+    },
+    {
+     "q": "What is stated about the matte paper?",
+     "o": [
+      "It is more expensive than glossy paper",
+      "It is currently unavailable",
+      "It was Mr. Webb's original choice",
+      "It would allow the order to ship on schedule"
+     ],
+     "a": 3,
+     "why": "**ship by March 11 as originally planned** → on schedule",
+     "no": [
+      "**at the same price** ราคาเท่ากัน",
+      "ที่หมดคือ **glossy**",
+      "เดิมเลือก **glossy**",
+      null
+     ],
+     "whySay": "ในอีเมลเขียนว่า ถ้าใช้กระดาษด้าน จะส่งได้วันที่สิบเอ็ดมีนาคม ตามแผนเดิม คำว่า as originally planned ถูกเปลี่ยนเป็น on schedule ระวังข้อ B เพราะคนที่หมดคือกระดาษมัน ไม่ใช่กระดาษด้าน"
+    },
+    {
+     "q": "What is Mr. Webb asked to do?",
+     "o": [
+      "Make a decision by a certain time",
+      "Pick up the brochures in person",
+      "Pay an extra fee for faster shipping",
+      "Contact the paper supplier directly"
+     ],
+     "a": 0,
+     "why": "**tell me which option you prefer by tomorrow afternoon** → decision by a certain time",
+     "no": [
+      null,
+      "ไม่มีเรื่องมารับเอง",
+      "ไม่มีค่าส่งด่วน",
+      "ไม่มีเรื่องให้ติดต่อผู้ผลิตกระดาษ"
+     ],
+     "whySay": "คำขอให้ทำอยู่ประโยคท้าย บอกให้แจ้งว่าเลือกแบบไหน ภายในบ่ายพรุ่งนี้ ข้อ A เปลี่ยน tomorrow afternoon เป็นคำกว้างๆ ว่า a certain time ซึ่งเป็น paraphrase ที่เจอบ่อยมาก"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 2/5 · โฆษณา",
+   "say": "บทความที่สองเป็นโฆษณาฟิตเนส บทนี้มีข้อ NOT หนึ่งข้อ ข้อแบบนี้ต้องเช็กตัวเลือกทีละข้อกับบทความ ตัดข้อที่มีอยู่จริงออก ข้อที่เหลือคือคำตอบ",
+   "text": "Summit Peak Fitness\nGrand Opening on Park Avenue!\n\nCelebrate the opening of our second location! From June 1 to June 30, new members pay no sign-up fee and get their first month for just $19.\n\nEvery membership includes access to over 40 weekly group classes, a heated indoor pool, and a free fitness assessment with a certified trainer. Locker rooms with towel service are available at both locations, and members park free in the underground garage.\n\nSign up online at summitpeakfit.com or visit our front desk any day between 6 A.M. and 10 P.M.",
+   "qs": [
+    {
+     "q": "What is NOT mentioned as a benefit of membership?",
+     "o": [
+      "Group exercise classes",
+      "Use of a swimming pool",
+      "Advice on healthy eating",
+      "A check-up with a trainer"
+     ],
+     "a": 2,
+     "why": "ไม่มีเรื่อง **อาหาร / nutrition** ในบทความ",
+     "no": [
+      "มี **40 weekly group classes**",
+      "มี **heated indoor pool**",
+      null,
+      "มี **fitness assessment with a certified trainer**"
+     ],
+     "whySay": "เช็กทีละข้อ group classes มี indoor pool มี fitness assessment กับเทรนเนอร์ก็มี เหลือข้อ C เรื่องคำแนะนำการกินอาหาร ซึ่งไม่มีพูดถึงเลย"
+    },
+    {
+     "q": "What is suggested about Summit Peak Fitness?",
+     "o": [
+      "It is moving to a new building",
+      "It has more than one location",
+      "It is open 24 hours a day",
+      "It offers a discount to students"
+     ],
+     "a": 1,
+     "why": "**our second location** + **both locations** → มีมากกว่า 1 สาขา",
+     "no": [
+      "เปิดสาขาใหม่ ไม่ได้ย้าย",
+      null,
+      "เปิด **6 A.M.–10 P.M.**",
+      "ไม่มีส่วนลดนักศึกษา"
+     ],
+     "whySay": "ข้อ suggested ต้องอนุมาน บทความบอกว่าเป็นสาขาที่สอง และพูดถึง both locations แปลว่าตอนนี้มีสองสาขา ข้อ B จึงถูก ส่วนข้อ A เป็นกับดัก เปิดสาขาใหม่ไม่ได้แปลว่าย้าย"
+    },
+    {
+     "q": "How can new members save money?",
+     "o": [
+      "By joining before the end of June",
+      "By signing up at the front desk",
+      "By bringing a friend",
+      "By paying for a full year in advance"
+     ],
+     "a": 0,
+     "why": "**From June 1 to June 30 … no sign-up fee** → join before the end of June",
+     "no": [
+      null,
+      "สมัครที่ไหนก็ได้ ราคาเท่ากัน",
+      "ไม่มีเรื่องพาเพื่อน",
+      "ไม่มีเรื่องจ่ายล่วงหน้า"
+     ],
+     "whySay": "โปรโมชันมีตั้งแต่หนึ่งถึงสามสิบมิถุนายน ไม่เสียค่าสมัคร และเดือนแรกแค่สิบเก้าดอลลาร์ ข้อ A เปลี่ยนช่วงวันที่เป็นคำว่า before the end of June"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 3/5 · ประกาศ",
+   "say": "บทความที่สามเป็นประกาศของอาคารสำนักงาน ข้อคำศัพท์ในบริบท อย่าเลือกความหมายแรกที่รู้จัก ให้กลับไปอ่านประโยคนั้น แล้วลองแทนคำในตัวเลือกดูว่าความหมายเข้ากันไหม",
+   "text": "NOTICE TO ALL TENANTS\nRosewood Tower\n\nThe building's main elevators will undergo scheduled maintenance from Monday, April 7, through Wednesday, April 9. During this period, tenants and visitors are asked to use the service elevator at the rear of the building.\n\nPlease note that the service elevator holds a maximum of six people, so delays may occur during busy hours. Deliveries of large items should be rescheduled for after April 9 whenever possible.\n\nWe apologize for any inconvenience. Questions may be directed to the management office in Suite 102.",
+   "qs": [
+    {
+     "q": "What is the purpose of the notice?",
+     "o": [
+      "To introduce a new building manager",
+      "To announce the opening of a rear entrance",
+      "To request help with deliveries",
+      "To inform tenants of a temporary service change"
+     ],
+     "a": 3,
+     "why": "**main elevators … maintenance April 7–9** → temporary service change",
+     "no": [
+      "ไม่มีผู้จัดการใหม่",
+      "**rear** คือที่ตั้งลิฟต์ขนของ ไม่ใช่ทางเข้าใหม่",
+      "ขอให้ **เลื่อน** การส่งของ ไม่ได้ขอให้ช่วย",
+      null
+     ],
+     "whySay": "ประกาศบอกว่าลิฟต์หลักจะปิดซ่อมสามวัน ให้ไปใช้ลิฟต์ขนของแทน ข้อ D สรุปเป็นคำใหม่ว่า temporary service change ข้อ B ลอกคำว่า rear มา แต่ความหมายไม่ตรง"
+    },
+    {
+     "q": "The word \"holds\" in paragraph 2 is closest in meaning to",
+     "o": [
+      "grips",
+      "accommodates",
+      "delays",
+      "owns"
+     ],
+     "a": 1,
+     "why": "**holds a maximum of six people** = จุคนได้ → **accommodates**",
+     "no": [
+      "grip = จับ กำ ใช้กับมือ",
+      null,
+      "delay อยู่ท่อนหลังของประโยค ไม่ใช่ความหมายของ holds",
+      "own = เป็นเจ้าของ"
+     ],
+     "whySay": "ในประโยคนี้ holds a maximum of six people แปลว่าจุคนได้มากสุดหกคน ลองแทนด้วย accommodates ความหมายเหมือนเดิมพอดี ส่วน grips เป็นความหมายแรกที่คนไทยนึกถึง แต่ไม่เข้ากับบริบท"
+    },
+    {
+     "q": "What are tenants advised to do?",
+     "o": [
+      "Use the stairs during busy hours",
+      "Contact Suite 102 to reserve the elevator",
+      "Postpone deliveries of large items",
+      "Arrive early on April 7"
+     ],
+     "a": 2,
+     "why": "**should be rescheduled for after April 9** → postpone",
+     "no": [
+      "ให้ใช้ **service elevator** ไม่ใช่บันได",
+      "Suite 102 ไว้ **สอบถาม** ไม่ใช่จองลิฟต์",
+      null,
+      "ไม่ได้บอกให้มาเช้า"
+     ],
+     "whySay": "ประกาศขอให้เลื่อนการส่งของชิ้นใหญ่ไปหลังวันที่เก้าเมษายน คำว่า rescheduled for after ถูกเปลี่ยนเป็น postpone ข้อ B มีเลขห้องจริง แต่ห้องนั้นไว้สอบถาม ไม่ได้ไว้จองลิฟต์"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 4/5 · แชท",
+   "say": "บทความที่สี่เป็นแชทระหว่างเพื่อนร่วมงาน ข้อสอบชอบถามว่า เมื่อคนหนึ่งพิมพ์ประโยคนี้ เขาหมายถึงอะไร ให้ดูข้อความก่อนหน้านั้นทันที ว่าเขากำลังตอบอะไรอยู่",
+   "text": "Anjali Rao (9:12 A.M.)\nHi Tom, are you still at the Harborview Hotel? The client from Osaka just moved our meeting to 11:00.\n\nTom Garcia (9:14 A.M.)\nYes, I'm in the lobby. 11:00 is fine, but I left the product samples in my car.\n\nAnjali Rao (9:15 A.M.)\nCan you get them before then? Mr. Sato specifically asked to see them.\n\nTom Garcia (9:16 A.M.)\nNo problem. The parking garage is right next door.\n\nAnjali Rao (9:17 A.M.)\nGreat. I'm getting a taxi now. I should be there by 10:45.",
+   "qs": [
+    {
+     "q": "Why did Ms. Rao send the first message?",
+     "o": [
+      "To report a change in a meeting time",
+      "To ask for directions to a hotel",
+      "To cancel a meeting with a client",
+      "To ask Mr. Garcia to pick her up"
+     ],
+     "a": 0,
+     "why": "**just moved our meeting to 11:00** → change in a meeting time",
+     "no": [
+      null,
+      "ถามว่ายังอยู่โรงแรมไหม ไม่ได้ถามทาง",
+      "ประชุม **เลื่อน** ไม่ได้ยกเลิก",
+      "เธอนั่ง **taxi** มาเอง"
+     ],
+     "whySay": "ข้อความแรกบอกว่า ลูกค้าจากโอซาก้าเพิ่งเลื่อนประชุมเป็นสิบเอ็ดโมง ข้อ A เปลี่ยน moved เป็น a change in a meeting time ข้อ C เป็นกับดัก เลื่อนไม่ใช่ยกเลิก"
+    },
+    {
+     "q": "At 9:16 A.M., what does Mr. Garcia most likely mean when he writes, \"No problem\"?",
+     "o": [
+      "He does not mind the new meeting time",
+      "He has already shown the samples to Mr. Sato",
+      "He can get the samples easily",
+      "He will pay for Ms. Rao's taxi"
+     ],
+     "a": 2,
+     "why": "ตอบคำถาม **Can you get them before then?** + **garage is right next door**",
+     "no": [
+      "เรื่องเวลาเขาตอบไปแล้วตอน 9:14",
+      "ยังไม่ได้เจอ Mr. Sato",
+      null,
+      "ไม่มีเรื่องจ่ายค่าแท็กซี่"
+     ],
+     "whySay": "No problem ตอบข้อความก่อนหน้า ที่ถามว่าไปเอาตัวอย่างสินค้ามาทันไหม แล้วเขาบอกต่อว่าที่จอดรถอยู่ติดกัน แปลว่าไปเอาได้ง่ายๆ ข้อ A เป็นกับดัก เพราะเรื่องเวลาเขาตอบไปแล้วตอนเก้าโมงสิบสี่"
+    },
+    {
+     "q": "What is suggested about Ms. Rao?",
+     "o": [
+      "She is staying at the Harborview Hotel",
+      "She drove her car to the meeting",
+      "She has met Mr. Sato in Osaka",
+      "She expects to arrive before the meeting starts"
+     ],
+     "a": 3,
+     "why": "**there by 10:45** < ประชุม **11:00** → มาถึงก่อนเริ่ม",
+     "no": [
+      "คนที่อยู่โรงแรมคือ **Tom**",
+      "เธอนั่ง **taxi** · รถเป็นของ Tom",
+      "ไม่มีข้อมูล",
+      null
+     ],
+     "whySay": "ข้อนี้ต้องเอาสองข้อมูลมาต่อกัน เธอบอกว่าจะถึงสิบโมงสี่สิบห้า ส่วนประชุมเริ่มสิบเอ็ดโมง แปลว่าเธอคาดว่าจะถึงก่อนประชุมเริ่ม ข้อ D จึงถูก"
+    }
+   ]
+  },
+  {
+   "type": "passage",
+   "h": "บทความ 5/5 · ใบแจ้งหนี้",
+   "say": "บทความสุดท้ายเป็นใบแจ้งหนี้ เต็มไปด้วยตัวเลข อ่านชื่อรายการกับจำนวนให้ดี และอย่าลืมหมายเหตุด้านล่าง เพราะข้อสอบชอบซ่อนคำตอบไว้ตรงนั้น",
+   "text": "Corland Office Supplies\nINVOICE #20-5583\nBill to: Pinecrest Accounting Group\nDate: September 2\n\nDesk chairs, black · Qty 6 · $540.00\nPrinter paper, box · Qty 10 · $280.00\nWhiteboard markers, set · Qty 4 · $36.00\nDelivery · $0.00\nTOTAL DUE: $856.00\n\nPayment is due within 30 days. Orders over $500 qualify for free delivery.\n\nNote: The 2 gray chairs you requested are back-ordered. They will be shipped separately by September 15 at no additional charge.",
+   "qs": [
+    {
+     "q": "Why was Pinecrest Accounting Group not charged for delivery?",
+     "o": [
+      "Its order was over a certain amount",
+      "It picked up the items itself",
+      "It is a new customer",
+      "Some items were back-ordered"
+     ],
+     "a": 0,
+     "why": "**Orders over $500 qualify for free delivery** · ยอด $856",
+     "no": [
+      null,
+      "ไม่มีเรื่องมารับเอง",
+      "ไม่มีข้อมูลว่าเป็นลูกค้าใหม่",
+      "back-order ส่งฟรีเฉพาะ **รอบที่สอง** ไม่ใช่เหตุผล"
+     ],
+     "whySay": "ใต้ตารางเขียนว่า สั่งเกินห้าร้อยดอลลาร์ ส่งฟรี ยอดรวมคือแปดร้อยห้าสิบหก จึงได้ส่งฟรี ข้อ A เปลี่ยน five hundred dollars เป็น a certain amount"
+    },
+    {
+     "q": "What is indicated about the gray chairs?",
+     "o": [
+      "They cost more than the black chairs",
+      "They were removed from the order",
+      "They will be delivered at a later date",
+      "They must be paid for in advance"
+     ],
+     "a": 2,
+     "why": "**back-ordered … shipped separately by September 15** → later date",
+     "no": [
+      "ไม่มีข้อมูลราคา",
+      "ยังอยู่ในออเดอร์ แค่ส่งทีหลัง",
+      null,
+      "ไม่มีเรื่องจ่ายล่วงหน้า"
+     ],
+     "whySay": "หมายเหตุบอกว่าเก้าอี้สีเทาสองตัว ของยังไม่มี จะส่งแยกภายในวันที่สิบห้ากันยายน ข้อ C เปลี่ยนเป็น delivered at a later date ส่วนข้อ B เป็นกับดัก ของยังไม่ถูกตัดออกจากออเดอร์"
+    },
+    {
+     "q": "What is suggested about the printer paper?",
+     "o": [
+      "It was ordered as a set of four",
+      "Each box costs $28",
+      "It will be shipped separately",
+      "It is not included in the total"
+     ],
+     "a": 1,
+     "why": "**10 boxes = $280** → กล่องละ **$28**",
+     "no": [
+      "ชุดละ 4 คือ **markers**",
+      null,
+      "ที่ส่งแยกคือ **gray chairs**",
+      "รวมอยู่ใน **$856** แล้ว"
+     ],
+     "whySay": "กระดาษสั่งสิบกล่อง ราคารวมสองร้อยแปดสิบดอลลาร์ หารออกมาเป็นกล่องละยี่สิบแปด ข้อ B ต้องคิดเลขนิดหน่อย ข้อสอบจริงมีแบบนี้บ่อย ส่วนข้อ A เอาตัวเลขสี่ของปากกามาหลอก"
+    }
+   ]
+  },
+  {
+   "type": "end",
+   "h": "3 จุดพลาดในชุดนี้",
+   "items": [
+    {
+     "x": "**ตัวเลือกลอกคำจากบทความ** : rear · Suite 102 · back-ordered → ระวังกับดัก",
+     "say": "จุดพลาดแรก ตัวเลือกที่ลอกคำจากบทความมาตรงๆ อย่าง rear หรือ Suite 102 คำเหมือนกันก็จริง แต่ไม่ได้ตอบคำถาม ข้อถูกมักใช้คำใหม่"
+    },
+    {
+     "x": "**แชท \"หมายถึงอะไร\"** : ดูข้อความ **ก่อนหน้าทันที** ว่าตอบอะไร",
+     "say": "จุดพลาดที่สอง ข้อถามว่าคนพิมพ์หมายถึงอะไร ต้องดูข้อความก่อนหน้าทันที อย่าง No problem ตอบเรื่องไปเอาตัวอย่างสินค้า ไม่ใช่เรื่องเวลาประชุม"
+    },
+    {
+     "x": "**ข้อ NOT + คำศัพท์** : เช็กทีละตัวเลือก · แทนคำลงในประโยค",
+     "say": "จุดพลาดที่สาม ข้อ NOT ให้เช็กตัวเลือกทีละข้อแล้วตัดทิ้ง ส่วนข้อคำศัพท์ อย่าเลือกความหมายแรกที่รู้จัก ให้ลองแทนคำลงในประโยคก่อน"
+    }
+   ],
+   "outro": "ชุดแรกของ Part 7 จบแล้ว ได้กี่ข้อจากสิบห้า ถ้าได้สิบสองข้อขึ้นไปถือว่าดีมาก ข้อที่พลาดย้อนดูเฉลยอีกรอบ กดทำเครื่องหมายว่าเรียนจบ แล้วไปบทถัดไปกันเลย"
+  }
+ ]
+}
