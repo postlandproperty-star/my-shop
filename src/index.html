@@ -5609,15 +5609,17 @@ function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d
 `;}
 /* 🎯 แผนการตลาด (คุณแดนสั่ง 6 ต.ค. 69: "จดไว้ในแผน ทำเยอะจะหลุดโฟกัส") · ทีม AI อ่านฉบับเดียวกันใน lib/policy.js MARKET_PLAN
    กฎ: งานใหม่เข้า "พักไว้" ก่อน เว้นแต่ช่วย 3 ข้อโฟกัสโดยตรง · แก้แผนที่นี่และที่ lib/policy.js พร้อมกัน */
-const MKT_PLAN={at:'7 ต.ค. 69',focus:[
+const MKT_PLAN={at:'8 ต.ค. 69',focus:[
   ['📣','แอด Facebook ชุด TOEIC / IELTS','ได้ผลแล้ว (คลิก 4–6% · ขายได้) → เติมวงเงินไม่ให้หยุด ปล่อยครบ 7 วัน แล้วตัดสินใจต่อจากยอด "ร้านนับได้" (ระบบเตือนก่อนจบและก่อนวงเงินหมด)'],
   ['🎓','เปิดขายคอร์ส TOEIC','ตั้งราคา + แชร์โฟลเดอร์ Drive (Courses) → เปิดขาย · อนุมัติบทใหม่จากโรงงาน (สัปดาห์ละ 5 บท) · ครบ 10 บทขึ้นไปค่อยยิงแอดคอร์ส'],
   ['🎵','TikTok ช่องติว TOEIC (ใหม่)','คลิปแนวตั้ง 30–60 วิ จากโรงงาน สัปดาห์ละ 3 คลิป · บอกตรงๆ ว่าเป็นช่องของ SheetLab (ไม่แอบอ้างเป็นคนนอก) เปิด "Your brand" ตอนโพสต์ · ลิงก์ไบโอไปร้าน/คอร์ส · วัดผลหลัง 4 สัปดาห์: วิว คลิกลิงก์ ออเดอร์']],
  wait:['Meta App Review แชทบอท Messenger (รอ Meta ตรวจ)'],
+ next:['แยกโค้ดหลังบ้านออกจากหน้าขาย ให้หน้าลูกค้าเล็กลงครึ่งหนึ่ง เร็วขึ้น ~0.3–0.5 วิบนมือถือ (วัด 8 ต.ค. 69: ราคา+ปุ่มซื้อขึ้น 1.3–2.2 วิ · ไฟล์ 1.17 MB) · ทำหลังเปิดขายแพ็กเกจ Pro'],
  parked:['อัปคลิป YouTube อัตโนมัติ','ขายต่างประเทศ (Gumroad / Notion)','สมาชิก VIP','หนังสือ/หมวดใหม่ที่ไม่ใช่ TOEIC/IELTS']};
 function mktPlanBox(){return `<details class="card mkt" ${S.mktOpen!==false?'open':''}><summary data-a="mktToggle"><b>🎯 แผนการตลาด · โฟกัส 3 อย่าง</b> <span class="fine">อัปเดต ${MKT_PLAN.at}</span></summary>
   <ol class="mkt-f">${MKT_PLAN.focus.map(f=>`<li><b>${f[0]} ${esc(f[1])}</b><span class="fine">${esc(f[2])}</span></li>`).join('')}</ol>
   <p class="fine" style="margin:8px 0 0">⏳ รอคนอื่น: ${MKT_PLAN.wait.map(esc).join(' · ')}</p>
+  ${(MKT_PLAN.next||[]).length?`<p class="fine" style="margin:4px 0 0">🔜 ทำต่อจากนี้: ${MKT_PLAN.next.map(esc).join(' · ')}</p>`:''}
   <p class="fine" style="margin:4px 0 0">⏸ พักไว้ก่อน (ทำเมื่อ 3 ข้อบนเดินเองแล้ว): ${MKT_PLAN.parked.map(esc).join(' · ')}</p>
   <p class="fine" style="margin:4px 0 0">กฎ: ไอเดียใหม่ใส่ "พักไว้" ก่อน เว้นแต่ช่วย 3 ข้อนี้โดยตรง</p></details>`;}
 function homeTab(){
