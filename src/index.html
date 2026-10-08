@@ -1165,6 +1165,19 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bst-empty{border:1px dashed var(--line);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.bst-empty p{margin:0}.bst-empty.ok{background:#F0FDF4;border-color:#86EFAC;border-style:solid}
 .bst-new{margin-bottom:12px}.bst-new-list{display:grid;gap:6px;margin-top:10px;max-height:420px;overflow:auto}.bst-new-it{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}.bst-new-it img{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--line)}.bst-new-it>div{display:grid;gap:2px;min-width:0}.bst-new-it b{font-size:14px;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.bst-new-it .fine{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 @media (max-width:640px){.adt-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.adt-cell{font-size:11.5px;padding:5px}.adt-cell img{aspect-ratio:1}.acamp-h{grid-template-columns:56px minmax(0,1fr)}.acamp-imgs{width:56px;height:56px}.acamp-imgs img,.acamp-imgs span{width:48px;height:48px}.acamp-imgs.n1 img{width:56px;height:56px}.acamp-kpi{grid-column:1/-1;grid-template-columns:repeat(3,1fr);text-align:left;background:var(--surface);border-radius:10px;padding:8px 10px}.acamp-acts{justify-content:flex-start}.ats{font-size:13px;padding:7px 12px}}
+.adm-perf,.adm-list{display:grid;gap:10px}.adm-list{margin-top:6px}.adm-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.adm-rng{display:flex;gap:6px}
+.adm-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.adm-card{--c:transparent;text-align:left;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--c);border-radius:8px;padding:10px 12px;display:grid;gap:2px;cursor:pointer;min-width:0}
+.adm-card.on{box-shadow:0 1px 6px rgba(15,27,51,.08)}.adm-card span{font-size:13px;color:var(--muted)}.adm-card b{font-size:20px;line-height:1.25}.adm-chg{font-style:normal;font-size:12px;font-weight:600}.adm-chg.up{color:#15803D}.adm-chg.down{color:#DC2626}.adm-chg.flat{color:var(--muted)}
+.adm-note{margin:0}.adc{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 10px 4px}.adc-leg{display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end;font-size:13px}.adc-leg i,.adc-tip i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.adc-svg{width:100%;height:210px;display:block;touch-action:pan-y}.adc-grid{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}.adc-ln{stroke:#94A3B8;stroke-dasharray:3 3;vector-effect:non-scaling-stroke}.adc-xs{position:relative;height:18px;font-size:12px;color:var(--muted)}.adc-xs span{position:absolute;transform:translateX(-50%);white-space:nowrap}.adc-xs span.s{transform:none}.adc-xs span.e{transform:translateX(-100%)}
+.adc-tip{position:absolute;top:34px;transform:translateX(-50%);background:#0F172A;color:#fff;border-radius:8px;padding:8px 10px;font-size:12.5px;display:grid;gap:2px;pointer-events:none;white-space:nowrap;z-index:2}.adc-tip[hidden]{display:none}.adc-none{padding:20px;text-align:center}
+.adm-tools{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}.adm-tf{display:flex;gap:6px;flex-wrap:wrap}.adm-q{max-width:240px}
+.adt-tbl{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}.adt-hd,.adt-row{display:grid;grid-template-columns:minmax(190px,2.4fr) repeat(7,minmax(60px,1fr)) 128px;gap:8px;align-items:center;padding:10px 12px}
+.adt-hd{background:var(--bg);font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line)}.adt-h{font:inherit;background:none;border:0;color:inherit;cursor:pointer;text-align:right;padding:0}.adt-h.on{color:var(--ink);font-weight:700}.adt-hd>span:last-child{text-align:right}
+.adt-row{border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--surface)}.adt-row:last-child{border-bottom:0}.adt-row.g-fix{background:#FFF7F7}.adt-name{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;align-items:center;min-width:0}.adt-name .acamp-imgs{width:56px;height:56px}.adt-name .acamp-imgs img,.adt-name .acamp-imgs span{width:48px;height:48px}.adt-name .acamp-imgs.n1 img{width:56px;height:56px}
+.adt-c{text-align:right;display:grid;gap:1px;font-size:14px}.adt-act{display:flex;gap:6px;justify-content:flex-end}.adt-act .btn{white-space:nowrap;padding-left:10px;padding-right:10px}.adt-wide{grid-column:1/-1}.adt-wide p{margin:0}
+@media (max-width:900px){.adt-hd{display:none}.adt-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px}.adt-name{grid-column:1/-1}.adt-c{text-align:left;background:var(--bg);border-radius:8px;padding:6px 8px}.adt-c::before{content:attr(data-l);font-size:11.5px;color:var(--muted)}.adt-act{grid-column:1/-1;justify-content:flex-start}}
+@media (max-width:640px){.adm-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.adm-card b{font-size:18px}.adc-svg{height:170px}.adc-xs span.h{display:none}.adm-q{max-width:none;flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -5061,7 +5074,7 @@ function adTestBox(){const T=adTests();if(!T.length)return '';const money=n=>'�
   </section>`).join('');}
 /* แท็บโฆษณา (ยกเครื่อง 8 ต.ค. 69): แถบ "ต้องทำ" + ตัวเลข 7 วัน + แท็บย่อย ต้องทำ / กำลังวิ่ง / หยุด-จบ / แนะนำ-ประเมิน / เครื่องมือ
    แอดหลายรูปในแคมเปญเดียวรวมเป็นการ์ดเดียว (เดิมขึ้นแยกทีละรูปชื่อซ้ำกัน) · สถานะจริงจาก Facebook */
-const ADST={d:null,loading:false,f:'now',busy:'',pick:false,q:''};
+const ADST={d:null,loading:false,f:'home',busy:'',pick:false,q:'',rng:7,met:null,tf:'all',sort:'spend',cq:''};
 function loadAdsStatus(){if(ADST.loading)return;ADST.loading=true;adminApi('/api/content?action=ads_auto_status').then(j=>{ADST.d=j||{ok:false};}).catch(()=>{ADST.d={ok:false,error:'เชื่อมต่อไม่ได้'};}).then(()=>{ADST.loading=false;render(true);});}
 const ADG={fix:['🔴','ต้องแก้ไข','bad'],review:['🟡','รอรีวิว','warn'],run:['🟢','กำลังวิ่ง','ok'],paused:['⏸','หยุดไว้','gray'],ended:['✓','จบแล้ว','gray']};
 const ADG_ORDER=['fix','review','run','paused','ended'];
@@ -5076,19 +5089,6 @@ function adsCamps(){const ads=(ADST.d&&ADST.d.ads)||[],m=new Map();
     .sort((p,q)=>ADG_ORDER.indexOf(p.g)-ADG_ORDER.indexOf(q.g)||q.w.spendTHB-p.w.spendTHB);}
 function adAdBtn(a){return a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`
   :a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:'';}
-function adCampCard(c){const g=ADG[c.g],w=c.w,one=c.ads.length===1,a0=c.ads[0];
-  const imgs=c.ads.map(a=>a.image).filter(Boolean).slice(0,3);
-  const label=a=>(c.au&&(c.au.labels||{})[a.image])||'รูป '+(c.ads.indexOf(a)+1);
-  const todo=c.ads.filter(a=>a.todo||a.reasons.length);
-  return `<article class="acamp g-${c.g}">
-    <div class="acamp-h"><div class="acamp-imgs n${imgs.length}">${imgs.length?imgs.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join(''):'<span></span>'}</div>
-      <div class="acamp-t"><b>${esc(c.name)}</b><span class="bst-st"><span class="badge ${g[2]}">${g[0]} ${esc(one?a0.label:g[1])}</span>${c.daily?`<span class="fine">≈${adMoney(c.daily)}/วัน</span>`:''}${c.end&&c.g!=='ended'?`<span class="fine">ถึง ${new Date(c.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}${one?'':`<span class="fine">${c.ads.length} รูป</span>`}</span></div>
-      ${(()=>{const sh=c.sh,n=sh?sh.orders7:w.purchases,rev=sh?sh.rev7:w.valueTHB,pr=rev-w.spendTHB;return `<div class="acamp-kpi"><div><b>${adMoney(w.spendTHB)}</b><span>ค่าแอด 7 วัน</span></div><div><b>${n}</b><span>ออเดอร์${sh?' (ร้านนับ)':''}${n?` · ${adMoney(w.spendTHB/n)}/ออเดอร์`:''}</span></div><div><b class="${pr>=0?'up':'down'}">${w.spendTHB?(pr>=0?'+':'−')+adMoney(Math.abs(pr)):'–'}</b><span>${pr>=0?'กำไร':'ขาดทุน'}</span></div></div>`;})()}</div>
-    ${c.sh&&w.purchases!==c.sh.orders7?`<p class="fine" style="margin:0">Facebook นับ ${w.purchases} ครั้ง ${adMoney(w.valueTHB)} (รวมคนที่เห็นแอดแล้วมาซื้อทีหลังทางอื่น อาจนับเกิน) · ร้านนับจากลิงก์แอด ${c.sh.orders7} ออเดอร์ ${adMoney(c.sh.rev7)}</p>`:''}
-    ${todo.map(a=>`${a.todo?`<p class="bst-todo">👉 ${one?'':esc(label(a))+': '}${esc(a.todo)}</p>`:''}${a.reasons.length?`<p class="fine bst-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</p>`:''}`).join('')}
-    ${one?'':`<details class="acamp-ads"><summary>ดูทีละรูป (${c.ads.length})</summary>${c.ads.map(a=>{const ag=ADG[a.group];return `<div class="acamp-ad">${a.image?`<img src="${esc(a.image)}" alt="" loading="lazy">`:'<span></span>'}<div><b>${esc(label(a))}</b> <span class="badge ${ag[2]}">${ag[0]} ${esc(a.label)}</span><span class="fine">ใช้ ${adMoney(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · ซื้อ ${a.week.purchases}${a.week.purchases?` · ${adMoney(a.week.spendTHB/a.week.purchases)}/ออเดอร์`:''}</span></div><div class="bst-acts">${adAdBtn(a)}</div></div>`;}).join('')}</details>`}
-    <div class="acamp-acts">${one?adAdBtn(a0):c.au&&['live','paused'].includes(c.au.status)?`<button class="btn btn-line btn-sm" data-a="${c.au.status==='live'?'adsStop':'adsResume'}" data-id="${esc(c.au.id)}" ${ADA.busy===c.au.id?'disabled':''}>${c.au.status==='live'?'⏸ หยุดทั้งแคมเปญ':'▶ เปิดทั้งแคมเปญต่อ'}</button>`:''}<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/${one?'ads?selected_ad_ids='+esc(a0.id):'campaigns?selected_campaign_ids='+esc(c.id)}" target="_blank" rel="noopener noreferrer">Ads Manager ↗</a></div>
-  </article>`;}
 /* + สร้างแอดใหม่: เลือกสินค้า (เรียงตามคำแนะนำของน้องบูสต์) → ได้ร่างแอด ยังไม่เสียเงิน */
 function adsNewBox(){if(!ADST.pick)return '';const L=adPicks(),rank=new Map(L.map((x,i)=>[x.p.id,{i,x}]));const q=String(ADST.q||'').trim().toLowerCase();
   const open=new Set((ADA.items||[]).filter(x=>['pending','launching','live'].includes(x.status)).map(x=>x.productId));
@@ -5100,39 +5100,89 @@ function adsNewBox(){if(!ADST.pick)return '';const L=adPicks(),rank=new Map(L.ma
     <div class="bst-new-list">${P.map(p=>{const r=rank.get(p.id),top=r&&r.i<3&&r.x.sc>=0;return `<div class="bst-new-it"><img src="${esc((p.images||[])[0]||p.cover||'')}" alt="" loading="lazy"><div><b>${top?'⭐ ':''}${esc(p.name)}</b><span class="fine">${{course:'คอร์สเรียน',bundle:'ชุด',notion:'Notion'}[pfmt(p)]||'ชีท'} · ${isBundle(p)?'เริ่ม '+adMoney(fromPrice(p)):adMoney(p.price)}${r&&r.x.why.length?' · '+esc(r.x.why[0]):''}</span></div>${open.has(p.id)?'<span class="badge gray">มีแอดอยู่แล้ว</span>':`<button class="btn btn-cta btn-sm" data-a="adsDraftOne" data-id="${p.id}">📣 ทำแอด</button>`}</div>`;}).join('')||'<p class="fine">ไม่พบสินค้า</p>'}</div></section>`;}
 /* ส่วนไหนแสดงไม่ได้: ขึ้นข้อความในส่วนนั้น ส่วนอื่นยังใช้ได้ (ไม่ให้ทั้งแท็บหาย) */
 function adSafe(f,name){try{return f();}catch(e){console.error(name,e);return `<p class="err">แสดง${name}ไม่ได้: ${esc(e.message||e)} · กดรีเฟรช ถ้ายังเป็นอยู่แจ้งทีม</p>`;}}
+/* แท็บโฆษณาแบบ Shopee Ads (คุณแดน 8 ต.ค. 69): ผลการดำเนินงาน (เลือกช่วง 7/14/30 วัน · 8 การ์ดตัวเลข กดเลือกเส้นในกราฟได้ 4 เส้น · เทียบช่วงก่อนหน้า)
+   + กราฟรายวัน + ตารางรายการโฆษณา (เรียงได้ · หยุด/เปิด · ดูทีละรูป) · คำสั่งซื้อ/ยอดขาย = ออเดอร์จ่ายแล้วในร้านจากลิงก์แอด (Facebook นับเกิน แสดงแยก) */
+const AD_MET=[['imp','การมองเห็น','n',1],['clk','จำนวนคลิก','n',1],['ctr','อัตราการคลิก (CTR)','pct',1],['ord','คำสั่งซื้อ','n',1],['sales','ยอดขาย','baht',1],['spend','ค่าโฆษณา','baht',0],['roas','ROAS','x',1],['cpa','ต้นทุนต่อออเดอร์','baht',-1]];
+const AD_COL=['#2563EB','#F97316','#475569','#14B8A6'];
+const adFmt=(t,v)=>v==null||!isFinite(v)?'–':t==='pct'?(v*100).toFixed(2)+'%':t==='x'?v.toFixed(2):t==='baht'?adMoney(v):v>=1e4?(v/1e3).toFixed(1)+'k':Math.round(v).toLocaleString('th-TH');
+function adCalc(o){return {...o,ctr:o.imp?o.clk/o.imp:null,roas:o.spend?o.sales/o.spend:null,cpa:o.ord?o.spend/o.ord:null};}
+// ช่วงที่เลือก (รวมวันนี้) + ช่วงก่อนหน้ายาวเท่ากัน · กรองตามแคมเปญ (ids) และชื่อในลิงก์ (tags) ได้
+function adRange(ids,tags){const d=ADST.d||{},rows=d.daily;if(!rows)return null;const N=ADST.rng||7,tz=d.tz==null?7:d.tz,day=t=>new Date(t+tz*36e5).toISOString().slice(0,10);
+  const days=[...Array(2*N)].map((_,k)=>day(Date.now()-(2*N-1-k)*864e5)),by=new Map(days.map(x=>[x,{imp:0,clk:0,spend:0,fbp:0,fbv:0,ord:0,sales:0}]));
+  for(const r of rows){if(ids&&!ids.has(r.c))continue;const o=by.get(r.d);if(o){o.imp+=r.i;o.clk+=r.k;o.spend+=r.s;o.fbp+=r.p;o.fbv+=r.v;}}
+  for(const r of d.shopDaily||[]){if(!tags.has(r.t))continue;const o=by.get(r.d);if(o){o.ord+=r.n;o.sales+=r.v;}}
+  const sum=L=>adCalc(L.reduce((a,x)=>{for(const k in x)a[k]=(a[k]||0)+x[k];return a;},{}));const V=days.map(x=>by.get(x));
+  return {N,days:days.slice(N),daily:V.slice(N).map(adCalc),cur:sum(V.slice(N)),prev:sum(V.slice(0,N))};}
+const adTags=ads=>new Set(ads.map(a=>String(a.tag||a.campaign||'').toLowerCase()).filter(Boolean));
+function adChg(k,cur,prev){const m=AD_MET.find(x=>x[0]===k),a=cur[k],b=prev[k];if(a==null||!b)return '';const p=(a-b)/Math.abs(b);if(!isFinite(p))return '';
+  const cls=m[3]===0?'flat':(p>=0)===(m[3]>0)?'up':'down';return `<em class="adm-chg ${cls}">${p>=0?'▲':'▼'} ${Math.abs(p*100).toFixed(1)}%</em>`;}
+function adChart(R){const sel=(ADST.met||[]).filter(k=>AD_MET.some(m=>m[0]===k));if(!sel.length)return '<p class="fine adc-none">เลือกการ์ดด้านบนเพื่อดูกราฟ</p>';
+  const W=1000,H=210,P=14,n=R.days.length,X=i=>P+(n>1?i/(n-1):.5)*(W-2*P);
+  const series=sel.map((k,j)=>{const m=AD_MET.find(x=>x[0]===k),vals=R.daily.map(o=>o[k]==null?0:o[k]),mx=Math.max(...vals,0)||1;
+    return {k,label:m[1],t:m[2],color:AD_COL[AD_COL.length>j?j:0],vals,path:vals.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${(H-P-(v/mx)*(H-2*P)).toFixed(1)}`).join('')};});
+  window.__adc={days:R.days.map(x=>x.slice(8)+'/'+x.slice(5,7)),W,P,series:series.map(s=>({label:s.label,color:s.color,vals:s.vals.map(v=>adFmt(s.t,v))}))};
+  const step=Math.max(1,Math.ceil(n/8));
+  return `<div class="adc"><div class="adc-leg">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.label)}</span>`).join('')}</div>
+    <svg class="adc-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="กราฟรายวัน ${esc(sel.map(k=>AD_MET.find(m=>m[0]===k)[1]).join(', '))}">
+      ${[0,.25,.5,.75,1].map(f=>`<line x1="${P}" x2="${W-P}" y1="${(P+f*(H-2*P)).toFixed(1)}" y2="${(P+f*(H-2*P)).toFixed(1)}" class="adc-grid"/>`).join('')}
+      ${series.map(s=>`<path d="${s.path}" fill="none" stroke="${s.color}" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`).join('')}
+      <line id="adc-ln" class="adc-ln" x1="-9" x2="-9" y1="${P}" y2="${H-P}"/>
+    </svg><div class="adc-xs" aria-hidden="true">${(()=>{const L=R.days.map((x,i)=>i).filter(i=>(i%step===0&&(n-1-i>=step/2||i===0))||i===n-1);return L.map((i,j)=>`<span style="left:${(X(i)/W*100).toFixed(2)}%" class="${i===0?'s':i===n-1?'e':''}${j%2&&j<L.length-1?' h':''}${j===L.length-2&&j%2===0&&L.length>2?' h':''}">${R.days[i].slice(8)}/${R.days[i].slice(5,7)}</span>`).join('');})()}</div><div id="adc-tip" class="adc-tip" hidden></div></div>`;}
+// แถวในตาราง = 1 แคมเปญ
+function adCampRow(c,R){const g=ADG[c.g],one=c.ads.length===1,a0=c.ads[0],cur=R?R.cur:adCalc({imp:c.w.impressions,clk:c.w.clicks,spend:c.w.spendTHB,ord:c.sh?c.sh.orders7:c.w.purchases,sales:c.sh?c.sh.rev7:c.w.valueTHB}),prev=R?R.prev:{};
+  const imgs=c.ads.map(a=>a.image).filter(Boolean).slice(0,3),label=a=>(c.au&&(c.au.labels||{})[a.image])||'รูป '+(c.ads.indexOf(a)+1),todo=c.ads.filter(a=>a.todo||a.reasons.length);
+  const cell=(k,l)=>`<div class="adt-c" data-l="${l}"><b>${adFmt(AD_MET.find(m=>m[0]===k)[2],cur[k])}</b>${adChg(k,cur,prev)}</div>`;
+  const toggle=one?adAdBtn(a0):c.au&&['live','paused'].includes(c.au.status)?`<button class="btn btn-line btn-sm" data-a="${c.au.status==='live'?'adsStop':'adsResume'}" data-id="${esc(c.au.id)}" ${ADA.busy===c.au.id?'disabled':''}>${c.au.status==='live'?'⏸ หยุด':'▶ เปิดต่อ'}</button>`:'';
+  return `<div class="acamp adt-row g-${c.g}">
+    <div class="adt-name"><div class="acamp-imgs n${imgs.length}">${imgs.length?imgs.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join(''):'<span></span>'}</div>
+      <div class="acamp-t"><b>${esc(c.name)}</b><span class="bst-st"><span class="badge ${g[2]}">${g[0]} ${esc(one?a0.label:g[1])}</span>${c.daily?`<span class="fine">${adMoney(c.daily)}/วัน</span>`:''}${c.end&&c.g!=='ended'?`<span class="fine">ถึง ${new Date(c.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}${one?'':`<span class="fine">${c.ads.length} รูป</span>`}</span></div></div>
+    ${cell('imp','การมองเห็น')}${cell('clk','คลิก')}${cell('ctr','CTR')}${cell('spend','ค่าโฆษณา')}${cell('sales','ยอดขาย')}${cell('ord','คำสั่งซื้อ')}${cell('roas','ROAS')}
+    <div class="adt-act">${toggle}<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/${one?'ads?selected_ad_ids='+esc(a0.id):'campaigns?selected_campaign_ids='+esc(c.id)}" target="_blank" rel="noopener noreferrer" title="เปิดใน Ads Manager">↗</a></div>
+    ${todo.length?`<div class="adt-wide">${todo.map(a=>`${a.todo?`<p class="bst-todo">👉 ${one?'':esc(label(a))+': '}${esc(a.todo)}</p>`:''}${a.reasons.length?`<p class="fine bst-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</p>`:''}`).join('')}</div>`:''}
+    ${one?'':`<details class="acamp-ads adt-wide"><summary>ดูทีละรูป (${c.ads.length}) · ตัวเลข 7 วัน</summary>${c.ads.map(a=>{const ag=ADG[a.group];return `<div class="acamp-ad">${a.image?`<img src="${esc(a.image)}" alt="" loading="lazy">`:'<span></span>'}<div><b>${esc(label(a))}</b> <span class="badge ${ag[2]}">${ag[0]} ${esc(a.label)}</span><span class="fine">ใช้ ${adMoney(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · Facebook นับซื้อ ${a.week.purchases}</span></div><div class="bst-acts">${adAdBtn(a)}</div></div>`;}).join('')}</details>`}
+  </div>`;}
 function adsTab(){
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
   if(ADA.items===null&&!ADA.loading)loadAdsAuto();
-  const d=ADST.d||{},A=d.access||ADA.access,L=A&&A.limit,camps=adsCamps(),T=adTests();
-  const w={};for(const c of camps)for(const k in c.w)w[k]=(w[k]||0)+c.w[k];const spend=w.spendTHB||0,fbVal=w.valueTHB||0,fbBuys=w.purchases||0;
-  // ยอดจริง = ออเดอร์จ่ายแล้วในร้านที่มาจากลิงก์แอด (นับครั้งเดียวต่อชื่อในลิงก์) · Facebook นับรวมคนที่เห็นแอดแล้วซื้อทีหลัง มักนับเกิน (คุณแดน 8 ต.ค. 69: ยอดไม่ตรง)
-  const tags=new Map();for(const c of camps)if(c.sh&&c.sh.tag&&!tags.has(c.sh.tag))tags.set(c.sh.tag,c.sh);const hasShop=tags.size>0;
-  const buys=hasShop?[...tags.values()].reduce((a,x)=>a+(x.orders7||0),0):fbBuys,val=hasShop?[...tags.values()].reduce((a,x)=>a+(x.rev7||0),0):fbVal,prof=val-spend;
+  if(!ADST.met)ADST.met=['imp','ord','spend','roas'];
+  const d=ADST.d||{},A=d.access||ADA.access,L=A&&A.limit,camps=adsCamps(),T=adTests(),allTags=adTags(d.ads||[]);
   const accBad=A&&!A.ok&&A.reason==='account',pend=(ADA.items||[]).filter(x=>['pending','failed','launching'].includes(x.status));
-  const fix=camps.filter(c=>c.g==='fix'),run=camps.filter(c=>c.g==='run'||c.g==='review'),off=camps.filter(c=>c.g==='paused'||c.g==='ended'),decide=T.filter(t=>t.done);
+  const fix=camps.filter(c=>c.g==='fix'),run=camps.filter(c=>c.g==='run'||c.g==='review'),off=camps.filter(c=>c.g==='paused'||c.g==='ended'),ready=T.filter(t=>t.done);
   const low=L&&L.capTHB&&L.leftTHB<300;
-  const todo=[accBad?['🏦 บัญชีโฆษณามีปัญหา','now','bad']:null,A&&!A.ok&&!accBad?['⚠️ ยังยิงแอดจากหลังบ้านไม่ได้','now','bad']:null,fix.length?[`🔴 แอดต้องแก้ ${fix.length}`,'now','bad']:null,pend.length?[`📝 รอกดตกลง ${pend.length}`,'now','warn']:null,decide.length?[`🏆 ผลทดสอบรูปพร้อมแล้ว ${decide.length} (ดูแล้วเลือกทำต่อ)`,'now','warn']:null,low?[`💳 วงเงินเหลือ ${adMoney(L.leftTHB)}`,'',' warn',L.page]:null].filter(Boolean);
-  const nNow=fix.length+pend.length+decide.length+(accBad||(A&&!A.ok)?1:0);
-  const f=['now','run','off','plan','tools'].includes(ADST.f)?ADST.f:'now';
-  const tabs=[['now','👉 ต้องทำ',nNow],['run','🟢 กำลังวิ่ง',run.length],['off','⏸ หยุด/จบ',off.length],['plan','🔮 แนะนำ & ประเมิน',''],['tools','🧰 เครื่องมือ','']];
-  const tile=(l,v,sub,cls)=>`<div class="dtile${cls?' '+cls:''}"><span>${l}</span><b>${v}</b>${sub?`<small>${sub}</small>`:''}</div>`;
-  const empty=(t)=>`<div class="bst-empty"><p>${t}</p><button class="btn btn-cta btn-sm" data-a="adsNew">+ สร้างแอดใหม่</button></div>`;
-  const loading=!ADST.d?'<p class="fine" style="padding:12px 0">กำลังโหลดสถานะจาก Facebook...</p>':d.ok===false&&!accBad?`<p class="fine" style="color:var(--bad);padding:8px 0">ดึงสถานะไม่ได้: ${esc(d.error||'')} · กดรีเฟรช</p>`:'';
+  const todo=[accBad?['🏦 บัญชีโฆษณามีปัญหา','draft','bad']:null,A&&!A.ok&&!accBad?['⚠️ ยังยิงแอดจากหลังบ้านไม่ได้','draft','bad']:null,fix.length?[`🔴 แอดต้องแก้ ${fix.length}`,'fix','bad']:null,pend.length?[`📝 รอกดตกลง ${pend.length}`,'draft','warn']:null,ready.length?[`🏆 ผลทดสอบรูปพร้อมแล้ว ${ready.length}`,'test','warn']:null,low?[`💳 วงเงินเหลือ ${adMoney(L.leftTHB)}`,'','warn',L.page]:null].filter(Boolean);
+  const f=['home','draft','test','plan','tools'].includes(ADST.f)?ADST.f:'home';
+  const tabs=[['home','📊 ภาพรวมโฆษณา',''],['draft','📝 รอกดตกลง',pend.length],['test','🏆 ทดสอบรูป',T.length],['plan','🔮 แนะนำ & ประเมิน',''],['tools','🧰 เครื่องมือ','']];
+  const loading=!ADST.d?'<p class="fine" style="padding:12px 0">กำลังโหลดตัวเลขจาก Facebook...</p>':d.ok===false&&!accBad?`<p class="fine" style="color:var(--bad);padding:8px 0">ดึงตัวเลขไม่ได้: ${esc(d.error||'')} · กด ↻ รีเฟรช</p>`:'';
   let body='';
-  if(f==='now')body=`${accBad?`<div class="acamp g-fix"><div class="acamp-h"><div class="acamp-imgs"><span style="display:grid;place-items:center;font-size:24px">🏦</span></div><div class="acamp-t"><b>บัญชีโฆษณา</b><span class="bst-st"><span class="badge bad">🔴 ${esc(A.error||'ใช้งานไม่ได้')}</span></span></div></div><p class="bst-todo">👉 แก้ที่หน้าการชำระเงิน แอดทุกตัวจะหยุดจนกว่าจะแก้</p><div class="acamp-acts"><a class="btn btn-cta btn-sm" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">ไปหน้าชำระเงิน ↗</a></div></div>`:''}
-    ${adSafe(()=>fix.map(adCampCard).join(''),'แอดที่ต้องแก้')}${adSafe(adTestBox,'ผลทดสอบรูป')}${pend.length||(A&&!A.ok)?adSafe(()=>adsAutoBox(false,true),'ร่างแอด'):''}
-    ${!nNow&&!T.length&&ADST.d&&ADA.items?`<div class="bst-empty ok"><p>✓ ไม่มีงานค้าง${run.length?` · แอดวิ่งอยู่ ${run.length} แคมเปญ ปล่อยให้ Facebook ทำงานได้เลย`:''}</p><button class="btn btn-cta btn-sm" data-a="adsNew">+ สร้างแอดใหม่</button></div>${adPickBox()}`:''}${loading}`;
-  else if(f==='run')body=adSafe(()=>run.map(adCampCard).join(''),'แอดที่กำลังวิ่ง')||loading||empty('ยังไม่มีแอดที่กำลังวิ่ง');
-  else if(f==='off')body=adSafe(()=>off.map(adCampCard).join(''),'แอดที่หยุด')+(off.length?'':loading||'<p class="fine" style="padding:12px 0">ยังไม่มีแอดที่หยุดหรือจบ</p>')+adsAutoHist();
+  if(f==='home'){const R=adSafe(()=>adRange(null,allTags),'ตัวเลข')||null,Rv=R&&typeof R==='object'?R:null,cur=Rv?Rv.cur:{},prev=Rv?Rv.prev:{};
+    const cards=AD_MET.map(([k,l,t])=>{const j=ADST.met.indexOf(k);return `<button class="adm-card${j>=0?' on':''}" data-a="adsMetric" data-v="${k}" aria-pressed="${j>=0}" style="${j>=0?'--c:'+AD_COL[j]:''}"><span>${l}</span><b>${Rv?adFmt(t,cur[k]):'–'}</b>${Rv?adChg(k,cur,prev)||'<em class="adm-chg flat">–</em>':''}</button>`;}).join('');
+    const tf=['all','run','fix','off'].includes(ADST.tf)?ADST.tf:'all',q=String(ADST.cq||'').trim().toLowerCase();
+    const list=(tf==='run'?run:tf==='fix'?fix:tf==='off'?off:camps).filter(c=>!q||String(c.name).toLowerCase().includes(q));
+    // ชื่อในลิงก์ที่หลายแคมเปญใช้ร่วมกัน: ยกออเดอร์ให้แคมเปญที่ใช้เงินมากสุดในช่วงนี้ (ไม่นับซ้ำ เช่น toeic-checkout กับ toeic-test)
+    const spendOf=c=>{const r=Rv?adRange(new Set([c.id]),new Set()):null;return r?r.cur.spend:0;},own=new Map();
+    for(const c of camps){const sp=spendOf(c);for(const t of adTags(c.ads)){const o=own.get(t);if(!o||sp>o.sp)own.set(t,{id:c.id,sp});}}
+    const myTags=c=>new Set([...adTags(c.ads)].filter(t=>(own.get(t)||{}).id===c.id));
+    const rowsR=list.map(c=>({c,R:Rv?adRange(new Set([c.id]),myTags(c)):null}));
+    const sk=ADST.sort||'spend';rowsR.sort((x,y)=>{const a=x.R?x.R.cur[sk]:0,b=y.R?y.R.cur[sk]:0;return (b==null?-1:b)-(a==null?-1:a)||ADG_ORDER.indexOf(x.c.g)-ADG_ORDER.indexOf(y.c.g);});
+    const hd=(k,l)=>`<button class="adt-h${sk===k?' on':''}" data-a="adsSort" data-v="${k}">${l}${sk===k?' ▼':''}</button>`;
+    body=`<section class="adm-perf"><div class="adm-head"><h3 class="h3" style="margin:0">ผลการดำเนินงาน</h3><div class="adm-rng" role="group" aria-label="ช่วงเวลา">${[7,14,30].map(n=>`<button class="chip" data-a="adsRng" data-v="${n}" aria-pressed="${(ADST.rng||7)===n}">${n} วัน</button>`).join('')}</div></div>
+      <div class="adm-cards">${cards}</div>
+      ${Rv?`<p class="fine adm-note">คำสั่งซื้อ/ยอดขาย = ออเดอร์จ่ายแล้วในร้านที่มาจากลิงก์แอด ${Rv.N} วันล่าสุด · Facebook นับซื้อ ${Math.round(cur.fbp||0)} ครั้ง ${adMoney(cur.fbv)} (รวมคนที่เห็นแอดแล้วมาซื้อทีหลังทางอื่น จึงนับเกิน) · ▲▼ เทียบ ${Rv.N} วันก่อนหน้า</p>`:loading}
+      ${Rv?adSafe(()=>adChart(Rv),'กราฟ'):''}
+      <p class="fine bst-acc">บัญชีโฆษณา: ${accBad?'⚠️ มีปัญหา':A&&A.ok?'✓ ปกติ':'–'}${A&&A.account&&A.account.payment?' · จ่ายด้วย '+esc(A.account.payment):''}${L?(L.capTHB?` · วงเงินเหลือ ${adMoney(L.leftTHB)} จาก ${adMoney(L.capTHB)} · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">แก้วงเงิน ↗</a>`:` · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">ตั้งวงเงินกันเงินหมด ↗</a>`):''}</p></section>
+    <section class="adm-list"><div class="adm-head"><h3 class="h3" style="margin:0">รายการโฆษณา</h3><button class="btn btn-sm pt-new" data-a="adsNew">+ สร้างแอดใหม่</button></div>
+      <div class="adm-tools"><div class="adm-tf">${[['all','ทั้งหมด',camps.length],['run','🟢 กำลังวิ่ง',run.length],['fix','🔴 ต้องแก้',fix.length],['off','⏸ หยุด/จบ',off.length]].map(x=>`<button class="chip${x[0]==='fix'&&x[2]?' warnchip':''}" data-a="adsTf" data-v="${x[0]}" aria-pressed="${tf===x[0]}">${x[1]} ${x[2]}</button>`).join('')}</div>
+        <input class="input adm-q" type="search" data-adscq="1" placeholder="ค้นหาแคมเปญ" aria-label="ค้นหาแคมเปญ" value="${esc(ADST.cq||'')}"></div>
+      <div class="adt-tbl"><div class="adt-hd"><span>โฆษณา</span>${hd('imp','การมองเห็น')}${hd('clk','คลิก')}${hd('ctr','CTR')}${hd('spend','ค่าโฆษณา')}${hd('sales','ยอดขาย')}${hd('ord','คำสั่งซื้อ')}${hd('roas','ROAS')}<span>จัดการ</span></div>
+        ${adSafe(()=>rowsR.map(x=>adCampRow(x.c,x.R)).join(''),'รายการโฆษณา')||(ADST.d?`<div class="bst-empty"><p>${q?'ไม่พบแคมเปญที่ค้นหา':'ยังไม่มีแอดในกลุ่มนี้'}</p><button class="btn btn-cta btn-sm" data-a="adsNew">+ สร้างแอดใหม่</button></div>`:loading)}</div></section>`;}
+  else if(f==='draft')body=(accBad?`<div class="acamp g-fix"><b>🏦 บัญชีโฆษณา: ${esc(A.error||'ใช้งานไม่ได้')}</b><p class="bst-todo">👉 แก้ที่หน้าการชำระเงิน แอดทุกตัวจะหยุดจนกว่าจะแก้</p><div><a class="btn btn-cta btn-sm" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">ไปหน้าชำระเงิน ↗</a></div></div>`:'')+adSafe(()=>adsAutoBox(false,true),'ร่างแอด')+adsAutoHist();
+  else if(f==='test')body=adSafe(adTestBox,'ผลทดสอบรูป')||'<div class="bst-empty"><p>ยังไม่มีแอดที่ทดสอบหลายรูป · ตอนร่างแอด เลือกรูปได้ถึง 4 รูป Facebook จะทดสอบให้ว่ารูปไหนขายดีกว่า</p></div>';
   else if(f==='plan')body=adSafe(adPickBox,'คำแนะนำ')+adSafe(adsForecast,'ประเมินรายได้');
   else body=adSafe(adsTools,'เครื่องมือ');
   return `<div class="pt-head"><h2 class="h2" style="margin:0">📣 โฆษณา</h2><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-line btn-sm" data-a="adsStRefresh">${ADST.loading?'กำลังโหลด...':'↻ รีเฟรช'}</button><button class="btn btn-sm pt-new" data-a="adsNew" aria-expanded="${!!ADST.pick}">+ สร้างแอดใหม่</button></div></div>
   ${adSafe(adsNewBox,'รายการสินค้า')}
-  <div class="bst-strip">${todo.length?todo.map(t=>t[3]?`<a class="ats${t[2]}" href="${esc(t[3])}" target="_blank" rel="noopener noreferrer">${t[0]} · แก้วงเงิน ↗</a>`:`<button class="ats ${t[2]}" data-a="adsFilter" data-v="${t[1]}">${t[0]} →</button>`).join(''):`<span class="ats ok">✓ ไม่มีอะไรต้องทำตอนนี้</span>`}</div>
-  <div class="dgrid bst-kpi">${tile('ค่าแอด 7 วัน',adMoney(spend),`${run.length} แคมเปญกำลังวิ่ง`)}${tile(hasShop?'ยอดขายจริงจากแอด':'ยอดขายจากแอด',adMoney(val),hasShop?`${buys} ออเดอร์ (ร้านนับจากลิงก์แอด)`:`ซื้อ ${buys} ครั้ง (Facebook นับ)`)}${tile(prof>=0?'กำไร':'ขาดทุน',adMoney(Math.abs(prof)),'ยอดขาย − ค่าแอด',prof<0&&spend?'warn':'')}${tile('ต้นทุนต่อออเดอร์',buys?adMoney(spend/buys):'–',buys?'ยิ่งต่ำยิ่งดี':'ยังไม่มีการซื้อ')}</div>
-  ${hasShop&&fbBuys!==buys?`<p class="fine bst-acc" style="margin:0 0 4px">Facebook นับ ${fbBuys} ครั้ง ${adMoney(fbVal)} · มากกว่าที่ร้านนับเพราะรวมคนที่เห็นแอดแล้วมาซื้อทีหลังทางอื่น (อาจนับเกิน) ตัวเลขด้านบนใช้ยอดที่ร้านนับได้จริง</p>`:''}
-  <p class="fine bst-acc">บัญชีโฆษณา: ${accBad?'⚠️ มีปัญหา':A&&A.ok?'✓ ปกติ':'–'}${A&&A.account&&A.account.payment?' · จ่ายด้วย '+esc(A.account.payment):''}${L?(L.capTHB?` · วงเงินเหลือ ${adMoney(L.leftTHB)} จาก ${adMoney(L.capTHB)} · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">แก้วงเงิน ↗</a>`:` · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">ตั้งวงเงินกันเงินหมด ↗</a>`):''}</p>
-  <div class="pt-card bst-card"><div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='now'&&t[2]?' newt':''}" data-a="adsFilter" data-v="${t[0]}" aria-selected="${f===t[0]}" aria-pressed="${f===t[0]}">${t[1]}${t[2]!==''?` (${t[2]})`:''}</button>`).join('')}</div>
+  ${todo.length?`<div class="bst-strip">${todo.map(t=>t[3]?`<a class="ats ${t[2]}" href="${esc(t[3])}" target="_blank" rel="noopener noreferrer">${t[0]} · แก้วงเงิน ↗</a>`:`<button class="ats ${t[2]}" data-a="adsFilter" data-v="${t[1]}">${t[0]} →</button>`).join('')}</div>`:''}
+  <div class="pt-card bst-card"><div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[2]&&t[0]!=='home'?' newt':''}" data-a="adsFilter" data-v="${t[0]}" aria-selected="${f===t[0]}" aria-pressed="${f===t[0]}">${t[1]}${t[2]!==''&&t[2]?` (${t[2]})`:''}</button>`).join('')}</div>
     <div class="bst-body">${body}</div></div>`;
 }
 /* ประวัติร่างแอด (จบแล้ว/ไม่เอา) อยู่ในแท็บหยุด/จบ */
@@ -6278,7 +6328,11 @@ function act(a,el){
       authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:x.aiModel||imgModel(),quality:imgQuality(),aspect:(x.aiStyle||'ugc')==='clean'?'':'4:5'})})
         .then(async j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');await adsUseImage(x,j.image);toast('ได้รูปแอดใหม่แล้ว ✨');})
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
-    case 'adsFilter':ADST.f=el.dataset.v;render(true);requestAnimationFrame(()=>{const t=document.querySelector('.bst-card');if(t&&t.getBoundingClientRect().top<0)t.scrollIntoView({block:'start'});});break;
+    case 'adsFilter':if(el.dataset.v==='fix'){ADST.f='home';ADST.tf='fix';}else ADST.f=el.dataset.v;render(true);requestAnimationFrame(()=>{const t=document.querySelector('.bst-card');if(t&&t.getBoundingClientRect().top<0)t.scrollIntoView({block:'start'});});break;
+    case 'adsRng':ADST.rng=Number(el.dataset.v)||7;render(true);break;
+    case 'adsTf':ADST.tf=el.dataset.v;render(true);break;
+    case 'adsSort':ADST.sort=el.dataset.v;render(true);break;
+    case 'adsMetric':{const k=el.dataset.v,M=ADST.met||[];if(M.includes(k))ADST.met=M.filter(x=>x!==k);else{ADST.met=M.concat(k);if(ADST.met.length>4)ADST.met.shift();}render(true);break;}
     case 'adsNew':ADST.pick=!ADST.pick;render(true);if(ADST.pick)requestAnimationFrame(()=>{const t=document.querySelector('.bst-new');if(t)t.scrollIntoView({block:'start'});});break;
     case 'adfSet':ADF.budget=Number(el.dataset.v)||0;render(true);break;
     case 'adsStRefresh':LIVEAT.ads=LIVEAT.adsdraft=Date.now();loadAdsStatus();loadAdsAuto();render(true);break;
@@ -6325,8 +6379,8 @@ function act(a,el){
         const blob=await z.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='SheetLab-'+(S.order.orderId||'order')+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);toast('ดาวน์โหลด '+n+' เล่มแล้ว');})()
         .catch(e=>toast('รวมไฟล์ไม่สำเร็จ กดโหลดทีละเล่มแทน')).then(()=>{S.zipBusy=false;S.zipN='';render(true);});break;}
     case 'fOrderToggle':S.fOrder=!S.fOrder;render(true);if(S.fOrder)setTimeout(()=>{const e=document.getElementById('fac-order');if(e)e.scrollIntoView({behavior:'smooth',block:'start'});},50);break;
-    case 'goAds':S.tab='ads';ADST.f='now';S.edit=null;render(false);break;
-    case 'goAdsFix':S.tab='ads';ADST.f='now';S.edit=null;render(false);break;
+    case 'goAds':S.tab='ads';ADST.f='home';S.edit=null;render(false);break;
+    case 'goAdsFix':S.tab='ads';ADST.f='home';ADST.tf='fix';S.edit=null;render(false);break;
     case 'goNew':S.tab='products';S.pstat='new';S.edit=null;render(false);break;
     case 'goTodo':S.tab='todo';TODO.items=null;render(false);break;
     case 'adsRefresh':ADA.items=null;loadAdsAuto();render(true);break;
@@ -6354,7 +6408,7 @@ function act(a,el){
           variants:[{label:'ใหม่ ตามผู้ชนะ 1',prompt:base+'โต๊ะในคาเฟ่ มีแก้วกาแฟเย็นและมือถือ แสงจากหน้าต่างตอนบ่าย'+tail},{label:'ใหม่ ตามผู้ชนะ 2',prompt:base+'บนเตียงในห้องนอนตอนกลางคืน มีแท็บเล็ตและโคมไฟหัวเตียงแสงส้ม'+tail}]});
         if(!j||!j.ok)throw new Error((j&&(j.error||(j.errors||[])[0]))||'ทำรูปไม่สำเร็จ');
         toast('ได้ร่างแอดรอบใหม่แล้ว (ผู้ชนะ + 2 รูปใหม่) ตรวจแล้วกดตกลง');ADA.items=null;loadAdsAuto();})().catch(e=>toast('ไม่สำเร็จ: '+(e.message||e))).then(()=>{ADA.remake='';render(true);});break;}
-    case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';ADST.f='now';ADST.pick=false;render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
+    case 'adsDraftOne':{toast('กำลังเตรียมแอด...');adminPost('/api/content?action=ads_auto_draft',{productId:id}).then(j=>{if(!j||!j.ok){toast('ทำแอดไม่ได้: '+((j&&j.error)||''));return;}ADA.items=null;S.pmore=null;S.tab='ads';ADST.f='draft';ADST.pick=false;render(false);toast(j.existed?'สินค้านี้มีแอดอยู่แล้ว':'เตรียมแอดแล้ว ตรวจแล้วกดตกลง');}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'adsDismissAll':{const L=(ADA.items||[]).filter(x=>x.status==='pending');if(!L.length)break;if(!confirm(`เอาร่างแอดออกทั้ง ${L.length} รายการ? (ยังไม่ได้ยิง ไม่เสียเงิน)`))break;S.confirm='';ADA.bulk=true;render(true);
       (async()=>{let n=0;for(const x of L){try{const j=await adminPost('/api/content?action=ads_auto_dismiss',{id:x.id});if(j&&j.ok){x.status='dismissed';n++;}}catch(e){}}ADA.bulk=false;render(true);toast(`เอาออกแล้ว ${n} รายการ (ไม่เสียเงิน)`);})();break;}
     case 'adsDismiss':{if(!confirm('ไม่ยิงแอดสินค้านี้?'))break;adminPost('/api/content?action=ads_auto_dismiss',{id}).then(j=>{if(j&&j.ok){const x=(ADA.items||[]).find(y=>y.id===id);if(x)x.status='dismissed';render(true);}else toast((j&&j.error)||'ไม่สำเร็จ');});break;}
@@ -6570,6 +6624,13 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='ArrowRight')act('zoomNext',{dataset:{}});
   else if(e.key==='ArrowLeft')act('zoomPrev',{dataset:{}});
 });
+// กราฟหน้าโฆษณา: ชี้/แตะแล้วเห็นตัวเลขของวันนั้น (ข้อมูลจาก window.__adc ที่ adChart เตรียมไว้ · หน้าลูกค้าไม่มีกราฟ ไม่ทำอะไร)
+document.addEventListener('pointermove',e=>{const C=window.__adc;if(!C)return;const s=e.target&&e.target.closest&&e.target.closest('.adc-svg'),tip=document.getElementById('adc-tip'),ln=document.getElementById('adc-ln');if(!tip)return;
+  if(!s){if(!tip.hidden){tip.hidden=true;if(ln){ln.setAttribute('x1',-9);ln.setAttribute('x2',-9);}}return;}
+  const r=s.getBoundingClientRect(),n=C.days.length,fx=(e.clientX-r.left)/r.width,i=Math.max(0,Math.min(n-1,Math.round((fx*C.W-C.P)/(C.W-2*C.P)*(n-1)))),x=C.P+(n>1?i/(n-1):.5)*(C.W-2*C.P);
+  if(ln){ln.setAttribute('x1',x);ln.setAttribute('x2',x);}
+  tip.innerHTML='<b>'+C.days[i]+'</b>'+C.series.map(z=>'<span><i style="background:'+z.color+'"></i>'+z.label+': '+z.vals[i]+'</span>').join('');
+  const box=s.parentElement.getBoundingClientRect(),px=r.left-box.left+x/C.W*r.width;tip.style.left=Math.max(80,Math.min(box.width-80,px))+'px';tip.hidden=false;},{passive:true});
 document.addEventListener('click',e=>{
   const g=!PV&&e.target.closest('a[data-go]');
   if(g&&e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(S.cart){S.cart=false;drawCart();}if(g.dataset.go&&!S.src)S.src='store';navTo(g.getAttribute('href'));return;}
@@ -6609,6 +6670,7 @@ document.addEventListener('input',e=>{
   if(ds.crsgc){CRS.gc=t.value;return;}
   if(ds.crsq){CRS.q=t.value;render(true);return;}
   if(ds.adsq){ADST.q=t.value;render(true);return;}
+  if(ds.adscq){ADST.cq=t.value;render(true);return;}
   if(ds.crssq){CRS.sq=t.value;render(true);return;}
   if(ds.crssc){CRS.sc=t.value;render(true);return;}
   if(ds.vf){(VID.f||(VID.f={}))[ds.vf]=t.value;return;}
@@ -6701,14 +6763,16 @@ function qrInner(slug,on,total){
   const q=S.qr&&S.qr.slug===slug&&S.qr.total===total?S.qr:null;
   if(!q||q.step==='email'||q.step==='err'){
     if(!S.form.qrEmail)S.form.qrEmail=qrEmailGuess();
+    // คอร์สเรียน: อีเมลนี้ใช้ล็อกอินเข้าเรียน ไม่ใช่รับไฟล์ (คุณแดน 8 ต.ค. 69) · ตะกร้าที่มีทั้งคอร์สและชีท ใช้คำกลางๆ
+    const ks=(slug==='__cart__'?cartItems():[D.products.find(x=>x.slug===slug)]).filter(Boolean).map(x=>x.kind==='course'),crs=ks.length&&ks.every(Boolean),mix=!crs&&ks.some(Boolean);
     return `<div class="qpay" id="qrbox">
       ${S.unpaidHint?`<p class="qr-back" role="status">ยังไม่ได้ชำระเงิน · <b>สแกนจ่ายพร้อมเพย์ง่ายกว่า</b> ใช้แอปธนาคารไหนก็ได้ ไม่ถึง 1 นาที</p>`:''}
-      <label for="qr-email"><b>อีเมลรับไฟล์</b></label>
+      <label for="qr-email"><b>${crs?'อีเมลสำหรับเข้าเรียน':mix?'อีเมลสำหรับรับไฟล์และเข้าเรียน':'อีเมลรับไฟล์'}</b></label>
       <input class="input" id="qr-email" type="email" inputmode="email" autocomplete="email" placeholder="you@gmail.com" value="${esc(S.form.qrEmail||(q&&q.email)||'')}" data-f="qrEmail">
       ${q&&q.err?`<p class="fine" role="alert" style="color:var(--bad);margin:6px 0 0">${esc(q.err)}</p>`:''}
       ${slug==='__cart__'?'':codeRow()}
       <button class="btn btn-buy btn-block" style="margin-top:10px" data-a="qrMake" data-slug="${esc(slug)}" data-bump="${on?1:0}" data-total="${total}" data-track="InitiateCheckout">ชำระเงิน ${S.code?`<s style="opacity:.7;font-weight:400">${baht(total)}</s> `:''}${baht(codeOff(total))}</button>
-      <p class="fine qr-why">สแกน QR พร้อมเพย์ได้ทุกธนาคาร · ✓ ได้ไฟล์ทันทีบนหน้านี้และทางอีเมล · ✓ ไม่ต้องสมัครสมาชิก</p>
+      <p class="fine qr-why">สแกน QR พร้อมเพย์ได้ทุกธนาคาร · ${crs?'✓ เข้าเรียนได้ทันทีหลังจ่าย ด้วยอีเมลนี้':'✓ ได้ไฟล์ทันทีบนหน้านี้และทางอีเมล'} · ✓ ไม่ต้องสมัครสมาชิก</p>
     </div>`;
   }
   if(q.step==='loading')return `<div class="qpay center"><p class="muted">กำลังสร้าง QR…</p></div>`;
