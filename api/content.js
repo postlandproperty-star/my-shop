@@ -18,7 +18,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
-import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily } from '../lib/ads.js';
+import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
 import { sendRecoveries } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
@@ -3031,6 +3031,16 @@ ${books}`;
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       const body = await readBody(req);
+      if (action === 'ads_auto_image') { // ✏️ เปลี่ยนรูปแอดที่ยิงแล้ว (เฉพาะคุณแดน) · Facebook รีวิวใหม่
+        if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน' });
+        const adId = String(body.adId || ''), image = String(body.image || '');
+        if (!/^\d{6,30}$/.test(adId) || !/^https:\/\/\S+$/.test(image)) return res.status(400).json({ ok: false, error: 'ข้อมูลไม่ครบ' });
+        try {
+          const r = await swapAdImage(await loadFb(), adId, image.slice(0, 500));
+          try { const items = await loadAdsAuto(); const x = items.find((y) => (y.fb?.ads || [y.fb?.ad]).includes(adId)); if (x) { const k = (x.fb.ads || [x.fb.ad]).indexOf(adId); x.launchImages = x.launchImages || []; x.launchImages[k] = image.slice(0, 500); if (k === 0) x.image = image.slice(0, 500); x.updated_at = new Date().toISOString(); await saveAdsAuto(items); } } catch (e) {}
+          return res.status(200).json({ ok: true, ...r });
+        } catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
+      }
       if (action === 'ads_auto_adset') { // หยุด/เปิดแอดรายตัวจากแท็บสถานะ (เฉพาะคุณแดน)
         if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
         const st = body.status === 'ACTIVE' ? 'ACTIVE' : 'PAUSED', adId = String(body.adId || '');

@@ -26,7 +26,7 @@ const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
-const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const CRSPOST = []; const BULK = [];
+const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const IMGSWAP = []; const CRSPOST = []; const BULK = [];
 const MAILS = [];
 const { freePage, FREEBIES } = await import(path.join(ROOT, '..', 'lib/free.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
@@ -74,6 +74,7 @@ async function newPage(kind) {
     if (/\/api\/checkout\?m=code/.test(url)) { const c = new URL(url).searchParams.get('code'); return route.fulfill({ json: c === CODE ? { ok: true, code: CODE, pct: 20 } : { ok: false, error: 'ไม่พบโค้ดนี้' } }); }
     if (/action=drive_check/.test(url)) { const b = JSON.parse(route.request().postData() || '{}'); return route.fulfill({ json: { ok: true, results: (b.urls || []).map((u) => ({ url: u, state: 'public' })) } }); }
     if (/\/api\/checkout\?card=1/.test(url)) { CARDHITS.push(url); return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>stripe</title>card' }); }
+    if (/action=ads_auto_image/.test(url)) { IMGSWAP.push(route.request().postData() || ''); return route.fulfill({ json: { ok: true, creative: 'cr_new' } }); }
     if (/\/api\/checkout\?m=card/.test(url)) return route.fulfill({ json: CARDMODE ? { ok: true, pi: 'pi_card', k: 'pi_card_secret_t', pk: 'pk_test_x' } : { ok: false, nopk: true } });
     if (/\/api\/order\?pi=pi_card/.test(url)) { ORDERHITS.push(url); return route.fulfill({ json: { ok: true, paid: true, orderId: 'CARD0001', productName: 'x', items: [{ name: 'ไฟล์', link: 'https://example.com/f' }] } }); }
     if (/\/api\/checkout\?m=qr/.test(url)) return route.fulfill({ json: { ok: true, pi: 'pi_test', k: 'pi_test_secret', png: `${BASE}/qr.png`, amount: 1 } });
@@ -451,6 +452,11 @@ try {
           const nb = await page.evaluate(() => { const b = document.querySelector('.bst-new'); return { box: !!b, n: b ? b.querySelectorAll('.bst-new-it').length : 0, btn: b ? b.querySelectorAll('[data-a="adsDraftOne"]').length : 0, star: b ? /⭐/.test(b.innerText) : false }; });
           pass(`[${kind}] โฆษณา: ปุ่ม + สร้างแอดใหม่ เปิดรายการสินค้า (เรียงตามคำแนะนำ ⭐) พร้อมปุ่มทำแอด`, nb.box && nb.n >= 2 && nb.btn >= 1 && nb.star, JSON.stringify(nb));
           await page.locator('.bst-new').first().screenshot({ path: path.join(OUT, `bst-new-${kind}.png`) }).catch(() => {});
+          { IMGSWAP.length = 0; await page.evaluate(() => { ADST.pick = false; ADST.f = 'home'; ADST.tf = 'all'; render(true); const b = document.querySelector('.adt-tbl [data-a="adsEdOpen"]'); b && b.click(); });
+            const ed = await page.evaluate(() => ({ box: !!document.querySelector('.aded'), cands: document.querySelectorAll('.aded [data-a="adsEdPick"]').length, save: !!document.querySelector('.aded [data-a="adsEdSave"][disabled]') }));
+            await page.evaluate(() => { const c = document.querySelector('.aded [data-a="adsEdPick"]'); c && c.click(); const cf = window.confirm; window.confirm = () => true; document.querySelector('.aded [data-a="adsEdSave"]')?.click(); window.confirm = cf; }); await page.waitForTimeout(400);
+            ed.sent = IMGSWAP.length; ed.body = IMGSWAP[0] || ''; ed.closed = await page.evaluate(() => !document.querySelector('.aded'));
+            pass(`[${kind}] โฆษณา: ✏️ แก้รูปแอดที่ยิงแล้ว (เลือกรูป → เปลี่ยน ส่งรหัสแอด + ลิงก์รูป)`, ed.box && ed.cands >= 1 && ed.save && ed.sent === 1 && /"adId":"9\d+"/.test(ed.body) && /"image":"https:/.test(ed.body) && ed.closed, JSON.stringify(ed)); }
           await page.evaluate(() => { ADST.pick = false; ADST.f = 'draft'; ADST.tf = 'all'; render(true); }); }
         const d = page.locator('.adq-wrap').first(); if (await d.count()) await d.screenshot({ path: path.join(OUT, `adflow-${kind}.png`) }); }
       if (v === 'products') { // ปุ่มบันทึก: ฉบับร่าง / เผยแพร่แล้วไปเซลเพจ · สร้างชุดใหม่โดยรวมชุดเดิมเข้ามา
