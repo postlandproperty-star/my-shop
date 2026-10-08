@@ -44,4 +44,8 @@ const sm = I.summarize([R('s1', 'view', '/'), R('s1', 'view', '/p/a'), R('s1', '
 ok('พฤติกรรม: สรุปคนเข้า ดูหน้าเดียว ขั้นการซื้อ อ่านนาน ออกจากเว็บ', sm.totals.sessions === 2 && sm.totals.bounce === 50 && sm.funnel.add === 1 && sm.funnel.pay === 1 && sm.funnel.paid === 1 && sm.articles[0].avg === 200 && sm.articles[0].pct100 === 100 && sm.pages.find((x) => x.p === '/p/a').exits === 1);
 { const C = await import('../lib/courses.js'); const c = C.cleanCourse({ title: 'x', emails: 'Owner@Gmail.com, bad-email\nhelper@site.co owner@gmail.com', lessons: [] });
   ok('คอร์ส: อีเมลเรียนฟรี เก็บเป็นตัวเล็ก ไม่ซ้ำ ตัดอีเมลผิดรูปแบบ', JSON.stringify(c.emails) === JSON.stringify(['owner@gmail.com', 'helper@site.co'])); }
+{ const F = await import('../lib/fulfill.js'); const sh = { products: [{ id: 'c1', name: 'คอร์ส', kind: 'course', bonusIds: ['b1', 'b2', 'set1', 'c2'] }, { id: 'b1', name: 'ชีท Grammar' }, { id: 'b2', name: 'ชีทไม่มีลิงก์' }, { id: 'set1', type: 'bundle', name: 'ชุด', items: [] }, { id: 'c2', name: 'คอร์สอื่น', kind: 'course' }, { id: 'p1', name: 'เล่ม', bonusIds: ['b1'] }] };
+  const links = { c1: 'https://x/c1', b1: 'https://x/b1', p1: 'https://x/p1' };
+  const one = await F.orderItems({ metadata: { productId: 'c1' } }, sh, links), cart = await F.orderItems({ metadata: { cart: 'c1,p1' } }, sh, links);
+  ok('ของแถม: ซื้อแล้วได้ไฟล์ของแถมที่เลือก (ไม่รวมชุด/คอร์ส ไม่ซ้ำในตะกร้า)', one.map((i) => i.productId).join() === 'c1,b1,b2' && one[1].bonus && /ของแถม/.test(one[1].name) && cart.filter((i) => i.productId === 'b1').length === 1, JSON.stringify(one.map((i) => i.productId)) + ' ' + JSON.stringify(cart.map((i) => i.productId))); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);

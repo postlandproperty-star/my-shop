@@ -1178,6 +1178,8 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .adt-c{text-align:right;display:grid;gap:1px;font-size:14px}.adt-act{display:flex;gap:6px;justify-content:flex-end}.adt-act .btn{white-space:nowrap;padding-left:10px;padding-right:10px}.adt-wide{grid-column:1/-1}.adt-wide p{margin:0}
 @media (max-width:900px){.adt-hd{display:none}.adt-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px}.adt-name{grid-column:1/-1}.adt-c{text-align:left;background:var(--bg);border-radius:8px;padding:6px 8px}.adt-c::before{content:attr(data-l);font-size:11.5px;color:var(--muted)}.adt-act{grid-column:1/-1;justify-content:flex-start}}
 @media (max-width:640px){.adm-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.adm-card b{font-size:18px}.adc-svg{height:170px}.adc-xs span.h{display:none}.adm-q{max-width:none;flex:1 1 100%}}
+.bonus-chips{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}.bonus-chip{display:inline-flex;align-items:center;gap:6px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:999px;padding:4px 6px 4px 12px;font-size:14px}.bonus-chip em{font-style:normal;color:var(--muted)}.bonus-chip button{border:0;background:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:15px;line-height:1}
+.adv{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;border-radius:8px;padding:7px 10px;font-size:13.5px;background:var(--bg)}.adv b{white-space:nowrap}.adv span{color:var(--muted)}.adv-stop{background:#FEF2F2}.adv-stop b{color:#B91C1C}.adv-up{background:#F0FDF4}.adv-up b{color:#15803D}.adv-ok b{color:#15803D}.adv-meh{background:#FFFBEB}.adv-meh b{color:#B45309}
 </style>
 </head>
 <body>
@@ -1483,7 +1485,7 @@ async function drvCheck(){const d=S.draft;if(!d)return;const urls=[...new Set(au
 function initDraft(p){
   const d={};d.fillFrom=Object.keys(p.fillPending||{});d.audioOk=!!p.audioOk;d.videoOk=!!p.videoOk;d.audioDrive=p.audioDrive||'';d.audio=!!p.audio;d.freshNote=p.freshNote||'';
   ['name','slug','sku','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
-  d.bumpPrice=p.bumpPrice||0;
+  d.bumpPrice=p.bumpPrice||0;d.bonusIds=(p.bonusIds||[]).slice();
   for(const [k,v] of Object.entries(p.fillPending||{})){if(k==='previews')continue;else if(!String(d[k]||'').trim())d[k]=v;} // รายละเอียดที่โรงงานเตรียมไว้ ใช้จริงเมื่อกดบันทึก
   if(!d.kind)d.kind='other';
   d.promoEndStr=toLocalInput(p.promoEnd);
@@ -2467,7 +2469,7 @@ function shopView(){
   const c=calc(p,S.coupon),f=S.form;
   const bp=p.bumpProductId?getProduct(p.bumpProductId):null;
   const grand=c.total+(f.bump&&bp?Number(p.bumpPrice)||0:0);
-  const feats=lines(p.features),pains=lines(p.pains),bonus=lines(p.bonus).map(pair),reviews=lines(p.reviews).map(pair);
+  const feats=lines(p.features),pains=lines(p.pains),bonus=[...(p.bonusIds||[]).map(getProduct).filter(Boolean).map(b=>[b.name,String(Number(b.price)||'')]),...lines(p.bonus).map(pair)],reviews=lines(p.reviews).map(pair);
   const specs=lines(p.specs).map(pair),toc=lines(p.toc).map(pair),forwho=lines(p.forwho),notfor=lines(p.notfor);
   let faqs=lines(p.faq).map(pair);
   if(!faqs.length)faqs=[['ได้รับไฟล์เมื่อไหร่','ทันทีที่ชำระเงินสำเร็จ ลิงก์จะขึ้นในหน้าถัดไปและส่งไปที่อีเมลของคุณ'],['ถ้าไม่ได้รับอีเมลต้องทำอย่างไร','ตรวจสอบโฟลเดอร์สแปมก่อน หากยังไม่พบ ติดต่อทีมงานพร้อมเลขออเดอร์ เราส่งลิงก์ให้ใหม่ได้ทันที']];
@@ -2893,7 +2895,7 @@ function draftToProduct(d){
   const name=t('name'),link=t('link'),sample=t('sampleLink');
   return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
-    proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
+    proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,bonusIds:(d.bonusIds||[]).filter(id=>getProduct(id)),reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
     bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
@@ -2987,6 +2989,13 @@ function aiCoverBox(d){return `    <div class="field aicover"><div class="row" s
         ${S.coverErr?`<p class="err" style="margin:8px 0 0">${esc(S.coverErr)}${aiPay(S.coverErr)}</p>`:''}
         ${S.imgSet?`<div class="imgset">${S.imgSet.map((it,i)=>`<label class="imgset-it">${it.url?`<img src="${it.url}" alt="ภาพที่ ${i+1}">`:`<span class="imgset-ph">${it.err?esc(it.err):'กำลังสร้าง...'}</span>`}<span><input type="checkbox" data-a="imgPick" data-v="${i}" ${it.pick&&it.url?'checked':''} ${it.url?'':'disabled'}> ${['ปก','ภาพในเล่ม','มีอะไรบ้าง','เหมาะกับใคร','วิธีรับไฟล์'][i]}</span></label>`).join('')}</div><p class="fine" style="margin:6px 0 0">สร้างทีละรูป 5 รูปใช้เวลาประมาณ 2-4 นาที คิดเงิน OpenAI 5 รูป · <b>เสร็จแล้วระบบแทนรูปเดิมให้เอง</b> (เอาติ๊กออกระหว่างรอ = ไม่ใช้รูปนั้น) ไม่ชอบรูปไหนกดลบที่รายการรูปด้านบนได้</p>`:''}
         ${S.coverImg?`<div class="aic-out"><img src="${S.coverImg}" alt="ปกที่สร้าง"><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverUse" ${S.coverBusy?'disabled':''}>ใช้เป็นปก (ภาพแรก)</button><span class="fine">ตรวจตัวสะกดภาษาไทยบนปกก่อนใช้ · กดบันทึกสินค้าได้เลย ระบบใส่รูปนี้เป็นภาพแรกให้อัตโนมัติ</span></div></div>`:''}</div>`:''}</div>`;}
+/* 🎁 ของแถม: เลือกสินค้าในร้าน (เล่มเดี่ยว) ลูกค้าได้ไฟล์ทันทีหลังจ่าย ทั้งอีเมล หน้าขอบคุณ และบัญชีของฉัน · มูลค่า = ราคาสินค้า (คุณแดน 8 ต.ค. 69) */
+function bonusPicker(d){const ids=d.bonusIds||[],cand=D.products.filter(p=>p.id!==d.id&&!isBundle(p)&&p.kind!=='course'&&!ids.includes(p.id)).sort((a,b)=>(a.status==='published'?0:1)-(b.status==='published'?0:1)||String(a.name).localeCompare(String(b.name),'th'));
+  const noLink=ids.map(getProduct).filter(p=>p&&!validLink(p.link));
+  return `<div class="field"><span class="lbl">🎁 ของแถม: เลือกสินค้าในร้าน <span class="fine">ลูกค้าได้ไฟล์ทันทีหลังจ่าย (อีเมล + หน้าขอบคุณ + บัญชีของฉัน) · ขึ้นบนหน้าขายพร้อมมูลค่าตามราคาสินค้า</span></span>
+    ${ids.length?`<div class="bonus-chips">${ids.map(id=>{const p=getProduct(id);return p?`<span class="bonus-chip">🎁 ${esc(p.name)} <em>${baht(Number(p.price)||0)}</em><button type="button" data-a="bonusRm" data-id="${esc(id)}" aria-label="เอา ${esc(p.name)} ออกจากของแถม">×</button></span>`:'';}).join('')}</div>`:''}
+    <select class="input" id="e-bonus-add" aria-label="เพิ่มของแถม"><option value="">+ เลือกสินค้าเป็นของแถม</option>${cand.map(p=>`<option value="${esc(p.id)}">${esc(String(p.name).slice(0,80))} (${baht(Number(p.price)||0)})${p.status!=='published'?' · ฉบับร่าง':''}</option>`).join('')}</select>
+    ${noLink.length?`<span class="fine aud-warn">⚠️ ${noLink.map(p=>esc(p.name)).join(', ')} ยังไม่มีลิงก์ไฟล์ ลูกค้าจะยังไม่ได้รับจนกว่าจะใส่ลิงก์ในหน้าสินค้านั้น</span>`:''}</div>`;}
 function courseProductForm(d){let c=CRS.ed;
   if(!c||!(c.grants||[]).includes(S.edit)){if(!CRS.list){loadCRS();return '<p class="fine">กำลังโหลดคอร์ส...</p>';}const x=crsOfProduct(S.edit);if(!x)return '';c=CRS.ed=JSON.parse(JSON.stringify(x));}
   const lb=(id,t)=>`<label for="${id}">${t}</label>`;
@@ -3021,7 +3030,8 @@ function courseProductForm(d){let c=CRS.ed;
     ${ta('e-pains','pains','ถ้าคุณเคยเจอแบบนี้ (ปัญหาที่คนเรียนเจอ บรรทัดละข้อ)','ฟังทันแต่ยังเลือกผิดเพราะกับดัก')}
     ${ta('e-features','features','สิ่งที่จะได้จากคอร์สนี้ (บรรทัดละข้อ)')}
     ${ta('e-forwho','forwho','เหมาะกับใคร (บรรทัดละข้อ)')}
-    ${ta('e-bonus','bonus','ของแถม (บรรทัดละชิ้น รูปแบบ ชื่อ | มูลค่าเป็นบาท)','ชุดข้อสอบ TOEIC 750+ 10 เล่ม | 1680','',3)}
+    ${bonusPicker(d)}
+    ${ta('e-bonus','bonus','ของแถมอื่นที่พิมพ์เอง (ไม่มีไฟล์แนบ · บรรทัดละชิ้น รูปแบบ ชื่อ | มูลค่าเป็นบาท)','ชุดข้อสอบ TOEIC 750+ 10 เล่ม | 1680','',3)}
     ${ta('e-faq','faq','คำถามที่พบบ่อย (บรรทัดละข้อ รูปแบบ คำถาม | คำตอบ)','เรียนได้นานแค่ไหน | ตลอดไป ดูซ้ำได้ไม่จำกัด','',4)}
     <div class="field">${lb('e-guar','ข้อความรับประกัน')}<input class="input" id="e-guar" data-d="guarantee" value="${esc(d.guarantee)}" placeholder="เช่น เรียนบทแรกแล้วไม่ชอบ คืนเงินภายใน 7 วัน"></div>
     <p class="fine">สารบัญและข้อมูลคอร์ส (จำนวนบท ความยาวรวม) บนหน้าขาย ระบบสร้างจากบทที่เผยแพร่ให้เองทุกครั้งที่บันทึก</p>
@@ -3103,7 +3113,8 @@ function productForm(){
     <div class="field">${lb('e-promo','โปรโมชันสิ้นสุดเมื่อ')}<input class="input" id="e-promo" data-d="promoEndStr" type="datetime-local" value="${esc(d.promoEndStr)}">
       <span class="fine">ตั้งเวลาในอนาคต แถบนับถอยหลังจะขึ้นบนเซลเพจ และหายไปเองเมื่อหมดเวลา ควรตั้งให้ตรงกับโปรโมชันจริง เช่น ช่วงก่อนสอบ</span></div>
     ${ta('e-pains','pains','ปัญหาที่ผู้อ่านเจอ (บรรทัดละข้อ)')}
-    ${ta('e-bonus','bonus','ของแถม (บรรทัดละชิ้น รูปแบบ ชื่อ | มูลค่าเป็นบาท)','สูตรสรุปหน้าเดียว | 49')}
+    ${bonusPicker(d)}
+    ${ta('e-bonus','bonus','ของแถมอื่นที่พิมพ์เอง (ไม่มีไฟล์แนบ · บรรทัดละชิ้น รูปแบบ ชื่อ | มูลค่าเป็นบาท)','สูตรสรุปหน้าเดียว | 49')}
     ${ta('e-reviews','reviews','รีวิวจากผู้ซื้อ (บรรทัดละคน รูปแบบ ชื่อ | ข้อความ ใส่เฉพาะรีวิวจริง)','น้องมิ้น ปี 1 | อ่านแล้วทำข้อสอบได้')}
     <div class="field">${lb('e-guar','ข้อความรับประกัน')}<input class="input" id="e-guar" data-d="guarantee" value="${esc(d.guarantee)}" placeholder="เช่น รับประกันคืนเงินภายใน 7 วัน"></div>
     ${ta('e-faq','faq','คำถามที่พบบ่อย (บรรทัดละข้อ รูปแบบ คำถาม | คำตอบ)','พิมพ์ได้ไหม | ได้ครับ')}
@@ -5128,6 +5139,19 @@ function adChart(R){const sel=(ADST.met||[]).filter(k=>AD_MET.some(m=>m[0]===k))
       ${series.map(s=>`<path d="${s.path}" fill="none" stroke="${s.color}" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`).join('')}
       <line id="adc-ln" class="adc-ln" x1="-9" x2="-9" y1="${P}" y2="${H-P}"/>
     </svg><div class="adc-xs" aria-hidden="true">${(()=>{const L=R.days.map((x,i)=>i).filter(i=>(i%step===0&&(n-1-i>=step/2||i===0))||i===n-1);return L.map((i,j)=>`<span style="left:${(X(i)/W*100).toFixed(2)}%" class="${i===0?'s':i===n-1?'e':''}${j%2&&j<L.length-1?' h':''}${j===L.length-2&&j%2===0&&L.length>2?' h':''}">${R.days[i].slice(8)}/${R.days[i].slice(5,7)}</span>`).join('');})()}</div><div id="adc-tip" class="adc-tip" hidden></div></div>`;}
+/* คำแนะนำต่อแคมเปญ (น้องบูสต์): ควรหยุด / เพิ่มงบ / ปล่อยวิ่ง / รอข้อมูล · ใช้ยอดที่ร้านนับจริงในช่วงที่เลือก · แนะนำเท่านั้น คุณแดนกดเอง */
+function adAdvice(c,R){const cur=R?R.cur:null,a0=c.ads[0],price=Number(a0.price)||179,N=R?R.N:7;
+  if(c.g==='fix')return null;
+  if(c.g==='review')return ['wait','⏳ รอ Facebook รีวิว','ยังไม่ต้องทำอะไร ปกติไม่เกิน 1 วัน'];
+  if(!cur)return null;
+  const age=(Date.now()-Math.min(...c.ads.map(a=>Date.parse(a.created)||Date.now())))/864e5,sp=cur.spend||0,roas=cur.roas,ctr=cur.ctr||0,loss=sp-(cur.sales||0);
+  if(c.g==='paused'||c.g==='ended')return roas>=2&&sp>=300?['up','▶ น่าเปิดต่อ',`ตอนวิ่ง ${N} วันล่าสุดได้ ROAS ${roas.toFixed(2)} (กำไร)`]:null;
+  const thr=Math.min(Math.max(2*price,300),1500),early=age<3||sp<thr; // ยังไม่มีออเดอร์และใช้เงินยังน้อย/เพิ่งเริ่ม: รอก่อน · มีออเดอร์แล้วดูจาก ROAS ได้เลย
+  if((!cur.ord&&early)||(roas!=null&&roas<1&&early))return ['wait','⏳ รอข้อมูล · ปล่อยวิ่งต่อ',`ใช้ไป ${adMoney(sp)}${cur.ord?` ได้ ${cur.ord} ออเดอร์`:''} ยังน้อยเกินจะตัดสิน (รอให้ถึง ${adMoney(thr)} และวิ่งครบ 3 วัน)`];
+  if(roas<1)return ['stop','⛔ ควรหยุด',`ขาดทุน ${adMoney(loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}: จ่าย ฿1 ได้คืน ฿${roas.toFixed(2)}) · ${ctr<0.01?'คนไม่ค่อยคลิก รูปไม่ดึงดูด ถ้าจะลองใหม่ให้เปลี่ยนรูป':'คนคลิกเยอะแต่ไม่ซื้อ ลองเปลี่ยนสินค้าที่ยิงเป็นชุดที่ขายดีแทน'} · ย้ายงบไปแคมเปญที่ ROAS สูงกว่า`];
+  if(roas<1.5)return ['meh','🟡 เสมอตัว · ลองเปลี่ยนรูป',`ROAS ${roas.toFixed(2)} เกือบคุ้มทุน ลองรูป/ข้อความใหม่ก่อนเพิ่มงบ`];
+  if(roas>=3&&(cur.ord||0)>=3)return ['up','🚀 ควรเพิ่มงบ',`กำไร ${adMoney(-loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}) · เพิ่มทีละ 20–30%${c.daily?` (${adMoney(c.daily)} → ${adMoney(Math.round(c.daily*1.25/10)*10)}/วัน)`:''} ทุก 3–4 วัน ถ้าเพิ่มเร็วไปต้นทุนต่อออเดอร์มักแพงขึ้น`];
+  return ['ok','✅ ปล่อยวิ่งต่อ',`กำไร ${adMoney(-loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}) · ได้ ${cur.ord||0} ออเดอร์ ถ้าได้ถึง 3 ออเดอร์และ ROAS เกิน 3 ค่อยเพิ่มงบ`];}
 // แถวในตาราง = 1 แคมเปญ
 function adCampRow(c,R){const g=ADG[c.g],one=c.ads.length===1,a0=c.ads[0],cur=R?R.cur:adCalc({imp:c.w.impressions,clk:c.w.clicks,spend:c.w.spendTHB,ord:c.sh?c.sh.orders7:c.w.purchases,sales:c.sh?c.sh.rev7:c.w.valueTHB}),prev=R?R.prev:{};
   const imgs=c.ads.map(a=>a.image).filter(Boolean).slice(0,3),label=a=>(c.au&&(c.au.labels||{})[a.image])||'รูป '+(c.ads.indexOf(a)+1),todo=c.ads.filter(a=>a.todo||a.reasons.length);
@@ -5138,6 +5162,7 @@ function adCampRow(c,R){const g=ADG[c.g],one=c.ads.length===1,a0=c.ads[0],cur=R?
       <div class="acamp-t"><b>${esc(c.name)}</b><span class="bst-st"><span class="badge ${g[2]}">${g[0]} ${esc(one?a0.label:g[1])}</span>${c.daily?`<span class="fine">${adMoney(c.daily)}/วัน</span>`:''}${c.end&&c.g!=='ended'?`<span class="fine">ถึง ${new Date(c.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}${one?'':`<span class="fine">${c.ads.length} รูป</span>`}</span></div></div>
     ${cell('imp','การมองเห็น')}${cell('clk','คลิก')}${cell('ctr','CTR')}${cell('spend','ค่าโฆษณา')}${cell('sales','ยอดขาย')}${cell('ord','คำสั่งซื้อ')}${cell('roas','ROAS')}
     <div class="adt-act">${toggle}<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/${one?'ads?selected_ad_ids='+esc(a0.id):'campaigns?selected_campaign_ids='+esc(c.id)}" target="_blank" rel="noopener noreferrer" title="เปิดใน Ads Manager">↗</a></div>
+    ${(()=>{const v=adAdvice(c,R);return v?`<div class="adt-wide adv adv-${v[0]}"><b>${v[1]}</b><span>${esc(v[2])}</span></div>`:'';})()}
     ${todo.length?`<div class="adt-wide">${todo.map(a=>`${a.todo?`<p class="bst-todo">👉 ${one?'':esc(label(a))+': '}${esc(a.todo)}</p>`:''}${a.reasons.length?`<p class="fine bst-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</p>`:''}`).join('')}</div>`:''}
     ${one?'':`<details class="acamp-ads adt-wide"><summary>ดูทีละรูป (${c.ads.length}) · ตัวเลข 7 วัน</summary>${c.ads.map(a=>{const ag=ADG[a.group];return `<div class="acamp-ad">${a.image?`<img src="${esc(a.image)}" alt="" loading="lazy">`:'<span></span>'}<div><b>${esc(label(a))}</b> <span class="badge ${ag[2]}">${ag[0]} ${esc(a.label)}</span><span class="fine">ใช้ ${adMoney(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · Facebook นับซื้อ ${a.week.purchases}</span></div><div class="bst-acts">${adAdBtn(a)}</div></div>`;}).join('')}</details>`}
   </div>`;}
@@ -5149,7 +5174,8 @@ function adsTab(){
   const accBad=A&&!A.ok&&A.reason==='account',pend=(ADA.items||[]).filter(x=>['pending','failed','launching'].includes(x.status));
   const fix=camps.filter(c=>c.g==='fix'),run=camps.filter(c=>c.g==='run'||c.g==='review'),off=camps.filter(c=>c.g==='paused'||c.g==='ended'),ready=T.filter(t=>t.done);
   const low=L&&L.capTHB&&L.leftTHB<300;
-  const todo=[accBad?['🏦 บัญชีโฆษณามีปัญหา','draft','bad']:null,A&&!A.ok&&!accBad?['⚠️ ยังยิงแอดจากหลังบ้านไม่ได้','draft','bad']:null,fix.length?[`🔴 แอดต้องแก้ ${fix.length}`,'fix','bad']:null,pend.length?[`📝 รอกดตกลง ${pend.length}`,'draft','warn']:null,ready.length?[`🏆 ผลทดสอบรูปพร้อมแล้ว ${ready.length}`,'test','warn']:null,low?[`💳 วงเงินเหลือ ${adMoney(L.leftTHB)}`,'','warn',L.page]:null].filter(Boolean);
+  const advStop=(()=>{try{const R0=adRange(null,allTags);if(!R0)return 0;return run.filter(c=>{const v=adAdvice(c,adRange(new Set([c.id]),adTags(c.ads)));return v&&v[0]==='stop';}).length;}catch(e){return 0;}})();
+  const todo=[accBad?['🏦 บัญชีโฆษณามีปัญหา','draft','bad']:null,A&&!A.ok&&!accBad?['⚠️ ยังยิงแอดจากหลังบ้านไม่ได้','draft','bad']:null,fix.length?[`🔴 แอดต้องแก้ ${fix.length}`,'fix','bad']:null,advStop?[`⛔ แนะนำหยุด ${advStop} แคมเปญ (ขาดทุน)`,'home','bad']:null,pend.length?[`📝 รอกดตกลง ${pend.length}`,'draft','warn']:null,ready.length?[`🏆 ผลทดสอบรูปพร้อมแล้ว ${ready.length}`,'test','warn']:null,low?[`💳 วงเงินเหลือ ${adMoney(L.leftTHB)}`,'','warn',L.page]:null].filter(Boolean);
   const f=['home','draft','test','plan','tools'].includes(ADST.f)?ADST.f:'home';
   const tabs=[['home','📊 ภาพรวมโฆษณา',''],['draft','📝 รอกดตกลง',pend.length],['test','🏆 ทดสอบรูป',T.length],['plan','🔮 แนะนำ & ประเมิน',''],['tools','🧰 เครื่องมือ','']];
   const loading=!ADST.d?'<p class="fine" style="padding:12px 0">กำลังโหลดตัวเลขจาก Facebook...</p>':d.ok===false&&!accBad?`<p class="fine" style="color:var(--bad);padding:8px 0">ดึงตัวเลขไม่ได้: ${esc(d.error||'')} · กด ↻ รีเฟรช</p>`:'';
@@ -6329,6 +6355,7 @@ function act(a,el){
         .then(async j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');await adsUseImage(x,j.image);toast('ได้รูปแอดใหม่แล้ว ✨');})
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
     case 'adsFilter':if(el.dataset.v==='fix'){ADST.f='home';ADST.tf='fix';}else ADST.f=el.dataset.v;render(true);requestAnimationFrame(()=>{const t=document.querySelector('.bst-card');if(t&&t.getBoundingClientRect().top<0)t.scrollIntoView({block:'start'});});break;
+    case 'bonusRm':if(S.draft){S.draft.bonusIds=(S.draft.bonusIds||[]).filter(x=>x!==id);render(true);}break;
     case 'adsRng':ADST.rng=Number(el.dataset.v)||7;render(true);break;
     case 'adsTf':ADST.tf=el.dataset.v;render(true);break;
     case 'adsSort':ADST.sort=el.dataset.v;render(true);break;
@@ -6720,6 +6747,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='src'){S.src=t.value;}
   else if(t.id==='ad-p'){const p=getProduct(t.value);S.ad.pid=p.id;S.ad.camp='';Object.assign(S.ad,adDraft(p,S.ad.var));render(true);}
   else if(t.id==='ad-cta'){S.ad.cta=t.value;render(true);}
+  else if(t.id==='e-bonus-add'){if(t.value&&S.draft){S.draft.bonusIds=[...(S.draft.bonusIds||[]),t.value];if(typeof pvSync==='function')pvSync();render(true);}}
   else if(t.id==='ad-camp'){S.ad.camp=t.value;render(true);}
   else if(t.id==='e-img'){addImages(t.files);t.value='';}
   else if(t.id==='e-pdf'){const f=t.files&&t.files[0];t.value='';if(f)makePreviews(f);}
