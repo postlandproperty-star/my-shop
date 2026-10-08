@@ -1341,7 +1341,7 @@ export default async function handler(req, res) {
     if (action === 'paywatch') { // ตรวจตัวเฝ้าปุ่มจ่ายเงิน (คีย์ร้าน/แอดมิน อ่านอย่างเดียว ไม่ส่งเตือน): 3 ชม.ล่าสุด กี่คนกดจ่าย กี่ QR
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
-      const st = (await sb('shop_state?id=eq.paywatch&select=data'))?.[0]?.data || {}, since = new Date(Date.now() - 3 * 36e5);
+      const st = (await sb('shop_state?id=eq.paywatch&select=data'))?.[0]?.data || {}, since = new Date(Date.now() - Math.min(48, Math.max(1, Number(req.query.h) || 3)) * 36e5);
       const ev = (await sb(`web_events?at=gte.${since.toISOString()}&ev=eq.click&k=in.(qrMake,cartPay)&select=sid&limit=3000`)) || [];
       const pis = await stripe('GET', `payment_intents?limit=100&created[gte]=${Math.floor(since.getTime() / 1000)}`);
       return res.status(200).json({ ok: true, state: st, now: { people: new Set(ev.map((e) => e.sid)).size, taps: ev.length, qr: (pis.data || []).filter((x) => x.metadata?.flow === 'qr').length } });
