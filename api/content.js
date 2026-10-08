@@ -1428,6 +1428,7 @@ ${books}`;
       if (admin === 'key' && p.kind !== 'course') return res.status(403).json({ ok: false, error: 'คีย์ร้านแก้ได้เฉพาะหน้าขายคอร์ส' });
       const F = ['headline', 'desc', 'features', 'pains', 'forwho', 'faq', 'bonus', 'guarantee', 'specs', 'toc', 'sampleLink', 'proof'], f = b.fields || {}, done = [];
       for (const k of F) if (typeof f[k] === 'string') { p[k] = f[k].slice(0, 6000); done.push(k); }
+      if (Array.isArray(f.images) && f.images.length && f.images.every((u) => /^https:\/\/\S+$/.test(String(u)))) { p.images = f.images.slice(0, 5).map((u) => String(u).slice(0, 500)); done.push('images'); } // รูปสินค้า (ลิงก์ https เท่านั้น)
       if (!done.length) return res.status(400).json({ ok: false, error: 'ไม่มีช่องที่แก้ได้' });
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'main', data: { ...data, products: P }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, fields: done });
