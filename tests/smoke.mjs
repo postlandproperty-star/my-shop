@@ -410,6 +410,8 @@ try {
         await page.evaluate(() => document.querySelector('[data-a="adsAiOpen"][data-id="ad-test"]')?.click());
         const hk = await page.evaluate(() => (document.querySelector('[id^="adext-hook-"]') || {}).value || '');
         pass(`[${kind}] โฆษณา: ข้อความบนรูปของชุดไม่พูดว่า "เล่มเดียว" และบอกจำนวนเล่ม`, !/เล่มเดียว/.test(hk) && /ครบ \d+ เล่ม/.test(hk), hk.replace(/\n/g, ' / '));
+        const has916 = () => page.waitForFunction(() => /9:16/.test((document.querySelector('.adq-extp') || {}).value || ''), null, { timeout: 2500 }).then(() => true, () => false);
+        if (!(await has916())) { await tap('[data-a="adsExtSize"][data-v="916"]'); await has916(); } // กดแล้วหน้ายังวาดไม่ทัน: กดซ้ำอีกครั้ง
         const ep = await page.evaluate(() => { const t = document.querySelector('.adq-extp'); return t ? t.value : ''; });
         pass(`[${kind}] โฆษณา: ปุ่มสร้าง prompt ไปทำรูปเอง (มีชื่อสินค้า ข้อความไทย แนวปกเด่น ขนาด 9:16)`, /9:16/.test(ep) && /250px/.test(ep) && /SheetLab/.test(ep) && /[\u0E00-\u0E7F]/.test(ep) && /royal-blue/.test(ep), ep.slice(0, 80));
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(150);
