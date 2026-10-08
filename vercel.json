@@ -41,6 +41,10 @@
       "destination": "/api/page?freeimg=:f"
     },
     {
+      "source": "/adm.js",
+      "destination": "/api/page?chunk=adm"
+    },
+    {
       "source": "/sw.js",
       "destination": "/api/page?pwa=sw"
     },

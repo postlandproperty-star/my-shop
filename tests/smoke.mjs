@@ -31,6 +31,9 @@ const MAILS = [];
 const { freePage, FREEBIES } = await import(path.join(ROOT, '..', 'lib/free.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
 const T_QZ = [{ slug: 'toeic-level-test', title: 'วัดระดับ TOEIC ฟรี 20 ข้อ', cat: 'grammar', mode: 'level', questions: [1] }, { slug: 'toeic-tense-quiz', title: 'ข้อสอบ TOEIC Tense 10 ข้อ พร้อมเฉลย', desc: 'ลองทำข้อสอบ TOEIC Part 5 เรื่อง Tense 10 ข้อ พร้อมเฉลยและคำอธิบายภาษาไทยครบทุกข้อ', cat: 'grammar', questions: Array(10).fill(1) }, { slug: 'toeic-ctm', title: 'จับผิดประโยค TOEIC 10 ข้อ พิมพ์แก้เอง ตรวจใจดี', desc: 'แบบฝึกจับผิดประโยคภาษาอังกฤษแนว TOEIC 10 ข้อ พิมพ์ประโยคที่ถูกเอง', cat: 'grammar', questions: Array(10).fill(1) }];
+// เสิร์ฟแบบเดียวกับเว็บจริง: โค้ดหลังบ้านแยกไป /adm.js (lib/split.js)
+const { splitHtml } = await import(path.join(ROOT, '..', 'lib/split.js'));
+const SPLIT = splitHtml(fs.readFileSync(path.join(SRC, 'index.html'), 'utf8')); const ADM_LOADS = [];
 const server = http.createServer((req, res) => {
   const u = decodeURIComponent(req.url.split('?')[0]);
   if (u === '/__free') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(freePage(FREEBIES[0], { site: BASE, upsell: SHOP.products.find((p) => p.status === 'published' && p.type !== 'bundle') })); }
@@ -44,7 +47,8 @@ const server = http.createServer((req, res) => {
   const ti = u.match(/^\/topic-img\/([a-z-]+)\.jpg$/); if (ti) { const f = path.join(SRC, 'topics', ti[1] + '.jpg'); if (fs.existsSync(f)) { res.setHeader('Content-Type', 'image/jpeg'); return res.end(fs.readFileSync(f)); } res.statusCode = 404; return res.end(); }
   const f = path.join(SRC, u);
   if (u !== '/' && fs.existsSync(f) && fs.statSync(f).isFile()) return res.end(fs.readFileSync(f));
-  res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(fs.readFileSync(path.join(SRC, 'index.html')));
+  if (u === '/adm.js') { ADM_LOADS.push(req.headers.referer || ''); res.setHeader('Content-Type', 'application/javascript; charset=utf-8'); return res.end(SPLIT.chunk); }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(SPLIT.html);
 });
 await new Promise((r) => server.listen(0, r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
@@ -219,6 +223,7 @@ try {
         const back = await page.evaluate(() => ({ hint: !!document.querySelector('#checkout .qr-back'), url: location.search, prefill: (document.querySelector('#checkout #qr-email') || {}).value }));
         pass(`[${kind}] หน้าจ่ายเงิน: กรอกอีเมล + ปุ่มสแกนพร้อมเพย์ขึ้นทันที · บัตรเป็นลิงก์รองส่งอีเมลไปด้วย กดซ้ำได้หน้าเดียว · กลับจาก Stripe มีข้อความชวนสแกน (จำอีเมลไว้)`,
           box.email && box.qr && !box.cardBig && box.card && hits.length === 1 && /[?&]e=buyer%40test\.co/.test(hits[0]) && back.hint && !/unpaid/.test(back.url) && back.prefill === 'buyer@test.co', JSON.stringify({ box, hits, back })); }
+      pass(`[${kind}] หน้าลูกค้า (ร้าน/หน้าขาย/ตะกร้า/จ่ายเงิน) ไม่ต้องโหลดโค้ดหลังบ้าน /adm.js`, await page.evaluate(() => typeof __admOk !== 'undefined' && !__admOk), await page.evaluate(() => (window.__admWhy || '') + ' ' + location.pathname));
       await page.context().close();
     } catch (e) { pass(`[${kind}] หน้าขาย ${p.slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 

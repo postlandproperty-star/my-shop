@@ -13,6 +13,7 @@ import { PWA_MANIFEST, SW_JS } from '../lib/pwa.js';
 import { loadVip, vipSellable } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
 import { FREEBIES, freeBySlug, freePage } from '../lib/free.js';
+import { splitHtml } from '../lib/split.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
 async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
@@ -20,7 +21,10 @@ async function loadArticles() { try { const r = await sbSelect('shop_state?id=eq
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY = 'sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
-const html = readFileSync(join(process.cwd(), 'src', 'index.html'), 'utf8');
+const RAW = readFileSync(join(process.cwd(), 'src', 'index.html'), 'utf8');
+// หน้าลูกค้าโหลดเร็วขึ้น: โค้ดหลังบ้านแยกไป /adm.js (ถ้าแยกไม่ได้ เสิร์ฟไฟล์เต็มเหมือนเดิม)
+let SPLIT = null; try { SPLIT = splitHtml(RAW); } catch (e) { console.error('split', e); }
+const html = SPLIT ? SPLIT.html : RAW;
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -122,6 +126,11 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).send(page);
+  }
+  if (req.query.chunk === 'adm') { // โค้ดหลังบ้าน: ลิงก์มีเวอร์ชัน (?v=) แคชได้นาน · เวอร์ชันไม่ตรง (หน้าเก่า) แคชสั้น
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8'); res.setHeader('X-Robots-Tag', 'noindex');
+    res.setHeader('Cache-Control', SPLIT && req.query.v === SPLIT.v ? 'public, max-age=31536000, immutable' : 'public, max-age=0, s-maxage=30');
+    return res.status(SPLIT ? 200 : 404).send(SPLIT ? SPLIT.chunk : '');
   }
   const brand = String(req.query.brand || '');
   if (brand) { // โลโก้ร้าน (ทำจาก Canva) ไอคอนแท็บ/หน้าจอมือถือ ไฟล์อยู่ใน src/brand
@@ -282,6 +291,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
         `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}">`,
         `<meta name="description" content="${esc(desc)}">`,
         `<link rel="canonical" href="${NEW_SITE}/p/${esc(p.slug)}">`,
+        img && p.type !== 'bundle' ? `<link rel="preload" as="image" href="${esc(img)}" fetchpriority="high">` : '', // รูปหลักเริ่มโหลดทันที ไม่ต้องรอสคริปต์วาดหน้า
         productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img, rvAll[p.id]),
       ].join('');
       out = out

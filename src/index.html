@@ -2145,7 +2145,7 @@ function bundleView(p){
     return `<section class="spx"><div class="sp-media">
     <div class="sp-car-wrap"><div class="sp-car" id="sp-car">${imgs.length?imgs.map((src,i)=>`<button class="zoom" data-a="zoom" data-i="${i}" aria-label="ขยายภาพที่ ${i+1}"><img width="1200" height="1200" src="${esc(src)}" alt="${i?'ภาพที่ '+(i+1)+' ของ ':''}${esc(p.name)}"></button>`).join(''):`<div class="bx-stack">${books.slice(0,8).map((b,i)=>`<span class="bx-mini" ${cover(b,i)}></span>`).join('')}</div>`}</div>
       ${imgs.length>1?`<button class="sp-nav prev" data-a="spNav" data-d="-1" aria-label="รูปก่อนหน้า">‹</button><button class="sp-nav next" data-a="spNav" data-d="1" aria-label="รูปถัดไป">›</button><span class="sp-count" id="sp-count">📷 1/${imgs.length}</span>`:''}${off>0?`<span class="sp-off">ประหยัด ${off}%</span>`:''}</div>
-    ${imgs.length>1?`<div class="sp-thumbs" id="sp-thumbs">${imgs.map((src,i)=>`<button class="sp-th${i?'':' on'}" data-a="spGo" data-i="${i}" aria-label="ดูรูปที่ ${i+1}"><img src="${esc(src)}" alt=""></button>`).join('')}</div>`:''}</div>
+    ${imgs.length>1?`<div class="sp-thumbs" id="sp-thumbs">${imgs.map((src,i)=>`<button class="sp-th${i?'':' on'}" data-a="spGo" data-i="${i}" aria-label="ดูรูปที่ ${i+1}"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>`:''}</div>
     <div class="sp-band" style="--hero:${esc(p.color)}"><div class="wrap sp-band-in">
       <div class="sp-price">${plans.length>1?'<span class="from">เริ่มต้น</span>':''}<span class="now">${baht(minP)}</span>${sum>minP?`<span class="old">${baht(sum)}</span>`:''}</div>
       ${live?`<div class="sp-cd" data-end="${p.promoEnd}"><span>ราคาเปิดตัวจบใน</span>${p.promoEnd-Date.now()>864e5?'<b data-u="d">00</b><i>วัน</i>':''}<b data-u="h">00</b><i>:</i><b data-u="m">00</b><i>:</i><b data-u="s">00</b></div>`:''}
@@ -2454,7 +2454,7 @@ function shopView(){
   const opts=D.products.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(x.name)}${x.status==='draft'?' (ฉบับร่าง)':''}</option>`).join('');
   const tag=off>0?`<div class="tag" role="img" aria-label="ลด ${off} เปอร์เซ็นต์"><span>ลด<br><b>${off}%</b></span></div>`:'';
   const imgCls=kind==='book'?'book':kind==='sheet'?'sheet':'';
-  const visual=imgs.length?`<div class="cover-wrap has-img"><button class="zoom" data-a="zoom" data-i="0" aria-label="ขยายภาพ"><img class="cover-img" width="1200" height="1200" src="${esc(imgs[0])}" alt="${doc?'ปก ':'ภาพตัวอย่าง '}${esc(p.name)}"></button>${tag}</div>`:`<div class="cover-wrap">${cover(p.color,kind)}${tag}</div>`;
+  const visual=imgs.length?`<div class="cover-wrap has-img"><button class="zoom" data-a="zoom" data-i="0" aria-label="ขยายภาพ"><img class="cover-img" width="1200" height="1200" fetchpriority="high" src="${esc(imgs[0])}" alt="${doc?'ปก ':'ภาพตัวอย่าง '}${esc(p.name)}"></button>${tag}</div>`:`<div class="cover-wrap">${cover(p.color,kind)}${tag}</div>`;
   const units={d:'วัน',h:'ชม.',m:'นาที',s:'วินาที'};
   const promo=live?`<div class="promo" data-end="${p.promoEnd}"><div class="wrap promo-in"><span>โปรโมชันนี้หมดเวลาใน</span><div class="cd">${['d','h','m','s'].map(u=>`<div><b data-u="${u}">00</b><small>${units[u]}</small></div>`).join('')}</div></div></div>`:'';
   const X='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -2465,9 +2465,9 @@ function shopView(){
   ${shopHead(p)}
   ${p.status==='draft'?`<div class="draftnote">ฉบับร่าง ลูกค้ายังเปิดหน้านี้ไม่ได้ จนกว่าคุณจะเผยแพร่</div>`:''}
   <section class="spx"><div class="sp-media">
-    <div class="sp-car-wrap"><div class="sp-car" id="sp-car">${(imgs.length?imgs:[null]).map((src,i)=>src?`<button class="zoom" data-a="zoom" data-i="${i}" aria-label="ขยายภาพที่ ${i+1}"><img width="1200" height="1200" src="${esc(src)}" alt="${i===0?(doc?'ปก ':'ภาพ ')+esc(p.name):'ภาพที่ '+(i+1)+' ของ '+esc(p.name)}" ${i?'loading="lazy"':''}></button>`:`<div class="sp-art">${cover(p.color,kind)}</div>`).join('')}</div>
+    <div class="sp-car-wrap"><div class="sp-car" id="sp-car">${(imgs.length?imgs:[null]).map((src,i)=>src?`<button class="zoom" data-a="zoom" data-i="${i}" aria-label="ขยายภาพที่ ${i+1}"><img width="1200" height="1200" src="${esc(src)}" alt="${i===0?(doc?'ปก ':'ภาพ ')+esc(p.name):'ภาพที่ '+(i+1)+' ของ '+esc(p.name)}" ${i?'loading="lazy"':'fetchpriority="high"'}></button>`:`<div class="sp-art">${cover(p.color,kind)}</div>`).join('')}</div>
       ${imgs.length>1?`<button class="sp-nav prev" data-a="spNav" data-d="-1" aria-label="รูปก่อนหน้า">‹</button><button class="sp-nav next" data-a="spNav" data-d="1" aria-label="รูปถัดไป">›</button><span class="sp-count" id="sp-count">📷 1/${imgs.length}</span>`:''}${off>0?`<span class="sp-off">ลด ${off}%</span>`:''}</div>
-    ${imgs.length>1?`<div class="sp-thumbs" id="sp-thumbs">${imgs.map((src,i)=>`<button class="sp-th${i?'':' on'}" data-a="spGo" data-i="${i}" aria-label="ดูรูปที่ ${i+1}"><img src="${esc(src)}" alt=""></button>`).join('')}<span class="sp-hint">มี ${imgs.length} รูป กดหรือปัดเพื่อดู</span></div>`:''}</div>
+    ${imgs.length>1?`<div class="sp-thumbs" id="sp-thumbs">${imgs.map((src,i)=>`<button class="sp-th${i?'':' on'}" data-a="spGo" data-i="${i}" aria-label="ดูรูปที่ ${i+1}"><img src="${esc(src)}" alt="" loading="lazy" decoding="async"></button>`).join('')}<span class="sp-hint">มี ${imgs.length} รูป กดหรือปัดเพื่อดู</span></div>`:''}</div>
     <div class="sp-band" style="--hero:${esc(p.color)}"><div class="wrap sp-band-in">
       <div class="sp-price"><span class="now">${baht(p.price)}</span>${p.fullPrice>p.price?`<span class="old">${baht(p.fullPrice)}</span>`:''}${kind==='course'&&crsLessonN(p)>=5&&p.price>=1?`<span class="per">เฉลี่ยบทละ ${baht(Math.round(p.price/crsLessonN(p)))}</span>`:''}</div>
       ${live?`<div class="sp-cd" data-end="${p.promoEnd}"><span>จบใน</span>${p.promoEnd-Date.now()>864e5?'<b data-u="d">00</b><i>วัน</i>':''}<b data-u="h">00</b><i>:</i><b data-u="m">00</b><i>:</i><b data-u="s">00</b></div>`:''}
@@ -6913,6 +6913,7 @@ document.addEventListener('visibilitychange',async()=>{
   const q=new URLSearchParams(location.search);
   const wantAdmin=q.has('admin')||['#admin','#factory','#vip'].includes(location.hash)||hasAdminToken();
   S.loading=!inline&&!load(); // ไม่มีข้อมูลฝังและไม่มีแคช: รอโหลดจากระบบก่อน
+  if(wantAdmin&&window.__admAsync){try{await window.__admAsync();}catch(e){console.error(e);}} // โค้ดหลังบ้านแยกไฟล์ (/adm.js) โหลดเฉพาะแอดมิน
   applyUrl();
   render(false);
   if(PV){S.loading=!S.pvGot;render(false);try{window.parent.postMessage({type:'pvReady'},location.origin);}catch(e){}return;}
