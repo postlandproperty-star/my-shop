@@ -373,15 +373,16 @@ const adsTestProduct = (p) => Number(p.price) < 30 || /ทดสอบ|แคล
 function adCopy(p, site) {
   const L = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
   const notion = /notion/i.test(`${p.cat} ${p.link}`);
+  const course = p.kind === 'course'; // คอร์สวิดีโอ: ไม่ใช่ไฟล์ PDF (คุณแดน 8 ต.ค. 69)
   if (p.type === 'bundle') { // ชุด: ราคาแพ็กเกจหลัก
     const pls = (p.plans || []).filter((x) => x && x.on !== false && Number(x.price) >= 1); const pl = pls.find((x) => x.key === p.planDefault) || pls[0];
     p = { ...p, price: pl ? Number(pl.price) : Number(p.price) || 0, fullPrice: pl && Number(pl.fullPrice) > Number(pl.price) ? Number(pl.fullPrice) : Number(p.fullPrice) || 0, images: (p.images || []).length ? p.images : (p.cover ? [p.cover] : []) };
   }
   const full = Number(p.fullPrice) > Number(p.price) ? ` (ปกติ ฿${Number(p.fullPrice).toLocaleString('th-TH')})` : '';
   const text = [p.headline && p.headline !== p.name ? p.headline : p.name, p.desc || '', L(p.features).slice(0, 4).map((x) => '✅ ' + x).join('\n'),
-    `ราคา ฿${Number(p.price).toLocaleString('th-TH')}${full} · ${notion ? 'ได้ลิงก์เทมเพลต Notion ทันทีหลังจ่าย' : 'ได้ไฟล์ PDF ทันทีหลังจ่าย'} สแกน QR จ่ายได้เลย`].filter(Boolean).join('\n\n').slice(0, 1500);
+    `ราคา ฿${Number(p.price).toLocaleString('th-TH')}${full} · ${course ? 'เข้าเรียนได้ทันทีหลังจ่าย' : notion ? 'ได้ลิงก์เทมเพลต Notion ทันทีหลังจ่าย' : 'ได้ไฟล์ PDF ทันทีหลังจ่าย'} สแกน QR จ่ายได้เลย`].filter(Boolean).join('\n\n').slice(0, 1500);
   const camp = ('auto-' + String(p.slug || p.id)).slice(0, 60);
-  return { text, headline: String(p.name || '').slice(0, 40), description: notion ? 'Notion Template · ได้ทันที' : p.type === 'bundle' ? `ชุด ${(p.items || []).length} เล่ม · PDF ได้ทันทีหลังจ่าย` : 'ไฟล์ PDF · ได้ทันทีหลังจ่าย', campaign: camp,
+  return { text, headline: String(p.name || '').slice(0, 40), description: course ? 'คอร์สวิดีโอ · เรียนได้ทันทีหลังจ่าย' : notion ? 'Notion Template · ได้ทันที' : p.type === 'bundle' ? `ชุด ${(p.items || []).length} เล่ม · PDF ได้ทันทีหลังจ่าย` : 'ไฟล์ PDF · ได้ทันทีหลังจ่าย', campaign: camp,
     link: `${site}/p/${p.slug}?utm_source=facebook&utm_medium=paid&utm_campaign=${encodeURIComponent(camp)}&utm_content=auto`, image: (p.images || [])[0] || '' };
 }
 async function draftAd(productId, { by = 'system', force = false } = {}) {
@@ -3070,7 +3071,9 @@ ${books}`;
         const acc = await adsAccess(fb);
         if (!acc.ok) return res.status(400).json({ ok: false, error: acc.error, reason: acc.reason });
         const shop = await loadShop();
-        Object.assign(x, { text, headline, image, multi, platforms, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() }); await saveAdsAuto(items);
+        Object.assign(x, { text, headline, image, multi, platforms, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() });
+        if (shop.products.find((p) => p.id === x.productId)?.kind === 'course') x.description = 'คอร์สวิดีโอ · เรียนได้ทันทีหลังจ่าย'; // ร่างเก่าที่ยังเขียนว่า PDF
+        await saveAdsAuto(items);
         try {
           const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency });
           const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
