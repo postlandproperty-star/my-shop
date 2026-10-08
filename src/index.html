@@ -2422,7 +2422,7 @@ function crsPreview(p){const t=crsTeaser(p),e=p.videoOk&&vidEmbed(p.sampleLink);
   const cover=/^https:\/\//.test(String(p.teaserCover||''))?p.teaserCover:'';
   return `<section class="section" id="crs-preview"><div class="wrap"><h2>ดูตัวอย่างฟรี</h2><p class="fine" style="margin:-8px 0 12px">${t?'กดเล่นได้เลย ไม่ต้องสมัคร · ลองทำโจทย์จริง 1 ข้อ แล้วดูเฉลยแบบในคอร์ส':'กดเล่นได้เลย ไม่ต้องสมัคร · ทุกบทเป็นแบบนี้: สอนเทคนิค แล้วฝึกทำจริงพร้อมเฉลย'}</p>
     <div class="crs-pv">${t?`<video src="${esc(t)}" ${cover?`poster="${esc(cover)}"`:''} playsinline preload="none" title="ตัวอย่างคอร์ส" onclick="if(!this.controls){this.controls=true;this.play();}"></video>`:`<iframe src="${esc(e)}" title="ตัวอย่างบทเรียน" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe>`}</div>
-    ${t&&e?`<p class="fine" style="margin-top:10px">อยากดูบทเต็ม? <a href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">▶ เปิดบทเรียนตัวอย่างฟรี (บทเต็ม)</a></p>`:''}</div></section>`;}
+    </div></section>`;}
 function crsCurriculum(p){const secs=[];let cur=null;
   for(const raw of String(p.toc||'').split('\n')){if(!raw.trim())continue;const m=raw.match(/^\s+(\d+)\.\s*(.+?)(?:\s*\((\d+) นาที\))?\s*$/);
     if(m&&cur)cur.L.push({n:m[1],t:m[2],min:Number(m[3])||0});else if(!m){cur={name:raw.trim(),L:[]};secs.push(cur);}}
