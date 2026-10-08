@@ -18,7 +18,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
-import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory } from '../lib/ads.js';
+import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
 import { sendRecoveries } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
@@ -2984,17 +2984,21 @@ ${books}`;
         const acc = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) }));
         if (!fb?.userToken || (acc.reason === 'token' || acc.reason === 'perm')) return res.status(200).json({ ok: false, access: acc, error: acc.error });
         try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() });
-          const history = await adsHistory(fb, r.rate).catch(() => null); // ใช้ประเมินรายได้ ไม่มีก็ไม่เป็นไร
+          const [history, daily] = await Promise.all([adsHistory(fb, r.rate).catch(() => null), adsDaily(fb, r.rate, 60).catch((e) => { console.error('ads daily', e.message); return null; })]); // ประเมินรายได้ + กราฟรายวัน (ไม่มีก็ไม่เป็นไร)
+          let shopDaily = null;
           // ออเดอร์จริงในร้านของแต่ละแอด: จับคู่จากชื่อที่ลิงก์แอดส่งมา (tag) หรือชื่อแคมเปญ · 7 วันและ 30 วัน (ไม่นับออเดอร์ทดสอบ)
           try {
-            const since = new Date(Date.now() - 30 * 864e5).toISOString(), wk = Date.now() - 7 * 864e5;
+            const since = new Date(Date.now() - 60 * 864e5).toISOString(), wk = Date.now() - 7 * 864e5, mo = Date.now() - 30 * 864e5;
             const [ords, priv] = await Promise.all([sb(`orders?status=eq.paid&paid_at=gte.${since}&select=campaign,amount,paid_at,email&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
             const isTest = testOrder(null, priv?.[0]?.data?.testEmails); const real = ords.filter((o) => !isTest(o) && o.campaign);
-            for (const ad of r.ads) { const keys = new Set([ad.tag, ad.campaign].filter(Boolean).map((x) => x.toLowerCase())); const m = real.filter((o) => keys.has(String(o.campaign).toLowerCase())), m7 = m.filter((o) => Date.parse(o.paid_at) >= wk);
+            // ยอดจริงรายวันต่อชื่อในลิงก์ (กราฟ): วันที่ตามเขตเวลาบัญชีโฆษณาให้ตรงกับตัวเลขของ Facebook
+            const tzh = daily ? daily.tz : 7, sd = new Map(); for (const o of real) { const k = new Date(Date.parse(o.paid_at) + tzh * 36e5).toISOString().slice(0, 10) + '|' + String(o.campaign).toLowerCase(); const x = sd.get(k) || { n: 0, v: 0 }; x.n++; x.v += Number(o.amount) || 0; sd.set(k, x); }
+            shopDaily = [...sd].map(([k, x]) => { const [d, t] = k.split('|'); return { d, t, n: x.n, v: x.v }; });
+            for (const ad of r.ads) { const keys = new Set([ad.tag, ad.campaign].filter(Boolean).map((x) => x.toLowerCase())); const m = real.filter((o) => keys.has(String(o.campaign).toLowerCase()) && Date.parse(o.paid_at) >= mo), m7 = m.filter((o) => Date.parse(o.paid_at) >= wk);
               ad.shop = { tag: ad.tag || ad.campaign, orders7: m7.length, rev7: m7.reduce((x, o) => x + (Number(o.amount) || 0), 0), orders30: m.length, rev30: m.reduce((x, o) => x + (Number(o.amount) || 0), 0) }; }
-            if (history) for (const h of history) { const tags = new Set(r.ads.filter((a) => a.campaign === h.name).map((a) => (a.tag || a.campaign).toLowerCase()).concat(h.name.toLowerCase())); const m = real.filter((o) => tags.has(String(o.campaign).toLowerCase())); h.tags = [...tags]; h.shopOrders30 = m.length; h.shopRev30 = m.reduce((x, o) => x + (Number(o.amount) || 0), 0); }
+            if (history) for (const h of history) { const tags = new Set(r.ads.filter((a) => a.campaign === h.name).map((a) => (a.tag || a.campaign).toLowerCase()).concat(h.name.toLowerCase())); const m = real.filter((o) => tags.has(String(o.campaign).toLowerCase()) && Date.parse(o.paid_at) >= mo); h.tags = [...tags]; h.shopOrders30 = m.length; h.shopRev30 = m.reduce((x, o) => x + (Number(o.amount) || 0), 0); }
           } catch (e) { console.error('ad shop orders', e.message); }
-          return res.status(200).json({ ok: true, access: acc, ...r, history }); }
+          return res.status(200).json({ ok: true, access: acc, ...r, history, daily: daily && daily.rows, tz: daily && daily.tz, shopDaily }); }
         catch (e) { return res.status(200).json({ ok: false, access: acc, error: String(e.message || e) }); }
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
