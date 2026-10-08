@@ -5071,7 +5071,8 @@ function adsCamps(){const ads=(ADST.d&&ADST.d.ads)||[],m=new Map();
   return [...m.values()].map(L=>{const g=ADG_ORDER.find(k=>L.some(a=>a.group===k))||'ended';
     const w={};for(const a of L)for(const k of ['spendTHB','valueTHB','profitTHB','purchases','clicks','impressions'])w[k]=(w[k]||0)+(Number((a.week||{})[k])||0);
     const au=(ADA.items||[]).find(x=>(L[0].campaign&&x.campaign===L[0].campaign)||(x.fb&&x.fb.campaign&&x.fb.campaign===L[0].campaignId));
-    return {id:L[0].campaignId||L[0].id,ads:L,g,w,au,name:au?au.name:L[0].campaign||L[0].name,daily:Math.max(0,...L.map(a=>Number(a.dailyTHB)||0)),end:L.map(a=>a.end).filter(Boolean).sort().pop()||''};})
+    const sh=(L.find(a=>a.shop)||{}).shop||null;
+    return {id:L[0].campaignId||L[0].id,ads:L,g,w,au,sh,name:au?au.name:L[0].campaign||L[0].name,daily:Math.max(0,...L.map(a=>Number(a.dailyTHB)||0)),end:L.map(a=>a.end).filter(Boolean).sort().pop()||''};})
     .sort((p,q)=>ADG_ORDER.indexOf(p.g)-ADG_ORDER.indexOf(q.g)||q.w.spendTHB-p.w.spendTHB);}
 function adAdBtn(a){return a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`
   :a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:'';}
@@ -5082,9 +5083,9 @@ function adCampCard(c){const g=ADG[c.g],w=c.w,one=c.ads.length===1,a0=c.ads[0];
   return `<article class="acamp g-${c.g}">
     <div class="acamp-h"><div class="acamp-imgs n${imgs.length}">${imgs.length?imgs.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join(''):'<span></span>'}</div>
       <div class="acamp-t"><b>${esc(c.name)}</b><span class="ads-st"><span class="badge ${g[2]}">${g[0]} ${esc(one?a0.label:g[1])}</span>${c.daily?`<span class="fine">≈${adMoney(c.daily)}/วัน</span>`:''}${c.end&&c.g!=='ended'?`<span class="fine">ถึง ${new Date(c.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}${one?'':`<span class="fine">${c.ads.length} รูป</span>`}</span></div>
-      <div class="acamp-kpi"><div><b>${adMoney(w.spendTHB)}</b><span>ค่าแอด 7 วัน</span></div><div><b>${w.purchases}</b><span>ซื้อ${w.purchases?` · ${adMoney(w.spendTHB/w.purchases)}/ออเดอร์`:''}</span></div><div><b class="${w.profitTHB>=0?'up':'down'}">${w.spendTHB?(w.profitTHB>=0?'+':'−')+adMoney(Math.abs(w.profitTHB)):'–'}</b><span>${w.profitTHB>=0?'กำไร':'ขาดทุน'}</span></div></div></div>
+      ${(()=>{const sh=c.sh,n=sh?sh.orders7:w.purchases,rev=sh?sh.rev7:w.valueTHB,pr=rev-w.spendTHB;return `<div class="acamp-kpi"><div><b>${adMoney(w.spendTHB)}</b><span>ค่าแอด 7 วัน</span></div><div><b>${n}</b><span>ออเดอร์${sh?' (ร้านนับ)':''}${n?` · ${adMoney(w.spendTHB/n)}/ออเดอร์`:''}</span></div><div><b class="${pr>=0?'up':'down'}">${w.spendTHB?(pr>=0?'+':'−')+adMoney(Math.abs(pr)):'–'}</b><span>${pr>=0?'กำไร':'ขาดทุน'}</span></div></div>`;})()}</div>
+    ${c.sh&&w.purchases!==c.sh.orders7?`<p class="fine" style="margin:0">Facebook นับ ${w.purchases} ครั้ง ${adMoney(w.valueTHB)} (รวมคนที่เห็นแอดแล้วมาซื้อทีหลังทางอื่น อาจนับเกิน) · ร้านนับจากลิงก์แอด ${c.sh.orders7} ออเดอร์ ${adMoney(c.sh.rev7)}</p>`:''}
     ${todo.map(a=>`${a.todo?`<p class="ads-todo">👉 ${one?'':esc(label(a))+': '}${esc(a.todo)}</p>`:''}${a.reasons.length?`<p class="fine ads-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</p>`:''}`).join('')}
-    ${one&&a0.shop?`<p class="fine" style="margin:6px 0 0">🧾 ร้านนับได้: 7 วัน ${a0.shop.orders7} ออเดอร์ ${adMoney(a0.shop.rev7)} · 30 วัน ${a0.shop.orders30} ออเดอร์ ${adMoney(a0.shop.rev30)}</p>`:''}
     ${one?'':`<details class="acamp-ads"><summary>ดูทีละรูป (${c.ads.length})</summary>${c.ads.map(a=>{const ag=ADG[a.group];return `<div class="acamp-ad">${a.image?`<img src="${esc(a.image)}" alt="" loading="lazy">`:'<span></span>'}<div><b>${esc(label(a))}</b> <span class="badge ${ag[2]}">${ag[0]} ${esc(a.label)}</span><span class="fine">ใช้ ${adMoney(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · ซื้อ ${a.week.purchases}${a.week.purchases?` · ${adMoney(a.week.spendTHB/a.week.purchases)}/ออเดอร์`:''}</span></div><div class="ads-acts">${adAdBtn(a)}</div></div>`;}).join('')}</details>`}
     <div class="acamp-acts">${one?adAdBtn(a0):c.au&&['live','paused'].includes(c.au.status)?`<button class="btn btn-line btn-sm" data-a="${c.au.status==='live'?'adsStop':'adsResume'}" data-id="${esc(c.au.id)}" ${ADA.busy===c.au.id?'disabled':''}>${c.au.status==='live'?'⏸ หยุดทั้งแคมเปญ':'▶ เปิดทั้งแคมเปญต่อ'}</button>`:''}<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/${one?'ads?selected_ad_ids='+esc(a0.id):'campaigns?selected_campaign_ids='+esc(c.id)}" target="_blank" rel="noopener noreferrer">Ads Manager ↗</a></div>
   </article>`;}
@@ -5097,15 +5098,20 @@ function adsNewBox(){if(!ADST.pick)return '';const L=adPicks(),rank=new Map(L.ma
     <p class="fine" style="margin:4px 0 10px">กดแล้วได้ร่างแอด (ข้อความ รูป งบ) ไปตรวจในแท็บ "ต้องทำ" · ยังไม่เสียเงินจนกว่าจะกด ✅ ตกลง</p>
     <input class="input" type="search" data-adsq="1" placeholder="ค้นหาสินค้า" aria-label="ค้นหาสินค้าที่จะโฆษณา" value="${esc(ADST.q||'')}">
     <div class="ads-new-list">${P.map(p=>{const r=rank.get(p.id),top=r&&r.i<3&&r.x.sc>=0;return `<div class="ads-new-it"><img src="${esc((p.images||[])[0]||p.cover||'')}" alt="" loading="lazy"><div><b>${top?'⭐ ':''}${esc(p.name)}</b><span class="fine">${{course:'คอร์สเรียน',bundle:'ชุด',notion:'Notion'}[pfmt(p)]||'ชีท'} · ${isBundle(p)?'เริ่ม '+adMoney(fromPrice(p)):adMoney(p.price)}${r&&r.x.why.length?' · '+esc(r.x.why[0]):''}</span></div>${open.has(p.id)?'<span class="badge gray">มีแอดอยู่แล้ว</span>':`<button class="btn btn-cta btn-sm" data-a="adsDraftOne" data-id="${p.id}">📣 ทำแอด</button>`}</div>`;}).join('')||'<p class="fine">ไม่พบสินค้า</p>'}</div></section>`;}
+/* ส่วนไหนแสดงไม่ได้: ขึ้นข้อความในส่วนนั้น ส่วนอื่นยังใช้ได้ (ไม่ให้ทั้งแท็บหาย) */
+function adSafe(f,name){try{return f();}catch(e){console.error(name,e);return `<p class="err">แสดง${name}ไม่ได้: ${esc(e.message||e)} · กดรีเฟรช ถ้ายังเป็นอยู่แจ้งทีม</p>`;}}
 function adsTab(){
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
   if(ADA.items===null&&!ADA.loading)loadAdsAuto();
   const d=ADST.d||{},A=d.access||ADA.access,L=A&&A.limit,camps=adsCamps(),T=adTests();
-  const w={};for(const c of camps)for(const k in c.w)w[k]=(w[k]||0)+c.w[k];const spend=w.spendTHB||0,val=w.valueTHB||0,buys=w.purchases||0,prof=val-spend;
+  const w={};for(const c of camps)for(const k in c.w)w[k]=(w[k]||0)+c.w[k];const spend=w.spendTHB||0,fbVal=w.valueTHB||0,fbBuys=w.purchases||0;
+  // ยอดจริง = ออเดอร์จ่ายแล้วในร้านที่มาจากลิงก์แอด (นับครั้งเดียวต่อชื่อในลิงก์) · Facebook นับรวมคนที่เห็นแอดแล้วซื้อทีหลัง มักนับเกิน (คุณแดน 8 ต.ค. 69: ยอดไม่ตรง)
+  const tags=new Map();for(const c of camps)if(c.sh&&c.sh.tag&&!tags.has(c.sh.tag))tags.set(c.sh.tag,c.sh);const hasShop=tags.size>0;
+  const buys=hasShop?[...tags.values()].reduce((a,x)=>a+(x.orders7||0),0):fbBuys,val=hasShop?[...tags.values()].reduce((a,x)=>a+(x.rev7||0),0):fbVal,prof=val-spend;
   const accBad=A&&!A.ok&&A.reason==='account',pend=(ADA.items||[]).filter(x=>['pending','failed','launching'].includes(x.status));
-  const fix=camps.filter(c=>c.g==='fix'),run=camps.filter(c=>c.g==='run'||c.g==='review'),off=camps.filter(c=>c.g==='paused'||c.g==='ended'),decide=T.filter(t=>t.done&&t.lose.length);
+  const fix=camps.filter(c=>c.g==='fix'),run=camps.filter(c=>c.g==='run'||c.g==='review'),off=camps.filter(c=>c.g==='paused'||c.g==='ended'),decide=T.filter(t=>t.done);
   const low=L&&L.capTHB&&L.leftTHB<300;
-  const todo=[accBad?['🏦 บัญชีโฆษณามีปัญหา','now','bad']:null,A&&!A.ok&&!accBad?['⚠️ ยังยิงแอดจากหลังบ้านไม่ได้','now','bad']:null,fix.length?[`🔴 แอดต้องแก้ ${fix.length}`,'now','bad']:null,pend.length?[`📝 รอกดตกลง ${pend.length}`,'now','warn']:null,decide.length?[`🏆 ผลทดสอบรูปพร้อมแล้ว ${decide.length}`,'now','warn']:null,low?[`💳 วงเงินเหลือ ${adMoney(L.leftTHB)}`,'',' warn',L.page]:null].filter(Boolean);
+  const todo=[accBad?['🏦 บัญชีโฆษณามีปัญหา','now','bad']:null,A&&!A.ok&&!accBad?['⚠️ ยังยิงแอดจากหลังบ้านไม่ได้','now','bad']:null,fix.length?[`🔴 แอดต้องแก้ ${fix.length}`,'now','bad']:null,pend.length?[`📝 รอกดตกลง ${pend.length}`,'now','warn']:null,decide.length?[`🏆 ผลทดสอบรูปพร้อมแล้ว ${decide.length} (ดูแล้วเลือกทำต่อ)`,'now','warn']:null,low?[`💳 วงเงินเหลือ ${adMoney(L.leftTHB)}`,'',' warn',L.page]:null].filter(Boolean);
   const nNow=fix.length+pend.length+decide.length+(accBad||(A&&!A.ok)?1:0);
   const f=['now','run','off','plan','tools'].includes(ADST.f)?ADST.f:'now';
   const tabs=[['now','👉 ต้องทำ',nNow],['run','🟢 กำลังวิ่ง',run.length],['off','⏸ หยุด/จบ',off.length],['plan','🔮 แนะนำ & ประเมิน',''],['tools','🧰 เครื่องมือ','']];
@@ -5114,16 +5120,17 @@ function adsTab(){
   const loading=!ADST.d?'<p class="fine" style="padding:12px 0">กำลังโหลดสถานะจาก Facebook...</p>':d.ok===false&&!accBad?`<p class="fine" style="color:var(--bad);padding:8px 0">ดึงสถานะไม่ได้: ${esc(d.error||'')} · กดรีเฟรช</p>`:'';
   let body='';
   if(f==='now')body=`${accBad?`<div class="acamp g-fix"><div class="acamp-h"><div class="acamp-imgs"><span style="display:grid;place-items:center;font-size:24px">🏦</span></div><div class="acamp-t"><b>บัญชีโฆษณา</b><span class="ads-st"><span class="badge bad">🔴 ${esc(A.error||'ใช้งานไม่ได้')}</span></span></div></div><p class="ads-todo">👉 แก้ที่หน้าการชำระเงิน แอดทุกตัวจะหยุดจนกว่าจะแก้</p><div class="acamp-acts"><a class="btn btn-cta btn-sm" href="${esc(A.billing||'https://business.facebook.com/billing_hub/')}" target="_blank" rel="noopener noreferrer">ไปหน้าชำระเงิน ↗</a></div></div>`:''}
-    ${fix.map(adCampCard).join('')}${adTestBox()}${pend.length||(A&&!A.ok)?adsAutoBox(false,true):''}
+    ${adSafe(()=>fix.map(adCampCard).join(''),'แอดที่ต้องแก้')}${adSafe(adTestBox,'ผลทดสอบรูป')}${pend.length||(A&&!A.ok)?adSafe(()=>adsAutoBox(false,true),'ร่างแอด'):''}
     ${!nNow&&!T.length&&ADST.d&&ADA.items?`<div class="ads-empty ok"><p>✓ ไม่มีงานค้าง${run.length?` · แอดวิ่งอยู่ ${run.length} แคมเปญ ปล่อยให้ Facebook ทำงานได้เลย`:''}</p><button class="btn btn-cta btn-sm" data-a="adsNew">+ สร้างแอดใหม่</button></div>${adPickBox()}`:''}${loading}`;
-  else if(f==='run')body=run.map(adCampCard).join('')||loading||empty('ยังไม่มีแอดที่กำลังวิ่ง');
-  else if(f==='off')body=off.map(adCampCard).join('')+(off.length?'':loading||'<p class="fine" style="padding:12px 0">ยังไม่มีแอดที่หยุดหรือจบ</p>')+adsAutoHist();
-  else if(f==='plan')body=adPickBox()+adsForecast();
-  else body=adsTools();
+  else if(f==='run')body=adSafe(()=>run.map(adCampCard).join(''),'แอดที่กำลังวิ่ง')||loading||empty('ยังไม่มีแอดที่กำลังวิ่ง');
+  else if(f==='off')body=adSafe(()=>off.map(adCampCard).join(''),'แอดที่หยุด')+(off.length?'':loading||'<p class="fine" style="padding:12px 0">ยังไม่มีแอดที่หยุดหรือจบ</p>')+adsAutoHist();
+  else if(f==='plan')body=adSafe(adPickBox,'คำแนะนำ')+adSafe(adsForecast,'ประเมินรายได้');
+  else body=adSafe(adsTools,'เครื่องมือ');
   return `<div class="pt-head"><h2 class="h2" style="margin:0">📣 โฆษณา</h2><div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-line btn-sm" data-a="adsStRefresh">${ADST.loading?'กำลังโหลด...':'↻ รีเฟรช'}</button><button class="btn btn-sm pt-new" data-a="adsNew" aria-expanded="${!!ADST.pick}">+ สร้างแอดใหม่</button></div></div>
-  ${adsNewBox()}
+  ${adSafe(adsNewBox,'รายการสินค้า')}
   <div class="ads-todo-strip">${todo.length?todo.map(t=>t[3]?`<a class="ats${t[2]}" href="${esc(t[3])}" target="_blank" rel="noopener noreferrer">${t[0]} · แก้วงเงิน ↗</a>`:`<button class="ats ${t[2]}" data-a="adsFilter" data-v="${t[1]}">${t[0]} →</button>`).join(''):`<span class="ats ok">✓ ไม่มีอะไรต้องทำตอนนี้</span>`}</div>
-  <div class="dgrid ads-kpi">${tile('ค่าแอด 7 วัน',adMoney(spend),`${run.length} แคมเปญกำลังวิ่ง`)}${tile('ยอดขายจากแอด',adMoney(val),`ซื้อ ${buys} ครั้ง (Facebook นับ)`)}${tile(prof>=0?'กำไร':'ขาดทุน',adMoney(Math.abs(prof)),'ยอดขาย − ค่าแอด',prof<0&&spend?'warn':'')}${tile('ต้นทุนต่อออเดอร์',buys?adMoney(spend/buys):'–',buys?'ยิ่งต่ำยิ่งดี':'ยังไม่มีการซื้อ')}</div>
+  <div class="dgrid ads-kpi">${tile('ค่าแอด 7 วัน',adMoney(spend),`${run.length} แคมเปญกำลังวิ่ง`)}${tile(hasShop?'ยอดขายจริงจากแอด':'ยอดขายจากแอด',adMoney(val),hasShop?`${buys} ออเดอร์ (ร้านนับจากลิงก์แอด)`:`ซื้อ ${buys} ครั้ง (Facebook นับ)`)}${tile(prof>=0?'กำไร':'ขาดทุน',adMoney(Math.abs(prof)),'ยอดขาย − ค่าแอด',prof<0&&spend?'warn':'')}${tile('ต้นทุนต่อออเดอร์',buys?adMoney(spend/buys):'–',buys?'ยิ่งต่ำยิ่งดี':'ยังไม่มีการซื้อ')}</div>
+  ${hasShop&&fbBuys!==buys?`<p class="fine ads-acc" style="margin:0 0 4px">Facebook นับ ${fbBuys} ครั้ง ${adMoney(fbVal)} · มากกว่าที่ร้านนับเพราะรวมคนที่เห็นแอดแล้วมาซื้อทีหลังทางอื่น (อาจนับเกิน) ตัวเลขด้านบนใช้ยอดที่ร้านนับได้จริง</p>`:''}
   <p class="fine ads-acc">บัญชีโฆษณา: ${accBad?'⚠️ มีปัญหา':A&&A.ok?'✓ ปกติ':'–'}${A&&A.account&&A.account.payment?' · จ่ายด้วย '+esc(A.account.payment):''}${L?(L.capTHB?` · วงเงินเหลือ ${adMoney(L.leftTHB)} จาก ${adMoney(L.capTHB)} · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">แก้วงเงิน ↗</a>`:` · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">ตั้งวงเงินกันเงินหมด ↗</a>`):''}</p>
   <div class="pt-card ads-card"><div class="pt-tabs" role="tablist">${tabs.map(t=>`<button role="tab" class="pt-tab${t[0]==='now'&&t[2]?' newt':''}" data-a="adsFilter" data-v="${t[0]}" aria-selected="${f===t[0]}" aria-pressed="${f===t[0]}">${t[1]}${t[2]!==''?` (${t[2]})`:''}</button>`).join('')}</div>
     <div class="ads-body">${body}</div></div>`;
