@@ -491,6 +491,8 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
 .paycard{text-align:center;margin:12px 0 4px;font-size:14px}.paycard a{color:var(--muted);text-decoration:underline}.qr-why{text-align:center;margin:8px 0 0}.qr-back{background:var(--warnbg);color:var(--ink);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:14px}
 .mkt{margin-bottom:12px;padding:14px 16px}.mkt summary{cursor:pointer}.mkt-f{margin:10px 0 0;padding-left:20px;display:grid;gap:8px}.mkt-f li b{display:block}
+.sp-price .per{display:block;width:100%;font-size:14px;font-weight:600;opacity:.9;margin-top:2px}
+.crs-pv{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 8px 24px rgba(15,27,51,.15)}.crs-pv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .ccur{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}.ccur details+details{border-top:1px solid var(--line)}.ccur summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 16px;background:var(--bg)}.ccur summary::-webkit-details-marker{display:none}.ccur summary span{font-size:13px;color:var(--muted);white-space:nowrap}.ccur ul{list-style:none;margin:0;padding:4px 16px 10px}.ccur li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:15px}.ccur li:first-child{border-top:0}.ccur li em{font-style:normal;color:var(--muted);font-size:13px;white-space:nowrap}
 .crs-row,.stu-row{display:grid;grid-template-columns:minmax(0,3fr) 1fr .7fr .7fr 1.7fr 1fr;gap:12px;padding:14px;border-top:1px solid var(--line);align-items:start}.crs-row.pt-th,.stu-row.pt-th{border-top:0}.stu-row{grid-template-columns:minmax(0,1.6fr) minmax(0,2fr) 1.2fr .8fr}.stu-em{word-break:break-all}.stu-p{display:flex;align-items:center;gap:8px;margin:6px 0}.stu-p .vbar{flex:1;margin:0}
 .crs-st{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.crs-acts{display:flex;flex-direction:column;align-items:flex-start;gap:6px}.fcr-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:28px 0 10px;padding-top:18px;border-top:2px dashed var(--line);font-size:20px}.fcr-box{padding:16px 18px}
@@ -2409,13 +2411,20 @@ function route(){
   render(false);
 }
 /* หน้าขายคอร์ส: เนื้อหาคอร์สแยกหมวด (กดเปิด/ปิด) จากสารบัญที่ระบบสร้างจากบทที่เผยแพร่ ("หมวด" แล้วบรรทัดย่อ "  1. ชื่อบท (5 นาที)") */
+const crsLessonN=p=>String(p.toc||'').split('\n').filter(x=>/^\s+\d+\./.test(x)).length;
+const hrsTH=m=>{m=Number(m)||0;if(m<60)return m+' นาที';const h=Math.round(m/6)/10;return (Number.isInteger(h)?h:h.toFixed(1))+' ชั่วโมง';};
+const vidEmbed=u=>{u=String(u||'');let m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/);if(m)return `https://drive.google.com/file/d/${m[1]}/preview`;m=u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);return m?`https://www.youtube-nocookie.com/embed/${m[1]}?rel=0`:'';};
+/* หน้าขายคอร์ส: วิดีโอตัวอย่างเล่นได้ในหน้า (เฉพาะเมื่อยืนยันแล้วว่าวิดีโอใน Drive เปิดได้แบบไม่ล็อกอิน) */
+function crsPreview(p){const e=p.videoOk&&vidEmbed(p.sampleLink);if(!e)return '';
+  return `<section class="section" id="crs-preview"><div class="wrap"><h2>ดูตัวอย่างบทเรียนฟรี</h2><p class="fine" style="margin:-8px 0 12px">กดเล่นได้เลย ไม่ต้องสมัคร · ทุกบทเป็นแบบนี้: สอนเทคนิค แล้วฝึกทำจริงพร้อมเฉลย</p>
+    <div class="crs-pv"><iframe src="${esc(e)}" title="ตัวอย่างบทเรียน" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe></div></div></section>`;}
 function crsCurriculum(p){const secs=[];let cur=null;
   for(const raw of String(p.toc||'').split('\n')){if(!raw.trim())continue;const m=raw.match(/^\s+(\d+)\.\s*(.+?)(?:\s*\((\d+) นาที\))?\s*$/);
     if(m&&cur)cur.L.push({n:m[1],t:m[2],min:Number(m[3])||0});else if(!m){cur={name:raw.trim(),L:[]};secs.push(cur);}}
   const all=secs.flatMap(x=>x.L);if(!all.length)return '';const tot=all.reduce((a,l)=>a+l.min,0);
-  return `<section class="section" id="curriculum"><div class="wrap"><h2>เนื้อหาคอร์ส</h2><p class="fine" style="margin:-8px 0 12px">${secs.length} หมวด · ${all.length} บท${tot?` · รวม ${tot>=60?Math.floor(tot/60)+' ชม. '+(tot%60)+' นาที':tot+' นาที'}`:''}</p>
+  return `<section class="section" id="curriculum"><div class="wrap"><h2>เนื้อหาคอร์ส</h2><p class="fine" style="margin:-8px 0 12px">${secs.length} หมวด · ${all.length} บท${tot?` · รวม ${hrsTH(tot)}`:''}</p>
     <div class="ccur">${secs.map((x,k)=>`<details ${k<2?'open':''}><summary><b>${esc(x.name)}</b><span>${x.L.length} บท${x.L.reduce((a,l)=>a+l.min,0)?` · ${x.L.reduce((a,l)=>a+l.min,0)} นาที`:''}</span></summary><ul>${x.L.map(l=>`<li><span>▶ ${esc(l.n)}. ${esc(l.t)}</span>${l.min?`<em>${l.min} นาที</em>`:''}</li>`).join('')}</ul></details>`).join('')}</div>
-    ${p.sampleLink?`<p style="margin-top:12px"><a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">▶ ดูบทเรียนตัวอย่างฟรี</a></p>`:''}</div></section>`;}
+    ${p.sampleLink?`<p style="margin-top:12px"><a class="btn btn-line" href="${p.videoOk&&vidEmbed(p.sampleLink)?'#crs-preview':esc(p.sampleLink)}" ${p.videoOk&&vidEmbed(p.sampleLink)?'':'target="_blank" rel="noopener noreferrer"'}>▶ ดูบทเรียนตัวอย่างฟรี</a></p>`:''}</div></section>`;}
 function shopView(){
   const p=curProduct();
   if(p&&isBundle(p))return bundleView(p);
@@ -2452,7 +2461,7 @@ function shopView(){
       ${imgs.length>1?`<button class="sp-nav prev" data-a="spNav" data-d="-1" aria-label="รูปก่อนหน้า">‹</button><button class="sp-nav next" data-a="spNav" data-d="1" aria-label="รูปถัดไป">›</button><span class="sp-count" id="sp-count">📷 1/${imgs.length}</span>`:''}${off>0?`<span class="sp-off">ลด ${off}%</span>`:''}</div>
     ${imgs.length>1?`<div class="sp-thumbs" id="sp-thumbs">${imgs.map((src,i)=>`<button class="sp-th${i?'':' on'}" data-a="spGo" data-i="${i}" aria-label="ดูรูปที่ ${i+1}"><img src="${esc(src)}" alt=""></button>`).join('')}<span class="sp-hint">มี ${imgs.length} รูป กดหรือปัดเพื่อดู</span></div>`:''}</div>
     <div class="sp-band" style="--hero:${esc(p.color)}"><div class="wrap sp-band-in">
-      <div class="sp-price"><span class="now">${baht(p.price)}</span>${p.fullPrice>p.price?`<span class="old">${baht(p.fullPrice)}</span>`:''}</div>
+      <div class="sp-price"><span class="now">${baht(p.price)}</span>${p.fullPrice>p.price?`<span class="old">${baht(p.fullPrice)}</span>`:''}${kind==='course'&&crsLessonN(p)>=5&&p.price>=1?`<span class="per">เฉลี่ยบทละ ${baht(Math.round(p.price/crsLessonN(p)))}</span>`:''}</div>
       ${live?`<div class="sp-cd" data-end="${p.promoEnd}"><span>จบใน</span>${p.promoEnd-Date.now()>864e5?'<b data-u="d">00</b><i>วัน</i>':''}<b data-u="h">00</b><i>:</i><b data-u="m">00</b><i>:</i><b data-u="s">00</b></div>`:''}
     </div></div>
     <div class="wrap sp-info">
@@ -2463,7 +2472,7 @@ function shopView(){
       <div class="hero-cta">
         <button class="btn btn-buy" data-a="toCheckout">${kind==='course'?'สมัครเรียนและเข้าเรียนทันที':'สั่งซื้อและรับไฟล์ทันที'}</button>
         ${prev.length?`<a class="btn btn-line" href="#preview">ดูตัวอย่างเนื้อหา</a>`:''}
-        ${p.sampleLink?`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">${kind==='course'?'▶ ดูบทเรียนตัวอย่างฟรี':'ดาวน์โหลดตัวอย่างฟรี'}</a>`:''}
+        ${p.sampleLink?(kind==='course'&&p.videoOk&&vidEmbed(p.sampleLink)?`<a class="btn btn-line" href="#crs-preview">▶ ดูตัวอย่างบทเรียนฟรี</a>`:`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">${kind==='course'?'▶ ดูบทเรียนตัวอย่างฟรี':'ดาวน์โหลดตัวอย่างฟรี'}</a>`):''}
       </div>
       ${payLogos(0)}
       ${p.proof?`<p class="proof">${esc(p.proof)}</p>`:''}
@@ -2474,6 +2483,7 @@ function shopView(){
     <div class="specs">${specs.map(sp=>`<div><span class="k">${esc(sp[1]?sp[0]:'')}</span><b>${esc(sp[1]||sp[0])}</b></div>`).join('')}</div>
   </div></section>`:''}
 
+  ${kind==='course'?crsPreview(p):''}
   ${pains.length?`<section class="section"><div class="wrap">
     <h2>ถ้าคุณเคยเจอแบบนี้</h2>
     <ul class="pain">${pains.map(x=>`<li><span class="cross">${X}</span><span>${esc(x)}</span></li>`).join('')}</ul>
@@ -2882,9 +2892,25 @@ function noteBox(p){if(!p||!p.freshNote)return '';const parts=String(p.freshNote
 /* หน้าแก้คอร์ส = หน้าขายของสินค้าคอร์ส (แบบเดียวกับหน้าแก้ชุด มีตัวอย่างหน้าขายสดด้านขวา) + บทเรียน (อนุมัติบทจากโรงงาน) + ใครเรียนได้
    ข้อมูลหน้าขายอยู่ในสินค้า (kind=course) · บทเรียน/สิทธิ์อยู่ในคอร์ส (CRS.ed) · กดบันทึกครั้งเดียวบันทึกทั้งสองอย่าง · สารบัญ/ข้อมูลคอร์สบนหน้าขายสร้างจากบทที่เผยแพร่ให้เอง */
 const crsOfProduct=pid=>(CRS.list||[]).find(c=>(c.grants||[]).includes(pid));
+function crsQCount(L){return L.filter(l=>/ฝึกทำข้อสอบ/.test(l.section||'')).reduce((a,l)=>a+((String(l.title).match(/(\d+)\s*ข้อ/)||[])[1]*1||0),0);}
+function crsPlanLeft(c){const T=new Set((c.lessons||[]).map(l=>l.title));return String(c.plan||'').split('\n').filter(x=>x.trim()).filter(x=>!T.has((x.split('|')[1]||x.split('|')[0]).trim())).length;}
+/* ✨ เขียนรายละเอียดหน้าขายคอร์สใหม่จากบทเรียนจริง (ชั่วโมง จำนวนข้อฝึก พาร์ตที่ครอบคลุม) · ใส่ลงฉบับแก้ เห็นในตัวอย่างหน้าขาย · มีผลเมื่อกดบันทึก */
+function crsWriteCopy(c,d){const L=(c.lessons||[]).filter(l=>l.status!=='draft'),tot=L.reduce((a,l)=>a+(Number(l.min)||0),0),q=crsQCount(L),qt=q>=100?Math.floor(q/50)*50+'+':String(q),T=/TOEIC/i.test(c.title||d.name),has=r=>L.some(l=>r.test(l.title+' '+(l.section||'')));
+  const name=String(d.name||c.title).replace(/\s*คอร์สออนไลน์\s*/,' ').trim();
+  d.headline=`${name} คอร์สวิดีโอ ${hrsTH(tot)} สอนเทคนิค + ฝึกทำข้อสอบ${has(/Listening|Part [1-4]/i)&&has(/Reading|Part [5-7]/i)?'ครบทุกพาร์ต':''}`;
+  d.desc=`เรียนทีละบท บทละ 5–12 นาที สอนเป็นภาษาไทย${T?' ทีละพาร์ต Part 1–7':''} ทุกบทมีเทคนิค กับดักที่คนไทยพลาดบ่อย และฝึกทำจริงพร้อมเฉลยทีละข้อ เรียนบนมือถือได้ เข้าเรียนได้ทันทีหลังชำระเงิน`;
+  d.features=[`เทคนิคทำข้อสอบเป็นขั้นตอน${T?' ครบ Listening Part 1–4 และ Reading Part 5–7':''}`,q?`ฝึกทำข้อสอบพร้อมเฉลยละเอียด ${qt} ข้อ`:'',T?'รู้ทันกับดักที่ทำให้เสียคะแนนบ่อย เช่น เสียงคล้าย คำซ้ำ และ is being':'รู้ทันกับดักที่คนไทยพลาดบ่อย',
+    has(/แผนเวลา|เดา/)?'แผนเวลาวันสอบจริง และวิธีเดาอย่างมีหลักเมื่อทำไม่ทัน':'',has(/คำศัพท์/)?'คำศัพท์ธุรกิจที่ออกบ่อย พร้อมประโยคตัวอย่าง':'','เรียนต่อจากบทล่าสุดได้ทุกเครื่อง และดูความคืบหน้าของตัวเองได้'].filter(Boolean).join('\n');
+  d.pains=['ฟังทันแต่ยังเลือกผิด เพราะไม่รู้ทันกับดัก','ทำ Reading ไม่ทัน ข้อท้ายๆ ต้องเดาทิ้ง','อ่านหนังสือเองแล้วไม่รู้จะเริ่มตรงไหน','คะแนนค้างอยู่ที่เดิม สอบหลายรอบแล้วไม่ขึ้น','ไม่มีเวลาไปเรียนพิเศษ อยากเรียนบนมือถือทีละนิด'].join('\n');
+  d.forwho=[T?'คนที่ต้องใช้คะแนน TOEIC สมัครงาน เลื่อนตำแหน่ง หรือจบการศึกษา':'คนที่ต้องใช้คะแนนสอบสมัครงานหรือเรียนต่อ','คนที่มีพื้นฐานบ้าง อยากได้เทคนิคเพิ่มคะแนน','คนทำงานที่มีเวลาน้อย อยากเรียนวันละ 1–2 บท'].join('\n');
+  d.faq=['ต้องมีพื้นฐานไหม | มีพื้นฐานภาษาอังกฤษระดับมัธยมก็เรียนได้ ทุกบทอธิบายเป็นภาษาไทย',`เรียนยังไง | หลังจ่ายเงิน เข้าที่ ${location.host}/my-learning ด้วยอีเมลที่ใช้ซื้อ แล้วเริ่มเรียนได้เลย`,'เรียนบนมือถือได้ไหม | ได้ ทั้งมือถือ แท็บเล็ต และคอม ระบบจำว่าเรียนถึงบทไหน',
+    'ข้อฝึกในคอร์สเป็นข้อสอบจริงไหม | ไม่ใช่ เป็นแบบฝึกแต่งใหม่ตามรูปแบบข้อสอบจริง','เสียงบรรยายเป็นคนจริงไหม | เป็นเสียง AI ภาษาไทยที่ฟังชัด ส่วนตัวอย่างภาษาอังกฤษมีหลายสำเนียงเหมือนข้อสอบ','ดูตัวอย่างก่อนได้ไหม | ได้ กดดูบทเรียนตัวอย่างฟรีในหน้านี้'].join('\n');
+  if(!d.sampleLink){const f=L.find(l=>l.url);if(f)d.sampleLink=f.url;}
+  c.desc=d.desc;crsSalesSync(c,d);}
 function crsSalesSync(c,d){const L=(c.lessons||[]).filter(l=>l.status!=='draft'),tot=L.reduce((a,l)=>a+(Number(l.min)||0),0),secs=[...new Set(L.map(l=>l.section||'บทเรียน'))];
   d.toc=secs.map(sn=>sn+'\n'+L.filter(l=>(l.section||'บทเรียน')===sn).map(l=>`  ${L.indexOf(l)+1}. ${l.title}${l.min?` (${l.min} นาที)`:''}`).join('\n')).join('\n');
-  d.specs=`รูปแบบ | วิดีโอเรียนออนไลน์\nจำนวนบท | ${L.length} บท${c.auto&&c.auto.on?' (มีบทใหม่เพิ่มเรื่อยๆ)':''}\nความยาวรวม | ${tot} นาที\nเรียนที่ | ${location.host}/my-learning (มือถือหรือคอม)\nเข้าเรียนได้ | ทันทีหลังชำระเงิน`;
+  const q=crsQCount(L),parts=[/Listening|Part [1-4]/i,/Reading|Part [5-7]/i].map(r=>L.some(l=>r.test(l.section||''))),more=c.auto&&c.auto.on&&crsPlanLeft(c)>0;
+  d.specs=[`ความยาว | ${hrsTH(tot)} (${L.length} บท)`,q?`ข้อฝึกพร้อมเฉลย | ${q>=100?Math.floor(q/50)*50+'+':q} ข้อ`:'',parts[0]&&parts[1]?'ครอบคลุม | Listening + Reading ทุกพาร์ต':'',`รูปแบบ | วิดีโอสอนภาษาไทย บทละ 5–12 นาที`,'เรียนบน | มือถือ แท็บเล็ต หรือคอม',`เข้าเรียนได้ | ทันทีหลังชำระเงิน${more?' · มีบทใหม่เพิ่ม':''}`].filter(Boolean).join('\n');
   if(!String(d.link||'').includes('/my-learning'))d.link=location.origin+'/my-learning?c='+encodeURIComponent(c.slug||c.id);}
 function crsLessonsHtml(c){const L=c.lessons||[],dr=L.filter(l=>l.status==='draft');
   const lrow=(l,i)=>`<div class="crl${l.status==='draft'?' wait':''}">${l.cover?`<img src="${esc(l.cover)}" alt="" loading="lazy">`:`<span class="crl-n">${i+1}</span>`}
@@ -2946,7 +2972,8 @@ function courseProductForm(d){let c=CRS.ed;
     <div class="grid2"><div class="field">${lb('e-price','ราคาขาย (บาท)')}<input class="input" id="e-price" data-d="price" type="number" inputmode="numeric" min="1" value="${esc(d.price)}" placeholder="เช่น 1990"></div>
       <div class="field">${lb('e-full','ราคาปกติที่ขีดฆ่า (บาท)')}<input class="input" id="e-full" data-d="fullPrice" type="number" inputmode="numeric" min="0" value="${esc(d.fullPrice)}"></div></div>
     <div class="field">${lb('e-promo','โปรโมชันสิ้นสุดเมื่อ (ไม่ใส่ก็ได้)')}<input class="input" id="e-promo" data-d="promoEndStr" type="datetime-local" value="${esc(d.promoEndStr)}"></div>
-    <hr class="sep"><h3 class="h3">5. หน้าขาย</h3>
+    <hr class="sep"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">5. หน้าขาย</h3><button class="btn btn-cta btn-sm" data-a="crsCopyGen">✨ เขียนรายละเอียดหน้าขายใหม่จากบทเรียน</button></div>
+    <p class="fine" style="margin:4px 0 10px">ระบบเขียนหัวข้อ คำโปรย สิ่งที่ได้ ปัญหา เหมาะกับใคร และคำถามที่พบบ่อย จากบทเรียนจริง (ชั่วโมง จำนวนข้อฝึก) ดูในตัวอย่างหน้าขายด้านขวา แก้ต่อได้ · มีผลเมื่อกดบันทึก</p>
     ${ta('e-pains','pains','ถ้าคุณเคยเจอแบบนี้ (ปัญหาที่คนเรียนเจอ บรรทัดละข้อ)','ฟังทันแต่ยังเลือกผิดเพราะกับดัก')}
     ${ta('e-features','features','สิ่งที่จะได้จากคอร์สนี้ (บรรทัดละข้อ)')}
     ${ta('e-forwho','forwho','เหมาะกับใคร (บรรทัดละข้อ)')}
@@ -6454,6 +6481,7 @@ function act(a,el){
       D.products.push(p);ensureSkus();save();const ed=JSON.parse(JSON.stringify(c));ed.grants=[...new Set([...(ed.grants||[]),p.id])];ed.on=true;CRS.ed=ed;
       (crsSaveNow(`เปิดขาย "${c.title}" ในร้านแล้ว ${baht(price)} · แก้หน้าขายได้ที่แท็บสินค้า`)||Promise.resolve()).then(()=>{CRS.ed=null;CRS.view='list';render(true);});break;}
     case 'mktToggle':S.mktOpen=S.mktOpen===false;break;
+    case 'crsCopyGen':{const d=S.draft,c=CRS.ed;if(!d||!c)break;if(['headline','desc','features','pains','faq'].some(k=>String(d[k]||'').trim())&&!confirm('เขียนทับหัวข้อ คำโปรย สิ่งที่ได้ ปัญหา เหมาะกับใคร และคำถามที่พบบ่อย ด้วยข้อความใหม่? (ยังไม่บันทึกจนกว่ากดบันทึก)'))break;crsWriteCopy(c,d);render(true);toast('เขียนรายละเอียดใหม่แล้ว ดูในตัวอย่างหน้าขาย แล้วกดบันทึก');break;}
     case 'crsGive':{const e=CRS.ge.trim().toLowerCase(),cid=CRS.gc||(CRS.list[0]&&CRS.list[0].id),c=CRS.list.find(x=>x.id===cid);if(!c)break;if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e)){toast('ใส่อีเมลให้ถูก');break;}
       const em=new Set(Array.isArray(c.emails)?c.emails:String(c.emails||'').split(/[\s,]+/).filter(Boolean));em.add(e);CRS.busy=true;render(true);
       adminPost('/api/content?action=courses',{list:CRS.list.map(x=>x.id===c.id?Object.assign({},x,{emails:[...em]}):x)}).then(j=>{if(j&&j.ok){CRS.list=j.list;CRS.ge='';toast(`ให้สิทธิ์ ${e} เรียน "${c.title}" แล้ว`);CRS.students=null;loadCRSStudents();}else toast('ไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{CRS.busy=false;render(true);});break;}
