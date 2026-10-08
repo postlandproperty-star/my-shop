@@ -1420,6 +1420,18 @@ ${books}`;
       const lessonJobs = jobs.filter((j) => j.kind === 'lesson' && !['cancelled'].includes(j.status)).slice(-80).map((j) => ({ id: j.id, status: j.status, course_id: j.course_id, title: j.lesson_title, section: j.lesson_section, no: j.lesson_no, auto: !!j.auto, created_at: j.created_at, progress: j.progress || null, error: j.error || '' }));
       return res.status(200).json({ ok: true, list, jobs: lessonJobs, ...(req.query.students ? { students: await C.students().catch((e) => { console.error('students', e.message); return []; }) } : {}) });
     }
+    if (action === 'product_patch') { // แก้ข้อความหน้าขาย (ไม่แตะราคา/สถานะ/ลิงก์ไฟล์) · คีย์ร้านแก้ได้เฉพาะสินค้าคอร์ส · เวลา updated_at ใหม่ → หลังบ้านที่เปิดค้างจะโหลดใหม่ก่อนบันทึก ไม่ทับกัน
+      const admin = keyOk(req) ? 'key' : (req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null);
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const b = await readBody(req); const rows = await sb('shop_state?id=eq.main&select=data'); const data = rows?.[0]?.data || {}; const P = data.products || [];
+      const p = P.find((x) => x.id === String(b.id || '')); if (!p) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้า' });
+      if (admin === 'key' && p.kind !== 'course') return res.status(403).json({ ok: false, error: 'คีย์ร้านแก้ได้เฉพาะหน้าขายคอร์ส' });
+      const F = ['headline', 'desc', 'features', 'pains', 'forwho', 'faq', 'bonus', 'guarantee', 'specs', 'toc', 'sampleLink', 'proof'], f = b.fields || {}, done = [];
+      for (const k of F) if (typeof f[k] === 'string') { p[k] = f[k].slice(0, 6000); done.push(k); }
+      if (!done.length) return res.status(400).json({ ok: false, error: 'ไม่มีช่องที่แก้ได้' });
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'main', data: { ...data, products: P }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, fields: done });
+    }
     if (action === 'video_img') { // Mac ขอรูปประกอบคลิป Part 1 (ภาพถ่ายสถานการณ์ ไม่มีตัวหนังสือ) · ใช้เงิน AI ทำรูปของร้าน
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
