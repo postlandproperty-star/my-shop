@@ -421,13 +421,13 @@ try {
         { const chip = page.locator('[data-a="adsFilter"][data-v="run"]').first(); await chip.click({ timeout: 4000 }).catch(() => {}); const on = await chip.getAttribute('aria-pressed'); await page.locator('[data-a="adsFilter"][data-v="now"]').last().click({ timeout: 4000 }).catch(() => {});
           pass(`[${kind}] โฆษณา: กดตัวกรอง "กำลังวิ่ง" ได้จริง (คลิกด้วยเมาส์)`, on === 'true', String(on)); }
         { await page.evaluate(() => { ADST.f = 'run'; render(true); }); await page.waitForTimeout(150);
-          const rc = await page.evaluate(() => { const c = [...document.querySelectorAll('.ads-body .acamp')]; return { n: c.length, three: c.some((x) => /3 รูป/.test(x.innerText) && x.querySelectorAll('.acamp-ad').length === 3), pause: c.some((x) => x.querySelector('[data-a="adsSet"][data-v="PAUSED"]')) }; });
+          const rc = await page.evaluate(() => { const c = [...document.querySelectorAll('.bst-body .acamp')]; return { n: c.length, three: c.some((x) => /3 รูป/.test(x.innerText) && x.querySelectorAll('.acamp-ad').length === 3), pause: c.some((x) => x.querySelector('[data-a="adsSet"][data-v="PAUSED"]')) }; });
           pass(`[${kind}] โฆษณา: แท็บกำลังวิ่ง รวมแอด 3 รูปของแคมเปญเดียวเป็นการ์ดเดียว (ดูทีละรูป + ปุ่มหยุด)`, rc.n === 1 && rc.three && rc.pause, JSON.stringify(rc));
-          await page.locator('.ads-card').first().screenshot({ path: path.join(OUT, `ads-run-${kind}.png`) }).catch(() => {});
+          await page.locator('.bst-card').first().screenshot({ path: path.join(OUT, `ads-run-${kind}.png`) }).catch(() => {});
           await page.locator('.pt-head [data-a="adsNew"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(150);
-          const nb = await page.evaluate(() => { const b = document.querySelector('.ads-new'); return { box: !!b, n: b ? b.querySelectorAll('.ads-new-it').length : 0, btn: b ? b.querySelectorAll('[data-a="adsDraftOne"]').length : 0, star: b ? /⭐/.test(b.innerText) : false }; });
+          const nb = await page.evaluate(() => { const b = document.querySelector('.bst-new'); return { box: !!b, n: b ? b.querySelectorAll('.bst-new-it').length : 0, btn: b ? b.querySelectorAll('[data-a="adsDraftOne"]').length : 0, star: b ? /⭐/.test(b.innerText) : false }; });
           pass(`[${kind}] โฆษณา: ปุ่ม + สร้างแอดใหม่ เปิดรายการสินค้า (เรียงตามคำแนะนำ ⭐) พร้อมปุ่มทำแอด`, nb.box && nb.n >= 2 && nb.btn >= 1 && nb.star, JSON.stringify(nb));
-          await page.locator('.ads-new').first().screenshot({ path: path.join(OUT, `ads-new-${kind}.png`) }).catch(() => {});
+          await page.locator('.bst-new').first().screenshot({ path: path.join(OUT, `bst-new-${kind}.png`) }).catch(() => {});
           await page.evaluate(() => { ADST.pick = false; ADST.f = 'now'; render(true); }); }
         const d = page.locator('.adq-wrap').first(); if (await d.count()) await d.screenshot({ path: path.join(OUT, `adflow-${kind}.png`) }); }
       if (v === 'products') { // ปุ่มบันทึก: ฉบับร่าง / เผยแพร่แล้วไปเซลเพจ · สร้างชุดใหม่โดยรวมชุดเดิมเข้ามา

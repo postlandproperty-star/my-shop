@@ -16,6 +16,13 @@ fs.writeFileSync(tmp, scripts.sort((a, b) => b.length - a.length)[0] || ''); che
   if (sp) { const core = sp.html.slice(sp.html.indexOf('<script>') + 8, sp.html.lastIndexOf('</script>'));
     fs.writeFileSync(tmp, core); check(tmp, 'หน้าลูกค้า (แยกโค้ดหลังบ้านแล้ว)'); fs.writeFileSync(tmp, sp.chunk); check(tmp, '/adm.js (โค้ดหลังบ้าน)'); fs.rmSync(tmp, { force: true });
     if (!(sp.moved > 100 && core.length < sp.chunk.length)) { bad++; console.log(`✗ แยกโค้ดหลังบ้านได้น้อยผิดปกติ (ย้าย ${sp.moved} ฟังก์ชัน)`); } } }
+// ชื่อ class ที่ตัวบล็อกโฆษณาซ่อนทุกเว็บ (เช่น .ads-card) ห้ามใช้ ไม่งั้นกล่องหายในเครื่องที่มี ad blocker (คุณแดนเจอ 8 ต.ค. 69 แท็บโฆษณาหาย)
+{ const block = new Set(fs.readFileSync(path.join(root, 'tests/adblock-classes.txt'), 'utf8').split('\n').filter((x) => x && !x.startsWith('#')));
+  const files = [path.join(root, 'src/index.html'), ...['lib', 'api'].flatMap((d) => fs.readdirSync(path.join(root, d)).filter((x) => /\.m?js$/.test(x)).map((x) => path.join(root, d, x)))];
+  for (const f of files) { const t = fs.readFileSync(f, 'utf8'), used = new Set();
+    for (const m of t.matchAll(/class=\\?["']([^"'$\\]*)/g)) for (const c of m[1].split(/\s+/)) if (c) used.add(c);
+    for (const m of t.matchAll(/\.([a-zA-Z][\w-]*)\s*\{/g)) used.add(m[1]);
+    const hit = [...used].filter((c) => block.has(c)); if (hit.length) { bad++; console.log(`✗ ${path.relative(root, f)}: ชื่อ class ที่ ad blocker ซ่อน: ${hit.join(', ')} (เปลี่ยนชื่อ)`); } } }
 // Vercel แผนฟรีมีได้ไม่เกิน 12 ฟังก์ชัน (ไฟล์ใน api/) เกินแล้วขึ้นเว็บไม่ได้ทั้งเว็บ
 const fnN = fs.readdirSync(path.join(root, 'api')).filter((x) => /\.m?js$/.test(x)).length;
 if (fnN > 12) { bad++; console.log(`✗ api/ มี ${fnN} ไฟล์ เกิน 12 ฟังก์ชันของ Vercel แผนฟรี (ย้ายไปเป็นทางย่อยของไฟล์เดิมแทน)`); }
