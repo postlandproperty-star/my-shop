@@ -492,7 +492,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .paycard{text-align:center;margin:12px 0 4px;font-size:14px}.paycard a{color:var(--muted);text-decoration:underline}.qr-why{text-align:center;margin:8px 0 0}.qr-back{background:var(--warnbg);color:var(--ink);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:14px}
 .mkt{margin-bottom:12px;padding:14px 16px}.mkt summary{cursor:pointer}.mkt-f{margin:10px 0 0;padding-left:20px;display:grid;gap:8px}.mkt-f li b{display:block}
 .sp-price .per{display:block;width:100%;font-size:14px;font-weight:600;opacity:.9;margin-top:2px}
-.crs-pv{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 8px 24px rgba(15,27,51,.15)}.crs-pv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.crs-pv{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 8px 24px rgba(15,27,51,.15)}.crs-pv iframe,.crs-pv video{position:absolute;inset:0;width:100%;height:100%;border:0}.crs-pv video{object-fit:contain;background:#16203f}
 .ccur{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}.ccur details+details{border-top:1px solid var(--line)}.ccur summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 16px;background:var(--bg)}.ccur summary::-webkit-details-marker{display:none}.ccur summary span{font-size:13px;color:var(--muted);white-space:nowrap}.ccur ul{list-style:none;margin:0;padding:4px 16px 10px}.ccur li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:15px}.ccur li:first-child{border-top:0}.ccur li em{font-style:normal;color:var(--muted);font-size:13px;white-space:nowrap}
 .crs-row,.stu-row{display:grid;grid-template-columns:minmax(0,3fr) 1fr .7fr .7fr 1.7fr 1fr;gap:12px;padding:14px;border-top:1px solid var(--line);align-items:start}.crs-row.pt-th,.stu-row.pt-th{border-top:0}.stu-row{grid-template-columns:minmax(0,1.6fr) minmax(0,2fr) 1.2fr .8fr}.stu-em{word-break:break-all}.stu-p{display:flex;align-items:center;gap:8px;margin:6px 0}.stu-p .vbar{flex:1;margin:0}
 .crs-st{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.crs-acts{display:flex;flex-direction:column;align-items:flex-start;gap:6px}.fcr-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:28px 0 10px;padding-top:18px;border-top:2px dashed var(--line);font-size:20px}.fcr-box{padding:16px 18px}
@@ -2414,17 +2414,22 @@ function route(){
 const crsLessonN=p=>String(p.toc||'').split('\n').filter(x=>/^\s+\d+\./.test(x)).length;
 const hrsTH=m=>{m=Number(m)||0;if(m<60)return m+' นาที';const h=Math.round(m/6)/10;return (Number.isInteger(h)?h:h.toFixed(1))+' ชั่วโมง';};
 const vidEmbed=u=>{u=String(u||'');let m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/);if(m)return `https://drive.google.com/file/d/${m[1]}/preview`;m=u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/);return m?`https://www.youtube-nocookie.com/embed/${m[1]}?rel=0`:'';};
-/* หน้าขายคอร์ส: วิดีโอตัวอย่างเล่นได้ในหน้า (เฉพาะเมื่อยืนยันแล้วว่าวิดีโอใน Drive เปิดได้แบบไม่ล็อกอิน) */
-function crsPreview(p){const e=p.videoOk&&vidEmbed(p.sampleLink);if(!e)return '';
-  return `<section class="section" id="crs-preview"><div class="wrap"><h2>ดูตัวอย่างบทเรียนฟรี</h2><p class="fine" style="margin:-8px 0 12px">กดเล่นได้เลย ไม่ต้องสมัคร · ทุกบทเป็นแบบนี้: สอนเทคนิค แล้วฝึกทำจริงพร้อมเฉลย</p>
-    <div class="crs-pv"><iframe src="${esc(e)}" title="ตัวอย่างบทเรียน" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe></div></div></section>`;}
+/* หน้าขายคอร์ส: คลิปตัวอย่างในหน้า · มีคลิป hook สั้น (p.teaser .mp4 ในสตอเรจร้าน + ปก p.teaserCover) ใช้ video ธรรมดา พอดีกรอบ ไม่ติดเครื่องเล่น Drive
+   ไม่มี teaser: ใช้บทเต็มจาก Drive (เฉพาะเมื่อยืนยันแล้วว่าเปิดได้แบบไม่ล็อกอิน) */
+const crsTeaser=p=>/^https:\/\/\S+\.mp4$/i.test(String(p.teaser||''))?p.teaser:'';
+const crsHasPv=p=>!!(crsTeaser(p)||p.videoOk&&vidEmbed(p.sampleLink));
+function crsPreview(p){const t=crsTeaser(p),e=p.videoOk&&vidEmbed(p.sampleLink);if(!t&&!e)return '';
+  const cover=/^https:\/\//.test(String(p.teaserCover||''))?p.teaserCover:'';
+  return `<section class="section" id="crs-preview"><div class="wrap"><h2>ดูตัวอย่างฟรี</h2><p class="fine" style="margin:-8px 0 12px">${t?'กดเล่นได้เลย ไม่ต้องสมัคร · ลองทำโจทย์จริง 1 ข้อ แล้วดูเฉลยแบบในคอร์ส':'กดเล่นได้เลย ไม่ต้องสมัคร · ทุกบทเป็นแบบนี้: สอนเทคนิค แล้วฝึกทำจริงพร้อมเฉลย'}</p>
+    <div class="crs-pv">${t?`<video src="${esc(t)}" ${cover?`poster="${esc(cover)}"`:''} controls playsinline preload="none" title="ตัวอย่างคอร์ส"></video>`:`<iframe src="${esc(e)}" title="ตัวอย่างบทเรียน" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe>`}</div>
+    ${t&&e?`<p class="fine" style="margin-top:10px">อยากดูบทเต็ม? <a href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">▶ เปิดบทเรียนตัวอย่างฟรี (บทเต็ม)</a></p>`:''}</div></section>`;}
 function crsCurriculum(p){const secs=[];let cur=null;
   for(const raw of String(p.toc||'').split('\n')){if(!raw.trim())continue;const m=raw.match(/^\s+(\d+)\.\s*(.+?)(?:\s*\((\d+) นาที\))?\s*$/);
     if(m&&cur)cur.L.push({n:m[1],t:m[2],min:Number(m[3])||0});else if(!m){cur={name:raw.trim(),L:[]};secs.push(cur);}}
   const all=secs.flatMap(x=>x.L);if(!all.length)return '';const tot=all.reduce((a,l)=>a+l.min,0);
   return `<section class="section" id="curriculum"><div class="wrap"><h2>เนื้อหาคอร์ส</h2><p class="fine" style="margin:-8px 0 12px">${secs.length} หมวด · ${all.length} บท${tot?` · รวม ${hrsTH(tot)}`:''}</p>
     <div class="ccur">${secs.map((x,k)=>`<details ${k<2?'open':''}><summary><b>${esc(x.name)}</b><span>${x.L.length} บท${x.L.reduce((a,l)=>a+l.min,0)?` · ${x.L.reduce((a,l)=>a+l.min,0)} นาที`:''}</span></summary><ul>${x.L.map(l=>`<li><span>▶ ${esc(l.n)}. ${esc(l.t)}</span>${l.min?`<em>${l.min} นาที</em>`:''}</li>`).join('')}</ul></details>`).join('')}</div>
-    ${p.sampleLink?`<p style="margin-top:12px"><a class="btn btn-line" href="${p.videoOk&&vidEmbed(p.sampleLink)?'#crs-preview':esc(p.sampleLink)}" ${p.videoOk&&vidEmbed(p.sampleLink)?'':'target="_blank" rel="noopener noreferrer"'}>▶ ดูบทเรียนตัวอย่างฟรี</a></p>`:''}</div></section>`;}
+    ${p.sampleLink||crsHasPv(p)?`<p style="margin-top:12px"><a class="btn btn-line" href="${crsHasPv(p)?'#crs-preview':esc(p.sampleLink)}" ${crsHasPv(p)?'':'target="_blank" rel="noopener noreferrer"'}>▶ ดูตัวอย่างฟรี</a></p>`:''}</div></section>`;}
 function shopView(){
   const p=curProduct();
   if(p&&isBundle(p))return bundleView(p);
@@ -2472,7 +2477,7 @@ function shopView(){
       <div class="hero-cta">
         <button class="btn btn-buy" data-a="toCheckout">${kind==='course'?'สมัครเรียนและเข้าเรียนทันที':'สั่งซื้อและรับไฟล์ทันที'}</button>
         ${prev.length?`<a class="btn btn-line" href="#preview">ดูตัวอย่างเนื้อหา</a>`:''}
-        ${p.sampleLink?(kind==='course'&&p.videoOk&&vidEmbed(p.sampleLink)?`<a class="btn btn-line" href="#crs-preview">▶ ดูตัวอย่างบทเรียนฟรี</a>`:`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">${kind==='course'?'▶ ดูบทเรียนตัวอย่างฟรี':'ดาวน์โหลดตัวอย่างฟรี'}</a>`):''}
+        ${p.sampleLink||kind==='course'&&crsHasPv(p)?(kind==='course'&&crsHasPv(p)?`<a class="btn btn-line" href="#crs-preview">▶ ดูตัวอย่างฟรี</a>`:`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">${kind==='course'?'▶ ดูบทเรียนตัวอย่างฟรี':'ดาวน์โหลดตัวอย่างฟรี'}</a>`):''}
       </div>
       ${payLogos(0)}
       ${p.proof?`<p class="proof">${esc(p.proof)}</p>`:''}
