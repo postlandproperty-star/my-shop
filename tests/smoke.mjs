@@ -133,7 +133,7 @@ async function layout(page, label) {
   pass(`${label}: ข้อความไม่ถูกบีบแคบ`, !r.narrow.length, r.narrow.join(' | '));
   if (page.errors.length) pass(`${label}: ไม่มี error ในหน้า`, false, page.errors.slice(0, 3).join(' | ')); else pass(`${label}: ไม่มี error ในหน้า`, true);
   page.errors.length = 0;
-  await page.screenshot({ path: path.join(OUT, label.replace(/[^\w฀-๿-]+/g, '_') + '.png'), fullPage: false });
+  await page.screenshot({ path: path.join(OUT, label.replace(/[^\w฀-๿-]+/g, '_') + '.png'), fullPage: !!process.env.FULLSHOT && label.includes(process.env.FULLSHOT) });
 }
 
 const pub = SHOP.products.filter((p) => p.status === 'published');
@@ -412,13 +412,23 @@ try {
         pass(`[${kind}] โฆษณา: ข้อความบนรูปของชุดไม่พูดว่า "เล่มเดียว" และบอกจำนวนเล่ม`, !/เล่มเดียว/.test(hk) && /ครบ \d+ เล่ม/.test(hk), hk.replace(/\n/g, ' / '));
         const has916 = () => page.waitForFunction(() => /9:16/.test((document.querySelector('.adq-extp') || {}).value || ''), null, { timeout: 2500 }).then(() => true, () => false);
         if (!(await has916())) { await tap('[data-a="adsExtSize"][data-v="916"]'); await has916(); } // กดแล้วหน้ายังวาดไม่ทัน: กดซ้ำอีกครั้ง
+        if (!(await page.waitForFunction(() => /royal-blue/.test((document.querySelector('.adq-extp') || {}).value || ''), null, { timeout: 2500 }).then(() => true, () => false))) { await tap('[data-a="adsExtAngle"][data-v="cover"]'); await page.waitForFunction(() => /royal-blue/.test((document.querySelector('.adq-extp') || {}).value || ''), null, { timeout: 2500 }).catch(() => {}); }
         const ep = await page.evaluate(() => { const t = document.querySelector('.adq-extp'); return t ? t.value : ''; });
         pass(`[${kind}] โฆษณา: ปุ่มสร้าง prompt ไปทำรูปเอง (มีชื่อสินค้า ข้อความไทย แนวปกเด่น ขนาด 9:16)`, /9:16/.test(ep) && /250px/.test(ep) && /SheetLab/.test(ep) && /[\u0E00-\u0E7F]/.test(ep) && /royal-blue/.test(ep), ep.slice(0, 80));
         await tap('[data-a="adsExtOpen"]'); await page.waitForTimeout(150);
         const fl = await page.evaluate(() => [...document.querySelectorAll('.adflow')].map((f) => [...f.children].findIndex((c) => c.classList.contains('cur'))));
         pass(`[${kind}] โฆษณา: แถบขั้นตอน (ร่าง = ขั้น 1, ทดสอบวันที่ 6 = ขั้น 4)`, fl.includes(0) && fl.includes(3), JSON.stringify(fl));
-        { const chip = page.locator('[data-a="adsFilter"][data-v="run"]').first(); await chip.click({ timeout: 4000 }).catch(() => {}); const on = await chip.getAttribute('aria-pressed'); await page.locator('[data-a="adsFilter"][data-v="all"]').first().click({ timeout: 4000 }).catch(() => {});
+        { const chip = page.locator('[data-a="adsFilter"][data-v="run"]').first(); await chip.click({ timeout: 4000 }).catch(() => {}); const on = await chip.getAttribute('aria-pressed'); await page.locator('[data-a="adsFilter"][data-v="now"]').last().click({ timeout: 4000 }).catch(() => {});
           pass(`[${kind}] โฆษณา: กดตัวกรอง "กำลังวิ่ง" ได้จริง (คลิกด้วยเมาส์)`, on === 'true', String(on)); }
+        { await page.evaluate(() => { ADST.f = 'run'; render(true); }); await page.waitForTimeout(150);
+          const rc = await page.evaluate(() => { const c = [...document.querySelectorAll('.ads-body .acamp')]; return { n: c.length, three: c.some((x) => /3 รูป/.test(x.innerText) && x.querySelectorAll('.acamp-ad').length === 3), pause: c.some((x) => x.querySelector('[data-a="adsSet"][data-v="PAUSED"]')) }; });
+          pass(`[${kind}] โฆษณา: แท็บกำลังวิ่ง รวมแอด 3 รูปของแคมเปญเดียวเป็นการ์ดเดียว (ดูทีละรูป + ปุ่มหยุด)`, rc.n === 1 && rc.three && rc.pause, JSON.stringify(rc));
+          await page.locator('.ads-card').first().screenshot({ path: path.join(OUT, `ads-run-${kind}.png`) }).catch(() => {});
+          await page.locator('.pt-head [data-a="adsNew"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(150);
+          const nb = await page.evaluate(() => { const b = document.querySelector('.ads-new'); return { box: !!b, n: b ? b.querySelectorAll('.ads-new-it').length : 0, btn: b ? b.querySelectorAll('[data-a="adsDraftOne"]').length : 0, star: b ? /⭐/.test(b.innerText) : false }; });
+          pass(`[${kind}] โฆษณา: ปุ่ม + สร้างแอดใหม่ เปิดรายการสินค้า (เรียงตามคำแนะนำ ⭐) พร้อมปุ่มทำแอด`, nb.box && nb.n >= 2 && nb.btn >= 1 && nb.star, JSON.stringify(nb));
+          await page.locator('.ads-new').first().screenshot({ path: path.join(OUT, `ads-new-${kind}.png`) }).catch(() => {});
+          await page.evaluate(() => { ADST.pick = false; ADST.f = 'now'; render(true); }); }
         const d = page.locator('.adq-wrap').first(); if (await d.count()) await d.screenshot({ path: path.join(OUT, `adflow-${kind}.png`) }); }
       if (v === 'products') { // ปุ่มบันทึก: ฉบับร่าง / เผยแพร่แล้วไปเซลเพจ · สร้างชุดใหม่โดยรวมชุดเดิมเข้ามา
         const ed = await page.evaluate(() => { const p = D.products.find((x) => !isBundle(x)); S.draft = initDraft(p); S.edit = p.id; render(false);
@@ -477,8 +487,8 @@ try {
             act('cancelEdit', { dataset: {} });
             const p = D.products.find((x) => !isBundle(x) && x.price > 0); const rec = adBudgetRec({ productId: p.id }); const crs = shelves({ kind: 'course', name: 'TOEIC 750+ คอร์ส' }).includes('course') && SHELVES.some((x) => x[0] === 'course'); return { up, inSec3, flip, old, crs, n: bundleBooks(b).length, daily: rec.daily, days: rec.days, why: rec.why.length }; });
           pass(`[${kind}] หน้าแก้ชุด: ปุ่ม ⬆ ใส่ปกเองทุกเล่ม · สวิตช์แสดงปกทุกเล่มอยู่ในโซน 3. รูปชุด · หมวด 🎓 คอร์สเรียนในร้าน · แอด: น้องบูสต์แนะนำงบต่อวันพร้อมเหตุผล`, r.up === r.n && r.inSec3 && r.flip && r.old === 0 && r.crs && r.daily >= 100 && r.days === 7 && r.why >= 3, JSON.stringify(r)); }
-        { const r = await page.evaluate(() => { const L = adPicks(); S.view = 'admin'; S.tab = 'ads'; S.edit = null; render(false); const box = document.querySelector('.boost-pick'); const o = { n: L.length, top: L[0] && L[0].p.name, box: !!box, btn: box ? box.querySelectorAll('[data-a="adsDraftOne"]').length : 0, w: box ? Math.round(box.getBoundingClientRect().width) : 0, par: box ? box.parentElement.className + ' ' + getComputedStyle(box.parentElement).display + ' ' + getComputedStyle(box.parentElement).gridTemplateColumns : '' }; return o; });
-          await page.locator('.boost-pick').screenshot({ path: path.join(OUT, `ads-pick-${kind}.png`) }).catch(() => {}); await page.evaluate(() => { S.tab = 'products'; render(false); });
+        { const r = await page.evaluate(() => { const L = adPicks(); S.view = 'admin'; S.tab = 'ads'; ADST.f = 'plan'; S.edit = null; render(false); const box = document.querySelector('.boost-pick'); const o = { n: L.length, top: L[0] && L[0].p.name, box: !!box, btn: box ? box.querySelectorAll('[data-a="adsDraftOne"]').length : 0, w: box ? Math.round(box.getBoundingClientRect().width) : 0, par: box ? box.parentElement.className + ' ' + getComputedStyle(box.parentElement).display + ' ' + getComputedStyle(box.parentElement).gridTemplateColumns : '' }; return o; });
+          await page.locator('.boost-pick').screenshot({ path: path.join(OUT, `ads-pick-${kind}.png`) }).catch(() => {}); await page.evaluate(() => { S.tab = 'products'; ADST.f = 'now'; render(false); });
           pass(`[${kind}] โฆษณา: น้องบูสต์แนะนำ 3 อันดับว่าควรยิงแอดตัวไหน พร้อมเหตุผลและปุ่มเอาไปโฆษณา`, r.n > 0 && r.box && r.btn >= 1, JSON.stringify(r)); }
         { const r = await page.evaluate(() => { const p = D.products.find((x) => !isBundle(x) && x.status === 'published'); REVIEWS[p.id] = { avg: 4, count: 1, items: [{ name: 'ผู้ซื้อ', stars: 4, text: 'ดีมาก', em: '', at: '2026-10-01' }] };
             S.view = 'shop'; S.edit = null; selectProduct(p.id); render(false); const top = (document.querySelector('.sp-rv') || {}).textContent || '', sec = !!document.getElementById('reviews');
