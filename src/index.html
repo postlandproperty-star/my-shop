@@ -489,7 +489,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqm{margin:0 0 14px}.so-ai{display:flex;flex-direction:column;gap:6px;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;margin:0 0 14px}.so-airow{display:flex;gap:8px;flex-wrap:wrap}.so-airow select{flex:1;min-width:140px;width:auto}
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}.bx-li{cursor:pointer}.bx-li:hover{border-color:#2440E8}.bx-li-go{margin-left:auto;font-size:13px;color:#2440E8;white-space:nowrap;padding-left:8px}
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
-.paycard{text-align:center;margin:12px 0 4px;font-size:14px}.paycard a{color:var(--muted);text-decoration:underline}.qr-why{text-align:center;margin:8px 0 0}.qr-back{background:var(--warnbg);color:var(--ink);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:14px}
+.paycard{text-align:center;margin:10px 0 4px}.paycard a.paycard-btn{color:var(--ink);text-decoration:none;font-size:15px;font-weight:600}.qr-why{text-align:center;margin:8px 0 0}.qr-back{background:var(--warnbg);color:var(--ink);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:14px}
 .mkt{margin-bottom:12px;padding:14px 16px}.mkt summary{cursor:pointer}.mkt-f{margin:10px 0 0;padding-left:20px;display:grid;gap:8px}.mkt-f li b{display:block}
 .sp-price .per{display:block;width:100%;font-size:14px;font-weight:600;opacity:.9;margin-top:2px}
 .crs-pv{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 8px 24px rgba(15,27,51,.15)}.crs-pv iframe,.crs-pv video{position:absolute;inset:0;width:100%;height:100%;border:0}.crs-pv video{object-fit:contain;background:#16203f;cursor:pointer}
@@ -6777,7 +6777,8 @@ async function codeApply(c,quiet){c=String(c||'').trim();if(!c)return;S.codeBusy
   catch(e){S.codeErr='ตรวจโค้ดไม่ได้ ลองใหม่';}S.codeBusy=false;render(true);if(S.cart)drawCart();}
 /* หน้าจ่ายเงิน (7 ต.ค. 69): QR พร้อมเพย์เป็นทางหลัก (จ่ายจริง ~67%) บัตรเป็นลิงก์รอง (เปิดหน้า Stripe แล้วทิ้ง ~97%)
    กดบัตรแล้วส่งอีเมลที่กรอกไว้ไปด้วย → Stripe กรอกให้ และระบบส่งอีเมลเตือนได้ถ้าจ่ายไม่เสร็จ · กันกดซ้ำสร้างหน้าจ่ายเงิน 2 อัน */
-const cardLink=href=>`<p class="paycard"><a href="${esc(href)}" data-track="InitiateCheckout" data-card="1">ไม่สะดวกสแกน? จ่ายด้วยบัตรเครดิต / เดบิต</a></p>`;
+// ปุ่มจ่ายด้วยบัตร: ปุ่มเต็มความกว้างใต้ปุ่ม QR (คุณแดน 8 ต.ค. 69 ขอกลับมาเป็นปุ่ม) · ยังพาอีเมลที่กรอกไปหน้า Stripe และกันกดซ้ำเหมือนเดิม
+const cardLink=href=>`<p class="paycard"><a class="btn btn-line btn-block paycard-btn" href="${esc(href)}" data-track="InitiateCheckout" data-card="1">💳 ชำระด้วยบัตรเครดิต / เดบิต</a></p>`;
 function qrEmailGuess(){let em=S.form.qrEmail||'';if(!em){try{em=localStorage.getItem('sl_email')||'';}catch(e){}}return em;}
 function qrBox(p,on,total){return `<div id="qrslot" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">${qrInner(p.slug,on,total)}</div>`;}
 function qrPaint(focus){ // วาดใหม่เฉพาะกล่อง QR ไม่แตะส่วนอื่นของหน้า
