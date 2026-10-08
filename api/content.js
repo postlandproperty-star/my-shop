@@ -291,6 +291,25 @@ async function publishReadlab(onlyId = '') {
 // ที่มาของออเดอร์จาก campaign (utm_campaign หรือที่หน้าเว็บเดาจาก referrer) · แอด = ชื่อแคมเปญอื่นทั้งหมด
 const ORGANIC_SRC = { store: 'หน้าร้าน', fb_page: 'เพจ Facebook', threads: 'Threads', google: 'Google', instagram: 'Instagram', pinterest: 'Pinterest', line: 'LINE', tiktok: 'TikTok', youtube: 'YouTube', email: 'อีเมล', web: 'เว็บอื่น' };
 const srcGroup = (c) => { const k = String(c || '').trim().toLowerCase(); if (!k) return { g: 'direct', label: 'ไม่ทราบที่มา' }; if (ORGANIC_SRC[k]) return { g: 'organic', label: ORGANIC_SRC[k] }; return { g: 'ads', label: 'แอด ' + c }; }; // ชื่อแคมเปญแอดที่มีคำว่า test (เช่น fb-toeic-test) คือแอดจริง
+// 🚨 เฝ้าปุ่มจ่ายเงิน (คุณแดน 8 ต.ค. 69: ปุ่มเงียบทั้งวันไม่มีใครรู้): ตอนมีคนเข้าเว็บ เช็คทุก 30 นาที
+// 3 ชม.ล่าสุด ลูกค้า ≥5 คนกด "ชำระเงิน" แต่ Stripe ไม่มี QR ถูกสร้างเลย → อีเมลคุณแดน + งานบนบอร์ด (เตือนซ้ำได้ทุก 6 ชม.)
+async function payWatch() {
+  const st = (await sb('shop_state?id=eq.paywatch&select=data'))?.[0]?.data || {}, now = Date.now();
+  if (now - (st.at || 0) < 30 * 60e3) return;
+  const save = (x) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'paywatch', data: { ...st, ...x }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  await save({ at: now });
+  const since = new Date(now - 3 * 36e5), ev = (await sb(`web_events?at=gte.${since.toISOString()}&ev=eq.click&k=in.(qrMake,cartPay)&select=sid&limit=3000`)) || [];
+  const people = new Set(ev.map((e) => e.sid)).size;
+  if (people < 5) return;
+  const pis = await stripe('GET', `payment_intents?limit=100&created[gte]=${Math.floor(since.getTime() / 1000)}`);
+  const qr = (pis.data || []).filter((x) => x.metadata?.flow === 'qr').length;
+  await save({ at: now, last: { people, taps: ev.length, qr, t: new Date(now).toISOString() } });
+  if (qr > 0 || now - (st.alerted || 0) < 6 * 36e5) return;
+  await save({ at: now, alerted: now, last: { people, taps: ev.length, qr, t: new Date(now).toISOString() } });
+  const msg = `3 ชั่วโมงล่าสุดมีลูกค้า ${people} คนกดปุ่ม "ชำระเงิน" (${ev.length} ครั้ง) แต่ไม่มี QR ถูกสร้างเลย ปุ่มจ่ายเงินอาจเสีย`;
+  await addTodo({ text: `🚨 ${msg} · ลองเปิดหน้าขายบนมือถือ กรอกอีเมลแล้วกดชำระเงินดู ถ้าไม่ขึ้น QR แจ้งทีมทันที`, type: 'do', from: 'manager' }).catch(() => {});
+  await ownerMail('🚨 ปุ่มจ่ายเงินอาจเสีย ลูกค้ากดแล้วไม่มี QR', `<p>${escH(msg)}</p><p>ลองเปิดหน้าขายบนมือถือ กรอกอีเมลแล้วกดชำระเงิน ถ้าไม่ขึ้น QR ให้แจ้งทีมทันที</p>`, { button: ['เปิดหน้าร้าน', 'https://sheetlabth.com/store'] }).catch(() => {});
+}
 // อีเมลถึงคุณแดน (เล่มเสร็จ / ผลิตไม่สำเร็จ / โรงงานบน Mac มีปัญหา) · once = คีย์กันส่งซ้ำวันละครั้ง
 const escH = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 async function ownerMail(subject, bodyHtml, { once = '', button = null, image = '' } = {}) {
@@ -1323,6 +1342,7 @@ export default async function handler(req, res) {
       if (req.method !== 'POST') return res.status(405).end();
       if (/bot|crawl|spider|slurp|facebookexternalhit|headless|preview|lighthouse/i.test(String(req.headers['user-agent'] || ''))) return res.status(204).end();
       try { const I = await import('../lib/insights.js'); await I.saveEvents(I.cleanEvents(await readBody(req))); } catch (e) { if (!e.missing) console.error('ev', e.message); }
+      try { await payWatch(); } catch (e) { console.error('paywatch', e.message); }
       return res.status(204).end();
     }
     if (action === 'insights') { // แท็บ 📈 พฤติกรรม (แอดมิน/ทีมอ่าน)
