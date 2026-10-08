@@ -26,7 +26,7 @@ const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
-const CARDHITS = []; const CRSPOST = []; const BULK = [];
+const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const CRSPOST = []; const BULK = [];
 const MAILS = [];
 const { freePage, FREEBIES } = await import(path.join(ROOT, '..', 'lib/free.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
@@ -74,6 +74,8 @@ async function newPage(kind) {
     if (/\/api\/checkout\?m=code/.test(url)) { const c = new URL(url).searchParams.get('code'); return route.fulfill({ json: c === CODE ? { ok: true, code: CODE, pct: 20 } : { ok: false, error: 'ไม่พบโค้ดนี้' } }); }
     if (/action=drive_check/.test(url)) { const b = JSON.parse(route.request().postData() || '{}'); return route.fulfill({ json: { ok: true, results: (b.urls || []).map((u) => ({ url: u, state: 'public' })) } }); }
     if (/\/api\/checkout\?card=1/.test(url)) { CARDHITS.push(url); return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>stripe</title>card' }); }
+    if (/\/api\/checkout\?m=card/.test(url)) return route.fulfill({ json: CARDMODE ? { ok: true, pi: 'pi_card', k: 'pi_card_secret_t', pk: 'pk_test_x' } : { ok: false, nopk: true } });
+    if (/\/api\/order\?pi=pi_card/.test(url)) { ORDERHITS.push(url); return route.fulfill({ json: { ok: true, paid: true, orderId: 'CARD0001', productName: 'x', items: [{ name: 'ไฟล์', link: 'https://example.com/f' }] } }); }
     if (/\/api\/checkout\?m=qr/.test(url)) return route.fulfill({ json: { ok: true, pi: 'pi_test', k: 'pi_test_secret', png: `${BASE}/qr.png`, amount: 1 } });
     if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD, LIVE], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอด 2 รูป + แอดทดสอบ 3 รูปที่วิ่งมา 6 วัน
     if (/action=ads_auto_status/.test(url) && AD) return route.fulfill({ json: { ok: true, access: { ok: true }, currency: 'AUD', rate: 0.04, history: [], ads: LIVE_ADS, tz: 7, daily: AD_DAILY, shopDaily: AD_SHOPD } });
@@ -230,6 +232,15 @@ try {
         const back = await page.evaluate(() => ({ hint: !!document.querySelector('#checkout .qr-back'), url: location.search, prefill: (document.querySelector('#checkout #qr-email') || {}).value }));
         pass(`[${kind}] หน้าจ่ายเงิน: กรอกอีเมล + ปุ่มสแกนพร้อมเพย์ + ปุ่มชำระด้วยบัตร (พาอีเมลไป Stripe · กดซ้ำไม่สร้างหลายครั้ง)`,
           box.email && box.qr && box.cardBtn && box.card && hits.length === 1 && /[?&]e=buyer%40test\.co/.test(hits[0]) && back.hint && !/unpaid/.test(back.url) && back.prefill === 'buyer@test.co', JSON.stringify({ box, hits, back })); }
+      if (p.type !== 'bundle') { CARDMODE = true; ORDERHITS.length = 0; CARDHITS.length = 0;
+        await page.goto(`${BASE}/p/${p.slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(700);
+        await page.evaluate(() => { window.Stripe = () => ({ elements: () => ({ create: () => ({ mount(n) { n.innerHTML = '<div class="fake-card">CARD FORM</div>'; }, destroy() {} }) }), confirmPayment: async (o) => { window.__cp = o; return { paymentIntent: { status: 'succeeded' } }; } }); });
+        await page.fill('#checkout #qr-email', 'buyer@test.co'); await page.locator('#checkout .paycard a[data-card]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(700);
+        const cf = await page.evaluate(() => { const o = { form: !!document.querySelector('#checkout .fake-card'), pay: !!document.querySelector('#checkout [data-a="cardPay"]'), path: location.pathname }; const a = document.getElementById('app'); a.__h = ''; render(true); o.remount = !!document.querySelector('#checkout .fake-card'); return o; });
+        await page.locator('#checkout [data-a="cardPay"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(900);
+        cf.email = await page.evaluate(() => window.__cp && window.__cp.confirmParams.payment_method_data.billing_details.email); cf.order = ORDERHITS.length; cf.hosted = CARDHITS.length; cf.url = await page.evaluate(() => location.search);
+        pass(`[${kind}] หน้าจ่ายเงิน: กดชำระด้วยบัตร → ช่องกรอกบัตรขึ้นในหน้าขาย (ไม่ไปหน้า Stripe) จ่ายแล้วไปหน้าขอบคุณ`, cf.form && cf.pay && cf.remount && cf.email === 'buyer@test.co' && cf.order >= 1 && cf.hosted === 0 && /pi=pi_card/.test(cf.url), JSON.stringify(cf));
+        CARDMODE = false; }
       pass(`[${kind}] หน้าลูกค้า (ร้าน/หน้าขาย/ตะกร้า/จ่ายเงิน) ไม่ต้องโหลดโค้ดหลังบ้าน /adm.js`, await page.evaluate(() => typeof __admOk !== 'undefined' && !__admOk), await page.evaluate(() => (window.__admWhy || '') + ' ' + location.pathname));
       await page.context().close();
     } catch (e) { pass(`[${kind}] หน้าขาย ${p.slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }

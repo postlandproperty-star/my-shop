@@ -101,7 +101,7 @@ const fillTpl = (t, l, site) => String(t).replace(/\{สินค้า\}/g, l.p
 async function sweepQrPayments() {
   const since = Math.floor(Date.now() / 1000) - 3 * 86400;
   const r = await stripe('GET', `payment_intents?limit=100&created[gte]=${since}`);
-  const paid = (r.data || []).filter((pi) => pi.status === 'succeeded' && pi.metadata?.flow === 'qr');
+  const paid = (r.data || []).filter((pi) => pi.status === 'succeeded' && ['qr', 'card'].includes(pi.metadata?.flow)); // QR + บัตรบนหน้าขาย
   const origin = await siteUrl();
   const out = [];
   for (const pi of paid) { const f = await fulfill(piToSession(pi), { origin }); out.push({ id: pi.id.slice(-8), sent: f.sent, reason: f.reason || null }); }
@@ -302,7 +302,7 @@ async function payWatch() {
   const people = new Set(ev.map((e) => e.sid)).size;
   if (people < 5) return;
   const pis = await stripe('GET', `payment_intents?limit=100&created[gte]=${Math.floor(since.getTime() / 1000)}`);
-  const qr = (pis.data || []).filter((x) => x.metadata?.flow === 'qr').length;
+  const qr = (pis.data || []).filter((x) => ['qr', 'card'].includes(x.metadata?.flow)).length;
   await save({ at: now, last: { people, taps: ev.length, qr, t: new Date(now).toISOString() } });
   if (qr > 0 || now - (st.alerted || 0) < 6 * 36e5) return;
   await save({ at: now, alerted: now, last: { people, taps: ev.length, qr, t: new Date(now).toISOString() } });

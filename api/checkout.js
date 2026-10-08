@@ -2,7 +2,7 @@
 // GET /api/checkout?p=<slug>&c=<campaign>
 // GET /api/checkout?cart=<id,id,...>&c=<campaign>  ตะกร้า: หลายเล่มจ่ายครั้งเดียว (ออเดอร์เดียว ได้ลิงก์ทุกเล่ม)
 import { capiMeta } from '../lib/capi.js';
-import { loadShop, stripe, configured, htmlError, createQrPayment, bundlePlan } from '../lib/shop.js';
+import { loadShop, stripe, configured, htmlError, createQrPayment, createCardPayment, STRIPE_PK, bundlePlan } from '../lib/shop.js';
 import { checkReward, stripeRewardCoupon } from '../lib/rewards.js';
 // โค้ดส่วนลด (โค้ดขอบคุณคนรีวิว): ลดยอด QR หรือใส่คูปองในหน้าบัตร · โค้ดผิด/หมดอายุ = ไม่ลด
 const offAmt = (amount, rw) => rw ? Math.max(1, Math.round(amount * (100 - rw.pct) / 100)) : amount;
@@ -19,7 +19,8 @@ async function rewardOf(code) { if (!code) return null; try { const r = await ch
 async function cardDiscount(base, rw) { if (!rw) return base; const coupon = await stripeRewardCoupon(rw.pct); const { allow_promotion_codes, ...rest } = base; return { ...rest, discounts: [{ coupon }], metadata: { ...rest.metadata, reward: rw.code } }; }
 
 // POST /api/checkout?m=qr  JSON {p, bump, c, e} → สร้าง QR PromptPay ให้แสดงบนหน้าร้านเลย (ลูกค้าไม่ต้องออกไปหน้า Stripe)
-async function qr(req, res) {
+async function qr(req, res, method = 'qr') {
+  const make = method === 'card' ? createCardPayment : createQrPayment, label = method === 'card' ? 'บัตร' : 'QR';
   res.setHeader('Cache-Control', 'no-store');
   const b = typeof req.body === 'object' && req.body ? req.body : {};
   const email = String(b.e || '').trim().toLowerCase();
@@ -33,11 +34,11 @@ async function qr(req, res) {
     if (!ps.length) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้าที่เลือก กลับไปเลือกใหม่ที่หน้าร้าน' });
     let pname = ps.map((p) => p.name).join(' + '); if (pname.length > 400) pname = `${ps[0].name.slice(0, 200)} + อีก ${ps.length - 1} รายการ`;
     try {
-      const r = await createQrPayment({ amount: offAmt(ps.reduce((a, p) => a + Number(p.price), 0), rw), email, description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) + (rw ? ` (โค้ด ${rw.code} -${rw.pct}%)` : '') + ' QR',
+      const r = await make({ amount: offAmt(ps.reduce((a, p) => a + Number(p.price), 0), rw), email, description: `ตะกร้า ${ps.length} รายการ: ${pname}`.slice(0, 990) + (rw ? ` (โค้ด ${rw.code} -${rw.pct}%)` : '') + ' ' + label,
         metadata: { productId: ps[0].id, productName: pname, slug: ps[0].slug, campaign: String(b.c || '').slice(0, 60), cart: ps.map((p) => p.id).join(','), cartPlans: cartPlans(ps), plan: '', bumpProductId: '', bumpProductName: '', ...(rw ? { reward: rw.code } : {}), ...capiMeta(req) } });
-      if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' });
+      if (method !== 'card' && !r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' });
       return res.status(200).json({ ok: true, ...r });
-    } catch (e) { console.error(e); return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายด้วยบัตรแทน' }); }
+    } catch (e) { console.error(e); return res.status(502).json({ ok: false, error: `สร้างรายการจ่าย${label}ไม่สำเร็จ` }); }
   }
   const p = shop.products.find((x) => x.slug === String(b.p || '') && x.status === 'published');
   if (!p || !(Number(p.price) >= 1)) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้า' });
@@ -48,12 +49,12 @@ async function qr(req, res) {
   const campaign = String(b.c || '').slice(0, 60);
   const pname = plan ? `${p.name} · แพ็กเกจ ${plan.name}` : p.name;
   try {
-    const r = await createQrPayment({
+    const r = await make({
       amount: offAmt(plan ? Number(plan.price) : Number(p.price) + bumpPrice, rw), email,
-      description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})${rw ? ` (โค้ด ${rw.code} -${rw.pct}%)` : ''} QR`,
+      description: `${pname}${bumpPrice ? ' + ' + bp.name : ''} (${p.slug})${rw ? ` (โค้ด ${rw.code} -${rw.pct}%)` : ''} ${label}`,
       metadata: { productId: p.id, productName: pname, slug: p.slug, campaign, plan: plan ? plan.key : '', bumpProductId: bumpPrice ? bp.id : '', bumpProductName: bumpPrice ? bp.name : '', ...(rw ? { reward: rw.code } : {}), ...capiMeta(req) },
     });
-    if (!r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายผ่านหน้า Stripe แทน' });
+    if (method !== 'card' && !r.png) return res.status(502).json({ ok: false, error: 'สร้าง QR ไม่สำเร็จ ลองจ่ายผ่านหน้า Stripe แทน' });
     return res.status(200).json({ ok: true, ...r });
   } catch (e) {
     console.error(e);
@@ -115,6 +116,12 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ ok: false });
     if (!configured().stripe) return res.status(500).json({ ok: false, error: 'ร้านยังไม่พร้อมรับชำระเงิน' });
     return qr(req, res);
+  }
+  if (req.query.m === 'card') { // บัตรบนหน้าขาย · ยังไม่ได้ใส่ STRIPE_PUBLISHABLE_KEY: บอกหน้าเว็บให้ไปหน้า Stripe แบบเดิม (ยังไม่สร้างรายการ)
+    if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    if (!configured().stripe) return res.status(500).json({ ok: false, error: 'ร้านยังไม่พร้อมรับชำระเงิน' });
+    if (!STRIPE_PK) return res.status(200).json({ ok: false, nopk: true });
+    return qr(req, res, 'card');
   }
   if (req.query.cart) {
     if (!configured().stripe) return htmlError(res, 'ร้านยังไม่พร้อมรับชำระเงิน', 'ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY บน Vercel');

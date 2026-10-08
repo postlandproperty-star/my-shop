@@ -1180,6 +1180,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 @media (max-width:640px){.adm-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.adm-card b{font-size:18px}.adc-svg{height:170px}.adc-xs span.h{display:none}.adm-q{max-width:none;flex:1 1 100%}}
 .bonus-chips{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}.bonus-chip{display:inline-flex;align-items:center;gap:6px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:999px;padding:4px 6px 4px 12px;font-size:14px}.bonus-chip em{font-style:normal;color:var(--muted)}.bonus-chip button{border:0;background:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:15px;line-height:1}
 .adv{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;border-radius:8px;padding:7px 10px;font-size:13.5px;background:var(--bg)}.adv b{white-space:nowrap}.adv span{color:var(--muted)}.adv-stop{background:#FEF2F2}.adv-stop b{color:#B91C1C}.adv-up{background:#F0FDF4}.adv-up b{color:#15803D}.adv-ok b{color:#15803D}.adv-meh{background:#FFFBEB}.adv-meh b{color:#B45309}
+.qcard-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 4px}.qcard-h span{font-weight:800;font-size:18px}.card-el{min-height:120px;padding:4px 0}
 </style>
 </head>
 <body>
@@ -5904,6 +5905,7 @@ function render(keep){
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
   setHtml($('#app'),({factory:()=>hasAdminAccess()?factoryView():loginView(),vip:()=>hasAdminAccess()?vipView():loginView(),store:()=>storeView(false),catalog:catalogView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])());
+  if(CARD)cardMount(); // ช่องกรอกบัตรของ Stripe: วาดหน้าใหม่แล้วติดกลับเข้ากล่องจ่ายเงิน
   if(v==='store')hit('store');else if(v==='catalog')hit('catalog');else if(v==='order')hit('order');else if(v==='shop'){const cp=curProduct();if(cp&&cp.status==='published')hit('p/'+cp.slug);}
   if(csY){const ci=document.getElementById('cs-in');if(ci)ci.scrollTop=csY;}
   if(cVal){const ci=document.getElementById('chat-new');if(ci&&!ci.value){ci.value=cVal;if(cFoc)ci.focus();}}
@@ -6058,6 +6060,7 @@ function act(a,el){
     case 'recheckOrder':verifyOrder();break;
     case 'qrOpen':{let em='';try{em=localStorage.getItem('sl_email')||'';}catch(e){}S.form.qrEmail=S.form.qrEmail||em;S.qr={slug:el.dataset.slug,total:Number(el.dataset.total),email:S.form.qrEmail,step:'email'};qrPaint('qr-email');break;}
     case 'qrMake':qrMake(el);break;
+    case 'cardPay':cardPay(el);break;
     case 'codeOpen':S.codeOpen=true;render(true);if(S.cart)drawCart();setTimeout(()=>{const i=document.getElementById('code-in');if(i)i.focus();},30);break;
     case 'codeApply':codeApply(S.form.codeIn||(document.getElementById('code-in')||{}).value);break;
     case 'codeDel':S.code=null;S.codeOpen=false;try{sessionStorage.removeItem('sl_code');}catch(e){}render(true);if(S.cart)drawCart();break;
@@ -6071,7 +6074,7 @@ function act(a,el){
         LEADS.msg=j.ok?('ส่งแล้ว '+j.sent+' คน'+(j.results.some(x=>!x.ok)?' · ไม่ได้ส่ง: '+j.results.filter(x=>!x.ok).map(x=>x.email+' ('+x.reason+')').join(', '):'')):(j.error||'ส่งไม่สำเร็จ');}
       catch(e){LEADS.msg='ส่งไม่สำเร็จ';}LEADS.sending=false;LEADS.list=null;render(true);})();break;}
     case 'qrSave':qrSave();break;
-    case 'qrCancel':{qrStop();const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;qrPaint();break;}
+    case 'qrCancel':{qrStop();CARD=null;const q=S.qr;S.qr=q?{slug:q.slug,total:q.total,email:q.email,step:'email'}:null;qrPaint();break;}
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'cbrand':S.cbrand=el.dataset.v;if(S.cbrand==='readlab'&&!RL.data)loadRL();render(true);break;
@@ -6663,10 +6666,11 @@ document.addEventListener('click',e=>{
   if(g&&e.button===0&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();if(S.cart){S.cart=false;drawCart();}if(g.dataset.go&&!S.src)S.src='store';navTo(g.getAttribute('href'));return;}
   const tr=e.target.closest('[data-track]');
   if(tr&&tr.dataset.card){e.preventDefault();if(tr.dataset.busy)return;tr.dataset.busy='1';setTimeout(()=>{delete tr.dataset.busy;},4000);
-    const em=String(qrEmailGuess()).trim(),ok=/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(em),href=tr.getAttribute('href')+(ok&&!/[?&]e=/.test(tr.getAttribute('href'))?'&e='+encodeURIComponent(em):'');
+    {const inp=document.getElementById('qr-email');if(inp&&inp.value)S.form.qrEmail=inp.value;}
+    const em=String(S.form.qrEmail||qrEmailGuess()).trim(),ok=/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(em),href=tr.getAttribute('href')+(ok&&!/[?&]e=/.test(tr.getAttribute('href'))?'&e='+encodeURIComponent(em):'');
     if(ok){try{localStorage.setItem('sl_email',em);}catch(x){}}
     const p=curProduct();if(p)track('InitiateCheckout',Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));
-    setTimeout(()=>{location.href=href;},pixelReady?350:0);return;}
+    cardStart(em,ok,href);return;}
   if(tr){const p=curProduct();if(p)track(tr.dataset.track,Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));
     // ลิงก์ไปหน้าจ่ายเงิน: รอให้ Pixel ส่งเหตุการณ์ออกไปก่อนเปลี่ยนหน้า ไม่งั้นเบราว์เซอร์ตัดคำขอทิ้ง (Meta ไม่เห็น InitiateCheckout)
     const href=tr.tagName==='A'&&tr.getAttribute('href');
@@ -6783,7 +6787,7 @@ function qrEmailGuess(){let em=S.form.qrEmail||'';if(!em){try{em=localStorage.ge
 function qrBox(p,on,total){return `<div id="qrslot" data-slug="${esc(p.slug)}" data-bump="${on?1:0}" data-total="${total}">${qrInner(p.slug,on,total)}</div>`;}
 function qrPaint(focus){ // วาดใหม่เฉพาะกล่อง QR ไม่แตะส่วนอื่นของหน้า
   const el=document.getElementById('qrslot');if(!el)return render(true);
-  el.innerHTML=qrInner(el.dataset.slug,el.dataset.bump==='1',Number(el.dataset.total));
+  el.innerHTML=qrInner(el.dataset.slug,el.dataset.bump==='1',Number(el.dataset.total));if(CARD)cardMount();
   const b=document.getElementById('qrbox');if(b){const r=b.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight)b.scrollIntoView({block:r.height>innerHeight-80?'start':'center'});}
   if(focus){const i=document.getElementById(focus);if(i)i.focus({preventScroll:true});}
 }
@@ -6804,7 +6808,12 @@ function qrInner(slug,on,total){
       <p class="fine qr-why">สแกน QR พร้อมเพย์ได้ทุกธนาคาร · ${crs?'✓ เข้าเรียนได้ทันทีหลังจ่าย ด้วยอีเมลนี้':'✓ ได้ไฟล์ทันทีบนหน้านี้และทางอีเมล'} · ✓ ไม่ต้องสมัครสมาชิก</p>
     </div>`;
   }
-  if(q.step==='loading')return `<div class="qpay center"><p class="muted">กำลังสร้าง QR…</p></div>`;
+  if(q.step==='loading')return `<div class="qpay center"><p class="muted">${q.card?'กำลังเปิดช่องกรอกบัตร…':'กำลังสร้าง QR…'}</p></div>`;
+  if(q.step==='card')return `<div class="qpay" id="qrbox"><p class="qcard-h"><b>💳 ชำระด้วยบัตรเครดิต / เดบิต</b><span>${baht(codeOff(total))}</span></p><p class="fine" style="margin:0 0 8px">อีเมลรับไฟล์: <b>${esc(q.email)}</b></p>
+      <div id="card-el" class="card-el"><p class="fine">กำลังเปิดช่องกรอกบัตร…</p></div><p class="fine" role="alert" id="card-err" style="color:var(--bad);margin:6px 0 0"></p>
+      <button class="btn btn-buy btn-block" style="margin-top:10px" data-a="cardPay">ชำระเงิน ${baht(codeOff(total))}</button>
+      <p class="fine qr-why">🔒 กรอกบัตรผ่านระบบ Stripe ร้านไม่เห็นและไม่เก็บเลขบัตร · ถ้าธนาคารขอ OTP จะขึ้นให้กรอกเลย</p>
+      <button class="tx fine" data-a="qrCancel" style="margin-top:6px">← กลับไปสแกน QR พร้อมเพย์</button></div>`;
   return `<div class="qpay center" id="qrbox">
     <p style="margin:0 0 6px"><b>สแกนจ่าย ${baht(q.total)}</b> ด้วยแอปธนาคารไหนก็ได้</p>
     <img class="qrimg" src="${esc(q.png)}" width="240" height="240" alt="QR PromptPay สำหรับจ่าย ${baht(q.total)}">
@@ -6864,6 +6873,37 @@ async function qrPoll(){
     }
   }catch(e){}
 }
+const qrBody=(slug,bump,email)=>slug==='__cart__'?{cart:cartItems().map(p=>p.id),c:S.src||'',e:email,code:S.code?S.code.code:''}:{p:slug,bump:!!bump,c:S.src||'',e:email,plan:(S.bplan||{})[slug]||'',code:S.code?S.code.code:''};
+/* 💳 บัตรบนหน้าขาย (คุณแดน 8 ต.ค. 69 ไม่อยากเด้งไปหน้า Stripe): ช่องกรอกบัตรของ Stripe (Payment Element) ฝังในกล่องจ่ายเงิน
+   ร้านไม่เห็นเลขบัตร · 3D Secure/OTP Stripe จัดการ · ถ้าเปิดช่องบัตรไม่ได้ด้วยเหตุใดก็ตาม → ไปหน้า Stripe แบบเดิม (ลูกค้าต้องจ่ายได้เสมอ) */
+var CARD=null;
+async function cardStart(email,ok,href){
+  const slot=document.getElementById('qrslot'),go=()=>{setTimeout(()=>{location.href=href;},typeof pixelReady!=='undefined'&&pixelReady?350:0);};
+  if(!slot)return go();
+  const slug=slot.dataset.slug,total=Number(slot.dataset.total),bump=slot.dataset.bump==='1';
+  if(S.qr&&S.qr.step==='card'&&CARD&&S.qr.slug===slug&&S.qr.total===total){qrPaint();return;}
+  if(!ok){S.qr={slug,total,email,step:'email',err:email?'อีเมลยังไม่ถูกต้อง ลองเช็คอีกครั้ง เช่น name@gmail.com':'กรอกอีเมลก่อน แล้วกดชำระด้วยบัตรอีกครั้ง (ใช้ส่งไฟล์ให้)'};qrPaint('qr-email');return;}
+  qrStop();CARD=null;S.qr={slug,total,email,step:'loading',card:1};qrPaint();
+  try{
+    const r=await fetch('/api/checkout?m=card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(qrBody(slug,bump,email))}),j=await r.json().catch(()=>({}));
+    if(r.status===400&&j.error){S.qr={slug,total,email,step:'email',err:j.error};qrPaint('qr-email');return;} // อีเมล/โค้ดผิด: บอกในกล่อง
+    if(!j.ok||!j.pk||!j.k)throw new Error('no card form');
+    if(!window.Stripe)await loadScript('https://js.stripe.com/v3/');
+    const st=window.Stripe(j.pk,{locale:'th'});
+    CARD={stripe:st,pi:j.pi,k:j.k,el:null,node:null,elements:st.elements({clientSecret:j.k,appearance:{theme:'stripe',variables:{colorPrimary:'#E8492B',borderRadius:'10px',fontSizeBase:'16px'}}})};
+    S.qr={slug,total,email,step:'card',pi:j.pi,k:j.k};qrPaint();
+  }catch(e){console.error('card',e);CARD=null;S.qr={slug,total,email,step:'email'};qrPaint();go();}
+}
+function cardMount(){const q=S.qr;if(!CARD||!q||q.step!=='card')return;const n=document.getElementById('card-el');if(!n||(n===CARD.node&&n.querySelector('iframe,.__PrivateStripeElement')))return;
+  try{if(CARD.el){try{CARD.el.destroy();}catch(e){}}n.innerHTML='';CARD.el=CARD.elements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});CARD.el.mount(n);CARD.node=n;}
+  catch(e){console.error('card mount',e);}}
+async function cardPay(el){const q=S.qr;if(!CARD||!q||q.step!=='card')return;const err=document.getElementById('card-err'),label='ชำระเงิน '+baht(codeOff(q.total));
+  el.disabled=true;el.textContent='กำลังชำระเงิน…';if(err)err.textContent='';
+  const ret=location.pathname+'?pi='+encodeURIComponent(CARD.pi)+'&k='+encodeURIComponent(CARD.k);
+  try{const r=await CARD.stripe.confirmPayment({elements:CARD.elements,confirmParams:{return_url:location.origin+ret,payment_method_data:{billing_details:{email:q.email}}},redirect:'if_required'});
+    if(r&&r.error){if(err)err.textContent=r.error.message||'ชำระเงินไม่สำเร็จ ลองอีกครั้ง';el.disabled=false;el.textContent=label;return;}
+    S.sessionId=CARD.pi;S.piKey=CARD.k;S.qr=null;CARD=null;try{history.replaceState(null,'',ret);}catch(e){}verifyOrder();
+  }catch(e){if(err)err.textContent='ชำระเงินไม่สำเร็จ ลองอีกครั้ง หรือสแกน QR พร้อมเพย์แทน';el.disabled=false;el.textContent=label;}}
 async function qrMake(el){
   const inp=document.getElementById('qr-email');if(inp&&inp.value)S.form.qrEmail=inp.value; // อ่านจากช่องตรงๆ เผื่อคีย์บอร์ดมือถือ/เติมอัตโนมัติไม่ส่ง input
   const email=String(S.form.qrEmail||'').trim(),slug=el.dataset.slug,total=Number(el.dataset.total);
@@ -6873,7 +6913,7 @@ async function qrMake(el){
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur(); // ปิดคีย์บอร์ดก่อน หน้าจะได้ไม่กระโดด
   S.qr={slug,total,email,step:'loading'};qrPaint();
   try{
-    const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(slug==='__cart__'?{cart:cartItems().map(p=>p.id),c:S.src||'',e:email,code:S.code?S.code.code:''}:{p:slug,bump:el.dataset.bump==='1',c:S.src||'',e:email,plan:(S.bplan||{})[slug]||'',code:S.code?S.code.code:''})}).then(r=>r.json());
+    const j=await fetch('/api/checkout?m=qr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(qrBody(slug,el.dataset.bump==='1',email))}).then(r=>r.json());
     if(!j.ok)throw new Error(j.error||'สร้าง QR ไม่สำเร็จ');
     S.qr={slug,total,email,step:'show',pi:j.pi,k:j.k,png:j.png,hosted:j.hosted};
     qrPaint();qrStop();qrTimer=setInterval(qrPoll,3000);qrPrefetch();

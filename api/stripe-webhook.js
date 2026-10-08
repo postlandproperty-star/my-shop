@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       const r = await fulfill(session, { origin });
       return res.status(r.retry ? 500 : 200).json({ ok: !r.retry, sent: r.sent, reason: r.reason || null }); // 500 = ให้ Stripe ส่งมาใหม่
     }
-    if (event.type === 'payment_intent.succeeded' && event.data.object?.metadata?.flow === 'qr') { // จ่ายด้วย QR บนหน้าร้าน
+    if (event.type === 'payment_intent.succeeded' && ['qr', 'card'].includes(event.data.object?.metadata?.flow)) { // QR หรือบัตรบนหน้าขาย // จ่ายด้วย QR บนหน้าร้าน
       const r = await fulfill(piToSession(event.data.object), { origin: `https://${req.headers.host}` });
       return res.status(r.retry ? 500 : 200).json({ ok: !r.retry, sent: r.sent, reason: r.reason || null });
     }
