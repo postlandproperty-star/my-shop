@@ -220,6 +220,9 @@ try {
       await layout(page, `[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}`);
       if (p.type !== 'bundle') { // หน้าจ่ายเงิน: QR เป็นทางหลัก กรอกอีเมลได้ทันที · บัตรเป็นลิงก์รอง ส่งอีเมลไปด้วย · กดซ้ำไม่สร้างหน้าจ่ายเงิน 2 อัน · กลับมาจาก Stripe แล้วมีข้อความชวนสแกน
         const box = await page.evaluate(() => ({ email: !!document.querySelector('#checkout #qr-email'), qr: !!document.querySelector('#checkout [data-a="qrMake"]'), cardBig: !!document.querySelector('#checkout a.btn[href*="card=1"]'), card: !!document.querySelector('#checkout .paycard a[data-card]') }));
+        { await page.fill('#checkout #qr-email', ''); await page.evaluate(() => { S.form.qrEmail = ''; }); const e0 = page.errors.length; await page.locator('#checkout [data-a="qrMake"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(300);
+          const em = await page.evaluate(() => ({ msg: (document.querySelector('#checkout #qrbox [role="alert"]') || {}).textContent || '', focus: document.activeElement && document.activeElement.id }));
+          pass(`[${kind}] หน้าจ่ายเงิน: กดชำระเงินโดยยังไม่กรอกอีเมล → ขึ้นข้อความให้กรอก (ไม่ error เงียบ)`, /กรอกอีเมล/.test(em.msg) && page.errors.length === e0, JSON.stringify(em) + ' ' + page.errors.slice(e0).join(' | ')); }
         await page.fill('#checkout #qr-email', 'buyer@test.co'); CARDHITS.length = 0;
         await page.evaluate(() => { const a = document.querySelector('#checkout .paycard a[data-card]'); a.click(); a.click(); }); await page.waitForTimeout(1200);
         const hits = CARDHITS.slice(); await page.goto(`${BASE}/p/${p.slug}?unpaid=1`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(900);

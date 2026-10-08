@@ -6836,10 +6836,11 @@ async function qrPoll(){
   }catch(e){}
 }
 async function qrMake(el){
-  const email=String(S.form.qrEmail||'').trim();
-  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)){S.qr.err='กรอกอีเมลให้ถูกต้อง เช่น name@gmail.com';qrPaint('qr-email');return;}
+  const inp=document.getElementById('qr-email');if(inp&&inp.value)S.form.qrEmail=inp.value; // อ่านจากช่องตรงๆ เผื่อคีย์บอร์ดมือถือ/เติมอัตโนมัติไม่ส่ง input
+  const email=String(S.form.qrEmail||'').trim(),slug=el.dataset.slug,total=Number(el.dataset.total);
+  // อีเมลว่าง/ผิด: บอกให้กรอก (เดิม S.qr ยังไม่มี → error เงียบ ปุ่มกดแล้วไม่มีอะไรเกิดขึ้น ลูกค้ากดซ้ำแล้วออก · พบ 8 ต.ค. 69)
+  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)){S.qr={slug,total,email,step:'email',err:email?'อีเมลยังไม่ถูกต้อง ลองเช็คอีกครั้ง เช่น name@gmail.com':'กรอกอีเมลก่อน แล้วกดชำระเงินอีกครั้ง (ใช้ส่งไฟล์ให้)'};qrPaint('qr-email');return;}
   try{localStorage.setItem('sl_email',email);}catch(e){}
-  const slug=el.dataset.slug,total=Number(el.dataset.total);
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur(); // ปิดคีย์บอร์ดก่อน หน้าจะได้ไม่กระโดด
   S.qr={slug,total,email,step:'loading'};qrPaint();
   try{
