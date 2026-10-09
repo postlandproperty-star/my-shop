@@ -26,7 +26,7 @@ const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
-const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const IMGSWAP = []; const CRSPOST = []; const BULK = [];
+const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const IMGSWAP = []; const PHOQ = []; let PHOKEY = true; const CRSPOST = []; const BULK = [];
 const MAILS = [];
 const { freePage, FREEBIES } = await import(path.join(ROOT, '..', 'lib/free.js'));
 const T_ART = [{ slug: 'toeic-tense-guide', title: 'สรุป Tense ภาษาอังกฤษที่ออกสอบ TOEIC บ่อย พร้อมตัวอย่าง', desc: 'เจาะลึก Tense ที่ใช้บ่อยในข้อสอบ TOEIC Part 5 พร้อมตัวอย่าง', cat: 'grammar', body: 'x' }, { slug: 'toeic-mistakes', title: 'จับผิดไวยากรณ์ภาษาอังกฤษที่พบบ่อยในข้อสอบ TOEIC', desc: 'รวมจุดที่คนไทยเขียนผิดบ่อย', cat: 'grammar', body: 'x' }];
@@ -70,6 +70,9 @@ async function newPage(kind) {
   await page.route('**/*', async (route) => {
     const url = route.request().url();
     if (url.startsWith(BASE) && !/\/api\//.test(url)) return route.continue();
+    if (/action=photos/.test(url)) { const u = new URL(url); PHOQ.push(u.searchParams.get('q') || 'img'); if (!PHOKEY) return route.fulfill({ json: { ok: false, nokey: true } });
+      if (u.searchParams.get('img')) return route.fulfill({ json: { ok: true, image: 'data:image/png;base64,' + PNG.toString('base64') } });
+      return route.fulfill({ json: { ok: true, hits: [1, 2, 3, 4, 5, 6, 7].map((i) => ({ id: i, thumb: `https://cdn.pixabay.com/photo/t${i}_640.jpg`, large: `https://pixabay.com/get/l${i}_1280.jpg`, tags: 'student' })) } }); }
     if (/\/storage\/v1\/object\/public\//.test(url) || /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url)) return route.fulfill({ status: 200, contentType: 'image/png', body: PNG });
     if (/fonts\.(googleapis|gstatic)\.com|connect\.facebook\.net|googletagmanager|facebook\.com\/tr/.test(url)) return route.fulfill({ status: 200, body: '' });
     if (/\/api\/checkout\?m=code/.test(url)) { const c = new URL(url).searchParams.get('code'); return route.fulfill({ json: c === CODE ? { ok: true, code: CODE, pct: 20 } : { ok: false, error: 'ไม่พบโค้ดนี้' } }); }
@@ -481,6 +484,17 @@ try {
             await page.evaluate(() => { const c = document.querySelector('.aded [data-a="adsEdPick"]'); c && c.click(); const cf = window.confirm; window.confirm = () => true; document.querySelector('.aded [data-a="adsEdSave"]')?.click(); window.confirm = cf; }); await page.waitForTimeout(400);
             ed.sent = IMGSWAP.length; ed.body = IMGSWAP[0] || ''; ed.closed = await page.evaluate(() => !document.querySelector('.aded'));
             pass(`[${kind}] โฆษณา: ✏️ แก้รูปแอดที่ยิงแล้ว (เลือกรูป → เปลี่ยน ส่งรหัสแอด + ลิงก์รูป)`, ed.box && ed.cands >= 1 && ed.save && ed.sent === 1 && /"adId":"9\d+"/.test(ed.body) && /"image":"https:/.test(ed.body) && ed.closed, JSON.stringify(ed)); }
+          { PHOQ.length = 0; PHOKEY = true; const ph = await page.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)), REF = 'https://x.supabase.co/storage/v1/object/public/product-images/pho.jpg', up0 = window.uploadImage; window.uploadImage = async () => REF;
+              ADST.f = 'home'; render(true); document.querySelector('.adt-tbl [data-a="adsEdOpen"]')?.click(); await w(50); document.querySelector('.aded [data-a="phoOpen"]')?.click(); await w(300);
+              const r = { grid: document.querySelectorAll('.aded .pho-th').length, kw: document.querySelectorAll('.aded [data-a="phoKw"]').length };
+              document.querySelector('.aded .pho-th')?.click(); for (let i = 0; i < 40 && !PHO.out; i++) await w(150);
+              r.out = /^data:image\/jpeg/.test(PHO.out) && !!document.querySelector('.aded img.pho-out');r.err = PHO.err; r.busy = PHO.busy; r.lay = document.querySelectorAll('.aded [data-a="phoLay"]').length;
+              document.querySelector('.aded [data-a="phoUse"]')?.click(); for (let i = 0; i < 20 && PHO.ctx; i++) await w(100); r.used = ADST.edImg === REF && !PHO.ctx;
+              window.uploadImage = up0; ADST.edit = null; render(true); return r; });
+            PHOKEY = false; const nk = await page.evaluate(async () => { ADST.f = 'home'; render(true); document.querySelector('.adt-tbl [data-a="adsEdOpen"]')?.click(); await new Promise((r) => setTimeout(r, 50)); document.querySelector('.aded [data-a="phoOpen"]')?.click(); await new Promise((r) => setTimeout(r, 300));
+              const t = (document.querySelector('.aded .pho') || {}).innerText || ''; PHO.nokey = false; PHO.ctx = null; ADST.edit = null; render(true); return /PIXABAY_KEY/.test(t) && /ไม่ต้องส่งคีย์/.test(t); }); PHOKEY = true;
+            ph.nokey = nk; ph.q = PHOQ.slice();
+            pass(`[${kind}] โฆษณา: 📷 รูปถ่ายจริงฟรี (Pixabay ผ่านเซิร์ฟเวอร์) → วาดปก+ข้อความเป็นรูป 4:5 → ใช้เป็นรูปแอด · ยังไม่มีคีย์บอกวิธีใส่ใน Vercel`, ph.grid === 7 && ph.kw >= 4 && ph.out && ph.lay === 3 && ph.used && ph.nokey && ph.q.length >= 2, JSON.stringify(ph)); }
           await page.evaluate(() => { ADST.pick = false; ADST.f = 'draft'; ADST.tf = 'all'; render(true); }); }
         const d = page.locator('.adq-wrap').first(); if (await d.count()) await d.screenshot({ path: path.join(OUT, `adflow-${kind}.png`) }); }
       if (v === 'products') { // ปุ่มบันทึก: ฉบับร่าง / เผยแพร่แล้วไปเซลเพจ · สร้างชุดใหม่โดยรวมชุดเดิมเข้ามา

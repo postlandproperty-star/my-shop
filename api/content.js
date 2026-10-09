@@ -1593,6 +1593,33 @@ ${books}`;
       try { const m = await fetch('https://api.openai.com/v1/models', { headers: { Authorization: `Bearer ${KEY}` } }).then((x) => x.json()); imageModels = (m.data || []).map((x) => x.id).filter((id) => /image|dall-e/i.test(id)).sort(); } catch (e) {}
       return res.status(200).json({ ok: !!(r && r.ok), configured: true, model, imageModels, status: r ? r.status : 0, error: r && r.ok ? null : (j?.error?.message || 'เชื่อมต่อ OpenAI ไม่ได้').slice(0, 200) });
     }
+    if (action === 'photos') { // 📷 รูปถ่ายจริงฟรีจาก Pixabay ไว้ทำรูปแอด (คุณแดน 10 ต.ค. "ใช้ AI ทำเลยมันดูปลอม") · คีย์ PIXABAY_KEY อยู่ใน Vercel เท่านั้น
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const KEY = process.env.PIXABAY_KEY || '';
+      if (!KEY) return res.status(200).json({ ok: false, nokey: true, error: 'ยังไม่ได้ใส่ PIXABAY_KEY ใน Vercel' });
+      if (req.query.img) { // ดึงรูปผ่านเซิร์ฟเวอร์ (วาดลง canvas ได้ ไม่ติด CORS) · รับเฉพาะลิงก์ของ Pixabay
+        const u = String(req.query.img);
+        if (!/^https:\/\/(cdn\.)?pixabay\.com\/[^\s]+$/.test(u)) return res.status(400).json({ ok: false, error: 'bad url' });
+        const r = await fetch(u).catch(() => null);
+        if (!r || !r.ok) return res.status(200).json({ ok: false, error: 'โหลดรูปไม่ได้ ลองค้นใหม่' });
+        const type = (r.headers.get('content-type') || 'image/jpeg').split(';')[0];
+        if (!/^image\/(jpeg|png|webp)$/.test(type)) return res.status(200).json({ ok: false, error: 'ไม่ใช่รูป' });
+        const buf = Buffer.from(await r.arrayBuffer());
+        if (buf.length > 3.2e6) return res.status(200).json({ ok: false, error: 'รูปใหญ่เกินไป เลือกรูปอื่น' });
+        return res.status(200).json({ ok: true, image: `data:${type};base64,${buf.toString('base64')}` });
+      }
+      const q = String(req.query.q || '').replace(/[^\p{L}\p{N} +-]/gu, ' ').trim().slice(0, 90);
+      if (!q) return res.status(400).json({ ok: false, error: 'ใส่คำค้นก่อน' });
+      const o = ['vertical', 'horizontal'].includes(req.query.o) ? req.query.o : 'all';
+      const page = Math.max(1, Math.min(10, Number(req.query.page) || 1));
+      const url = `https://pixabay.com/api/?key=${encodeURIComponent(KEY)}&q=${encodeURIComponent(q)}&image_type=photo&orientation=${o}&safesearch=true&per_page=24&page=${page}&min_width=1000&lang=${/[\u0E00-\u0E7F]/.test(q) ? 'th' : 'en'}`;
+      const r = await fetch(url).catch(() => null);
+      if (!r || !r.ok) return res.status(200).json({ ok: false, error: r && r.status === 429 ? 'ค้นบ่อยเกินไป รอสักครู่' : r && [400, 401, 403].includes(r.status) ? 'PIXABAY_KEY ไม่ถูกต้อง ตรวจใน Vercel' : 'ค้นรูปไม่ได้ ลองใหม่' });
+      const j = await r.json().catch(() => ({}));
+      const hits = (j.hits || []).map((h) => ({ id: h.id, thumb: h.webformatURL, large: h.largeImageURL, w: h.imageWidth, h: h.imageHeight, user: h.user, page: h.pageURL, tags: h.tags }));
+      return res.status(200).json({ ok: true, total: j.totalHits || 0, hits });
+    }
     if (action === 'cover') {
       // สร้างรูปด้วย AI จากหน้าแก้สินค้า ครั้งละ 1 รูป: OpenAI (gpt-image*) หรือ Google (gemini-*image*) ตามที่คุณแดนเลือก · คีย์อยู่ใน Vercel เท่านั้น
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
