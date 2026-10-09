@@ -1999,6 +1999,56 @@ async function themeCover(b,i,n,st){await thFont();const W=900,H=1200,c=document
   if(tx.count){y+=26;x.font=K(900,54);const cw=x.measureText(tx.count).width+56;x.save();x.translate(mx,y);x.rotate(-3*Math.PI/180);x.fillStyle='rgba(0,0,0,.18)';x.beginPath();x.roundRect?x.roundRect(0,8,cw,76,22):x.rect(0,8,cw,76);x.fill();x.fillStyle=ink==='#fff'?'#fff':'#1b1b1b';x.beginPath();x.roundRect?x.roundRect(0,0,cw,76,22):x.rect(0,0,cw,76);x.fill();x.fillStyle=ink==='#fff'?bg:'#fff';x.textBaseline='middle';x.fillText(tx.count,28,40);x.restore();x.textBaseline='alphabetic';}
   x.font=K(700,28);x.fillStyle=ink;x.globalAlpha=.85;x.fillText('sheetlabth.com',mx,H-40);x.globalAlpha=1;
   return c.toDataURL('image/jpeg',.9);}
+/* 🎲 ชุดรูปสินค้า 5 รูปตามธีมเดียวกับปก (ฟรี วาดในเครื่อง) สีพื้น ตัวการ์ตูน ฟอนต์ เหมือนปกทุกรูป (คุณแดน 10 ต.ค. "รูปรายละเอียดที่เหลือให้ไปแนวเดียวกัน")
+   1 ปก+ราคา · 2 ตัวอย่างหน้าในเล่ม (หน้าจริงจาก PDF) · 3 ในเล่มมีอะไร · 4 เหมาะกับใคร · 5 สั่งซื้อแล้วได้ยังไง */
+const thSt=d=>{const m=String(d.coverKey||'').match(/^theme:([\w-]+):(\w):(\d+)(?::(\d+))?/);return m?{theme:m[1],layout:m[2],pal:Number(m[3]),off:Number(m[4])||0,series:''}:Object.assign({series:''},thPick('auto'));};
+function thLines(x,text,maxW,maxL){const seg=typeof Intl!=='undefined'&&Intl.Segmenter?[...new Intl.Segmenter('th',{granularity:'word'}).segment(String(text))].map(z=>z.segment):String(text).split(/(\s+)/);
+  const out=[];let cur='';for(const w of seg){const t=cur+w;if(x.measureText(t.trim()).width>maxW&&cur.trim()){out.push(cur.trim());cur=w.trimStart();}else cur=t;}if(cur.trim())out.push(cur.trim());
+  if(out.length>maxL){out.length=maxL;let l=out[maxL-1];while(l&&x.measureText(l+'…').width>maxW)l=l.slice(0,-1);out[maxL-1]=l+'…';}return out;}
+const thList=(t,n)=>String(t||'').split('\n').map(z=>z.replace(/^[\s•\-–*✓✔️✅0-9.)]+/,'').split('|')[0].trim()).filter(z=>z.length>1).slice(0,n);
+async function themeSet(d,st){await thFont();const W=1200,H=1200,els=await thEls(st),[bg,ink]=TH_PAL[(st.pal||0)%TH_PAL.length],dark=ink!=='#fff';
+  const K=(w,s)=>`${w} ${s}px Kanit,'IBM Plex Sans Thai',sans-serif`,mx=80,course=pfmt(d)==='course',price=Number(d.price)>=1?Number(d.price):0;
+  const [hero,side,cover]=await Promise.all([thImg(els[(st.off||0)%els.length]),thImg(els[((st.off||0)+3)%els.length]),themeCover(d,0,1,st).then(thLoad)]);
+  const ld=u=>u?thLoad(u).catch(()=>null):Promise.resolve(null);
+  const rr=(x,a,b,w,h,r)=>{x.beginPath();x.roundRect?x.roundRect(a,b,w,h,r):x.rect(a,b,w,h);};
+  const base=(title)=>{const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle=bg;x.fillRect(0,0,W,H);
+    const gl=x.createRadialGradient(W*.75,H*.8,10,W*.75,H*.8,W*.7);gl.addColorStop(0,'rgba(255,255,255,.24)');gl.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gl;x.fillRect(0,0,W,H);
+    if(st.layout==='B'){x.fillStyle='rgba(255,255,255,.1)';for(let yy=40;yy<H;yy+=64)for(let xx=(yy/64%2)*32+20;xx<W;xx+=64){x.beginPath();x.arc(xx,yy,6,0,7);x.fill();}}
+    x.font=K(700,30);const bw=x.measureText('SheetLab').width+44;x.fillStyle='rgba(255,255,255,.94)';rr(x,mx,56,bw,50,25);x.fill();x.fillStyle='#1a1a1a';x.textBaseline='middle';x.fillText('SheetLab',mx+22,82);
+    x.textBaseline='alphabetic';x.font=K(700,28);x.fillStyle=ink;x.globalAlpha=.85;x.fillText('sheetlabth.com',mx,H-48);x.globalAlpha=1;
+    if(title){x.font=K(900,76);x.fillStyle='rgba(0,0,0,.14)';x.fillText(title,mx,206);x.fillStyle=ink;x.fillText(title,mx,200);}
+    return {c,x};};
+  const pic=(x,im,cx,cy,size,rot)=>{if(!im)return;x.save();x.translate(cx,cy);x.rotate(rot*Math.PI/180);x.shadowColor='rgba(0,0,0,.28)';x.shadowBlur=30;x.shadowOffsetY=14;x.drawImage(im,-size/2,-size/2,size,size);x.restore();};
+  const card=(x,im,cx,cy,w,rot)=>{const h=w*im.height/im.width;x.save();x.translate(cx,cy);x.rotate(rot*Math.PI/180);x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=40;x.shadowOffsetY=18;x.fillStyle='#fff';x.fillRect(-w/2-6,-h/2-6,w+12,h+12);x.shadowColor='transparent';x.drawImage(im,-w/2,-h/2,w,h);x.restore();};
+  const pill=(x,t,a,b,s,fill,col)=>{x.font=K(900,s);const w=x.measureText(t).width+s*1.1;x.fillStyle=fill;rr(x,a,b,w,s*1.45,s*.5);x.fill();x.fillStyle=col;x.textBaseline='middle';x.fillText(t,a+s*.55,b+s*.74);x.textBaseline='alphabetic';return w;};
+  const rows=(x,items,y0,icon,maxW)=>{let y=y0;for(const t of items){x.font=K(700,40);const ls=thLines(x,t,maxW-110,2),h=ls.length*52+44;x.fillStyle='rgba(255,255,255,.95)';rr(x,mx,y,maxW,h,24);x.fill();
+      x.fillStyle=bg;x.beginPath();x.arc(mx+52,y+h/2,26,0,7);x.fill();x.fillStyle=ink;x.font=K(900,30);x.textAlign='center';x.textBaseline='middle';x.fillText(icon,mx+52,y+h/2+1);x.textAlign='left';
+      x.fillStyle='#1b1b1b';x.font=K(700,40);ls.forEach((l,k)=>x.fillText(l,mx+100,y+22+k*52+18));x.textBaseline='alphabetic';y+=h+18;if(y>H-200)break;}return y;};
+  const out=[];
+  { // 1 ปก + ราคา
+    const {c,x}=base('');card(x,cover,W*.4,H*.53,560,-4);pic(x,hero,W*.8,H*.72,380,8);pic(x,side,W*.82,H*.24,190,-10);
+    if(price){x.save();x.translate(W*.78,H*.47);x.rotate(-8*Math.PI/180);x.fillStyle=dark?'#1b1b1b':'#fff';x.beginPath();x.arc(0,0,118,0,7);x.fill();x.fillStyle=dark?'#fff':bg;x.textAlign='center';x.font=K(700,30);x.fillText(course?'คอร์สวิดีโอ':'ไฟล์ PDF',0,-30);x.font=K(900,64);x.fillText('฿'+price.toLocaleString('th-TH'),0,40);x.restore();x.textAlign='left';}
+    out.push(c.toDataURL('image/jpeg',.9));}
+  { // 2 ตัวอย่างหน้าใน (หน้าจริง)
+    const pv=(await Promise.all((d.previews||[]).slice(0,3).map(ld))).filter(Boolean);
+    if(pv.length){const {c,x}=base(course?'ตัวอย่างในคอร์ส':'ดูตัวอย่างข้างใน');const n=pv.length,w=n===1?600:n===2?500:450;
+      pv.forEach((im,k)=>card(x,im,n===1?W/2:W*(.3+.4*k/(n-1)),H*.6+(k%2?24:0),w,n===1?-2:[-6,3,-2][k]));pic(x,hero,W-130,H-150,210,10);
+      x.font=K(700,32);x.fillStyle=ink;x.globalAlpha=.9;x.fillText('หน้าจริงจากในเล่ม',mx,262);x.globalAlpha=1;out.push(c.toDataURL('image/jpeg',.9));}}
+  { // 3 ในเล่มมีอะไร
+    const f=thList(d.features||d.toc,5);if(f.length){const {c,x}=base(course?'ในคอร์สมีอะไรบ้าง':'ในเล่มมีอะไรบ้าง');rows(x,f,262,'✓',W-mx*2-150);pic(x,hero,W-120,H-170,230,8);out.push(c.toDataURL('image/jpeg',.9));}}
+  { // 4 เหมาะกับใคร
+    const f=thList(d.forwho||d.pains,4);if(f.length){const {c,x}=base('เหมาะกับใคร');rows(x,f,262,'★',W-mx*2-150);pic(x,side,W-120,H-170,230,-8);out.push(c.toDataURL('image/jpeg',.9));}}
+  { // 5 สั่งซื้อแล้วได้ยังไง
+    const {c,x}=base('ซื้อง่าย ได้ทันที');const steps=[['1','กดสั่งซื้อ ใส่อีเมล'],['2','สแกนจ่าย QR หรือบัตร'],['3',course?'เข้าเรียนได้ทันที':'รับไฟล์ PDF ทางอีเมลทันที']];
+    steps.forEach(([nn,t],k)=>{const y=300+k*200;x.fillStyle='rgba(255,255,255,.95)';rr(x,mx,y,W-mx*2-200,150,30);x.fill();x.fillStyle=bg;x.beginPath();x.arc(mx+80,y+75,48,0,7);x.fill();x.fillStyle=ink;x.font=K(900,52);x.textAlign='center';x.textBaseline='middle';x.fillText(nn,mx+80,y+78);x.textAlign='left';x.fillStyle='#1b1b1b';x.font=K(700,44);x.fillText(thLines(x,t,W-mx*2-400,1)[0],mx+160,y+78);x.textBaseline='alphabetic';});
+    if(price)pill(x,`${course?'คอร์สวิดีโอ':'ไฟล์ PDF'} ฿${price.toLocaleString('th-TH')}`,mx,930,58,dark?'#1b1b1b':'#fff',dark?'#fff':bg);pic(x,hero,W-170,H-250,330,8);out.push(c.toDataURL('image/jpeg',.9));}
+  return out.slice(0,5);}
+async function themeSetGen(){const d=S.draft;if(!d)return;S.coverOpen=true;S.coverBusy=true;S.coverErr='';render(true);
+  try{const st=thSt(d),imgs=await themeSet(d,st),urls=[];for(const u of imgs)urls.push(await uploadImage(u));
+    d.images=urls;d.coverKey=`theme:${st.theme}:${st.layout}:${st.pal}:${st.off||0}`;d.coverMode='theme';S.coverImg=null;S.coverOpen=false;
+    toast(`ได้ภาพสินค้า ${urls.length} รูปธีม${thThemeName(st)} ในหน้าแก้แล้ว · ยังไม่เปลี่ยนจนกว่าจะกดบันทึก`);}
+  catch(e){console.error(e);S.coverErr='ทำชุดรูปไม่สำเร็จ: '+(e.message||e);}
+  S.coverBusy=false;render(true);pvPost(0);}
 const thSeries=d=>String(d&&d.name||'').replace(/\s*(ครบชุด|ชุด\s*\d|\d+\s*เล่ม|·).*$/,'').trim().slice(0,30);
 function bxStyle(){let v={};try{v=JSON.parse(localStorage.getItem('sl_bxstyle')||'{}')||{};}catch(e){}return Object.assign({mode:'orig',pal:'brand',note:'',pdf:true,refs:[],theme:'auto'},v);}
 const bxKey=st=>st.pal+'|'+(st.refs||[]).join(',');
@@ -3108,7 +3158,7 @@ async function vidCheck(c,d){const urls=vidUrls(c);if(!urls.length)return null;S
     const bad=res.filter(r=>r.state!=='public').length;if(d&&res.length&&!bad)d.videoOk=true;toast(bad?`🔒 ยังเปิดไม่ได้ ${bad} บท แชร์โฟลเดอร์ Courses เป็น "ทุกคนที่มีลิงก์" ก่อน`:'✅ วิดีโอทุกบทเปิดได้แบบไม่ล็อกอิน');return {bad,n:res.length};}
   catch(e){toast('ตรวจไม่สำเร็จ ลองใหม่');return null;}finally{S.vidBusy=false;render(true);}}
 /* ตัวสร้างปกด้วย AI (ใช้ทั้งหน้าแก้สินค้าและหน้าแก้คอร์ส) · คอร์ส: สร้างทีละรูป ไม่มีชุด 5 รูป (ชุดนั้นทำมาสำหรับหนังสือ) */
-function aiCoverBox(d){return `    <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><button class="btn btn-line btn-sm" data-a="coverTheme" ${S.coverBusy?'disabled':''}>🎲 ปกตามธีม (ฟรี)</button><span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
+function aiCoverBox(d){return `    <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><button class="btn btn-line btn-sm" data-a="coverTheme" ${S.coverBusy?'disabled':''}>🎲 ปกตามธีม (ฟรี)</button>${pfmt(d)==='notion'?'':`<button class="btn btn-line btn-sm" data-a="themeSetGen" ${S.coverBusy?'disabled':''}>🖼 ชุดรูป 5 รูปตามธีม (ฟรี)</button>`}<span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
       ${S.coverOpen?`<div class="aic-box"><label for="e-cover-prompt">คำสั่งทำปก (แก้ได้)</label><textarea class="input" id="e-cover-prompt" data-cp="1" rows="7">${esc(S.coverPrompt==null?coverPrompt(d):S.coverPrompt)}</textarea>
         <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${imgSetReal(d)?`<div class="kind-seg" role="group" aria-label="รูปแรกของชุด" style="margin:0 0 6px"><button data-a="imgFirst" data-v="ai" aria-pressed="${S.imgFirst!=='real'}">🎨 รูปแรกให้ AI ออกแบบ</button><button data-a="imgFirst" data-v="real" aria-pressed="${S.imgFirst==='real'}">📕 ใช้ปกจริงเป็นรูปแรก</button></div>`:''}${pfmt(d)==='course'?'':`<button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button>`}${S.coverBusy?'<button class="btn btn-danger btn-sm" data-a="aiStop">⏹ หยุดสร้างรูป</button>':''}<button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><label class="fine">โมเดล <select class="input" data-imgset="model" style="width:auto;display:inline-block;padding:6px 8px">${IMG_MODELS.map(m=>`<option value="${m[0]}" ${imgModel()===m[0]?'selected':''}>${esc(m[1])}</option>`).join('')}</select></label>
@@ -6243,7 +6293,7 @@ function act(a,el){
     case 'forder':factoryOrder();break;
     case 'fIdea':fIdea();break;
     case 'coverTheme':{if(!S.draft)break;S.coverOpen=true;S.coverBusy=true;S.coverErr='';render(true);const ch=thPick('auto');
-      themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${thThemeName(ch)} · กดอีกครั้งเพื่อสุ่มใหม่`);})
+      themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}:${ch.off}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${thThemeName(ch)} · กดอีกครั้งเพื่อสุ่มใหม่`);})
         .catch(e=>{S.coverErr='ทำปกไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.coverBusy=false;render(true);});break;}
     case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
     case 'coverGen':coverGen();break;
@@ -6251,6 +6301,7 @@ function act(a,el){
     case 'imgSetUse':imgSetUse();break;
     case 'imgPick':if(S.imgSet&&S.imgSet[+el.dataset.v])S.imgSet[+el.dataset.v].pick=el.checked;break;
     case 'coverUse':coverUse();break;
+    case 'themeSetGen':themeSetGen();break;
     case 'coverReset':S.coverPrompt=null;render(true);break;
     case 'fsNew':S.fedit='new';S.fdraft={name:'',emoji:'📚',goal:'',books:''};S.confirm='';render(true);break;
     case 'fsEdit':{const st=facSetList().find(x=>x.id===el.dataset.v);if(!st)break;S.fedit=st.id;S.fdraft={name:st.name,emoji:st.emoji||'📚',goal:st.goal||'',books:(st.books||[]).map(bookLine).join('\n')};S.confirm='';render(true);break;}
