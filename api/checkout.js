@@ -24,7 +24,7 @@ async function qr(req, res, method = 'qr') {
   res.setHeader('Cache-Control', 'no-store');
   const b = typeof req.body === 'object' && req.body ? req.body : {};
   const email = String(b.e || '').trim().toLowerCase();
-  if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง (ใช้ส่งไฟล์)' });
+  if (!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง (ใช้ส่งไฟล์)' });
   const shop = await loadShop();
   const rw = await rewardOf(b.code);
   if (b.code && !rw) return res.status(400).json({ ok: false, error: 'โค้ดส่วนลดใช้ไม่ได้ (ไม่พบ ใช้แล้ว หรือหมดอายุ)' });
@@ -82,7 +82,7 @@ async function qrImage(req, res) {
 async function cartCheckout(req, res) {
   const ids = [...new Set(String(req.query.cart || '').split(',').map((s) => s.trim()).filter((s) => /^[A-Za-z0-9_-]{1,60}$/.test(s)))].slice(0, 20);
   const campaign = String(req.query.c || '').slice(0, 60);
-  const email = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
+  const email = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
   const shop = await loadShop();
   const ps = cartPick(shop, ids);
   if (!ps.length) return htmlError(res, 'ตะกร้าว่าง', 'สินค้าในตะกร้าอาจถูกปิดการขายแล้ว กลับไปเลือกใหม่ที่หน้าร้าน');
@@ -138,7 +138,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Location', `/p/${encodeURIComponent(slug)}?${q}`); return res.status(302).end();
   }
   // อีเมลที่ลูกค้ากรอกในหน้าร้าน: ใช้ส่งไฟล์ และเตือน 1 ครั้งถ้าจ่ายไม่เสร็จ
-  const email = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
+  const email = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(String(req.query.e || '').trim()) ? String(req.query.e).trim().toLowerCase() : '';
   if (!configured().stripe) return htmlError(res, 'ร้านยังไม่พร้อมรับชำระเงิน', 'ยังไม่ได้ตั้งค่า STRIPE_SECRET_KEY บน Vercel');
   try {
     const shop = await loadShop();

@@ -225,6 +225,9 @@ try {
         const box = await page.evaluate(() => ({ email: !!document.querySelector('#checkout #qr-email'), qr: !!document.querySelector('#checkout [data-a="qrMake"]'), cardBtn: !!document.querySelector('#checkout .paycard a.btn[data-card][href*="card=1"]'), card: !!document.querySelector('#checkout .paycard a[data-card]') }));
         { await page.fill('#checkout #qr-email', ''); await page.evaluate(() => { S.form.qrEmail = ''; }); const e0 = page.errors.length; await page.locator('#checkout [data-a="qrMake"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(300);
           const em = await page.evaluate(() => ({ msg: (document.querySelector('#checkout #qrbox [role="alert"]') || {}).textContent || '', focus: document.activeElement && document.activeElement.id }));
+          { await page.fill('#checkout #qr-email', 'metapoda,tnk@gmail.com'); await page.locator('#checkout [data-a="qrMake"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(300);
+            const cm = await page.evaluate(() => (document.querySelector('#checkout #qrbox [role="alert"]') || {}).textContent || '');
+            pass(`[${kind}] หน้าจ่ายเงิน: อีเมลมีลูกน้ำ (metapoda,tnk@gmail.com) → ไม่ให้จ่าย บอกให้เปลี่ยนเป็นจุด`, /ลูกน้ำ/.test(cm), cm); await page.fill('#checkout #qr-email', ''); await page.evaluate(() => { S.form.qrEmail = ''; }); }
           pass(`[${kind}] หน้าจ่ายเงิน: กดชำระเงินโดยยังไม่กรอกอีเมล → ขึ้นข้อความให้กรอก (ไม่ error เงียบ)`, /กรอกอีเมล/.test(em.msg) && page.errors.length === e0, JSON.stringify(em) + ' ' + page.errors.slice(e0).join(' | ')); }
         await page.fill('#checkout #qr-email', 'buyer@test.co'); CARDHITS.length = 0;
         await page.evaluate(() => { const a = document.querySelector('#checkout .paycard a[data-card]'); a.click(); a.click(); }); await page.waitForTimeout(1200);

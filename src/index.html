@@ -2425,7 +2425,7 @@ function orderView(){
 }
 async function findOrder(email){
   const f=S.find;f.email=email;f.err='';
-  if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)){f.err='กรอกอีเมลให้ถูกต้อง เช่น name@gmail.com';render(true);return;}
+  if(!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(email)){f.err='กรอกอีเมลให้ถูกต้อง เช่น name@gmail.com';render(true);return;}
   f.busy=true;render(true);
   try{const j=await fetch('/api/order?m=resend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}).then(r=>r.json());
     if(j&&j.ok)f.done=true;else f.err=(j&&j.error)||'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง';}
@@ -6061,7 +6061,7 @@ function act(a,el){
       if(!reset&&p.faq.some(x=>!String(x.q).trim()||!String(x.a).trim())){toast('คำถามที่พบบ่อยต้องมีทั้งคำถามและคำตอบ');break;}
       VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',reset?{resetPage:true}:{page:p}).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});VIPA.pg=null;toast(reset?'กลับเป็นข้อความตั้งต้นแล้ว':'บันทึกข้อความหน้าแล้ว หน้าลูกค้าเปลี่ยนแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'vipGrant':{const email=String(S.form.vgEmail||'').trim().toLowerCase(),days=Number(S.form.vgDays||30);
-      if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)){toast('ใส่อีเมลให้ถูกต้อง');break;}
+      if(!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(email)){toast('ใส่อีเมลให้ถูกต้อง');break;}
       VIPA.gBusy=true;render(true);adminPost('/api/content?action=vip_admin',{grant:{email,days}}).then(j=>{VIPA.gBusy=false;if(j&&j.ok){S.form.vgEmail='';if(j.stats)VIPA.d=Object.assign(VIPA.d||{},{stats:j.stats});toast(`🎁 ให้สิทธิ์ ${email} ถึง ${new Date(j.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})} แล้ว${j.mailed?' ส่งอีเมลต้อนรับแล้ว':' (ส่งอีเมลไม่สำเร็จ ให้เขาขอลิงก์เข้าระบบที่หน้า /vip เอง)'}`);}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.gBusy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'vipSqlCopy':copyText((VIPA.d||{}).sql||'','คัดลอก SQL แล้ว ไปวางใน Supabase → SQL Editor');break;
     case 'vipReload':VIPA.d=null;loadVipAdmin();render(true);break;
@@ -6171,7 +6171,7 @@ function act(a,el){
     case 'ordToggle':S.ordOpen=S.ordOpen||{};S.ordOpen[id]=el.dataset.v==='1';render(true);break;
     case 'orderState':{el.disabled=true;adminPost('/api/content?action=reply_state',{id,state:el.dataset.v}).then(j=>{if(!j.ok)throw new Error(j.error||'ไม่สำเร็จ');const p=POSTS.find(x=>x.id===id);if(p){let m={};try{m=p.notes?JSON.parse(p.notes):{};}catch(e){}m.state=el.dataset.v;m.state_at=new Date().toISOString();p.notes=JSON.stringify(m);}render(true);toast(el.dataset.v==='done'?'ปิดเรื่องแล้ว ข้อความจะหายไปใน 24 ชม.':el.dataset.v==='cancel'?'ยกเลิกแล้ว ทีมจะไม่ทำเรื่องนี้ต่อ ข้อความจะหายไปใน 24 ชม.':'เปิดเรื่องนี้ใหม่แล้ว');}).catch(e=>{el.disabled=false;toast(e.message);});break;}
     case 'payGo':{const inp=document.getElementById('co-email');const v=inp?inp.value.trim():'';
-      if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)){toast('กรอกอีเมลก่อน เพื่อรับไฟล์หลังชำระเงิน');if(inp)inp.focus();break;}
+      if(!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(v)){toast('กรอกอีเมลก่อน เพื่อรับไฟล์หลังชำระเงิน');if(inp)inp.focus();break;}
       try{localStorage.setItem('sl_email',v);}catch(e){}location.href=el.getAttribute('href')+'&e='+encodeURIComponent(v);break;}
     case 'dashRefresh':DASH.d=null;DASH.err='';render(true);break;
     case 'chatPhoto':S.chatPhoto=el.dataset.u;render(true);break;
@@ -6204,9 +6204,9 @@ function act(a,el){
     case 'postCopy':{const p=POSTS.find(x=>x.id===id);copyText(($('#pt-'+id)?$('#pt-'+id).value:p.text)||'','คัดลอกข้อความแล้ว');break;}
     case 'postNow':{toast('กำลังโพสต์...');adminApi('/api/content?action=publish&id='+encodeURIComponent(id)).then(async j=>{await loadPosts();render(true);const r=j.results&&j.results[0];toast(j.skipped?j.error:r&&r.ok?'โพสต์ขึ้นเพจแล้ว':'โพสต์ไม่สำเร็จ: '+(r&&r.error||j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'oClear':S.oq='';S.ofrom='';S.oto='';render(true);break;
-    case 'altMailSend':{const sid=el.dataset.sid,to=String((S.altMail||{})[sid]||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}toast('กำลังส่งอีเมล...');
+    case 'altMailSend':{const sid=el.dataset.sid,to=String((S.altMail||{})[sid]||'').trim();if(!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}toast('กำลังส่งอีเมล...');
       adminApi('/api/order-email?session_id='+encodeURIComponent(sid)+'&to='+encodeURIComponent(to)).then(async j=>{if(j.ok){S.altMail[sid]='';await loadOrders();render(true);toast('ส่งไฟล์ไปที่ '+to+' แล้ว · พรุ่งนี้ขอรีวิวที่อีเมลนี้ให้เอง');}else toast('ส่งไม่สำเร็จ: '+(j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
-    case 'freeSend':{const to=String(S.freeMail||'').trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}S.freeBusy=true;render(true);
+    case 'freeSend':{const to=String(S.freeMail||'').trim();if(!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(to)){toast('ใส่อีเมลให้ถูกก่อน');break;}S.freeBusy=true;render(true);
       adminPost('/api/content?action=free_send',{email:to}).then(j=>{if(j&&j.ok){S.freeMail='';toast('ส่งชีทฟรีไปที่ '+to+' แล้ว');}else toast('ส่งไม่สำเร็จ: '+((j&&j.error)||''));}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{S.freeBusy=false;render(true);});break;}
     case 'resendEmail':{toast('กำลังส่งอีเมล...');adminApi('/api/order-email?session_id='+encodeURIComponent(el.dataset.sid)).then(async j=>{if(j.ok){await loadOrders();render(true);toast('ส่งอีเมลไปที่ '+j.to+' แล้ว');}else toast('ส่งไม่สำเร็จ: '+(j.error||''));}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
     case 'range':S.range=Number(el.dataset.v);S.chartDay=null;render(true);break;
@@ -6265,7 +6265,7 @@ function act(a,el){
     case 'createOrder':{
       const p=curProduct(),name=(S.form.name||'').trim(),email=(S.form.email||'').trim();
       if(!name){S.err='กรอกชื่อก่อนชำระเงิน';render(true);break;}
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){S.err='กรอกอีเมลให้ถูกต้อง เพื่อรับลิงก์ดาวน์โหลด';render(true);break;}
+      if(!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(email)){S.err='กรอกอีเมลให้ถูกต้อง เพื่อรับลิงก์ดาวน์โหลด';render(true);break;}
       const c=calc(p,S.coupon);
       const bp=p.bumpProductId?getProduct(p.bumpProductId):null;
       const useBump=!!(S.form.bump&&bp);
@@ -6693,7 +6693,7 @@ document.addEventListener('click',e=>{
   const tr=e.target.closest('[data-track]');
   if(tr&&tr.dataset.card){e.preventDefault();if(tr.dataset.busy)return;tr.dataset.busy='1';setTimeout(()=>{delete tr.dataset.busy;},4000);
     {const inp=document.getElementById('qr-email');if(inp&&inp.value)S.form.qrEmail=inp.value;}
-    const em=String(S.form.qrEmail||qrEmailGuess()).trim(),ok=/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(em),href=tr.getAttribute('href')+(ok&&!/[?&]e=/.test(tr.getAttribute('href'))?'&e='+encodeURIComponent(em):'');
+    const em=String(S.form.qrEmail||qrEmailGuess()).trim(),ok=/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(em),href=tr.getAttribute('href')+(ok&&!/[?&]e=/.test(tr.getAttribute('href'))?'&e='+encodeURIComponent(em):'');
     if(ok){try{localStorage.setItem('sl_email',em);}catch(x){}}
     const p=curProduct();if(p)track('InitiateCheckout',Object.assign({content_name:p.name,value:p.price,currency:'THB'},S.src?{campaign:S.src}:{}));
     cardStart(em,ok,href);return;}
@@ -6910,7 +6910,7 @@ async function cardStart(email,ok,href){
   if(!slot)return go();
   const slug=slot.dataset.slug,total=Number(slot.dataset.total),bump=slot.dataset.bump==='1';
   if(S.qr&&S.qr.step==='card'&&CARD&&S.qr.slug===slug&&S.qr.total===total){qrPaint();return;}
-  if(!ok){S.qr={slug,total,email,step:'email',err:email?'อีเมลยังไม่ถูกต้อง ลองเช็คอีกครั้ง เช่น name@gmail.com':'กรอกอีเมลก่อน แล้วกดชำระด้วยบัตรอีกครั้ง (ใช้ส่งไฟล์ให้)'};qrPaint('qr-email');return;}
+  if(!ok){S.qr={slug,total,email,step:'email',err:/,/.test(email)?'อีเมลมีลูกน้ำ (,) ให้เปลี่ยนเป็นจุด (.) แล้วกดอีกครั้ง':/\s/.test(email)?'อีเมลมีช่องว่าง ลบช่องว่างออกแล้วกดอีกครั้ง':email?'อีเมลยังไม่ถูกต้อง ลองเช็คอีกครั้ง เช่น name@gmail.com':'กรอกอีเมลก่อน แล้วกดชำระด้วยบัตรอีกครั้ง (ใช้ส่งไฟล์ให้)'};qrPaint('qr-email');return;}
   qrStop();CARD=null;S.qr={slug,total,email,step:'loading',card:1};qrPaint();
   try{
     const r=await fetch('/api/checkout?m=card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(qrBody(slug,bump,email))}),j=await r.json().catch(()=>({}));
@@ -6936,7 +6936,7 @@ async function qrMake(el){
   const inp=document.getElementById('qr-email');if(inp&&inp.value)S.form.qrEmail=inp.value; // อ่านจากช่องตรงๆ เผื่อคีย์บอร์ดมือถือ/เติมอัตโนมัติไม่ส่ง input
   const email=String(S.form.qrEmail||'').trim(),slug=el.dataset.slug,total=Number(el.dataset.total);
   // อีเมลว่าง/ผิด: บอกให้กรอก (เดิม S.qr ยังไม่มี → error เงียบ ปุ่มกดแล้วไม่มีอะไรเกิดขึ้น ลูกค้ากดซ้ำแล้วออก · พบ 8 ต.ค. 69)
-  if(!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,24}$/i.test(email)){S.qr={slug,total,email,step:'email',err:email?'อีเมลยังไม่ถูกต้อง ลองเช็คอีกครั้ง เช่น name@gmail.com':'กรอกอีเมลก่อน แล้วกดชำระเงินอีกครั้ง (ใช้ส่งไฟล์ให้)'};qrPaint('qr-email');return;}
+  if(!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(email)){S.qr={slug,total,email,step:'email',err:/,/.test(email)?'อีเมลมีลูกน้ำ (,) ให้เปลี่ยนเป็นจุด (.) แล้วกดอีกครั้ง':/\s/.test(email)?'อีเมลมีช่องว่าง ลบช่องว่างออกแล้วกดอีกครั้ง':email?'อีเมลยังไม่ถูกต้อง ลองเช็คอีกครั้ง เช่น name@gmail.com':'กรอกอีเมลก่อน แล้วกดชำระเงินอีกครั้ง (ใช้ส่งไฟล์ให้)'};qrPaint('qr-email');return;}
   try{localStorage.setItem('sl_email',email);}catch(e){}
   const ae=document.activeElement;if(ae&&ae.blur)ae.blur(); // ปิดคีย์บอร์ดก่อน หน้าจะได้ไม่กระโดด
   S.qr={slug,total,email,step:'loading'};qrPaint();

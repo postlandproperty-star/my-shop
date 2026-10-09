@@ -1181,7 +1181,7 @@ export default async function handler(req, res) {
       const data = row?.[0]?.data || {};
       if (req.method === 'POST') {
         const b = await readBody(req);
-        data.testEmails = [...new Set((b.emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)))];
+        data.testEmails = [...new Set((b.emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(e)))];
         await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' });
       }
       return res.status(200).json({ ok: true, testEmails: data.testEmails || [] });

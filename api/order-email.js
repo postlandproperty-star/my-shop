@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   try {
     const s = id.startsWith('pi_') ? piToSession(await stripe('GET', `payment_intents/${id}`)) : await stripe('GET', `checkout/sessions/${id}`);
     const alt = String(req.query.to || '').trim().toLowerCase();
-    if (alt && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alt)) return res.status(400).json({ ok: false, error: 'อีเมลไม่ถูกต้อง' });
+    if (alt && !/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,24}$/.test(alt)) return res.status(400).json({ ok: false, error: 'อีเมลไม่ถูกต้อง' });
     const r = await fulfill(s, { force: true, origin: `https://${req.headers.host}`, to: alt });
     if (r.sent && alt) { // ส่งเองไปอีเมลอื่น: จดไว้ในออเดอร์ + ขอรีวิวที่อีเมลนั้น 1 วันหลังส่ง (ครั้งเดียว)
       try { const RV = await import('../lib/reviews.js'); const d = await RV.loadReviews(); if (!d.sent[id] && !d.list.some((x) => x.order === id)) { d.follow[id] = { to: alt, at: new Date().toISOString() }; await RV.saveReviews(d); } } catch (e) { console.error('follow', e.message); }
