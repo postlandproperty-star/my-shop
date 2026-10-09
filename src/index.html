@@ -1178,6 +1178,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .adt-c{text-align:right;display:grid;gap:1px;font-size:14px}.adt-act{display:flex;gap:6px;justify-content:flex-end}.adt-act .btn{white-space:nowrap;padding-left:10px;padding-right:10px}.adt-act .adt-ic{padding-left:9px;padding-right:9px}.adt-wide{grid-column:1/-1}.adt-wide p{margin:0}
 @media (max-width:900px){.adt-hd{display:none}.adt-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px}.adt-name{grid-column:1/-1}.adt-c{text-align:left;background:var(--bg);border-radius:8px;padding:6px 8px}.adt-c::before{content:attr(data-l);font-size:11.5px;color:var(--muted)}.adt-act{grid-column:1/-1;justify-content:flex-start}}
 @media (max-width:640px){.adm-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.adm-card b{font-size:18px}.adc-svg{height:170px}.adc-xs span.h{display:none}.adm-q{max-width:none;flex:1 1 100%}}
+.th-kw{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.th-kw .input{width:230px;padding:6px 10px}
 .bonus-chips{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}.bonus-chip{display:inline-flex;align-items:center;gap:6px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:999px;padding:4px 6px 4px 12px;font-size:14px}.bonus-chip em{font-style:normal;color:var(--muted)}.bonus-chip button{border:0;background:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:15px;line-height:1}
 .adv{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;border-radius:8px;padding:7px 10px;font-size:13.5px;background:var(--bg)}.adv b{white-space:nowrap}.adv span{color:var(--muted)}.adv-stop{background:#FEF2F2}.adv-stop b{color:#B91C1C}.adv-up{background:#F0FDF4}.adv-up b{color:#15803D}.adv-ok b{color:#15803D}.adv-meh{background:#FFFBEB}.adv-meh b{color:#B45309}
 .qcard-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 4px}.qcard-h span{font-weight:800;font-size:18px}.card-el{min-height:120px;padding:4px 0}
@@ -1899,10 +1900,27 @@ const TH_THEMES={dino:['ไดโนเสาร์','🦕',['sauropod','dragon'
 const TH_TOPIC=[[/travel|เที่ยว/i,'airplane'],[/medical|แพทย์|พยาบาล|hospital/i,'stethoscope'],[/e-?commerce|ขายของ|online shop/i,'shopping_cart'],[/business|ธุรกิจ|office|ออฟฟิศ|workplace|ที่ทำงาน/i,'briefcase'],[/listening|การฟัง/i,'headphone'],[/speaking|การพูด|conversation|สนทนา/i,'speech_balloon'],[/finance|การเงิน|บัญชี/i,'money_bag'],[/science|วิทยาศาสตร์/i,'test_tube'],[/writing|การเขียน/i,'memo'],[/planner|แผนอ่าน/i,'calendar'],[/safety|ความปลอดภัย/i,'hammer_and_wrench'],[/marketing|การตลาด/i,'megaphone']];
 const TH_PAL=[['#F57C00','#fff'],['#1E88E5','#fff'],['#8E24AA','#fff'],['#FBC02D','#1b1b1b'],['#E53935','#fff'],['#00897B','#fff'],['#43A047','#fff'],['#3949AB','#fff'],['#D81B60','#fff'],['#6D4C41','#fff'],['#00ACC1','#fff'],['#7CB342','#fff']];
 const TH_LAYOUTS=['A','B','C','D','E'];
+// ธีมเพิ่มจาก Iconify (Noto Emoji ของ Google · Apache 2.0 ใช้ขายได้) ค้นรูปตามคำ ตอนทำปก ไม่ต้องเก็บไฟล์ · คุณแดนพิมพ์คำเองก็ได้ (เช่น cat, coffee)
+const TH_KW={cat:['แมว','🐱','cat cat-face black-cat grinning-cat smiling-cat-with-heart-eyes cat-with-wry-smile lion tiger'],dog:['หมา','🐶','dog dog-face poodle guide-dog service-dog paw-prints bone wolf'],
+  coffee:['คาเฟ่','☕','hot-beverage teacup-without-handle bubble-tea croissant cookie bagel cup-with-straw doughnut'],penguin:['ขั้วโลก','🐧','penguin polar-bear snowman snowflake ice seal whale fish'],
+  robot:['หุ่นยนต์','🤖','robot laptop desktop-computer joystick satellite-antenna battery video-game rocket'],frog:['บึงน้ำ','🐸','frog turtle lotus duck snail lizard crocodile herb'],
+  owl:['ป่ายามค่ำ','🦉','owl fox hedgehog mushroom crescent-moon evergreen-tree badger chipmunk'],pizza:['ฟาสต์ฟู้ด','🍕','pizza hamburger french-fries hot-dog taco popcorn sandwich burrito'],
+  music:['ดนตรี','🎵','musical-note guitar saxophone trumpet violin drum microphone headphone'],ball:['กีฬา','⚽','soccer-ball basketball tennis trophy sports-medal volleyball baseball badminton'],
+  car:['ยานพาหนะ','🚗','automobile racing-car bus taxi bicycle motor-scooter fire-engine police-car'],train:['รถไฟ','🚆','locomotive high-speed-train bullet-train railway-car tram monorail station mountain-railway'],
+  tree:['ต้นไม้','🌳','palm-tree deciduous-tree evergreen-tree seedling cactus herb potted-plant four-leaf-clover'],moon:['กลางคืน','🌙','crescent-moon full-moon-face star milky-way shooting-star sparkles ringed-planet comet'],
+  heart:['หัวใจ','❤️','red-heart heart-with-ribbon sparkling-heart love-letter heart-hands rose two-hearts heart-with-arrow'],gem:['อัญมณี','💎','gem-stone crown ring money-bag coin trophy sparkles crystal-ball'],
+  bird:['นก','🦜','parrot flamingo peacock dove swan chicken eagle penguin'],bug:['แมลง','🐞','lady-beetle butterfly honeybee snail ant bug cricket beetle'],
+  fish:['ปลา','🐠','tropical-fish blowfish fish octopus shark dolphin spiral-shell crab'],bear:['หมี','🐻','bear teddy-bear panda polar-bear koala honey-pot bear-face raccoon']};
+const TH_KW_POOL={};
+async function thKwPool(q){q=String(q||'').trim().toLowerCase().slice(0,30);if(!q)return [];if(TH_KW_POOL[q])return TH_KW_POOL[q];
+  let L=[];try{const j=await fetch('https://api.iconify.design/search?query='+encodeURIComponent(q)+'&prefixes=noto&limit=48').then(r=>r.json());
+    L=(j.icons||[]).map(x=>x.split(':')[1]).filter(n=>n&&!/flag|keycap|skin-tone|light-skin|dark-skin|medium|-tone|symbol|sign|button|square|circle|^letter/.test(n)).slice(0,12);}catch(e){}
+  return TH_KW_POOL[q]=L.map(n=>'ic:'+n);}
 // เลือกธีม/แบบ: ที่ร้านใช้น้อยที่สุด (นับจากปกตามธีมที่มีอยู่) สุ่มในกลุ่มที่เท่ากัน
-function thPick(want){const ut={},uc={};for(const p of D.products){const m=String(p.coverKey||'').match(/^theme:(\w+):(\w):/);if(m){ut[m[1]]=(ut[m[1]]||0)+1;uc[m[1]+m[2]]=(uc[m[1]+m[2]]||0)+1;}}
+function thPick(want){const ut={},uc={};for(const p of D.products){const m=String(p.coverKey||'').match(/^theme:([\w-]+):(\w):/);if(m){ut[m[1]]=(ut[m[1]]||0)+1;uc[m[1]+m[2]]=(uc[m[1]+m[2]]||0)+1;}}
   const least=(keys,cnt)=>{const mn=Math.min(...keys.map(k=>cnt(k)));const c=keys.filter(k=>cnt(k)===mn);return c[Math.floor(Math.random()*c.length)];};
-  const theme=TH_THEMES[want]?want:least(Object.keys(TH_THEMES),k=>ut[k]||0);
+  const all=[...Object.keys(TH_THEMES),...Object.keys(TH_KW).map(k=>'kw-'+k)];
+  const theme=TH_THEMES[want]||/^kw-/.test(want)?want:least(all,k=>ut[k]||0);
   return {theme,layout:least(TH_LAYOUTS,l=>uc[theme+l]||0),pal:Math.floor(Math.random()*TH_PAL.length),off:Math.floor(Math.random()*8)};}
 // ข้อความบนปกจากชื่อสินค้า: หัวข้อ = ชื่อภาษาอังกฤษช่วงยาวสุด · ป้าย = จำนวน (500 คำ) · บรรทัดรอง = ภาษาไทย
 function thText(b){const name=String(b.name||'').replace(/\([^)]*\)/g,' ').replace(/\s+/g,' ').trim();
@@ -1920,13 +1938,18 @@ async function thFont(){if(thFont.ok)return;let l=document.getElementById('th-ka
   try{if(!l.sheet)await new Promise(r=>{l.addEventListener('load',r,{once:true});l.addEventListener('error',r,{once:true});setTimeout(r,5000);});
     for(let k=0;k<3;k++){await Promise.all(['900 100px Kanit','700 40px Kanit'].map(f=>document.fonts.load(f,'กขABC12')));if(document.fonts.check('900 100px Kanit','ก')&&document.fonts.check('700 40px Kanit','ก'))break;await new Promise(r=>setTimeout(r,300));}}catch(e){}
   thFont.ok=document.fonts.check('900 100px Kanit','ก');}
-const thImg=n=>new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(new Error('โหลดรูปการ์ตูนไม่ได้: '+n));im.src='/fe/'+n+'.svg';});
+const thLoad=src=>new Promise((ok,no)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>ok(im);im.onerror=no;im.src=src;});
+async function thImg(n){if(!/^ic:/.test(n))return thLoad('/fe/'+n+'.svg').catch(()=>{throw new Error('โหลดรูปการ์ตูนไม่ได้: '+n);});
+  const k=n.slice(3);return thLoad('https://api.iconify.design/fluent-emoji/'+k+'.svg?height=640').catch(()=>thLoad('https://api.iconify.design/noto/'+k+'.svg?height=640')).catch(()=>thLoad('/fe/star.svg'));}
+// รูปตัวละครของธีม: ธีมในเครื่อง หรือค้นจาก Iconify ตามคำ (kw-cat / คำที่พิมพ์เอง)
+async function thEls(st){if(TH_THEMES[st.theme])return TH_THEMES[st.theme][2];const q=st.kw||String(st.theme||'').replace(/^kw-/,'');if(TH_KW[q])return TH_KW[q][2].split(' ').map(n=>'ic:'+n);const L=await thKwPool(q);return L.length?L:TH_THEMES.dino[2];}
+const thThemeName=st=>TH_THEMES[st.theme]?TH_THEMES[st.theme][0]:(TH_KW[String(st.theme).replace(/^kw-/,'')]||[st.kw||st.theme])[0];
 const thTopic=b=>(TH_TOPIC.find(([r])=>r.test(String(b.name||'')))||[])[1];
-const thHero=(b,st,i,n)=>{const t=thTopic(b),els=TH_THEMES[st.theme][2];return n>1&&t?t:els[(st.off+i)%els.length];}; // ในชุด: ตัวการ์ตูนตามเรื่องของเล่ม · เล่มเดี่ยว: ตัวการ์ตูนตามธีม (เรื่องเป็นรูปเล็ก) จะได้ไม่ซ้ำกันทุกเล่มเรื่องเดียวกัน
+const thHero=(b,st,i,n,els)=>{const t=thTopic(b);return n>1&&t?t:els[(st.off+i)%els.length];}; // ในชุด: ตัวการ์ตูนตามเรื่องของเล่ม · เล่มเดี่ยว: ตัวการ์ตูนตามธีม (เรื่องเป็นรูปเล็ก) จะได้ไม่ซ้ำกันทุกเล่มเรื่องเดียวกัน
 // ปก 900×1200 (3:4) คืน dataURL · st={theme,layout,pal,off,series}
 async function themeCover(b,i,n,st){await thFont();const W=900,H=1200,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
-  const T=TH_THEMES[st.theme]||TH_THEMES.dino,[bg,ink]=TH_PAL[((st.pal||0)+i)%TH_PAL.length],tx=thText(b),L=st.layout||'A',els=T[2];
-  const hn=thHero(b,st,i,n),tp=thTopic(b),[hero,small]=await Promise.all([thImg(hn),thImg(n<=1&&tp&&tp!==hn?tp:els[((st.off||0)+i+3)%els.length])]);
+  const els=await thEls(st),[bg,ink]=TH_PAL[((st.pal||0)+i)%TH_PAL.length],tx=thText(b),L=st.layout||'A';
+  const hn=thHero(b,st,i,n,els),tp=thTopic(b),[hero,small]=await Promise.all([thImg(hn),thImg(n<=1&&tp&&tp!==hn?tp:els[((st.off||0)+i+3)%els.length])]);
   const K=(w,s)=>`${w} ${s}px Kanit,'IBM Plex Sans Thai',sans-serif`,mx=64,maxW=W-mx*2;
   const wrap=(text,w,sizes,maxL)=>{for(const s of sizes){x.font=K(w,s);const out=[];let cur='';for(const word of text.split(' ')){const t=cur?cur+' '+word:word;if(x.measureText(t).width>maxW&&cur){out.push(cur);cur=word;}else cur=t;}if(cur)out.push(cur);if(out.length<=maxL&&out.every(l=>x.measureText(l).width<=maxW)&&!(out.length>1&&out[out.length-1].length<=3&&s!==sizes[sizes.length-1]))return {s,lines:out};}x.font=K(w,sizes[sizes.length-1]);return {s:sizes[sizes.length-1],lines:[text]};};
   const ti=wrap(tx.title,900,[124,108,96,84,72,62,54],3),su=tx.sub?wrap(tx.sub,700,[42,36,32],2):{s:0,lines:[]},ser=st.series||'';
@@ -2117,8 +2140,9 @@ function bundleForm(){
     <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ได้แล้ว<b>ใช้เป็นรูปสินค้าของเล่มนั้นด้วย</b> รูปเดิมเก็บไว้เป็นรูปที่ 2 · กดที่รูปเพื่อดูใหญ่ เทียบกับรูปเดิม หรือสลับกลับ</p>
     ${(()=>{const left=chosen.filter(b=>b.bookCover&&(b.images||[])[0]!==b.bookCover);return left.length?`<div class="bxi-apply"><span>มีปกเรียบ ${left.length} เล่มที่ยังไม่ได้ใช้เป็นรูปสินค้า</span><button class="btn btn-cta btn-sm" data-a="bxUseAll">✓ ใช้ปกเรียบเป็นรูปสินค้าทั้ง ${left.length} เล่ม</button></div>`:'';})()}
     <div class="bxi-style"><span class="bxi-lab">แบบปก</span><div class="kind-seg" role="group" aria-label="แบบปก"><button data-a="bxStyle" data-v="mode:orig" aria-pressed="${st.mode!=='new'}">📘 ตามปกเดิม</button><button data-a="bxStyle" data-v="mode:new" aria-pressed="${st.mode==='new'}">✨ ออกแบบใหม่</button><button data-a="bxStyle" data-v="mode:theme" aria-pressed="${st.mode==='theme'}">🎨 ปกตามธีม (ฟรี)</button></div></div>
-    ${st.mode==='theme'?`<div class="bxi-pal th-pick"><button class="chip${st.theme==='auto'?' on':''}" data-a="bxTheme" data-v="auto" aria-pressed="${st.theme==='auto'}">🎲 สุ่มแบบไม่ซ้ำ</button>${Object.entries(TH_THEMES).map(([k,v])=>`<button class="chip${st.theme===k?' on':''}" data-a="bxTheme" data-v="${k}" aria-pressed="${st.theme===k}">${v[1]} ${esc(v[0])}</button>`).join('')}</div>
-      <p class="fine" style="margin:0 0 8px">ไม่ใช้ AI ไม่เสียเงิน · ทุกเล่มในชุดใช้ธีมเดียวกันแต่สีพื้นและตัวการ์ตูนไม่ซ้ำกัน · ระบบเลือกธีม/แบบจัดวางที่ร้านยังใช้น้อยให้ ชุดอื่นจะได้ไม่เหมือนกัน · ตัวหนังสือไทยพิมพ์ตรงตามชื่อสินค้า${S.thSet?` · รอบนี้: <b>${esc((TH_THEMES[S.thSet.theme]||[''])[0])}</b> แบบ ${S.thSet.layout} <button class="chip" data-a="bxThemeNew">🎲 สุ่มใหม่</button>`:''}</p>`:''}
+    ${st.mode==='theme'?`<div class="bxi-pal th-pick"><button class="chip${st.theme==='auto'?' on':''}" data-a="bxTheme" data-v="auto" aria-pressed="${st.theme==='auto'}">🎲 สุ่มแบบไม่ซ้ำ</button>${Object.entries(TH_THEMES).map(([k,v])=>`<button class="chip${st.theme===k?' on':''}" data-a="bxTheme" data-v="${k}" aria-pressed="${st.theme===k}">${v[1]} ${esc(v[0])}</button>`).join('')}${Object.entries(TH_KW).map(([k,v])=>`<button class="chip${st.theme==='kw-'+k?' on':''}" data-a="bxTheme" data-v="kw-${k}" aria-pressed="${st.theme==='kw-'+k}">${v[1]} ${esc(v[0])}</button>`).join('')}
+      <span class="th-kw"><input class="input" data-thkw="1" placeholder="หรือพิมพ์คำอังกฤษ เช่น cat, coffee" value="${esc(/^kw-/.test(st.theme)&&!TH_KW[st.theme.slice(3)]?st.theme.slice(3):'')}" aria-label="ธีมจากคำ"><button class="chip" data-a="bxThemeKw">🔎 ใช้คำนี้</button></span></div>
+      <p class="fine" style="margin:0 0 8px">ไม่ใช้ AI ไม่เสียเงิน · ทุกเล่มในชุดใช้ธีมเดียวกันแต่สีพื้นและตัวการ์ตูนไม่ซ้ำกัน · ระบบเลือกธีม/แบบจัดวางที่ร้านยังใช้น้อยให้ ชุดอื่นจะได้ไม่เหมือนกัน · ตัวหนังสือไทยพิมพ์ตรงตามชื่อสินค้า${S.thSet?` · รอบนี้: <b>${esc(thThemeName(S.thSet))}</b> แบบ ${S.thSet.layout} <button class="chip" data-a="bxThemeNew">🎲 สุ่มใหม่</button>`:''}</p>`:''}
     ${st.mode==='new'?`<div class="bxi-pal">${Object.entries(BX_PAL).map(([k,v])=>`<button class="chip${st.pal===k?' on':''}" data-a="bxStyle" data-v="pal:${k}" aria-pressed="${st.pal===k}">${esc(v[0])}</button>`).join('')}</div>
       <div class="bxi-refs"><span class="fine">รูปตัวอย่างปกที่ชอบ (ไม่บังคับ สูงสุด 3 รูป · ใช้แทนโทนสีด้านบน ไม่ใช้ปกเดิมของเล่ม)</span><div class="bxi-refrow">${(st.refs||[]).map((u,k)=>`<span class="bxi-ref"><img src="${esc(u)}" alt="รูปตัวอย่าง ${k+1}"><button data-a="bxRefDel" data-v="${k}" aria-label="เอารูปนี้ออก">×</button></span>`).join('')}${(st.refs||[]).length<3?`<label class="bxi-refadd">${S.bxRefUp?'กำลังอัป...':'+ เพิ่มรูปตัวอย่าง'}<input type="file" accept="image/*" hidden data-bxref="1"></label>`:''}</div></div>
       <input class="input" data-bxs="note" value="${esc(st.note)}" placeholder="อยากได้แนวไหนเพิ่ม (ไม่ใส่ก็ได้) เช่น มีรูปไอคอนหูฟังสำหรับเล่ม Listening" style="margin:6px 0 4px">
@@ -6099,7 +6123,7 @@ function act(a,el){
     case 'forder':factoryOrder();break;
     case 'fIdea':fIdea();break;
     case 'coverTheme':{if(!S.draft)break;S.coverOpen=true;S.coverBusy=true;S.coverErr='';render(true);const ch=thPick('auto');
-      themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${TH_THEMES[ch.theme][0]} · กดอีกครั้งเพื่อสุ่มใหม่`);})
+      themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${thThemeName(ch)} · กดอีกครั้งเพื่อสุ่มใหม่`);})
         .catch(e=>{S.coverErr='ทำปกไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.coverBusy=false;render(true);});break;}
     case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
     case 'coverGen':coverGen();break;
@@ -6492,6 +6516,8 @@ function act(a,el){
     case 'bxRefDel':{const st=bxStyle();st.refs=(st.refs||[]).filter((u,k)=>k!==Number(el.dataset.v));bxStyleSet('refs',st.refs);render(true);break;}
     case 'bxTheme':bxStyleSet('theme',el.dataset.v);S.thSet=null;render(true);break;
     case 'bxThemeNew':S.thSet=null;render(true);break;
+    case 'bxThemeKw':{const w=String((document.querySelector('[data-thkw]')||{}).value||'').trim().toLowerCase();if(!/^[a-z][a-z ]{1,24}$/.test(w)){toast('พิมพ์คำภาษาอังกฤษ เช่น cat, coffee, robot');break;}
+      thKwPool(w).then(L=>{if(L.length<1){toast(`ไม่พบรูปสำหรับ "${w}" ลองคำอื่น`);return;}bxStyleSet('theme','kw-'+w);S.thSet=null;render(true);toast(`ธีม "${w}" มีรูป ${L.length} แบบ`);});break;}
     case 'bxStyle':{const [k,v]=String(el.dataset.v).split(':');bxStyleSet(k,k==='pdf'?v==='1':v);render(true);break;}
     case 'bxPdf':{const b=getProduct(id);if(!b)break;S.bxImg='pdf:'+id;S.bxImgErr='';render(true);bxPdfCover(b).then(r=>toast(`ใส่ปกในไฟล์แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ใหม่`)).catch(e=>{S.bxImgErr=String(e.message||e);toast(S.bxImgErr);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxPdfUndo':{const b=getProduct(id);if(!b||!b.linkOrig)break;const gen=b.link;b.link=b.linkOrig;b.pdfFrom='';b.pdfCover='';save();if(gen&&gen!==b.linkOrig)bxDropFile(gen);toast('กลับไปใช้ไฟล์เดิมแล้ว (ไฟล์ปกใหม่ลบทิ้งเพื่อประหยัดพื้นที่)');render(true);break;}
