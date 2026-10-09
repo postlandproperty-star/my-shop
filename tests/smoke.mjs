@@ -47,6 +47,7 @@ const server = http.createServer((req, res) => {
   const ti = u.match(/^\/topic-img\/([a-z-]+)\.jpg$/); if (ti) { const f = path.join(SRC, 'topics', ti[1] + '.jpg'); if (fs.existsSync(f)) { res.setHeader('Content-Type', 'image/jpeg'); return res.end(fs.readFileSync(f)); } res.statusCode = 404; return res.end(); }
   const f = path.join(SRC, u);
   if (u !== '/' && fs.existsSync(f) && fs.statSync(f).isFile()) return res.end(fs.readFileSync(f));
+  const fem = u.match(/^\/fe\/([a-z0-9_]+\.svg)$/); if (fem) { const f = path.join(SRC, 'brand', 'fe', fem[1]); if (fs.existsSync(f)) { res.setHeader('Content-Type', 'image/svg+xml'); return res.end(fs.readFileSync(f)); } res.statusCode = 404; return res.end(); }
   if (u === '/adm.js') { ADM_LOADS.push(req.headers.referer || ''); res.setHeader('Content-Type', 'application/javascript; charset=utf-8'); return res.end(SPLIT.chunk); }
   res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(SPLIT.html);
 });
@@ -614,6 +615,11 @@ try {
         pass(`[${kind}] แก้สินค้า: ปุ่ม "บันทึกฉบับร่าง" + "บันทึกและเผยแพร่" (กดแล้วเผยแพร่และไปเซลเพจ)`, /ฉบับร่าง/.test(ed.draft) && ed.pub === 'บันทึกและเผยแพร่' && !ed.sel && after.view === 'shop' && after.sel === ed.id && after.st === 'published', JSON.stringify({ ed, after }));
         if (bundle) { const bx = await page.evaluate((bid) => { S.view = 'admin'; S.tab = 'products'; S.draft = bundleDraft(null); S.edit = 'new'; render(false);
             const row = document.querySelector(`[data-a="bxAddSet"][data-id="${bid}"]`); if (row) row.click(); return { row: !!row, n: S.draft.items.length, want: bundleBooks(getProduct(bid)).length, pub: !!document.querySelector('[data-a="saveBundle"][data-status="published"]') }; }, bundle.id);
+          { const th = await page.evaluate(async (bid) => { S.draft = bundleDraft(getProduct(bid)); S.edit = bid; bxStyleSet('mode', 'theme'); render(false);
+              const o = { chips: document.querySelectorAll('[data-a="bxTheme"]').length, free: /ปกตามธีม.*ฟรี/.test((document.querySelector('[data-a="bxAiBooks"]') || {}).textContent || ''), models: !!document.querySelector('.bxi-models') };
+              const bk = bundleBooks(getProduct(bid))[0], url = await themeCover(bk, 0, 3, Object.assign({ series: thSeries(getProduct(bid)) }, thPick('auto'))); o.img = /^data:image\/jpeg/.test(url) && url.length > 30000;
+              o.txt = JSON.stringify(thText({ name: 'TOEIC Part 5 จับจุดออกสอบ 30 วัน วันละ 20 ข้อ พร้อมเฉลย' })); bxStyleSet('mode', 'orig'); render(false); return o; }, bundle.id);
+            pass(`[${kind}] ชุดขาย: 🎨 ปกตามธีม (ฟรี) 12 ธีม + 🎲 สุ่ม · ไม่มีตัวเลือกโมเดล AI · วาดปกได้ · อ่านชื่อสินค้าเป็นข้อความบนปกถูก`, th.chips === 13 && th.free && !th.models && th.img && /"TOEIC PART 5"/.test(th.txt) && /"30 วัน"/.test(th.txt), JSON.stringify(th)); }
           const dz = await page.evaluate((bid) => { S.draft = bundleDraft(getProduct(bid)); S.edit = bid; render(false); return { pdfs: !!document.querySelector('[data-a="dlSetPdfs"]'), imgs: !!document.querySelector('[data-a="dlSetImgs"]') }; }, bundle.id);
           const dl = page.waitForEvent('download', { timeout: 15000 }).catch(() => null); await page.evaluate(() => document.querySelector('[data-a="dlSetImgs"]')?.click()); const got = await dl; // กดผ่าน DOM: บนจอเล็กใน CI ปุ่มลอยบังทำให้คลิกด้วยเมาส์ไม่โดน
           pass(`[${kind}] ชุดขาย: ปุ่มโหลดไฟล์ทุกเล่ม + โหลดรูปทั้งหมดของชุด เป็น ZIP (กดแล้วได้ไฟล์ .zip)`, dz.pdfs && dz.imgs && !!got && /\.zip$/.test(got.suggestedFilename()), JSON.stringify({ ...dz, file: got && got.suggestedFilename(), toast: !got ? await page.evaluate(() => (document.getElementById('toast') || document.querySelector('.toast') || {}).textContent || '') : '', busy: !got ? await page.evaluate(() => S.zipBusy) : '', adm: await page.evaluate(() => window.__admOk), errs: page.errors.slice(-3) }));

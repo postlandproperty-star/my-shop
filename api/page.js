@@ -132,6 +132,14 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('Cache-Control', SPLIT && req.query.v === SPLIT.v ? 'public, max-age=31536000, immutable' : 'public, max-age=0, s-maxage=30');
     return res.status(SPLIT ? 200 : 404).send(SPLIT ? SPLIT.chunk : '');
   }
+  const fe = String(req.query.fe || ''); // รูปการ์ตูนทำปกตามธีม (Fluent Emoji · MIT) อยู่ใน src/brand/fe
+  if (fe) {
+    if (!/^[a-z0-9_]{2,40}\.svg$/.test(fe)) return res.status(404).end();
+    let buf = null; try { buf = readFileSync(join(process.cwd(), 'src', 'brand', 'fe', fe)); } catch (e) {}
+    if (!buf) return res.status(404).end();
+    res.setHeader('Content-Type', 'image/svg+xml'); res.setHeader('Cache-Control', 'public, max-age=2592000, s-maxage=2592000, immutable');
+    return res.status(200).end(buf);
+  }
   const brand = String(req.query.brand || '');
   if (brand) { // โลโก้ร้าน (ทำจาก Canva) ไอคอนแท็บ/หน้าจอมือถือ ไฟล์อยู่ใน src/brand
     if (!/^(favicon\.ico|apple-touch-icon\.png|icon-(32|48|192|512|maskable)\.png)$/.test(brand)) return res.status(404).end();

@@ -1882,10 +1882,85 @@ function bxCoverPrompt(d,books){const n=books.length,price=bxPrice(d);
 แถบล่างตัวเล็กเขียนว่า "ไฟล์ PDF · ได้ทันทีหลังจ่าย"`+AI_NO_TEXT;}
 /* แบบปกเล่มเดี่ยว: ตามปกเดิม หรือออกแบบใหม่ (โทนเดียวกันทั้งชุด) · ใส่ปกใหม่ในไฟล์ PDF ด้วยไหม · จำไว้ในเครื่อง */
 const BX_PAL={brand:['น้ำเงิน-เหลือง (สีร้าน)','พื้นปกสีน้ำเงินเข้ม (#1d2b53) แถบเฉียงสีเหลือง (#FFD23F) ด้านล่าง ชื่อเรื่องตัวใหญ่สีขาว'],pastel:['พาสเทลนุ่ม','พื้นปกสีพาสเทลอ่อน (ฟ้าอ่อน มิ้นต์ หรือครีม) ตัวอักษรสีน้ำเงินเข้ม ภาพประกอบลายเส้นเล็กๆ แบบมินิมอล'],premium:['ดำ-ทอง พรีเมียม','พื้นปกสีดำด้าน ตัวอักษรสีทอง เส้นกรอบบางสีทอง ดูหรูหราน่าเชื่อถือ'],bold:['สีสดต่างกันทุกเล่ม','พื้นปกสีสดหนึ่งสี (แต่ละเล่มในชุดใช้สีต่างกัน) ตัวอักษรสีขาวตัวหนาใหญ่มาก เลย์เอาต์เหมือนกันทุกเล่ม']};
-function bxStyle(){let v={};try{v=JSON.parse(localStorage.getItem('sl_bxstyle')||'{}')||{};}catch(e){}return Object.assign({mode:'orig',pal:'brand',note:'',pdf:true,refs:[]},v);}
+/* 🎨 ปกตามธีม (ฟรี ไม่ใช้ AI · คุณแดน 9 ต.ค. 69): สีพื้นสดคนละสีต่อเล่ม + ตัวการ์ตูนตัวใหญ่ (Fluent Emoji · MIT · /fe/*.svg)
+   + ตัวหนังสือที่ระบบพิมพ์เอง (ไทยไม่เพี้ยน) · หลายชุด/หลายเล่มไม่ซ้ำ: เลือกธีม + แบบจัดวางที่ใช้น้อยที่สุดในร้าน · หนังสือเรื่องเฉพาะ (เที่ยว/แพทย์/ขายของ…) ได้ตัวการ์ตูนตามเรื่อง */
+const TH_THEMES={dino:['ไดโนเสาร์','🦕',['sauropod','dragon','dragon_face','volcano','turtle','crocodile','lizard','leafy_green']],
+  space:['อวกาศ','🚀',['rocket','ringed_planet','astronaut','flying_saucer','alien','comet','crescent_moon','satellite']],
+  flower:['ดอกไม้','🌸',['sunflower','cherry_blossom','tulip','hibiscus','rose','blossom','butterfly','bouquet']],
+  monster:['สัตว์ประหลาด','👾',['alien_monster','ogre','ghost','robot','goblin','clown_face','alien','dragon_face']],
+  zoo:['สวนสัตว์','🦁',['lion','panda','giraffe','elephant','monkey','tiger_face','zebra','hippopotamus']],
+  sea:['ทะเล','🐙',['octopus','spouting_whale','tropical_fish','shark','dolphin','crab','squid','lobster']],
+  sweets:['ขนม','🧁',['doughnut','cupcake','soft_ice_cream','birthday_cake','cookie','lollipop','shortcake','candy']],
+  pets:['สัตว์เลี้ยง','🐶',['dog_face','cat_face','rabbit_face','hamster','fox','bear','koala','hatching_chick']],
+  fruit:['ผลไม้','🍍',['avocado','pineapple','banana','cherries','grapes','peach','watermelon','strawberry']],
+  travel:['เที่ยว','✈️',['airplane','desert_island','ferris_wheel','camera','luggage','compass','sailboat','globe_with_meridians']],
+  school:['โรงเรียน','🎓',['books','graduation_cap','light_bulb','brain','laptop','trophy','pencil','backpack']],
+  nature:['ธรรมชาติ','🌈',['rainbow','sun_with_face','snowman','cactus','mushroom','four_leaf_clover','evergreen_tree','water_wave']]};
+const TH_TOPIC=[[/travel|เที่ยว/i,'airplane'],[/medical|แพทย์|พยาบาล|hospital/i,'stethoscope'],[/e-?commerce|ขายของ|online shop/i,'shopping_cart'],[/business|ธุรกิจ|office|ออฟฟิศ|workplace|ที่ทำงาน/i,'briefcase'],[/listening|การฟัง/i,'headphone'],[/speaking|การพูด|conversation|สนทนา/i,'speech_balloon'],[/finance|การเงิน|บัญชี/i,'money_bag'],[/science|วิทยาศาสตร์/i,'test_tube'],[/writing|การเขียน/i,'memo'],[/planner|แผนอ่าน/i,'calendar'],[/safety|ความปลอดภัย/i,'hammer_and_wrench'],[/marketing|การตลาด/i,'megaphone']];
+const TH_PAL=[['#F57C00','#fff'],['#1E88E5','#fff'],['#8E24AA','#fff'],['#FBC02D','#1b1b1b'],['#E53935','#fff'],['#00897B','#fff'],['#43A047','#fff'],['#3949AB','#fff'],['#D81B60','#fff'],['#6D4C41','#fff'],['#00ACC1','#fff'],['#7CB342','#fff']];
+const TH_LAYOUTS=['A','B','C','D','E'];
+// เลือกธีม/แบบ: ที่ร้านใช้น้อยที่สุด (นับจากปกตามธีมที่มีอยู่) สุ่มในกลุ่มที่เท่ากัน
+function thPick(want){const ut={},uc={};for(const p of D.products){const m=String(p.coverKey||'').match(/^theme:(\w+):(\w):/);if(m){ut[m[1]]=(ut[m[1]]||0)+1;uc[m[1]+m[2]]=(uc[m[1]+m[2]]||0)+1;}}
+  const least=(keys,cnt)=>{const mn=Math.min(...keys.map(k=>cnt(k)));const c=keys.filter(k=>cnt(k)===mn);return c[Math.floor(Math.random()*c.length)];};
+  const theme=TH_THEMES[want]?want:least(Object.keys(TH_THEMES),k=>ut[k]||0);
+  return {theme,layout:least(TH_LAYOUTS,l=>uc[theme+l]||0),pal:Math.floor(Math.random()*TH_PAL.length),off:Math.floor(Math.random()*8)};}
+// ข้อความบนปกจากชื่อสินค้า: หัวข้อ = ชื่อภาษาอังกฤษช่วงยาวสุด · ป้าย = จำนวน (500 คำ) · บรรทัดรอง = ภาษาไทย
+function thText(b){const name=String(b.name||'').replace(/\([^)]*\)/g,' ').replace(/\s+/g,' ').trim();
+  // ป้ายจำนวน: เลือกตัวเลขที่ใหญ่สุดที่มีหน่วย (500 ข้อ ดีกว่า 15 จุด) · "ข้อสอบ" ไม่ใช่หน่วย "ข้อ"
+  const cms=[...name.matchAll(/([\d,]+)\s*(คำ|ข้อ(?!สอบ|ความ)|สำนวน|คู่คำ|ตัวย่อ|ประโยค|วัน(?!ละ)|บท|หัวข้อ|เรื่อง|จุด|ชุด|สัปดาห์|เทคนิค|แบบฟอร์ม)/g)].sort((a,c)=>Number(c[1].replace(/,/g,''))-Number(a[1].replace(/,/g,'')));const cm=cms[0];
+  const rest=cm?name.replace(cm[0],' '):name;
+  const lat=(rest.match(/[A-Za-z][A-Za-z0-9&+.'’–\- ]{2,}/g)||[]).map(x=>x.replace(/[\s\-–:.]+$/,'').trim()).sort((a,c)=>c.length-a.length)[0]||'';
+  const words=rest.replace(lat,' ').replace(/[:·|]/g,' ').replace(/\s+/g,' ').trim().split(/\s+พร้อม|\s+\+\s+|\s+-\s+/)[0].replace(/^[\s+\-–]+|[\s+\-–]+$/g,'').split(' ');
+  let sub='';for(const w of words){if((sub+' '+w).trim().length>34)break;sub=(sub+' '+w).trim();}
+  const title=(lat||sub.split(' ').slice(0,2).join(' ')).toUpperCase();if(!lat)sub='';
+  return {title,sub,count:cm?`${cm[1]} ${cm[2]}`:''};}
+// โหลดฟอนต์ Kanit ให้เสร็จก่อนวาด (เคยวาดเล่มแรกๆ ด้วยฟอนต์สำรองเพราะยังโหลดไม่ทัน)
+async function thFont(){if(thFont.ok)return;let l=document.getElementById('th-kanit');
+  if(!l){l=document.createElement('link');l.id='th-kanit';l.rel='stylesheet';l.href='https://fonts.googleapis.com/css2?family=Kanit:wght@700;900&display=block';document.head.appendChild(l);}
+  try{if(!l.sheet)await new Promise(r=>{l.addEventListener('load',r,{once:true});l.addEventListener('error',r,{once:true});setTimeout(r,5000);});
+    for(let k=0;k<3;k++){await Promise.all(['900 100px Kanit','700 40px Kanit'].map(f=>document.fonts.load(f,'กขABC12')));if(document.fonts.check('900 100px Kanit','ก')&&document.fonts.check('700 40px Kanit','ก'))break;await new Promise(r=>setTimeout(r,300));}}catch(e){}
+  thFont.ok=document.fonts.check('900 100px Kanit','ก');}
+const thImg=n=>new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(new Error('โหลดรูปการ์ตูนไม่ได้: '+n));im.src='/fe/'+n+'.svg';});
+const thTopic=b=>(TH_TOPIC.find(([r])=>r.test(String(b.name||'')))||[])[1];
+const thHero=(b,st,i,n)=>{const t=thTopic(b),els=TH_THEMES[st.theme][2];return n>1&&t?t:els[(st.off+i)%els.length];}; // ในชุด: ตัวการ์ตูนตามเรื่องของเล่ม · เล่มเดี่ยว: ตัวการ์ตูนตามธีม (เรื่องเป็นรูปเล็ก) จะได้ไม่ซ้ำกันทุกเล่มเรื่องเดียวกัน
+// ปก 900×1200 (3:4) คืน dataURL · st={theme,layout,pal,off,series}
+async function themeCover(b,i,n,st){await thFont();const W=900,H=1200,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  const T=TH_THEMES[st.theme]||TH_THEMES.dino,[bg,ink]=TH_PAL[((st.pal||0)+i)%TH_PAL.length],tx=thText(b),L=st.layout||'A',els=T[2];
+  const hn=thHero(b,st,i,n),tp=thTopic(b),[hero,small]=await Promise.all([thImg(hn),thImg(n<=1&&tp&&tp!==hn?tp:els[((st.off||0)+i+3)%els.length])]);
+  const K=(w,s)=>`${w} ${s}px Kanit,'IBM Plex Sans Thai',sans-serif`,mx=64,maxW=W-mx*2;
+  const wrap=(text,w,sizes,maxL)=>{for(const s of sizes){x.font=K(w,s);const out=[];let cur='';for(const word of text.split(' ')){const t=cur?cur+' '+word:word;if(x.measureText(t).width>maxW&&cur){out.push(cur);cur=word;}else cur=t;}if(cur)out.push(cur);if(out.length<=maxL&&out.every(l=>x.measureText(l).width<=maxW)&&!(out.length>1&&out[out.length-1].length<=3&&s!==sizes[sizes.length-1]))return {s,lines:out};}x.font=K(w,sizes[sizes.length-1]);return {s:sizes[sizes.length-1],lines:[text]};};
+  const ti=wrap(tx.title,900,[124,108,96,84,72,62,54],3),su=tx.sub?wrap(tx.sub,700,[42,36,32],2):{s:0,lines:[]},ser=st.series||'';
+  const blockH=(ser?52:0)+ti.lines.length*ti.s*1.02+(su.lines.length?14+su.lines.length*su.s*1.25:0)+(tx.count?110:0);
+  const y0=L==='C'?H-96-blockH:150,blockBottom=y0+blockH;
+  // พื้น
+  x.fillStyle=bg;x.fillRect(0,0,W,H);
+  if(L==='D'){x.fillStyle='rgba(0,0,0,.13)';x.beginPath();x.moveTo(0,H*.66);x.lineTo(W,H*.44);x.lineTo(W,H);x.lineTo(0,H);x.fill();}
+  if(L==='B'){x.fillStyle='rgba(255,255,255,.12)';for(let yy=40;yy<H;yy+=64)for(let xx=(yy/64%2)*32+20;xx<W;xx+=64){x.beginPath();x.arc(xx,yy,6,0,7);x.fill();}}
+  const gl=x.createRadialGradient(W*.72,H*.76,10,W*.72,H*.76,W*.62);gl.addColorStop(0,'rgba(255,255,255,.26)');gl.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gl;x.fillRect(0,0,W,H);
+  if(L==='E'){x.fillStyle='rgba(255,255,255,.2)';x.beginPath();x.arc(W*.64,H*.74,320,0,7);x.fill();}
+  // ตัวการ์ตูน (ลงต่ำกว่าข้อความ ล้นขอบล่างได้)
+  const draw=(im,cx,cy,size,rot)=>{x.save();x.translate(cx,cy);x.rotate(rot*Math.PI/180);x.shadowColor='rgba(0,0,0,.28)';x.shadowBlur=34;x.shadowOffsetY=18;x.drawImage(im,-size/2,-size/2,size,size);x.restore();};
+  const P={A:[.66,.74,600],B:[.5,.82,700],C:[.7,.27,470],D:[.64,.73,580],E:[.64,.74,540]}[L],hs=P[2];
+  const hy=L==='C'?Math.min(H*P[1],y0-hs*.36):Math.max(H*P[1],blockBottom+hs*.4);
+  draw(hero,W*P[0],hy,hs,i%2?6:-6);
+  draw(small,L==='C'?W*.14:W*.15,L==='C'?H*.12+70:H-150,n<=1&&tp?160:120,-12);
+  const sp=x.createLinearGradient(0,0,36,0);sp.addColorStop(0,'rgba(0,0,0,.2)');sp.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=sp;x.fillRect(0,0,36,H);
+  // หัว: ป้าย SheetLab + เล่มที่
+  x.font=K(700,30);const bw=x.measureText('SheetLab').width+44;x.fillStyle='rgba(255,255,255,.94)';x.beginPath();x.roundRect?x.roundRect(mx,48,bw,50,25):x.rect(mx,48,bw,50);x.fill();x.fillStyle='#1a1a1a';x.textBaseline='middle';x.fillText('SheetLab',mx+22,74);
+  if(n>1){x.fillStyle=ink;x.globalAlpha=.9;x.textAlign='right';x.fillText(`เล่ม ${i+1}/${n}`,W-56,74);x.textAlign='left';x.globalAlpha=1;}
+  // ข้อความ
+  x.textBaseline='alphabetic';let y=y0;x.fillStyle=ink;
+  if(ser){x.font=K(700,38);x.globalAlpha=.9;x.fillText(ser,mx,y+38);x.globalAlpha=1;y+=52;}
+  x.font=K(900,ti.s);for(const l of ti.lines){y+=ti.s*1.02;x.fillStyle='rgba(0,0,0,.14)';x.fillText(l,mx,y-ti.s*.06+5);x.fillStyle=ink;x.fillText(l,mx,y-ti.s*.06);}
+  if(su.lines.length){y+=14;x.font=K(700,su.s);for(const l of su.lines){y+=su.s*1.25;x.fillText(l,mx,y-su.s*.25);}}
+  if(tx.count){y+=26;x.font=K(900,54);const cw=x.measureText(tx.count).width+56;x.save();x.translate(mx,y);x.rotate(-3*Math.PI/180);x.fillStyle='rgba(0,0,0,.18)';x.beginPath();x.roundRect?x.roundRect(0,8,cw,76,22):x.rect(0,8,cw,76);x.fill();x.fillStyle=ink==='#fff'?'#fff':'#1b1b1b';x.beginPath();x.roundRect?x.roundRect(0,0,cw,76,22):x.rect(0,0,cw,76);x.fill();x.fillStyle=ink==='#fff'?bg:'#fff';x.textBaseline='middle';x.fillText(tx.count,28,40);x.restore();x.textBaseline='alphabetic';}
+  x.font=K(700,28);x.fillStyle=ink;x.globalAlpha=.85;x.fillText('sheetlabth.com',mx,H-40);x.globalAlpha=1;
+  return c.toDataURL('image/jpeg',.9);}
+const thSeries=d=>String(d&&d.name||'').replace(/\s*(ครบชุด|ชุด\s*\d|\d+\s*เล่ม|·).*$/,'').trim().slice(0,30);
+function bxStyle(){let v={};try{v=JSON.parse(localStorage.getItem('sl_bxstyle')||'{}')||{};}catch(e){}return Object.assign({mode:'orig',pal:'brand',note:'',pdf:true,refs:[],theme:'auto'},v);}
 const bxKey=st=>st.pal+'|'+(st.refs||[]).join(',');
 function bxStyleSet(k,v){const st=Object.assign(bxStyle(),{[k]:v});try{localStorage.setItem('sl_bxstyle',JSON.stringify(st));}catch(e){}S.bxStyleV=st;}
-const bxNeeds=(b,st)=>st.mode==='new'?!(b.bookCover&&b.coverMode==='new'&&(b.coverKey||b.coverPal)===bxKey(st)):!b.bookCover;
+const bxNeeds=(b,st)=>st.mode==='theme'?!(b.bookCover&&b.coverMode==='theme'):st.mode==='new'?!(b.bookCover&&b.coverMode==='new'&&(b.coverKey||b.coverPal)===bxKey(st)):!b.bookCover;
 function bxBookPrompt(b,i,n,st,sameAsRef,styleRefs){const t=String(b.headline&&b.headline.length<60?b.headline:b.name).split(/\s+\+\s+|\s+พร้อม/)[0].slice(0,48);st=st||{mode:'orig'};
   if(st.mode==='new')return `หน้าปกหนังสือ e-book 1 เล่ม ออกแบบใหม่ทั้งหมด (ไม่ต้องเหมือนปกเดิม) มองจากด้านหน้าตรงๆ ตั้งอยู่กลางภาพ บนพื้นหลังสีขาวล้วนเรียบสะอาด มีเงาบางๆ ใต้เล่ม ภาพสี่เหลี่ยมจัตุรัส 1:1 หนังสือสูงประมาณ 85% ของภาพ กว้างไม่เกิน 60% ของภาพ
 ${sameAsRef?'ใช้สไตล์ เลย์เอาต์ ฟอนต์ และการจัดวางเดียวกับปกในรูปที่แนบทุกอย่าง (เป็นเล่มในชุดเดียวกัน) เปลี่ยนแค่ชื่อเรื่องและเลขเล่ม':styleRefs?'รูปที่แนบเป็นตัวอย่างสไตล์ที่เจ้าของร้านชอบ ใช้เป็นแรงบันดาลใจด้านโทนสี เลย์เอาต์ ฟอนต์ และอารมณ์ของภาพเท่านั้น ห้ามคัดลอกข้อความ ชื่อแบรนด์ หรือโลโก้จากรูปตัวอย่าง ทุกเล่มในชุดจะใช้แบบเดียวกัน':'ดีไซน์ปกเรียบ อ่านง่าย ทุกเล่มในชุดจะใช้แบบเดียวกัน'}${(st.refs||[]).length&&!sameAsRef?'':': '+(BX_PAL[st.pal]||BX_PAL.brand)[1]}
@@ -1911,7 +1986,7 @@ function bxSnapUndo(){if(!S.bxSnap)return;let ch=0;
 function bxSnapCommit(){const files=S.bxDrop||[];S.bxSnap=null;S.bxDrop=[];S.bxNew=[];files.forEach(bxDropFile);}
 async function bxPdfCover(b){if(!b.bookCover)throw new Error('ยังไม่มีปกใหม่');const src=b.linkOrig||b.link;
   if(!src||!/\/storage\/v1\/object\/public\/product-images\//.test(src))throw new Error('ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน ใส่ปกให้อัตโนมัติไม่ได้');
-  const flat=await uploadImage(await toJpeg(await bxAiRaw(BX_FLAT,[b.bookCover],'3:4'),1400));
+  const flat=b.coverMode==='theme'?b.bookCover:await uploadImage(await toJpeg(await bxAiRaw(BX_FLAT,[b.bookCover],'3:4'),1400)); // ปกตามธีมเป็นปกแบนอยู่แล้ว ไม่ต้องใช้ AI
   const r=await authFetch('/api/content?action=pdf_cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdf:src,image:flat,name:b.slug||'',title:b.name||''})});
   if(!r||!r.ok)throw new Error((r&&r.error)||'ใส่ปกในไฟล์ไม่สำเร็จ');
   const prev=b.linkOrig&&b.link!==b.linkOrig?b.link:'';
@@ -1928,6 +2003,10 @@ function bxUseCover(b,on){if(!b.bookCover)return;if(!('origImg' in b))b.origImg=
 const STOPPED=()=>Object.assign(new Error('หยุดแล้ว'),{stopped:true});
 async function bxMakeBook(id,i,n){const b=getProduct(id);if(!b)return;const run=S.aiRun;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
   const st=bxStyle(),o=bxOrig(b);let url;
+  if(st.mode==='theme'){const ch=S.thSet&&S.thSet.want===st.theme?S.thSet:(S.thSet=Object.assign(thPick(st.theme),{want:st.theme}));
+    url=await uploadImage(await themeCover(b,i,n,Object.assign({series:thSeries(S.draft)},ch)));if(run!==S.aiRun)throw STOPPED();
+    if(b.bookCover)b.oldCovers=[...(b.oldCovers||[]),b.bookCover].slice(-5);b.bookCover=url;b.coverMode='theme';b.coverPal='';b.coverKey=`theme:${ch.theme}:${ch.layout}:${(ch.pal+i)%TH_PAL.length}`;bxUseCover(b,true);if(!S.bxSnap)save();
+    if(st.pdf&&(b.linkOrig||b.link)&&run===S.aiRun){try{await bxPdfCover(b);}catch(e){S.bxImgErr=`ได้ปกใหม่แล้ว แต่ใส่ในไฟล์ PDF ของ "${b.name.slice(0,30)}" ไม่สำเร็จ: ${e.message||e}`;}}return;}
   if(st.mode==='new'){const key=bxKey(st),refs=st.refs||[],sib=(S.draft?S.draft.items:[]).map(getProduct).find(x=>x&&x.id!==b.id&&x.bookCover&&x.coverMode==='new'&&(x.coverKey||x.coverPal)===key);
     url=await bxAiImage(bxBookPrompt(b,i,n,st,!!sib,!sib&&refs.length>0),sib?[sib.bookCover]:refs.slice(0,3));}
   else url=await bxAiImage(bxBookPrompt(Object.assign({},b,{images:o?[o]:[]}),i,n,st),o?[o]:[]);
@@ -2037,17 +2116,19 @@ function bundleForm(){
     <h4 class="bxi-step"><span>1</span> ปกเล่มเดี่ยว (ใช้ใน "ในชุดมีอะไรบ้าง")</h4>
     <p class="fine" style="margin:0 0 8px">AI ทำปกหน้าตรง พื้นขาวเรียบ จากรูปปกเดิมของเล่มนั้น (ตัดป้ายราคา/ไอคอนออก คงชื่อและดีไซน์เดิม) ได้แล้ว<b>ใช้เป็นรูปสินค้าของเล่มนั้นด้วย</b> รูปเดิมเก็บไว้เป็นรูปที่ 2 · กดที่รูปเพื่อดูใหญ่ เทียบกับรูปเดิม หรือสลับกลับ</p>
     ${(()=>{const left=chosen.filter(b=>b.bookCover&&(b.images||[])[0]!==b.bookCover);return left.length?`<div class="bxi-apply"><span>มีปกเรียบ ${left.length} เล่มที่ยังไม่ได้ใช้เป็นรูปสินค้า</span><button class="btn btn-cta btn-sm" data-a="bxUseAll">✓ ใช้ปกเรียบเป็นรูปสินค้าทั้ง ${left.length} เล่ม</button></div>`:'';})()}
-    <div class="bxi-style"><span class="bxi-lab">แบบปก</span><div class="kind-seg" role="group" aria-label="แบบปก"><button data-a="bxStyle" data-v="mode:orig" aria-pressed="${st.mode!=='new'}">📘 ตามปกเดิม</button><button data-a="bxStyle" data-v="mode:new" aria-pressed="${st.mode==='new'}">✨ ออกแบบใหม่</button></div></div>
+    <div class="bxi-style"><span class="bxi-lab">แบบปก</span><div class="kind-seg" role="group" aria-label="แบบปก"><button data-a="bxStyle" data-v="mode:orig" aria-pressed="${st.mode!=='new'}">📘 ตามปกเดิม</button><button data-a="bxStyle" data-v="mode:new" aria-pressed="${st.mode==='new'}">✨ ออกแบบใหม่</button><button data-a="bxStyle" data-v="mode:theme" aria-pressed="${st.mode==='theme'}">🎨 ปกตามธีม (ฟรี)</button></div></div>
+    ${st.mode==='theme'?`<div class="bxi-pal th-pick"><button class="chip${st.theme==='auto'?' on':''}" data-a="bxTheme" data-v="auto" aria-pressed="${st.theme==='auto'}">🎲 สุ่มแบบไม่ซ้ำ</button>${Object.entries(TH_THEMES).map(([k,v])=>`<button class="chip${st.theme===k?' on':''}" data-a="bxTheme" data-v="${k}" aria-pressed="${st.theme===k}">${v[1]} ${esc(v[0])}</button>`).join('')}</div>
+      <p class="fine" style="margin:0 0 8px">ไม่ใช้ AI ไม่เสียเงิน · ทุกเล่มในชุดใช้ธีมเดียวกันแต่สีพื้นและตัวการ์ตูนไม่ซ้ำกัน · ระบบเลือกธีม/แบบจัดวางที่ร้านยังใช้น้อยให้ ชุดอื่นจะได้ไม่เหมือนกัน · ตัวหนังสือไทยพิมพ์ตรงตามชื่อสินค้า${S.thSet?` · รอบนี้: <b>${esc((TH_THEMES[S.thSet.theme]||[''])[0])}</b> แบบ ${S.thSet.layout} <button class="chip" data-a="bxThemeNew">🎲 สุ่มใหม่</button>`:''}</p>`:''}
     ${st.mode==='new'?`<div class="bxi-pal">${Object.entries(BX_PAL).map(([k,v])=>`<button class="chip${st.pal===k?' on':''}" data-a="bxStyle" data-v="pal:${k}" aria-pressed="${st.pal===k}">${esc(v[0])}</button>`).join('')}</div>
       <div class="bxi-refs"><span class="fine">รูปตัวอย่างปกที่ชอบ (ไม่บังคับ สูงสุด 3 รูป · ใช้แทนโทนสีด้านบน ไม่ใช้ปกเดิมของเล่ม)</span><div class="bxi-refrow">${(st.refs||[]).map((u,k)=>`<span class="bxi-ref"><img src="${esc(u)}" alt="รูปตัวอย่าง ${k+1}"><button data-a="bxRefDel" data-v="${k}" aria-label="เอารูปนี้ออก">×</button></span>`).join('')}${(st.refs||[]).length<3?`<label class="bxi-refadd">${S.bxRefUp?'กำลังอัป...':'+ เพิ่มรูปตัวอย่าง'}<input type="file" accept="image/*" hidden data-bxref="1"></label>`:''}</div></div>
       <input class="input" data-bxs="note" value="${esc(st.note)}" placeholder="อยากได้แนวไหนเพิ่ม (ไม่ใส่ก็ได้) เช่น มีรูปไอคอนหูฟังสำหรับเล่ม Listening" style="margin:6px 0 4px">
       <p class="fine" style="margin:0 0 8px">ยังเป็นรูปหนังสือเล่มเดียวบนพื้นขาวเหมือนเดิม แต่ดีไซน์ปกใหม่ทั้งชุด เล่มแรกที่ทำจะเป็นต้นแบบให้เล่มที่เหลือใช้สไตล์เดียวกัน</p>`:''}
     <label class="tgl bxi-pdf"><input type="checkbox" data-a="bxStyle" data-v="pdf:${st.pdf?'0':'1'}" ${st.pdf?'checked':''}> <span>📄 <b>ใส่ปกใหม่ในไฟล์ PDF ด้วย</b> หน้าแรกของไฟล์เปลี่ยนเป็นปกใหม่ (ลูกค้าที่ซื้อหลังจากนี้ได้ไฟล์ใหม่ · ไฟล์เดิมเก็บไว้ สลับกลับได้) ใช้รูปเพิ่มเล่มละ 1 รูป · เก็บไว้แค่ไฟล์เดิม + ไฟล์ล่าสุด รุ่นก่อนหน้าลบให้อัตโนมัติ${noFile?` · ${noFile} เล่มยังไม่มีไฟล์ ข้ามไป`:''}</span></label>
-    <div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`).join('')}</div>
+    ${st.mode==='theme'?'':`<div class="bxi-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>`<label class="bxi-model${imgModel()===k?' on':''}"><input type="radio" name="bxmodel" value="${k}" data-imgset="model" ${imgModel()===k?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด ต้องเติมก่อน · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`).join('')}</div>`}
     <div class="bxi-pick"><span class="fine">ติ๊กเล่มที่จะให้ AI ทำปก${sel.length?` · เลือกแล้ว <b>${sel.length}</b> เล่ม`:''}</span><button class="chip" data-a="bxSelAll" data-v="todo" ${todo?'':'disabled'}>เลือกเล่มที่ยังไม่มีปกเรียบ (${todo})</button><button class="chip" data-a="bxSelAll" data-v="all">เลือกทั้งหมด</button>${sel.length?'<button class="chip" data-a="bxSelAll" data-v="none">ไม่เลือก</button>':''}</div>
     <div class="bxi-books">${chosen.map((b,i)=>`<div class="bxi-b${sel.includes(b.id)?' sel':''}"><button class="bxi-bc" data-a="bxView" data-id="${b.id}" aria-label="ดูปกเล่ม ${i+1} ขนาดใหญ่">${b.bookCover||((b.images||[])[0])?`<img src="${esc(b.bookCover||b.images[0])}" alt="" loading="lazy">`:''}${b.bookCover?`<span class="bxi-ok">✓ ปกเรียบ${(b.images||[])[0]===b.bookCover?' · รูปสินค้า':''}</span>`:''}<span class="bxi-zoom" aria-hidden="true">🔍</span></button>
       <label class="bxi-selb"><input type="checkbox" data-a="bxSel" data-id="${b.id}" ${sel.includes(b.id)?'checked':''} ${pend?'disabled':''}> เล่ม ${i+1}</label><button class="chip" data-a="bxAiBook" data-id="${b.id}" data-v="${i}" ${pend?'disabled':''}>${pend===b.id?'กำลังสร้าง...':(b.bookCover?'✨ ทำใหม่':'✨ ทำปก')}</button><label class="chip bxi-upl" title="ใส่รูปปกของเล่มนี้เอง (ใช้จริงเมื่อกดบันทึกชุด)">⬆ ใส่ปกเอง<input type="file" accept="image/*" hidden data-bxbook="${b.id}"></label></div>`).join('')}</div>
-    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">${pend?'<button class="btn btn-danger btn-sm" data-a="aiStop">⏹ หยุดทำปก AI</button>':''}<button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${S.bxImgT||cnt}...`:sel.length?`✨ ทำปกเล่มที่เลือก (${sel.length} รูป)`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก${st.pdf?' (รวมปกในไฟล์ PDF)':''} · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">${pend?'<button class="btn btn-danger btn-sm" data-a="aiStop">⏹ หยุดทำปก AI</button>':''}<button class="btn btn-cta btn-sm" data-a="bxAiBooks" ${pend||!n?'disabled':''}>${st.mode==='theme'&&pend!=='all'?`🎨 ทำปกตามธีม${sel.length?` เล่มที่เลือก (${sel.length})`:todo&&todo<n?` อีก ${todo} เล่ม`:'ทุกเล่ม'} (ฟรี)`:pend==='all'?`กำลังทำปกเล่ม ${S.bxImgN||1}/${S.bxImgT||cnt}...`:sel.length?`✨ ทำปกเล่มที่เลือก (${sel.length} รูป)`:`✨ ทำปกเรียบ${todo&&todo<n?'เล่มที่เหลือ':'ให้ทุกเล่ม'} (${todo||n} รูป)`}</button><span class="fine">ประมาณ <b>฿${Math.round(cost)}</b> ด้วยโมเดลที่เลือก${st.pdf?' (รวมปกในไฟล์ PDF)':''} · ทำครบแล้วระบบจัดรูปใหญ่ของชุด (ขั้นที่ 2) ให้เอง</span></div>
     ${S.bxImgErr?`<div class="bxi-err">⚠️ ${esc(S.bxImgErr)}${aiPay(S.bxImgErr)}</div>`:''}
     <h4 class="bxi-step" style="margin-top:20px"><span>2</span> รูปใหญ่ของชุด (หัวหน้าขาย · การ์ดหน้าร้าน · แอด)</h4>
     <div class="bxi-hero"><div class="bxi-big">${d.cover?`<a href="${esc(d.cover)}" target="_blank" rel="noopener noreferrer" title="เปิดรูปใหญ่"><img src="${esc(d.cover)}" alt="รูปใหญ่ของชุด"></a>`:'<span class="fine">ยังไม่มีรูปใหญ่ของชุด<br>(ตอนนี้ใช้ปกเล่มแรก)</span>'}</div>
@@ -2897,7 +2978,7 @@ function draftToProduct(d){
   const name=t('name'),link=t('link'),sample=t('sampleLink');
   return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
-    proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,bonus:d.bonus,bonusIds:(d.bonusIds||[]).filter(id=>getProduct(id)),reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
+    proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,...(d.coverKey?{coverKey:d.coverKey,coverMode:d.coverMode}:{}),bonus:d.bonus,bonusIds:(d.bonusIds||[]).filter(id=>getProduct(id)),reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
     bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
@@ -2983,7 +3064,7 @@ async function vidCheck(c,d){const urls=vidUrls(c);if(!urls.length)return null;S
     const bad=res.filter(r=>r.state!=='public').length;if(d&&res.length&&!bad)d.videoOk=true;toast(bad?`🔒 ยังเปิดไม่ได้ ${bad} บท แชร์โฟลเดอร์ Courses เป็น "ทุกคนที่มีลิงก์" ก่อน`:'✅ วิดีโอทุกบทเปิดได้แบบไม่ล็อกอิน');return {bad,n:res.length};}
   catch(e){toast('ตรวจไม่สำเร็จ ลองใหม่');return null;}finally{S.vidBusy=false;render(true);}}
 /* ตัวสร้างปกด้วย AI (ใช้ทั้งหน้าแก้สินค้าและหน้าแก้คอร์ส) · คอร์ส: สร้างทีละรูป ไม่มีชุด 5 รูป (ชุดนั้นทำมาสำหรับหนังสือ) */
-function aiCoverBox(d){return `    <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
+function aiCoverBox(d){return `    <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><button class="btn btn-line btn-sm" data-a="coverTheme" ${S.coverBusy?'disabled':''}>🎲 ปกตามธีม (ฟรี)</button><span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
       ${S.coverOpen?`<div class="aic-box"><label for="e-cover-prompt">คำสั่งทำปก (แก้ได้)</label><textarea class="input" id="e-cover-prompt" data-cp="1" rows="7">${esc(S.coverPrompt==null?coverPrompt(d):S.coverPrompt)}</textarea>
         <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${imgSetReal(d)?`<div class="kind-seg" role="group" aria-label="รูปแรกของชุด" style="margin:0 0 6px"><button data-a="imgFirst" data-v="ai" aria-pressed="${S.imgFirst!=='real'}">🎨 รูปแรกให้ AI ออกแบบ</button><button data-a="imgFirst" data-v="real" aria-pressed="${S.imgFirst==='real'}">📕 ใช้ปกจริงเป็นรูปแรก</button></div>`:''}${pfmt(d)==='course'?'':`<button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button>`}${S.coverBusy?'<button class="btn btn-danger btn-sm" data-a="aiStop">⏹ หยุดสร้างรูป</button>':''}<button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><label class="fine">โมเดล <select class="input" data-imgset="model" style="width:auto;display:inline-block;padding:6px 8px">${IMG_MODELS.map(m=>`<option value="${m[0]}" ${imgModel()===m[0]?'selected':''}>${esc(m[1])}</option>`).join('')}</select></label>
@@ -6017,6 +6098,9 @@ function act(a,el){
     case 'fcancel':if(S.confirm!=='fc:'+id){S.confirm='fc:'+id;render(true);break;}S.confirm='';authFetch('/api/content?action=factory_cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})}).then(j=>{if(j&&j.ok){toast('ยกเลิกงานแล้ว');FJOBS=null;}else toast((j&&j.error)||'ยกเลิกไม่สำเร็จ');render(true);});break;
     case 'forder':factoryOrder();break;
     case 'fIdea':fIdea();break;
+    case 'coverTheme':{if(!S.draft)break;S.coverOpen=true;S.coverBusy=true;S.coverErr='';render(true);const ch=thPick('auto');
+      themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${TH_THEMES[ch.theme][0]} · กดอีกครั้งเพื่อสุ่มใหม่`);})
+        .catch(e=>{S.coverErr='ทำปกไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.coverBusy=false;render(true);});break;}
     case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
     case 'coverGen':coverGen();break;
     case 'imgSetGen':imgSetGen();break;
@@ -6406,6 +6490,8 @@ function act(a,el){
       bxCompose(d,books).then(uploadImage).then(u=>{S.draft.cover=u;S.draft.coverAuto=d.items.join(',');toast('จัดรูปชุดแล้ว อย่าลืมกดบันทึก');}).catch(e=>{S.bxImgErr='จัดรูปไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxView':S.bxView=S.bxView===id||!id?null:id;render(true);break;
     case 'bxRefDel':{const st=bxStyle();st.refs=(st.refs||[]).filter((u,k)=>k!==Number(el.dataset.v));bxStyleSet('refs',st.refs);render(true);break;}
+    case 'bxTheme':bxStyleSet('theme',el.dataset.v);S.thSet=null;render(true);break;
+    case 'bxThemeNew':S.thSet=null;render(true);break;
     case 'bxStyle':{const [k,v]=String(el.dataset.v).split(':');bxStyleSet(k,k==='pdf'?v==='1':v);render(true);break;}
     case 'bxPdf':{const b=getProduct(id);if(!b)break;S.bxImg='pdf:'+id;S.bxImgErr='';render(true);bxPdfCover(b).then(r=>toast(`ใส่ปกในไฟล์แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ใหม่`)).catch(e=>{S.bxImgErr=String(e.message||e);toast(S.bxImgErr);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxPdfUndo':{const b=getProduct(id);if(!b||!b.linkOrig)break;const gen=b.link;b.link=b.linkOrig;b.pdfFrom='';b.pdfCover='';save();if(gen&&gen!==b.linkOrig)bxDropFile(gen);toast('กลับไปใช้ไฟล์เดิมแล้ว (ไฟล์ปกใหม่ลบทิ้งเพื่อประหยัดพื้นที่)');render(true);break;}
@@ -6416,7 +6502,7 @@ function act(a,el){
     case 'bxAiBook':{const n=(S.draft&&S.draft.items.length)||1;S.bxImg=id;S.bxImgErr='';render(true);
       bxMakeBook(id,Number(el.dataset.v)||0,n).then(()=>toast('ทำปกเล่มนี้แล้ว กดบันทึกชุดเพื่อใช้')).catch(e=>{if(!e.stopped)S.bxImgErr=String(e.message||e);}).then(()=>{S.bxImg='';render(true);});break;}
     case 'bxAiBooks':{const d=S.draft;if(!d)break;const ids=d.items.filter(i=>getProduct(i));const st=bxStyle();const todo=ids.filter(i=>bxNeeds(getProduct(i),st));const sel=(S.bxSel||[]).filter(i=>ids.includes(i));const list=sel.length?ids.filter(i=>sel.includes(i)):todo.length?todo:ids;
-      if(!confirm(`ทำปกเรียบ ${list.length} รูป (เสียค่า AI ต่อรูปตามโมเดลที่เลือก) ใช้เวลาประมาณ ${Math.ceil(list.length*0.6)} นาที ทำเลยไหม?`))break;
+      if(st.mode!=='theme'&&!confirm(`ทำปกเรียบ ${list.length} รูป (เสียค่า AI ต่อรูปตามโมเดลที่เลือก) ใช้เวลาประมาณ ${Math.ceil(list.length*0.6)} นาที ทำเลยไหม?`))break;
       S.bxImg='all';S.bxImgErr='';S.bxImgN=1;S.bxImgT=list.length;S.bxSel=[];render(true);
       (async()=>{let ok=0,bad=0,stop='';
         const run=S.aiRun;
