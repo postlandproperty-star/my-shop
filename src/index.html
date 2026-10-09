@@ -6923,7 +6923,7 @@ async function cardStart(email,ok,href){
   }catch(e){console.error('card',e);CARD=null;S.qr={slug,total,email,step:'email'};qrPaint();go();}
 }
 function cardMount(){const q=S.qr;if(!CARD||!q||q.step!=='card')return;const n=document.getElementById('card-el');if(!n||(n===CARD.node&&n.querySelector('iframe,.__PrivateStripeElement')))return;
-  try{if(CARD.el){try{CARD.el.destroy();}catch(e){}}n.innerHTML='';CARD.el=CARD.elements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
+  try{if(CARD.el){try{CARD.el.destroy();}catch(e){}}n.innerHTML='';CARD.el=CARD.elements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}},defaultValues:{billingDetails:{address:{country:'TH'}}}});
     // ช่องบัตรโหลดไม่ขึ้น (คีย์ผิด/เน็ต/Stripe ล่ม): ไปหน้า Stripe แบบเดิมทันที ลูกค้าต้องจ่ายได้เสมอ
     const href=CARD.href;CARD.el.on('loaderror',()=>{console.error('card loaderror');const q2=S.qr;CARD=null;S.qr=q2?{slug:q2.slug,total:q2.total,email:q2.email,step:'email'}:null;qrPaint();if(href)location.href=href;});
     CARD.el.mount(n);CARD.node=n;}
