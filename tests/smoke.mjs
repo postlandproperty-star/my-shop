@@ -238,12 +238,16 @@ try {
           box.email && box.qr && box.cardBtn && box.card && hits.length === 1 && /[?&]e=buyer%40test\.co/.test(hits[0]) && back.hint && !/unpaid/.test(back.url) && back.prefill === 'buyer@test.co', JSON.stringify({ box, hits, back })); }
       if (p.type !== 'bundle') { CARDMODE = true; ORDERHITS.length = 0; CARDHITS.length = 0;
         await page.goto(`${BASE}/p/${p.slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(700);
-        await page.evaluate(() => { window.Stripe = () => ({ elements: () => ({ create: () => ({ mount(n) { n.innerHTML = '<div class="fake-card">CARD FORM</div>'; }, destroy() {} }) }), confirmPayment: async (o) => { window.__cp = o; return { paymentIntent: { status: 'succeeded' } }; } }); });
+        await page.evaluate(() => { window.Stripe = () => ({ elements: () => ({ create: () => ({ on() {}, mount(n) { n.innerHTML = '<div class="fake-card">CARD FORM</div>'; }, destroy() {} }) }), confirmPayment: async (o) => { window.__cp = o; return { paymentIntent: { status: 'succeeded' } }; } }); });
         await page.fill('#checkout #qr-email', 'buyer@test.co'); await page.locator('#checkout .paycard a[data-card]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(700);
         const cf = await page.evaluate(() => { const o = { form: !!document.querySelector('#checkout .fake-card'), pay: !!document.querySelector('#checkout [data-a="cardPay"]'), path: location.pathname }; const a = document.getElementById('app'); a.__h = ''; render(true); o.remount = !!document.querySelector('#checkout .fake-card'); return o; });
         await page.locator('#checkout [data-a="cardPay"]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(900);
         cf.email = await page.evaluate(() => window.__cp && window.__cp.confirmParams.payment_method_data.billing_details.email); cf.order = ORDERHITS.length; cf.hosted = CARDHITS.length; cf.url = await page.evaluate(() => location.search);
         pass(`[${kind}] หน้าจ่ายเงิน: กดชำระด้วยบัตร → ช่องกรอกบัตรขึ้นในหน้าขาย (ไม่ไปหน้า Stripe) จ่ายแล้วไปหน้าขอบคุณ`, cf.form && cf.pay && cf.remount && cf.email === 'buyer@test.co' && cf.order >= 1 && cf.hosted === 0 && /pi=pi_card/.test(cf.url), JSON.stringify(cf));
+        { CARDHITS.length = 0; await page.goto(`${BASE}/p/${p.slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(700);
+          await page.evaluate(() => { window.Stripe = () => ({ elements: () => ({ create: () => { let cb = null; return { on(ev, f) { if (ev === 'loaderror') cb = f; }, mount() { setTimeout(() => cb && cb({}), 50); }, destroy() {} }; } }) }); });
+          await page.fill('#checkout #qr-email', 'buyer@test.co'); await page.locator('#checkout .paycard a[data-card]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(1200);
+          pass(`[${kind}] หน้าจ่ายเงิน: ช่องบัตรโหลดไม่ขึ้น (คีย์ผิด/Stripe ล่ม) → พาไปหน้า Stripe แทนเอง พร้อมอีเมล`, CARDHITS.length === 1 && /[?&]e=buyer%40test\.co/.test(CARDHITS[0]), JSON.stringify(CARDHITS)); await page.goto(`${BASE}/p/${p.slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(500); }
         CARDMODE = false; }
       pass(`[${kind}] หน้าลูกค้า (ร้าน/หน้าขาย/ตะกร้า/จ่ายเงิน) ไม่ต้องโหลดโค้ดหลังบ้าน /adm.js`, await page.evaluate(() => typeof __admOk !== 'undefined' && !__admOk), await page.evaluate(() => (window.__admWhy || '') + ' ' + location.pathname));
       await page.context().close();

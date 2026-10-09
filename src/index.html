@@ -6918,12 +6918,15 @@ async function cardStart(email,ok,href){
     if(!j.ok||!j.pk||!j.k)throw new Error('no card form');
     if(!window.Stripe)await loadScript('https://js.stripe.com/v3/');
     const st=window.Stripe(j.pk,{locale:'th'});
-    CARD={stripe:st,pi:j.pi,k:j.k,el:null,node:null,elements:st.elements({clientSecret:j.k,appearance:{theme:'stripe',variables:{colorPrimary:'#E8492B',borderRadius:'10px',fontSizeBase:'16px'}}})};
+    CARD={stripe:st,pi:j.pi,k:j.k,el:null,node:null,href:href+(/[?&]e=/.test(href)?'':'&e='+encodeURIComponent(email)),elements:st.elements({clientSecret:j.k,appearance:{theme:'stripe',variables:{colorPrimary:'#E8492B',borderRadius:'10px',fontSizeBase:'16px'}}})};
     S.qr={slug,total,email,step:'card',pi:j.pi,k:j.k};qrPaint();
   }catch(e){console.error('card',e);CARD=null;S.qr={slug,total,email,step:'email'};qrPaint();go();}
 }
 function cardMount(){const q=S.qr;if(!CARD||!q||q.step!=='card')return;const n=document.getElementById('card-el');if(!n||(n===CARD.node&&n.querySelector('iframe,.__PrivateStripeElement')))return;
-  try{if(CARD.el){try{CARD.el.destroy();}catch(e){}}n.innerHTML='';CARD.el=CARD.elements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});CARD.el.mount(n);CARD.node=n;}
+  try{if(CARD.el){try{CARD.el.destroy();}catch(e){}}n.innerHTML='';CARD.el=CARD.elements.create('payment',{layout:'tabs',fields:{billingDetails:{email:'never'}}});
+    // ช่องบัตรโหลดไม่ขึ้น (คีย์ผิด/เน็ต/Stripe ล่ม): ไปหน้า Stripe แบบเดิมทันที ลูกค้าต้องจ่ายได้เสมอ
+    const href=CARD.href;CARD.el.on('loaderror',()=>{console.error('card loaderror');const q2=S.qr;CARD=null;S.qr=q2?{slug:q2.slug,total:q2.total,email:q2.email,step:'email'}:null;qrPaint();if(href)location.href=href;});
+    CARD.el.mount(n);CARD.node=n;}
   catch(e){console.error('card mount',e);}}
 async function cardPay(el){const q=S.qr;if(!CARD||!q||q.step!=='card')return;const err=document.getElementById('card-err'),label='ชำระเงิน '+baht(codeOff(q.total));
   el.disabled=true;el.textContent='กำลังชำระเงิน…';if(err)err.textContent='';
