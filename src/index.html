@@ -6837,7 +6837,7 @@ function qrInner(slug,on,total){
     </div>`;
   }
   if(q.step==='loading')return `<div class="qpay center"><p class="muted">${q.card?'กำลังเปิดช่องกรอกบัตร…':'กำลังสร้าง QR…'}</p></div>`;
-  if(q.step==='card')return `<div class="qpay" id="qrbox"><p class="qcard-h"><b>💳 ชำระด้วยบัตรเครดิต / เดบิต</b><span>${baht(codeOff(total))}</span></p><p class="fine" style="margin:0 0 8px">อีเมลรับไฟล์: <b>${esc(q.email)}</b></p>
+  if(q.step==='card')return `<div class="qpay" id="qrbox"><p class="qcard-h"><b>💳 ชำระด้วยบัตรเครดิต / เดบิต</b><span>${baht(codeOff(total))}</span></p><p class="fine" style="margin:0 0 8px">${(slug==='__cart__'?cartItems():[D.products.find(x=>x.slug===slug)]).filter(Boolean).every(x=>x.kind==='course')?'อีเมลเข้าเรียน':'อีเมลรับไฟล์'}: <b>${esc(q.email)}</b></p>
       <div id="card-el" class="card-el"><p class="fine">กำลังเปิดช่องกรอกบัตร…</p></div><p class="fine" role="alert" id="card-err" style="color:var(--bad);margin:6px 0 0"></p>
       <button class="btn btn-buy btn-block" style="margin-top:10px" data-a="cardPay">ชำระเงิน ${baht(codeOff(total))}</button>
       <p class="fine qr-why">🔒 กรอกบัตรผ่านระบบ Stripe ร้านไม่เห็นและไม่เก็บเลขบัตร · ถ้าธนาคารขอ OTP จะขึ้นให้กรอกเลย</p>
