@@ -2706,16 +2706,42 @@ ${books}`;
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
-    if (action === 'shopee_sheet' || action === 'shopee_sheet_cfg' || action === 'shopee_dl' || action === 'print' || action === 'print_pdf' || action === 'print_card') { // 🛒 Google Sheet "Shopee Auto Delivery" (lib/shopeesheet.js): Apps Script ในชีตดึงด้วยรหัสลับของชีต · หลังบ้านขอรหัส/โค้ดได้
+    if (action === 'shopee_sheet' || action === 'shopee_sheet_cfg' || action === 'shopee_dl' || action === 'print' || action === 'print_pdf' || action === 'print_card' || action === 'print_order' || action === 'shopee_mail') { // 🛒 Google Sheet "Shopee Auto Delivery" (lib/shopeesheet.js): Apps Script ในชีตดึงด้วยรหัสลับของชีต · หลังบ้านขอรหัส/โค้ดได้
       const { shopeeRows, shopeeScript, bundleSig, bundlePage, shopeeCsv, shopeeFormula, SHEET_CELL } = await import('../lib/shopeesheet.js'), { randomBytes, timingSafeEqual } = await import('node:crypto');
       const st = (await sb('shop_state?id=eq.shopee_sheet&select=data'))?.[0]?.data || {};
-      if (action === 'print' || action === 'print_pdf' || action === 'print_card') { // 🖨 หน้าพิมพ์หนังสือของแม่ (lib/printpage.js) · ลิงก์ลับจากรหัสชีต
+      const loadSO = async () => (await sb('shop_state?id=eq.shopee_orders&select=data'))?.[0]?.data || { orders: {}, map: {} };
+      const putSO = (d) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'shopee_orders', data: d, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (action === 'shopee_mail') { // 📦 ผู้ช่วยอัตโนมัติส่งอีเมลออเดอร์ Shopee (ข้อความดิบ) มาให้แยก · คีย์ร้านเท่านั้น
+        if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องใช้คีย์ร้าน' });
+        if (req.method !== 'POST') return res.status(405).json({ ok: false });
+        const SO = await import('../lib/shopeeorders.js'), b = await readBody(req), mails = (Array.isArray(b.mails) ? b.mails : [b]).slice(0, 50), d = await loadSO(), shop = await loadShop(), out = [];
+        for (const m of mails) {
+          const o = SO.parseShopeeMail(String(m.text || '').slice(0, 60000), String(m.subject || ''));
+          if (!o.sn || !o.items.length) { out.push({ id: m.id || '', skip: 'ไม่ใช่อีเมลออเดอร์' }); continue; }
+          const old = d.orders[o.sn];
+          d.orders[o.sn] = { sn: o.sn, date: o.date, at: old?.at || new Date().toISOString(), done: old?.done || null, mail: String(m.id || '').slice(0, 40), items: o.items.map((it) => ({ ...it, pid: SO.matchItem(it, shop.products, d.map) })) };
+          out.push({ sn: o.sn, items: d.orders[o.sn].items.map((it) => ({ name: it.name.slice(0, 60), variation: it.variation, qty: it.qty, matched: !!it.pid })), new: !old });
+        }
+        const ks = Object.keys(d.orders).sort((x, y) => String(d.orders[y].at).localeCompare(String(d.orders[x].at))); for (const k of ks.slice(500)) delete d.orders[k];
+        await putSO(d); return res.status(200).json({ ok: true, orders: out });
+      }
+      if (action === 'print' || action === 'print_pdf' || action === 'print_card' || action === 'print_order') { // 🖨 หน้าพิมพ์หนังสือของแม่ (lib/printpage.js) · ลิงก์ลับจากรหัสชีต
         const PR = await import('../lib/printpage.js'), k = Buffer.from(String(req.query.k || '')), want = st.token ? Buffer.from(PR.printKey(st.token)) : Buffer.from('');
         if (!want.length || k.length !== want.length || !timingSafeEqual(k, want)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ลิงก์ไม่ถูกต้อง ขอลิงก์ใหม่จากคุณแดน</p>'); }
         const shop = await loadShop(), pUrl = (id, part) => part === 'card' ? `/api/content?action=print_card&k=${PR.printKey(st.token)}&p=${encodeURIComponent(id)}` : `/api/content?action=print_pdf&k=${PR.printKey(st.token)}&p=${encodeURIComponent(id)}&part=${part}`;
         if (action === 'print_card') { const id = String(req.query.p || ''), p = (shop.products || []).find((x) => x.id === id); res.setHeader('Content-Type', 'text/html; charset=utf-8'); if (!p) return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ไม่พบสินค้า</p>');
           const { bundleSig } = await import('../lib/shopeesheet.js'); return res.status(200).send(PR.cardPage(p, `https://${req.headers.host}/api/content?action=shopee_dl&b=${encodeURIComponent(id)}&s=${bundleSig(st.token, id)}`, p.type === 'bundle' ? (p.items || []).length : 1)); }
-        if (action === 'print') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(200).send(PR.printPage(PR.printList(shop), pUrl)); }
+        if (action === 'print_order') { // แม่กด ✓ แพ็กเสร็จ / ↩ / เลือกเล่มให้สินค้าที่จับคู่ไม่ได้ (ลิงก์ลับของหน้าพิมพ์)
+          if (req.method !== 'POST') return res.status(405).json({ ok: false });
+          const b = await readBody(req), d = await loadSO(), o = d.orders[String(b.sn || '')];
+          if (!o) return res.status(404).json({ ok: false, error: 'ไม่พบออเดอร์' });
+          if (b.op === 'done') o.done = new Date().toISOString(); else if (b.op === 'undo') o.done = null;
+          else if (b.op === 'map' && (shop.products || []).some((p) => p.id === String(b.pid || ''))) { const pid = String(b.pid); if (/^\d{4,20}$/.test(String(b.itemId || ''))) d.map[String(b.itemId)] = pid; for (const x of Object.values(d.orders)) for (const it of x.items) if ((b.itemId && it.itemId === String(b.itemId)) || (!b.itemId && it.name === String(b.name || ''))) it.pid = pid; }
+          else return res.status(400).json({ ok: false });
+          await putSO(d); return res.status(200).json({ ok: true });
+        }
+        if (action === 'print') { const d = await loadSO(), all = Object.values(d.orders).sort((x, y) => String(y.at).localeCompare(String(x.at))); res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.status(200).send(PR.printPage(PR.printList(shop), pUrl, { todo: all.filter((o) => !o.done && Date.now() - Date.parse(o.at) < 45 * 864e5), done: all.filter((o) => o.done).sort((x, y) => String(y.done).localeCompare(String(x.done))).slice(0, 10) }, `/api/content?action=print_order&k=${PR.printKey(st.token)}`)); }
         const id = String(req.query.p || ''), part = req.query.part === 'body' ? 'body' : 'cover', links = await loadLinks(), src = String(links[id] || '').trim();
         const prod = (shop.products || []).find((x) => x.id === id);
         if (!prod || !/^https:\/\//.test(src)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ยังไม่มีไฟล์ของเล่มนี้ แจ้งคุณแดน</p>'); }
