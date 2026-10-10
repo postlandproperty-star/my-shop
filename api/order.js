@@ -40,6 +40,24 @@ async function vip(req, res, m) {
     const A = await import('../lib/account.js');
     return res.status(200).json({ ok: true, ...(await A.accountData(me)), settings: pub });
   }
+  if (m === 'vip_write' || m === 'vip_write_get') { // ✍️ ตรวจ IELTS Writing ด้วย AI (lib/writing.js) · ต้องเข้าระบบด้วยอีเมล · สมาชิก = WRITE_CAP ครั้ง/เดือน · ยังไม่เป็นสมาชิก = ทดลองฟรี WRITE_FREE ครั้ง
+    const W = await import('../lib/writing.js');
+    let mem = null; if (me) { try { mem = await V.refreshMember(await V.getMember(me)); } catch (e) {} }
+    const active = V.isActive(mem), monthStart = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 8) + '01T00:00:00+07:00';
+    const quota = async () => { if (!me) return { used: 0, left: 0 }; const used = active ? await V.writingUsed(me, new Date(monthStart).toISOString()) : await V.writingUsed(me); const cap = active ? V.WRITE_CAP : V.WRITE_FREE; return { used, cap, left: Math.max(0, cap - used) }; };
+    if (m === 'vip_write_get') { if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบก่อน' }); const r = await V.getWriting(me, req.query.id); if (!r) return res.status(404).json({ ok: false, error: 'ไม่พบ' }); return res.status(200).json({ ok: true, item: { id: r.id, at: r.created_at, prompt: r.prompt, essay: r.essay, result: r.result } }); }
+    if (req.method === 'GET') return res.status(200).json({ ok: true, email: me, active, open: pub.open, ...(await quota()), history: me ? await V.listWriting(me).catch(() => []) : [], prompts: W.PROMPTS, tasks: Object.fromEntries(Object.entries(W.TASKS).map(([k, t]) => [k, { name: t.name, min: t.min }])) });
+    if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบด้วยอีเมลก่อน' });
+    const b = json(req), task = W.TASKS[b.task] ? b.task : 't2', prompt = String(b.prompt || '').trim().slice(0, 1500), essay = String(b.essay || '').trim().slice(0, 7000), n = W.words(essay);
+    if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'ใส่โจทย์ก่อน (หรือกดสุ่มโจทย์)' });
+    if (n < 60) return res.status(400).json({ ok: false, error: `เรียงความสั้นไป (${n} คำ) ต้องมีอย่างน้อย 60 คำ` });
+    if (n > 900) return res.status(400).json({ ok: false, error: `ยาวเกิน 900 คำ (${n} คำ)` });
+    const q = await quota(); if (q.left <= 0) return res.status(403).json({ ok: false, error: active ? `ใช้ครบ ${q.cap} ครั้งของเดือนนี้แล้ว เริ่มใหม่วันที่ 1` : 'ใช้สิทธิ์ทดลองฟรีแล้ว สมัคร VIP เพื่อตรวจได้ทุกสัปดาห์', needVip: !active });
+    let out; try { out = await W.checkWriting({ task, prompt, essay, image: task === 't1a' ? String(b.image || '') : '' }); } catch (e) { return res.status(503).json({ ok: false, error: e.message }); }
+    const shop = await (await import('../lib/shop.js')).loadShop().catch(() => ({ products: [] })), result = { ...out.result, books: W.recommend(out.result, shop.products) };
+    const row = await V.saveWriting({ email: me, task, prompt, essay, result, band: result.band.overall, via: out.via });
+    return res.status(200).json({ ok: true, id: row?.id || null, result, left: Math.max(0, q.left - 1), cap: q.cap, active });
+  }
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
   const b = json(req);
   if (m === 'course_visit') { if (!me) return res.status(200).json({ ok: false }); try { const C = await import('../lib/courses.js'); await C.visit(me); } catch (e) {} return res.status(200).json({ ok: true }); }
@@ -85,24 +103,6 @@ async function vip(req, res, m) {
     const sub = await stripe('POST', `subscriptions/${mem.stripe_sub}`, { cancel_at_period_end: 'true' });
     const at = sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : mem.paid_until;
     await V.putMember({ email: me, cancel_at: at }); return res.status(200).json({ ok: true, cancelAt: at });
-  }
-  if (m === 'vip_write' || m === 'vip_write_get') { // ✍️ ตรวจ IELTS Writing ด้วย AI (lib/writing.js) · ต้องเข้าระบบด้วยอีเมล · สมาชิก = WRITE_CAP ครั้ง/เดือน · ยังไม่เป็นสมาชิก = ทดลองฟรี WRITE_FREE ครั้ง
-    const W = await import('../lib/writing.js');
-    let mem = null; if (me) { try { mem = await V.refreshMember(await V.getMember(me)); } catch (e) {} }
-    const active = V.isActive(mem), monthStart = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 8) + '01T00:00:00+07:00';
-    const quota = async () => { if (!me) return { used: 0, left: 0 }; const used = active ? await V.writingUsed(me, new Date(monthStart).toISOString()) : await V.writingUsed(me); const cap = active ? V.WRITE_CAP : V.WRITE_FREE; return { used, cap, left: Math.max(0, cap - used) }; };
-    if (m === 'vip_write_get') { if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบก่อน' }); const r = await V.getWriting(me, req.query.id); if (!r) return res.status(404).json({ ok: false, error: 'ไม่พบ' }); return res.status(200).json({ ok: true, item: { id: r.id, at: r.created_at, prompt: r.prompt, essay: r.essay, result: r.result } }); }
-    if (req.method === 'GET') return res.status(200).json({ ok: true, email: me, active, open: pub.open, ...(await quota()), history: me ? await V.listWriting(me).catch(() => []) : [], prompts: W.PROMPTS, tasks: Object.fromEntries(Object.entries(W.TASKS).map(([k, t]) => [k, { name: t.name, min: t.min }])) });
-    if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบด้วยอีเมลก่อน' });
-    const b = json(req), task = W.TASKS[b.task] ? b.task : 't2', prompt = String(b.prompt || '').trim().slice(0, 1500), essay = String(b.essay || '').trim().slice(0, 7000), n = W.words(essay);
-    if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'ใส่โจทย์ก่อน (หรือกดสุ่มโจทย์)' });
-    if (n < 60) return res.status(400).json({ ok: false, error: `เรียงความสั้นไป (${n} คำ) ต้องมีอย่างน้อย 60 คำ` });
-    if (n > 900) return res.status(400).json({ ok: false, error: `ยาวเกิน 900 คำ (${n} คำ)` });
-    const q = await quota(); if (q.left <= 0) return res.status(403).json({ ok: false, error: active ? `ใช้ครบ ${q.cap} ครั้งของเดือนนี้แล้ว เริ่มใหม่วันที่ 1` : 'ใช้สิทธิ์ทดลองฟรีแล้ว สมัคร VIP เพื่อตรวจได้ทุกสัปดาห์', needVip: !active });
-    let out; try { out = await W.checkWriting({ task, prompt, essay, image: task === 't1a' ? String(b.image || '') : '' }); } catch (e) { return res.status(503).json({ ok: false, error: e.message }); }
-    const shop = await (await import('../lib/shop.js')).loadShop().catch(() => ({ products: [] })), result = { ...out.result, books: W.recommend(out.result, shop.products) };
-    const row = await V.saveWriting({ email: me, task, prompt, essay, result, band: result.band.overall, via: out.via });
-    return res.status(200).json({ ok: true, id: row?.id || null, result, left: Math.max(0, q.left - 1), cap: q.cap, active });
   }
   if (['vip_mark', 'vip_marks', 'vip_mistakes', 'vip_mock'].includes(m)) {
     const mem = await V.refreshMember(await V.getMember(me).catch(() => null));
