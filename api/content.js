@@ -19,7 +19,7 @@ import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { saleKit } from '../lib/salepost.js';
-import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage } from '../lib/ads.js';
+import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
 import { sendRecoveries, recoverStatus, recoverCfg } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
@@ -3120,6 +3120,17 @@ ${books}`;
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       const body = await readBody(req);
+      if (action === 'ads_extend') { // ⏩ ต่ออายุ / ปรับงบแอดเดิม (เฉพาะคุณแดน · เงิน)
+        if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
+        const campaignId = String(body.campaignId || ''), adsetIds = (Array.isArray(body.adsetIds) ? body.adsetIds : []).map(String).filter((x) => /^\d{6,30}$/.test(x)).slice(0, 10);
+        const days = Math.round(Number(body.days) || 0), daily = Math.round(Number(body.dailyTHB) || 0);
+        if (!/^\d{6,30}$/.test(campaignId)) return res.status(400).json({ ok: false, error: 'ไม่พบแคมเปญ' });
+        if (days && (days < 1 || days > 30 || !adsetIds.length)) return res.status(400).json({ ok: false, error: 'ต่อได้ 1-30 วัน' });
+        if (daily && (daily < 50 || daily > 2000)) return res.status(400).json({ ok: false, error: 'งบต่อวันต้องอยู่ระหว่าง ฿50 - ฿2,000' });
+        if (!days && !daily) return res.status(400).json({ ok: false, error: 'ยังไม่ได้เลือกจำนวนวันหรืองบ' });
+        try { const acc = await adsAccess(await loadFb()); const r = await extendCampaign(await loadFb(), { campaignId, adsetIds, end: String(body.end || ''), days, dailyTHB: daily, budgetOn: body.budgetOn === 'adset' ? 'adset' : 'campaign', currency: acc.account?.currency || 'AUD' }); return res.status(200).json({ ok: true, ...r }); }
+        catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
+      }
       if (action === 'ads_auto_image') { // ✏️ เปลี่ยนรูปแอดที่ยิงแล้ว (เฉพาะคุณแดน) · Facebook รีวิวใหม่
         if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน' });
         const adId = String(body.adId || ''), image = String(body.image || '');

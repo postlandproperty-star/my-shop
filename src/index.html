@@ -5563,7 +5563,7 @@ function adsCamps(){const ads=(ADST.d&&ADST.d.ads)||[],m=new Map();
     const w={};for(const a of L)for(const k of ['spendTHB','valueTHB','profitTHB','purchases','clicks','impressions'])w[k]=(w[k]||0)+(Number((a.week||{})[k])||0);
     const au=(ADA.items||[]).find(x=>(L[0].campaign&&x.campaign===L[0].campaign)||(x.fb&&x.fb.campaign&&x.fb.campaign===L[0].campaignId));
     const sh=(L.find(a=>a.shop)||{}).shop||null;
-    return {id:L[0].campaignId||L[0].id,ads:L,g,w,au,sh,name:au?au.name:L[0].campaign||L[0].name,daily:Math.max(0,...L.map(a=>Number(a.dailyTHB)||0)),end:L.map(a=>a.end).filter(Boolean).sort().pop()||''};})
+    return {id:L[0].campaignId||L[0].id,adsets:[...new Set(L.map(a=>a.adsetId).filter(Boolean))],campBudget:L.some(a=>a.campaignBudget),ads:L,g,w,au,sh,name:au?au.name:L[0].campaign||L[0].name,daily:Math.max(0,...L.map(a=>Number(a.dailyTHB)||0)),end:L.map(a=>a.end).filter(Boolean).sort().pop()||''};})
     .sort((p,q)=>ADG_ORDER.indexOf(p.g)-ADG_ORDER.indexOf(q.g)||q.w.spendTHB-p.w.spendTHB);}
 function adAdBtn(a){return a.group==='run'||a.group==='review'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="PAUSED" ${ADST.busy===a.id?'disabled':''}>⏸ หยุด</button>`
   :a.group==='paused'?`<button class="btn btn-line btn-sm" data-a="adsSet" data-id="${esc(a.id)}" data-v="ACTIVE" data-camp="${esc(a.campaignId)}" ${ADST.busy===a.id?'disabled':''}>▶ เปิดต่อ</button>`:'';}
@@ -5619,6 +5619,16 @@ function adAdvice(c,R){const cur=R?R.cur:null,a0=c.ads[0],price=Number(a0.price)
   if(roas<1.5)return ['meh','🟡 เสมอตัว · ลองเปลี่ยนรูป',`ROAS ${roas.toFixed(2)} เกือบคุ้มทุน ลองรูป/ข้อความใหม่ก่อนเพิ่มงบ`];
   if(roas>=3&&(cur.ord||0)>=3)return ['up','🚀 ควรเพิ่มงบ',`กำไร ${adMoney(-loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}) · เพิ่มทีละ 20–30%${c.daily?` (${adMoney(c.daily)} → ${adMoney(Math.round(c.daily*1.25/10)*10)}/วัน)`:''} ทุก 3–4 วัน ถ้าเพิ่มเร็วไปต้นทุนต่อออเดอร์มักแพงขึ้น`];
   return ['ok','✅ ปล่อยวิ่งต่อ',`กำไร ${adMoney(-loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}) · ได้ ${cur.ord||0} ออเดอร์ ถ้าได้ถึง 3 ออเดอร์และ ROAS เกิน 3 ค่อยเพิ่มงบ`];}
+/* ⏩ ต่ออายุ / ปรับงบแอดเดิม (คุณแดน 10 ต.ค. 69 "แอดหมดอายุไปเอง ควรต่อมั้ย"): เลือกจำนวนวัน + งบต่อวัน (แนะนำตามผล) แล้วกดยืนยัน · รูป/ข้อความเหมือนเดิม */
+function adRenewBox(c,R){const v=adAdvice(c,R)||[],cur=c.daily||0,sug=v[0]==='up'?Math.round(cur*1.25/10)*10:cur,d=ADST.renewDays!=null?ADST.renewDays:(c.end?7:0),bud=ADST.renewBudget!=null?ADST.renewBudget:sug;
+  const left=c.end?Math.ceil((Date.parse(c.end)-Date.now())/864e5):null;
+  return `<div class="adt-wide aded adrenew"><div class="aded-h"><b>⏩ ต่ออายุ / ปรับงบ · ${esc(c.name)}</b><button class="chip" data-a="adsRenew" data-id="${esc(c.id)}">ปิด</button></div>
+    <p class="fine" style="margin:0">${c.end?(left<=0?'แอดนี้หมดอายุแล้ว':`เหลืออีก ${left} วัน (ถึง ${new Date(c.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})})`)+' · ต่อแล้วนับต่อจากวันจบเดิม':'แอดนี้ไม่มีวันจบ (วิ่งจนกว่าจะหยุด) ปรับได้แค่งบ'} · รูป ข้อความ กลุ่มเป้าหมายเหมือนเดิม</p>
+    ${c.end?`<span class="adq-lbl">ต่ออีกกี่วัน</span><div class="adq-plats">${[0,3,7,14].map(n=>`<button class="chip" data-a="adsRenewDays" data-v="${n}" aria-pressed="${d===n}">${n?n+' วัน':'ไม่ต่อ (ปรับงบอย่างเดียว)'}</button>`).join('')}</div>`:''}
+    <label class="adq-lbl" for="adrenew-b">งบต่อวัน (บาท) <span class="fine">ตอนนี้ ${adMoney(cur)}/วัน${sug>cur?` · แนะนำ ${adMoney(sug)} (+25% เพราะ${esc(v[1]||'')})`:''} · เพิ่มทีละไม่เกิน 20–30% ทุก 3–4 วัน ต้นทุนต่อออเดอร์จะไม่พุ่ง</span></label>
+    <input class="input" id="adrenew-b" type="number" min="50" max="2000" step="10" value="${esc(bud)}" style="max-width:160px">
+    ${ADST.renewErr?`<p class="err" style="margin:0">${esc(ADST.renewErr)}</p>`:''}
+    <div><button class="btn btn-cta btn-sm" data-a="adsRenewGo" data-id="${esc(c.id)}" ${ADST.renewBusy?'disabled':''}>${ADST.renewBusy?'กำลังบันทึกกับ Facebook...':'✅ ยืนยัน'}</button></div></div>`;}
 // แถวในตาราง = 1 แคมเปญ
 function adCampRow(c,R){const g=ADG[c.g],one=c.ads.length===1,a0=c.ads[0],cur=R?R.cur:adCalc({imp:c.w.impressions,clk:c.w.clicks,spend:c.w.spendTHB,ord:c.sh?c.sh.orders7:c.w.purchases,sales:c.sh?c.sh.rev7:c.w.valueTHB}),prev=R?R.prev:{};
   const imgs=c.ads.map(a=>a.image).filter(Boolean).slice(0,3),label=a=>(c.au&&(c.au.labels||{})[a.image])||'รูป '+(c.ads.indexOf(a)+1),todo=c.ads.filter(a=>a.todo||a.reasons.length);
@@ -5628,8 +5638,9 @@ function adCampRow(c,R){const g=ADG[c.g],one=c.ads.length===1,a0=c.ads[0],cur=R?
     <div class="adt-name"><div class="acamp-imgs n${imgs.length}">${imgs.length?imgs.map(u=>`<img src="${esc(u)}" alt="" loading="lazy">`).join(''):'<span></span>'}</div>
       <div class="acamp-t"><b>${esc(c.name)}</b><span class="bst-st"><span class="badge ${g[2]}">${g[0]} ${esc(one?a0.label:g[1])}</span>${c.daily?`<span class="fine">${adMoney(c.daily)}/วัน</span>`:''}${c.end&&c.g!=='ended'?`<span class="fine">ถึง ${new Date(c.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</span>`:''}${one?'':`<span class="fine">${c.ads.length} รูป</span>`}</span></div></div>
     ${cell('imp','การมองเห็น')}${cell('clk','คลิก')}${cell('ctr','CTR')}${cell('spend','ค่าโฆษณา')}${cell('sales','ยอดขาย')}${cell('ord','คำสั่งซื้อ')}${cell('roas','ROAS')}
-    <div class="adt-act">${toggle}${one?`<button class="btn btn-line btn-sm adt-ic" data-a="adsEdOpen" data-id="${esc(a0.id)}" title="แก้รูปแอด" aria-label="แก้รูปแอด">✏️</button>`:''}<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/${one?'ads?selected_ad_ids='+esc(a0.id):'campaigns?selected_campaign_ids='+esc(c.id)}" target="_blank" rel="noopener noreferrer" title="เปิดใน Ads Manager">↗</a></div>
+    <div class="adt-act">${c.adsets&&c.adsets.length&&/^\d+$/.test(String(c.id))?`<button class="btn ${c.g==='ended'?'btn-cta':'btn-line'} btn-sm" data-a="adsRenew" data-id="${esc(c.id)}" aria-expanded="${ADST.renew===c.id}">${c.g==='ended'?'⏩ ต่ออายุ':'⏩ ต่อ/ปรับงบ'}</button>`:''}${toggle}${one?`<button class="btn btn-line btn-sm adt-ic" data-a="adsEdOpen" data-id="${esc(a0.id)}" title="แก้รูปแอด" aria-label="แก้รูปแอด">✏️</button>`:''}<a class="btn btn-line btn-sm" href="https://adsmanager.facebook.com/adsmanager/manage/${one?'ads?selected_ad_ids='+esc(a0.id):'campaigns?selected_campaign_ids='+esc(c.id)}" target="_blank" rel="noopener noreferrer" title="เปิดใน Ads Manager">↗</a></div>
     ${one&&ADST.edit===a0.id?adEditBox(c,a0,''):''}
+    ${ADST.renew===c.id?adRenewBox(c,R):''}
     ${(()=>{const v=adAdvice(c,R);return v?`<div class="adt-wide adv adv-${v[0]}"><b>${v[1]}</b><span>${esc(v[2])}</span></div>`:'';})()}
     ${todo.length?`<div class="adt-wide">${todo.map(a=>`${a.todo?`<p class="bst-todo">👉 ${one?'':esc(label(a))+': '}${esc(a.todo)}</p>`:''}${a.reasons.length?`<p class="fine bst-why">เหตุผลจาก Facebook: ${a.reasons.map(esc).join(' · ')}</p>`:''}`).join('')}</div>`:''}
     ${one?'':`<details class="acamp-ads adt-wide" ${c.ads.some(a=>a.id===ADST.edit)?'open':''}><summary>ดูทีละรูป (${c.ads.length}) · ตัวเลข 7 วัน</summary>${c.ads.map(a=>{const ag=ADG[a.group];return `<div class="acamp-ad">${a.image?`<img src="${esc(a.image)}" alt="" loading="lazy">`:'<span></span>'}<div><b>${esc(label(a))}</b> <span class="badge ${ag[2]}">${ag[0]} ${esc(a.label)}</span><span class="fine">ใช้ ${adMoney(a.week.spendTHB)} · เห็น ${a.week.impressions.toLocaleString('th-TH')} · คลิก ${a.week.clicks} · Facebook นับซื้อ ${a.week.purchases}</span></div><div class="bst-acts">${adAdBtn(a)}<button class="btn btn-line btn-sm" data-a="adsEdOpen" data-id="${esc(a.id)}">✏️ แก้รูป</button></div></div>${ADST.edit===a.id?adEditBox(c,a,label(a)):''}`;}).join('')}</details>`}
@@ -6833,6 +6844,15 @@ function act(a,el){
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
     case 'adsFilter':if(el.dataset.v==='fix'){ADST.f='home';ADST.tf='fix';}else ADST.f=el.dataset.v;render(true);requestAnimationFrame(()=>{const t=document.querySelector('.bst-card');if(t&&t.getBoundingClientRect().top<0)t.scrollIntoView({block:'start'});});break;
     case 'bonusRm':if(S.draft){S.draft.bonusIds=(S.draft.bonusIds||[]).filter(x=>x!==id);render(true);}break;
+    case 'adsRenew':ADST.renew=ADST.renew===id?null:id;ADST.renewDays=null;ADST.renewBudget=null;ADST.renewErr='';render(true);break;
+    case 'adsRenewDays':{const b=$('#adrenew-b');if(b)ADST.renewBudget=Number(b.value)||0;ADST.renewDays=Number(el.dataset.v)||0;render(true);break;}
+    case 'adsRenewGo':{const c=adsCamps().find(z=>String(z.id)===String(id));if(!c||ADST.renewBusy)break;const b=$('#adrenew-b'),bud=Math.round(Number(b&&b.value)||0),days=c.end?(ADST.renewDays!=null?ADST.renewDays:7):0,chg=bud&&bud!==c.daily?bud:0;
+      if(!days&&!chg){ADST.renewErr='ยังไม่ได้เปลี่ยนอะไร (เลือกจำนวนวัน หรือแก้งบ)';render(true);break;}
+      if(chg&&(chg<50||chg>2000)){ADST.renewErr='งบต่อวันต้องอยู่ระหว่าง ฿50 - ฿2,000';render(true);break;}
+      if(!confirm(`${days?`ต่ออายุอีก ${days} วัน`:''}${days&&chg?' และ ':''}${chg?`ตั้งงบ ${adMoney(chg)}/วัน`:`งบเท่าเดิม ${adMoney(c.daily)}/วัน`}?\nค่าโฆษณาจะตัดจากบัตรในบัญชี Facebook ตามปกติ`))break;
+      ADST.renewBusy=true;ADST.renewErr='';render(true);
+      adminPost('/api/content?action=ads_extend',{campaignId:c.id,adsetIds:c.adsets,end:c.end,days,dailyTHB:chg,budgetOn:c.campBudget?'campaign':'adset'}).then(j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');ADST.renew=null;toast(`✅ ${days?`ต่ออายุถึง ${new Date(j.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}`:'ปรับงบแล้ว'}${chg?` · งบ ${adMoney(chg)}/วัน`:''}`,7000);loadAdsStatus();})
+        .catch(e=>{ADST.renewErr=String(e.message||e);}).then(()=>{ADST.renewBusy=false;render(true);});break;}
     case 'adsEdOpen':ADST.edit=id;PHO.ctx=null;ADST.edImg='';ADST.edImgs=[];ADST.edErr='';ADST.edBusy='';ADST.edAi=false;ADST.edHook=null;render(true);break;
     case 'adsEdClose':ADST.edit=null;render(true);break;
     case 'phoOpen':{if(PHO.ctx===id){PHO.ctx=null;render(true);break;}const p=getProduct(el.dataset.pid);if(!p)break;Object.assign(PHO,{ctx:id,pid:p.id,hits:null,sel:-1,src:'',out:'',err:'',hook:null});phoSearch(PHO.q||phoKw(p)[0]);break;}
