@@ -516,7 +516,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .bx-sec .feat li,.bx-sec .pain li{font-weight:400}.bx-li{cursor:pointer}.bx-li:hover{border-color:#2440E8}.bx-li-go{margin-left:auto;font-size:13px;color:#2440E8;white-space:nowrap;padding-left:8px}
 .osearch{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}.osearch input[type=search]{flex:1;min-width:220px}.osearch input[type=date]{width:auto;display:inline-block;padding:6px 8px}.osearch select{width:auto}.osearch-n{flex-basis:100%}
 .paycard{text-align:center;margin:10px 0 4px}.paycard a.paycard-btn{color:var(--ink);text-decoration:none;font-size:15px;font-weight:600}.qr-why{text-align:center;margin:8px 0 0}.qr-back{background:var(--warnbg);color:var(--ink);border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:14px}
-.mkt{margin-bottom:12px;padding:14px 16px}.mkt summary{cursor:pointer}.mkt-f{margin:10px 0 0;padding-left:20px;display:grid;gap:8px}.mkt-f li b{display:block}
+
 .sp-price .per{display:block;width:100%;font-size:14px;font-weight:600;opacity:.9;margin-top:2px}
 .crs-pv{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 8px 24px rgba(15,27,51,.15)}.crs-pv iframe,.crs-pv video{position:absolute;inset:0;width:100%;height:100%;border:0}.crs-pv video{object-fit:contain;background:#16203f;cursor:pointer}
 .ccur{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}.ccur details+details{border-top:1px solid var(--line)}.ccur summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 16px;background:var(--bg)}.ccur summary::-webkit-details-marker{display:none}.ccur summary span{font-size:13px;color:var(--muted);white-space:nowrap}.ccur ul{list-style:none;margin:0;padding:4px 16px 10px}.ccur li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:15px}.ccur li:first-child{border-top:0}.ccur li em{font-style:normal;color:var(--muted);font-size:13px;white-space:nowrap}
@@ -6174,21 +6174,7 @@ function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d
     <p class="fine" style="margin:4px 0 10px">น้องปากกาเขียนบทความ + แบบทดสอบคู่กัน จันทร์ พุธ พฤหัส เสาร์ 10:00 · ทุกบทความมีคำถามที่พบบ่อยและลิงก์ภายใน · ซ่อนชิ้นไหนได้ที่แท็บคอนเทนต์</p>
     <div class="seo-tbl">${R.slice(0,15).map(x=>`<div><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${x.type==='quiz'?'📝':'📄'} ${esc(x.title)}</a><span>${x.at?new Date(x.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}${x.type==='article'?(x.faq?' · มีคำถามที่พบบ่อย':' · ยังไม่มีคำถามที่พบบ่อย')+(x.image?'':' · ยังไม่มีรูปปก'):` · ${x.n} ข้อ`}</span></div>`).join('')}</div></section>
 `;}
-/* 🎯 แผนการตลาด (คุณแดนสั่ง 6 ต.ค. 69: "จดไว้ในแผน ทำเยอะจะหลุดโฟกัส") · ทีม AI อ่านฉบับเดียวกันใน lib/policy.js MARKET_PLAN
-   กฎ: งานใหม่เข้า "พักไว้" ก่อน เว้นแต่ช่วย 3 ข้อโฟกัสโดยตรง · แก้แผนที่นี่และที่ lib/policy.js พร้อมกัน */
-const MKT_PLAN={at:'8 ต.ค. 69',focus:[
-  ['📣','แอด Facebook ชุด TOEIC / IELTS','ได้ผลแล้ว (คลิก 4–6% · ขายได้) → เติมวงเงินไม่ให้หยุด ปล่อยครบ 7 วัน แล้วตัดสินใจต่อจากยอด "ร้านนับได้" (ระบบเตือนก่อนจบและก่อนวงเงินหมด)'],
-  ['🎓','เปิดขายคอร์ส TOEIC','ตั้งราคา + แชร์โฟลเดอร์ Drive (Courses) → เปิดขาย · อนุมัติบทใหม่จากโรงงาน (สัปดาห์ละ 5 บท) · ครบ 10 บทขึ้นไปค่อยยิงแอดคอร์ส'],
-  ['🎵','TikTok ช่องติว TOEIC (ใหม่)','คลิปแนวตั้ง 30–60 วิ จากโรงงาน สัปดาห์ละ 3 คลิป · บอกตรงๆ ว่าเป็นช่องของ SheetLab (ไม่แอบอ้างเป็นคนนอก) เปิด "Your brand" ตอนโพสต์ · ลิงก์ไบโอไปร้าน/คอร์ส · วัดผลหลัง 4 สัปดาห์: วิว คลิกลิงก์ ออเดอร์']],
- wait:['Meta App Review แชทบอท Messenger (รอ Meta ตรวจ)'],
- next:['✅ เสร็จแล้ว 8 ต.ค. 69: แยกโค้ดหลังบ้านออกจากหน้าขาย หน้าลูกค้าเล็กลงครึ่งหนึ่ง (373 → 178 KB) รูปหลักบน 4G ขึ้นเร็วขึ้นจาก ~3.3 เหลือ ~2 วิ'],
- parked:['อัปคลิป YouTube อัตโนมัติ','ขายต่างประเทศ (Gumroad / Notion)','สมาชิก VIP','หนังสือ/หมวดใหม่ที่ไม่ใช่ TOEIC/IELTS']};
-function mktPlanBox(){return `<details class="card mkt" ${S.mktOpen!==false?'open':''}><summary data-a="mktToggle"><b>🎯 แผนการตลาด · โฟกัส 3 อย่าง</b> <span class="fine">อัปเดต ${MKT_PLAN.at}</span></summary>
-  <ol class="mkt-f">${MKT_PLAN.focus.map(f=>`<li><b>${f[0]} ${esc(f[1])}</b><span class="fine">${esc(f[2])}</span></li>`).join('')}</ol>
-  <p class="fine" style="margin:8px 0 0">⏳ รอคนอื่น: ${MKT_PLAN.wait.map(esc).join(' · ')}</p>
-  ${(MKT_PLAN.next||[]).length?`<p class="fine" style="margin:4px 0 0">🔜 ทำต่อจากนี้: ${MKT_PLAN.next.map(esc).join(' · ')}</p>`:''}
-  <p class="fine" style="margin:4px 0 0">⏸ พักไว้ก่อน (ทำเมื่อ 3 ข้อบนเดินเองแล้ว): ${MKT_PLAN.parked.map(esc).join(' · ')}</p>
-  <p class="fine" style="margin:4px 0 0">กฎ: ไอเดียใหม่ใส่ "พักไว้" ก่อน เว้นแต่ช่วย 3 ข้อนี้โดยตรง</p></details>`;}
+/* 🎯 แผนการตลาด ย้ายไป Notion หน้า Sheetlab → "แผนการตลาด · โฟกัส 3 อย่าง" (คุณแดน 10 ต.ค. 69 "ใส่ไว้ในเว็บมันรก") ลิงก์อยู่ในห้องเอกสาร · ทีม AI อ่านฉบับใน lib/policy.js MARKET_PLAN */
 function homeTab(){
   if(TODO.items===null&&!TODO.loading){loadTodo().then(()=>render(true));}
   if(!ADST.d&&!ADST.loading)loadAdsStatus();
@@ -6200,7 +6186,7 @@ function homeTab(){
   const hBad=((HEALTH.d&&HEALTH.d.checks)||[]).filter(c=>c.level==='bad').length;
   const waits=[[hBad,'🩺 ระบบมีเรื่องด่วน','goHealth','bad'],[accBad?1:0,'🏦 บัญชีโฆษณาค้างชำระ แอดหยุดหมด','goAdsFix','bad'],[adFix-(accBad?1:0),'🔴 แอดใช้เงินแต่ยังขายไม่ได้','goAdsFix','bad'],[fresh,'✨ สินค้ามาใหม่ รอเผยแพร่','goNew','warn'],[adWait,'📣 แอดรอกดตกลง','goAds','warn'],[todo,'✅ เรื่องในเช็คลิสต์','goTodo','']].filter(w=>w[0]>0);
   const sp=ads.reduce((a,x)=>a+(x.week.spendTHB||0),0),va=ads.reduce((a,x)=>a+(x.week.valueTHB||0),0);
-  return mktPlanBox()+`<section class="waitbar">${waits.length?`<b>รอคุณแดน</b>${waits.map(w=>`<button class="wchip ${w[3]}" data-a="${w[2]}">${w[1]}${w[0]>1||w[2]!=='goAdsFix'?` <span>${w[0]}</span>`:''}</button>`).join('')}`:'<b>✓ ไม่มีเรื่องค้าง</b><span class="fine">ทีมดูแลอยู่ เปิดดูตัวเลขด้านล่างได้เลย</span>'}
+  return `<section class="waitbar">${waits.length?`<b>รอคุณแดน</b>${waits.map(w=>`<button class="wchip ${w[3]}" data-a="${w[2]}">${w[1]}${w[0]>1||w[2]!=='goAdsFix'?` <span>${w[0]}</span>`:''}</button>`).join('')}`:'<b>✓ ไม่มีเรื่องค้าง</b><span class="fine">ทีมดูแลอยู่ เปิดดูตัวเลขด้านล่างได้เลย</span>'}
     ${ads.length?`<button class="wchip info" data-a="tab" data-v="ads">📣 แอด 7 วัน: ค่าแอด ฿${sp.toLocaleString('th-TH')} · ยอดขาย ฿${va.toLocaleString('th-TH')} · <b class="${va-sp>=0?'up':'down'}">${va-sp>=0?'กำไร':'ขาดทุน'} ฿${Math.abs(va-sp).toLocaleString('th-TH')}</b></button>`:''}</section>
   ${healthCard()}
   ${dashBox()}
@@ -7076,7 +7062,6 @@ function act(a,el){
         forwho:'คนที่อยากได้เทคนิคทำข้อสอบแบบเป็นขั้นตอน\nคนที่ฟังทันแต่ยังเลือกผิดเพราะกับดัก\nคนทำงานที่มีเวลาน้อย อยากเรียนทีละบทสั้นๆ'});
       D.products.push(p);ensureSkus();save();const ed=JSON.parse(JSON.stringify(c));ed.grants=[...new Set([...(ed.grants||[]),p.id])];ed.on=true;CRS.ed=ed;
       (crsSaveNow(`เปิดขาย "${c.title}" ในร้านแล้ว ${baht(price)} · แก้หน้าขายได้ที่แท็บสินค้า`)||Promise.resolve()).then(()=>{CRS.ed=null;CRS.view='list';render(true);});break;}
-    case 'mktToggle':S.mktOpen=S.mktOpen===false;break;
     case 'crsCopyGen':{const d=S.draft,c=CRS.ed;if(!d||!c)break;if(['headline','desc','features','pains','faq'].some(k=>String(d[k]||'').trim())&&!confirm('เขียนทับหัวข้อ คำโปรย สิ่งที่ได้ ปัญหา เหมาะกับใคร และคำถามที่พบบ่อย ด้วยข้อความใหม่? (ยังไม่บันทึกจนกว่ากดบันทึก)'))break;crsWriteCopy(c,d);render(true);toast('เขียนรายละเอียดใหม่แล้ว ดูในตัวอย่างหน้าขาย แล้วกดบันทึก');break;}
     case 'crsGive':{const e=CRS.ge.trim().toLowerCase(),cid=CRS.gc||(CRS.list[0]&&CRS.list[0].id),c=CRS.list.find(x=>x.id===cid);if(!c)break;if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(e)){toast('ใส่อีเมลให้ถูก');break;}
       const em=new Set(Array.isArray(c.emails)?c.emails:String(c.emails||'').split(/[\s,]+/).filter(Boolean));em.add(e);CRS.busy=true;render(true);
