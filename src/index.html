@@ -1514,7 +1514,7 @@ async function drvCheck(){const d=S.draft;if(!d)return;const urls=[...new Set(au
 function initDraft(p){
   const d={};d.fillFrom=Object.keys(p.fillPending||{});d.audioOk=!!p.audioOk;d.videoOk=!!p.videoOk;d.audioDrive=p.audioDrive||'';d.audio=!!p.audio;d.freshNote=p.freshNote||'';
   ['name','slug','sku','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
-  d.bumpPrice=p.bumpPrice||0;d.bonusIds=(p.bonusIds||[]).slice();
+  d.bumpPrice=p.bumpPrice||0;d.bonusIds=(p.bonusIds||[]).slice();d.bookCover=p.bookCover||'';d.coverKey=p.coverKey||'';d.coverMode=p.coverMode||'';
   for(const [k,v] of Object.entries(p.fillPending||{})){if(k==='previews')continue;else if(!String(d[k]||'').trim())d[k]=v;} // รายละเอียดที่โรงงานเตรียมไว้ ใช้จริงเมื่อกดบันทึก
   if(!d.kind)d.kind='other';
   d.promoEndStr=toLocalInput(p.promoEnd);
@@ -1657,7 +1657,7 @@ async function imgSetUse(){
 async function coverUse(){
   if(!S.coverImg||!S.draft)return;S.coverBusy=true;render(true);
   try{const blob=await (await fetch(S.coverImg)).blob();const r=await square(new File([blob],'cover.png',{type:'image/png'}));const url=await uploadImage(r.url);
-    S.draft.images=[url,...(S.draft.images||[])].slice(0,5);S.coverImg=null;S.coverOpen=false;toast('ใส่ปกใหม่เป็นภาพแรกแล้ว อย่าลืมกดบันทึกสินค้า');}
+    S.draft.images=[url,...(S.draft.images||[])].slice(0,5);if(S.coverFlat===S.coverImg&&S.draft.coverMode==='theme')S.draft.bookCover=await uploadImage(S.coverImg);S.coverImg=null;S.coverFlat=null;S.coverOpen=false;toast('ใส่ปกใหม่เป็นภาพแรกแล้ว อย่าลืมกดบันทึกสินค้า');}
   catch(e){console.error(e);S.coverErr='อัปโหลดรูปไม่สำเร็จ: '+(e.message||e);}
   S.coverBusy=false;render(true);pvPost(0);
 }
@@ -2014,7 +2014,7 @@ const THNO=/pdf|ไฟล์|ดาวน์โหลด|ลิงก์|e-?book
 const thList=(t,n)=>String(t||'').split('\n').map(z=>z.replace(/^[\s•\-–*✓✔️✅0-9.)]+/,'').split('|')[0].trim()).filter(z=>z.length>1&&!THNO.test(z)).slice(0,n);
 async function themeSet(d,st){await thFont();const W=1200,H=1200,els=await thEls(st),[bg,ink]=TH_PAL[(st.pal||0)%TH_PAL.length],dark=ink!=='#fff';
   const K=(w,s)=>`${w} ${s}px Kanit,'IBM Plex Sans Thai',sans-serif`,mx=80,course=pfmt(d)==='course',price=Number(d.price)>=1?Number(d.price):0;
-  const [hero,side,cover]=await Promise.all([thImg(els[(st.off||0)%els.length]),thImg(els[((st.off||0)+3)%els.length]),themeCover(d,0,1,st).then(thLoad)]);
+  let flat='';const [hero,side,cover]=await Promise.all([thImg(els[(st.off||0)%els.length]),thImg(els[((st.off||0)+3)%els.length]),themeCover(d,0,1,st).then(u=>{flat=u;return thLoad(u);})]);
   const ld=u=>u?thLoad(u).catch(()=>null):Promise.resolve(null);
   const rr=(x,a,b,w,h,r)=>{x.beginPath();x.roundRect?x.roundRect(a,b,w,h,r):x.rect(a,b,w,h);};
   const base=(title)=>{const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle=bg;x.fillRect(0,0,W,H);
@@ -2046,10 +2046,10 @@ async function themeSet(d,st){await thFont();const W=1200,H=1200,els=await thEls
   { // 5 รายละเอียดเล่ม/คอร์ส (จาก "รายละเอียดสินค้า")
     const f=String(d.specs||'').split('\n').map(z=>z.split(/\s*[|:]\s*/).map(y=>y.trim()).filter(Boolean)).filter(z=>z.length&&!THNO.test(z.join(' '))).map(z=>z.length>1?z[0]+' · '+z.slice(1).join(' '):z[0]).slice(0,6);
     if(f.length){const {c,x}=base(course?'รายละเอียดคอร์ส':'รายละเอียดเล่ม');rows(x,f,262,'•',W-mx*2-150);pic(x,hero,W-120,H-170,230,8);out.push(c.toDataURL('image/jpeg',.9));}}
-  return out.slice(0,5);}
+  return Object.assign(out.slice(0,5),{flat});}
 async function themeSetGen(){const d=S.draft;if(!d)return;S.coverOpen=true;S.coverBusy=true;S.coverErr='';render(true);
   try{const st=thSt(d),imgs=await themeSet(d,st),urls=[];for(const u of imgs)urls.push(await uploadImage(u));
-    d.images=urls;d.coverKey=`theme:${st.theme}:${st.layout}:${st.pal}:${st.off||0}`;d.coverMode='theme';S.coverImg=null;S.coverOpen=false;
+    d.images=urls;d.bookCover=await uploadImage(imgs.flat);d.coverKey=`theme:${st.theme}:${st.layout}:${st.pal}:${st.off||0}`;d.coverMode='theme';S.coverImg=null;S.coverOpen=false;
     toast(`ได้ภาพสินค้า ${urls.length} รูปธีม${thThemeName(st)} ในหน้าแก้แล้ว · ยังไม่เปลี่ยนจนกว่าจะกดบันทึก`);}
   catch(e){console.error(e);S.coverErr='ทำชุดรูปไม่สำเร็จ: '+(e.message||e);}
   S.coverBusy=false;render(true);pvPost(0);}
@@ -2090,6 +2090,10 @@ async function bxPdfCover(b){if(!b.bookCover)throw new Error('ยังไม่
   if(!b.linkOrig)b.linkOrig=b.link;b.link=r.url;b.pdfCover=flat;b.pdfFrom=b.bookCover;
   if(S.bxSnap){S.bxNew.push(r.url);if(prev)S.bxDrop.push(prev);return r;} // รอกดบันทึกชุด
   save();if(prev)bxDropFile(prev);return r;}
+/* กด "บันทึกและเผยแพร่" แล้วสินค้ามีปกตามธีมใหม่ → เอาปก (แบบแบน ไม่มีพื้นขาว) ไปแทนหน้าแรกของไฟล์ PDF ให้ (คุณแดน 10 ต.ค. 69) · ไฟล์ต้นฉบับเก็บไว้ (linkOrig) */
+function pdfThemeCover(p){if(!p||p.status!=='published'||p.coverMode!=='theme'||!p.bookCover||p.pdfFrom===p.bookCover||isBundle(p)||pfmt(p)!=='pdf')return;
+  const src=p.linkOrig||p.link;if(!src||!/\/storage\/v1\/object\/public\/product-images\/.*\.pdf(\?|$)/i.test(src)){toast('ปกใหม่ยังไม่ได้ใส่ในไฟล์ PDF: ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน');return;}
+  toast('กำลังใส่ปกใหม่เป็นหน้าแรกของไฟล์ PDF...');bxPdfCover(p).then(r=>{toast(`ใส่ปกใหม่ในไฟล์ PDF แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ที่มีปกใหม่`);render(true);}).catch(e=>toast('ใส่ปกในไฟล์ PDF ไม่สำเร็จ: '+(e.message||e)));}
 // เก็บแค่ไฟล์ต้นฉบับ + รุ่นที่ใช้อยู่ รุ่นก่อนหน้าลบทิ้งหลังบันทึกแล้ว (ไม่เปลือง storage)
 async function bxDropFile(url){try{clearTimeout(saveTimer);if(!(await flushRemote()))return;await authFetch('/api/content?action=file_remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});}catch(e){}}
 async function bxAiImage(prompt,refs){const img=await bxAiRaw(prompt,refs);const blob=await (await fetch(img)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
@@ -3092,7 +3096,7 @@ function draftToProduct(d){
   const name=t('name'),link=t('link'),sample=t('sampleLink');
   return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
-    proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,...(d.coverKey?{coverKey:d.coverKey,coverMode:d.coverMode}:{}),bonus:d.bonus,bonusIds:(d.bonusIds||[]).filter(id=>getProduct(id)),reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
+    proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,...(d.coverKey?{coverKey:d.coverKey,coverMode:d.coverMode}:{}),...(d.bookCover?{bookCover:d.bookCover}:{}),bonus:d.bonus,bonusIds:(d.bonusIds||[]).filter(id=>getProduct(id)),reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
     bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
@@ -6324,7 +6328,7 @@ function act(a,el){
     case 'forder':factoryOrder();break;
     case 'fIdea':fIdea();break;
     case 'coverTheme':{if(!S.draft)break;S.coverOpen=true;S.coverBusy=true;S.coverErr='';render(true);const ch=thPick('auto');
-      themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}:${ch.off}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${thThemeName(ch)} · กดอีกครั้งเพื่อสุ่มใหม่`);})
+      themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.coverFlat=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}:${ch.off}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${thThemeName(ch)} · กดอีกครั้งเพื่อสุ่มใหม่`);})
         .catch(e=>{S.coverErr='ทำปกไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.coverBusy=false;render(true);});break;}
     case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
     case 'coverGen':coverGen();break;
@@ -6887,6 +6891,7 @@ function act(a,el){
       else{saved=getProduct(selfId);Object.assign(saved,data);}
       if(saved.status==='published'){delete saved.fresh;if(!saved.publishedAt){saved.publishedAt=Date.now();adDraftSoon(saved.id);}}
       if(d.fromProp)propDone(d.fromProp,true);
+      pdfThemeCover(saved);
       S.edit=null;S.draft=null;S.err='';save();
       if(crsC){crsC.title=saved.name;if(!crsC.desc)crsC.desc=saved.desc;if(saved.status==='published')crsC.on=true;crsSaveNow('บันทึกคอร์สแล้ว');}
       if(d.fromJob){const jid=d.fromJob,pid=saved.id;clearTimeout(saveTimer);
