@@ -2291,6 +2291,7 @@ ${books}`;
       try { const r = await G.gscReport(); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'seo_report', data: r, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); return res.status(200).json({ ...r, connected: true }); }
       catch (e) { return res.status(200).json({ ok: false, connected: true, email: G.gscEmail(), error: String(e.message || e).slice(0, 240) }); }
     }
+    if (action === 'file_remove') return res.status(200).json({ ok: false, error: 'ไม่ลบไฟล์ PDF แล้ว: ลูกค้าที่ซื้อไปได้ลิงก์รุ่นนั้นในอีเมล (10 ต.ค. 69)' });
     if (action === 'file_remove') { // คุณแดน: ลบไฟล์ PDF รุ่นที่ไม่ใช้แล้ว (ใน files/ เท่านั้น และต้องไม่มีสินค้าไหนใช้อยู่) ประหยัดพื้นที่
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });

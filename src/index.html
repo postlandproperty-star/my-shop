@@ -2125,7 +2125,8 @@ function pdfThemeCover(p){if(!p||p.status!=='published'||p.coverMode!=='theme'||
   const src=p.linkOrig||p.link;if(!src||!/\/storage\/v1\/object\/public\/product-images\/.*\.pdf(\?|$)/i.test(src)){toast('ปกใหม่ยังไม่ได้ใส่ในไฟล์ PDF: ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน');return;}
   toast('กำลังใส่ปกใหม่เป็นหน้าแรกของไฟล์ PDF...');bxPdfCover(p).then(r=>{const q=getProduct(p.id);if(q&&q!==p){Object.assign(q,{link:p.link,linkOrig:p.linkOrig,pdfCover:p.pdfCover,pdfFrom:p.pdfFrom});save();}toast(`ใส่ปกใหม่ในไฟล์ PDF แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ที่มีปกใหม่`);render(true);}).catch(e=>toast('ใส่ปกในไฟล์ PDF ไม่สำเร็จ: '+(e.message||e)));}
 // เก็บแค่ไฟล์ต้นฉบับ + รุ่นที่ใช้อยู่ รุ่นก่อนหน้าลบทิ้งหลังบันทึกแล้ว (ไม่เปลือง storage)
-async function bxDropFile(url){try{clearTimeout(saveTimer);if(!(await flushRemote()))return;await authFetch('/api/content?action=file_remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});}catch(e){}}
+// ห้ามลบไฟล์ PDF รุ่นเก่า (คุณแดน 10 ต.ค. 69): ลูกค้าที่ซื้อไปแล้วได้ลิงก์รุ่นนั้นในอีเมล ลบแล้วลูกค้าเปิดไม่ได้ (404) · เก็บทุกรุ่นไว้ (ไฟล์ละไม่กี่ MB)
+async function bxDropFile(url){return;try{clearTimeout(saveTimer);if(!(await flushRemote()))return;await authFetch('/api/content?action=file_remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});}catch(e){}}
 async function bxAiImage(prompt,refs){const img=await bxAiRaw(prompt,refs);const blob=await (await fetch(img)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
 const bxOrig=b=>b.origImg||(b.images||[]).find(u=>u!==b.bookCover)||'';
 function bxUseCover(b,on){if(!b.bookCover)return;if(!('origImg' in b))b.origImg=(b.images||[]).find(u=>u!==b.bookCover)||'';
