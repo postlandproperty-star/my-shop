@@ -18,6 +18,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
+import { saleKit } from '../lib/salepost.js';
 import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
 import { sendRecoveries, recoverStatus, recoverCfg } from '../lib/recover.js';
@@ -3205,6 +3206,14 @@ ${books}`;
             await sbPatch(`posts?id=eq.${p.id}`, patchP); p.notes = patchP.notes;
           }
         }
+        // โพสต์ขายของ: ปกจริง + หน้าตัวอย่างจริง + ลิงก์สินค้า (คุณแดน 10 ต.ค. 69) แทนรูปที่ AI วาด
+        if (!isVideoUrl(p.image_url) && p.kind !== 'reel') { try {
+          const kit = saleKit(p, (await loadShop().catch(() => ({ products: [] }))).products, await siteUrl());
+          if (kit && (ch === 'facebook' || kit.text.length <= 480)) {
+            const patchK = { text: kit.text, notes: [p.notes, `ระบบ: โพสต์ขาย ${kit.product.sku || kit.product.slug} ใช้ปกจริง + ตัวอย่าง ${Math.max(0, kit.gallery.length - 1)} หน้า + ลิงก์สินค้า`].filter(Boolean).join('\n').slice(0, 1500) };
+            if (ch === 'facebook' && kit.gallery.length) { p.gallery = kit.gallery; patchK.image_url = kit.gallery[0]; p.image_url = kit.gallery[0]; }
+            p.text = kit.text; await sbPatch(`posts?id=eq.${p.id}`, patchK).catch(() => {});
+          } } catch (e) { console.error('saleKit', e.message); } }
         // จองสิทธิ์ก่อนโพสต์ กันโพสต์ซ้ำเมื่อ cron กับแอดมินชนกัน
         const claimed = await sbPatch(`posts?id=eq.${p.id}&status=neq.publishing&status=neq.published`, { status: 'publishing' });
         if (!claimed.length) continue;
