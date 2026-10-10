@@ -1219,7 +1219,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .adv{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;border-radius:8px;padding:7px 10px;font-size:13.5px;background:var(--bg)}.adv b{white-space:nowrap}.adv span{color:var(--muted)}.adv-stop{background:#FEF2F2}.adv-stop b{color:#B91C1C}.adv-up{background:#F0FDF4}.adv-up b{color:#15803D}.adv-ok b{color:#15803D}.adv-meh{background:#FFFBEB}.adv-meh b{color:#B45309}
 .qcard-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 4px}.qcard-h span{font-weight:800;font-size:18px}.card-el{min-height:120px;padding:4px 0}
 .aded{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface);display:grid;gap:10px}.aded-h{display:flex;justify-content:space-between;align-items:center;gap:8px}.aded-cmp{display:flex;align-items:center;gap:12px}.aded-cmp figure{margin:0;display:grid;gap:4px;text-align:center;font-size:12px;color:var(--muted)}.aded-cmp img,.aded-ph{width:120px;height:150px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}.aded-ph{display:grid;place-items:center;padding:8px;font-size:12px}.aded-cmp>span{font-size:22px;color:var(--muted)}
-.shp-sheet{margin-bottom:12px;padding:14px 16px;display:grid;gap:8px}.shp-sheet p{margin:0}.shp-steps{margin:6px 0;padding-left:20px;display:grid;gap:4px}.shp-code{font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre}.shp-name{margin-top:8px}.shp-mail{border:1px solid var(--line);border-radius:10px;padding:8px 10px}.shp-mail summary{cursor:pointer}.shp-code-box{background:#FEF3C7;border-radius:8px;padding:8px 10px;margin:6px 0}
+.shp-sheet{margin-bottom:12px;padding:14px 16px;display:grid;gap:8px}.shp-sheet p{margin:0}.shp-steps{margin:6px 0;padding-left:20px;display:grid;gap:4px}.shp-code{font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre}.shp-name{margin-top:8px}.spc-btn{margin-top:8px}.spc{margin-top:8px}.spc-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}.spc-c{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}.spc-p{font-size:28px;font-weight:800;line-height:1.1}.spc-pf{font-size:13px}.spc-l{list-style:none;margin:4px 0;padding:0;font-size:12.5px;color:var(--muted)}.spc-l li{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.spc-l .spc-tot{border-top:1px dashed var(--line);color:var(--ink);font-weight:600}.spc-try{width:110px;display:inline-block;padding:6px 8px}.spc-tp{font-size:13px;margin:2px 0;color:#15803D}.spc-tp.bad{color:var(--danger,#c0392b)}.spc-w{color:#B45309}.spc-set{margin-top:8px}.spc-set summary{cursor:pointer;font-size:13px}.spc-fs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 10px;margin-top:6px}.spc-f{display:flex;flex-direction:column;font-size:12px;gap:2px}.spc-f .input{padding:6px 8px}.spc-x{flex-direction:row;align-items:center;gap:6px;grid-column:1/-1}.shp-mail{border:1px solid var(--line);border-radius:10px;padding:8px 10px}.shp-mail summary{cursor:pointer}.shp-code-box{background:#FEF3C7;border-radius:8px;padding:8px 10px;margin:6px 0}
 </style>
 </head>
 <body>
@@ -3159,8 +3159,42 @@ function shopeeSwitch(d){const p=S.edit&&S.edit!=='new'?getProduct(S.edit):null;
 /* ข้อความ Shopee ที่สร้างไว้ ผูกกับสินค้าที่เปิดแก้อยู่ (เดิมใช้ d.id ซึ่งฉบับร่างไม่มี → ทุกเล่มใช้ข้อความเล่มก่อน คุณแดน 10 ต.ค. 69) */
 const shopeeKey=d=>S.edit&&S.edit!=='new'?S.edit:'new:'+String(d.name||'');
 function shopeeBox(d){const x=S.shopee&&S.shopee.key===shopeeKey(d)?S.shopee:null;
-  return `<section class="card shp"><div class="shp-h"><b>🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์)</b><button class="btn btn-sm btn-line" data-a="shopeeImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy==='shopee'?'กำลังย่อรูป...':'⬇ รูปสำหรับ Shopee (ย่อแล้ว)'}</button><button class="btn btn-sm ${x&&x.text?'btn-ghost':'btn-dark'}" data-a="shopeeCopy" ${x&&x.busy?'disabled':''}>${x&&x.busy?'กำลังเขียน...':x&&x.text?'↻ เขียนใหม่':'✍️ สร้างรายละเอียด'}</button></div>${shopeeSwitch(d)}
+  return `<section class="card shp"><div class="shp-h"><b>🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์)</b><button class="btn btn-sm btn-line" data-a="shopeeImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy==='shopee'?'กำลังย่อรูป...':'⬇ รูปสำหรับ Shopee (ย่อแล้ว)'}</button><button class="btn btn-sm ${x&&x.text?'btn-ghost':'btn-dark'}" data-a="shopeeCopy" ${x&&x.busy?'disabled':''}>${x&&x.busy?'กำลังเขียน...':x&&x.text?'↻ เขียนใหม่':'✍️ สร้างรายละเอียด'}</button></div>${shopeeSwitch(d)}<button class="btn btn-sm ${S.spcOpen?'btn-line':'btn-cta'} spc-btn" data-a="spcToggle" aria-expanded="${!!S.spcOpen}">💰 ${S.spcOpen?'ซ่อนราคาแนะนำ':'ราคาที่ควรตั้งใน Shopee'}</button>${spcBox(d)}
     ${x&&x.text?`<textarea class="input shp-t" id="shp-t" readonly>${esc(x.text)}</textarea><div class="shp-f"><button class="btn btn-sm btn-dark" data-a="shopeeCopyText">📋 คัดลอก</button><span class="fine">${x.text.length.toLocaleString('th-TH')} ตัวอักษร${x.ai?'':' · AI ใช้ไม่ได้ตอนนี้ ใช้ข้อความจากหน้าขายแทน'} · ไม่มีคำว่า ดิจิทัล / ebook / PDF / ไฟล์ / ดาวน์โหลด / ลิงก์ (ผิดกฎ Shopee)</span></div>`:x&&x.err?`<p class="fine" style="color:var(--danger,#c0392b)">${esc(x.err)}</p>`:`<p class="fine" style="margin:6px 0 0">กดแล้วได้ข้อความขายแบบเล่มพิมพ์ A4 จากข้อมูลหน้านี้ คัดลอกไปวางใน Shopee ได้เลย (ไม่บันทึกลงสินค้า)</p>`}</section>`;}
+/* 💰 ราคาที่ควรตั้งใน Shopee (คุณแดน 10 ต.ค. 69): เล่มพิมพ์ (ร้านปริ้นให้) กับบัตร QR (ลูกค้าปริ้นเอง)
+   ต้นทุนแม่ (กระดาษ+หมึกต่อหน้า ปกสี เข้าเล่ม ซอง) + ค่าธรรมเนียม Shopee ร้านทั่วไป หมวดหนังสือ (คอมมิชชั่น 14.45% · ธุรกรรม 3.21% · ฿1.07/ออเดอร์ ตั้งแต่ 4 ส.ค. 69) แก้ได้ใน ⚙
+   ราคาแนะนำ = ราคาต่ำสุดลงท้าย 9 ที่ (1) กำไรไม่น้อยกว่าขายไฟล์บนเว็บ (ไม่แย่งลูกค้าเว็บ) และ (2) กำไร ≥ X% ของต้นทุนรวมค่าธรรมเนียม */
+const SPC_DEF={bw:0.3,cover:8,bind:10,pack:7,card:3,env:4,comm:14.45,txn:3.21,fixed:1.07,xtra:false,mk:80};
+const spcCfg=()=>Object.assign({},SPC_DEF,(D.settings&&D.settings.shpCost)||{},S.spc||{});
+const r9=p=>Math.max(9,Math.ceil((p+1)/10)*10-1);
+function shpPrice(d,c){c=c||spcCfg();const bun=isBundle(d)||d.type==='bundle',books=bun?(d.items||[]).map(getProduct).filter(Boolean):[d];
+  const f=(Number(c.comm)+Number(c.txn)+(c.xtra?7.49:0))/100,fx=Number(c.fixed)||0,mk=(Number(c.mk)||0)/100,web=Number(d.price)||0;
+  const noPg=books.filter(b=>!pagesOf(b)).length,pages=books.reduce((n,b)=>n+(pagesOf(b)||100),0),nb=Math.max(1,books.length);
+  const fee=P=>f*P+fx,profit=(P,cost)=>P-fee(P)-cost;
+  const rec=cost=>{const a=(1+mk)*(cost+fx)/(1-f*(1+mk)),b=(web+cost+fx)/(1-f);return r9(Math.max(f*(1+mk)<1?a:b,b));};
+  const one=(cost,parts)=>{const P=rec(cost),pf=profit(P,cost);return {cost,parts,P,fee:fee(P),profit:pf,ofPrice:pf/P,ofCost:pf/(cost+fee(P))};};
+  const prCost=pages*c.bw+nb*(Number(c.cover)+Number(c.bind))+Number(c.pack);
+  return {f,fx,web,pages,noPg,nb,profit,fee,
+    pr:one(prCost,[[`กระดาษ+หมึก ${pages.toLocaleString('th-TH')} หน้า × ฿${c.bw}`,pages*c.bw],[`ปกสี ${nb} ปก × ฿${c.cover}`,nb*c.cover],[`เข้าเล่ม ${nb} เล่ม × ฿${c.bind}`,nb*c.bind],['ซอง/บรรจุ',Number(c.pack)]]),
+    qr:one(Number(c.card)+Number(c.env),[['พิมพ์บัตร QR',Number(c.card)],['ซอง',Number(c.env)]])};}
+const b2=n=>'฿'+(Math.round(n*100)/100).toLocaleString('th-TH',{maximumFractionDigits:2});
+function spcOut(d){const c=spcCfg(),x=shpPrice(d,c),pc=n=>Math.round(n*100)+'%';
+  const card=(k,t,v,sub)=>{const tr=Number((S.spcTry||{})[k])||0,tp=tr?x.profit(tr,v.cost):0;
+    return `<div class="spc-c"><b>${t}</b><span class="fine">${sub}</span>
+    <div class="spc-p">${baht(v.P)}</div><div class="spc-pf">กำไร ${b2(v.profit)} / ชิ้น · <b>${pc(v.ofPrice)}</b> ของราคาขาย · ${pc(v.ofCost)} ของต้นทุน</div>
+    <ul class="spc-l">${v.parts.map(([l,n])=>`<li><span>${esc(l)}</span><span>${b2(n)}</span></li>`).join('')}<li><span>ค่าธรรมเนียม Shopee ${(x.f*100).toFixed(2)}% + ฿${x.fx}</span><span>${b2(v.fee)}</span></li><li class="spc-tot"><span>ต้นทุนรวม</span><span>${b2(v.cost+v.fee)}</span></li></ul>
+    <label class="fine">ลองตั้งราคาเอง ฿ <input class="input spc-try" type="number" min="0" inputmode="numeric" data-spc-try="${k}" value="${tr||''}" placeholder="${v.P}"></label>
+    ${tr?`<p class="spc-tp ${tp<0?'bad':''}">ที่ ${baht(tr)} ได้กำไร ${b2(tp)} (${pc(tp/tr)} ของราคา)${tp<x.web?` · น้อยกว่าขายไฟล์บนเว็บ (${baht(x.web)})`:''}</p>`:''}</div>`;};
+  return `<div class="spc-g">${card('pr','📘 เล่มพิมพ์ · ร้านปริ้นให้',x.pr,`${x.nb>1?x.nb+' เล่ม · ':''}${x.pages.toLocaleString('th-TH')} หน้า${x.noPg?` <span class="spc-w">(${x.noPg} เล่มไม่รู้จำนวนหน้า คิด 100 หน้า)</span>`:''}`)}${card('qr','🎫 บัตร QR · ลูกค้าปริ้นเอง',x.qr,'ส่งบัตรทางไปรษณีย์ ลูกค้าสแกนโหลดเอง')}</div>
+    <p class="fine">ราคาบนเว็บ ${baht(x.web)} · ราคาแนะนำ = ราคาต่ำสุดลงท้าย 9 ที่ได้กำไรไม่น้อยกว่าขายไฟล์บนเว็บ และกำไร ≥ ${c.mk}% ของต้นทุน · ค่าส่งลูกค้าจ่ายเอง (Shopee หักค่าธุรกรรม 3.21% จากค่าส่งด้วยเล็กน้อย)</p>`;}
+function spcBox(d){if(!S.spcOpen)return '';const c=spcCfg(),fld=(k,l,st)=>`<label class="spc-f"><span>${l}</span><input class="input" type="number" step="${st||1}" min="0" data-spc="${k}" value="${esc(c[k])}"></label>`;
+  return `<div class="spc"><div id="spc-out">${spcOut(d)}</div>
+    <details class="spc-set"><summary>⚙ ต้นทุนของแม่ · ค่าธรรมเนียม Shopee (แก้ได้)</summary><div class="spc-fs">
+    ${fld('bw','กระดาษ+หมึก ต่อหน้า (฿)',0.01)}${fld('cover','ปกสี ต่อปก (฿)',0.5)}${fld('bind','เข้าเล่ม ต่อเล่ม (฿)',0.5)}${fld('pack','ซอง/บรรจุ เล่มพิมพ์ (฿)',0.5)}${fld('card','พิมพ์บัตร QR (฿)',0.5)}${fld('env','ซองบัตร QR (฿)',0.5)}
+    ${fld('comm','คอมมิชชั่น Shopee (%)',0.01)}${fld('txn','ค่าธุรกรรม (%)',0.01)}${fld('fixed','ค่าธรรมเนียมต่อออเดอร์ (฿)',0.01)}${fld('mk','กำไรขั้นต่ำ (% ของต้นทุน)',5)}
+    <label class="spc-f spc-x"><input type="checkbox" data-spc="xtra" ${c.xtra?'checked':''}><span>เข้าโปรแกรมโค้ดส่วนลด/ส่งฟรี (Xtra) +7.49%</span></label></div>
+    <div class="row" style="gap:8px;margin-top:6px"><button class="btn btn-sm btn-dark" data-a="spcSave">💾 บันทึกเป็นค่าประจำร้าน</button><button class="btn btn-sm btn-line" data-a="spcReset">↺ ค่าเริ่มต้น</button></div>
+    <p class="fine">ค่าเริ่มต้นเป็นค่าประมาณ (เลเซอร์ขาวดำ 2 หน้า ≈ ฿0.3/หน้า) ถามต้นทุนจริงจากแม่แล้วแก้ตรงนี้ · ค่าธรรมเนียม: ร้านทั่วไป หมวดหนังสือ อัตราตั้งแต่ 4 ส.ค. 69</p></details></div>`;}
 /* รูปสำหรับ Shopee: จัตุรัส 1,000×1,000 JPEG ไม่เกินประมาณ 1MB (Shopee รับไม่เกิน 2MB/รูป) วางทั้งรูปบนพื้นขาว ไม่ตัดขอบ */
 async function shopeeImgs(){const d=S.draft;if(!d)return;const bun=isBundle(d)||d.type==='bundle',books=bun?(d.items||[]).map(getProduct).filter(Boolean):[];
   const urls=[...(d.cover?[d.cover]:[]),...(d.images||[]),...(bun?books.map(b=>b.bookCover||(b.images||[])[0]):(d.previews||[]))].filter(Boolean).filter((u,i,a)=>a.indexOf(u)===i).slice(0,9);
@@ -6703,6 +6737,9 @@ function act(a,el){
     case 'shpSheetCopy':{const fm=el.dataset.v==='formula',pu=el.dataset.v==='printUrl',mw=el.dataset.v==='mailWorker',t=(S.shpSheet||{})[mw?'mailWorker':pu?'printUrl':fm?'formula':'script']||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(mw?'คัดลอกโค้ด Worker แล้ว ไปวางใน Cloudflare ได้เลย':pu?'คัดลอกลิงก์หน้าพิมพ์แล้ว ส่งให้แม่ได้เลย':fm?'คัดลอกสูตรแล้ว วางในแท็บ Links ช่องเดิม':'คัดลอกโค้ดแล้ว ไปวางใน Apps Script ของชีตได้เลย')).catch(()=>{const ta=document.getElementById(mw?'shp-worker':fm?'shp-formula':'shp-code');if(ta){ta.select();document.execCommand('copy');toast('คัดลอกแล้ว');}});break;}
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
     case 'shopeeCopy':shopeeCopy();break;
+    case 'spcToggle':S.spcOpen=!S.spcOpen;render(true);break;
+    case 'spcSave':{D.settings.shpCost=Object.assign({},SPC_DEF,D.settings.shpCost||{},S.spc||{});S.spc=null;save();toast('บันทึกต้นทุน/ค่าธรรมเนียมแล้ว ใช้กับทุกเล่ม');render(true);break;}
+    case 'spcReset':S.spc=Object.assign({},SPC_DEF);render(true);toast('กลับเป็นค่าเริ่มต้นแล้ว (ยังไม่บันทึก)');break;
     case 'shopeeImgs':shopeeImgs();break;
     case 'shopeeCopyText':{const t=(S.shopee||{}).text||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('คัดลอกแล้ว ไปวางใน Shopee ได้เลย')).catch(()=>{const ta=document.getElementById('shp-t');if(ta){ta.select();document.execCommand('copy');toast('คัดลอกแล้ว');}});break;}
     case 'dlImgs':{const d=S.draft;if(d)zipDownload((d.images||[]).map((u,i)=>({name:`${dlName(d)}-${i+1}${i?'':'-cover'}`,url:u})),dlName(d)+'-images','รูป');break;}
@@ -7221,6 +7258,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.d
 document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
   if(ds.adf){ADF[ds.adf]=Number(t.value)||0;const o=document.getElementById('adf-out');if(o)o.innerHTML=adfOut();return;}
+  if(ds.spc||ds.spcTry){if(ds.spc)S.spc=Object.assign({},S.spc||{},{[ds.spc]:t.type==='checkbox'?t.checked:(Number(t.value)||0)});else S.spcTry=Object.assign({},S.spcTry||{},{[ds.spcTry]:Number(t.value)||0});
+    const o=document.getElementById('spc-out');if(o&&S.draft){const k=ds.spcTry,pos=t.selectionStart;o.innerHTML=spcOut(S.draft);if(k){const n=o.querySelector(`[data-spc-try="${k}"]`);if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}}}return;}
   if(ds.f)S.form[ds.f]=t.value;
   if(ds.f==='setBooks'){const b=document.querySelector('[data-a="soOrder"]');if(b&&!S.fbusy){const n=setOrderLines().length;b.textContent='สั่งผลิตทั้งชุด'+(n?` (${n} เล่ม)`:'');}}
   if(ds.vp&&VIPA.pg){const [k,i,f]=ds.vp.split('.'),v=t.type==='checkbox'?t.checked:t.value;if(i===undefined)VIPA.pg[k]=v;else if(VIPA.pg[k]&&VIPA.pg[k][i])VIPA.pg[k][i][f]=v;return;}
