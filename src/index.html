@@ -3130,7 +3130,9 @@ const shpBadge=p=>p.shopee?'<span class="badge shp-st on">🛒 ลง Shopee แ
 function shopeeSwitch(d){const p=S.edit&&S.edit!=='new'?getProduct(S.edit):null;if(!p)return '<span class="fine">บันทึกสินค้าก่อน แล้วค่อยเปิดสถานะ Shopee</span>';
   return `<div class="sw-row shp-sw"><span><b>${p.shopee?'🛒 ลง Shopee แล้ว':'ยังไม่ได้ลง Shopee'}</b><small>${p.shopee?(p.shopeeAt?'เปิดเมื่อ '+fdt(p.shopeeAt)+' · ':'')+`<a href="${SHOPEE_NEW}" target="_blank" rel="noopener noreferrer">เปิด Shopee Seller ↗</a>`:'เปิดสวิตช์เมื่อเอาไปลง Shopee ระบบเปิดหน้าเพิ่มสินค้าใน Shopee Seller ให้'}</small></span><label class="switch"><input type="checkbox" data-a="shopeeOn" data-id="${esc(p.id)}" ${p.shopee?'checked':''} aria-label="ลง Shopee แล้ว"><span></span></label></div>`;}
 /* 🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์): AI เขียนจากข้อมูลหน้าขาย คุณแดนคัดลอกไปวางเอง · กรองคำต้องห้ามของ Shopee (ดิจิทัล ebook PDF ไฟล์ ดาวน์โหลด ลิงก์) ที่เซิร์ฟเวอร์ */
-function shopeeBox(d){const x=S.shopee&&S.shopee.key===(d.id||'new')?S.shopee:null;
+/* ข้อความ Shopee ที่สร้างไว้ ผูกกับสินค้าที่เปิดแก้อยู่ (เดิมใช้ d.id ซึ่งฉบับร่างไม่มี → ทุกเล่มใช้ข้อความเล่มก่อน คุณแดน 10 ต.ค. 69) */
+const shopeeKey=d=>S.edit&&S.edit!=='new'?S.edit:'new:'+String(d.name||'');
+function shopeeBox(d){const x=S.shopee&&S.shopee.key===shopeeKey(d)?S.shopee:null;
   return `<section class="card shp"><div class="shp-h"><b>🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์)</b><button class="btn btn-sm btn-line" data-a="shopeeImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy==='shopee'?'กำลังย่อรูป...':'⬇ รูปสำหรับ Shopee (ย่อแล้ว)'}</button><button class="btn btn-sm ${x&&x.text?'btn-ghost':'btn-dark'}" data-a="shopeeCopy" ${x&&x.busy?'disabled':''}>${x&&x.busy?'กำลังเขียน...':x&&x.text?'↻ เขียนใหม่':'✍️ สร้างรายละเอียด'}</button></div>${shopeeSwitch(d)}
     ${x&&x.text?`<textarea class="input shp-t" id="shp-t" readonly>${esc(x.text)}</textarea><div class="shp-f"><button class="btn btn-sm btn-dark" data-a="shopeeCopyText">📋 คัดลอก</button><span class="fine">${x.text.length.toLocaleString('th-TH')} ตัวอักษร${x.ai?'':' · AI ใช้ไม่ได้ตอนนี้ ใช้ข้อความจากหน้าขายแทน'} · ไม่มีคำว่า ดิจิทัล / ebook / PDF / ไฟล์ / ดาวน์โหลด / ลิงก์ (ผิดกฎ Shopee)</span></div>`:x&&x.err?`<p class="fine" style="color:var(--danger,#c0392b)">${esc(x.err)}</p>`:`<p class="fine" style="margin:6px 0 0">กดแล้วได้ข้อความขายแบบเล่มพิมพ์ A4 จากข้อมูลหน้านี้ คัดลอกไปวางใน Shopee ได้เลย (ไม่บันทึกลงสินค้า)</p>`}</section>`;}
 /* รูปสำหรับ Shopee: จัตุรัส 1,000×1,000 JPEG ไม่เกินประมาณ 1MB (Shopee รับไม่เกิน 2MB/รูป) วางทั้งรูปบนพื้นขาว ไม่ตัดขอบ */
@@ -3145,7 +3147,7 @@ async function shopeeImgs(){const d=S.draft;if(!d)return;const bun=isBundle(d)||
     if(!n)throw new Error('โหลดรูปไม่ได้');const z=await zip.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(z);a.download=dlName(d)+'-shopee.zip';document.body.appendChild(a);a.click();a.remove();
     toast(`ได้รูปสำหรับ Shopee ${n} รูป (1000×1000 ไม่เกิน 1MB)`);}catch(e){toast('ทำรูปไม่สำเร็จ: '+(e.message||e));}
   S.zipBusy='';render(true);}
-async function shopeeCopy(){const d=S.draft;if(!d)return;const key=d.id||'new',bun=isBundle(d),books=bun?(d.items||[]).map(getProduct).filter(Boolean):[d];
+async function shopeeCopy(){const d=S.draft;if(!d)return;const key=shopeeKey(d),bun=isBundle(d),books=bun?(d.items||[]).map(getProduct).filter(Boolean):[d];
   S.shopee={key,busy:true};render(true);
   const pages=books.reduce((a,b)=>a+pagesOf(b),0),audio=books.some(b=>/MP3|ไฟล์เสียง|เสียงอ่าน|QR|🎧/i.test([b.specs,b.features,b.desc].join(' ')));
   try{const j=await adminPost('/api/content?action=shopee_copy',{name:d.name,headline:d.headline,desc:d.desc,features:bun?'':d.features,forwho:d.forwho,notfor:d.notfor,faq:d.faq,toc:bun?'':d.toc,specs:bun?'':d.specs,pages,audio,books:bun?books.map(b=>b.name):[]});
@@ -7340,7 +7342,8 @@ function pvData(){
 }
 function pvPost(ms){
   clearTimeout(pvTimer);
-  pvTimer=setTimeout(()=>{const f=document.getElementById('pvf');if(!f||!f.contentWindow||!S.draft)return;try{f.contentWindow.postMessage(pvData(),location.origin);}catch(e){console.error(e);}},ms==null?250:ms);
+  pvTimer=setTimeout(()=>{const f=document.getElementById('pvf');if(!f||!f.contentWindow||!S.draft)return;const n=document.getElementById('pvw-err');
+    try{f.contentWindow.postMessage(pvData(),location.origin);if(n)n.textContent='';}catch(e){console.error(e);if(n)n.textContent='⚠️ แสดงตัวอย่างไม่ได้: '+(e.message||e);}},ms==null?250:ms);
 }
 function pvSync(){
   if(PV)return;
@@ -7349,22 +7352,24 @@ function pvSync(){
   if(!on){document.body.classList.remove('pv-open');return;}
   if(!pvWrap){
     pvWrap=document.createElement('div');pvWrap.id='pvw';
-    pvWrap.innerHTML=`<div class="pvw-head"><div><b>👁 ตัวอย่างหน้าขาย</b><div class="fine">เปลี่ยนตามที่พิมพ์ทันที · ยังไม่บันทึก · ปุ่มจ่ายเงินกดไม่ได้</div></div><button class="btn btn-dark btn-sm pvw-x" data-a="pvClose">✏️ กลับไปแก้ไข</button></div><div class="pvw-phone"><iframe id="pvf" src="/?pv=1" title="ตัวอย่างหน้าขาย"></iframe></div>`;
+    pvWrap.innerHTML=`<div class="pvw-head"><div><b>👁 ตัวอย่างหน้าขาย</b><div class="fine">เปลี่ยนตามที่พิมพ์ทันที · ยังไม่บันทึก · ปุ่มจ่ายเงินกดไม่ได้</div><div class="fine err" id="pvw-err" role="status"></div></div><button class="btn btn-dark btn-sm pvw-x" data-a="pvClose">✏️ กลับไปแก้ไข</button></div><div class="pvw-phone"><iframe id="pvf" src="/?pv=1" title="ตัวอย่างหน้าขาย"></iframe></div>`;
     const b=document.createElement('button');b.id='pvbtn';b.className='btn btn-cta';b.dataset.a='pvOpen';b.textContent='👁 ดูตัวอย่างหน้า';
-    document.body.appendChild(pvWrap);document.body.appendChild(b);
+    document.body.appendChild(pvWrap);document.body.appendChild(b);pvWrap.dataset.for=S.edit;
   }
+  /* เปิดสินค้าเล่มอื่น: โหลดหน้าตัวอย่างใหม่ทั้งหน้า (คุณแดน 10 ต.ค. 69 เห็นตัวอย่างของเล่มก่อนค้างอยู่) · หน้าใหม่ส่ง pvReady แล้วได้ข้อมูลเล่มนี้ */
+  if(pvWrap.dataset.for!==String(S.edit)){pvWrap.dataset.for=String(S.edit);const f=document.getElementById('pvf');if(f){f.src='/?pv=1&k='+encodeURIComponent(S.edit)+'-'+Date.now().toString(36);return;}}
   pvPost();
 }
 window.addEventListener('popstate',()=>{if(!PV&&S.view!=='admin'&&S.view!=='login')route();});
 window.addEventListener('message',e=>{
   if(e.origin!==location.origin)return;
   const m=e.data||{};
-  if(!PV){const f=document.getElementById('pvf');if(m.type==='pvReady'&&f&&e.source===f.contentWindow)pvPost(0);return;}
+  if(!PV){const f=document.getElementById('pvf');if(f&&e.source===f.contentWindow){if(m.type==='pvReady')pvPost(0);else if(m.type==='pvErr'){const n=document.getElementById('pvw-err');if(n)n.textContent='⚠️ หน้าตัวอย่างแสดงไม่ได้: '+m.msg;}}return;}
   if(e.source!==window.parent||m.type!=='pv'||!Array.isArray(m.products))return;
   const first=!S.pvGot;S.pvGot=true;
   D.products=m.products;if(m.settings)D.settings=m.settings;
   S.productId=m.id;S.view='shop';S.loading=false;S.qr=null;
-  render(!first);
+  try{render(!first);}catch(err){console.error(err);try{window.parent.postMessage({type:'pvErr',msg:String(err&&err.message||err).slice(0,160)},location.origin);}catch(_){}}
 });
 if(PV){
   document.addEventListener('click',e=>{ // ตัวอย่างเท่านั้น: ห้ามพาไปหน้าจ่ายเงินหรือออกนอกหน้า
