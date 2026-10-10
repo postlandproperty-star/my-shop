@@ -311,7 +311,7 @@ footer{padding:28px 0 110px;text-align:center}
 .pt-table{border:1px solid var(--line);border-radius:8px;overflow:visible}
 .pt-th,.pt-row{display:grid;grid-template-columns:minmax(0,3.2fr) 1fr .9fr 1.8fr 1.1fr;gap:12px;padding:14px 14px;align-items:start}
 .pt-th{background:var(--bg);font-size:13px;color:var(--muted);padding:10px 14px;border-radius:8px 8px 0 0}
-.pt-row{border-top:1px solid var(--line)}.pt-row.draft .pt-img{opacity:.6}
+.pt-row{border-top:1px solid var(--line)}.pt-row[hidden]{display:none!important}.pt-row.draft .pt-img{opacity:.6}
 .pt-prod{display:flex;gap:12px;min-width:0}
 .pt-img{width:64px;height:64px;flex:none;border-radius:6px;object-fit:cover;border:1px solid var(--line);background:var(--bg)}
 .pt-noimg{display:grid;place-items:center;font-size:26px;border-left:4px solid var(--c)}
@@ -1209,6 +1209,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .adv{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;border-radius:8px;padding:7px 10px;font-size:13.5px;background:var(--bg)}.adv b{white-space:nowrap}.adv span{color:var(--muted)}.adv-stop{background:#FEF2F2}.adv-stop b{color:#B91C1C}.adv-up{background:#F0FDF4}.adv-up b{color:#15803D}.adv-ok b{color:#15803D}.adv-meh{background:#FFFBEB}.adv-meh b{color:#B45309}
 .qcard-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 4px}.qcard-h span{font-weight:800;font-size:18px}.card-el{min-height:120px;padding:4px 0}
 .aded{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface);display:grid;gap:10px}.aded-h{display:flex;justify-content:space-between;align-items:center;gap:8px}.aded-cmp{display:flex;align-items:center;gap:12px}.aded-cmp figure{margin:0;display:grid;gap:4px;text-align:center;font-size:12px;color:var(--muted)}.aded-cmp img,.aded-ph{width:120px;height:150px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}.aded-ph{display:grid;place-items:center;padding:8px;font-size:12px}.aded-cmp>span{font-size:22px;color:var(--muted)}
+.shp-sheet{margin-bottom:12px;padding:14px 16px;display:grid;gap:8px}.shp-sheet p{margin:0}.shp-steps{margin:6px 0;padding-left:20px;display:grid;gap:4px}.shp-code{font:12px/1.4 ui-monospace,Menlo,monospace;white-space:pre}.shp-name{margin-top:8px}
 </style>
 </head>
 <body>
@@ -1543,7 +1544,7 @@ async function drvCheck(){const d=S.draft;if(!d)return;const urls=[...new Set(au
 function initDraft(p){
   const d={};d.fillFrom=Object.keys(p.fillPending||{});d.audioOk=!!p.audioOk;d.videoOk=!!p.videoOk;d.audioDrive=p.audioDrive||'';d.audio=!!p.audio;d.freshNote=p.freshNote||'';
   ['name','slug','sku','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
-  d.bumpPrice=p.bumpPrice||0;d.bonusIds=(p.bonusIds||[]).slice();d.bookCover=p.bookCover||'';d.noAudio=!!p.noAudio;d.coverKey=p.coverKey||'';d.coverMode=p.coverMode||'';
+  d.bumpPrice=p.bumpPrice||0;d.bonusIds=(p.bonusIds||[]).slice();d.bookCover=p.bookCover||'';d.shopeeName=p.shopeeName||'';d.noAudio=!!p.noAudio;d.coverKey=p.coverKey||'';d.coverMode=p.coverMode||'';
   for(const [k,v] of Object.entries(p.fillPending||{})){if(k==='previews')continue;else if(!String(d[k]||'').trim())d[k]=v;} // รายละเอียดที่โรงงานเตรียมไว้ ใช้จริงเมื่อกดบันทึก
   if(!d.kind)d.kind='other';
   d.promoEndStr=toLocalInput(p.promoEnd);
@@ -3131,7 +3132,7 @@ function draftToProduct(d){
   return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
     proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,...(d.coverKey?{coverKey:d.coverKey,coverMode:d.coverMode}:{}),...(d.bookCover?{bookCover:d.bookCover}:{}),bonus:d.bonus,bonusIds:(d.bonusIds||[]).filter(id=>getProduct(id)),reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
-    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,noAudio:!!d.noAudio,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
+    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,noAudio:!!d.noAudio,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,shopeeName:t('shopeeName'),fillPending:undefined};
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
 function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/|\/Users\//.test(x)).slice(0,2).join(' · ')+(/🎧/.test(n)?' · 🎧 มีไฟล์เสียง (ดูในหน้าแก้สินค้า)':'');}
@@ -3140,7 +3141,7 @@ const SHOPEE_NEW='https://seller.shopee.co.th/portal/product/new?pageEntry=produ
 const shpBadge=p=>p.shopee?'<span class="badge shp-st on">🛒 ลง Shopee แล้ว</span>':''; // แสดงอย่างเดียว เปิด/ปิดที่สวิตช์ในหน้าแก้สินค้า (คุณแดน 10 ต.ค.)
 function shopeeSwitch(d){const p=S.edit&&S.edit!=='new'?getProduct(S.edit):null;if(!p)return '<span class="fine">บันทึกสินค้าก่อน แล้วค่อยเปิดสถานะ Shopee</span>';
   const sku=String(d.sku||p.sku||'').trim();
-  return `${sku?`<div class="shp-sku"><span>รหัส SKU <b>${esc(sku)}</b> <span class="fine">ใส่ในช่อง "รหัส SKU" ของ Shopee (ไม่ใช่ GTIN)</span></span><button class="btn btn-sm btn-line" data-a="skuCopy" data-v="${esc(sku)}">📋 คัดลอก SKU</button></div>`:''}<div class="sw-row shp-sw"><span><b>${p.shopee?'🛒 ลง Shopee แล้ว':'ยังไม่ได้ลง Shopee'}</b><small>${p.shopee?(p.shopeeAt?'เปิดเมื่อ '+fdt(p.shopeeAt)+' · ':'')+`<a href="${SHOPEE_NEW}" target="_blank" rel="noopener noreferrer">เปิด Shopee Seller ↗</a>`:'เปิดสวิตช์เมื่อเอาไปลง Shopee ระบบเปิดหน้าเพิ่มสินค้าใน Shopee Seller ให้'}</small></span><label class="switch"><input type="checkbox" data-a="shopeeOn" data-id="${esc(p.id)}" ${p.shopee?'checked':''} aria-label="ลง Shopee แล้ว"><span></span></label></div>`;}
+  return `${sku?`<div class="shp-sku"><span>รหัส SKU <b>${esc(sku)}</b> <span class="fine">ใส่ในช่อง "รหัส SKU" ของ Shopee (ไม่ใช่ GTIN)</span></span><button class="btn btn-sm btn-line" data-a="skuCopy" data-v="${esc(sku)}">📋 คัดลอก SKU</button></div>`:''}<div class="sw-row shp-sw"><span><b>${p.shopee?'🛒 ลง Shopee แล้ว':'ยังไม่ได้ลง Shopee'}</b><small>${p.shopee?(p.shopeeAt?'เปิดเมื่อ '+fdt(p.shopeeAt)+' · ':'')+`<a href="${SHOPEE_NEW}" target="_blank" rel="noopener noreferrer">เปิด Shopee Seller ↗</a>`:'เปิดสวิตช์เมื่อเอาไปลง Shopee ระบบเปิดหน้าเพิ่มสินค้าใน Shopee Seller ให้'}</small></span><label class="switch"><input type="checkbox" data-a="shopeeOn" data-id="${esc(p.id)}" ${p.shopee?'checked':''} aria-label="ลง Shopee แล้ว"><span></span></label></div>${p.shopee?`<div class="field shp-name"><label class="lbl" for="e-shpname">ชื่อสินค้าบน Shopee <span class="fine">ให้ตรงกับชื่อที่ลงใน Shopee (ชีตส่งไฟล์ใช้จับคู่ออเดอร์) · เว้นว่าง = ใช้ชื่อเดียวกับเว็บ · แก้แล้วกดบันทึก</span></label><input class="input" id="e-shpname" data-d="shopeeName" value="${esc(d.shopeeName||'')}" placeholder="${esc(p.name)}"><span class="fine">📄 เปิดสวิตช์แล้ว สินค้านี้เข้า Google Sheet ส่งไฟล์เองภายใน 5 นาที · ปิดสวิตช์ (กดผิด) = ลบออกจากชีต</span></div>`:''}`;}
 /* 🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์): AI เขียนจากข้อมูลหน้าขาย คุณแดนคัดลอกไปวางเอง · กรองคำต้องห้ามของ Shopee (ดิจิทัล ebook PDF ไฟล์ ดาวน์โหลด ลิงก์) ที่เซิร์ฟเวอร์ */
 /* ข้อความ Shopee ที่สร้างไว้ ผูกกับสินค้าที่เปิดแก้อยู่ (เดิมใช้ d.id ซึ่งฉบับร่างไม่มี → ทุกเล่มใช้ข้อความเล่มก่อน คุณแดน 10 ต.ค. 69) */
 const shopeeKey=d=>S.edit&&S.edit!=='new'?S.edit:'new:'+String(d.name||'');
@@ -4274,6 +4275,20 @@ async function shopDecor(){if(S.zipBusy)return;S.zipBusy='decor';render(true);
     toast(`ได้รูปตกแต่งร้าน Shopee ${imgs.length} รูป (โปรไฟล์ · ภาพปก · สไลด์ · แบนเนอร์หมวด) ดูวิธีใช้ในไฟล์ วิธีใช้.txt`,8000);}
   catch(e){console.error(e);toast('ทำรูปตกแต่งร้านไม่สำเร็จ: '+(e.message||e));}
   S.zipBusy=false;render(true);}
+/* 📄 Google Sheet "Shopee Auto Delivery" (คุณแดน 10 ต.ค.): ลูกค้า Shopee สแกนบัตร QR + เลขคำสั่งซื้อ → โหลดไฟล์ · สวิตช์ "ลง Shopee" = เพิ่ม/ลบแถวในแท็บ Links เอง (lib/shopeesheet.js)
+   หลังบ้านโชว์สถานะซิงก์ + โค้ด Apps Script ให้คุณแดนวางในชีตครั้งเดียว */
+async function shpSheetLoad(reset){S.shpSheet=Object.assign({},S.shpSheet,{open:true,busy:true,err:''});render(true);
+  try{const j=reset?await adminPost('/api/content?action=shopee_sheet_cfg',{reset:true}):await authFetch('/api/content?action=shopee_sheet_cfg');if(!j||!j.ok)throw new Error((j&&j.error)||'โหลดไม่ได้');S.shpSheet={open:true,script:j.script,last:j.last,rows:j.rows||[],missing:j.missing||[]};}
+  catch(e){S.shpSheet={open:true,err:String(e.message||e)};}render(true);}
+function shpSheetBox(){const x=S.shpSheet;if(!x||!x.open)return '';
+  return `<section class="card shp-sheet"><div class="shp-h"><b>📄 Google Sheet ส่งไฟล์ Shopee อัตโนมัติ</b><button class="btn btn-sm btn-line" data-a="shpSheetClose">ปิด</button></div>
+  ${x.busy?'<p class="fine">กำลังโหลด...</p>':x.err?`<p class="err">${esc(x.err)}</p>`:`
+  <p>${x.last?`✅ ชีตซิงก์ล่าสุด <b>${fdt(x.last.at)}</b> · ${x.last.n} รายการ`:'⏳ ชีตยังไม่เคยดึงข้อมูล (ยังไม่ได้วางโค้ดในชีต ทำตามขั้นตอนข้างล่างครั้งเดียว)'}</p>
+  <p class="fine">เปิดสวิตช์ "ลง Shopee" แล้ว ${x.rows.length} รายการจะอยู่ในแท็บ Links${x.rows.length?': '+x.rows.slice(0,8).map(r=>esc(r.name)).join(' · ')+(x.rows.length>8?' ...':''):''}</p>
+  ${x.missing.length?`<p class="err">⚠️ ยังไม่มีลิงก์ไฟล์ จึงยังไม่เข้าชีต: ${x.missing.map(r=>esc(r.name)).join(' · ')} (ใส่ลิงก์ไฟล์ในหน้าแก้สินค้า)</p>`:''}
+  <details ${x.last?'':'open'}><summary class="fine">วิธีเชื่อมชีต (ทำครั้งเดียว)</summary><ol class="fine shp-steps"><li>เปิดชีต "Shopee Auto Delivery" → เมนู <b>ส่วนขยาย → Apps Script</b></li><li>กด <b>+</b> ข้างคำว่า "ไฟล์" → <b>สคริปต์</b> ตั้งชื่อ SheetLab → ลบของในไฟล์ใหม่ทิ้ง แล้ววางโค้ดข้างล่าง → กดบันทึก 💾</li><li>ด้านบนเลือกฟังก์ชัน <b>slSetup</b> → กด <b>▶ เรียกใช้</b> → อนุญาตสิทธิ์ (บัญชี Google ของคุณแดน)</li><li>เสร็จ: ระบบซิงก์ทุก 5 นาที แถวที่ระบบเพิ่มมีคำว่า SheetLab: ในคอลัมน์ C (แถวที่พิมพ์เองไม่ถูกแตะ)</li></ol>
+  <textarea class="input shp-code" id="shp-code" readonly rows="6">${esc(x.script||'')}</textarea>
+  <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:6px"><button class="btn btn-sm btn-dark" data-a="shpSheetCopy">📋 คัดลอกโค้ด</button><button class="btn btn-sm btn-line" data-a="shpSheetReset">สร้างรหัสใหม่ (โค้ดเก่าใช้ไม่ได้)</button></div></details>`}</section>`;}
 /* ดาวน์โหลดหลายไฟล์เป็น ZIP เดียว (รูปสินค้า · หน้าตัวอย่าง · รูปทั้งชุด · ไฟล์ PDF ทุกเล่มในชุด) */
 async function zipDownload(files,zipName,label){files=files.filter(f=>f&&f.url&&/^https?:\/\//.test(f.url));if(!files.length){toast('ยังไม่มีไฟล์ให้โหลด');return;}
   if(S.zipBusy)return;S.zipBusy='dl';render(true);
@@ -4312,12 +4327,14 @@ function productsTab(){
   ${propBox()}
   ${facBox()}
   ${setImportBox()}
+  ${shpSheetBox()}
   <div class="pt-head">
     <h3 class="h3" style="margin:0">สินค้าและเซลเพจ</h3>
     <span class="row" style="gap:8px;flex-wrap:wrap">
       <details class="pt-dd"><summary class="btn btn-line btn-sm">⬇ ดาวน์โหลด ▾</summary><div class="pt-menu">
         <button class="pt-a" data-a="exportCsv">ข้อมูลสินค้าทั้งหมด (Excel)</button>
         <button class="pt-a" data-a="exportShopee">🛒 ไฟล์ลง Shopee (เล่มพิมพ์)</button>
+        <button class="pt-a" data-a="shpSheetOpen">📄 Google Sheet ส่งไฟล์ Shopee</button>
         <button class="pt-a" data-a="shopDecor" ${S.zipBusy?'disabled':''}>${S.zipBusy==='decor'?'กำลังทำรูปร้าน...':'🛍 ชุดรูปตกแต่งร้าน Shopee (ZIP)'}</button>
         <button class="pt-a" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy===true?'กำลังรวมรูป...':'รูปสินค้าทั้งหมด (ZIP)'}</button>
         <span class="fine" style="padding:4px 10px;display:block">เฉพาะที่ขายอยู่ · ไว้ลง Shopee / Lazada · ทีละรายการกด "ดูเพิ่มเติม" ที่สินค้า</span></div></details>
@@ -6371,7 +6388,7 @@ function act(a,el){
     case 'flCat':S.flcat=el.dataset.v;render(true);break;
     case 'facTab':S.facTab=el.dataset.v;render(true);break;
     case 'skuCopy':copyText(el.dataset.v,'คัดลอก SKU '+el.dataset.v+' แล้ว');break;
-    case 'shopeeOn':{const p=getProduct(id);if(!p)break;p.shopee=!p.shopee;if(p.shopee){p.shopeeAt=Date.now();try{window.open(SHOPEE_NEW,'_blank','noopener');}catch(e){}}save();render(true);toast(p.shopee?'ติดสถานะ "ลง Shopee แล้ว" · เปิด Shopee Seller ให้ในแท็บใหม่':'ยกเลิกสถานะ Shopee แล้ว');break;}
+    case 'shopeeOn':{const p=getProduct(id);if(!p)break;p.shopee=!p.shopee;if(p.shopee){p.shopeeAt=Date.now();try{window.open(SHOPEE_NEW,'_blank','noopener');}catch(e){}}save();render(true);toast(p.shopee?'ติดสถานะ "ลง Shopee แล้ว" · เปิด Shopee Seller ให้ในแท็บใหม่ · เข้า Google Sheet ส่งไฟล์ภายใน 5 นาที':'ยกเลิกสถานะ Shopee แล้ว · ลบออกจาก Google Sheet ภายใน 5 นาที');break;}
     case 'rcvOpen':RCV.open=!RCV.open;render(true);break;
     case 'rcvOn':case 'rcvSet':{const c=(RCV.d||{}).cfg||{},body=a==='rcvOn'?{on:!c.on}:{[el.dataset.k]:Number(el.dataset.v)};RCV.busy='cfg';render(true);
       adminPost('/api/content?action=recover_cfg',body).then(j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'บันทึกไม่สำเร็จ');RCV.d.cfg=j.cfg;toast(a==='rcvOn'?(j.cfg.on?'เปิดส่งโค้ดอัตโนมัติแล้ว':'ปิดส่งโค้ดอัตโนมัติแล้ว'):'บันทึกแล้ว ใช้กับอีเมลฉบับถัดไป');}).catch(e=>toast(String(e.message||e))).then(()=>{RCV.busy='';render(true);});break;}
@@ -6622,6 +6639,10 @@ function act(a,el){
     case 'exportCsv':exportCsv();break;
     case 'exportShopee':exportShopee();break;
     case 'shopDecor':shopDecor();break;
+    case 'shpSheetOpen':shpSheetLoad();break;
+    case 'shpSheetClose':S.shpSheet=null;break;
+    case 'shpSheetReset':if(confirm('สร้างรหัสใหม่? โค้ดที่วางในชีตไว้จะใช้ไม่ได้ ต้องวางโค้ดใหม่'))shpSheetLoad(true);break;
+    case 'shpSheetCopy':{const t=(S.shpSheet||{}).script||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('คัดลอกโค้ดแล้ว ไปวางใน Apps Script ของชีตได้เลย')).catch(()=>{const el=document.getElementById('shp-code');if(el){el.select();document.execCommand('copy');toast('คัดลอกโค้ดแล้ว');}});break;}
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
     case 'shopeeCopy':shopeeCopy();break;
     case 'shopeeImgs':shopeeImgs();break;
