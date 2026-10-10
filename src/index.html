@@ -484,7 +484,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 -1px;position:relative;z-index:1}.fqt::-webkit-scrollbar{display:none}
 .fqt button{flex:0 0 auto;border:1.5px solid var(--line);border-bottom:0;background:var(--bg);color:var(--muted);border-radius:12px 12px 0 0;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}.fqt button[aria-selected=true]{background:var(--surface);color:var(--ink)}
 .fqt em{font-style:normal;background:var(--brand);color:#fff;border-radius:999px;padding:0 7px;font-size:12px;margin-left:2px}
-.fqh.shp-st{font-size:12px}.aud-go{font-weight:700}.shp-st.on{background:#FFE9E3;color:#C2410C}.shp-sw{margin-top:8px}.shp-sw small a{color:var(--brand)}
+.fqh.shp-st{font-size:12px}.shp-sku{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:8px 12px;border:1px dashed var(--line);border-radius:10px}.sku-cp{font:inherit;font-size:12px;border:0;background:none;color:var(--brand);cursor:pointer;padding:0 2px}.aud-go{font-weight:700}.shp-st.on{background:#FFE9E3;color:#C2410C}.shp-sw{margin-top:8px}.shp-sw small a{color:var(--brand)}
 .rcv{display:grid;gap:10px;margin:0 0 14px}.rcv-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.rcv-h small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
 .rcv-st{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:14px}.rcv-set{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.rcv-set .chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
 .rcv-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:360px;overflow-y:auto}.rcv-list li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px}.rcv-list li>span:first-child{min-width:0}.rcv-list b{display:block;overflow-wrap:anywhere;font-size:14px}.rcv-list small{color:var(--muted);font-size:12.5px}.rcv-list .badge{flex:0 0 auto;white-space:nowrap}
@@ -3081,7 +3081,7 @@ function productRow(p){
     <div class="pt-prod">${pthumb(p)}<div class="pt-info">
       <b class="pt-name" title="${esc(p.name)}">${bun?'📦 ':''}${esc(p.name||'(ยังไม่มีชื่อ)')}</b>
       <div class="pt-tags">${ptags(p)}${bun?`<span class="badge">ชุด ${bundleBooks(p).length} เล่ม</span>`:''}${p.sell&&p.sell!=='both'?`<span class="badge">${esc(SELL[p.sell]?SELL[p.sell][0]:'')}</span>`:''}</div>
-      <span class="pt-sku">SKU: ${esc(p.sku||p.slug||'-')}</span>
+      <span class="pt-sku">SKU: ${esc(p.sku||p.slug||'-')}${p.sku?` <button class="sku-cp" data-a="skuCopy" data-v="${esc(p.sku)}" aria-label="คัดลอก SKU ${esc(p.sku)}">📋 คัดลอก</button>`:''}</span>
       ${(()=>{const top=hints.find(h=>h[0]==='bad')||hints.find(h=>h[0]==='warn'),ad=(ADA.items||[]).find(y=>y.productId===p.id&&['pending','failed','launching','live','paused'].includes(y.status));
         return `<div class="pt-m"><span><b>${price}</b>${full?' '+full:''}</span><span class="fine">ขายแล้ว ${st.paid}</span></div>
         <div class="pt-m pt-m2"><span class="badge ${pub?'ok':'gray'}">${pub?'ขายอยู่':'ร่าง'}</span>${top?`<span class="pt-hint ${top[0]}">${top[0]==='bad'?'⚠️ ':''}${esc(top[1])}</span>`:ad?`<button class="pt-a" data-a="goAds">${ad.status==='live'?'📣 แอดกำลังวิ่ง':ad.status==='paused'?'📣 แอดหยุดไว้':'📣 แอดรอกดตกลง'}</button>`:''}</div>`;})()}
@@ -3130,7 +3130,8 @@ function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/
 const SHOPEE_NEW='https://seller.shopee.co.th/portal/product/new?pageEntry=product_list';
 const shpBadge=p=>p.shopee?'<span class="badge shp-st on">🛒 ลง Shopee แล้ว</span>':''; // แสดงอย่างเดียว เปิด/ปิดที่สวิตช์ในหน้าแก้สินค้า (คุณแดน 10 ต.ค.)
 function shopeeSwitch(d){const p=S.edit&&S.edit!=='new'?getProduct(S.edit):null;if(!p)return '<span class="fine">บันทึกสินค้าก่อน แล้วค่อยเปิดสถานะ Shopee</span>';
-  return `<div class="sw-row shp-sw"><span><b>${p.shopee?'🛒 ลง Shopee แล้ว':'ยังไม่ได้ลง Shopee'}</b><small>${p.shopee?(p.shopeeAt?'เปิดเมื่อ '+fdt(p.shopeeAt)+' · ':'')+`<a href="${SHOPEE_NEW}" target="_blank" rel="noopener noreferrer">เปิด Shopee Seller ↗</a>`:'เปิดสวิตช์เมื่อเอาไปลง Shopee ระบบเปิดหน้าเพิ่มสินค้าใน Shopee Seller ให้'}</small></span><label class="switch"><input type="checkbox" data-a="shopeeOn" data-id="${esc(p.id)}" ${p.shopee?'checked':''} aria-label="ลง Shopee แล้ว"><span></span></label></div>`;}
+  const sku=String(d.sku||p.sku||'').trim();
+  return `${sku?`<div class="shp-sku"><span>รหัส SKU <b>${esc(sku)}</b> <span class="fine">ใส่ในช่อง "รหัส SKU" ของ Shopee (ไม่ใช่ GTIN)</span></span><button class="btn btn-sm btn-line" data-a="skuCopy" data-v="${esc(sku)}">📋 คัดลอก SKU</button></div>`:''}<div class="sw-row shp-sw"><span><b>${p.shopee?'🛒 ลง Shopee แล้ว':'ยังไม่ได้ลง Shopee'}</b><small>${p.shopee?(p.shopeeAt?'เปิดเมื่อ '+fdt(p.shopeeAt)+' · ':'')+`<a href="${SHOPEE_NEW}" target="_blank" rel="noopener noreferrer">เปิด Shopee Seller ↗</a>`:'เปิดสวิตช์เมื่อเอาไปลง Shopee ระบบเปิดหน้าเพิ่มสินค้าใน Shopee Seller ให้'}</small></span><label class="switch"><input type="checkbox" data-a="shopeeOn" data-id="${esc(p.id)}" ${p.shopee?'checked':''} aria-label="ลง Shopee แล้ว"><span></span></label></div>`;}
 /* 🛒 รายละเอียดสำหรับ Shopee (เล่มพิมพ์): AI เขียนจากข้อมูลหน้าขาย คุณแดนคัดลอกไปวางเอง · กรองคำต้องห้ามของ Shopee (ดิจิทัล ebook PDF ไฟล์ ดาวน์โหลด ลิงก์) ที่เซิร์ฟเวอร์ */
 /* ข้อความ Shopee ที่สร้างไว้ ผูกกับสินค้าที่เปิดแก้อยู่ (เดิมใช้ d.id ซึ่งฉบับร่างไม่มี → ทุกเล่มใช้ข้อความเล่มก่อน คุณแดน 10 ต.ค. 69) */
 const shopeeKey=d=>S.edit&&S.edit!=='new'?S.edit:'new:'+String(d.name||'');
@@ -6318,6 +6319,7 @@ function act(a,el){
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'flCat':S.flcat=el.dataset.v;render(true);break;
     case 'facTab':S.facTab=el.dataset.v;render(true);break;
+    case 'skuCopy':copyText(el.dataset.v,'คัดลอก SKU '+el.dataset.v+' แล้ว');break;
     case 'shopeeOn':{const p=getProduct(id);if(!p)break;p.shopee=!p.shopee;if(p.shopee){p.shopeeAt=Date.now();try{window.open(SHOPEE_NEW,'_blank','noopener');}catch(e){}}save();render(true);toast(p.shopee?'ติดสถานะ "ลง Shopee แล้ว" · เปิด Shopee Seller ให้ในแท็บใหม่':'ยกเลิกสถานะ Shopee แล้ว');break;}
     case 'rcvOpen':RCV.open=!RCV.open;render(true);break;
     case 'rcvOn':case 'rcvSet':{const c=(RCV.d||{}).cfg||{},body=a==='rcvOn'?{on:!c.on}:{[el.dataset.k]:Number(el.dataset.v)};RCV.busy='cfg';render(true);
