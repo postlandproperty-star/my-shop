@@ -2706,11 +2706,21 @@ ${books}`;
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
-    if (action === 'shopee_sheet' || action === 'shopee_sheet_cfg' || action === 'shopee_dl' || action === 'print' || action === 'print_pdf' || action === 'print_card' || action === 'print_order' || action === 'shopee_mail') { // 🛒 Google Sheet "Shopee Auto Delivery" (lib/shopeesheet.js): Apps Script ในชีตดึงด้วยรหัสลับของชีต · หลังบ้านขอรหัส/โค้ดได้
+    if (action === 'shopee_sheet' || action === 'shopee_sheet_cfg' || action === 'shopee_dl' || action === 'print' || action === 'print_pdf' || action === 'print_card' || action === 'print_order' || action === 'shopee_mail' || action === 'shopee_inbound') { // 🛒 Google Sheet "Shopee Auto Delivery" (lib/shopeesheet.js): Apps Script ในชีตดึงด้วยรหัสลับของชีต · หลังบ้านขอรหัส/โค้ดได้
       const { shopeeRows, shopeeScript, bundleSig, bundlePage, shopeeCsv, shopeeFormula, SHEET_CELL } = await import('../lib/shopeesheet.js'), { randomBytes, timingSafeEqual } = await import('node:crypto');
       const st = (await sb('shop_state?id=eq.shopee_sheet&select=data'))?.[0]?.data || {};
       const loadSO = async () => (await sb('shop_state?id=eq.shopee_orders&select=data'))?.[0]?.data || { orders: {}, map: {} };
       const putSO = (d) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'shopee_orders', data: d, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      const upsertSO = async (SO, d, shop, o, mailId) => { const old = d.orders[o.sn]; d.orders[o.sn] = { sn: o.sn, date: o.date, at: old?.at || new Date().toISOString(), done: old?.done || null, mail: String(mailId || '').slice(0, 40), items: o.items.map((it) => ({ ...it, pid: SO.matchItem(it, shop.products, d.map) })) }; const ks = Object.keys(d.orders).sort((x, y) => String(d.orders[y].at).localeCompare(String(d.orders[x].at))); for (const k of ks.slice(500)) delete d.orders[k]; return { sn: o.sn, items: d.orders[o.sn].items.map((it) => ({ name: it.name.slice(0, 60), variation: it.variation, qty: it.qty, matched: !!it.pid })), new: !old }; };
+      if (action === 'shopee_inbound') { // 📬 Cloudflare Email Worker ส่งอีเมลดิบมา (Gmail ส่งต่ออีเมลออเดอร์ Shopee → orders@sheetlabth.com) · ไม่ใช้ AI
+        const SO = await import('../lib/shopeeorders.js'), mk = Buffer.from(String(req.query.mk || '')), want = st.token ? Buffer.from(SO.mailKey(st.token)) : Buffer.from('');
+        if (!want.length || mk.length !== want.length || !timingSafeEqual(mk, want)) return res.status(401).json({ ok: false });
+        const b = await readBody(req), m = SO.parseMime(String(b.raw || '').slice(0, 3e6)), d = await loadSO(); d.inbound = { ...(d.inbound || {}), last: new Date().toISOString(), lastSubject: String(m.subject || '').slice(0, 120) };
+        if (SO.isForwardConfirm(m)) { d.inbound.confirm = { ...SO.forwardCode(m), at: new Date().toISOString() }; await putSO(d); return res.status(200).json({ ok: true, confirm: true }); }
+        const o = SO.parseShopeeMail(m.html ? SO.htmlToRows(m.html) : m.text, m.subject);
+        if (!o.sn || !o.items.length) { await putSO(d); return res.status(200).json({ ok: true, skip: 'ไม่ใช่อีเมลออเดอร์' }); } // ตอบ 200 ไม่ให้ Gmail ตีกลับ
+        const shop = await loadShop(), r = await upsertSO(SO, d, shop, o, 'cf'); d.inbound.lastOrder = o.sn; await putSO(d); return res.status(200).json({ ok: true, order: r });
+      }
       if (action === 'shopee_mail') { // 📦 ผู้ช่วยอัตโนมัติส่งอีเมลออเดอร์ Shopee (ข้อความดิบ) มาให้แยก · คีย์ร้านเท่านั้น
         if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องใช้คีย์ร้าน' });
         if (req.method !== 'POST') return res.status(405).json({ ok: false });
@@ -2718,11 +2728,8 @@ ${books}`;
         for (const m of mails) {
           const o = SO.parseShopeeMail(String(m.text || '').slice(0, 60000), String(m.subject || ''));
           if (!o.sn || !o.items.length) { out.push({ id: m.id || '', skip: 'ไม่ใช่อีเมลออเดอร์' }); continue; }
-          const old = d.orders[o.sn];
-          d.orders[o.sn] = { sn: o.sn, date: o.date, at: old?.at || new Date().toISOString(), done: old?.done || null, mail: String(m.id || '').slice(0, 40), items: o.items.map((it) => ({ ...it, pid: SO.matchItem(it, shop.products, d.map) })) };
-          out.push({ sn: o.sn, items: d.orders[o.sn].items.map((it) => ({ name: it.name.slice(0, 60), variation: it.variation, qty: it.qty, matched: !!it.pid })), new: !old });
+          out.push(await upsertSO(SO, d, shop, o, m.id));
         }
-        const ks = Object.keys(d.orders).sort((x, y) => String(d.orders[y].at).localeCompare(String(d.orders[x].at))); for (const k of ks.slice(500)) delete d.orders[k];
         await putSO(d); return res.status(200).json({ ok: true, orders: out });
       }
       if (action === 'print' || action === 'print_pdf' || action === 'print_card' || action === 'print_order') { // 🖨 หน้าพิมพ์หนังสือของแม่ (lib/printpage.js) · ลิงก์ลับจากรหัสชีต
@@ -2777,7 +2784,8 @@ ${books}`;
         const [shop, links] = await Promise.all([loadShop(), loadLinks().catch(() => ({}))]), { rows, missing } = shopeeRows(shop, links, bUrl);
         const sUrl = `https://${req.headers.host}/api/content?action=shopee_sheet&t=${st.token}`;
         const { printKey } = await import('../lib/printpage.js');
-        return res.status(200).json({ ok: true, printUrl: `https://${req.headers.host}/api/content?action=print&k=${printKey(st.token)}`, script: shopeeScript(sUrl), formula: shopeeFormula(sUrl), cell: SHEET_CELL, last: st.last || null, rows: rows.map((r) => ({ id: r.id, name: r.name })), missing });
+        const SOm = await import('../lib/shopeeorders.js'), sod = await loadSO();
+        return res.status(200).json({ ok: true, mailWorker: SOm.workerCode(`https://${req.headers.host}/api/content?action=shopee_inbound&mk=${SOm.mailKey(st.token)}`), inbound: sod.inbound || null, printUrl: `https://${req.headers.host}/api/content?action=print&k=${printKey(st.token)}`, script: shopeeScript(sUrl), formula: shopeeFormula(sUrl), cell: SHEET_CELL, last: st.last || null, rows: rows.map((r) => ({ id: r.id, name: r.name })), missing });
       }
       const t = Buffer.from(String(req.query.t || '')), want = Buffer.from(String(st.token || ''));
       if (!st.token || t.length !== want.length || !timingSafeEqual(t, want)) return res.status(401).json({ ok: false, error: 'รหัสชีตไม่ถูกต้อง (กดสร้างโค้ดใหม่ในหลังบ้าน)' });
