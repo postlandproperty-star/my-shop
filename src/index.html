@@ -1277,14 +1277,17 @@ function save(){
   clearTimeout(saveTimer);
   saveTimer=setTimeout(flushRemote,400);
 }
-async function flushRemote(){
+async function flushRemote(retry){
   if(!savePending||!sb||!sbSession)return false;
   savePending=false;
   const chk=await sb.from('shop_state').select('id,updated_at').in('id',['main','private']);
   const newest=(chk.data||[]).map(r=>r.updated_at||'').sort().pop()||'';
-  if(remoteStamp&&Date.parse(newest)>Date.parse(remoteStamp)){ // มีคนบันทึกจากแท็บ/เครื่องอื่นหลังจากเราโหลด
-    await loadRemote();S.edit=null;S.draft=null;render(true);
-    toast('ข้อมูลถูกแก้จากที่อื่นก่อนหน้านี้ โหลดข้อมูลล่าสุดมาแล้ว กรุณาแก้อีกครั้ง');return false;
+  if(remoteStamp&&Date.parse(newest)>Date.parse(remoteStamp)){ // มีคนบันทึกจากแท็บ/เครื่องอื่น (หรือระบบหลังบ้าน เช่น ซิงก์ค่าแอด) หลังจากเราโหลด
+    // เดิม: ทิ้งสิ่งที่คุณแดนแก้แล้วปิดหน้าแก้ (10 ต.ค. 69 ชุดรูปใหม่หายหลังกดบันทึก) → ตอนนี้: โหลดของล่าสุด แล้วใส่สิ่งที่เราแก้ทับเฉพาะส่วนที่เราแก้จริง หน้าแก้ที่เปิดอยู่ไม่ปิด
+    const mine=dataSnap(),base=BASE;
+    if(!base||(retry||0)>=2){await loadRemote();S.edit=null;S.draft=null;render(true);toast('ข้อมูลถูกแก้จากที่อื่นก่อนหน้านี้ โหลดข้อมูลล่าสุดมาแล้ว กรุณาแก้อีกครั้ง');return false;}
+    if((await loadRemote())===false){savePending=true;toast('บันทึกไม่สำเร็จ: โหลดข้อมูลล่าสุดไม่ได้ ลองใหม่อีกครั้ง');return false;}
+    mergeMine(mine,base);savePending=true;render(true);return flushRemote((retry||0)+1);
   }
   const now=new Date().toISOString();
   // ลิงก์ไฟล์สินค้า (link) เป็นความลับ: แยกออกจากข้อมูลสาธารณะไปเก็บในแถว private
@@ -1301,8 +1304,16 @@ async function flushRemote(){
   const rows=[{id:'main',data:pub,updated_at:now},{id:'private',data:priv,updated_at:now}];
   const {error}=await sb.from('shop_state').upsert(rows);
   if(error){console.error(error);toast('บันทึกขึ้นระบบไม่สำเร็จ: '+error.message);return false;}
-  remoteStamp=now;return true;
+  remoteStamp=now;BASE=dataSnap();return true;
 }
+/* ข้อมูลตอนโหลด/บันทึกล่าสุด ไว้ดูว่าเราแก้อะไรไปบ้าง ตอนมีคนอื่นบันทึกแทรก */
+let BASE=null;
+const dataSnap=()=>JSON.parse(JSON.stringify(pick(D,[...PUBLIC_KEYS,...PRIVATE_KEYS])));
+function mergeMine(mine,base){const bm=new Map((base.products||[]).map(p=>[p.id,JSON.stringify(p)])),ids=new Set((mine.products||[]).map(p=>p.id));
+  for(const p of mine.products||[]){if(bm.get(p.id)===JSON.stringify(p))continue;const i=D.products.findIndex(x=>x.id===p.id);if(i>=0)D.products[i]=p;else D.products.push(p);} // สินค้าที่เราแก้/เพิ่ม
+  for(const id of bm.keys())if(!ids.has(id))D.products=D.products.filter(x=>x.id!==id); // สินค้าที่เราลบ
+  for(const k of [...PUBLIC_KEYS,...PRIVATE_KEYS])if(k!=='products'&&JSON.stringify(mine[k])!==JSON.stringify(base[k]))D[k]=mine[k];
+  saveCache();}
 /* SKU: SL-NNN = เลขการผลิตบน Mac (ไฟล์ NNN_วันที่_ชื่อ.pdf) · ชุด SL-SETnn · สินค้าที่ไม่ได้มาจากโรงงาน SL-Wnn */
 function ensureSkus(){let ch=0;const used=new Set(D.products.map(p=>p.sku).filter(Boolean));
   const next=(pre)=>{let i=1;while(used.has(pre+String(i).padStart(2,'0')))i++;return pre+String(i).padStart(2,'0');};
@@ -1334,6 +1345,7 @@ async function loadRemote(){
     await loadOrders();
   }
   saveCache();
+  if(sbSession)BASE=dataSnap();
   return true;
 }
 /* ออเดอร์จริงจากตาราง orders (บันทึกโดยเซิร์ฟเวอร์เมื่อลูกค้าจ่ายผ่าน Stripe) */
@@ -2093,7 +2105,7 @@ async function bxPdfCover(b){if(!b.bookCover)throw new Error('ยังไม่
 /* กด "บันทึกและเผยแพร่" แล้วสินค้ามีปกตามธีมใหม่ → เอาปก (แบบแบน ไม่มีพื้นขาว) ไปแทนหน้าแรกของไฟล์ PDF ให้ (คุณแดน 10 ต.ค. 69) · ไฟล์ต้นฉบับเก็บไว้ (linkOrig) */
 function pdfThemeCover(p){if(!p||p.status!=='published'||p.coverMode!=='theme'||!p.bookCover||p.pdfFrom===p.bookCover||isBundle(p)||pfmt(p)!=='pdf')return;
   const src=p.linkOrig||p.link;if(!src||!/\/storage\/v1\/object\/public\/product-images\/.*\.pdf(\?|$)/i.test(src)){toast('ปกใหม่ยังไม่ได้ใส่ในไฟล์ PDF: ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน');return;}
-  toast('กำลังใส่ปกใหม่เป็นหน้าแรกของไฟล์ PDF...');bxPdfCover(p).then(r=>{toast(`ใส่ปกใหม่ในไฟล์ PDF แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ที่มีปกใหม่`);render(true);}).catch(e=>toast('ใส่ปกในไฟล์ PDF ไม่สำเร็จ: '+(e.message||e)));}
+  toast('กำลังใส่ปกใหม่เป็นหน้าแรกของไฟล์ PDF...');bxPdfCover(p).then(r=>{const q=getProduct(p.id);if(q&&q!==p){Object.assign(q,{link:p.link,linkOrig:p.linkOrig,pdfCover:p.pdfCover,pdfFrom:p.pdfFrom});save();}toast(`ใส่ปกใหม่ในไฟล์ PDF แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ที่มีปกใหม่`);render(true);}).catch(e=>toast('ใส่ปกในไฟล์ PDF ไม่สำเร็จ: '+(e.message||e)));}
 // เก็บแค่ไฟล์ต้นฉบับ + รุ่นที่ใช้อยู่ รุ่นก่อนหน้าลบทิ้งหลังบันทึกแล้ว (ไม่เปลือง storage)
 async function bxDropFile(url){try{clearTimeout(saveTimer);if(!(await flushRemote()))return;await authFetch('/api/content?action=file_remove',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});}catch(e){}}
 async function bxAiImage(prompt,refs){const img=await bxAiRaw(prompt,refs);const blob=await (await fetch(img)).blob();const r=await square(new File([blob],'ai.jpg',{type:blob.type||'image/jpeg'}));return uploadImage(r.url);}
