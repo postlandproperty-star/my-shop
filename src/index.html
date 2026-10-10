@@ -1510,7 +1510,9 @@ function normalize(d){
 function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',price:199,fullPrice:390,features:'',link:'https://',color:COLORS[0][0],status:'draft'};}
 /* 🎧 เล่มที่มีไฟล์เสียงใน Google Drive: ต้องติ๊กยืนยันว่าโฟลเดอร์แชร์เป็น "ทุกคนที่มีลิงก์" แล้ว ถึงจะเผยแพร่ได้ (กันลูกค้าสแกน QR แล้วฟังไม่ได้) */
 const DRIVE_RE=/https:\/\/drive\.google\.com\/drive\/folders\/[\w-]+/;
-const hasAudio=p=>!!p&&!isBundle(p)&&!!(p.audio||p.audioDrive||/🎧|ไฟล์เสียง|เสียงอ่าน|\bMP3\b|แทร็ก|audio/i.test([p.name,p.headline,p.desc,p.features,p.specs,p.freshNote].join(' ')));
+// "ไม่มีไฟล์เสียง" ในคำอธิบายไม่นับ (TOEIC Mock Test ถูกจับผิด 10 ต.ค. 69) · คุณแดนกด "เล่มนี้ไม่มีไฟล์เสียง" ได้ (noAudio)
+const AUD_NEG=/(ไม่มี|ไม่ใช้|ไม่รวม|ไม่ได้มี)\s*(ไฟล์)?\s*(เสียง(อ่าน)?|MP3|audio)|\b(no|without)\s+(audio|mp3)\b/gi;
+const hasAudio=p=>!!p&&!isBundle(p)&&!p.noAudio&&!!(p.audio||p.audioDrive||/🎧|ไฟล์เสียง|เสียงอ่าน|\bMP3\b|แทร็ก|audio/i.test([p.name,p.headline,p.desc,p.features,p.specs,p.freshNote].join(' ').replace(AUD_NEG,' ')));
 const AUDIO_ROOT='https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f'; // Drive: Sheetlab/Academic Audio
 const audNorm=t=>String(t||'').toLowerCase().replace(/\s+/g,' ').trim().slice(0,40);
 // โฟลเดอร์เสียงของเล่ม: ที่บันทึกไว้ → โน้ตจากโรงงาน → รายชื่อไฟล์ที่ Mac ส่งขึ้นมา (จับด้วย SKU หรือชื่อเล่ม) (คุณแดน 10 ต.ค. "ไฟล์เป็นร้อยจะรู้ได้ไง")
@@ -1533,7 +1535,7 @@ function audioBox(d){const L=audioBooks(d);if(!L.length)return '';if(FLIB.d===nu
   return `<section class="card aud${ok?' ok':''}"><b>🎧 ${L.length>1?`มีไฟล์เสียง ${L.length} เล่ม`:'เล่มนี้มีไฟล์เสียง'} ใน Google Drive (ลูกค้าสแกน QR ในเล่มแล้วเปิดฟัง)</b>
     <ol class="fine aud-steps"><li>เปิดโฟลเดอร์เสียง${links.length?': '+links.map((u,i)=>`<a class="aud-go" href="${esc(u)}" target="_blank" rel="noopener noreferrer">📂 ${links.length>1?`โฟลเดอร์ ${i+1}`:'เปิดโฟลเดอร์เสียงของเล่มนี้'} ↗</a>`).join(' · '):''}${miss.length?`${links.length?' · ':': '}${miss.map(b=>`<a href="${esc(audioSearch(b))}" target="_blank" rel="noopener noreferrer">🔎 ค้นหาโฟลเดอร์ "${esc(String(b.name).slice(0,28))}" ใน Drive ↗</a>`).join(' · ')} หรือ <a href="${AUDIO_ROOT}" target="_blank" rel="noopener noreferrer">เปิด Academic Audio ↗</a>`:''}</li><li>กด แชร์ → การเข้าถึงทั่วไป → <b>ทุกคนที่มีลิงก์</b> (ผู้มีสิทธิ์อ่าน)</li><li>ลองเปิดลิงก์ในหน้าต่างไม่ระบุตัวตน (ไม่ล็อกอิน) ต้องฟังได้</li></ol>
     ${links.length?`<div class="aud-chk"><button class="btn btn-sm btn-line" data-a="drvCheck" ${S.drvBusy?'disabled':''}>${S.drvBusy?'กำลังตรวจ...':'🔎 ตรวจลิงก์ให้ (เปิดแบบไม่ล็อกอิน)'}</button>${links.map((u,i)=>{const st=(S.drv||{})[u];return st?`<span class="aud-r ${st}">${links.length>1?`โฟลเดอร์ ${i+1}: `:''}${st==='public'?'✅ เปิดได้ ลูกค้าฟังได้':st==='private'?'🔒 ยังเป็นส่วนตัว ลูกค้าเปิดไม่ได้':st==='missing'?'❓ ไม่พบโฟลเดอร์':'⚠️ ตรวจไม่ได้ ลองเปิดเอง'}</span>`:'';}).join('')}</div>`:(isBundle(d)||d.type==='bundle'?'<p class="fine">ยังไม่รู้ลิงก์โฟลเดอร์ของบางเล่ม ใส่ได้ในหน้าแก้ของเล่มนั้น</p>':`<div class="field" style="margin:6px 0"><label for="e-audioDrive">ลิงก์โฟลเดอร์เสียงของเล่มนี้ <span class="fine">กด 🔎 ค้นหาด้านบน เปิดโฟลเดอร์แล้วคัดลอกลิงก์มาวาง ระบบจำไว้และตรวจให้ครั้งหน้า</span></label><input class="input" id="e-audioDrive" data-d="audioDrive" value="${esc(d.audioDrive||'')}" placeholder="https://drive.google.com/drive/folders/..."></div>`)}
-    <label class="aud-ok"><input type="checkbox" data-a="audioOk" ${ok?'checked':''}> ตั้งเป็น "ทุกคนที่มีลิงก์" และลองฟังแล้ว ลูกค้าเปิดได้</label>${ok?'':'<span class="fine aud-warn">ยังไม่ติ๊ก = กดเผยแพร่ไม่ได้</span>'}</section>`;}
+    ${isBundle(d)||d.type==='bundle'?'':`<button class="linkbtn aud-none" data-a="audioNone">เล่มนี้ไม่มีไฟล์เสียง (ซ่อนกล่องนี้)</button>`}<label class="aud-ok"><input type="checkbox" data-a="audioOk" ${ok?'checked':''}> ตั้งเป็น "ทุกคนที่มีลิงก์" และลองฟังแล้ว ลูกค้าเปิดได้</label>${ok?'':'<span class="fine aud-warn">ยังไม่ติ๊ก = กดเผยแพร่ไม่ได้</span>'}</section>`;}
 async function drvCheck(){const d=S.draft;if(!d)return;const urls=[...new Set(audioBooks(d).map(audioDriveOf).filter(Boolean))];if(!urls.length)return;S.drvBusy=true;render(true);
   try{const j=await adminPost('/api/content?action=drive_check',{urls});S.drv=Object.assign({},S.drv,Object.fromEntries(((j&&j.results)||[]).map(r=>[r.url,r.state])));
     const bad=((j&&j.results)||[]).filter(r=>r.state!=='public').length;toast(bad?`🔒 ยังเปิดไม่ได้ ${bad} โฟลเดอร์ ตั้งเป็น "ทุกคนที่มีลิงก์" ก่อน`:'✅ ทุกโฟลเดอร์เปิดได้ ติ๊กยืนยันแล้วเผยแพร่ได้');}
@@ -1541,7 +1543,7 @@ async function drvCheck(){const d=S.draft;if(!d)return;const urls=[...new Set(au
 function initDraft(p){
   const d={};d.fillFrom=Object.keys(p.fillPending||{});d.audioOk=!!p.audioOk;d.videoOk=!!p.videoOk;d.audioDrive=p.audioDrive||'';d.audio=!!p.audio;d.freshNote=p.freshNote||'';
   ['name','slug','sku','kind','headline','desc','price','fullPrice','features','link','color','status','specs','toc','forwho','notfor','authorName','authorBio','sampleLink','terms','proof','pains','bonus','reviews','faq','guarantee','bumpProductId','stripeLink','cat','sell'].forEach(k=>{d[k]=p[k]===undefined||p[k]===null?'':p[k];});
-  d.bumpPrice=p.bumpPrice||0;d.bonusIds=(p.bonusIds||[]).slice();d.bookCover=p.bookCover||'';d.coverKey=p.coverKey||'';d.coverMode=p.coverMode||'';
+  d.bumpPrice=p.bumpPrice||0;d.bonusIds=(p.bonusIds||[]).slice();d.bookCover=p.bookCover||'';d.noAudio=!!p.noAudio;d.coverKey=p.coverKey||'';d.coverMode=p.coverMode||'';
   for(const [k,v] of Object.entries(p.fillPending||{})){if(k==='previews')continue;else if(!String(d[k]||'').trim())d[k]=v;} // รายละเอียดที่โรงงานเตรียมไว้ ใช้จริงเมื่อกดบันทึก
   if(!d.kind)d.kind='other';
   d.promoEndStr=toLocalInput(p.promoEnd);
@@ -3126,7 +3128,7 @@ function draftToProduct(d){
   return {slug:t('slug').toLowerCase(),sku:t('sku').toUpperCase(),name,kind:d.kind,headline:t('headline')||name,desc:t('desc'),price:Number(d.price),fullPrice:Number(d.fullPrice)||0,features:d.features,link:link==='https://'?'':link,color:d.color,status:d.status,
     specs:d.specs,toc:d.toc,forwho:d.forwho,notfor:d.notfor,authorName:t('authorName'),authorBio:t('authorBio'),sampleLink:sample==='https://'?'':sample,terms:t('terms'),
     proof:t('proof'),promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,pains:d.pains,...(d.coverKey?{coverKey:d.coverKey,coverMode:d.coverMode}:{}),...(d.bookCover?{bookCover:d.bookCover}:{}),bonus:d.bonus,bonusIds:(d.bonusIds||[]).filter(id=>getProduct(id)),reviews:d.reviews,faq:d.faq,guarantee:t('guarantee'),images:(d.images||[]).slice(),previews:(d.previews||[]).slice(),
-    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
+    bumpProductId:d.bumpProductId||'',bumpPrice:Number(d.bumpPrice)||0,stripeLink:t('stripeLink'),cat:CATS[d.cat]?d.cat:'',sell:SELL[d.sell]?d.sell:'both',audioOk:!!d.audioOk,noAudio:!!d.noAudio,videoOk:!!d.videoOk,audioDrive:t('audioDrive'),audio:!!d.audio,fillPending:undefined};
 }
 /* โน้ตจากโรงงาน: ในรายการสินค้าแสดงสั้นๆ (ไม่มีลิงก์/ที่อยู่ไฟล์ยาว) · ตัวเต็มอยู่ในกล่องบนหน้าแก้สินค้า */
 function shortNote(n){return String(n||'').split(' · ').filter(x=>!/https?:\/\/|\/Users\//.test(x)).slice(0,2).join(' · ')+(/🎧/.test(n)?' · 🎧 มีไฟล์เสียง (ดูในหน้าแก้สินค้า)':'');}
@@ -6893,6 +6895,7 @@ function act(a,el){
     case 'drvCheck':drvCheck();break;
     case 'vidCheck':{const c=CRS.ed;if(c)vidCheck(c,S.draft);break;}
     case 'videoOk':if(S.draft){S.draft.videoOk=!!el.checked;render(true);}break;
+    case 'audioNone':if(S.draft){S.draft.noAudio=true;S.draft.audio=false;S.draft.audioDrive='';S.err='';render(true);toast('ตั้งว่าเล่มนี้ไม่มีไฟล์เสียงแล้ว กดบันทึกเพื่อใช้');}break;
     case 'audioOk':{if(S.draft){S.draft.audioOk=!!el.checked;S.err='';render(true);}break;}
     case 'saveProduct':{
       // รูปที่ AI สร้างไว้แต่ยังไม่ได้กด "ใช้เป็นปก"/"ใช้รูปที่เลือก": ใส่ให้ก่อนแล้วค่อยบันทึก (เดิมรูปหายถ้ากดบันทึกเลย)
