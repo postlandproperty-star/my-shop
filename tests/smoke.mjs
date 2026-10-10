@@ -590,6 +590,10 @@ try {
             D.orders = D.orders.filter((o) => o.id !== 'PEND0001'); S.open = {}; RCV.open = false; render(true); return r; });
           rv.post = RCVPOST.slice();
           pass(`[${kind}] ออเดอร์: 📧 แถบตามลูกค้าที่ยังไม่จ่าย (เปิด/ปิด · ลด % · ส่งแล้ว/กลับมาซื้อ/รอส่ง · รายชื่อ) + ออเดอร์รอชำระบอกว่าส่งโค้ดแล้ว`, rv.box && rv.sw && /ส่งแล้ว 2/.test(rv.st) && /กลับมาซื้อ 1/.test(rv.st) && /รอส่ง 1/.test(rv.st) && rv.tag && rv.log && rv.rows === 3 && rv.won && rv.pct === 15 && /"pct":15/.test(rv.post[0] || ''), JSON.stringify(rv)); }
+        { const au = await page.evaluate(() => { const f0 = FLIB.d; FLIB.d = { books: [{ sku: 'SL-044', title: 'HEALTH & DOCTOR ENGLISH 400', audio: true, audio_drive: 'https://drive.google.com/drive/folders/AAA111' }], sets: [] };
+            const a = { name: 'HEALTH & DOCTOR ENGLISH 400', sku: 'SL-044', audio: true, kind: 'sheet', type: '' }, b = { name: 'TOEIC Listening Shadowing 300 ประโยค', sku: 'SL-W09', audio: true, kind: 'sheet', type: '' };
+            const ha = audioBox(a), hb = audioBox(b); FLIB.d = f0; return { link: /folders\/AAA111/.test(ha) && a.audioDrive === 'https://drive.google.com/drive/folders/AAA111', search: /drive\/search\?q=type%3Afolder%20TOEIC%20Listening%20Shadowing/.test(hb) && /data-d="audioDrive"/.test(hb) && /1BJ5RIbcK2/.test(hb) }; });
+          pass(`[${kind}] สินค้า: 🎧 กล่องไฟล์เสียงมีลิงก์โฟลเดอร์ของเล่มนั้นตรงๆ (จากรายชื่อที่ Mac ส่งมา) · ไม่รู้ลิงก์ = ปุ่มค้นหาใน Drive + ช่องวางลิงก์`, au.link && au.search, JSON.stringify(au)); }
         { const cf = await page.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)), sb0 = sb, D0 = JSON.parse(JSON.stringify(D)), st0 = remoteStamp;
             const p = D.products.find((x) => x.status === 'published' && !isBundle(x)); const remoteMain = JSON.parse(JSON.stringify(pick(D, PUBLIC_KEYS))), remotePriv = Object.assign(JSON.parse(JSON.stringify(pick(D, PRIVATE_KEYS))), { campaigns: [{ id: 'srv1', name: 'จากเซิร์ฟเวอร์', spend: 123 }] });
             remoteStamp = '2026-01-01T00:00:00Z'; BASE = dataSnap(); let stamp = '2026-02-01T00:00:00Z', pushed = null;
