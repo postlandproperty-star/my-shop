@@ -4794,6 +4794,7 @@ async function loadDash(){DASH.loading=true;try{const j=await adminApi('/api/con
 const SO={d:null,loading:false,err:'',top:null,fresh:''};
 function loadSO(force){if(SO.loading)return;SO.loading=true;if(force)render(true);adminApi('/api/content?action=dash_orders').then(j=>{if(j&&j.ok){const top=j.latest[0];const k=top?top.at+top.product:'';
     if(SO.top!==null&&k&&k!==SO.top){SO.fresh=k;toast(`🎉 ออเดอร์ใหม่ ${'฿'+Math.round(top.amount).toLocaleString('th-TH')} · ${top.product}`);}
+    const sh=j.shopee&&j.shopee.latest&&j.shopee.latest[0],sk=sh?sh.sn:'';if(SO.shTop!=null&&sk&&sk!==SO.shTop)toast(`🛒 ออเดอร์ Shopee ใหม่ #${sk} · ${sh.items.map(x=>x.name).join(', ').slice(0,60)}`);SO.shTop=sk;
     SO.top=k;SO.d=j;SO.err='';}else SO.err=(j&&j.error)||'โหลดไม่ได้';}).catch(()=>{SO.err='เชื่อมต่อไม่ได้';}).then(()=>{SO.loading=false;const a=document.activeElement;if(!(a&&/^(TEXTAREA|INPUT|SELECT)$/.test(a.tagName)))render(true);});}
 const SRC_ICON={ads:'📣',organic:'🌱',direct:'❔'};
 function liveTiles(){
@@ -4824,6 +4825,19 @@ function stripeBox(){
     <button class="chip" data-a="tab" data-v="orders" style="margin-top:8px">ดูออเดอร์ทั้งหมด →</button>
   </details>`;
 }
+/* 🛒 ยอดขาย Shopee (จากอีเมลออเดอร์ที่เข้าระบบ) · ยอด = ราคาสินค้า × จำนวน ก่อนหักค่าธรรมเนียม · รับจริงประมาณ = หักค่าธรรมเนียมตามที่ตั้งในปุ่ม 💰 ราคา Shopee */
+function shopeeNet(x){const c=typeof spcCfg==='function'?spcCfg():{comm:14.45,txn:3.21,fixed:1.07},f=(Number(c.comm)+Number(c.txn)+(c.xtra?7.49:0))/100;return Math.max(0,x.rev*(1-f)-(Number(c.fixed)||0)*x.n);}
+function shopeeTile(){const X=SO.d&&SO.d.shopee;if(!X)return '';const b=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH'),W=X.week,P=X.prevWeek,dv=W.rev-P.rev;
+  return `<div class="dtile shp-tile"><span>🛒 Shopee 7 วัน</span><b>${b(W.rev)}</b>${P.n||W.n?`<em class="vs ${dv>0?'good':dv<0?'bad':'flat'}" title="เทียบ 7 วันก่อนหน้า">${dv?`${dv>0?'▲ +':'▼ −'}${b(Math.abs(dv))} จากสัปดาห์ก่อน`:'เท่าสัปดาห์ก่อน'}</em>`:''}<small>${W.n} ออเดอร์ · วันนี้ ${X.today.n}${W.n?` · 📘 เล่มพิมพ์ ${W.print} · 🎫 ไฟล์ ${W.file} · รับจริงประมาณ ${b(shopeeNet(W))}`:''}</small></div>`;}
+function shopeeAllTile(d){const X=SO.d&&SO.d.shopee;if(!X||!X.week.n)return '';const b=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH'),web=Number(d.sales.revenue)||0;
+  return `<div class="dtile"><span>💰 รวมเว็บ + Shopee 7 วัน</span><b>${b(web+X.week.rev)}</b><small>เว็บ ${b(web)} (${d.sales.orders}) · Shopee ${b(X.week.rev)} (${X.week.n})</small></div>`;}
+function shopeeBoxDash(){const X=SO.d&&SO.d.shopee;if(!X)return '';const b=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH'),D=X.days,mx=Math.max(1,...D.map(x=>x.rev)),dl=k=>new Date(k+'T00:00:00+07:00');
+  const when=at=>new Date(at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})+' '+new Date(at).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  return `<details class="so shp-so" ${S.shpSoOpen?'open':''}><summary data-a="shpSoOpen"><b>🛒 ออเดอร์ Shopee 14 วัน และออเดอร์ล่าสุด</b> <span class="fine">จากอีเมลออเดอร์ (เข้าระบบเองภายในไม่กี่วินาที)</span></summary>
+    <div class="so-bars" role="img" aria-label="ยอดขาย Shopee 14 วันล่าสุด">${D.map((x,i)=>`<div class="so-bar${x.n?'':' z'}${i===D.length-1?' t':''}" title="${dl(x.d).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})} · ${x.n} ออเดอร์ · ${b(x.rev)}">${x.n?`<em>${x.n}</em>`:''}<i style="height:${x.rev?Math.max(6,Math.round(x.rev/mx*84)):2}px"></i><span>${dl(x.d).getDate()}</span></div>`).join('')}</div>
+    <p class="fine" style="margin:8px 0 0">นับตามวันที่ลูกค้าสั่ง · ยอด = ราคาขายบน Shopee ก่อนหักค่าธรรมเนียม · ไม่นับออเดอร์ทดสอบ</p>
+    ${X.latest.length?`<ol class="so-list" aria-label="ออเดอร์ Shopee ล่าสุด">${X.latest.map(o=>`<li><span class="fine">${when(o.at)}</span><span class="p">${o.items.map(x=>`${x.print?'📘':'🎫'} ${esc(x.name)}${x.qty>1?' ×'+x.qty:''}`).join('<br>')}<small>#${esc(o.sn)} · ${o.done?'✓ แพ็กแล้ว':o.items.some(x=>x.print)?'รอแม่พิมพ์/แพ็ก':'ส่งบัตร QR'}</small></span><b>${b(o.rev)}</b></li>`).join('')}</ol>`:'<p class="fine">ยังไม่มีออเดอร์ Shopee ในระบบ</p>'}
+  </details>`;}
 function dashBox(){
   if(!DASH.d&&!DASH.loading&&!DASH.err){loadDash().then(()=>render(true));}
   const d=DASH.d;const baht2=n=>'฿'+Math.round(Number(n)||0).toLocaleString('th-TH');const num=n=>n==null?'–':Number(n).toLocaleString('th-TH');
@@ -4841,6 +4855,7 @@ function dashBox(){
     <div class="dgrid">
       ${liveTiles()}
       ${tile('ยอดขายจริง',baht2(d.sales.revenue),`${d.sales.orders} ออเดอร์${d.sales.store&&d.sales.store.orders?` (มาจากหน้าร้าน ${d.sales.store.orders})`:''} · ${salesSub}`,false,vs('revenue','up',1))}
+      ${shopeeTile()}${shopeeAllTile(d)}
       ${tile('ค่าแอดรวม',baht2(d.ads.spend),d.ads.campaigns.length?`${d.ads.campaigns.length} แคมเปญ`:'ยังไม่มีแคมเปญ',false,vs('spend','',1))}
       ${tile('ผู้ติดตาม Threads',num(d.followers.threads),d.followers.threadsDelta!=null?delta(d.followers.threadsDelta,'ใน 7 วัน'):'เริ่มเก็บสถิติวันนี้',false,vs('threads','up'))}
       ${tile('ผู้ติดตาม Facebook',num(d.followers.facebook),d.followers.facebookDelta!=null?delta(d.followers.facebookDelta,'ใน 7 วัน'):(d.followers.facebook==null?'ยังดึงตัวเลขไม่ได้':'เริ่มเก็บสถิติวันนี้'),false,vs('facebook','up'))}
@@ -4852,6 +4867,7 @@ function dashBox(){
       ${tile('เรื่องรอคุณแดน',num(d.todo.open),`${d.todo.delegated?d.todo.delegated+' เรื่องพี่ต้นรับแทน · ':''}${d.posts.held?d.posts.held+' โพสต์ถูกกัก · ':''}${d.posts.policy?d.posts.policy+' เตือนนโยบาย':'ไม่มีเตือนนโยบาย'}`,d.todo.open>0||d.posts.held>0,vs('todo','down'))}
     </div>
     ${stripeBox()}
+    ${shopeeBoxDash()}
     ${(()=>{const V=d.visits;if(!V)return '';const G=[['store','🏠 หน้าแรก'],['catalog','🛍 ร้านค้า'],['salepage','📄 salepage'],['quiz','📝 คลังข้อสอบ'],['learn','📖 คลังความรู้'],['daily','🗓️ ข้อสอบประจำวัน'],['order','🔎 หาออเดอร์']];const nm=k=>k==='store'?'หน้าแรก':k==='catalog'?'ร้านค้า (/store)':k==='order'?'หาออเดอร์':k==='daily'?'ข้อสอบประจำวัน':k==='quiz'?'คลังข้อสอบ (หน้ารวม)':k==='learn'?'คลังความรู้ (หน้ารวม)':k.startsWith('p/')?'salepage '+k.slice(2):k.startsWith('quiz/')?'ข้อสอบ '+k.slice(5):'บทความ '+k.slice(6);
       const dv=(a,b)=>{const x=(a||0)-(b||0);return x?`<em class="vs ${x>0?'good':'bad'}">${x>0?'▲ +':'▼ −'}${Math.abs(x)} จากเมื่อวาน</em>`:''};
       return `<div class="visits"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px"><b>👀 ผู้เข้าชมเว็บ 7 วัน</b><span class="fine">นับไม่ซ้ำต่อคนต่อวัน ไม่นับคุณแดน${V.since?' · เริ่มนับ '+new Date(V.since).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></div>
@@ -6859,6 +6875,7 @@ function act(a,el){
     case 'rvPreview':{const w=window.open('','_blank');adminApi('/api/content?action=review_mail&preview=1').then(j=>{if(j&&j.link){if(w)w.location=j.link;else location.href=j.link;}else{if(w)w.close();toast('ยังไม่มีออเดอร์ที่จ่ายแล้วให้ทำตัวอย่าง');}});break;}
     case 'soRefresh':loadSO(true);break;
     case 'soOpen':S.soOpen=!S.soOpen;break;
+    case 'shpSoOpen':S.shpSoOpen=!S.shpSoOpen;break;
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที':'แสดงอีกครั้งแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
     case 'adsBudgetRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;const r=adBudgetRec(x);x.dailyTHB=r.daily;x.days=r.days;{const i1=$('#add-'+id),i2=$('#adn-'+id);if(i1)i1.value=r.daily;if(i2)i2.value=r.days;}render(true);toast(`ใส่งบ ฿${r.daily}/วัน × ${r.days} วันแล้ว เงินยังไม่ออกจนกว่าจะกดตกลง`);break;}

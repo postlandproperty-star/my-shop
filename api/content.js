@@ -2716,7 +2716,7 @@ ${books}`;
         const SO = await import('../lib/shopeeorders.js'), url = `https://${req.headers.host}/s`; res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
         if (action === 'shopee_card') return res.status(200).send(SO.universalCard(url));
         const sn = SO.normSn(req.query.sn); if (!sn) return res.status(200).send(SO.lookupPage({ base: '/s' }));
-        const d = await loadSO(), o = d.orders[sn]; if (!o) return res.status(200).send(SO.lookupPage({ sn, notFound: true, base: '/s' }));
+        const d = await loadSO(), o = SO.isTestOrder({ sn }) ? null : d.orders[sn]; if (!o) return res.status(200).send(SO.lookupPage({ sn, notFound: true, base: '/s' }));
         const [shop, links] = await Promise.all([loadShop(), loadLinks()]); return res.status(200).send(SO.lookupPage({ sn, items: SO.orderItems(o, shop.products, links), base: '/s' }));
       }
       if (action === 'shopee_inbound') { // 📬 Cloudflare Email Worker ส่งอีเมลดิบมา (Gmail ส่งต่ออีเมลออเดอร์ Shopee → orders@sheetlabth.com) · ไม่ใช้ AI
@@ -2754,7 +2754,7 @@ ${books}`;
           else return res.status(400).json({ ok: false });
           await putSO(d); return res.status(200).json({ ok: true });
         }
-        if (action === 'print') { const d = await loadSO(), all = Object.values(d.orders).sort((x, y) => String(y.at).localeCompare(String(x.at))); res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        if (action === 'print') { const d = await loadSO(), { isTestOrder } = await import('../lib/shopeeorders.js'), all = Object.values(d.orders).filter((o) => !isTestOrder(o)).sort((x, y) => String(y.at).localeCompare(String(x.at))); res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.status(200).send(PR.printPage(PR.printList(shop), pUrl, { todo: all.filter((o) => !o.done && Date.now() - Date.parse(o.at) < 45 * 864e5), done: all.filter((o) => o.done).sort((x, y) => String(y.done).localeCompare(String(x.done))).slice(0, 10) }, `/api/content?action=print_order&k=${PR.printKey(st.token)}`)); }
         const id = String(req.query.p || ''), part = req.query.part === 'body' ? 'body' : 'cover', links = await loadLinks(), src = String(links[id] || '').trim();
         const prod = (shop.products || []).find((x) => x.id === id);
@@ -2833,7 +2833,7 @@ ${books}`;
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const now = Date.now(), since = new Date(now - 15 * 864e5).toISOString();
-      const [orders, priv] = await Promise.all([sb(`orders?select=created_at,paid_at,product_name,amount,status,email,campaign&created_at=gte.${since}&order=created_at.desc&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
+      const [orders, priv, soRow] = await Promise.all([sb(`orders?select=created_at,paid_at,product_name,amount,status,email,campaign&created_at=gte.${since}&order=created_at.desc&limit=2000`), sb('shop_state?id=eq.private&select=data'), sb('shop_state?id=eq.shopee_orders&select=data').catch(() => null)]);
       const isTest = testOrder(null, priv?.[0]?.data?.testEmails);
       const thDay = (t) => new Date(Date.parse(t) + 7 * 3600e3).toISOString().slice(0, 10);
       const real = orders.filter((o) => !isTest(o)), paid = real.filter((o) => o.status === 'paid');
@@ -2846,7 +2846,8 @@ ${books}`;
       const today = thDay(new Date(now).toISOString()), wkFrom = thDay(new Date(now - 6 * 864e5).toISOString());
       const bySrc = (L) => { const g = { ads: { n: 0, rev: 0 }, organic: { n: 0, rev: 0 }, direct: { n: 0, rev: 0 } }, labels = {}; for (const o of L) { const s = srcGroup(o.campaign); g[s.g].n++; g[s.g].rev += Number(o.amount) || 0; const l = labels[s.label] || (labels[s.label] = { group: s.g, n: 0, rev: 0 }); l.n++; l.rev += Number(o.amount) || 0; } return { groups: g, labels: Object.entries(labels).map(([label, v]) => ({ label, ...v })).sort((a, b) => b.rev - a.rev) }; };
       const src = { today: bySrc(paid.filter((o) => thDay(pAt(o)) === today)), week: bySrc(paid.filter((o) => thDay(pAt(o)) >= wkFrom)) };
-      return res.status(200).json({ ok: true, at: new Date(now).toISOString(), days, latest, src, test: orders.length - real.length });
+      const shopee = (await import('../lib/shopeeorders.js')).shopeeStats(soRow?.[0]?.data, now); // 🛒 ออเดอร์ Shopee จากอีเมล (คุณแดน 11 ต.ค. 69)
+      return res.status(200).json({ ok: true, at: new Date(now).toISOString(), days, latest, src, shopee, test: orders.length - real.length });
     }
     if (action === 'dash') {
       // แดชบอร์ดห้องประชุม: ตัวเลขจริงของ 7 วัน + ประเด็นจากรายงานล่าสุดของพี่ต้น (ไม่ใช้ AI)
