@@ -4218,6 +4218,62 @@ function exportShopee(){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='shopee-print-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);
   toast(`ไฟล์ลง Shopee ${list.length} รายการแล้ว (ราคา PDF + ฿${plus}/เล่ม) เปิดใน Excel แล้วคัดลอกไปวางในเทมเพลตของ Shopee`);
 }
+/* 🛍 ชุดรูปตกแต่งร้าน Shopee (คุณแดน 10 ต.ค. "ตกแต่งร้านใน shopee ให้เป็นธีมเดียวกัน") วาดในเครื่อง ฟรี ธีมเดียวกับปก: ฟอนต์ Kanit · สีชุดปก · ตัวการ์ตูนธีมที่ร้านใช้มากสุด · ปกจริงของเล่ม
+   1 รูปโปรไฟล์ 1200×1200 (Shopee ตัดเป็นวงกลม ของสำคัญอยู่กลาง) · 2 ภาพปกร้าน 1200×400 · 3 สไลด์ 2000×1000 (ทั้งร้าน + หมวดละรูป) · 4 แบนเนอร์หมวด 1200×400
+   ไม่มีเว็บ ราคา จำนวนเล่ม หรือคำว่า PDF (ลง Shopee ได้ และไม่ต้องทำใหม่เมื่อเพิ่มเล่ม) */
+const SD_HOWTO=['ชุดรูปตกแต่งร้าน Shopee — SheetLab','','เข้า Shopee Seller Centre → ร้านค้า → ตกแต่งร้านค้า (และ ข้อมูลร้านค้า สำหรับรูปโปรไฟล์/ภาพปก)','',
+  '1-รูปโปรไฟล์ร้าน  → รูปโปรไฟล์ร้าน (ระบบตัดเป็นวงกลม)','2-ภาพปกร้าน  → ภาพปก/ภาพพื้นหลังร้าน','3-สไลด์-xx  → แบนเนอร์แบบสไลด์ (ใส่หลายรูปเรียงตามเลข ตั้งลิงก์แต่ละรูปไปหมวดสินค้านั้น)',
+  '4-แบนเนอร์หมวด-xx  → แบนเนอร์รูปเดียว วางเหนือสินค้าหมวดนั้น','','ทุกรูปเป็น JPG ไม่เกิน 2MB ไม่มีลิงก์เว็บ ราคา หรือคำว่า PDF'].join('\r\n');
+async function shopDecorImgs(list){await thFont();
+  list=(list||exportList()).filter(p=>pfmt(p)!=='notion'&&pfmt(p)!=='course'&&(!isBundle(p)||bundleBooks(p).length));if(!list.length)throw new Error('ยังไม่มีเล่มที่ขายอยู่');
+  const keyOf=p=>String(p.coverKey||'').match(/^theme:([\w-]+):(\w):(\d+)/),most=a=>{const c={};a.forEach(v=>{c[v]=(c[v]||0)+1;});return Object.keys(c).sort((x,y)=>c[y]-c[x])[0];};
+  const ks=list.map(keyOf).filter(Boolean),theme=most(ks.map(m=>m[1]))||'school',pm=most(ks.map(m=>m[3])),pal0=pm==null?1:Number(pm);
+  const els=await thEls({theme}),heroes=await Promise.all([0,1,2,3,4].map(k=>thImg(els[k%els.length]).catch(()=>null)));
+  const cache={},ld=u=>u?(cache[u]=cache[u]||thLoad(u).catch(()=>null)):Promise.resolve(null);
+  const coverUrl=p=>p.bookCover||(p.images||[])[0];
+  const coversOf=async ps=>(await Promise.all(ps.map(coverUrl).filter(Boolean).filter((u,i,a)=>a.indexOf(u)===i).slice(0,4).map(ld))).filter(Boolean);
+  const K=(w,s)=>`${w} ${s}px Kanit,'IBM Plex Sans Thai',sans-serif`,rr=(x,a,b,w,h,r)=>{x.beginPath();x.roundRect?x.roundRect(a,b,w,h,r):x.rect(a,b,w,h);};
+  const fit=(x,t,w,sizes,maxL,wt)=>{for(const s of sizes){x.font=K(wt,s);const ls=thLines(x,t,w,maxL+1);if(ls.length<=maxL&&ls.every(l=>x.measureText(l).width<=w))return {s,ls};}const s=sizes[sizes.length-1];x.font=K(wt,s);return {s,ls:thLines(x,t,w,maxL)};};
+  const pic=(x,im,cx,cy,size,rot)=>{if(!im)return;x.save();x.translate(cx,cy);x.rotate(rot*Math.PI/180);x.shadowColor='rgba(0,0,0,.28)';x.shadowBlur=size*.08;x.shadowOffsetY=size*.04;x.drawImage(im,-size/2,-size/2,size,size);x.restore();};
+  const ground=(x,W,H,bg)=>{const u=H/1000;x.fillStyle=bg;x.fillRect(0,0,W,H);x.fillStyle='rgba(255,255,255,.1)';const g=64*Math.max(u,.6);
+    for(let yy=g/2,r=0;yy<H;yy+=g,r++)for(let xx=(r%2)*g/2+g/3;xx<W;xx+=g){x.beginPath();x.arc(xx,yy,6*Math.max(u,.6),0,7);x.fill();}
+    const gl=x.createRadialGradient(W*.75,H*.7,10,W*.75,H*.7,Math.max(W,H)*.6);gl.addColorStop(0,'rgba(255,255,255,.26)');gl.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gl;x.fillRect(0,0,W,H);};
+  // แบนเนอร์แนวนอน: ข้อความซ้าย · ปกจริงเรียงพัดขวา · ตัวการ์ตูนธีม
+  const banner=(W,H,pal,title,sub,covers,hero,pill)=>{const [bg,ink]=TH_PAL[pal%TH_PAL.length],c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),u=H/1000,mx=Math.max(40,W*.05);
+    ground(x,W,H,bg);const tw=(covers.length?W*.47:W-mx*2)-mx*.4;
+    let top=H*.12;if(pill){x.font=K(700,58*u);const bw=x.measureText('SheetLab').width+84*u;x.fillStyle='rgba(255,255,255,.94)';rr(x,mx,H*.1,bw,96*u,48*u);x.fill();x.fillStyle='#1a1a1a';x.textBaseline='middle';x.fillText('SheetLab',mx+42*u,H*.1+50*u);x.textBaseline='alphabetic';top=H*.1+130*u;}
+    const ti=fit(x,title,tw,[240,210,180,155,130,110].map(s=>s*u),2,900),su=!sub?{s:0,ls:[]}:sub.includes('\n')?(()=>{const ps=sub.split('\n');for(const s of [78,68,58,50].map(z=>z*u)){x.font=K(700,s);if(ps.every(l=>x.measureText(l).width<=tw))return {s,ls:ps};}return fit(x,ps.join(' '),tw,[50*u],3,700);})():fit(x,sub,tw,[78,68,58].map(s=>s*u),2,700);
+    const bh=ti.ls.length*ti.s*1.05+(su.ls.length?24*u+su.ls.length*su.s*1.3:0);let y=Math.max(top,(top+H*.92-bh)/2);
+    x.font=K(900,ti.s);for(const l of ti.ls){y+=ti.s*1.05;x.fillStyle='rgba(0,0,0,.15)';x.fillText(l,mx,y-ti.s*.08+6*u);x.fillStyle=ink;x.fillText(l,mx,y-ti.s*.08);}
+    if(su.ls.length){y+=24*u;x.font=K(700,su.s);x.fillStyle=ink;x.globalAlpha=.92;for(const l of su.ls){y+=su.s*1.3;x.fillText(l,mx,y-su.s*.3);}x.globalAlpha=1;}
+    const n=covers.length;if(n){const a0=W*.53,a1=W-mx*.8,ch=H*(n>2?.64:.7);
+      covers.forEach((im,k)=>{const w=ch*im.width/im.height,cx=n===1?(a0+a1)/2:a0+w/2+(a1-a0-w)*k/(n-1),cy=H*.53+(k%2?H*.03:-H*.02);
+        x.save();x.translate(cx,cy);x.rotate([-7,4,-3,6][k]*Math.PI/180);x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=40*u;x.shadowOffsetY=18*u;x.fillStyle='#fff';x.fillRect(-w/2-8*u,-ch/2-8*u,w+16*u,ch+16*u);x.shadowColor='transparent';x.drawImage(im,-w/2,-ch/2,w,ch);x.restore();});}
+    pic(x,hero,n?W*.5:W-H*.3,H*.8,H*.3,-8); // ตัวการ์ตูนหน้าปก (เหมือนปกเล่ม)
+    return c;};
+  const logo=()=>{const W=1200,[bg,ink]=TH_PAL[pal0%TH_PAL.length],c=document.createElement('canvas');c.width=c.height=W;const x=c.getContext('2d');ground(x,W,W,bg);
+    pic(x,heroes[0],W/2,430,440,-6);const t=fit(x,'SheetLab',880,[230,200,170],1,900);x.textAlign='center';x.font=K(900,t.s);x.fillStyle='rgba(0,0,0,.15)';x.fillText('SheetLab',W/2,866);x.fillStyle=ink;x.fillText('SheetLab',W/2,860);
+    const s=fit(x,'หนังสือเตรียมสอบภาษาอังกฤษ',820,[66,58,50],1,700);x.font=K(700,s.s);x.globalAlpha=.92;x.fillText(s.ls[0],W/2,960);x.globalAlpha=1;x.textAlign='left';return c;};
+  const gm={};for(const p of list){const k=isBundle(p)?'_set':CATS[p.cat]?p.cat:'general';(gm[k]=gm[k]||[]).push(p);}
+  const groups=Object.entries(gm).sort((a,b)=>b[1].length-a[1].length).slice(0,6);
+  const books=list.filter(p=>!isBundle(p)),all=await coversOf(books.length?books:list.flatMap(bundleBooks)),labels=groups.map(([k])=>k==='_set'?'ชุดคุ้ม':CATS[k]);
+  const shopSub='หนังสือเตรียมสอบภาษาอังกฤษ'+(labels.filter(l=>l!=='ชุดคุ้ม').length?'\n'+labels.filter(l=>l!=='ชุดคุ้ม').slice(0,3).join(' · '):'');
+  const out=[],push=(name,c)=>out.push({name:name.replace(/[\\/:*?"<>|\s]+/g,'-'),w:c.width,h:c.height,c});
+  push('1-รูปโปรไฟล์ร้าน-1200x1200',logo());
+  push('2-ภาพปกร้าน-1200x400',banner(1200,400,pal0,'SheetLab',shopSub,all,heroes[1],false));
+  push('3-สไลด์-01-ทั้งร้าน-2000x1000',banner(2000,1000,pal0,'SheetLab',shopSub,all,heroes[1],false));
+  for(const [gi,[k,ps]] of groups.entries()){const label=k==='_set'?'ชุดคุ้ม':CATS[k],pg=most(ps.map(keyOf).filter(Boolean).map(m=>m[3])),pal=pg==null?pal0+gi+1:Number(pg);
+    const cv=await coversOf(k==='_set'?ps.flatMap(bundleBooks):ps),sub=k==='_set'?'รวมหลายเล่มในชุดเดียว เล่มพิมพ์ A4':'หนังสือเล่มพิมพ์ A4',nn=String(gi+2).padStart(2,'0');
+    push(`3-สไลด์-${nn}-${label}-2000x1000`,banner(2000,1000,pal,label,sub,cv,heroes[(gi+2)%heroes.length],true));
+    push(`4-แบนเนอร์หมวด-${String(gi+1).padStart(2,'0')}-${label}-1200x400`,banner(1200,400,pal,label,sub,cv,heroes[(gi+2)%heroes.length],true));}
+  return out;}
+async function shopDecor(){if(S.zipBusy)return;S.zipBusy='decor';render(true);
+  try{const imgs=await shopDecorImgs();if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');const zip=new window.JSZip();
+    for(const it of imgs){let q=.9,b=await new Promise(r=>it.c.toBlob(r,'image/jpeg',q));while(b&&b.size>19e5&&q>.5){q-=.1;b=await new Promise(r=>it.c.toBlob(r,'image/jpeg',q));}if(b)zip.file(it.name+'.jpg',b);}
+    zip.file('วิธีใช้.txt','﻿'+SD_HOWTO);const z=await zip.generateAsync({type:'blob'}),a=document.createElement('a');a.href=URL.createObjectURL(z);a.download='sheetlab-shopee-decor-'+new Date().toISOString().slice(0,10)+'.zip';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);
+    toast(`ได้รูปตกแต่งร้าน Shopee ${imgs.length} รูป (โปรไฟล์ · ภาพปก · สไลด์ · แบนเนอร์หมวด) ดูวิธีใช้ในไฟล์ วิธีใช้.txt`,8000);}
+  catch(e){console.error(e);toast('ทำรูปตกแต่งร้านไม่สำเร็จ: '+(e.message||e));}
+  S.zipBusy=false;render(true);}
 /* ดาวน์โหลดหลายไฟล์เป็น ZIP เดียว (รูปสินค้า · หน้าตัวอย่าง · รูปทั้งชุด · ไฟล์ PDF ทุกเล่มในชุด) */
 async function zipDownload(files,zipName,label){files=files.filter(f=>f&&f.url&&/^https?:\/\//.test(f.url));if(!files.length){toast('ยังไม่มีไฟล์ให้โหลด');return;}
   if(S.zipBusy)return;S.zipBusy='dl';render(true);
@@ -4262,6 +4318,7 @@ function productsTab(){
       <details class="pt-dd"><summary class="btn btn-line btn-sm">⬇ ดาวน์โหลด ▾</summary><div class="pt-menu">
         <button class="pt-a" data-a="exportCsv">ข้อมูลสินค้าทั้งหมด (Excel)</button>
         <button class="pt-a" data-a="exportShopee">🛒 ไฟล์ลง Shopee (เล่มพิมพ์)</button>
+        <button class="pt-a" data-a="shopDecor" ${S.zipBusy?'disabled':''}>${S.zipBusy==='decor'?'กำลังทำรูปร้าน...':'🛍 ชุดรูปตกแต่งร้าน Shopee (ZIP)'}</button>
         <button class="pt-a" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy===true?'กำลังรวมรูป...':'รูปสินค้าทั้งหมด (ZIP)'}</button>
         <span class="fine" style="padding:4px 10px;display:block">เฉพาะที่ขายอยู่ · ไว้ลง Shopee / Lazada · ทีละรายการกด "ดูเพิ่มเติม" ที่สินค้า</span></div></details>
       <button class="btn btn-line btn-sm" data-a="newBundle">📦 สร้างชุดขาย</button>
@@ -6578,6 +6635,7 @@ function act(a,el){
     case 'toCheckout':glideTo('checkout');break;
     case 'exportCsv':exportCsv();break;
     case 'exportShopee':exportShopee();break;
+    case 'shopDecor':shopDecor();break;
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
     case 'shopeeCopy':shopeeCopy();break;
     case 'shopeeImgs':shopeeImgs();break;
