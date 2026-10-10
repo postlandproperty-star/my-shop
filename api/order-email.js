@@ -1,12 +1,13 @@
 // แอดมินกด "ส่งอีเมลซ้ำ": ส่งอีเมลลิงก์ไฟล์ของออเดอร์นี้อีกครั้ง
-// GET /api/order-email?session_id=cs_...  (ต้องล็อกอินแอดมิน)
+// GET /api/order-email?session_id=cs_...  (ต้องล็อกอินแอดมิน หรือ header x-content-key)
 import { stripe, verifyAdmin, configured, piToSession } from '../lib/shop.js';
 import { fulfill } from '../lib/fulfill.js';
 import { mailConfigured } from '../lib/mail.js';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  const admin = await verifyAdmin(req.headers.authorization);
+  const key = process.env.CONTENT_API_KEY || ''; // คีย์ร้าน (เครื่องคุณแดน) ใช้ส่งซ้ำได้ด้วย เช่น ส่งลิงก์ใหม่ให้ลูกค้าหลายคนที่คุณแดนสั่ง
+  const admin = (key.length >= 16 && req.headers['x-content-key'] === key) || await verifyAdmin(req.headers.authorization);
   if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
   const id = String(req.query.session_id || '');
   if (!/^(cs_(live|test)|pi)_[A-Za-z0-9]+$/.test(id)) return res.status(400).json({ ok: false, error: 'bad session id' });
