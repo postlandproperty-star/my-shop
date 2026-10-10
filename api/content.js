@@ -20,7 +20,7 @@ import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl 
 import { siteUrl } from '../lib/site.js';
 import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
-import { sendRecoveries } from '../lib/recover.js';
+import { sendRecoveries, recoverStatus, recoverCfg } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
@@ -2077,6 +2077,7 @@ ${books}`;
       if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } try { await autoVideo(all); } catch (e) { console.error('autovideo', e.message); } try { await autoLessons(all); } catch (e) { console.error('autolesson', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
       let jobs = st === 'queued' ? queueOrder(all) : all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
       if (!admin && st === 'queued') jobs = cfg.paused ? [] : jobs.filter((j) => !j.paused); // คอม/ทีม: ข้ามเล่มที่พักไว้ และไม่ได้งานเลยตอนคุณแดนหยุดโรงงาน
+      if (keyOk(req) && req.query.by === 'mac' && st === 'queued') { try { await sendRecoveries(); } catch (e) { console.error('recover', e.message); } } // 📧 ตามลูกค้าที่ยังไม่จ่ายทุกชั่วโมงที่ Mac เปิด (cron ของ Vercel ได้แค่วันละ 2 รอบ)
       if (keyOk(req) && req.query.by === 'mac') await workerBeat({ note: cfg.paused ? 'เช็คคิว: คุณแดนหยุดโรงงานไว้' : `เช็คคิว ${jobs.length} งาน` }); // คอมคุณแดนมาเช็คคิว
       const w = (await sb('shop_state?id=eq.factory_worker&select=data').catch(() => []))?.[0]?.data || null;
       const order = queueOrder(all).map((j) => j.id);
@@ -2707,7 +2708,13 @@ ${books}`;
       // ดูว่าจะเตือนใครบ้าง (dry=1) หรือสั่งส่งตอนนี้ (แอดมินหรือ key)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
-      return res.status(200).json(await sendRecoveries({ dry: req.query.dry === '1' }));
+      return res.status(200).json(await sendRecoveries({ dry: req.query.dry === '1', force: true }));
+    }
+    if (action === 'recover_status' || action === 'recover_cfg') { // 📧 แถบสถานะ "ตามลูกค้าที่ยังไม่จ่าย" + เปิด/ปิด/ส่วนลด/อายุโค้ด (คุณแดนเท่านั้น)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !(keyOk(req) && action === 'recover_status')) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (action === 'recover_cfg') { if (req.method !== 'POST') return res.status(405).json({ ok: false }); const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}; return res.status(200).json({ ok: true, cfg: await recoverCfg(b) }); }
+      return res.status(200).json(await recoverStatus());
     }
     if (action === 'reply_state') {
       // คุณแดนกด "เรียบร้อย" / "ยกเลิก" / "เปิดใหม่" ที่คำสั่งถึงสมาชิก

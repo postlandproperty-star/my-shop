@@ -484,7 +484,12 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .fqt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 -1px;position:relative;z-index:1}.fqt::-webkit-scrollbar{display:none}
 .fqt button{flex:0 0 auto;border:1.5px solid var(--line);border-bottom:0;background:var(--bg);color:var(--muted);border-radius:12px 12px 0 0;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer}.fqt button[aria-selected=true]{background:var(--surface);color:var(--ink)}
 .fqt em{font-style:normal;background:var(--brand);color:#fff;border-radius:999px;padding:0 7px;font-size:12px;margin-left:2px}
-.fqh.pho-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;max-height:300px;overflow-y:auto}.pho-th{padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg);aspect-ratio:4/5}.pho-th img{width:100%;height:100%;object-fit:cover;display:block}.pho-th.on{border-color:var(--brand)}
+.fqh.rcv{display:grid;gap:10px;margin:0 0 14px}.rcv-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.rcv-h small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.rcv-st{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:14px}.rcv-set{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.rcv-set .chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.rcv-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:360px;overflow-y:auto}.rcv-list li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px}.rcv-list li>span:first-child{min-width:0}.rcv-list b{display:block;overflow-wrap:anywhere;font-size:14px}.rcv-list small{color:var(--muted);font-size:12.5px}.rcv-list .badge{flex:0 0 auto;white-space:nowrap}
+@media(max-width:560px){.rcv-list li{flex-direction:column;align-items:flex-start;gap:4px}}
+.rcv-tag{grid-column:2;justify-self:end;font-size:12px;color:var(--ok);font-weight:600}
+.pho-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;max-height:300px;overflow-y:auto}.pho-th{padding:0;border:2px solid transparent;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg);aspect-ratio:4/5}.pho-th img{width:100%;height:100%;object-fit:cover;display:block}.pho-th.on{border-color:var(--brand)}
 .pho-mk{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:12px;align-items:start}.pho-out{width:100%;border-radius:10px;display:block;box-shadow:0 2px 8px rgba(15,27,51,.15)}.pho-side{display:grid;gap:6px}
 @media(max-width:560px){.pho-mk{grid-template-columns:1fr}.pho-out{max-width:300px;margin:0 auto}}
 .fb-st{grid-template-columns:auto minmax(0,1fr) auto;gap:10px 14px}.fb-st .fqh-main b{font-size:18px}.fb-st .fqh-main span{overflow-wrap:anywhere}
@@ -2867,11 +2872,11 @@ function orderRow(o){
   return `<div class="order">
     <button class="order-head" data-a="toggle" data-id="${o.id}" aria-expanded="${!!open}">
       <span class="l1">${esc(o.name)}</span><span class="r1">${baht(o.amount)}</span>
-      <span class="l2">${esc(o.pname)}${o.src==='stripe'?` · ${fdt(o.paidAt||o.created)}${o.email?' · '+esc(o.email):''}`:''}</span><span class="badge ${st[1]}">${st[0]}</span>
+      <span class="l2">${esc(o.pname)}${o.src==='stripe'?` · ${fdt(o.paidAt||o.created)}${o.email?' · '+esc(o.email):''}`:''}</span><span class="badge ${st[1]}">${st[0]}</span>${(()=>{const r=rcvOf(o);return r&&r.sent?`<span class="rcv-tag">📧 ${r.sent.used_at?'ใช้โค้ดแล้ว':'ส่งโค้ด -'+r.sent.pct+'% แล้ว'}</span>`:'';})()}
     </button>
     ${open?`<div class="order-body">
       <div class="o-info"><span>${esc(o.email)}</span><span>สร้างเมื่อ ${fdt(o.created)}</span><span>เลขออเดอร์ ${esc(o.id)}</span><span>วิธีชำระ ${methodName(o.method)}</span>${o.coupon?`<span>โค้ด ${esc(o.coupon)}</span>`:''}${o.campaign?`<span>จากแคมเปญ ${esc(o.campaign)}</span>`:''}${o.items&&o.items.length>1?`<span>รวม order bump: ${esc(o.items.slice(1).map(it=>it.name).join(', '))}</span>`:''}</div>
-      <ul class="log">${o.log.map(l=>`<li><span class="muted">${fdt(l.t)}</span>${esc(l.text)}</li>`).join('')}</ul>
+      <ul class="log">${o.log.map(l=>`<li><span class="muted">${fdt(l.t)}</span>${esc(l.text)}</li>`).join('')}${(()=>{const r=rcvOf(o);if(!r)return '';if(r.queue)return `<li><span class="muted">${fdt(Date.parse(r.queue.at))}</span>⏳ จะส่งอีเมลโค้ดส่วนลดอัตโนมัติ${r.queue.now?'รอบถัดไป':''}</li>`;const x=r.sent,s=rcvState(x);return `<li><span class="muted">${fdt(Date.parse(x.sent))}</span>📧 ส่งอีเมลโค้ด ${esc(x.code)} ลด ${x.pct}% แล้ว · ${s[1]}</li>`;})()}</ul>
       <div class="acts">
         ${o.src==='stripe'?`<a class="btn btn-line btn-sm" href="https://dashboard.stripe.com/${o.paymentIntent?'payments/'+esc(o.paymentIntent):'payments'}" target="_blank" rel="noopener noreferrer">ดู/คืนเงินใน Stripe</a>
           ${o.status==='paid'?`<button class="btn btn-line btn-sm" data-a="resendEmail" data-sid="${esc(o.sid)}" ${o.email?'':'disabled'}>${o.emailedAt?'ส่งอีเมลซ้ำ':'ส่งอีเมลลิงก์ไฟล์'}</button><span class="fine">${o.emailedAt?'อีเมลส่งแล้ว '+fdt(o.emailedAt):o.email?'ยังไม่ได้ส่งอีเมล':'ไม่มีอีเมลลูกค้า'}</span>`:''}${o.status==='paid'?`<div class="alt-mail"><input class="input" type="email" placeholder="ลูกค้าขอให้ส่งไปอีเมลอื่น? ใส่อีเมลที่นี่" data-altmail="${esc(o.sid)}" value="${esc((S.altMail||{})[o.sid]||'')}"><button class="btn btn-dark btn-sm" data-a="altMailSend" data-sid="${esc(o.sid)}">📧 ส่งไฟล์ไปอีเมลนี้</button><span class="fine">ส่งเองได้ทุกเมื่อ · พรุ่งนี้ระบบขอรีวิวที่อีเมลนี้ให้เอง</span></div>`:''}${o.status==='paid'&&o.src==='stripe'?rvReqRow(o):''}`:''}
@@ -2923,6 +2928,21 @@ function isTestOrd(o){
   const p=o.productId?getProduct(o.productId):null;
   return /ทดสอบ|แคลคูลัส/.test(o.pname||'')||Number(o.amount)<30||!!(o.productId&&(!p||p.status!=='published'))||TEST_EM.has(String(o.email||'').trim().toLowerCase());
 }
+/* 📧 ตามลูกค้าที่เปิดหน้าจ่ายแต่ยังไม่จ่าย: ส่งโค้ดลดทางอีเมลอัตโนมัติ (คุณแดน 10 ต.ค. 69 "คูปอง 20% อายุ 24 ชม. มีแถบสถานะบอก") */
+const RCV={d:null,loading:false,busy:'',open:false};
+function loadRcv(){if(RCV.loading)return;RCV.loading=true;adminApi('/api/content?action=recover_status').then(j=>{RCV.d=j&&j.ok?j:{cfg:{on:false,pct:20,hours:24},log:[],queue:[],err:(j&&j.error)||'โหลดไม่ได้'};}).catch(()=>{RCV.d={cfg:{on:false,pct:20,hours:24},log:[],queue:[],err:'เชื่อมต่อไม่ได้'};}).then(()=>{RCV.loading=false;render(true);});}
+function rcvOf(o){const d=RCV.d;if(!d||o.status==='paid')return null;const em=String(o.email||'').toLowerCase();
+  const x=(d.log||[]).find(l=>l.key===o.sid||l.key===o.paymentIntent)||(d.log||[]).find(l=>em&&l.email===em&&Date.parse(l.sent)>=o.created);if(x)return {sent:x};
+  const q=(d.queue||[]).find(l=>l.key===o.sid||l.key===o.paymentIntent);return q?{queue:q}:null;}
+function rcvState(l){return l.used_at?['ok',`✅ ใช้โค้ดซื้อแล้ว${l.paid!=null?' '+baht(l.paid):''}`]:Date.parse(l.expires)>Date.now()?['warn',`⏳ รอใช้ ถึง ${fdt(Date.parse(l.expires))}`]:['gray','หมดอายุ ไม่ได้ใช้'];}
+function rcvBox(){if(RCV.d===null&&!RCV.loading)loadRcv();const d=RCV.d;if(!d)return '<div class="card rcv"><b>📧 ตามลูกค้าที่ยังไม่จ่าย</b> <span class="fine">กำลังโหลด...</span></div>';
+  const c=d.cfg||{},L=d.log||[],Q=d.queue||[],m30=L.filter(l=>Date.now()-Date.parse(l.sent)<30*864e5),won=m30.filter(l=>l.used_at),rev=won.reduce((a,l)=>a+(Number(l.paid)||0),0),busy=RCV.busy;
+  return `<div class="card rcv"><div class="rcv-h"><span><b>📧 ตามลูกค้าที่ยังไม่จ่าย (อัตโนมัติ)</b><small>ลูกค้ากรอกอีเมลแล้วไม่จ่ายเกิน 1 ชม. ได้อีเมลโค้ดลด ${c.pct}% ใช้ได้ ${c.hours} ชม. · คนละ 1 ครั้งใน 30 วัน · ส่งทุกชั่วโมงที่ Mac เปิด + 10:00 และ 19:05</small></span><label class="switch"><input type="checkbox" data-a="rcvOn" ${c.on?'checked':''} ${busy?'disabled':''} aria-label="เปิดส่งอัตโนมัติ"><span></span></label></div>
+    <div class="rcv-st"><span class="badge ${c.on?'ok':'gray'}">${c.on?'● เปิดอยู่':'ปิดอยู่'}</span><span>ส่งแล้ว <b>${m30.length}</b></span><span>กลับมาซื้อ <b>${won.length}</b>${rev?` (${baht(rev)})`:''}</span><span>รอส่ง <b>${Q.length}</b></span>${d.lastRun?`<span class="fine">รอบล่าสุด ${fdt(Date.parse(d.lastRun))}</span>`:''}</div>
+    <div class="rcv-set"><span class="fine">ลด</span>${[10,15,20,25,30].map(n=>`<button class="chip" data-a="rcvSet" data-k="pct" data-v="${n}" aria-pressed="${Number(c.pct)===n}" ${busy?'disabled':''}>${n}%</button>`).join('')}<span class="fine">ใช้ได้</span>${[12,24,48].map(n=>`<button class="chip" data-a="rcvSet" data-k="hours" data-v="${n}" aria-pressed="${Number(c.hours)===n}" ${busy?'disabled':''}>${n} ชม.</button>`).join('')}
+      <span style="flex:1"></span><button class="btn btn-line btn-sm" data-a="rcvRun" ${busy||!c.on?'disabled':''}>${busy==='run'?'กำลังส่ง...':'ส่งรอบนี้เลย'}</button><button class="chip" data-a="rcvOpen" aria-expanded="${RCV.open}">${RCV.open?'ซ่อนรายชื่อ':'ดูรายชื่อ'}</button></div>
+    ${d.err?`<p class="err" style="margin:0">${esc(d.err)}</p>`:''}
+    ${RCV.open?`<ul class="rcv-list">${Q.map(q=>`<li><span><b>${esc(q.email)}</b><small>${esc(q.product)}</small></span><span class="badge warn">${q.now?'ส่งรอบถัดไป':'⏳ ส่งได้ '+fdt(Date.parse(q.at))}</span></li>`).join('')}${L.slice(0,40).map(l=>{const s=rcvState(l);return `<li><span><b>${esc(l.email)}</b><small>${esc(l.product)} · ${baht(l.amount)} · ส่ง ${fdt(Date.parse(l.sent))} · โค้ด ${esc(l.code)} -${l.pct}%</small></span><span class="badge ${s[0]}">${s[1]}</span></li>`;}).join('')||(!Q.length?'<li class="fine">ยังไม่ได้ส่งให้ใคร</li>':'')}</ul>`:''}</div>`;}
 function ordersTab(){
   const paidAll=D.orders.filter(o=>o.status==='paid'&&!isTestOrd(o)),nTest=D.orders.filter(o=>o.status==='paid'&&isTestOrd(o)).length;
   const now=Date.now(),day=864e5;
@@ -2944,6 +2964,7 @@ function ordersTab(){
   const kpi=(v,l,sub)=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}${sub?` · <span class="muted">${sub}</span>`:''}</div></div>`;
   return `
   ${memberDesk('finance')}
+  ${rcvBox()}
   <div class="card free-send"><b>🎁 ส่งชีทฟรีเอง</b><span class="fine">ลูกค้าทักแชทบอกว่าไม่ได้รับชีทฟรี หรือขอให้ส่งไปอีเมลอื่น</span>
     <div class="alt-mail"><input class="input" type="email" placeholder="อีเมลลูกค้า" data-freemail="1" value="${esc(S.freeMail||'')}"><button class="btn btn-dark btn-sm" data-a="freeSend" ${S.freeBusy?'disabled':''}>${S.freeBusy?'กำลังส่ง...':'ส่งชีทฟรี'}</button></div></div>
   <div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0">
@@ -6261,6 +6282,10 @@ function act(a,el){
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'flCat':S.flcat=el.dataset.v;render(true);break;
     case 'facTab':S.facTab=el.dataset.v;render(true);break;
+    case 'rcvOpen':RCV.open=!RCV.open;render(true);break;
+    case 'rcvOn':case 'rcvSet':{const c=(RCV.d||{}).cfg||{},body=a==='rcvOn'?{on:!c.on}:{[el.dataset.k]:Number(el.dataset.v)};RCV.busy='cfg';render(true);
+      adminPost('/api/content?action=recover_cfg',body).then(j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'บันทึกไม่สำเร็จ');RCV.d.cfg=j.cfg;toast(a==='rcvOn'?(j.cfg.on?'เปิดส่งโค้ดอัตโนมัติแล้ว':'ปิดส่งโค้ดอัตโนมัติแล้ว'):'บันทึกแล้ว ใช้กับอีเมลฉบับถัดไป');}).catch(e=>toast(String(e.message||e))).then(()=>{RCV.busy='';render(true);});break;}
+    case 'rcvRun':RCV.busy='run';render(true);adminApi('/api/content?action=recover').then(j=>{toast(j&&j.ok?(j.sent?`ส่งแล้ว ${j.sent} คน`:'ไม่มีใครต้องส่งตอนนี้'):'ส่งไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{RCV.busy='';RCV.d=null;render(true);});break;
     case 'facPanel':S.facTab=el.dataset.v||'';if(el.dataset.v==='course'&&el.dataset.t)FCR.tab=el.dataset.t;if(el.dataset.v==='order')S.ordKind=null;render(true);if(S.facTab)setTimeout(()=>{const x=document.getElementById('fb-panel');if(x)x.scrollIntoView({block:'start'});},30);break;
     case 'facRefresh':if(!CRS.loading)CRS.list=null;act('toFactory',el);break;
     case 'fbF':S.fbF=el.dataset.v;S.fbCol=null;render(true);break;

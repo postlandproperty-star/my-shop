@@ -48,4 +48,6 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const links = { c1: 'https://x/c1', b1: 'https://x/b1', p1: 'https://x/p1' };
   const one = await F.orderItems({ metadata: { productId: 'c1' } }, sh, links), cart = await F.orderItems({ metadata: { cart: 'c1,p1' } }, sh, links);
   ok('ของแถม: ซื้อแล้วได้ไฟล์ของแถมที่เลือก (ไม่รวมชุด/คอร์ส ไม่ซ้ำในตะกร้า)', one.map((i) => i.productId).join() === 'c1,b1,b2' && one[1].bonus && /ของแถม/.test(one[1].name) && cart.filter((i) => i.productId === 'b1').length === 1, JSON.stringify(one.map((i) => i.productId)) + ' ' + JSON.stringify(cart.map((i) => i.productId))); }
+{ const R = await import('../lib/recover.js'); const exp = '2026-10-11T03:00:00Z', m = R.buildRecoveryEmail({ shop: 'SheetLab', product: 'IELTS ครบชุด 13 เล่ม', amount: 990, url: 'https://sheetlabth.com/p/ielts?code=BACK12345#checkout', settings: {}, code: 'BACK12345', pct: 20, expires: exp, course: false });
+  ok('ตามลูกค้าที่ยังไม่จ่าย: อีเมลมีโค้ด ลด 20% ราคาหลังลด (฿792) เวลาหมดอายุไทย ลิงก์ใส่โค้ดให้ · ค่าตั้งต้น 20% / 24 ชม.', /BACK12345/.test(m.html) && /฿792/.test(m.html) && /code=BACK12345/.test(m.html) && /ลด 20%/.test(m.subject) && /10:00/.test(m.text) && R.RECOVER_DEFAULT.pct === 20 && R.RECOVER_DEFAULT.hours === 24, m.subject); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
