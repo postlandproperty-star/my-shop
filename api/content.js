@@ -1489,7 +1489,7 @@ ${books}`;
     }
     if (action === 'chatbot' || action === 'chatbot_resume' || action === 'chatbot_test') { // แชทบอทเพจ (คุณแดนเท่านั้น)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
-      if (!admin && !(keyOk(req) && action === 'chatbot' && req.method === 'GET')) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' }); // คีย์ร้าน: ดูสถานะได้อย่างเดียว
+      if (!admin && !(keyOk(req) && ((action === 'chatbot' && req.method === 'GET') || action === 'chatbot_test'))) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' }); // คีย์ร้าน: ดูสถานะ/ลองถาม (ไม่ส่งจริง) ได้อย่างเดียว
       const CB = await import('../lib/chatbot.js'), site = await siteUrl();
       if (action === 'chatbot_test') { const b = await readBody(req); try { return res.status(200).json({ ok: true, ...(await CB.previewReply(String(b.text || '').slice(0, 500), site)) }); } catch (e) { return res.status(200).json({ ok: false, error: String(e.message || e).slice(0, 200) }); } }
       if (action === 'chatbot_resume') { const b = await readBody(req); const th = await CB.loadThreads(); const t = th.t[String(b.psid || '')]; if (t) { delete t.paused_until; delete t.needsHuman; await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'chatbot_threads', data: th, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); } return res.status(200).json({ ok: true }); }
