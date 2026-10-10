@@ -2755,6 +2755,7 @@ ${books}`;
       if (!st.token || t.length !== want.length || !timingSafeEqual(t, want)) return res.status(401).json({ ok: false, error: 'รหัสชีตไม่ถูกต้อง (กดสร้างโค้ดใหม่ในหลังบ้าน)' });
       const [shop, links] = await Promise.all([loadShop(), loadLinks()]), { rows, missing } = shopeeRows(shop, links, bUrl);
       if (!st.last || Date.now() - st.last.at > 30 * 6e4 || st.last.n !== rows.length) { st.last = { at: Date.now(), n: rows.length }; await put(st).catch(() => {}); } // หลังบ้านโชว์ "ซิงก์ล่าสุด"
+      if (req.query.fmt === 'print') { const PR = await import('../lib/printpage.js'), k = PR.printKey(st.token); res.setHeader('Content-Type', 'text/csv; charset=utf-8'); return res.status(200).send(PR.printCsv(shop, (id, part) => `https://${req.headers.host}/api/content?action=print_pdf&k=${k}&p=${encodeURIComponent(id)}&part=${part}`)); } // แท็บ 🖨 พิมพ์ ในชีต
       if (req.query.fmt === 'csv') { res.setHeader('Content-Type', 'text/csv; charset=utf-8'); return res.status(200).send(shopeeCsv(rows)); } // สูตร IMPORTDATA ในชีต
       return res.status(200).json({ ok: true, rows: rows.map(({ id, name, link }) => ({ id, name, link })), missing: missing.length });
     }
