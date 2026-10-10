@@ -2711,7 +2711,7 @@ ${books}`;
       const put = (d) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'shopee_sheet', data: d, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
       if (action === 'shopee_sheet_cfg') {
         const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
-        if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+        if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
         const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         if (!st.token || (req.method === 'POST' && b.reset)) { st.token = randomBytes(24).toString('hex'); delete st.last; await put(st); }
         const [shop, links] = await Promise.all([loadShop(), loadLinks().catch(() => ({}))]), { rows, missing } = shopeeRows(shop, links);
