@@ -1057,6 +1057,12 @@ export default async function handler(req, res) {
       // รอบเช้า 10:00 กทม. โพสต์ที่อนุมัติและถึงเวลาแล้วขึ้นด้วย (โหมดเร่งผู้ติดตาม: วันละ 2 รอบ 10:00 และ 19:05)
       let morning = null;
       if (r.ok && cronOk(req)) { try { await (await import('../lib/insights.js')).pruneEvents(90); } catch (e) {} } // พฤติกรรมคนเข้าเว็บเก็บ 90 วัน
+      if (r.ok && cronOk(req) && process.env.GEMINI_API_KEY) { try { // 📅 ข้อสอบ IELTS ประจำวัน: เติมคลังวันละ 5 ข้อ (เท่าที่ใช้ต่อวัน) ไม่ให้ชุดวนซ้ำ · lib/ieltsLib.js
+        const IL = await import('../lib/ieltsLib.js'), lib = (await sb('shop_state?id=eq.ielts_lib&select=data'))?.[0]?.data;
+        if (lib && Array.isArray(lib.daily) && lib.daily.length < 600) { const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: IL.dailyPrompt(5, lib.daily.slice(-60).map((x) => x.q.slice(0, 40)).join(' | ')) }] }], generationConfig: { temperature: 0.8, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } }) });
+          const gj = await gr.json().catch(() => ({})), items = IL.normDaily((gj?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join(''));
+          if (items.length) { lib.daily = lib.daily.concat(items); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ielts_lib', data: lib, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); } }
+      } catch (e) { console.error('ielts daily topup', e); } }
       if (r.ok && cronOk(req)) {
         try {
           const pr = await fetch(`https://${req.headers.host}/api/content?action=publish`, { headers: { 'x-content-key': CONTENT_KEY } });
