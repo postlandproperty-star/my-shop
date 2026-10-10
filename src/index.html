@@ -5297,13 +5297,26 @@ function phoSearch(q){PHO.q=String(q||'').trim();if(!PHO.q){PHO.err='ใส่�
 function phoRedraw(){PHO.busy='load';render(true);return phoCompose().then(u=>{PHO.out=u;}).catch(e=>{PHO.err=String(e.message||e);}).then(()=>{PHO.busy='';render(true);});}
 /* ✏️ แก้รูปแอดที่ยิงแล้ว (คุณแดน 9 ต.ค. 69): เลือกรูปสินค้า/รูป AI เดิม/อัปโหลด/สร้างด้วย AI → เปลี่ยนรูปในแอดเดิม Facebook รีวิวใหม่ */
 function adEditProduct(c){if(c.au&&getProduct(c.au.productId))return getProduct(c.au.productId);const m=String((c.ads[0]||{}).link||'').match(/\/p\/([a-z0-9-]+)/);return m?D.products.find(p=>p.slug===m[1]):null;}
+/* ✨ สร้างรูปใหม่ด้วย AI ในหน้าแก้รูปแอด แบบเดียวกับตอนสร้างแอดใหม่ (คุณแดน 10 ต.ค. 69): 🎲 3 แบบที่ต่างกัน หรือทีละรูป (แนวรูป · ข้อความบนรูป · โมเดล) · ได้แล้วเลือกเองว่าจะใช้รูปไหน */
+function adEditAi(p,busy){const md=ADST.edModel||imgModel(),inf=IMG_INFO[md];
+  return `<div class="adq-ai">
+    <div class="adq-var"><b>🎲 แนะนำ: สร้าง ugly ad 3 แบบที่ต่างกัน</b><span class="fine">ก รูปโต๊ะรก + ข้อความสตอรี่ · ข แคปจอแอปโน้ต · ค ลายมือบนโพสต์อิท ได้แล้วกดเลือกรูปที่ชอบด้านบน</span>
+      <button class="btn btn-cta btn-sm" data-a="adsEdVar" ${busy?'disabled':''}>${busy==='var'?'กำลังสร้าง... (ประมาณ 1-3 นาที)':`🎲 สร้าง 3 แบบ${inf?` (≈ ฿${inf[1]*3})`:''}`}</button></div>
+    <span class="adq-lbl" style="margin-top:6px">หรือสร้างทีละรูปเอง</span>
+    <label class="adq-lbl" for="aded-style">แนวรูป</label><select class="input" id="aded-style" data-adedstyle="1">${AD_STYLES.map(([k,l])=>`<option value="${k}" ${(ADST.edStyle||'ugc')===k?'selected':''}>${l}</option>`).join('')}</select>
+    <label class="adq-lbl" for="aded-hook">ข้อความบนรูป (บรรทัดละท่อน · บรรทัดสุดท้ายเป็นสีเหลือง)</label><textarea class="input" id="aded-hook" rows="3">${esc(ADST.edHook!=null?ADST.edHook:adHook(p))}</textarea>
+    <span class="adq-lbl">โมเดล</span><div class="bxi-models adq-models">${IMG_MODELS.filter(([k])=>IMG_INFO[k]).map(([k,l])=>{const on=md===k;return `<label class="bxi-model${on?' on':''}"><input type="radio" name="aded-model" value="${k}" data-a="adsEdModel" ${on?'checked':''}><b>${esc(l.replace(/\s*\(.*\)\s*$/,''))}</b><span>${esc(IMG_INFO[k][0])}</span><em>≈ ฿${IMG_INFO[k][1]}/รูป</em>${(S.aiBroke||{})[imgProv(k)]?`<i class="bxi-broke">⚠️ เงินหมด · <a href="${AI_PAY[imgProv(k)][0]}" target="_blank" rel="noopener noreferrer">เติมเงิน ↗</a></i>`:''}</label>`;}).join('')}</div>
+    <button class="btn btn-cta btn-sm" data-a="adsEdGen" ${busy?'disabled':''}>${busy==='ai'?'กำลังสร้างรูป... (ประมาณ 20-60 วินาที)':'✨ สร้างรูป'}</button>
+    <span class="fine">รูปที่ได้จะขึ้นในแถวรูปด้านบน กดเลือกรูปที่ชอบ แล้วกด "✅ เปลี่ยนรูปแอดนี้" · ตรวจตัวหนังสือไทยบนรูปก่อนใช้ (เสียค่า AI ต่อรูปตามโมเดล)</span></div>`;}
+async function adEditGen(p,prompt,refs,aspect){const j=await authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,model:ADST.edModel||imgModel(),quality:imgQuality(),refs:refs||[],aspect:aspect||'4:5'})});
+  if(!j||!j.ok){const e=new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');throw e;}const u=await adImgUp(j.image);ADST.edImgs=[u].concat(ADST.edImgs||[]);return u;}
 function adEditBox(c,a,label){const p=adEditProduct(c),au=c.au,sel=ADST.edImg||'',busy=ADST.edBusy,info=IMG_INFO[imgModel()];
   const cand=[...new Set([...(ADST.edImgs||[]),...((au&&au.extra)||[]).slice().reverse(),...((au&&au.launchImages)||[]),...((p&&p.images)||[]).slice(0,6)].filter(u=>u&&u!==a.image))].slice(0,16);
   return `<div class="adt-wide aded"><div class="aded-h"><b>✏️ แก้รูปแอด${label?' · '+esc(label):''}</b><button class="chip" data-a="adsEdClose">ปิด</button></div>
     <p class="fine" style="margin:0">เปลี่ยนแค่รูป ข้อความ ลิงก์ และงบเหมือนเดิม · Facebook จะรีวิวแอดใหม่ (ปกติไม่เกิน 1 วัน)</p>
     <div class="aded-cmp"><figure>${a.image?`<img src="${esc(a.image)}" alt="">`:'<div class="aded-ph">–</div>'}<figcaption>รูปตอนนี้</figcaption></figure><span aria-hidden="true">→</span><figure>${sel?`<img src="${esc(sel)}" alt="">`:'<div class="aded-ph">เลือกรูปใหม่ด้านล่าง</div>'}<figcaption>รูปใหม่</figcaption></figure></div>
     <div class="adq-imgs">${cand.map(u=>`<span class="adq-pw"><button class="adq-pick${u===sel?' on':''}" data-a="adsEdPick" data-v="${esc(u)}" aria-pressed="${u===sel}" aria-label="เลือกรูปนี้"><img src="${esc(u)}" alt=""></button></span>`).join('')||'<p class="fine">ยังไม่มีรูปให้เลือก อัปโหลดหรือสร้างด้วย AI</p>'}</div>
-    <div class="row" style="gap:6px;flex-wrap:wrap"><label class="btn btn-line btn-sm" style="cursor:pointer">${busy==='up'?'กำลังอัปโหลด...':'⬆ อัปโหลดรูป'}<input type="file" accept="image/*" hidden data-adsedup="1"></label>${p?`<button class="btn btn-line btn-sm" data-a="adsEdAi" ${busy?'disabled':''}>${busy==='ai'?'กำลังสร้างรูป... (20-60 วินาที)':`✨ สร้างรูปด้วย AI${info?` (≈ ฿${info[1]})`:''}`}</button>`:''}${p?`<button class="btn btn-line btn-sm" data-a="phoOpen" data-id="ed" data-pid="${esc(p.id)}" aria-expanded="${PHO.ctx==='ed'}">📷 ${PHO.ctx==='ed'?'ปิดรูปถ่าย':'รูปถ่ายจริง (ฟรี)'}</button>`:''}</div>${phoBox('ed',p)}
+    <div class="row" style="gap:6px;flex-wrap:wrap"><label class="btn btn-line btn-sm" style="cursor:pointer">${busy==='up'?'กำลังอัปโหลด...':'⬆ อัปโหลดรูป'}<input type="file" accept="image/*" hidden data-adsedup="1"></label>${p?`<button class="btn ${ADST.edAi?'btn-line':'btn-dark'} btn-sm" data-a="adsEdAi" aria-expanded="${!!ADST.edAi}">✨ ${ADST.edAi?'ปิด AI':'สร้างรูปใหม่ด้วย AI'}</button>`:''}${p?`<button class="btn btn-line btn-sm" data-a="phoOpen" data-id="ed" data-pid="${esc(p.id)}" aria-expanded="${PHO.ctx==='ed'}">📷 ${PHO.ctx==='ed'?'ปิดรูปถ่าย':'รูปถ่ายจริง (ฟรี)'}</button>`:''}</div>${p&&ADST.edAi?adEditAi(p,busy):''}${phoBox('ed',p)}
     ${ADST.edErr?`<p class="err" style="margin:0">${esc(ADST.edErr)}${aiPay(ADST.edErr)}</p>`:''}
     <div><button class="btn btn-cta btn-sm" data-a="adsEdSave" data-id="${esc(a.id)}" ${!sel||busy?'disabled':''}>${busy==='save'?'กำลังเปลี่ยนรูป...':'✅ เปลี่ยนรูปแอดนี้'}</button></div></div>`;}
 async function adsUseImage(x,dataUrl){const blob=await (await fetch(dataUrl)).blob();const im=await new Promise(ok=>{const e=new Image();e.onload=()=>ok(e);e.onerror=()=>ok(null);e.src=dataUrl;});
@@ -6791,7 +6804,7 @@ function act(a,el){
         .catch(e=>{ADA.aiErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADA.aiBusy='';render(true);});break;}
     case 'adsFilter':if(el.dataset.v==='fix'){ADST.f='home';ADST.tf='fix';}else ADST.f=el.dataset.v;render(true);requestAnimationFrame(()=>{const t=document.querySelector('.bst-card');if(t&&t.getBoundingClientRect().top<0)t.scrollIntoView({block:'start'});});break;
     case 'bonusRm':if(S.draft){S.draft.bonusIds=(S.draft.bonusIds||[]).filter(x=>x!==id);render(true);}break;
-    case 'adsEdOpen':ADST.edit=id;PHO.ctx=null;ADST.edImg='';ADST.edImgs=[];ADST.edErr='';ADST.edBusy='';render(true);break;
+    case 'adsEdOpen':ADST.edit=id;PHO.ctx=null;ADST.edImg='';ADST.edImgs=[];ADST.edErr='';ADST.edBusy='';ADST.edAi=false;ADST.edHook=null;render(true);break;
     case 'adsEdClose':ADST.edit=null;render(true);break;
     case 'phoOpen':{if(PHO.ctx===id){PHO.ctx=null;render(true);break;}const p=getProduct(el.dataset.pid);if(!p)break;Object.assign(PHO,{ctx:id,pid:p.id,hits:null,sel:-1,src:'',out:'',err:'',hook:null});phoSearch(PHO.q||phoKw(p)[0]);break;}
     case 'phoSearch':phoSearch(($('#pho-q')||{}).value||PHO.q);break;
@@ -6804,10 +6817,17 @@ function act(a,el){
       (ctx==='ed'?adImgUp(out).then(u=>{ADST.edImgs=[u].concat(ADST.edImgs||[]);ADST.edImg=u;}):(()=>{const x=(ADA.items||[]).find(y=>y.id===ctx);if(!x)throw new Error('ไม่เจอร่างแอด');adsKeep(x);return adsUseImage(x,out);})())
         .then(()=>{PHO.ctx=null;PHO.out='';toast(ctx==='ed'?'ได้รูปใหม่แล้ว กด ✅ เปลี่ยนรูปแอดนี้':'ใช้เป็นรูปแอดแล้ว 📷');}).catch(e=>{PHO.err=String(e.message||e)||'บันทึกไม่สำเร็จ';}).then(()=>{PHO.busy='';render(true);});break;}
     case 'adsEdPick':ADST.edImg=el.dataset.v;render(true);break;
-    case 'adsEdAi':{const c=adsCamps().find(z=>z.ads.some(a=>a.id===ADST.edit)),p=c&&adEditProduct(c);if(!p)break;ADST.edBusy='ai';ADST.edErr='';render(true);
-      authFetch('/api/content?action=cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:adImgPrompt(p,'ugc',adHook(p)),model:imgModel(),quality:imgQuality(),aspect:'4:5'})})
-        .then(async j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'สร้างรูปไม่สำเร็จ');const u=await adImgUp(j.image);ADST.edImgs=[u].concat(ADST.edImgs||[]);ADST.edImg=u;toast('ได้รูปใหม่แล้ว ✨ ตรวจตัวหนังสือบนรูปก่อนกดเปลี่ยน');})
+    case 'adsEdAi':{const h=$('#aded-hook');if(h)ADST.edHook=h.value;ADST.edAi=!ADST.edAi;render(true);break;}
+    case 'adsEdModel':{const h=$('#aded-hook'),st=$('#aded-style');if(h)ADST.edHook=h.value;if(st)ADST.edStyle=st.value;ADST.edModel=el.value;render(true);break;}
+    case 'adsEdGen':{const c=adsCamps().find(z=>z.ads.some(a=>a.id===ADST.edit)),p=c&&adEditProduct(c);if(!p||ADST.edBusy)break;const h=$('#aded-hook'),st=$('#aded-style');if(h)ADST.edHook=h.value;if(st)ADST.edStyle=st.value;
+      const style=ADST.edStyle||'ugc',cov=(p.images||[])[0];ADST.edBusy='ai';ADST.edErr='';render(true);
+      adEditGen(p,adImgPrompt(p,style,ADST.edHook!=null?ADST.edHook:adHook(p)),style==='clean'&&cov?[cov]:[],style==='clean'?'':'4:5').then(u=>{ADST.edImg=u;toast('ได้รูปใหม่แล้ว ✨ ตรวจตัวหนังสือบนรูปก่อนกดเปลี่ยน');})
         .catch(e=>{ADST.edErr=String(e.message||e)||'สร้างรูปไม่สำเร็จ ลองใหม่';}).then(()=>{ADST.edBusy='';render(true);});break;}
+    case 'adsEdVar':{const c=adsCamps().find(z=>z.ads.some(a=>a.id===ADST.edit)),p=c&&adEditProduct(c);if(!p||ADST.edBusy)break;const h=$('#aded-hook');if(h)ADST.edHook=h.value;
+      const cov=(p.images||[])[0],vs=adVariants(p);ADST.edBusy='var';ADST.edErr='';render(true);
+      Promise.allSettled(vs.map(v=>adEditGen(p,v.prompt,v.refs||(cov?[cov]:[]),'4:5'))).then(rs=>{const ok=rs.filter(r=>r.status==='fulfilled'),bad=rs.filter(r=>r.status==='rejected');
+        if(ok.length){ADST.edImg=ok[0].value;toast(`ได้ ${ok.length} แบบแล้ว กดเลือกรูปที่ชอบ แล้วกด "เปลี่ยนรูปแอดนี้"`+(bad.length?' (บางแบบไม่สำเร็จ)':''));}
+        if(!ok.length)ADST.edErr=String((bad[0]&&bad[0].reason&&bad[0].reason.message)||'สร้างรูปไม่สำเร็จ ลองใหม่');}).then(()=>{ADST.edBusy='';render(true);});break;}
     case 'adsEdSave':{if(!ADST.edImg)break;if(!confirm('เปลี่ยนรูปแอดนี้? Facebook จะรีวิวแอดใหม่ (ปกติไม่เกิน 1 วัน)'))break;ADST.edBusy='save';ADST.edErr='';render(true);
       adminPost('/api/content?action=ads_auto_image',{adId:id,image:ADST.edImg}).then(j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'เปลี่ยนรูปไม่สำเร็จ');ADST.edit=null;toast('เปลี่ยนรูปแล้ว ✅ Facebook กำลังรีวิวแอด');loadAdsStatus();ADA.items=null;})
         .catch(e=>{ADST.edErr=String(e.message||e);}).then(()=>{ADST.edBusy='';render(true);});break;}
