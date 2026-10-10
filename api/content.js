@@ -2714,7 +2714,7 @@ ${books}`;
       const upsertSO = async (SO, d, shop, o, mailId) => { const old = d.orders[o.sn]; d.orders[o.sn] = { sn: o.sn, date: o.date, at: old?.at || new Date().toISOString(), done: old?.done || null, mail: String(mailId || '').slice(0, 40), items: o.items.map((it) => ({ ...it, pid: SO.matchItem(it, shop.products, d.map) })) }; const ks = Object.keys(d.orders).sort((x, y) => String(d.orders[y].at).localeCompare(String(d.orders[x].at))); for (const k of ks.slice(500)) delete d.orders[k]; return { sn: o.sn, items: d.orders[o.sn].items.map((it) => ({ name: it.name.slice(0, 60), variation: it.variation, qty: it.qty, matched: !!it.pid })), new: !old }; };
       if (action === 'shopee_get' || action === 'shopee_card') { // 🎫 การ์ด QR ใบเดียว → sheetlabth.com/s ลูกค้าใส่เลขคำสั่งซื้อ Shopee เห็นเฉพาะรายการของตัวเอง (ออเดอร์จากอีเมล shopee_inbound / shopee_mail)
         const SO = await import('../lib/shopeeorders.js'), url = `https://${req.headers.host}/s`; res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
-        if (action === 'shopee_card') return res.status(200).send(SO.universalCard(url));
+        if (action === 'shopee_card') return res.status(200).send(SO.universalCard(url, req.query.a4 === '1'));
         const sn = SO.normSn(req.query.sn); if (!sn) return res.status(200).send(SO.lookupPage({ base: '/s' }));
         const d = await loadSO(), o = SO.isTestOrder({ sn }) ? null : d.orders[sn]; if (!o) return res.status(200).send(SO.lookupPage({ sn, notFound: true, base: '/s' }));
         const [shop, links] = await Promise.all([loadShop(), loadLinks()]); return res.status(200).send(SO.lookupPage({ sn, items: SO.orderItems(o, shop.products, links), base: '/s' }));
