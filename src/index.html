@@ -1514,7 +1514,11 @@ const hasAudio=p=>!!p&&!isBundle(p)&&!!(p.audio||p.audioDrive||/🎧|ไฟล�
 const AUDIO_ROOT='https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f'; // Drive: Sheetlab/Academic Audio
 const audNorm=t=>String(t||'').toLowerCase().replace(/\s+/g,' ').trim().slice(0,40);
 // โฟลเดอร์เสียงของเล่ม: ที่บันทึกไว้ → โน้ตจากโรงงาน → รายชื่อไฟล์ที่ Mac ส่งขึ้นมา (จับด้วย SKU หรือชื่อเล่ม) (คุณแดน 10 ต.ค. "ไฟล์เป็นร้อยจะรู้ได้ไง")
-const audioLib=p=>{const B=FLIB.d&&FLIB.d.books||[];const b=B.find(x=>x.audio_drive&&p.sku&&x.sku===p.sku)||B.find(x=>x.audio_drive&&audNorm(x.title)===audNorm(p.name));return b?b.audio_drive:'';};
+// โฟลเดอร์ย่อยใน Academic Audio (อ่านจาก Drive ของคุณแดน 10 ต.ค. 69) ไว้จับเล่มเก่าที่ไม่อยู่ในรายชื่อจาก Mac · เล่มใหม่ Mac ส่งลิงก์มาเอง
+const AUDIO_DIRS=[['HEALTH & DOCTOR ENGLISH 400','1f1jEU5wN8OHzD859_flh6_rzUa43ok7u'],['IELTS LISTENING 10 TESTS','1uwFkT6vsVICmUYkVaGyzWqnrWKhpV7Zp'],['IELTS SPEAKING PART 2 CUE CARDS 100','1HLGWWBLuE-EI8U6nva3fqMC-xW18BDJZ'],['IELTS SPEAKING PART 1 & 3','1apm94LyetqlOQEg7rP7-vrjrxkqXAMgo'],['IELTS LISTENING DICTATION 200','1NWHqEPoqSmahHHIax_6eN1hG9t38QWJC'],['PRONUNCIATION FOR THAI SPEAKERS 50','18Y7CoJ5o4NLLs3qbspE-snrpG_YAATeK'],['GRAMMAR IN CONVERSATION 100','1R6oCS6BmJkLiX4MYc0dy0IC6ZTC8g4XY'],['SHOPPING & MONEY ENGLISH 400','1o1LAh8dwj7sGAA7MbVsr0V2vs0K7D1A7'],['TOEIC BUSINESS VOCABULARY 600','1LrrT73lKWFxl1w4i8wDXPFxl0HZk0Y4s'],['TOEIC LISTENING SHADOWING 300','1Qt34fyxUb50WN17JP7KsoDQZxn2yN7BL'],['TOEIC LISTENING Part 1-4','1kZ3uZVF-6_yBjkME0cVXrW7K0Kbn61Ny']];
+const audKey=t=>String(t||'').toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ').trim();
+const audioLib=p=>{const B=FLIB.d&&FLIB.d.books||[],n=audKey(p.name);const b=B.find(x=>x.audio_drive&&p.sku&&x.sku===p.sku)||B.find(x=>x.audio_drive&&audNorm(x.title)===audNorm(p.name));if(b)return b.audio_drive;
+  const m=AUDIO_DIRS.filter(([t])=>n.startsWith(audKey(t))).sort((a,c)=>c[0].length-a[0].length)[0];return m?'https://drive.google.com/drive/folders/'+m[1]:'';};
 const audioDriveOf=p=>p.audioDrive||(String(p.freshNote||'').match(DRIVE_RE)||[])[0]||audioLib(p)||'';
 const audioSearch=p=>'https://drive.google.com/drive/search?q='+encodeURIComponent('type:folder '+String(p.name||'').replace(/[^A-Za-z0-9& ]+/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,4).join(' '));
 const audioBooks=d=>isBundle(d)||d.type==='bundle'?(d.items||[]).map(getProduct).filter(hasAudio):hasAudio(d)?[d]:[];
