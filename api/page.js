@@ -201,7 +201,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const o = { settings: shop.settings, site: NEW_SITE }, slug = String(req.query.slug || '');
     const nf = () => { res.setHeader('Cache-Control', 'no-store'); return res.status(404).send(IL.hubPage(lib, o)); };
     if (ieltsQ === 'daily') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).send(IL.dailyIeltsPage(IL.dailySet(lib.daily), o)); }
-    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=1800');
+    res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300');
     if (ieltsQ === 'hub') return res.status(200).send(IL.hubPage(lib, o));
     if (ieltsQ === 'samples') { if (!slug) return res.status(200).send(IL.samplesPage(lib, o)); const x = (lib.samples || []).find((y) => y.slug === slug); return x ? res.status(200).send(IL.samplePage(x, { ...o, audio: x.audio || '' })) : nf(); }
     if (ieltsQ === 'dictation') { if (!slug) return res.status(200).send(IL.dictListPage(lib, o)); const x = (lib.dict || []).find((y) => y.slug === slug); return x ? res.status(200).send(IL.dictPage(x, o)) : nf(); }
