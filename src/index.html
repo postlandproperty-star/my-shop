@@ -4279,7 +4279,7 @@ async function shopDecor(){if(S.zipBusy)return;S.zipBusy='decor';render(true);
 /* 📄 Google Sheet "Shopee Auto Delivery" (คุณแดน 10 ต.ค.): ลูกค้า Shopee สแกนบัตร QR + เลขคำสั่งซื้อ → โหลดไฟล์ · สวิตช์ "ลง Shopee" = เพิ่ม/ลบแถวในแท็บ Links เอง (lib/shopeesheet.js)
    หลังบ้านโชว์สถานะซิงก์ + โค้ด Apps Script ให้คุณแดนวางในชีตครั้งเดียว */
 async function shpSheetLoad(reset){S.shpSheet=Object.assign({},S.shpSheet,{open:true,busy:true,err:''});render(true);
-  try{const j=reset?await adminPost('/api/content?action=shopee_sheet_cfg',{reset:true}):await authFetch('/api/content?action=shopee_sheet_cfg');if(!j||!j.ok)throw new Error((j&&j.error)||'โหลดไม่ได้');S.shpSheet={open:true,script:j.script,formula:j.formula,cell:j.cell||'A16',last:j.last,rows:j.rows||[],missing:j.missing||[]};}
+  try{const j=reset?await adminPost('/api/content?action=shopee_sheet_cfg',{reset:true}):await authFetch('/api/content?action=shopee_sheet_cfg');if(!j||!j.ok)throw new Error((j&&j.error)||'โหลดไม่ได้');S.shpSheet={open:true,printUrl:j.printUrl||'',script:j.script,formula:j.formula,cell:j.cell||'A16',last:j.last,rows:j.rows||[],missing:j.missing||[]};}
   catch(e){S.shpSheet={open:true,err:String(e.message||e)};}render(true);}
 function shpSheetBox(){const x=S.shpSheet;if(!x||!x.open)return '';
   return `<section class="card shp-sheet"><div class="shp-h"><b>📄 Google Sheet ส่งไฟล์ Shopee อัตโนมัติ</b><button class="btn btn-sm btn-line" data-a="shpSheetClose">ปิด</button></div>
@@ -4288,6 +4288,7 @@ function shpSheetBox(){const x=S.shpSheet;if(!x||!x.open)return '';
   <p class="fine">เปิดสวิตช์ "ลง Shopee" แล้ว ${x.rows.length} รายการจะอยู่ในแท็บ Links${x.rows.length?': '+x.rows.slice(0,8).map(r=>esc(r.name)).join(' · ')+(x.rows.length>8?' ...':''):''}</p>
   ${x.missing.length?`<p class="err">⚠️ ยังไม่มีลิงก์ไฟล์ จึงยังไม่เข้าชีต: ${x.missing.map(r=>esc(r.name)).join(' · ')} (ใส่ลิงก์ไฟล์ในหน้าแก้สินค้า)</p>`:''}
   <div class="shp-steps fine"><b>วิธีที่ใช้อยู่ (ง่ายสุด ไม่ต้องรันสคริปต์ ไม่ต้องอนุญาตสิทธิ์):</b> สูตรในแท็บ <b>Links</b> ช่อง <b>${esc(x.cell||'A16')}</b> ดึงรายการจากเว็บเอง Google อัปเดตเองประมาณทุกชั่วโมง (ใต้แถวหัวข้อ ⬇️ สินค้าจาก SheetLab) · สินค้าที่พิมพ์เอง: คลิกขวาเลขแถวหัวข้อ → แทรกแถวด้านบน แล้วพิมพ์ · ถ้าสูตรหาย คัดลอกไปวางใหม่ใต้แถวหัวข้อ</div>
+  ${x.printUrl?`<div class="shp-steps fine"><b>🖨 หน้าพิมพ์หนังสือของแม่</b> (ออเดอร์เล่มพิมพ์) · แต่ละเล่มมีปุ่ม ปก (เครื่องสี) และ เนื้อหา (เครื่องขาวดำ) ระบบแยกไฟล์ให้เอง · ส่งลิงก์นี้ให้แม่ เปิดบนคอมแล้วกดบุ๊กมาร์กไว้</div><div class="row" style="gap:8px;flex-wrap:wrap"><a class="btn btn-sm btn-line" href="${esc(x.printUrl)}" target="_blank" rel="noopener">เปิดหน้าพิมพ์ ↗</a><button class="btn btn-sm btn-dark" data-a="shpSheetCopy" data-v="printUrl">📋 คัดลอกลิงก์ให้แม่</button></div>`:''}
   <textarea class="input shp-code" id="shp-formula" readonly rows="2">${esc(x.formula||'')}</textarea>
   <div class="row" style="gap:8px;flex-wrap:wrap"><button class="btn btn-sm btn-dark" data-a="shpSheetCopy" data-v="formula">📋 คัดลอกสูตร</button><button class="btn btn-sm btn-line" data-a="shpSheetReset">สร้างรหัสใหม่ (สูตรเก่าใช้ไม่ได้)</button></div>
   <details><summary class="fine">ทางเลือก: Apps Script (อัปเดตทุก 5 นาที แต่ต้องอนุญาตสิทธิ์ Google)</summary><ol class="fine shp-steps"><li>ชีต → <b>ส่วนขยาย → Apps Script</b> → <b>+</b> → <b>สคริปต์</b> ชื่อ SheetLab → วางโค้ด → บันทึก</li><li>เลือก <b>slSetup</b> → <b>▶ เรียกใช้</b> → อนุญาตสิทธิ์ (ถ้าใช้ทางนี้ ให้ลบสูตรช่อง ${esc(x.cell||'A16')} ออก จะได้ไม่ซ้ำ)</li></ol>
@@ -6659,7 +6660,7 @@ function act(a,el){
     case 'shpSheetOpen':shpSheetLoad();break;
     case 'shpSheetClose':S.shpSheet=null;break;
     case 'shpSheetReset':if(confirm('สร้างรหัสใหม่? โค้ดที่วางในชีตไว้จะใช้ไม่ได้ ต้องวางโค้ดใหม่'))shpSheetLoad(true);break;
-    case 'shpSheetCopy':{const fm=el.dataset.v==='formula',t=(S.shpSheet||{})[fm?'formula':'script']||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(fm?'คัดลอกสูตรแล้ว วางในแท็บ Links ช่องเดิม':'คัดลอกโค้ดแล้ว ไปวางใน Apps Script ของชีตได้เลย')).catch(()=>{const ta=document.getElementById(fm?'shp-formula':'shp-code');if(ta){ta.select();document.execCommand('copy');toast('คัดลอกแล้ว');}});break;}
+    case 'shpSheetCopy':{const fm=el.dataset.v==='formula',pu=el.dataset.v==='printUrl',t=(S.shpSheet||{})[pu?'printUrl':fm?'formula':'script']||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast(pu?'คัดลอกลิงก์หน้าพิมพ์แล้ว ส่งให้แม่ได้เลย':fm?'คัดลอกสูตรแล้ว วางในแท็บ Links ช่องเดิม':'คัดลอกโค้ดแล้ว ไปวางใน Apps Script ของชีตได้เลย')).catch(()=>{const ta=document.getElementById(fm?'shp-formula':'shp-code');if(ta){ta.select();document.execCommand('copy');toast('คัดลอกแล้ว');}});break;}
     case 'exportImgs':if(!S.zipBusy)exportImgs();break;
     case 'shopeeCopy':shopeeCopy();break;
     case 'shopeeImgs':shopeeImgs();break;

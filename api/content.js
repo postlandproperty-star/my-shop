@@ -2706,9 +2706,30 @@ ${books}`;
       const nowIso = new Date().toISOString();
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
-    if (action === 'shopee_sheet' || action === 'shopee_sheet_cfg' || action === 'shopee_dl') { // 🛒 Google Sheet "Shopee Auto Delivery" (lib/shopeesheet.js): Apps Script ในชีตดึงด้วยรหัสลับของชีต · หลังบ้านขอรหัส/โค้ดได้
+    if (action === 'shopee_sheet' || action === 'shopee_sheet_cfg' || action === 'shopee_dl' || action === 'print' || action === 'print_pdf') { // 🛒 Google Sheet "Shopee Auto Delivery" (lib/shopeesheet.js): Apps Script ในชีตดึงด้วยรหัสลับของชีต · หลังบ้านขอรหัส/โค้ดได้
       const { shopeeRows, shopeeScript, bundleSig, bundlePage, shopeeCsv, shopeeFormula, SHEET_CELL } = await import('../lib/shopeesheet.js'), { randomBytes, timingSafeEqual } = await import('node:crypto');
       const st = (await sb('shop_state?id=eq.shopee_sheet&select=data'))?.[0]?.data || {};
+      if (action === 'print' || action === 'print_pdf') { // 🖨 หน้าพิมพ์หนังสือของแม่ (lib/printpage.js) · ลิงก์ลับจากรหัสชีต
+        const PR = await import('../lib/printpage.js'), k = Buffer.from(String(req.query.k || '')), want = st.token ? Buffer.from(PR.printKey(st.token)) : Buffer.from('');
+        if (!want.length || k.length !== want.length || !timingSafeEqual(k, want)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ลิงก์ไม่ถูกต้อง ขอลิงก์ใหม่จากคุณแดน</p>'); }
+        const shop = await loadShop(), pUrl = (id, part) => `/api/content?action=print_pdf&k=${PR.printKey(st.token)}&p=${encodeURIComponent(id)}&part=${part}`;
+        if (action === 'print') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(200).send(PR.printPage(PR.printList(shop), pUrl)); }
+        const id = String(req.query.p || ''), part = req.query.part === 'body' ? 'body' : 'cover', links = await loadLinks(), src = String(links[id] || '').trim();
+        const prod = (shop.products || []).find((x) => x.id === id);
+        if (!prod || !/^https:\/\//.test(src)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ยังไม่มีไฟล์ของเล่มนี้ แจ้งคุณแดน</p>'); }
+        const { createHash } = await import('node:crypto'), base = `print/${createHash('sha1').update(src).digest('hex').slice(0, 20)}`, pub = (n) => `${SB_URL}/storage/v1/object/public/product-images/${base}-${n}.pdf`;
+        const head = await fetch(pub(part), { method: 'HEAD' }).catch(() => null);
+        if (head && head.ok) return res.redirect(302, pub(part));
+        try {
+          const r = await fetch(PR.directPdf(src), { redirect: 'follow' }); if (!r.ok) throw new Error('โหลดไฟล์ไม่ได้ ' + r.status);
+          const buf = Buffer.from(await r.arrayBuffer()); if (buf.slice(0, 4).toString() !== '%PDF') throw new Error('ไม่ใช่ไฟล์ PDF');
+          const sp = await PR.splitPdf(buf);
+          const up = async (n, b) => { const u = await fetch(`${SB_URL}/storage/v1/object/product-images/${base}-${n}.pdf`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/pdf', 'x-upsert': 'true' }, body: b }); if (!u.ok) throw new Error('อัปโหลดไม่ได้ ' + u.status); };
+          await up('cover', sp.cover); if (sp.body) await up('body', sp.body);
+          if (part === 'body' && !sp.body) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(200).send('<!doctype html><meta charset="utf-8"><p>เล่มนี้มีหน้าเดียว (มีแต่ปก)</p>'); }
+          return res.redirect(302, pub(part));
+        } catch (e) { console.error('print_pdf', e); return res.redirect(302, src); } // แยกไฟล์ไม่ได้ (เช่น ไฟล์ใหญ่บน Drive) เปิดไฟล์เต็มแทน แม่เลือกหน้าเองตอนพิมพ์
+      }
       const bUrl = (id) => `https://${req.headers.host}/api/content?action=shopee_dl&b=${encodeURIComponent(id)}&s=${bundleSig(st.token, id)}`;
       if (action === 'shopee_dl') { // หน้ารวมลิงก์ของชุด สำหรับลูกค้า Shopee
         const id = String(req.query.b || ''), sg = Buffer.from(String(req.query.s || '')), ok = st.token && id ? Buffer.from(bundleSig(st.token, id)) : Buffer.from('');
@@ -2727,7 +2748,8 @@ ${books}`;
         if (!st.token || (req.method === 'POST' && b.reset)) { st.token = randomBytes(24).toString('hex'); delete st.last; await put(st); }
         const [shop, links] = await Promise.all([loadShop(), loadLinks().catch(() => ({}))]), { rows, missing } = shopeeRows(shop, links, bUrl);
         const sUrl = `https://${req.headers.host}/api/content?action=shopee_sheet&t=${st.token}`;
-        return res.status(200).json({ ok: true, script: shopeeScript(sUrl), formula: shopeeFormula(sUrl), cell: SHEET_CELL, last: st.last || null, rows: rows.map((r) => ({ id: r.id, name: r.name })), missing });
+        const { printKey } = await import('../lib/printpage.js');
+        return res.status(200).json({ ok: true, printUrl: `https://${req.headers.host}/api/content?action=print&k=${printKey(st.token)}`, script: shopeeScript(sUrl), formula: shopeeFormula(sUrl), cell: SHEET_CELL, last: st.last || null, rows: rows.map((r) => ({ id: r.id, name: r.name })), missing });
       }
       const t = Buffer.from(String(req.query.t || '')), want = Buffer.from(String(st.token || ''));
       if (!st.token || t.length !== want.length || !timingSafeEqual(t, want)) return res.status(401).json({ ok: false, error: 'รหัสชีตไม่ถูกต้อง (กดสร้างโค้ดใหม่ในหลังบ้าน)' });
