@@ -2706,7 +2706,7 @@ ${books}`;
       return res.status(200).json({ ok: true, world, now_utc: nowIso, bkk_date: `${bkk.getUTCFullYear()}-${String(bkk.getUTCMonth() + 1).padStart(2, '0')}-${String(dom).padStart(2, '0')}`, lines, owner_msgs: owner, lore: loreRows?.[0]?.data?.text || '', chat_engine: breakAI() ? breakAI().id : 'claude', recent_chat: chatRows.map((r) => ({ id: r.id, source: r.source, text: r.text, photo: !!r.image_url, at: r.scheduled_at || r.created_at, evt: (() => { try { return !!(r.notes && JSON.parse(r.notes).evt); } catch (e) { return false; } })() })).sort((a, b) => a.at.localeCompare(b.at)).slice(-60), pending_after_now: chatRows.filter((r) => (r.scheduled_at || r.created_at) > nowIso).length });
     }
     if (action === 'shopee_sheet' || action === 'shopee_sheet_cfg' || action === 'shopee_dl') { // 🛒 Google Sheet "Shopee Auto Delivery" (lib/shopeesheet.js): Apps Script ในชีตดึงด้วยรหัสลับของชีต · หลังบ้านขอรหัส/โค้ดได้
-      const { shopeeRows, shopeeScript, bundleSig, bundlePage } = await import('../lib/shopeesheet.js'), { randomBytes, timingSafeEqual } = await import('node:crypto');
+      const { shopeeRows, shopeeScript, bundleSig, bundlePage, shopeeCsv, shopeeFormula, SHEET_CELL } = await import('../lib/shopeesheet.js'), { randomBytes, timingSafeEqual } = await import('node:crypto');
       const st = (await sb('shop_state?id=eq.shopee_sheet&select=data'))?.[0]?.data || {};
       const bUrl = (id) => `https://${req.headers.host}/api/content?action=shopee_dl&b=${encodeURIComponent(id)}&s=${bundleSig(st.token, id)}`;
       if (action === 'shopee_dl') { // หน้ารวมลิงก์ของชุด สำหรับลูกค้า Shopee
@@ -2725,12 +2725,14 @@ ${books}`;
         const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
         if (!st.token || (req.method === 'POST' && b.reset)) { st.token = randomBytes(24).toString('hex'); delete st.last; await put(st); }
         const [shop, links] = await Promise.all([loadShop(), loadLinks().catch(() => ({}))]), { rows, missing } = shopeeRows(shop, links, bUrl);
-        return res.status(200).json({ ok: true, script: shopeeScript(`https://${req.headers.host}/api/content?action=shopee_sheet&t=${st.token}`), last: st.last || null, rows: rows.map((r) => ({ id: r.id, name: r.name })), missing });
+        const sUrl = `https://${req.headers.host}/api/content?action=shopee_sheet&t=${st.token}`;
+        return res.status(200).json({ ok: true, script: shopeeScript(sUrl), formula: shopeeFormula(sUrl), cell: SHEET_CELL, last: st.last || null, rows: rows.map((r) => ({ id: r.id, name: r.name })), missing });
       }
       const t = Buffer.from(String(req.query.t || '')), want = Buffer.from(String(st.token || ''));
       if (!st.token || t.length !== want.length || !timingSafeEqual(t, want)) return res.status(401).json({ ok: false, error: 'รหัสชีตไม่ถูกต้อง (กดสร้างโค้ดใหม่ในหลังบ้าน)' });
       const [shop, links] = await Promise.all([loadShop(), loadLinks()]), { rows, missing } = shopeeRows(shop, links, bUrl);
       if (!st.last || Date.now() - st.last.at > 30 * 6e4 || st.last.n !== rows.length) { st.last = { at: Date.now(), n: rows.length }; await put(st).catch(() => {}); } // หลังบ้านโชว์ "ซิงก์ล่าสุด"
+      if (req.query.fmt === 'csv') { res.setHeader('Content-Type', 'text/csv; charset=utf-8'); return res.status(200).send(shopeeCsv(rows)); } // สูตร IMPORTDATA ในชีต
       return res.status(200).json({ ok: true, rows: rows.map(({ id, name, link }) => ({ id, name, link })), missing: missing.length });
     }
     if (action === 'recover') {
