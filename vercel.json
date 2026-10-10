@@ -81,6 +81,30 @@
       "destination": "/api/page?vip=home"
     },
     {
+      "source": "/ielts",
+      "destination": "/api/page?ielts=hub"
+    },
+    {
+      "source": "/ielts/samples",
+      "destination": "/api/page?ielts=samples"
+    },
+    {
+      "source": "/ielts/samples/:slug",
+      "destination": "/api/page?ielts=samples&slug=:slug"
+    },
+    {
+      "source": "/ielts/dictation",
+      "destination": "/api/page?ielts=dictation"
+    },
+    {
+      "source": "/ielts/dictation/:slug",
+      "destination": "/api/page?ielts=dictation&slug=:slug"
+    },
+    {
+      "source": "/ielts/daily",
+      "destination": "/api/page?ielts=daily"
+    },
+    {
       "source": "/vip/speak",
       "destination": "/api/page?vip=speak"
     },

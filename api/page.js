@@ -10,6 +10,7 @@ import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/to
 import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
 import { vipPage, vipReviewPage, accountPage, vipMockPage, vipWritePage, vipSpeakPage, appPage } from '../lib/vipPage.js';
 import { bandCalcPage } from '../lib/ieltsTools.js';
+import * as IL from '../lib/ieltsLib.js';
 import { PWA_MANIFEST, SW_JS } from '../lib/pwa.js';
 import { loadVip, vipSellable } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
@@ -96,9 +97,9 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   if (seo === 'sitemap') { // รายการหน้าที่ลูกค้าเปิดได้ (เฉพาะสินค้าที่เผยแพร่แล้ว)
     const shop = await loadShop().catch(() => ({ products: [] }));
     const today = new Date().toISOString().slice(0, 10);
-    const [quizzes, articles] = await Promise.all([loadQuizzes(), loadArticles()]);
+    const [quizzes, articles, ilib] = await Promise.all([loadQuizzes(), loadArticles(), sbSelect('shop_state?id=eq.ielts_lib&select=data').then((r) => r?.[0]?.data || {}).catch(() => ({}))]);
     const topics = TOPICS.filter((t) => topicReady(topicItems(t, { articles, quizzes, products: shop.products }))).map((t) => `/topic/${t.slug}`);
-    const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/ielts-band-calculator', '/privacy', '/refund'];
+    const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/ielts-band-calculator', '/ielts', '/ielts/samples', '/ielts/dictation', '/ielts/daily', ...(ilib.samples || []).map((x) => `/ielts/samples/${x.slug}`), ...(ilib.dict || []).map((x) => `/ielts/dictation/${x.slug}`), '/privacy', '/refund'];
     res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=3600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
@@ -193,13 +194,27 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const shop = await loadShop().catch(() => ({ settings: {} }));
     return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE }));
   }
+  const ieltsQ = String(req.query.ielts || '');
+  if (ieltsQ) { // 📚 คลัง IELTS ฟรี (lib/ieltsLib.js): /ielts /ielts/samples[/slug] /ielts/dictation[/slug] /ielts/daily
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    const [shop, lib] = await Promise.all([loadShop().catch(() => ({ settings: {} })), sbSelect('shop_state?id=eq.ielts_lib&select=data').then((r) => r?.[0]?.data || {}).catch(() => ({}))]);
+    const o = { settings: shop.settings, site: NEW_SITE }, slug = String(req.query.slug || '');
+    const nf = () => { res.setHeader('Cache-Control', 'no-store'); return res.status(404).send(IL.hubPage(lib, o)); };
+    if (ieltsQ === 'daily') { res.setHeader('Cache-Control', 'no-store'); return res.status(200).send(IL.dailyIeltsPage(IL.dailySet(lib.daily), o)); }
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=1800');
+    if (ieltsQ === 'hub') return res.status(200).send(IL.hubPage(lib, o));
+    if (ieltsQ === 'samples') { if (!slug) return res.status(200).send(IL.samplesPage(lib, o)); const x = (lib.samples || []).find((y) => y.slug === slug); return x ? res.status(200).send(IL.samplePage(x, { ...o, audio: x.audio || '' })) : nf(); }
+    if (ieltsQ === 'dictation') { if (!slug) return res.status(200).send(IL.dictListPage(lib, o)); const x = (lib.dict || []).find((y) => y.slug === slug); return x ? res.status(200).send(IL.dictPage(x, o)) : nf(); }
+    return nf();
+  }
   const vipQ = String(req.query.vip || '');
   if (vipQ === 'home' || vipQ === 'review' || vipQ === 'mock' || vipQ === 'write' || vipQ === 'speak' || vipQ === 'bandcalc') { // สมาชิก VIP (/vip) สมุดจุดพลาด (/vip/review) ข้อสอบเสมือนจริง (/vip/mock)
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));
     if (vipQ === 'mock') return res.status(200).send(vipMockPage({ settings: shop.settings, site: NEW_SITE }));
-    if (vipQ === 'write') return res.status(200).send(vipWritePage({ settings: shop.settings, site: NEW_SITE }));
-    if (vipQ === 'speak') return res.status(200).send(vipSpeakPage({ settings: shop.settings, site: NEW_SITE }));
+    const preS = /^[a-z0-9-]{3,80}$/.test(String(req.query.s || '')) ? ((await sbSelect('shop_state?id=eq.ielts_lib&select=data').catch(() => []))?.[0]?.data?.samples || []).find((x) => x.slug === req.query.s) : null, pre = preS ? { task: preS.kind === 'p2' ? 'p2' : preS.kind, question: preS.question } : null;
+    if (vipQ === 'write') return res.status(200).send(vipWritePage({ settings: shop.settings, site: NEW_SITE, pre }));
+    if (vipQ === 'speak') return res.status(200).send(vipSpeakPage({ settings: shop.settings, site: NEW_SITE, pre }));
     if (vipQ === 'bandcalc') { res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=3600'); return res.status(200).send(bandCalcPage({ settings: shop.settings, site: NEW_SITE })); }
     if (vipQ === 'review') return res.status(200).send(vipReviewPage({ settings: shop.settings, site: NEW_SITE }));
     return res.status(200).send(vipPage(await loadVip(), { settings: shop.settings, site: NEW_SITE, preview: req.query.preview === '1' }));

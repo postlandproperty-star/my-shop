@@ -2494,6 +2494,37 @@ ${books}`;
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
     }
+    if (action === 'ielts_gen') { // 📚 สร้างเนื้อหาคลัง IELTS ฟรี (lib/ieltsLib.js) ทีละชิ้น: ตัวอย่าง Band 9 / บทฟังพิมพ์ตาม (+เสียง Google TTS) / ข้อสอบประจำวัน · คีย์ร้าน/แอดมิน · เก็บใน shop_state ielts_lib
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const IL = await import('../lib/ieltsLib.js'), b = await readBody(req), G = process.env.GEMINI_API_KEY, T = process.env.GOOGLE_TTS_API_KEY;
+      const lib = (await sb('shop_state?id=eq.ielts_lib&select=data'))?.[0]?.data || { samples: [], dict: [], daily: [] };
+      const save = () => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ielts_lib', data: lib, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (b.kind === 'list') return res.status(200).json({ ok: true, samples: lib.samples.map((x) => x.slug), dict: lib.dict.map((x) => x.slug), daily: lib.daily.length });
+      if (b.kind === 'remove') { const k = String(b.slug || ''); lib.samples = lib.samples.filter((x) => x.slug !== k); lib.dict = lib.dict.filter((x) => x.slug !== k); await save(); return res.status(200).json({ ok: true }); }
+      const ai = async (prompt) => { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 8192, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } }) }); const j = await r.json().catch(() => ({})); const t = (j?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join(''); if (!t) throw new Error('AI: ' + (j?.error?.message || r.status)); return t; };
+      const tts = async (text, path, voice) => { if (!T) return ''; const r = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${encodeURIComponent(T)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input: { text: String(text).slice(0, 4800) }, voice: { languageCode: 'en-GB', name: voice || 'en-GB-Neural2-B' }, audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95 } }) }); const j = await r.json().catch(() => ({})); if (!j.audioContent) throw new Error('TTS: ' + (j?.error?.message || r.status)); const up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'audio/mpeg', 'x-upsert': 'true' }, body: Buffer.from(j.audioContent, 'base64') }); if (!up.ok) throw new Error('upload ' + up.status); return `${SB_URL}/storage/v1/object/public/product-images/${path}`; };
+      try {
+        if (b.kind === 'sample') {
+          const sk = IL.KIND[b.sk] ? b.sk : 't2', q = String(b.question || '').trim(); if (q.length < 20) return res.status(400).json({ ok: false, error: 'no question' });
+          const x = IL.normSample(await ai(IL.samplePrompt(sk, q)), sk, q); if (!x) return res.status(502).json({ ok: false, error: 'AI ตอบรูปแบบไม่ถูก' });
+          if (sk === 'p2') x.audio = await tts(x.answer, `ielts/${x.slug}.mp3`, 'en-GB-Neural2-A').catch(() => '');
+          lib.samples = lib.samples.filter((y) => y.slug !== x.slug).concat(x); await save(); return res.status(200).json({ ok: true, slug: x.slug, title: x.title, words: x.answer.split(/\s+/).length, audio: !!x.audio });
+        }
+        if (b.kind === 'dict') {
+          const t = IL.DICT_TOPICS.find((x) => x[0] === b.topic); if (!t) return res.status(400).json({ ok: false, error: 'topic' });
+          const d = IL.normDict(await ai(IL.dictPrompt(t[0], t[2])), t[0], t[1]); if (!d) return res.status(502).json({ ok: false, error: 'AI ตอบรูปแบบไม่ถูก' });
+          const voices = ['en-GB-Neural2-A', 'en-GB-Neural2-B', 'en-GB-Neural2-C', 'en-GB-Neural2-D'], two = /Part [13]/.test(t[1]);
+          await Promise.all(d.sentences.map(async (s, i) => { s.audio = await tts(s.en, `ielts/dict/${d.slug}-${i + 1}.mp3`, two ? voices[i % 2] : voices[2]).catch(() => ''); }));
+          lib.dict = lib.dict.filter((y) => y.slug !== d.slug).concat(d); await save(); return res.status(200).json({ ok: true, slug: d.slug, n: d.sentences.length, audio: d.sentences.filter((s) => s.audio).length });
+        }
+        if (b.kind === 'daily') {
+          const items = IL.normDaily(await ai(IL.dailyPrompt(Math.min(25, Math.max(5, Number(b.n) || 15)), lib.daily.slice(-60).map((x) => x.q.slice(0, 40)).join(' | '))));
+          lib.daily = lib.daily.concat(items).slice(-600); await save(); return res.status(200).json({ ok: true, added: items.length, total: lib.daily.length });
+        }
+      } catch (e) { return res.status(502).json({ ok: false, error: String(e.message || e).slice(0, 200) }); }
+      return res.status(400).json({ ok: false, error: 'kind' });
+    }
     if (action === 'speaking_test') { // 🎙 ลองตรวจ IELTS Speaking (lib/speaking.js) จากไฟล์เสียง · คีย์ร้าน/แอดมิน · ไม่บันทึก ไม่นับโควตา
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });

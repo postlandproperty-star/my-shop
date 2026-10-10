@@ -40,6 +40,25 @@ async function vip(req, res, m) {
     const A = await import('../lib/account.js');
     return res.status(200).json({ ok: true, ...(await A.accountData(me)), settings: pub });
   }
+  if (m === 'ielts_daily') { // 📅 ข้อสอบ IELTS ประจำวัน (lib/ieltsLib.js): GET ตารางอันดับ · POST grade=1 ตรวจคำตอบ · POST nick ขึ้นตาราง (ตรวจคะแนนซ้ำที่เซิร์ฟเวอร์ · IP เดิมส่งได้วันละ 3 ครั้ง)
+    const IL = await import('../lib/ieltsLib.js'), today = IL.thDay(), d = String(req.query.d || json(req).d || today);
+    if (d !== today && d !== IL.thDay(Date.now() - 864e5)) return res.status(400).json({ ok: false, error: 'ชุดนี้หมดเวลาแล้ว รีเฟรชเพื่อทำชุดวันนี้' });
+    const rows = await sbSelect('shop_state?id=in.(ielts_lib,ielts_daily_lb)&select=id,data'), lib = rows?.find((r) => r.id === 'ielts_lib')?.data || {}, lb = rows?.find((r) => r.id === 'ielts_daily_lb')?.data || {};
+    const set = IL.dailySet(lib.daily, d), E = (lb[d] || []);
+    if (req.method === 'GET') return res.status(200).json({ ok: true, board: IL.rankBoard(E).slice(0, 20).map(({ ip, ...x }) => x), total: E.length });
+    const b = json(req), ans = (Array.isArray(b.ans) ? b.ans : []).slice(0, 5).map((x) => Number(x)), secs = Math.max(1, Math.min(3600, Math.round(Number(b.secs) || 0)));
+    if (set.length < 5) return res.status(400).json({ ok: false, error: 'ยังไม่มีข้อสอบวันนี้' });
+    const res5 = set.map((q, i) => ({ pick: ans[i] >= 0 ? ans[i] : -1, answer: q.answer, explain: q.explain })), score = res5.filter((x) => x.pick === x.answer).length;
+    if (b.grade) return res.status(200).json({ ok: true, score, res: res5 });
+    const nick = IL.cleanNick(b.nick); if (nick.length < 2) return res.status(400).json({ ok: false, error: 'ใส่ชื่อเล่นอย่างน้อย 2 ตัวอักษร' });
+    const { createHash, randomUUID } = await import('node:crypto'), ip = createHash('sha256').update(String(req.headers['x-forwarded-for'] || '').split(',')[0] + 'ield').digest('hex').slice(0, 12);
+    if (E.filter((x) => x.ip === ip).length >= 3) return res.status(429).json({ ok: false, error: 'ส่งได้วันละ 3 ครั้งต่อเครื่อง' });
+    const id = randomUUID().slice(0, 8); E.push({ id, nick, score, secs, ip, at: new Date().toISOString() });
+    const keep = {}; for (const k of [today, IL.thDay(Date.now() - 864e5)]) if (k === d) keep[k] = E.slice(-2000); else if (lb[k]) keep[k] = lb[k];
+    const { SB_URL } = await import('../lib/shop.js'), SK = process.env.SUPABASE_SECRET_KEY || '';
+    await fetch(`${SB_URL}/rest/v1/shop_state?on_conflict=id`, { method: 'POST', headers: { apikey: SK, Authorization: `Bearer ${SK}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify([{ id: 'ielts_daily_lb', data: keep, updated_at: new Date().toISOString() }]) });
+    return res.status(200).json({ ok: true, id, rank: IL.rankBoard(E).findIndex((x) => x.id === id) + 1 });
+  }
   if (m === 'vip_speak') { // 🎙 ตรวจ IELTS Speaking ด้วย AI (lib/speaking.js) · เก็บในตาราง member_writing (task sp:p1/p2/p3) โควตาแยกจาก Writing · ผลเก่าเปิดด้วย vip_write_get
     const SP = await import('../lib/speaking.js');
     let mem = null; if (me) { try { mem = await V.refreshMember(await V.getMember(me)); } catch (e) {} }
@@ -181,7 +200,7 @@ export default async function handler(req, res) {
     try { await F.claimFree(f, email, { src: b.src, origin }); } catch (e) { console.error('free', e); }
     return res.status(200).json({ ok: true, file: `${origin}/free-file/${f.file}` });
   }
-  if (/^vip_[a-z]+$/.test(String(req.query.m || ''))) { try { return await vip(req, res, req.query.m); } catch (e) { console.error('vip', e); return res.status(e.missing ? 503 : 500).json({ ok: false, error: e.missing ? 'ระบบสมาชิกยังไม่ได้ตั้งค่าฐานข้อมูล' : 'ระบบขัดข้อง ลองใหม่อีกครั้ง' }); } }
+  if (/^(vip_[a-z_]+|ielts_daily)$/.test(String(req.query.m || ''))) { try { return await vip(req, res, req.query.m); } catch (e) { console.error('vip', e); return res.status(e.missing ? 503 : 500).json({ ok: false, error: e.missing ? 'ระบบสมาชิกยังไม่ได้ตั้งค่าฐานข้อมูล' : 'ระบบขัดข้อง ลองใหม่อีกครั้ง' }); } }
   const id = String(req.query.session_id || '');
   const piId = String(req.query.pi || '');
   const isPi = /^pi_[A-Za-z0-9]+$/.test(piId);
