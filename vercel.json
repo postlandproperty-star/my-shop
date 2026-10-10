@@ -21,6 +21,14 @@
       "destination": "/api/page?timg=:slug"
     },
     {
+      "source": "/s",
+      "destination": "/api/content?action=shopee_get"
+    },
+    {
+      "source": "/shopee-card",
+      "destination": "/api/content?action=shopee_card"
+    },
+    {
       "source": "/deal",
       "destination": "/api/page?deal=1"
     },
