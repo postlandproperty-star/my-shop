@@ -8,7 +8,7 @@ import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } 
 import { sbSelect } from '../lib/shop.js';
 import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/topics.js';
 import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
-import { vipPage, vipReviewPage, accountPage, vipMockPage, appPage } from '../lib/vipPage.js';
+import { vipPage, vipReviewPage, accountPage, vipMockPage, vipWritePage, appPage } from '../lib/vipPage.js';
 import { PWA_MANIFEST, SW_JS } from '../lib/pwa.js';
 import { loadVip, vipSellable } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
@@ -193,10 +193,11 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE }));
   }
   const vipQ = String(req.query.vip || '');
-  if (vipQ === 'home' || vipQ === 'review' || vipQ === 'mock') { // สมาชิก VIP (/vip) สมุดจุดพลาด (/vip/review) ข้อสอบเสมือนจริง (/vip/mock)
+  if (vipQ === 'home' || vipQ === 'review' || vipQ === 'mock' || vipQ === 'write') { // สมาชิก VIP (/vip) สมุดจุดพลาด (/vip/review) ข้อสอบเสมือนจริง (/vip/mock)
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));
     if (vipQ === 'mock') return res.status(200).send(vipMockPage({ settings: shop.settings, site: NEW_SITE }));
+    if (vipQ === 'write') return res.status(200).send(vipWritePage({ settings: shop.settings, site: NEW_SITE }));
     if (vipQ === 'review') return res.status(200).send(vipReviewPage({ settings: shop.settings, site: NEW_SITE }));
     return res.status(200).send(vipPage(await loadVip(), { settings: shop.settings, site: NEW_SITE, preview: req.query.preview === '1' }));
   }

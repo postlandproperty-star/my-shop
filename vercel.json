@@ -81,6 +81,10 @@
       "destination": "/api/page?vip=home"
     },
     {
+      "source": "/vip/write",
+      "destination": "/api/page?vip=write"
+    },
+    {
       "source": "/vip/mock",
       "destination": "/api/page?vip=mock"
     },
@@ -167,6 +171,9 @@
     },
     "api/content.js": {
       "maxDuration": 300
+    },
+    "api/order.js": {
+      "maxDuration": 60
     }
   },
   "crons": [

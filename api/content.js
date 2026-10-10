@@ -2494,6 +2494,13 @@ ${books}`;
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
     }
+    if (action === 'writing_test') { // ✍️ ลองตรวจ IELTS Writing (lib/writing.js) ด้วยเรียงความตัวอย่าง · คีย์ร้าน/แอดมิน · ไม่บันทึก ไม่นับโควตา
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const W = await import('../lib/writing.js'), b = await readBody(req), task = W.TASKS[b.task] ? b.task : 't2';
+      try { const out = await W.checkWriting({ task, prompt: String(b.prompt || W.PROMPTS[task][0]), essay: String(b.essay || '') }); const shop = await loadShop(); return res.status(200).json({ ok: true, via: out.via, result: { ...out.result, books: W.recommend(out.result, shop.products) } }); }
+      catch (e) { return res.status(503).json({ ok: false, error: e.message, detail: e.detail || '' }); }
+    }
     if (action === 'docs') {
       // ห้องเอกสาร (แอดมินหรือ key): GET {links, files} POST {title,url,note?,cat?} เพิ่ม | {id,remove:true} ลบ | {id,title?,url?,note?,cat?} แก้
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
