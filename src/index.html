@@ -2312,7 +2312,7 @@ function bundleData(d){ // ชุดจากช่องที่กรอก�
   return {type:'bundle',sell:SELL[d.sell]?d.sell:'both',slug,name,kind:'book',headline:String(d.headline||'').trim()||name,desc:String(d.desc||'').trim(),color:d.color,status:d.status,items,freeItem:items.includes(d.freeItem)?d.freeItem:'',
     plans,planDefault:def.key,price:def.price,fullPrice:def.fullPrice,promoEnd:d.promoEndStr?new Date(d.promoEndStr).getTime():0,guarantee:String(d.guarantee||'').trim(),faq:d.faq||'',reviews:d.reviews||'',
     sku:String(d.sku||'').trim().toUpperCase(),cover:d.cover||'',coverAuto:d.cover?d.coverAuto||'':'',images:d.cover?[d.cover]:first&&first.images&&first.images[0]?[first.images[0]]:[],planLinks:Object.assign({},d.planLinks),link:'',
-    ...Object.fromEntries(['specs','toc','forwho','notfor','features','pains','freshNote','copyDone','coverPrice','coverV','oldCovers','audioOk','hideCovers'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]))};
+    ...Object.fromEntries(['specs','toc','forwho','notfor','features','pains','freshNote','copyDone','coverPrice','coverSig','coverV','oldCovers','audioOk','hideCovers'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]))};
 }
 /* เปลี่ยนเล่มในชุดเอง (เพิ่ม/เอาออก) → ทุกอย่างของชุดเปลี่ยนตาม (คุณแดนขอ 4 ต.ค. 69): จำนวนเล่มในชื่อ/ข้อความ · จำนวนหน้ารวม · ราคา (คงสัดส่วนส่วนลดเดิม)
    · หัวข้อขาย/คำโปรยที่ AI เขียน (ถ้ายังไม่ได้แก้เอง) · รูปชุดจัดใหม่จากปกตอนบันทึก (รูปเดิมเก็บใน oldCovers) — แล้วหยุดให้ตรวจก่อนกดบันทึกอีกครั้ง */
@@ -2334,7 +2334,6 @@ async function setSync(d,old,items){const ch=[],n=items.length,real=x=>getProduc
   return ch;}
 function bundleErr(d,selfId){
   const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase();
-  if(d.status==='published'&&audioBooks(d).length&&!d.audioOk)return AUDIO_ERR.replace('เล่มนี้มี','ชุดนี้มีเล่มที่มี');
   if(!name)return 'กรอกชื่อชุด';
   if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug))return 'ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น toeic-750';
   if(slugTaken(slug,selfId))return 'ชื่อในลิงก์นี้ถูกใช้แล้ว';
@@ -2348,6 +2347,8 @@ function bundleErr(d,selfId){
 function saveBundleDraft(el){
   const d=S.draft,isNew=S.edit==='new',selfId=isNew?null:S.edit;
   if(el.dataset.status)d.status=el.dataset.status;
+  /* ยังไม่ติ๊กยืนยันไฟล์เสียง: บันทึกเสมอ (เดิมไม่บันทึกอะไรเลย ปก/รูปที่ทำไว้หาย 10 ต.ค. 69) · ชุดที่ขายอยู่ = ขายต่อ + เตือน · ยังไม่เคยขาย = ฉบับร่าง */
+  let audWarn='';if(d.status==='published'&&audioBooks(d).length&&!d.audioOk){const cur=selfId&&getProduct(selfId);audWarn=cur&&cur.status==='published'?'live':'draft';if(audWarn==='draft')d.status='draft';}
   const bad=bundleErr(d,selfId);if(bad)return bad;
   const data=bundleData(d);
   let saved;
@@ -2356,7 +2357,9 @@ function saveBundleDraft(el){
   if(saved.status==='published'){delete saved.fresh;if(!saved.publishedAt)saved.publishedAt=Date.now();}
   if(d.fromProp)propDone(d.fromProp,true);
   S.edit=null;S.draft=null;S.err='';S.bxAuto='';save();
-  if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');window.scrollTo(0,0);toast('เผยแพร่ชุดแล้ว นี่คือเซลเพจที่ลูกค้าเห็น');}else{render(false);toast('บันทึกชุดเป็นฉบับร่างแล้ว ลูกค้ายังไม่เห็น');}
+  const AW=AUDIO_ERR.replace('เล่มนี้มี','ชุดนี้มีเล่มที่มี');
+  if(audWarn==='draft'){render(false);toast('💾 บันทึกชุดแล้ว (เป็นฉบับร่าง ยังไม่เปิดขาย) · '+AW,9000);}
+  else if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');window.scrollTo(0,0);toast(audWarn?'💾 บันทึกชุดแล้ว ขายต่อตามเดิม · ⚠️ อย่าลืมติ๊กยืนยันในกล่อง 🎧 ไฟล์เสียง':'เผยแพร่ชุดแล้ว นี่คือเซลเพจที่ลูกค้าเห็น',audWarn?9000:undefined);}else{render(false);toast('บันทึกชุดเป็นฉบับร่างแล้ว ลูกค้ายังไม่เห็น');}
   return '';
 }
 
@@ -6857,10 +6860,13 @@ function act(a,el){
       if(d.items.filter(i=>getProduct(i)&&!isBundle(getProduct(i))).length>=2&&!d.plans.some(x=>x.on&&Number(x.price)>=1)){act('bxCalc',el);S.err='ยังไม่ได้ใส่ราคา ระบบคำนวณราคาตามสูตรให้แล้ว (ส่วน 4. ราคาและแพ็กเกจ) ตรวจราคาแล้วกดบันทึกอีกครั้ง';render(true);break;}
       {const bad=bundleErr(d,S.edit==='new'?null:S.edit);if(bad){S.err=bad;render(true);break;}}
       const items=d.items.filter(i=>getProduct(i)&&!isBundle(getProduct(i))),key=items.join(','),books=items.map(getProduct);
-      // รูปชุดตามเล่มในชุด: ยังไม่มีรูปชุด หรือรูปที่ระบบจัดให้ไม่ตรงกับเล่มตอนนี้ → จัดจากปกเล่มเดี่ยวให้ก่อนบันทึก (ฟรี)
-      if(items.length>=2&&books.some(b=>b.bookCover||(b.images||[])[0])&&(!d.cover||(d.coverAuto&&(d.coverAuto!==key||(d.coverPrice!=null&&d.coverPrice!==bxPrice(d)))))&&S.bxAuto!==key+'|'+bxPrice(d)){ // รูปชุดมีป้ายราคา: ราคาเปลี่ยนก็จัดใหม่
-        S.bxAuto=key+'|'+bxPrice(d);S.bxImg='compose';render(true);toast('กำลังจัดรูปชุดจากปกเล่มในชุด...');
-        bxCompose(d,books).then(uploadImage).then(u=>{d.cover=u;d.coverAuto=key;d.coverPrice=bxPrice(d);}).catch(e=>{console.error(e);toast('จัดรูปชุดไม่สำเร็จ ใช้ปกเล่มแรกไปก่อน');}).then(()=>{S.bxImg='';act('saveBundle',el);});break;}
+      // ปกตามธีมที่ทำในหน้านี้ → ใช้เป็นรูปแรกของเล่มนั้นเลย (คุณแดน 10 ต.ค. 69 "แก้ปกแล้วแต่ยังเป็นรูปเดิม")
+      books.filter(b=>b.coverMode==='theme'&&b.bookCover&&(b.images||[])[0]!==b.bookCover).forEach(b=>bxUseCover(b,true));
+      const sig=books.map(b=>b.bookCover||(b.images||[])[0]||'').join('|').length+':'+books.map(b=>String(b.bookCover||(b.images||[])[0]||'').slice(-16)).join(',');
+      // รูปชุดตามเล่มในชุด: ยังไม่มีรูปชุด หรือรูปที่ระบบจัดให้ไม่ตรงกับเล่ม/ราคา/ปกเล่มตอนนี้ → จัดจากปกเล่มเดี่ยวให้ก่อนบันทึก (ฟรี)
+      if(items.length>=2&&books.some(b=>b.bookCover||(b.images||[])[0])&&(!d.cover||(d.coverAuto&&(d.coverAuto!==key||(d.coverPrice!=null&&d.coverPrice!==bxPrice(d))||d.coverSig!==sig)))&&S.bxAuto!==key+'|'+bxPrice(d)+'|'+sig){ // รูปชุดมีป้ายราคา: ราคาเปลี่ยนก็จัดใหม่ · ปกเล่มเปลี่ยนก็จัดใหม่
+        S.bxAuto=key+'|'+bxPrice(d)+'|'+sig;S.bxImg='compose';render(true);toast('กำลังจัดรูปชุดจากปกเล่มในชุด...');
+        bxCompose(d,books).then(uploadImage).then(u=>{d.cover=u;d.coverAuto=key;d.coverPrice=bxPrice(d);d.coverSig=sig;}).catch(e=>{console.error(e);toast('จัดรูปชุดไม่สำเร็จ ใช้ปกเล่มแรกไปก่อน');}).then(()=>{S.bxImg='';act('saveBundle',el);});break;}
       if(d.status==='published'||el.dataset.status==='published'){const dr=d.items.map(getProduct).filter(b=>b&&!isBundle(b)&&b.status!=='published');
         if(dr.length&&bxPubOn()){const bad=dr.filter(b=>!(Number(b.price)>=1)||!(b.link&&validLink(b.link)));if(bad.length){S.err='เผยแพร่เล่มในชุดพร้อมกันไม่ได้: '+bad.map(b=>`${b.sku||''} ${b.name.slice(0,30)} (${!(Number(b.price)>=1)?'ยังไม่ตั้งราคา':'ยังไม่มีไฟล์'})`).join(' · ')+' — ตั้งราคา/ใส่ไฟล์ก่อน หรือเอาติ๊ก "เผยแพร่เล่มเดี่ยว" ออก';render(true);break;}}}
       const selfId0=S.edit,slug0=String(d.slug).trim().toLowerCase();S.bxPubOn0=bxPubOn();
