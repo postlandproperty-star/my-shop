@@ -2494,6 +2494,13 @@ ${books}`;
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
     }
+    if (action === 'speaking_test') { // 🎙 ลองตรวจ IELTS Speaking (lib/speaking.js) จากไฟล์เสียง · คีย์ร้าน/แอดมิน · ไม่บันทึก ไม่นับโควตา
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const SP = await import('../lib/speaking.js'), b = await readBody(req), part = SP.PARTS[b.part] ? b.part : 'p1';
+      try { const out = await SP.checkSpeaking({ part, question: String(b.question || SP.QUESTIONS[part][0]), audio: String(b.audio || ''), secs: Number(b.secs) || 0 }); return res.status(200).json({ ok: true, via: out.via, result: out.result }); }
+      catch (e) { return res.status(e.bad ? 400 : 503).json({ ok: false, error: e.message, detail: e.detail || '' }); }
+    }
     if (action === 'writing_test') { // ✍️ ลองตรวจ IELTS Writing (lib/writing.js) ด้วยเรียงความตัวอย่าง · คีย์ร้าน/แอดมิน · ไม่บันทึก ไม่นับโควตา
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
