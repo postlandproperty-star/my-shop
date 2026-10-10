@@ -42,6 +42,8 @@ def audio_drive(title, folders):
     for f in folders:
         n = re.sub(r'\s+', ' ', f.name.upper()).strip()
         if n and (t.startswith(n) or n.startswith(t[:40])):
+            if not any(x.suffix.lower() in ('.mp3', '.m4a', '.wav') for x in f.rglob('*')):
+                continue  # โฟลเดอร์ว่าง (ยังไม่มีไฟล์เสียง) ไม่ใช้ · ลองโฟลเดอร์ถัดไป เช่น Drive เดิม (10 ต.ค. 69)
             i = drive_id(f)
             if i: return f'https://drive.google.com/drive/folders/{i}'
     return ''

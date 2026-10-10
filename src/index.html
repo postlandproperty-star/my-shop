@@ -1514,17 +1514,21 @@ const hasAudio=p=>!!p&&!isBundle(p)&&!!(p.audio||p.audioDrive||/🎧|ไฟล�
 const AUDIO_ROOT='https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f'; // Drive: Sheetlab/Academic Audio
 const audNorm=t=>String(t||'').toLowerCase().replace(/\s+/g,' ').trim().slice(0,40);
 // โฟลเดอร์เสียงของเล่ม: ที่บันทึกไว้ → โน้ตจากโรงงาน → รายชื่อไฟล์ที่ Mac ส่งขึ้นมา (จับด้วย SKU หรือชื่อเล่ม) (คุณแดน 10 ต.ค. "ไฟล์เป็นร้อยจะรู้ได้ไง")
-// โฟลเดอร์ย่อยใน Academic Audio (อ่านจาก Drive ของคุณแดน 10 ต.ค. 69) ไว้จับเล่มเก่าที่ไม่อยู่ในรายชื่อจาก Mac · เล่มใหม่ Mac ส่งลิงก์มาเอง
-const AUDIO_DIRS=[['HEALTH & DOCTOR ENGLISH 400','1f1jEU5wN8OHzD859_flh6_rzUa43ok7u'],['IELTS LISTENING 10 TESTS','1uwFkT6vsVICmUYkVaGyzWqnrWKhpV7Zp'],['IELTS SPEAKING PART 2 CUE CARDS 100','1HLGWWBLuE-EI8U6nva3fqMC-xW18BDJZ'],['IELTS SPEAKING PART 1 & 3','1apm94LyetqlOQEg7rP7-vrjrxkqXAMgo'],['IELTS LISTENING DICTATION 200','1NWHqEPoqSmahHHIax_6eN1hG9t38QWJC'],['PRONUNCIATION FOR THAI SPEAKERS 50','18Y7CoJ5o4NLLs3qbspE-snrpG_YAATeK'],['GRAMMAR IN CONVERSATION 100','1R6oCS6BmJkLiX4MYc0dy0IC6ZTC8g4XY'],['SHOPPING & MONEY ENGLISH 400','1o1LAh8dwj7sGAA7MbVsr0V2vs0K7D1A7'],['TOEIC BUSINESS VOCABULARY 600','1LrrT73lKWFxl1w4i8wDXPFxl0HZk0Y4s'],['TOEIC LISTENING SHADOWING 300','1Qt34fyxUb50WN17JP7KsoDQZxn2yN7BL'],['TOEIC LISTENING Part 1-4','1kZ3uZVF-6_yBjkME0cVXrW7K0Kbn61Ny']];
+// โฟลเดอร์เสียงที่ QR ในไฟล์ PDF ชี้ไปจริง (ถอด QR จากไฟล์ 10 ต.ค. 69) · 6 เล่มแรกอยู่ใน Drive เดิม (dksim.store) · เล่มใหม่ Mac ส่งลิงก์มาเอง
+const AUDIO_DIRS=[['HEALTH & DOCTOR ENGLISH 400','1f1jEU5wN8OHzD859_flh6_rzUa43ok7u'],['IELTS LISTENING 10 TESTS','1uwFkT6vsVICmUYkVaGyzWqnrWKhpV7Zp'],['IELTS SPEAKING PART 2 CUE CARDS 100','1HLGWWBLuE-EI8U6nva3fqMC-xW18BDJZ'],['IELTS SPEAKING PART 1 & 3','1apm94LyetqlOQEg7rP7-vrjrxkqXAMgo'],['IELTS LISTENING DICTATION 200','1NWHqEPoqSmahHHIax_6eN1hG9t38QWJC'],
+  ['PRONUNCIATION FOR THAI SPEAKERS 50','1KM6cUcVGa_cUBh9w9pSYkgGb0WdfB3cR'],['GRAMMAR IN CONVERSATION 100','1ACJVuAWVAGN6o0ctQ3R1rYo-UgjIRWgC'],['SHOPPING & MONEY ENGLISH 400','1kNXTfXtmlIf8Qs2qesFDPJ75GMZwhikJ'],['TOEIC BUSINESS VOCABULARY 600','1JW5FI7bz9Z_SwXTUqzZ2rrdahuyHQKdL'],['TOEIC LISTENING SHADOWING 300','128N0_OkozoNZKhYXkfZZ8FTlOqg7Kf8W'],['TOEIC LISTENING Part 1-4','1zHmp0HMCsgy3P0H63QxFHmwh8VmJPjsB']];
+// โฟลเดอร์ใน Academic Audio (Drive ใหม่) ที่ว่างเปล่า ห้ามใช้ (คุณแดนเปิดแล้ว "ไม่มีไฟล์จริง")
+const AUDIO_EMPTY=['18Y7CoJ5o4NLLs3qbspE-snrpG_YAATeK','1R6oCS6BmJkLiX4MYc0dy0IC6ZTC8g4XY','1o1LAh8dwj7sGAA7MbVsr0V2vs0K7D1A7','1LrrT73lKWFxl1w4i8wDXPFxl0HZk0Y4s','1Qt34fyxUb50WN17JP7KsoDQZxn2yN7BL','1kZ3uZVF-6_yBjkME0cVXrW7K0Kbn61Ny'];
+const audBad=u=>!u||AUDIO_EMPTY.some(id=>String(u).includes(id));
 const audKey=t=>String(t||'').toLowerCase().replace(/[–—]/g,'-').replace(/\s+/g,' ').trim();
-const audioLib=p=>{const B=FLIB.d&&FLIB.d.books||[],n=audKey(p.name);const b=B.find(x=>x.audio_drive&&p.sku&&x.sku===p.sku)||B.find(x=>x.audio_drive&&audNorm(x.title)===audNorm(p.name));if(b)return b.audio_drive;
-  const m=AUDIO_DIRS.filter(([t])=>n.startsWith(audKey(t))).sort((a,c)=>c[0].length-a[0].length)[0];return m?'https://drive.google.com/drive/folders/'+m[1]:'';};
-const audioDriveOf=p=>p.audioDrive||(String(p.freshNote||'').match(DRIVE_RE)||[])[0]||audioLib(p)||'';
+const audioLib=p=>{const n=audKey(p.name),m=AUDIO_DIRS.filter(([t])=>n.startsWith(audKey(t))).sort((a,c)=>c[0].length-a[0].length)[0];if(m)return 'https://drive.google.com/drive/folders/'+m[1]; // ที่ QR ชี้จริงมาก่อน
+  const B=FLIB.d&&FLIB.d.books||[],b=B.find(x=>!audBad(x.audio_drive)&&p.sku&&x.sku===p.sku)||B.find(x=>!audBad(x.audio_drive)&&audNorm(x.title)===audNorm(p.name));return b?b.audio_drive:'';};
+const audioDriveOf=p=>[p.audioDrive,(String(p.freshNote||'').match(DRIVE_RE)||[])[0],audioLib(p)].find(u=>!audBad(u))||'';
 const audioSearch=p=>'https://drive.google.com/drive/search?q='+encodeURIComponent('type:folder '+String(p.name||'').replace(/[^A-Za-z0-9& ]+/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,4).join(' '));
 const audioBooks=d=>isBundle(d)||d.type==='bundle'?(d.items||[]).map(getProduct).filter(hasAudio):hasAudio(d)?[d]:[];
 const AUDIO_ERR='เล่มนี้มีไฟล์เสียงใน Google Drive: ตั้งโฟลเดอร์เสียงเป็น "ทุกคนที่มีลิงก์" แล้วติ๊กยืนยันในกล่อง 🎧 ก่อนเผยแพร่';
 function audioBox(d){const L=audioBooks(d);if(!L.length)return '';if(FLIB.d===null&&!FLIB.loading)loadFacLib();
-  if(!isBundle(d)&&d.type!=='bundle'&&!d.audioDrive){const u=audioLib(d);if(u)d.audioDrive=u;} // เจอในรายชื่อจาก Mac → จำไว้กับสินค้า (บันทึกพร้อมกดบันทึก)
+  if(!isBundle(d)&&d.type!=='bundle'&&audBad(d.audioDrive)){const u=audioLib(d);if(u)d.audioDrive=u;} // เจอในรายชื่อจาก Mac → จำไว้กับสินค้า (บันทึกพร้อมกดบันทึก)
   const ok=!!d.audioOk,links=[...new Set(L.map(audioDriveOf).filter(Boolean))],miss=L.filter(b=>!audioDriveOf(b));
   return `<section class="card aud${ok?' ok':''}"><b>🎧 ${L.length>1?`มีไฟล์เสียง ${L.length} เล่ม`:'เล่มนี้มีไฟล์เสียง'} ใน Google Drive (ลูกค้าสแกน QR ในเล่มแล้วเปิดฟัง)</b>
     <ol class="fine aud-steps"><li>เปิดโฟลเดอร์เสียง${links.length?': '+links.map((u,i)=>`<a class="aud-go" href="${esc(u)}" target="_blank" rel="noopener noreferrer">📂 ${links.length>1?`โฟลเดอร์ ${i+1}`:'เปิดโฟลเดอร์เสียงของเล่มนี้'} ↗</a>`).join(' · '):''}${miss.length?`${links.length?' · ':': '}${miss.map(b=>`<a href="${esc(audioSearch(b))}" target="_blank" rel="noopener noreferrer">🔎 ค้นหาโฟลเดอร์ "${esc(String(b.name).slice(0,28))}" ใน Drive ↗</a>`).join(' · ')} หรือ <a href="${AUDIO_ROOT}" target="_blank" rel="noopener noreferrer">เปิด Academic Audio ↗</a>`:''}</li><li>กด แชร์ → การเข้าถึงทั่วไป → <b>ทุกคนที่มีลิงก์</b> (ผู้มีสิทธิ์อ่าน)</li><li>ลองเปิดลิงก์ในหน้าต่างไม่ระบุตัวตน (ไม่ล็อกอิน) ต้องฟังได้</li></ol>
@@ -1793,9 +1797,9 @@ function markPaid(o,note){
   save();
 }
 function selectProduct(id){S.productId=id;S.coupon='';S.form.coupon='';S.couponErr='';S.err='';S.form.bump=false;}
-function toast(msg){
+function toast(msg,ms){
   S.toast=msg;drawToast();
-  clearTimeout(toast._t);toast._t=setTimeout(()=>{S.toast='';drawToast();},2600);
+  clearTimeout(toast._t);toast._t=setTimeout(()=>{S.toast='';drawToast();},ms||2600);
 }
 /* ตะกร้า: เก็บรหัสสินค้าในเครื่องลูกค้า จ่ายครั้งเดียวผ่าน Stripe (QR พร้อมเพย์/บัตร) ได้ลิงก์ทุกเล่มในออเดอร์เดียว
    เฉพาะเล่มเดี่ยวราคา ≥ 1 · ชุดซื้อจากหน้าชุด (มีแพ็กเกจ) · ปุ่มซื้อทันทีเดิมยังเป็นทางหลัก ตะกร้าเป็นทางเลือกสำหรับคนซื้อหลายเล่ม */
@@ -6900,8 +6904,10 @@ function act(a,el){
       if(el.dataset.status)d.status=el.dataset.status;
       const name=String(d.name).trim(),slug=String(d.slug).trim().toLowerCase(),price=Number(d.price),full=Number(d.fullPrice)||0,link=String(d.link).trim(),sample=String(d.sampleLink).trim();
       if(!name){S.err='กรอกชื่อสินค้า';render(true);break;}
-      if(d.status==='published'&&d.kind==='course'&&!d.videoOk){d.status=getProduct(selfId)?getProduct(selfId).status:'draft';S.err=VIDEO_ERR;render(true);break;}
-      if(d.status==='published'&&hasAudio(d)&&!d.audioOk){d.status=getProduct(selfId)?getProduct(selfId).status:'draft';S.err=AUDIO_ERR;render(true);break;}
+      /* ยังไม่ได้ติ๊กยืนยันไฟล์เสียง/วิดีโอ: เดิมไม่บันทึกอะไรเลย (คุณแดนทำชุดรูปใหม่แล้วกดเผยแพร่ รูปหาย 10 ต.ค. 69) → ตอนนี้บันทึกทุกอย่างที่แก้เสมอ
+         ขายอยู่แล้ว = ขายต่อ + เตือน · ยังไม่เคยขาย = บันทึกเป็นฉบับร่าง (ยังไม่เปิดขายจนกว่าจะติ๊ก) */
+      const mediaErr=d.status==='published'&&(d.kind==='course'&&!d.videoOk?VIDEO_ERR:hasAudio(d)&&!d.audioOk?AUDIO_ERR:'');let mediaWarn='';
+      if(mediaErr){const cur=selfId&&getProduct(selfId);if(cur&&cur.status==='published')mediaWarn='live';else{d.status='draft';mediaWarn='draft';}}
       if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)){S.err='ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น calculus-1-summary';render(true);break;}
       if(slugTaken(slug,selfId)){S.err='ชื่อในลิงก์นี้ถูกใช้แล้ว เลือกชื่ออื่น';render(true);break;}
       if(!(price>=1)&&!(d.kind==='course'&&d.status!=='published')){S.err=d.kind==='course'?'ใส่ราคาคอร์สก่อนเปิดขาย (บันทึกเป็นฉบับร่างได้โดยไม่ใส่ราคา)':'ราคาขายต้องเป็นตัวเลขตั้งแต่ 1 บาทขึ้นไป';render(true);break;}
@@ -6926,7 +6932,8 @@ function act(a,el){
       if(d.fromJob){const jid=d.fromJob,pid=saved.id;clearTimeout(saveTimer);
         flushRemote().then(ok=>{if(!ok||!getProduct(pid)){toast('ลงขายไม่สำเร็จ การ์ดโรงงานยังอยู่ กดอนุมัติใหม่อีกครั้ง');FAC.jobs=null;render(true);return;}
           authFetch('/api/content?action=factory_list',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:jid,product_id:pid})}).then(j=>{if(j&&j.ok)FAC.jobs=(FAC.jobs||[]).filter(x=>x.id!==jid);render(true);}).catch(()=>{});});}
-      if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');window.scrollTo(0,0);toast('เผยแพร่แล้ว นี่คือเซลเพจที่ลูกค้าเห็น');}
+      if(mediaWarn==='draft'){render(false);toast('💾 บันทึกแล้ว (เป็นฉบับร่าง ยังไม่เปิดขาย) · '+mediaErr,9000);checkAllLinks();}
+      else if(el.dataset.then==='view'){selectProduct(saved.id);go('shop');window.scrollTo(0,0);toast(mediaWarn?'💾 บันทึกแล้ว ขายต่อตามเดิม · ⚠️ อย่าลืมติ๊กยืนยันในกล่อง '+(d.kind==='course'?'🎥 วิดีโอ':'🎧 ไฟล์เสียง'):'เผยแพร่แล้ว นี่คือเซลเพจที่ลูกค้าเห็น',mediaWarn?9000:undefined);}
       else{render(false);toast('บันทึกฉบับร่างแล้ว ลูกค้ายังไม่เห็น');checkAllLinks();}
       break;}
 
