@@ -40,6 +40,22 @@ async function vip(req, res, m) {
     const A = await import('../lib/account.js');
     return res.status(200).json({ ok: true, ...(await A.accountData(me)), settings: pub });
   }
+  if (m === 'vip_speak') { // 🎙 ตรวจ IELTS Speaking ด้วย AI (lib/speaking.js) · เก็บในตาราง member_writing (task sp:p1/p2/p3) โควตาแยกจาก Writing · ผลเก่าเปิดด้วย vip_write_get
+    const SP = await import('../lib/speaking.js');
+    let mem = null; if (me) { try { mem = await V.refreshMember(await V.getMember(me)); } catch (e) {} }
+    const active = V.isActive(mem), monthStart = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 8) + '01T00:00:00+07:00';
+    const quota = async () => { if (!me) return { used: 0, left: 0 }; const used = active ? await V.writingUsed(me, new Date(monthStart).toISOString(), 'speak') : await V.writingUsed(me, '', 'speak'); const cap = active ? V.WRITE_CAP : V.WRITE_FREE; return { used, cap, left: Math.max(0, cap - used) }; };
+    if (req.method === 'GET') return res.status(200).json({ ok: true, email: me, active, open: pub.open, ...(await quota()), history: me ? await V.listWriting(me, 'speak').catch(() => []) : [], questions: SP.QUESTIONS, parts: SP.PARTS });
+    if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบด้วยอีเมลก่อน' });
+    const b = json(req), part = SP.PARTS[b.part] ? b.part : 'p1', question = String(b.question || '').trim().slice(0, 800), secs = Math.max(0, Math.min(200, Number(b.secs) || 0));
+    if (question.length < 10) return res.status(400).json({ ok: false, error: 'เลือกคำถามก่อน' });
+    if (secs < 5) return res.status(400).json({ ok: false, error: 'เสียงสั้นเกินไป พูดอย่างน้อย 5 วินาที' });
+    const q = await quota(); if (q.left <= 0) return res.status(403).json({ ok: false, error: active ? `ใช้ครบ ${q.cap} ครั้งของเดือนนี้แล้ว เริ่มใหม่วันที่ 1` : 'ใช้สิทธิ์ทดลองฟรีแล้ว สมัคร VIP เพื่อฝึกพูดได้ทุกวัน', needVip: !active });
+    let out; try { out = await SP.checkSpeaking({ part, question, audio: String(b.audio || ''), secs }); } catch (e) { return res.status(e.bad ? 400 : 503).json({ ok: false, error: e.message }); }
+    const shop = await (await import('../lib/shop.js')).loadShop().catch(() => ({ products: [] })), result = { ...out.result, books: SP.recommend(out.result, shop.products) };
+    const row = await V.saveWriting({ email: me, task: 'sp:' + part, prompt: question, essay: result.transcript, result, band: result.band.overall, via: out.via });
+    return res.status(200).json({ ok: true, id: row?.id || null, result, left: Math.max(0, q.left - 1), cap: q.cap, active });
+  }
   if (m === 'vip_write' || m === 'vip_write_get') { // ✍️ ตรวจ IELTS Writing ด้วย AI (lib/writing.js) · ต้องเข้าระบบด้วยอีเมล · สมาชิก = WRITE_CAP ครั้ง/เดือน · ยังไม่เป็นสมาชิก = ทดลองฟรี WRITE_FREE ครั้ง
     const W = await import('../lib/writing.js');
     let mem = null; if (me) { try { mem = await V.refreshMember(await V.getMember(me)); } catch (e) {} }

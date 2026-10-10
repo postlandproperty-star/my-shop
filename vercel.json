@@ -81,6 +81,14 @@
       "destination": "/api/page?vip=home"
     },
     {
+      "source": "/vip/speak",
+      "destination": "/api/page?vip=speak"
+    },
+    {
+      "source": "/ielts-band-calculator",
+      "destination": "/api/page?vip=bandcalc"
+    },
+    {
       "source": "/vip/write",
       "destination": "/api/page?vip=write"
     },
