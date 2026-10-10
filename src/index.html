@@ -6852,7 +6852,7 @@ function act(a,el){
       if(!confirm(`${days?`ต่ออายุอีก ${days} วัน`:''}${days&&chg?' และ ':''}${chg?`ตั้งงบ ${adMoney(chg)}/วัน`:`งบเท่าเดิม ${adMoney(c.daily)}/วัน`}?\nค่าโฆษณาจะตัดจากบัตรในบัญชี Facebook ตามปกติ`))break;
       ADST.renewBusy=true;ADST.renewErr='';render(true);
       adminPost('/api/content?action=ads_auto_extend',{campaignId:c.id,adsetIds:c.adsets,end:c.end,days,dailyTHB:chg,budgetOn:c.campBudget?'campaign':'adset'}).then(j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');ADST.renew=null;toast(`✅ ${days?`ต่ออายุถึง ${new Date(j.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}`:'ปรับงบแล้ว'}${chg?` · งบ ${adMoney(chg)}/วัน`:''}`,7000);loadAdsStatus();})
-        .catch(e=>{ADST.renewErr=String(e.message||e);}).then(()=>{ADST.renewBusy=false;render(true);});break;}
+        .catch(e=>{const m=String(e.message||e);ADST.renewErr=/613|rate limit|too many/i.test(m)?'Facebook ให้แก้แอดเดียวกันได้ 1 ครั้งต่อ 30 วินาที บางส่วนอาจบันทึกไปแล้ว ดูวันจบ/งบในตารางที่รีเฟรชให้ก่อนกดซ้ำ':m;loadAdsStatus();}).then(()=>{ADST.renewBusy=false;render(true);});break;}
     case 'adsEdOpen':ADST.edit=id;PHO.ctx=null;ADST.edImg='';ADST.edImgs=[];ADST.edErr='';ADST.edBusy='';ADST.edAi=false;ADST.edHook=null;render(true);break;
     case 'adsEdClose':ADST.edit=null;render(true);break;
     case 'phoOpen':{if(PHO.ctx===id){PHO.ctx=null;render(true);break;}const p=getProduct(el.dataset.pid);if(!p)break;Object.assign(PHO,{ctx:id,pid:p.id,hits:null,sel:-1,src:'',out:'',err:'',hook:null});phoSearch(PHO.q||phoKw(p)[0]);break;}
