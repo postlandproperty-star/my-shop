@@ -1169,6 +1169,16 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .upsell .info b{display:block;font-size:15px}
 .upsell .info span{font-size:14px;color:var(--muted)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+/* แท็บชุดสุดคุ้ม: เรียงเป็น grid การ์ดแนวตั้ง (คุณแดน 10 ต.ค. 69 "เอาเป็นแบบ grid เฉพาะหน้านี้") · แบนเนอร์หน้าร้านแบบ Shopee (ชื่อคลาส bst- กันตัวบล็อกโฆษณา) */
+.st-main .st-bundles.st-bgrid{grid-auto-flow:row!important;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))!important;grid-auto-columns:auto!important;overflow:visible!important;padding-bottom:0}
+.st-main .st-bundles.st-bgrid .st-bundle{display:flex!important;flex-direction:column;gap:8px;padding:10px 10px 6px!important}
+.st-main .st-bundles.st-bgrid .st-bimg,.st-main .st-bundles.st-bgrid .st-stack{width:100%!important}.st-main .st-bundles.st-bgrid .st-bhead{-webkit-line-clamp:2}
+.st-main .st-bundles.st-bgrid .st-bwrap .st-add.st-badd{margin:0 10px 10px}
+@media(max-width:700px){.st-main .st-bundles.st-bgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}.st-main .st-bundles.st-bgrid .st-binfo b{font-size:15px}.st-main .st-bundles.st-bgrid .st-kicker{white-space:normal}.st-main .st-bundles.st-bgrid .st-bhead{display:none}}
+.bst-slides{display:grid;grid-auto-flow:column;grid-auto-columns:100%;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 14px;border-radius:14px;scrollbar-width:none}.bst-slides::-webkit-scrollbar{display:none}
+.bst-slide{scroll-snap-align:start;padding:0;border:0;background:none;cursor:pointer;border-radius:14px;overflow:hidden;display:block}.bst-slide img{width:100%;height:auto;aspect-ratio:2/1;object-fit:cover;display:block}
+@media(min-width:900px){.bst-slides{grid-auto-columns:calc(50% - 5px)}}
+.bst-toph{margin:4px 0 10px}
 /* ชุดสุดคุ้ม: ปุ่มเพิ่มอยู่ในการ์ดเดียวกัน · 2 ชุดขึ้นไปเรียงเท่ากันสวย (คุณแดน 5 ต.ค. 69) */
 .st-main .st-bundles{display:grid;grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:12px;overflow:visible}
 .st-main .st-bundles .st-bwrap{display:flex;flex-direction:column;gap:0;border:1.5px solid #FFD2C2;border-radius:14px;background:linear-gradient(105deg,#FFF6F2 0%,#fff 55%);overflow:hidden;box-shadow:0 1px 3px rgba(15,27,51,.06)}
@@ -2564,6 +2574,7 @@ function storeView(catalog){
   const note=hasAdminAccess()&&!storeMode()?`<div class="wrap"><p class="st-note">ลูกค้ายังไม่เห็นหน้านี้ หน้าแรกจะเปลี่ยนเป็นหน้าร้านเองเมื่อมีสินค้าเผยแพร่ตั้งแต่ ${STORE_MIN} รายการ ตอนนี้มี ${all.length}</p></div>`:'';
   const addB=b=>{const on=CART.includes(b.id);return `<div class="st-bwrap">${bcard(b)}${cartOk(b)&&!PV?`<button class="st-add st-badd${on?' on':''}" data-a="cartTick" data-id="${esc(b.id)}" aria-pressed="${on}" aria-label="${on?'เอาออก':'เพิ่ม'} ${esc(b.name)}">${on?'✓ เพิ่มแล้ว':'+ เพิ่มชุดนี้'}</button>`:''}</div>`;};
   const head=stHead(catalog?'store':'home',chat),foot=stFoot(chat);
+  const BNR=(Array.isArray(D.settings.storeBanners)?D.settings.storeBanners:[]).filter(x=>x&&/^https:\/\//.test(x.img||'')).slice(0,8); // 🖼 แบนเนอร์หน้าร้านแบบ Shopee (ทำจากชุดรูปตกแต่งร้านในหลังบ้าน)
   if(catalog){ // ร้านค้าแบบหน้าร้าน Shopee: หัวร้าน (ตัวเลขจริง) · แท็บหมวด + เรียงลำดับ ติดบนจอ · ชุดสุดคุ้ม · การ์ดสินค้า
     const so=S.ssort||'pop',price=p=>Number(p.price)||0;
     const list=so==='new'?shown.slice().sort((a,b)=>(b.publishedAt||0)-(a.publishedAt||0)):so==='asc'?shown.slice().sort((a,b)=>price(a)-price(b)):so==='desc'?shown.slice().sort((a,b)=>price(b)-price(a)):shown;
@@ -2576,8 +2587,9 @@ function storeView(catalog){
       <ul class="st-shop-trust"><li>ดูหน้าตัวอย่างก่อนซื้อ</li><li>รับไฟล์ทันทีหลังจ่าย</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></header>
     <div class="st-bar">${chips.length>1?`<div class="st-tabs" role="group" aria-label="หมวดสินค้า">${chips.map(c=>`<button type="button" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1].replace(/^📦\s*/,''))}</button>`).join('')}</div>`:''}
       ${f!=='bundle'&&shown.length>1?`<div class="st-sort"><span class="fine">เรียงตาม</span>${sb('pop','ยอดนิยม')}${sb('new','ล่าสุด')}<button type="button" data-a="ssort" data-v="${so==='asc'?'desc':'asc'}" aria-pressed="${so==='asc'||so==='desc'}">ราคา ${so==='desc'?'↓':'↑'}</button><span class="fine st-count">${list.length+shownB.length} รายการ</span></div>`:''}</div>
-    ${shownB.length?`<section class="st-bundles" aria-label="ชุดสุดคุ้ม">${shownB.map(addB).join('')}</section>`:''}
-    ${list.length?`<div class="st-grid">${list.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
+    ${f==='all'&&BNR.length?`<section class="bst-slides" aria-label="โปรโมชันร้าน">${BNR.map(x=>`<button type="button" class="bst-slide" data-a="scat" data-v="${esc(x.to||'all')}" aria-label="${esc(x.alt||'ดูสินค้า')}"><img src="${esc(x.img)}" alt="${esc(x.alt||'')}" width="2000" height="1000" loading="lazy"></button>`).join('')}</section>`:''}
+    ${shownB.length?`<section class="st-bundles${f==='bundle'?' st-bgrid':''}" aria-label="ชุดสุดคุ้ม">${shownB.map(addB).join('')}</section>`:''}
+    ${list.length?`${f==='all'&&BNR.length?'<h2 class="st-h2 bst-toph">ยอดขายสูงสุด</h2>':''}<div class="st-grid">${list.map(card).join('')}</div>`:shownB.length?'':'<p class="muted">ยังไม่มีสินค้าในหมวดนี้</p>'}
     <section class="st-sec st-how" aria-labelledby="st-h"><h2 id="st-h" class="st-h2">ซื้อยังไง</h2>
       <ol><li><b>เลือกเล่มหรือชุด</b><span>กดดูหน้าตัวอย่างจริงก่อนตัดสินใจ</span></li><li><b>สแกนจ่าย</b><span>QR PromptPay หรือบัตร ไม่ต้องสมัครสมาชิก</span></li><li><b>รับไฟล์ทันที</b><span>ปุ่มดาวน์โหลดขึ้นหลังจ่าย และส่งลิงก์ไปที่อีเมลด้วย</span></li></ol></section>
   </main>${foot}`;}
@@ -4260,15 +4272,23 @@ async function shopDecorImgs(list){await thFont();
   const groups=Object.entries(gm).sort((a,b)=>b[1].length-a[1].length).slice(0,6);
   const books=list.filter(p=>!isBundle(p)),all=await coversOf(books.length?books:list.flatMap(bundleBooks)),labels=groups.map(([k])=>k==='_set'?'ชุดคุ้ม':CATS[k]);
   const shopSub='หนังสือเตรียมสอบภาษาอังกฤษ'+(labels.filter(l=>l!=='ชุดคุ้ม').length?'\n'+labels.filter(l=>l!=='ชุดคุ้ม').slice(0,3).join(' · '):'');
-  const out=[],push=(name,c)=>out.push({name:name.replace(/[\\/:*?"<>|\s]+/g,'-'),w:c.width,h:c.height,c});
+  const out=[],push=(name,c,k,label)=>out.push({name:name.replace(/[\\/:*?"<>|\s]+/g,'-'),w:c.width,h:c.height,c,k:k||'',label:label||''});
   push('1-รูปโปรไฟล์ร้าน-1200x1200',logo());
   push('2-ภาพปกร้าน-1200x400',banner(1200,400,pal0,'SheetLab',shopSub,all,heroes[1],false));
-  push('3-สไลด์-01-ทั้งร้าน-2000x1000',banner(2000,1000,pal0,'SheetLab',shopSub,all,heroes[1],false));
+  push('3-สไลด์-01-ทั้งร้าน-2000x1000',banner(2000,1000,pal0,'SheetLab',shopSub,all,heroes[1],false),'all','SheetLab');
   for(const [gi,[k,ps]] of groups.entries()){const label=k==='_set'?'ชุดคุ้ม':CATS[k],pg=most(ps.map(keyOf).filter(Boolean).map(m=>m[3])),pal=pg==null?pal0+gi+1:Number(pg);
     const cv=await coversOf(k==='_set'?ps.flatMap(bundleBooks):ps),sub=k==='_set'?'รวมหลายเล่มในชุดเดียว เล่มพิมพ์ A4':'หนังสือเล่มพิมพ์ A4',nn=String(gi+2).padStart(2,'0');
-    push(`3-สไลด์-${nn}-${label}-2000x1000`,banner(2000,1000,pal,label,sub,cv,heroes[(gi+2)%heroes.length],true));
+    push(`3-สไลด์-${nn}-${label}-2000x1000`,banner(2000,1000,pal,label,sub,cv,heroes[(gi+2)%heroes.length],true),k,label);
     push(`4-แบนเนอร์หมวด-${String(gi+1).padStart(2,'0')}-${label}-1200x400`,banner(1200,400,pal,label,sub,cv,heroes[(gi+2)%heroes.length],true));}
   return out;}
+/* 🌐 ใช้สไลด์ชุดเดียวกันเป็นแบนเนอร์หน้าร้านบนเว็บ (คุณแดน 10 ต.ค. 69 "ตกแต่งหน้าร้านให้เหมือน shopee") กดแล้วแบนเนอร์ขึ้นหน้าร้าน (แท็บทั้งหมด) กดแบนเนอร์ = ไปหมวดนั้น */
+const SD_TO={_set:'bundle',ielts:'ielts',tgat:'tgat',kp:'kp',notion:'notion',work:'work',speak:'work'};
+async function storeBannersMake(){if(S.zipBusy)return;S.zipBusy='bnr';render(true);
+  try{const imgs=(await shopDecorImgs()).filter(x=>/^3-/.test(x.name)),out=[];
+    for(const it of imgs){const url=await uploadImage(it.c.toDataURL('image/jpeg',.85));out.push({img:url,to:it.k==='all'?'':(SD_TO[it.k]||''),alt:it.label||'SheetLab'});}
+    if(!out.length)throw new Error('ทำรูปไม่ได้');D.settings.storeBanners=out;save();toast(`ขึ้นแบนเนอร์หน้าร้าน ${out.length} รูปแล้ว ✅ เปิดหน้าร้าน (แท็บทั้งหมด) ดูได้เลย`,7000);}
+  catch(e){console.error(e);toast('ทำแบนเนอร์ไม่สำเร็จ: '+(e.message||e));}
+  S.zipBusy=false;render(true);}
 async function shopDecor(){if(S.zipBusy)return;S.zipBusy='decor';render(true);
   try{const imgs=await shopDecorImgs();if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');const zip=new window.JSZip();
     for(const it of imgs){let q=.9,b=await new Promise(r=>it.c.toBlob(r,'image/jpeg',q));while(b&&b.size>19e5&&q>.5){q-=.1;b=await new Promise(r=>it.c.toBlob(r,'image/jpeg',q));}if(b)zip.file(it.name+'.jpg',b);}
@@ -4339,6 +4359,8 @@ function productsTab(){
       <details class="pt-dd"><summary class="btn btn-line btn-sm">⬇ ดาวน์โหลด ▾</summary><div class="pt-menu">
         <button class="pt-a" data-a="exportCsv">ข้อมูลสินค้าทั้งหมด (Excel)</button>
         <button class="pt-a" data-a="exportShopee">🛒 ไฟล์ลง Shopee (เล่มพิมพ์)</button>
+        <button class="pt-a" data-a="storeBanners" ${S.zipBusy?'disabled':''}>${S.zipBusy==='bnr'?'กำลังทำแบนเนอร์...':'🌐 แบนเนอร์หน้าร้านเว็บ (แบบ Shopee)'}</button>
+        ${(D.settings.storeBanners||[]).length?`<button class="pt-a" data-a="storeBannersOff">✕ เอาแบนเนอร์หน้าร้านออก (${D.settings.storeBanners.length} รูป)</button>`:''}
         <button class="pt-a" data-a="shpSheetOpen">📄 Google Sheet ส่งไฟล์ Shopee</button>
         <button class="pt-a" data-a="shopDecor" ${S.zipBusy?'disabled':''}>${S.zipBusy==='decor'?'กำลังทำรูปร้าน...':'🛍 ชุดรูปตกแต่งร้าน Shopee (ZIP)'}</button>
         <button class="pt-a" data-a="exportImgs" ${S.zipBusy?'disabled':''}>${S.zipBusy===true?'กำลังรวมรูป...':'รูปสินค้าทั้งหมด (ZIP)'}</button>
@@ -6657,6 +6679,8 @@ function act(a,el){
     case 'exportCsv':exportCsv();break;
     case 'exportShopee':exportShopee();break;
     case 'shopDecor':shopDecor();break;
+    case 'storeBanners':if(confirm('ทำแบนเนอร์จากปกจริงแล้วขึ้นหน้าร้านเว็บเลย? (แทนแบนเนอร์เดิม)'))storeBannersMake();break;
+    case 'storeBannersOff':if(confirm('เอาแบนเนอร์ออกจากหน้าร้าน?')){D.settings.storeBanners=[];save();render(true);toast('เอาแบนเนอร์ออกแล้ว');}break;
     case 'shpSheetOpen':shpSheetLoad();break;
     case 'shpSheetClose':S.shpSheet=null;break;
     case 'shpSheetReset':if(confirm('สร้างรหัสใหม่? โค้ดที่วางในชีตไว้จะใช้ไม่ได้ ต้องวางโค้ดใหม่'))shpSheetLoad(true);break;

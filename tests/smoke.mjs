@@ -191,6 +191,13 @@ try {
       await page.evaluate(() => document.querySelector('[data-a="ssort"][data-v="pop"]')?.click()); await page.waitForTimeout(150); }
     { const sticky = await page.evaluate(() => { scrollTo(0, 900); const b = document.querySelector('.st-bar'); return b ? Math.round(b.getBoundingClientRect().top) : -1; }); await page.evaluate(() => scrollTo(0, 0));
       pass(`[${kind}] ร้านค้า: แถบหมวดติดบนจอตอนเลื่อน`, sticky >= 0 && sticky <= 2, `top ${sticky}`); }
+    if (bundle) { const bn = await page.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)), keep = D.settings.storeBanners; D.settings.storeBanners = [{ img: 'https://x.supabase.co/storage/v1/object/public/product-images/bnr1.jpg', to: 'bundle', alt: 'ชุดคุ้ม' }, { img: 'javascript:alert(1)', to: '' }]; S.scat = 'all'; render(false); await w(50);
+        const slides = document.querySelectorAll('.bst-slides .bst-slide').length, top = !!document.querySelector('.bst-toph'); document.querySelector('.bst-slide')?.click(); await w(100);
+        const r = { slides, top, tab: S.scat, grid: !!document.querySelector('.st-bundles.st-bgrid'), noSlideOnTab: !document.querySelector('.bst-slides') };
+        const g = document.querySelector('.st-bundles.st-bgrid'); r.cols = g ? getComputedStyle(g).gridTemplateColumns.split(' ').length : 0; r.noScroll = g ? g.scrollWidth <= g.clientWidth + 1 : false;
+        D.settings.storeBanners = keep; return r; }).catch((e) => ({ err: String(e) }));
+      await page.screenshot({ path: path.join(OUT, `store-bundles-${kind}.png`), fullPage: false }).catch(() => {}); await page.evaluate(() => { S.scat = 'all'; render(false); });
+      pass(`[${kind}] ร้านค้า: แบนเนอร์แบบ Shopee (กดแล้วไปหมวด · ลิงก์รูปปลอมไม่ขึ้น · หัวข้อยอดขายสูงสุด) · แท็บชุดสุดคุ้มเป็น grid ไม่เลื่อนข้าง`, bn.slides === 1 && bn.top && bn.tab === 'bundle' && bn.grid && bn.noSlideOnTab && bn.cols >= 1 && bn.noScroll, JSON.stringify(bn)); }
     await layout(page, `[${kind}] ร้านค้า /store`);
     await page.screenshot({ path: path.join(OUT, `store-${kind}.png`), fullPage: true });
 
