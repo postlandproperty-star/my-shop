@@ -2031,8 +2031,9 @@ async function themeSet(d,st){await thFont();const W=1200,H=1200,els=await thEls
       x.fillStyle=bg;x.beginPath();x.arc(mx+52,y+h/2,26,0,7);x.fill();x.fillStyle=ink;x.font=K(900,30);x.textAlign='center';x.textBaseline='middle';x.fillText(icon,mx+52,y+h/2+1);x.textAlign='left';
       x.fillStyle='#1b1b1b';x.font=K(700,40);ls.forEach((l,k)=>x.fillText(l,mx+100,y+22+k*52+18));x.textBaseline='alphabetic';y+=h+18;if(y>H-200)break;}return y;};
   const out=[];
-  { // 1 ปก (ไม่มีราคา/คำว่า PDF รูปชุดนี้ใช้ขาย Shopee เล่มพิมพ์ด้วย คุณแดน 10 ต.ค.)
-    const {c,x}=base('');card(x,cover,W*.4,H*.53,560,-4);pic(x,hero,W*.8,H*.72,380,8);pic(x,side,W*.82,H*.24,190,-10);out.push(c.toDataURL('image/jpeg',.9));}
+  { // 1 ปกบนพื้นขาว (ไม่มีราคา/คำว่า PDF รูปชุดนี้ใช้ขาย Shopee เล่มพิมพ์ด้วย คุณแดน 10 ต.ค.)
+    const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H); // พื้นขาว ปกเต็มความสูง (คุณแดน 10 ต.ค.)
+    const cw=H*cover.width/cover.height;x.drawImage(cover,(W-cw)/2,0,cw,H);out.push(c.toDataURL('image/jpeg',.9));}
   { // 2 ตัวอย่างหน้าใน (หน้าจริง)
     const pv=(await Promise.all((d.previews||[]).slice(0,3).map(ld))).filter(Boolean);
     if(pv.length){const {c,x}=base(course?'ตัวอย่างในคอร์ส':'ดูตัวอย่างข้างใน');const n=pv.length,w=n===1?600:n===2?500:450;
