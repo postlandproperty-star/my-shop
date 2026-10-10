@@ -6851,7 +6851,7 @@ function act(a,el){
       if(chg&&(chg<50||chg>2000)){ADST.renewErr='งบต่อวันต้องอยู่ระหว่าง ฿50 - ฿2,000';render(true);break;}
       if(!confirm(`${days?`ต่ออายุอีก ${days} วัน`:''}${days&&chg?' และ ':''}${chg?`ตั้งงบ ${adMoney(chg)}/วัน`:`งบเท่าเดิม ${adMoney(c.daily)}/วัน`}?\nค่าโฆษณาจะตัดจากบัตรในบัญชี Facebook ตามปกติ`))break;
       ADST.renewBusy=true;ADST.renewErr='';render(true);
-      adminPost('/api/content?action=ads_extend',{campaignId:c.id,adsetIds:c.adsets,end:c.end,days,dailyTHB:chg,budgetOn:c.campBudget?'campaign':'adset'}).then(j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');ADST.renew=null;toast(`✅ ${days?`ต่ออายุถึง ${new Date(j.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}`:'ปรับงบแล้ว'}${chg?` · งบ ${adMoney(chg)}/วัน`:''}`,7000);loadAdsStatus();})
+      adminPost('/api/content?action=ads_auto_extend',{campaignId:c.id,adsetIds:c.adsets,end:c.end,days,dailyTHB:chg,budgetOn:c.campBudget?'campaign':'adset'}).then(j=>{if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');ADST.renew=null;toast(`✅ ${days?`ต่ออายุถึง ${new Date(j.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}`:'ปรับงบแล้ว'}${chg?` · งบ ${adMoney(chg)}/วัน`:''}`,7000);loadAdsStatus();})
         .catch(e=>{ADST.renewErr=String(e.message||e);}).then(()=>{ADST.renewBusy=false;render(true);});break;}
     case 'adsEdOpen':ADST.edit=id;PHO.ctx=null;ADST.edImg='';ADST.edImgs=[];ADST.edErr='';ADST.edBusy='';ADST.edAi=false;ADST.edHook=null;render(true);break;
     case 'adsEdClose':ADST.edit=null;render(true);break;

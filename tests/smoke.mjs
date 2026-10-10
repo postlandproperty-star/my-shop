@@ -82,7 +82,7 @@ async function newPage(kind) {
     if (/\/api\/checkout\?m=code/.test(url)) { const c = new URL(url).searchParams.get('code'); return route.fulfill({ json: c === CODE ? { ok: true, code: CODE, pct: 20 } : { ok: false, error: 'ไม่พบโค้ดนี้' } }); }
     if (/action=drive_check/.test(url)) { const b = JSON.parse(route.request().postData() || '{}'); return route.fulfill({ json: { ok: true, results: (b.urls || []).map((u) => ({ url: u, state: 'public' })) } }); }
     if (/\/api\/checkout\?card=1/.test(url)) { CARDHITS.push(url); return route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>stripe</title>card' }); }
-    if (/action=ads_extend/.test(url)) { RENEW.push(route.request().postData() || ''); return route.fulfill({ json: { ok: true, end: '2026-12-01T00:00:00.000Z', dailyTHB: 250 } }); }
+    if (/action=ads_auto_extend/.test(url)) { RENEW.push(route.request().postData() || ''); return route.fulfill({ json: { ok: true, end: '2026-12-01T00:00:00.000Z', dailyTHB: 250 } }); }
     if (/action=ads_auto_image/.test(url)) { IMGSWAP.push(route.request().postData() || ''); return route.fulfill({ json: { ok: true, creative: 'cr_new' } }); }
     if (/\/api\/checkout\?m=card/.test(url)) return route.fulfill({ json: CARDMODE ? { ok: true, pi: 'pi_card', k: 'pi_card_secret_t', pk: 'pk_test_x' } : { ok: false, nopk: true } });
     if (/\/api\/order\?pi=pi_card/.test(url)) { ORDERHITS.push(url); return route.fulfill({ json: { ok: true, paid: true, orderId: 'CARD0001', productName: 'x', items: [{ name: 'ไฟล์', link: 'https://example.com/f' }] } }); }

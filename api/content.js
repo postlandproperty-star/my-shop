@@ -3148,7 +3148,7 @@ ${books}`;
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       const body = await readBody(req);
-      if (action === 'ads_extend') { // ⏩ ต่ออายุ / ปรับงบแอดเดิม (เฉพาะคุณแดน · เงิน)
+      if (action === 'ads_auto_extend') { // ⏩ ต่ออายุ / ปรับงบแอดเดิม (เฉพาะคุณแดน · เงิน)
         if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
         const campaignId = String(body.campaignId || ''), adsetIds = (Array.isArray(body.adsetIds) ? body.adsetIds : []).map(String).filter((x) => /^\d{6,30}$/.test(x)).slice(0, 10);
         const days = Math.round(Number(body.days) || 0), daily = Math.round(Number(body.dailyTHB) || 0);
