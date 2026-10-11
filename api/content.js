@@ -2500,6 +2500,26 @@ ${books}`;
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
     }
+    if (action === 'fb_report') { // 📊 สรุปคอนเทนต์ Facebook: ผลของแต่ละโพสต์ที่ระบบโพสต์ (ไลก์/คอมเมนต์/แชร์/คนเห็น/วิว) + ภาพรวมเพจ · คีย์ร้าน/แอดมิน · อ่านอย่างเดียว
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const { loadFb, FB_API } = await import('../lib/fb.js'), fb = await loadFb(); if (!fb) return res.status(400).json({ ok: false, error: 'ยังไม่ได้เชื่อมเพจ' });
+      const days = Math.min(90, Math.max(7, Number(req.query.days) || 30)), since = new Date(Date.now() - days * 864e5).toISOString();
+      const rows = await sb(`posts?status=eq.published&fb_post_id=not.is.null&published_at=gte.${since}&select=id,kind,text,published_at,fb_post_id,image_url,link_url&order=published_at.desc&limit=80`);
+      const g = async (path, params = {}) => { const q = new URLSearchParams({ ...params, access_token: fb.token }); const r = await fetch(`${FB_API}/${path}?${q}`); const j = await r.json().catch(() => ({})); if (!r.ok || j.error) throw new Error(j.error?.message || String(r.status)); return j; };
+      const one = async (p) => {
+        const o = { id: p.id, kind: p.kind, at: p.published_at, text: String(p.text || '').slice(0, 160), fb: p.fb_post_id, link: !!p.link_url };
+        try { const j = await g(p.fb_post_id, { fields: 'permalink_url,shares,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0)' }); o.url = j.permalink_url || ''; o.reactions = j.reactions?.summary?.total_count || 0; o.comments = j.comments?.summary?.total_count || 0; o.shares = j.shares?.count || 0; } catch (e) { o.err = String(e.message).slice(0, 120); }
+        try { const j = await g(`${p.fb_post_id}/insights`, { metric: 'post_impressions_unique,post_clicks,post_video_views' }); for (const m of j.data || []) o[m.name.replace('post_', '')] = m.values?.[0]?.value || 0; } catch (e) { o.ierr = String(e.message).slice(0, 120); }
+        if (o.err && /^\d+$/.test(p.fb_post_id)) { try { const j = await g(p.fb_post_id, { fields: 'permalink_url,views,likes.summary(total_count).limit(0),comments.summary(total_count).limit(0)' }); o.url = j.permalink_url ? 'https://facebook.com' + j.permalink_url : o.url; o.views = j.views || 0; o.reactions = j.likes?.summary?.total_count || 0; o.comments = j.comments?.summary?.total_count || 0; delete o.err; } catch (e) {} }
+        try { if (/^\d+$/.test(p.fb_post_id)) { const j = await g(`${p.fb_post_id}/video_insights`, { metric: 'total_video_views,total_video_impressions_unique,total_video_avg_time_watched' }); for (const m of j.data || []) o[m.name] = m.values?.[0]?.value || 0; } } catch (e) {}
+        return o;
+      };
+      const posts = []; for (let i = 0; i < rows.length; i += 8) posts.push(...(await Promise.all(rows.slice(i, i + 8).map(one))));
+      let page = {}; try { page = await g(fb.pageId, { fields: 'name,followers_count,fan_count' }); } catch (e) { page = { err: String(e.message).slice(0, 120) }; }
+      let pi = {}; try { const j = await g(`${fb.pageId}/insights`, { metric: 'page_impressions_unique,page_post_engagements,page_follows,page_views_total', period: 'day', since: Math.floor(Date.now() / 1000 - days * 86400), until: Math.floor(Date.now() / 1000) }); for (const m of j.data || []) pi[m.name] = (m.values || []).map((v) => [String(v.end_time).slice(0, 10), v.value]); } catch (e) { pi = { err: String(e.message).slice(0, 160) }; }
+      return res.status(200).json({ ok: true, days, page: { name: page.name, followers: page.followers_count, fans: page.fan_count, err: page.err }, pageInsights: pi, posts });
+    }
     if (action === 'ielts_gen') { // 📚 สร้างเนื้อหาคลัง IELTS ฟรี (lib/ieltsLib.js) ทีละชิ้น: ตัวอย่าง Band 9 / บทฟังพิมพ์ตาม (+เสียง Google TTS) / ข้อสอบประจำวัน · คีย์ร้าน/แอดมิน · เก็บใน shop_state ielts_lib
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
