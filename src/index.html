@@ -1522,7 +1522,7 @@ function blankProduct(){return{name:'',slug:'',kind:'sheet',headline:'',desc:'',
 /* 🎧 เล่มที่มีไฟล์เสียงใน Google Drive: ต้องติ๊กยืนยันว่าโฟลเดอร์แชร์เป็น "ทุกคนที่มีลิงก์" แล้ว ถึงจะเผยแพร่ได้ (กันลูกค้าสแกน QR แล้วฟังไม่ได้) */
 const DRIVE_RE=/https:\/\/drive\.google\.com\/drive\/folders\/[\w-]+/;
 // "ไม่มีไฟล์เสียง" ในคำอธิบายไม่นับ (TOEIC Mock Test ถูกจับผิด 10 ต.ค. 69) · คุณแดนกด "เล่มนี้ไม่มีไฟล์เสียง" ได้ (noAudio)
-const AUD_NEG=/(ไม่มี|ไม่ใช้|ไม่รวม|ไม่ได้มี)\s*(ไฟล์)?\s*(เสียง(อ่าน)?|MP3|audio)|\b(no|without)\s+(audio|mp3)\b/gi;
+const AUD_NEG=/(ไม่มี|ไม่ใช้|ไม่รวม|ไม่ได้มี)\s*(ไฟล์)?\s*(เสียง(อ่าน)?|MP3|audio)|\b(no|without)\s+(audio|mp3)\b|(ไฟล์\s*เสียง(อ่าน)?|MP3|audio)\s*[|:：]\s*(ไม่มี|ไม่รวม|no\b|none\b|-)/gi; // รวมแถวสเปก "ไฟล์เสียง | ไม่มี" (SL-065 11 ต.ค. 69)
 const hasAudio=p=>!!p&&!isBundle(p)&&!p.noAudio&&!!(p.audio||p.audioDrive||/🎧|ไฟล์เสียง|เสียงอ่าน|\bMP3\b|แทร็ก|audio/i.test([p.name,p.headline,p.desc,p.features,p.specs,p.freshNote].join(' ').replace(AUD_NEG,' ')));
 const AUDIO_ROOT='https://drive.google.com/drive/folders/1BJ5RIbcK2-lmRj1_8EQB5Z8b64RYu5_f'; // Drive: Sheetlab/Academic Audio
 const audNorm=t=>String(t||'').toLowerCase().replace(/\s+/g,' ').trim().slice(0,40);
@@ -3209,7 +3209,7 @@ async function shopeeImgs(){const d=S.draft;if(!d)return;const bun=isBundle(d)||
   S.zipBusy='';render(true);}
 async function shopeeCopy(){const d=S.draft;if(!d)return;const key=shopeeKey(d),bun=isBundle(d),books=bun?(d.items||[]).map(getProduct).filter(Boolean):[d];
   S.shopee={key,busy:true};render(true);
-  const pages=books.reduce((a,b)=>a+pagesOf(b),0),audio=books.some(b=>/MP3|ไฟล์เสียง|เสียงอ่าน|QR|🎧/i.test([b.specs,b.features,b.desc].join(' ')));
+  const pages=books.reduce((a,b)=>a+pagesOf(b),0),audio=books.some(hasAudio); // ใช้ตัวตรวจเดียวกับกล่อง 🎧 (เดิมจับคำว่า "ไฟล์เสียง | ไม่มี" เป็นมีเสียง → ข้อความ Shopee บอกลูกค้าผิด 11 ต.ค. 69)
   try{const j=await adminPost('/api/content?action=shopee_copy',{name:d.name,headline:d.headline,desc:d.desc,features:bun?'':d.features,forwho:d.forwho,notfor:d.notfor,faq:d.faq,toc:bun?'':d.toc,specs:bun?'':d.specs,pages,audio,books:bun?books.map(b=>b.name):[]});
     if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');S.shopee={key,text:j.text,ai:j.ai};}
   catch(e){S.shopee={key,err:'สร้างไม่สำเร็จ: '+(e.message||e)};}render(true);}
