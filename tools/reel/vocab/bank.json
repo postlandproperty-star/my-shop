@@ -1,0 +1,942 @@
+[
+ {
+  "id": "taste-01",
+  "host": "f",
+  "title": "รสชาติ ภาษาอังกฤษพูดว่าไง?",
+  "hook": "รู้แค่ Spicy? มาดูอีก 5 รส",
+  "intro": "รสชาติอาหาร ภาษาอังกฤษพูดว่ายังไงบ้าง มาดูกันค่ะ",
+  "question": "ชอบรสไหนที่สุด คอมเมนต์บอกหน่อย",
+  "scene": "at a busy Thai street food stall at night with warm string lights, she holds a small plate and a spoon, tasting different dishes",
+  "words": [
+   [
+    "Sweet",
+    "สวีท",
+    "หวาน",
+    "she tastes and smiles happily"
+   ],
+   [
+    "Sour",
+    "ซาว-เออะ",
+    "เปรี้ยว",
+    "she squints and puckers her lips"
+   ],
+   [
+    "Salty",
+    "ซอล-ที่",
+    "เค็ม",
+    "she raises her eyebrows"
+   ],
+   [
+    "Bitter",
+    "บิท-เทอะ",
+    "ขม",
+    "she grimaces a little"
+   ],
+   [
+    "Spicy",
+    "สไป-ซี่",
+    "เผ็ด",
+    "she fans her mouth with her hand"
+   ],
+   [
+    "Bland",
+    "แบลนด์",
+    "จืด",
+    "she shrugs with a flat face"
+   ]
+  ]
+ },
+ {
+  "id": "kitchen-verbs",
+  "host": "m",
+  "title": "ทำอาหาร ภาษาอังกฤษพูดว่าไง?",
+  "hook": "หั่น สับ ปอก พูดว่าไง?",
+  "intro": "เวลาทำอาหาร ภาษาอังกฤษใช้คำไหนบ้าง มาดูกันครับ",
+  "question": "ทำอาหารเป็นเมนูอะไรบ้าง คอมเมนต์เลย",
+  "scene": "in a bright home kitchen, he stands at the counter with a cutting board, vegetables and a pan",
+  "words": [
+   [
+    "Chop",
+    "ช็อพ",
+    "สับ",
+    "he chops a carrot quickly"
+   ],
+   [
+    "Slice",
+    "สไลซ์",
+    "หั่นเป็นแผ่น",
+    "he slices a tomato"
+   ],
+   [
+    "Peel",
+    "พีล",
+    "ปอกเปลือก",
+    "he peels a potato"
+   ],
+   [
+    "Stir",
+    "สเตอร์",
+    "คน",
+    "he stirs the pan"
+   ],
+   [
+    "Boil",
+    "บอยล์",
+    "ต้ม",
+    "he points at a boiling pot"
+   ],
+   [
+    "Fry",
+    "ฟราย",
+    "ทอด",
+    "he shakes the frying pan"
+   ]
+  ]
+ },
+ {
+  "id": "weather",
+  "host": "f",
+  "title": "อากาศ ภาษาอังกฤษพูดว่าไง?",
+  "hook": "ร้อนชื้น พูดว่าไง?",
+  "intro": "วันนี้อากาศเป็นยังไง ภาษาอังกฤษพูดว่าอะไรบ้าง มาดูกันค่ะ",
+  "question": "ที่บ้านวันนี้อากาศแบบไหน คอมเมนต์บอกหน่อย",
+  "scene": "on a Bangkok condo balcony with the city skyline, she holds a folded umbrella and looks at the sky",
+  "words": [
+   [
+    "Sunny",
+    "ซัน-นี่",
+    "แดดจ้า",
+    "she shades her eyes from the sun"
+   ],
+   [
+    "Cloudy",
+    "คลาว-ดี้",
+    "มีเมฆมาก",
+    "she points up at the clouds"
+   ],
+   [
+    "Rainy",
+    "เรน-นี่",
+    "ฝนตก",
+    "she opens the umbrella"
+   ],
+   [
+    "Windy",
+    "วิน-ดี้",
+    "ลมแรง",
+    "her hair blows in the wind"
+   ],
+   [
+    "Humid",
+    "ฮิว-มิด",
+    "ชื้น อบอ้าว",
+    "she fans herself, sweating"
+   ],
+   [
+    "Chilly",
+    "ชิล-ลี่",
+    "หนาวเย็น",
+    "she hugs herself as if cold"
+   ]
+  ]
+ },
+ {
+  "id": "airport",
+  "host": "m",
+  "title": "สนามบิน ภาษาอังกฤษพูดว่าไง?",
+  "hook": "ไปต่างประเทศต้องรู้!",
+  "intro": "ไปสนามบิน ต้องรู้คำพวกนี้ มาดูกันครับ",
+  "question": "เคยไปต่างประเทศที่ไหนมาบ้าง คอมเมนต์เลย",
+  "scene": "inside a modern airport terminal with departure boards behind him, he pulls a carry-on suitcase",
+  "words": [
+   [
+    "Check-in",
+    "เช็ก-อิน",
+    "เช็กอิน",
+    "he gestures toward the counter"
+   ],
+   [
+    "Boarding pass",
+    "บอร์-ดิ้ง พาส",
+    "บัตรขึ้นเครื่อง",
+    "he holds up a ticket"
+   ],
+   [
+    "Gate",
+    "เกท",
+    "ประตูขึ้นเครื่อง",
+    "he points toward the gate sign"
+   ],
+   [
+    "Delayed",
+    "ดี-เลด",
+    "ล่าช้า",
+    "he looks at his watch, worried"
+   ],
+   [
+    "Luggage",
+    "ลัก-กิจ",
+    "กระเป๋าเดินทาง",
+    "he pats his suitcase"
+   ],
+   [
+    "Customs",
+    "คัส-ตัมส์",
+    "ด่านศุลกากร",
+    "he nods seriously"
+   ]
+  ]
+ },
+ {
+  "id": "feelings",
+  "host": "f",
+  "title": "ความรู้สึก ภาษาอังกฤษพูดว่าไง?",
+  "hook": "โล่งใจ พูดว่าไง?",
+  "intro": "อารมณ์แบบนี้ ภาษาอังกฤษพูดว่าอะไร มาดูกันค่ะ",
+  "question": "วันนี้รู้สึกแบบไหน คอมเมนต์บอกหน่อย",
+  "scene": "in a cozy cafe by the window, she sits holding a cup, very expressive face",
+  "words": [
+   [
+    "Excited",
+    "อิก-ไซ-ทิด",
+    "ตื่นเต้น",
+    "she claps with a big smile"
+   ],
+   [
+    "Nervous",
+    "เนอร์-วัส",
+    "ประหม่า",
+    "she bites her lip nervously"
+   ],
+   [
+    "Tired",
+    "ไทร์ด",
+    "เหนื่อย",
+    "she sighs and droops her shoulders"
+   ],
+   [
+    "Bored",
+    "บอร์ด",
+    "เบื่อ",
+    "she rests her chin on her hand"
+   ],
+   [
+    "Proud",
+    "พราวด์",
+    "ภูมิใจ",
+    "she lifts her chin and smiles"
+   ],
+   [
+    "Relieved",
+    "รี-ลีฟด์",
+    "โล่งใจ",
+    "she puts a hand on her chest and exhales"
+   ]
+  ]
+ },
+ {
+  "id": "office-toeic",
+  "host": "m",
+  "title": "ศัพท์ออฟฟิศ ออกสอบ TOEIC",
+  "hook": "ออกสอบ TOEIC บ่อยมาก!",
+  "intro": "ศัพท์ในออฟฟิศที่ออกสอบ TOEIC บ่อย มาดูกันครับ",
+  "question": "คำไหนเจอบ่อยในที่ทำงาน คอมเมนต์เลย",
+  "scene": "in a modern open-plan office, he holds a tablet and stands beside his desk",
+  "words": [
+   [
+    "Deadline",
+    "เดด-ไลน์",
+    "กำหนดส่ง",
+    "he taps his watch"
+   ],
+   [
+    "Meeting",
+    "มี-ทิ่ง",
+    "ประชุม",
+    "he points to a meeting room"
+   ],
+   [
+    "Report",
+    "รี-พอร์ท",
+    "รายงาน",
+    "he holds up the tablet"
+   ],
+   [
+    "Schedule",
+    "สเก็จ-จูล",
+    "ตารางงาน",
+    "he scrolls on the tablet"
+   ],
+   [
+    "Postpone",
+    "โพสต์-โพน",
+    "เลื่อนออกไป",
+    "he waves his hand as if pushing something away"
+   ],
+   [
+    "Approve",
+    "อะ-พรูฟว์",
+    "อนุมัติ",
+    "he gives a thumbs up"
+   ]
+  ]
+ },
+ {
+  "id": "coffee-shop",
+  "host": "f",
+  "title": "สั่งกาแฟ ภาษาอังกฤษพูดว่าไง?",
+  "hook": "สั่งกาแฟเป็นภาษาอังกฤษ",
+  "intro": "ไปร้านกาแฟ ต้องรู้คำพวกนี้ค่ะ",
+  "question": "ชอบกาแฟแบบไหน คอมเมนต์บอกหน่อย",
+  "scene": "at a coffee shop counter with a menu board, she holds a takeaway cup",
+  "words": [
+   [
+    "Latte",
+    "ลา-เต้",
+    "กาแฟใส่นม",
+    "she lifts the cup"
+   ],
+   [
+    "Iced",
+    "ไอซ์ท",
+    "เย็น ใส่น้ำแข็ง",
+    "she shakes the cup and ice rattles"
+   ],
+   [
+    "Decaf",
+    "ดี-แคฟ",
+    "ไม่มีคาเฟอีน",
+    "she shakes her head lightly"
+   ],
+   [
+    "Refill",
+    "รี-ฟิล",
+    "เติม",
+    "she holds the cup out"
+   ],
+   [
+    "To go",
+    "ทู โก",
+    "กลับบ้าน",
+    "she points to the door"
+   ],
+   [
+    "Receipt",
+    "รี-ซีท",
+    "ใบเสร็จ",
+    "she holds up a small paper"
+   ]
+  ]
+ },
+ {
+  "id": "aches",
+  "host": "m",
+  "title": "ปวดตรงไหน พูดว่าไง?",
+  "hook": "ไปหาหมอต้องรู้!",
+  "intro": "ไม่สบาย ปวดตรงไหน ภาษาอังกฤษพูดว่ายังไง มาดูกันครับ",
+  "question": "คำไหนมีประโยชน์ที่สุด คอมเมนต์เลย",
+  "scene": "at a pharmacy counter with shelves of medicine behind him",
+  "words": [
+   [
+    "Headache",
+    "เฮด-เอค",
+    "ปวดหัว",
+    "he touches his forehead"
+   ],
+   [
+    "Stomachache",
+    "สตัม-มัค-เอค",
+    "ปวดท้อง",
+    "he holds his stomach"
+   ],
+   [
+    "Toothache",
+    "ทูธ-เอค",
+    "ปวดฟัน",
+    "he holds his cheek"
+   ],
+   [
+    "Backache",
+    "แบ็ค-เอค",
+    "ปวดหลัง",
+    "he rubs his lower back"
+   ],
+   [
+    "Sore throat",
+    "ซอร์ โธรท",
+    "เจ็บคอ",
+    "he touches his throat"
+   ],
+   [
+    "Fever",
+    "ฟี-เวอร์",
+    "ไข้",
+    "he wipes his forehead, looking unwell"
+   ]
+  ]
+ },
+ {
+  "id": "shopping",
+  "host": "f",
+  "title": "ช้อปปิ้ง ภาษาอังกฤษพูดว่าไง?",
+  "hook": "ขอคืนเงิน พูดว่าไง?",
+  "intro": "ไปช้อปปิ้ง ต้องรู้คำพวกนี้ค่ะ",
+  "question": "ชอบช้อปออนไลน์หรือที่ร้าน คอมเมนต์เลย",
+  "scene": "in a bright clothing store, she holds a shopping bag and a shirt on a hanger",
+  "words": [
+   [
+    "Discount",
+    "ดิส-เคานท์",
+    "ส่วนลด",
+    "she points at a sale tag"
+   ],
+   [
+    "Refund",
+    "รี-ฟันด์",
+    "คืนเงิน",
+    "she holds out a receipt"
+   ],
+   [
+    "Exchange",
+    "อิกซ์-เชนจ์",
+    "เปลี่ยนสินค้า",
+    "she swaps the shirt in her hands"
+   ],
+   [
+    "Fitting room",
+    "ฟิท-ทิ่ง รูม",
+    "ห้องลองเสื้อ",
+    "she points behind her"
+   ],
+   [
+    "Cashier",
+    "แค-เชียร์",
+    "พนักงานเก็บเงิน",
+    "she gestures to the counter"
+   ],
+   [
+    "Bargain",
+    "บาร์-เกน",
+    "ของถูกคุ้ม",
+    "she smiles excitedly"
+   ]
+  ]
+ },
+ {
+  "id": "hotel",
+  "host": "m",
+  "title": "โรงแรม ภาษาอังกฤษพูดว่าไง?",
+  "hook": "เช็กอินโรงแรมไม่งง",
+  "intro": "ไปพักโรงแรม ต้องรู้คำพวกนี้ครับ",
+  "question": "ชอบไปเที่ยวที่ไหน คอมเมนต์บอกหน่อย",
+  "scene": "at a hotel reception desk in an elegant lobby, he holds a key card",
+  "words": [
+   [
+    "Reservation",
+    "เรส-เซอร์-เว-ชั่น",
+    "การจอง",
+    "he shows his phone"
+   ],
+   [
+    "Check out",
+    "เช็ก เอาท์",
+    "เช็กเอาท์",
+    "he hands over the key card"
+   ],
+   [
+    "Room service",
+    "รูม เซอร์-วิส",
+    "บริการอาหารถึงห้อง",
+    "he mimes eating"
+   ],
+   [
+    "Lobby",
+    "ล็อบ-บี้",
+    "ล็อบบี้",
+    "he gestures around the lobby"
+   ],
+   [
+    "Wake-up call",
+    "เวค-อัพ คอล",
+    "โทรปลุก",
+    "he mimes holding a phone"
+   ],
+   [
+    "Housekeeping",
+    "เฮาส์-คีพ-ปิ้ง",
+    "แม่บ้านทำความสะอาด",
+    "he mimes wiping a table"
+   ]
+  ]
+ },
+ {
+  "id": "personality",
+  "host": "f",
+  "title": "นิสัย ภาษาอังกฤษพูดว่าไง?",
+  "hook": "คุณเป็นคนแบบไหน?",
+  "intro": "นิสัยแบบนี้ ภาษาอังกฤษพูดว่าอะไร มาดูกันค่ะ",
+  "question": "คุณเป็นคนแบบไหน คอมเมนต์บอกหน่อย",
+  "scene": "in a green city park in the afternoon, she stands talking to the camera",
+  "words": [
+   [
+    "Generous",
+    "เจน-เนอ-รัส",
+    "ใจกว้าง",
+    "she opens her arms warmly"
+   ],
+   [
+    "Stubborn",
+    "สตับ-เบิร์น",
+    "ดื้อ",
+    "she crosses her arms and frowns"
+   ],
+   [
+    "Shy",
+    "ชาย",
+    "ขี้อาย",
+    "she covers her face shyly"
+   ],
+   [
+    "Honest",
+    "ออน-เนสท์",
+    "ซื่อสัตย์",
+    "she puts a hand on her heart"
+   ],
+   [
+    "Lazy",
+    "เล-ซี่",
+    "ขี้เกียจ",
+    "she yawns and stretches"
+   ],
+   [
+    "Patient",
+    "เพ-เชินท์",
+    "อดทน",
+    "she nods calmly"
+   ]
+  ]
+ },
+ {
+  "id": "phone-calls",
+  "host": "m",
+  "title": "คุยโทรศัพท์ ภาษาอังกฤษพูดว่าไง?",
+  "hook": "รอสายสักครู่ พูดว่าไง?",
+  "intro": "คุยโทรศัพท์งาน ต้องรู้คำพวกนี้ครับ",
+  "question": "เคยรับสายฝรั่งไหม คอมเมนต์เลย",
+  "scene": "at his office desk, he holds a smartphone",
+  "words": [
+   [
+    "Hold on",
+    "โฮลด์ ออน",
+    "รอสักครู่",
+    "he raises one finger"
+   ],
+   [
+    "Hang up",
+    "แฮง อัพ",
+    "วางสาย",
+    "he lowers the phone"
+   ],
+   [
+    "Call back",
+    "คอล แบ็ค",
+    "โทรกลับ",
+    "he points to the phone"
+   ],
+   [
+    "Voicemail",
+    "วอยซ์-เมล",
+    "ข้อความเสียง",
+    "he holds the phone to his ear and listens"
+   ],
+   [
+    "Extension",
+    "อิก-สเตน-ชั่น",
+    "เบอร์ต่อภายใน",
+    "he mimes pressing numbers"
+   ],
+   [
+    "Speaker",
+    "สปี-เกอร์",
+    "ลำโพง",
+    "he holds the phone in front of him"
+   ]
+  ]
+ },
+ {
+  "id": "morning-routine",
+  "host": "f",
+  "title": "กิจวัตรตอนเช้า พูดว่าไง?",
+  "hook": "ตื่นสาย พูดว่าไง?",
+  "intro": "ตอนเช้าทำอะไรบ้าง ภาษาอังกฤษพูดว่ายังไง มาดูกันค่ะ",
+  "question": "ตื่นกี่โมงทุกวัน คอมเมนต์บอกหน่อย",
+  "scene": "in a bright bedroom in the morning, she holds a toothbrush and a mug",
+  "words": [
+   [
+    "Wake up",
+    "เวค อัพ",
+    "ตื่นนอน",
+    "she stretches her arms"
+   ],
+   [
+    "Brush teeth",
+    "บรัช ทีธ",
+    "แปรงฟัน",
+    "she mimes brushing her teeth"
+   ],
+   [
+    "Take a shower",
+    "เทค อะ ชาว-เวอร์",
+    "อาบน้ำ",
+    "she mimes washing her hair"
+   ],
+   [
+    "Get dressed",
+    "เก็ท เดรสท์",
+    "แต่งตัว",
+    "she adjusts her shirt"
+   ],
+   [
+    "Commute",
+    "คอม-มิวท์",
+    "เดินทางไปทำงาน",
+    "she grabs her bag"
+   ],
+   [
+    "Oversleep",
+    "โอ-เวอร์-สลีพ",
+    "ตื่นสาย",
+    "she looks at a clock, shocked"
+   ]
+  ]
+ },
+ {
+  "id": "money",
+  "host": "m",
+  "title": "เรื่องเงิน ภาษาอังกฤษพูดว่าไง?",
+  "hook": "ดอกเบี้ย พูดว่าไง?",
+  "intro": "เรื่องเงิน ภาษาอังกฤษใช้คำไหนบ้าง มาดูกันครับ",
+  "question": "อยากเก็บเงินไว้ทำอะไร คอมเมนต์เลย",
+  "scene": "at a bank counter with a calculator and documents, he holds a pen",
+  "words": [
+   [
+    "Salary",
+    "แซล-ละ-รี่",
+    "เงินเดือน",
+    "he smiles and counts on his fingers"
+   ],
+   [
+    "Budget",
+    "บัด-เจ็ท",
+    "งบประมาณ",
+    "he taps the calculator"
+   ],
+   [
+    "Invoice",
+    "อิน-วอยซ์",
+    "ใบแจ้งหนี้",
+    "he holds up a document"
+   ],
+   [
+    "Loan",
+    "โลน",
+    "เงินกู้",
+    "he signs a paper"
+   ],
+   [
+    "Interest",
+    "อิน-เทอ-เรสท์",
+    "ดอกเบี้ย",
+    "he raises his eyebrows"
+   ],
+   [
+    "Savings",
+    "เซ-วิ่งส์",
+    "เงินออม",
+    "he gives a satisfied nod"
+   ]
+  ]
+ },
+ {
+  "id": "hobbies",
+  "host": "f",
+  "title": "งานอดิเรก ภาษาอังกฤษพูดว่าไง?",
+  "hook": "ชอบทำอะไรวันหยุด?",
+  "intro": "งานอดิเรก ภาษาอังกฤษพูดว่าอะไรบ้าง มาดูกันค่ะ",
+  "question": "งานอดิเรกของคุณคืออะไร คอมเมนต์บอกหน่อย",
+  "scene": "in a sunny living room with plants, a guitar and paints around her",
+  "words": [
+   [
+    "Hiking",
+    "ไฮ-คิ้ง",
+    "เดินป่า",
+    "she mimes walking with a backpack"
+   ],
+   [
+    "Baking",
+    "เบ-คิ้ง",
+    "อบขนม",
+    "she mimes mixing in a bowl"
+   ],
+   [
+    "Gardening",
+    "การ์-เด็น-นิ่ง",
+    "ทำสวน",
+    "she touches a plant"
+   ],
+   [
+    "Painting",
+    "เพน-ทิ่ง",
+    "วาดภาพ",
+    "she mimes brushing a canvas"
+   ],
+   [
+    "Fishing",
+    "ฟิช-ชิ่ง",
+    "ตกปลา",
+    "she mimes casting a rod"
+   ],
+   [
+    "Knitting",
+    "นิท-ทิ่ง",
+    "ถักไหมพรม",
+    "she mimes knitting"
+   ]
+  ]
+ },
+ {
+  "id": "traffic",
+  "host": "m",
+  "title": "การเดินทาง ภาษาอังกฤษพูดว่าไง?",
+  "hook": "รถติด พูดว่าไง?",
+  "intro": "เดินทางในเมือง ภาษาอังกฤษพูดว่ายังไง มาดูกันครับ",
+  "question": "วันนี้รถติดไหม คอมเมนต์เลย",
+  "scene": "on a busy Bangkok sidewalk with traffic behind him, he holds his phone with a map",
+  "words": [
+   [
+    "Traffic jam",
+    "แทรฟ-ฟิค แจม",
+    "รถติด",
+    "he points at the cars and sighs"
+   ],
+   [
+    "Shortcut",
+    "ชอร์ท-คัท",
+    "ทางลัด",
+    "he points to the side"
+   ],
+   [
+    "Intersection",
+    "อิน-เทอร์-เซค-ชั่น",
+    "สี่แยก",
+    "he crosses his index fingers"
+   ],
+   [
+    "U-turn",
+    "ยู-เทิร์น",
+    "กลับรถ",
+    "he draws a U in the air"
+   ],
+   [
+    "Fare",
+    "แฟร์",
+    "ค่าโดยสาร",
+    "he holds up coins"
+   ],
+   [
+    "Pedestrian",
+    "เพ-เดส-เทรี-ยัน",
+    "คนเดินเท้า",
+    "he points at people walking"
+   ]
+  ]
+ },
+ {
+  "id": "cleaning",
+  "host": "f",
+  "title": "ทำความสะอาด ภาษาอังกฤษพูดว่าไง?",
+  "hook": "ถูพื้น พูดว่าไง?",
+  "intro": "ทำความสะอาดบ้าน ภาษาอังกฤษใช้คำไหนบ้าง มาดูกันค่ะ",
+  "question": "ชอบทำงานบ้านอะไรที่สุด คอมเมนต์บอกหน่อย",
+  "scene": "in a tidy living room, she holds a cloth and a broom",
+  "words": [
+   [
+    "Sweep",
+    "สวีพ",
+    "กวาด",
+    "she sweeps with the broom"
+   ],
+   [
+    "Mop",
+    "มอพ",
+    "ถูพื้น",
+    "she mimes mopping"
+   ],
+   [
+    "Dust",
+    "ดัสท์",
+    "ปัดฝุ่น",
+    "she dusts a shelf"
+   ],
+   [
+    "Wipe",
+    "ไวพ์",
+    "เช็ด",
+    "she wipes the table"
+   ],
+   [
+    "Vacuum",
+    "แวค-คิวม์",
+    "ดูดฝุ่น",
+    "she mimes pushing a vacuum"
+   ],
+   [
+    "Tidy up",
+    "ไท-ดี้ อัพ",
+    "เก็บให้เรียบร้อย",
+    "she arranges cushions"
+   ]
+  ]
+ },
+ {
+  "id": "job-interview",
+  "host": "m",
+  "title": "สัมภาษณ์งาน ภาษาอังกฤษพูดว่าไง?",
+  "hook": "สัมภาษณ์งานต้องรู้!",
+  "intro": "ไปสัมภาษณ์งาน ต้องรู้คำพวกนี้ครับ",
+  "question": "อยากทำงานอะไร คอมเมนต์เลย",
+  "scene": "in a bright interview room, he sits at a table in a neat shirt holding a folder",
+  "words": [
+   [
+    "Resume",
+    "เรซ-ซู-เม",
+    "ประวัติย่อ",
+    "he holds up the folder"
+   ],
+   [
+    "Experience",
+    "อิก-สเปีย-เรียนซ์",
+    "ประสบการณ์",
+    "he counts on his fingers"
+   ],
+   [
+    "Strength",
+    "สเตรงธ์",
+    "จุดแข็ง",
+    "he flexes his arm playfully"
+   ],
+   [
+    "Weakness",
+    "วีค-เนส",
+    "จุดอ่อน",
+    "he shrugs honestly"
+   ],
+   [
+    "Hire",
+    "ไฮเออร์",
+    "จ้างงาน",
+    "he offers a handshake"
+   ],
+   [
+    "Quit",
+    "ควิท",
+    "ลาออก",
+    "he waves goodbye"
+   ]
+  ]
+ },
+ {
+  "id": "texture",
+  "host": "f",
+  "title": "กรอบ เหนียว ภาษาอังกฤษพูดว่าไง?",
+  "hook": "กรอบนอกนุ่มใน พูดว่าไง?",
+  "intro": "อาหารเนื้อแบบนี้ ภาษาอังกฤษพูดว่าอะไร มาดูกันค่ะ",
+  "question": "ชอบอาหารแบบไหนที่สุด คอมเมนต์บอกหน่อย",
+  "scene": "at a busy Thai food court, she holds a plate of fried chicken and a fork",
+  "words": [
+   [
+    "Crispy",
+    "คริส-ปี้",
+    "กรอบ",
+    "she bites and it crunches"
+   ],
+   [
+    "Chewy",
+    "ชู-อี้",
+    "เหนียว",
+    "she chews slowly"
+   ],
+   [
+    "Juicy",
+    "จู-ซี่",
+    "ฉ่ำ",
+    "she smiles with delight"
+   ],
+   [
+    "Creamy",
+    "ครีม-มี่",
+    "เนียนข้น",
+    "she licks her lips"
+   ],
+   [
+    "Greasy",
+    "กรี-ซี่",
+    "เลี่ยน มัน",
+    "she wipes her fingers"
+   ],
+   [
+    "Soggy",
+    "ซอก-กี้",
+    "เละ แฉะ",
+    "she makes a disappointed face"
+   ]
+  ]
+ },
+ {
+  "id": "sleep",
+  "host": "m",
+  "title": "การนอน ภาษาอังกฤษพูดว่าไง?",
+  "hook": "นอนกรน พูดว่าไง?",
+  "intro": "เรื่องการนอน ภาษาอังกฤษพูดว่ายังไง มาดูกันครับ",
+  "question": "คืนนี้จะนอนกี่โมง คอมเมนต์เลย",
+  "scene": "in a cozy living room at night, he sits on a sofa with a pillow and a blanket",
+  "words": [
+   [
+    "Sleepy",
+    "สลีพ-พี่",
+    "ง่วง",
+    "he rubs his eyes"
+   ],
+   [
+    "Yawn",
+    "ยอน",
+    "หาว",
+    "he yawns widely"
+   ],
+   [
+    "Nap",
+    "แน็พ",
+    "งีบ",
+    "he leans on the pillow"
+   ],
+   [
+    "Snore",
+    "สนอร์",
+    "กรน",
+    "he mimes snoring"
+   ],
+   [
+    "Nightmare",
+    "ไนท์-แมร์",
+    "ฝันร้าย",
+    "he looks scared"
+   ],
+   [
+    "Insomnia",
+    "อิน-ซอม-เนีย",
+    "นอนไม่หลับ",
+    "he stares wide awake"
+   ]
+  ]
+ }
+]

@@ -7,3 +7,5 @@ tests/out/
 
 tools/reel/.vocab_work/
 tools/reel/vocab/*.mp4
+tools/reel/vocab/*-cover.jpg
+tools/reel/vocab/state.json

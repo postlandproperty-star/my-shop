@@ -147,4 +147,6 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
     && calls.find((c) => /gpt-image-2$/.test(c[0]))[1].image_size.height === 1536 && oi.data[0].b64_json === Buffer.from('BYTES').toString('base64')
     && !!ttsCall && ttsCall[1].prompt === 'Hello there' && !!ttsCall[1].style_instructions && tt.audioContent === Buffer.from('BYTES').toString('base64')
     && el.status === 200 && !!thCall && thCall[1].language_code === 'Thai (Thailand)' && ttsCall[1].language_code === 'English (US)' && A.ttsLang('en-GB') === 'English (UK)' && A.ttsLang('xx') === '' && pass === null && off === null, JSON.stringify({ g: gc && gc.model, n: calls.length })); }
+{ const F = await import('../lib/fb.js');
+  ok('🎬 ปกคลิป Reels: คลิป x.mp4 → ปก x-cover.jpg ที่อัปโหลดคู่กัน · รูปไม่ใช่คลิป = ไม่มีปก', F.coverOf('https://s/reels/1-a.mp4') === 'https://s/reels/1-a-cover.jpg' && F.coverOf('https://s/reels/1-a.MP4?v=2') === 'https://s/reels/1-a-cover.jpg' && F.coverOf('https://s/a.jpg') === ''); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);

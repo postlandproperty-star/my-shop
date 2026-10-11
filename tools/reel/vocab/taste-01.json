@@ -1,8 +1,10 @@
 {
-  "id": "taste-01",
+  "id": "taste-01", "host": "f",
   "title": "รสชาติ ภาษาอังกฤษพูดว่าไง?",
+  "hook": "รู้แค่ Spicy? มาดูอีก 5 รส",
+  "intro": "รสชาติอาหาร ภาษาอังกฤษพูดว่ายังไงบ้าง มาดูกันค่ะ",
+  "question": "ชอบรสไหนที่สุด คอมเมนต์บอกหน่อย",
   "scene": "at a busy Thai street food stall at night with warm string lights, she holds a small plate and a spoon, tasting different dishes",
-  "seconds": 12,
   "words": [
     ["Sweet", "สวีท", "หวาน", "she tastes and smiles happily"],
     ["Sour", "ซาว-เออะ", "เปรี้ยว", "she squints and puckers her lips"],
