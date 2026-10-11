@@ -16,6 +16,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import '../../lib/ai.js';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const FFMPEG = path.join(ROOT, 'node_modules/ffmpeg-static/ffmpeg');
@@ -28,7 +29,9 @@ fs.writeFileSync(path.join(OUT, 'spec.json'), JSON.stringify(spec, null, 1)); //
 // แถบความคืบหน้าในหลังบ้าน: ตั้ง JOB_ID + CONTENT_KEY แล้วสคริปต์บอกเว็บเอง (ไม่สำเร็จก็ทำต่อ)
 const JOB = process.env.JOB_ID || '', CK = process.env.CONTENT_KEY || (() => { try { return fs.readFileSync(path.join(process.env.HOME || '', '.config/sheetlab/content-key'), 'utf8').slice(0, 48).trim(); } catch (e) { return ''; } })(); let lastP = -1;
 async function progress(pct, note) { if (!JOB || !CK || pct === lastP) return; lastP = pct; try { await fetch('https://sheetlabth.com/api/content?action=factory_progress', { method: 'POST', headers: { 'x-content-key': CK, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: JOB, pct, note }) }); } catch (e) {} }
-const KEY = fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_tts_key'), 'utf8').trim();
+// เสียงผ่าน fal.ai (Gemini TTS เสียงชุดเดียวกับ Chirp 3 HD) เมื่อมี ~/.config/sheetlab/fal-key · ไม่มี = Google TTS เดิม
+try { process.env.FAL_KEY = process.env.FAL_KEY || fs.readFileSync(path.join(os.homedir(), '.config/sheetlab/fal-key'), 'utf8').trim(); } catch {}
+const KEY = (() => { try { return fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_tts_key'), 'utf8').trim(); } catch { return 'via-fal'; } })();
 const V = { th: ['th-TH', 'th-TH-Chirp3-HD-Kore'], q: ['en-US', 'en-US-Chirp3-HD-Kore'], r: ['en-AU', 'en-AU-Chirp3-HD-Puck'], n: ['en-US', 'en-US-Chirp3-HD-Charon'], m: ['en-GB', 'en-GB-Chirp3-HD-Fenrir'] };
 let chars = 0;
 const ff = (...a) => execFileSync(FFMPEG, ['-y', '-loglevel', 'error', ...a]);

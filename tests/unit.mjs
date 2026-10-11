@@ -125,4 +125,26 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const lst = C.normCard(JSON.stringify({ title: 'Phrasal Verbs with MAKE', items: [1, 2, 3, 4, 5].map((i) => ({ term: 'make up', meaning: 'invent', th: 'แต่งเรื่อง', example: i === 5 ? 'Please do not invent stories.' : 'Please don\'t make up stories.', emoji: '💡' })), caption_th: 'c' }), 'phrasal');
   const s1 = C.nextSlot([], Date.parse('2026-10-11T03:00:00Z')), s2 = C.nextSlot(['2026-10-11T05:00:00.000Z', '2026-10-11T13:00:00.000Z'], Date.parse('2026-10-11T03:00:00Z'));
   ok('🖼 การ์ดความรู้ลงเพจ: แบบเรื่องสั้น (4 คำไฮไลต์ ตรงกับ Top Tips) · แบบ 5 รายการ (ตัวอย่างต้องมีคำนั้นจริง) · แฮชแท็กสะอาด · ช่องโพสต์ 12:00/20:00 ไทยไม่ซ้ำ', pas && pas.tips.length === 4 && pas.hashtags.join(',') === 'english,TOEICtips' && bad1 === null && lst && lst.items.length === 4 && s1 === '2026-10-11T05:00:00.000Z' && s2 === '2026-10-12T05:00:00.000Z' && C.SERIES.length >= 8 && /never copied/.test(C.cardPrompt('linking', '')) && C.termRe('take after').test('She takes after her mum.') && C.termRe('make up').test('He made up a story') === false && C.termRe('look forward to').test('I am looking forward to it') && C.oneEmoji('👩‍👧') === '👩' && C.oneEmoji('') === '💡', JSON.stringify({ s1, s2, li: lst && lst.items.length })); }
+{ const A = await import('../lib/ai.js'); const calls = []; const had = process.env.FAL_KEY; process.env.FAL_KEY = 'test-key';
+  const orig = async (u, init) => { calls.push([String(u), init && init.body ? JSON.parse(init.body) : null]);
+    if (/openrouter/.test(u)) return new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":1}' }, finish_reason: 'stop' }] }), { status: 200 });
+    if (/fal\.run\/(fal-ai\/nano|openai\/gpt-image)/.test(u)) return new Response(JSON.stringify({ images: [{ url: 'https://f/x.png', content_type: 'image/png' }] }), { status: 200 });
+    if (/gemini-3\.1-flash-tts/.test(u)) return new Response(JSON.stringify({ audio: { url: 'https://f/a.mp3' } }), { status: 200 });
+    if (/eleven-v3/.test(u)) return new Response(JSON.stringify({ detail: 'voice not found' }), { status: 422 });
+    return new Response(Buffer.from('BYTES'), { status: 200 }); };
+  const g = await (await A.route(orig, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=x', { body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'hi' }, { inlineData: { mimeType: 'audio/webm', data: 'QQ==' } }] }], generationConfig: { responseMimeType: 'application/json', temperature: 0.2 } }) })).json();
+  const gc = calls[0][1];
+  const im = await (await A.route(orig, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=x', { body: JSON.stringify({ contents: [{ role: 'user', parts: [{ inlineData: { mimeType: 'image/png', data: 'QQ==' } }, { text: 'cover' }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '3:4' } } }) })).json();
+  const oi = await (await A.route(orig, 'https://api.openai.com/v1/images/generations', { body: JSON.stringify({ model: 'gpt-image-2', prompt: 'p', size: '1024x1536', quality: 'low' }) })).json();
+  const tt = await (await A.route(orig, 'https://texttospeech.googleapis.com/v1/text:synthesize?key=x', { body: JSON.stringify({ input: { ssml: '<speak>Hello <break/>there</speak>' }, voice: { languageCode: 'en-US', name: 'en-US-Chirp3-HD-Charon' }, audioConfig: { speakingRate: 0.85 } }) })).json();
+  const el = await A.route(orig, 'https://api.elevenlabs.io/v1/text-to-speech/J5M1BLQpOJ3qx2FU6EG0?output_format=mp3_44100_128', { body: JSON.stringify({ text: 'สวัสดีค่ะ', model_id: 'eleven_v3' }) });
+  const pass = await A.route(orig, 'https://api.stripe.com/v1/x', {});
+  const ttsCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].voice === 'Charon'), thCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].language_code === 'th-TH');
+  process.env.FAL_KEY = ''; const off = await A.route(orig, 'https://api.openai.com/v1/chat/completions', { body: '{}' }); if (had) process.env.FAL_KEY = had; else delete process.env.FAL_KEY;
+  ok('🔀 งาน AI ผ่าน fal: Gemini ข้อความ → OpenRouter (JSON · เสียงแนบ) ตอบรูปแบบ Gemini · รูป Gemini → nano-banana/edit · รูป OpenAI → gpt-image-2 · Google TTS → Gemini TTS เสียงเดิม · ElevenLabs เสียงใช้ไม่ได้ → เสียงไทย Gemini · อื่นๆ ไม่แตะ · ไม่มี FAL_KEY = เจ้าเดิม',
+    g.candidates[0].content.parts[0].text === '{"ok":1}' && gc.model === 'google/gemini-2.5-flash' && gc.response_format.type === 'json_object' && gc.messages[0].content[1].input_audio.format === 'webm'
+    && /nano-banana\/edit$/.test(calls.find((c) => /nano-banana/.test(c[0]))[0]) && im.candidates[0].content.parts[0].inlineData.data === Buffer.from('BYTES').toString('base64')
+    && calls.find((c) => /gpt-image-2$/.test(c[0]))[1].image_size.height === 1536 && oi.data[0].b64_json === Buffer.from('BYTES').toString('base64')
+    && !!ttsCall && ttsCall[1].prompt === 'Hello there' && !!ttsCall[1].style_instructions && tt.audioContent === Buffer.from('BYTES').toString('base64')
+    && el.status === 200 && !!thCall && pass === null && off === null, JSON.stringify({ g: gc && gc.model, n: calls.length })); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);

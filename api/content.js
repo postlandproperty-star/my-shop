@@ -13,6 +13,7 @@
 //   ?action=publish  (cron หรือแอดมิน) โพสต์ที่อนุมัติแล้วและถึงเวลา → ขึ้นเพจ Facebook
 //   ?action=publish&id=<uuid> (แอดมิน) โพสต์รายการเดียวทันที
 // key = header x-content-key ตรงกับ CONTENT_API_KEY บน Vercel (ใช้เฉพาะรูทีนอัตโนมัติ)
+import '../lib/ai.js'; // งาน AI ทั้งหมดผ่าน fal.ai (มี FAL_KEY)
 import { loadShop, loadLinks, verifyAdmin, sbPatch, stripe, piToSession, loadTestEmails } from '../lib/shop.js';
 import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';

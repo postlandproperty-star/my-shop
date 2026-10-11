@@ -8,13 +8,16 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
+import '../../lib/ai.js';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 const FFMPEG = path.join(ROOT, 'node_modules/ffmpeg-static/ffmpeg');
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const spec = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const OUT = path.join('/Volumes/PortableSSD/Sheetlab/Courses', spec.course, 'hook'); const W = path.join(OUT, 'work'); fs.mkdirSync(W, { recursive: true });
-const KEY = fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_tts_key'), 'utf8').trim();
+// เสียงผ่าน fal.ai (Gemini TTS เสียงชุดเดียวกับ Chirp 3 HD) เมื่อมี ~/.config/sheetlab/fal-key · ไม่มี = Google TTS เดิม
+try { process.env.FAL_KEY = process.env.FAL_KEY || fs.readFileSync(path.join(os.homedir(), '.config/sheetlab/fal-key'), 'utf8').trim(); } catch {}
+const KEY = (() => { try { return fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_tts_key'), 'utf8').trim(); } catch { return 'via-fal'; } })();
 const V = { q: ['en-US', 'en-US-Chirp3-HD-Kore'], r: ['en-AU', 'en-AU-Chirp3-HD-Puck'], n: ['en-US', 'en-US-Chirp3-HD-Charon'] };
 const ff = (...a) => execFileSync(FFMPEG, ['-y', '-loglevel', 'error', ...a]);
 function probe(f) { try { execFileSync(FFMPEG, ['-i', f], { stdio: 'pipe' }); } catch (e) { const m = String(e.stderr).match(/Duration: (\d+):(\d+):([\d.]+)/); if (m) return +m[1] * 3600 + +m[2] * 60 + +m[3]; } return 0; }
