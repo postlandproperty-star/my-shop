@@ -2809,7 +2809,7 @@ function shopView(){
       ${cardLink(`/api/checkout?card=1&p=${encodeURIComponent(p.slug)}${on?'&bump=1':''}${S.src?'&c='+encodeURIComponent(S.src):''}${codeQ()}`)}`;})()}
       ${cartBtn(p)}
       ${payLogos(1)}${paySafe()}
-      <p class="fine" style="text-align:center;margin-top:6px">จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้</p>
+      <p class="fine" style="text-align:center;margin-top:6px">${kind==='course'?'จ่ายแล้วเข้าเรียนได้ทันทีด้วยอีเมลนี้':'จ่ายแล้วได้ลิงก์ดาวน์โหลดทันทีบนหน้านี้'}</p>
       ${D.settings.chatLink?`<a class="btn btn-line btn-block" style="margin-top:10px" href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชทถามก่อนซื้อ</a>`:''}
     </div>
     ${p.guarantee?`<div class="guar"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg><p>${esc(p.guarantee)}</p></div>`:''}
