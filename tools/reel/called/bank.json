@@ -1,0 +1,434 @@
+[
+ {
+  "id": "called-kitchen",
+  "title": "ของในครัว ภาษาอังกฤษเรียกว่าอะไร?",
+  "intro": "ของในครัว ภาษาอังกฤษเรียกว่าอะไร ลองทายนะคะ",
+  "question": "ทายถูกกี่ข้อ? คอมเมนต์บอกหน่อย",
+  "items": [
+   [
+    "Whisk",
+    "วิสค์",
+    "ตะกร้อตีไข่",
+    "Whisk the eggs until fluffy.",
+    "ตีไข่จนฟู",
+    "whisk eggs bowl"
+   ],
+   [
+    "Spatula",
+    "สแปช-ชู-ล่า",
+    "ตะหลิว",
+    "Flip the pancake with a spatula.",
+    "พลิกแพนเค้กด้วยตะหลิว",
+    "spatula pancake"
+   ],
+   [
+    "Colander",
+    "คอล-แลน-เดอร์",
+    "กระชอน",
+    "Drain the pasta in a colander.",
+    "สะเด็ดน้ำเส้นในกระชอน",
+    "colander pasta drain"
+   ],
+   [
+    "Peeler",
+    "พี-เลอร์",
+    "ที่ปอกเปลือก",
+    "Use a peeler for the carrots.",
+    "ใช้ที่ปอกเปลือกแครอท",
+    "peeling carrot"
+   ],
+   [
+    "Grater",
+    "เกร-เทอร์",
+    "ที่ขูด",
+    "Grate the cheese with a grater.",
+    "ขูดชีสด้วยที่ขูด",
+    "grating cheese"
+   ],
+   [
+    "Rolling pin",
+    "โรล-ลิ่ง พิน",
+    "ไม้คลึงแป้ง",
+    "Flatten the dough with a rolling pin.",
+    "คลึงแป้งให้แบนด้วยไม้คลึง",
+    "rolling pin dough"
+   ],
+   [
+    "Kettle",
+    "เคท-เทิล",
+    "กาต้มน้ำ",
+    "The kettle is boiling.",
+    "กาน้ำเดือดแล้ว",
+    "kettle boiling water"
+   ],
+   [
+    "Cutting board",
+    "คัท-ทิ่ง บอร์ด",
+    "เขียง",
+    "Put the onion on the cutting board.",
+    "วางหัวหอมบนเขียง",
+    "cutting board vegetables"
+   ]
+  ]
+ },
+ {
+  "id": "called-office",
+  "title": "ของในออฟฟิศ ออกสอบ TOEIC",
+  "intro": "ของในออฟฟิศที่ออกสอบ TOEIC บ่อย ภาษาอังกฤษเรียกว่าอะไร ลองทายนะคะ",
+  "question": "ทายถูกกี่ข้อ? คอมเมนต์เลย",
+  "items": [
+   [
+    "Stapler",
+    "สเต-เพลอร์",
+    "ที่เย็บกระดาษ",
+    "The stapler is out of staples.",
+    "ลวดเย็บหมดแล้ว",
+    "stapler paper"
+   ],
+   [
+    "Sticky note",
+    "สติก-กี้ โนท",
+    "กระดาษโน้ตกาว",
+    "I left a sticky note on your desk.",
+    "ฉันแปะโน้ตไว้บนโต๊ะคุณ",
+    "sticky notes"
+   ],
+   [
+    "Highlighter",
+    "ไฮ-ไลท์-เตอร์",
+    "ปากกาเน้นข้อความ",
+    "Mark the key words with a highlighter.",
+    "ใช้ปากกาเน้นคำสำคัญ",
+    "highlighter marker"
+   ],
+   [
+    "Keyboard",
+    "คีย์-บอร์ด",
+    "คีย์บอร์ด แป้นพิมพ์",
+    "She is typing on the keyboard.",
+    "เธอกำลังพิมพ์บนคีย์บอร์ด",
+    "typing keyboard"
+   ],
+   [
+    "Printer",
+    "พริน-เทอร์",
+    "เครื่องพิมพ์",
+    "The printer is jammed again.",
+    "เครื่องพิมพ์กระดาษติดอีกแล้ว",
+    "office printer printing"
+   ],
+   [
+    "Calculator",
+    "แคล-คิว-เล-เทอร์",
+    "เครื่องคิดเลข",
+    "Check the total with a calculator.",
+    "เช็กยอดรวมด้วยเครื่องคิดเลข",
+    "calculator"
+   ],
+   [
+    "Whiteboard",
+    "ไวท์-บอร์ด",
+    "กระดานไวท์บอร์ด",
+    "He wrote the plan on the whiteboard.",
+    "เขาเขียนแผนบนไวท์บอร์ด",
+    "whiteboard writing"
+   ],
+   [
+    "Shredder",
+    "ชเรด-เดอร์",
+    "เครื่องทำลายเอกสาร",
+    "Put old documents in the shredder.",
+    "ใส่เอกสารเก่าในเครื่องทำลายเอกสาร",
+    "paper shredder"
+   ]
+  ]
+ },
+ {
+  "id": "called-home",
+  "title": "ของในบ้าน ภาษาอังกฤษเรียกว่าอะไร?",
+  "intro": "ของใช้ในบ้าน ภาษาอังกฤษเรียกว่าอะไร ลองทายดูนะคะ",
+  "question": "ทายถูกกี่ข้อ? คอมเมนต์บอกหน่อย",
+  "items": [
+   [
+    "Faucet",
+    "ฟอ-เซท",
+    "ก๊อกน้ำ",
+    "The faucet is dripping.",
+    "ก๊อกน้ำหยด",
+    "faucet water"
+   ],
+   [
+    "Doormat",
+    "ดอร์-แมท",
+    "พรมเช็ดเท้า",
+    "Wipe your feet on the doormat.",
+    "เช็ดเท้าบนพรมก่อนนะ",
+    "doormat"
+   ],
+   [
+    "Clothespin",
+    "โคลธส์-พิน",
+    "ไม้หนีบผ้า",
+    "Hang the shirt with clothespins.",
+    "ตากเสื้อด้วยไม้หนีบผ้า",
+    "clothespins laundry"
+   ],
+   [
+    "Hanger",
+    "แฮง-เกอร์",
+    "ไม้แขวนเสื้อ",
+    "Put your coat on a hanger.",
+    "แขวนเสื้อบนไม้แขวน",
+    "clothes hanger"
+   ],
+   [
+    "Broom",
+    "บรูม",
+    "ไม้กวาด",
+    "Sweep the floor with a broom.",
+    "กวาดพื้นด้วยไม้กวาด",
+    "broom sweeping"
+   ],
+   [
+    "Mop",
+    "มอพ",
+    "ไม้ถูพื้น",
+    "Mop the kitchen floor.",
+    "ถูพื้นห้องครัว",
+    "mop floor"
+   ],
+   [
+    "Light switch",
+    "ไลท์ สวิทช์",
+    "สวิตช์ไฟ",
+    "Turn off the light switch.",
+    "ปิดสวิตช์ไฟด้วย",
+    "light switch"
+   ],
+   [
+    "Curtain",
+    "เคอร์-เทิน",
+    "ผ้าม่าน",
+    "Open the curtains, please.",
+    "เปิดผ้าม่านหน่อย",
+    "opening curtains"
+   ]
+  ]
+ },
+ {
+  "id": "called-cafe",
+  "title": "ในร้านกาแฟ ภาษาอังกฤษเรียกว่าอะไร?",
+  "intro": "ของในร้านกาแฟ ภาษาอังกฤษเรียกว่าอะไรบ้าง ลองทายนะคะ",
+  "question": "ทายถูกกี่ข้อ? คอมเมนต์เลย",
+  "items": [
+   [
+    "Barista",
+    "บา-ริส-ต้า",
+    "คนชงกาแฟ",
+    "The barista made my latte.",
+    "บาริสต้าชงลาเต้ให้ฉัน",
+    "barista coffee"
+   ],
+   [
+    "Espresso",
+    "เอส-เพรส-โซ่",
+    "กาแฟเข้มข้นช็อตเล็ก",
+    "One espresso, please.",
+    "ขอเอสเพรสโซ่หนึ่งแก้ว",
+    "espresso shot"
+   ],
+   [
+    "Foam",
+    "โฟม",
+    "ฟองนม",
+    "I love the milk foam on top.",
+    "ชอบฟองนมด้านบน",
+    "milk foam latte art"
+   ],
+   [
+    "Straw",
+    "สตรอว์",
+    "หลอด",
+    "Can I have a paper straw?",
+    "ขอหลอดกระดาษได้ไหม",
+    "drinking straw"
+   ],
+   [
+    "Lid",
+    "ลิด",
+    "ฝาปิด",
+    "Put a lid on the cup.",
+    "ปิดฝาแก้วด้วย",
+    "coffee cup lid"
+   ],
+   [
+    "Saucer",
+    "ซอ-เซอร์",
+    "จานรองแก้ว",
+    "The cup sits on a saucer.",
+    "ถ้วยวางบนจานรอง",
+    "cup and saucer"
+   ],
+   [
+    "Croissant",
+    "ครัว-ซองต์",
+    "ครัวซองต์",
+    "I'll have a croissant too.",
+    "ขอครัวซองต์ด้วย",
+    "croissant"
+   ],
+   [
+    "Counter",
+    "เคาน์-เตอร์",
+    "เคาน์เตอร์",
+    "Please order at the counter.",
+    "กรุณาสั่งที่เคาน์เตอร์",
+    "cafe counter"
+   ]
+  ]
+ },
+ {
+  "id": "called-body",
+  "title": "อวัยวะ ภาษาอังกฤษเรียกว่าอะไร?",
+  "intro": "ส่วนต่างๆ ของร่างกาย ภาษาอังกฤษเรียกว่าอะไร ลองทายนะคะ",
+  "question": "ทายถูกกี่ข้อ? คอมเมนต์บอกหน่อย",
+  "items": [
+   [
+    "Eyebrow",
+    "อาย-บราว",
+    "คิ้ว",
+    "She raised her eyebrows.",
+    "เธอเลิกคิ้ว",
+    "eyebrow close up"
+   ],
+   [
+    "Eyelash",
+    "อาย-แลช",
+    "ขนตา",
+    "She has long eyelashes.",
+    "เธอมีขนตายาว",
+    "eyelashes close up"
+   ],
+   [
+    "Wrist",
+    "ริสท์",
+    "ข้อมือ",
+    "He wears a watch on his wrist.",
+    "เขาใส่นาฬิกาที่ข้อมือ",
+    "wrist watch"
+   ],
+   [
+    "Knuckle",
+    "นัค-เคิล",
+    "ข้อนิ้ว",
+    "He knocked with his knuckles.",
+    "เขาเคาะด้วยข้อนิ้ว",
+    "knocking door"
+   ],
+   [
+    "Elbow",
+    "เอล-โบว์",
+    "ข้อศอก",
+    "Don't put your elbows on the table.",
+    "อย่าเท้าศอกบนโต๊ะ",
+    "elbow"
+   ],
+   [
+    "Ankle",
+    "แอง-เคิล",
+    "ข้อเท้า",
+    "I twisted my ankle.",
+    "ข้อเท้าพลิก",
+    "ankle"
+   ],
+   [
+    "Heel",
+    "ฮีล",
+    "ส้นเท้า",
+    "My heel hurts after running.",
+    "ส้นเท้าเจ็บหลังวิ่ง",
+    "heel foot"
+   ],
+   [
+    "Palm",
+    "พาล์ม",
+    "ฝ่ามือ",
+    "Open your palm.",
+    "แบมือออก",
+    "open palm hand"
+   ]
+  ]
+ },
+ {
+  "id": "called-street",
+  "title": "บนถนน ภาษาอังกฤษเรียกว่าอะไร?",
+  "intro": "ของที่เห็นบนถนนทุกวัน ภาษาอังกฤษเรียกว่าอะไร ลองทายนะคะ",
+  "question": "ทายถูกกี่ข้อ? คอมเมนต์เลย",
+  "items": [
+   [
+    "Crosswalk",
+    "ครอส-วอล์ค",
+    "ทางม้าลาย",
+    "Cross the road at the crosswalk.",
+    "ข้ามถนนตรงทางม้าลาย",
+    "crosswalk people"
+   ],
+   [
+    "Traffic light",
+    "แทรฟ-ฟิค ไลท์",
+    "ไฟจราจร",
+    "Stop at the traffic light.",
+    "หยุดที่ไฟแดง",
+    "traffic light"
+   ],
+   [
+    "Sidewalk",
+    "ไซด์-วอล์ค",
+    "ทางเท้า",
+    "Walk on the sidewalk.",
+    "เดินบนทางเท้า",
+    "sidewalk walking"
+   ],
+   [
+    "Streetlight",
+    "สตรีท-ไลท์",
+    "ไฟถนน",
+    "The streetlights turn on at night.",
+    "ไฟถนนเปิดตอนกลางคืน",
+    "street lamp night"
+   ],
+   [
+    "Bus stop",
+    "บัส สต็อป",
+    "ป้ายรถเมล์",
+    "I'll wait at the bus stop.",
+    "ฉันจะรอที่ป้ายรถเมล์",
+    "bus stop"
+   ],
+   [
+    "Roundabout",
+    "ราวด์-อะ-เบาท์",
+    "วงเวียน",
+    "Turn left at the roundabout.",
+    "เลี้ยวซ้ายที่วงเวียน",
+    "roundabout traffic"
+   ],
+   [
+    "Overpass",
+    "โอ-เวอร์-พาส",
+    "สะพานลอย",
+    "Take the overpass to cross.",
+    "ขึ้นสะพานลอยเพื่อข้าม",
+    "pedestrian bridge"
+   ],
+   [
+    "Parking lot",
+    "พาร์-คิ่ง ล็อท",
+    "ลานจอดรถ",
+    "The parking lot is full.",
+    "ลานจอดรถเต็มแล้ว",
+    "parking lot cars"
+   ]
+  ]
+ }
+]

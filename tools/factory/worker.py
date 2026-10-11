@@ -161,6 +161,8 @@ def main():
         except Exception: pass
         try: subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reel', 'vocab.py'), 'daily'], capture_output=True, timeout=1500)  # คลิปคำศัพท์ AI วันละ 1 คลิป (ทำแล้ววันนี้ = ข้ามเอง)
         except Exception: pass
+        try: subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reel', 'called.py'), 'daily'], capture_output=True, timeout=1500)  # คลิป What is this called? วิดีโอฟรี Pixabay วันละ 2 คลิป (12:00/21:00) ทำทีละคลิปต่อรอบ
+        except Exception: pass
         a.cmd = 'queue'
     if a.cmd == 'thumbs':  # รูปย่อปกจริง (หน้า 1 ของ PDF) ให้หน้าพิมพ์ของแม่ · ทำเฉพาะเล่มที่ยังไม่มี/ไฟล์เปลี่ยน
         print(json.dumps(thumbs(int(a.args[0]) if a.args else 40), ensure_ascii=False)); return

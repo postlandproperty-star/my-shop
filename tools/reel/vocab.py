@@ -315,6 +315,12 @@ def new_topic(used, g):
     return t
 
 
+def threads_text(cap):
+    """Threads รับแท็กหัวข้อได้โพสต์ละ 1 แท็ก และไม่เกิน 500 ตัวอักษร: เก็บแฮชแท็กแรกไว้อันเดียว"""
+    tags = re.findall(r'#\S+', cap); body = re.sub(r'\s*#\S+', '', cap).strip()
+    return (body + (' ' + tags[0] if tags else ''))[:490]
+
+
 def daily(dry=False):
     now = datetime.datetime.utcnow() + datetime.timedelta(hours=7); today = now.strftime('%Y-%m-%d')
     st = json.load(open(STATE)) if os.path.exists(STATE) else {'done': [], 'last': ''}
@@ -341,11 +347,11 @@ def daily(dry=False):
     cpath = up['public_url'].split('/product-images/')[1].replace('.mp4', '-cover.jpg')
     put(shop('upload_sign', {'name': 'cover.jpg', 'type': 'image/jpeg', 'overwrite': cpath})['upload_url'], info['cover'], 'image/jpeg')
     at = (now.replace(hour=19, minute=0, second=0, microsecond=0) if now.hour < 18 else (now + datetime.timedelta(days=1)).replace(hour=19, minute=0, second=0, microsecond=0)) - datetime.timedelta(hours=7)
-    cap = spec.get('caption') or f'{spec["title"]} 🗣️\n{spec.get("question") or "คำไหนใช้บ่อยที่สุด คอมเมนต์บอกหน่อย"} 👇\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #SheetLab'
+    cap = spec.get('caption') or f'{spec["title"]} 🗣️\n{spec.get("question") or "คำไหนใช้บ่อยที่สุด คอมเมนต์บอกหน่อย"} 👇\n🤖 คลิปนี้สร้างด้วย AI\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #SheetLab'
     # ลงทุกช่องทาง (คุณแดน 12 ต.ค. 69): เพจ Facebook (ระบบส่งต่อ Instagram Reels เอง) + Threads
     note = f'คลิป Reels คำศัพท์ AI | {spec["id"]} | ครู{"ผู้ชาย" if spec.get("host") == "m" else "ผู้หญิง"} | {info["seconds"]} วิ | fal ~15 บาท'
     row = {'text': cap, 'video_url': up['public_url'], 'kind': 'reel', 'source': 'clip', 'scheduled_at': at.strftime('%Y-%m-%dT%H:%M:%SZ'), 'notes': note}
-    r = shop('drafts', {'posts': [row, {**row, 'channel': 'threads', 'text': cap[:490]}]})
+    r = shop('drafts', {'posts': [row, {**row, 'channel': 'threads', 'text': threads_text(cap)}]})
     st['done'].append(spec['id']); st['last'] = today; json.dump(st, open(STATE, 'w'), ensure_ascii=False)
     print(json.dumps({'ok': r.get('ok'), 'id': spec['id'], 'at': at.isoformat(), 'seconds': info['seconds']}, ensure_ascii=False))
 

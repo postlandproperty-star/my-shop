@@ -1129,9 +1129,10 @@ export default async function handler(req, res) {
       const rd = cfgField(cfgD, 'clip', 'reels_day');
       if (rd != null && rows.some((r) => r.kind === 'reel')) {
         const b = new Date(Date.now() + 7 * 3600e3); const dayStart = new Date(Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - 7 * 3600e3).toISOString();
-        const today = await sb(`posts?kind=eq.reel&created_at=gte.${dayStart}&select=id`);
+        // นับเป็นคลิป (โพสต์เพจ) · แถว Threads ของคลิปเดียวกันไม่นับซ้ำ
+        const today = await sb(`posts?kind=eq.reel&created_at=gte.${dayStart}${hasCh ? '&or=(channel.is.null,channel.neq.threads)' : ''}&select=id`);
         const room = Math.max(0, Math.round(Number(rd) || 0) - today.length); let keep = 0;
-        for (let i = 0; i < rows.length; i++) if (rows[i].kind === 'reel') { if (keep >= room) { rows.splice(i, 1); i--; } else keep++; }
+        for (let i = 0; i < rows.length; i++) if (rows[i].kind === 'reel' && rows[i].channel !== 'threads') { if (keep >= room) { rows.splice(i, 1); i--; } else keep++; }
         if (!rows.length) return res.status(429).json({ ok: false, error: `คลิปวันนี้ครบ ${rd} คลิปตามตั้งค่าของคุณแดนแล้ว` });
       }
       for (const r of rows) r.image_url = await cacheImage(r.image_url);

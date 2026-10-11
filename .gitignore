@@ -9,3 +9,5 @@ tools/reel/.vocab_work/
 tools/reel/vocab/*.mp4
 tools/reel/vocab/*-cover.jpg
 tools/reel/vocab/state.json
+tools/reel/.called_work/
+tools/reel/called/state.json
