@@ -30,6 +30,24 @@ BASE = 'https://sheetlabth.com/api/content'
 LOCK = '/Volumes/PortableSSD/Sheetlab/_factory/.running'  # กำลังผลิต (แอป Mac / หน้าโรงงานบนเว็บแสดงสถานะ) · รอบถัดไปไม่ผลิตซ้อน
 
 
+def thumbs(limit=10):
+    # GET print_thumbs → โหลดปก PDF (1 หน้า) → pdftoppm เป็น JPEG กว้าง 240 → POST กลับ · ไม่สำเร็จก็ข้าม รอบหน้าทำใหม่
+    import base64, tempfile
+    done, fail = 0, 0
+    try: need = api('print_thumbs').get('need', [])[:limit]
+    except Exception as e: return {'ok': False, 'error': str(e)[:120]}
+    for x in need:
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                pdf = os.path.join(d, 'c.pdf'); urllib.request.urlretrieve(x['url'], pdf)
+                subprocess.run(['/opt/homebrew/bin/pdftoppm', '-f', '1', '-l', '1', '-scale-to-x', '240', '-scale-to-y', '-1', '-jpeg', '-jpegopt', 'quality=80', pdf, os.path.join(d, 't')], check=True, capture_output=True, timeout=120)
+                jpg = [f for f in os.listdir(d) if f.endswith('.jpg')][0]
+                img = 'data:image/jpeg;base64,' + base64.b64encode(open(os.path.join(d, jpg), 'rb').read()).decode()
+                r = api('print_thumbs', {'id': x['id'], 'sha': x['sha'], 'image': img}); done += 1 if r.get('ok') else 0; fail += 0 if r.get('ok') else 1
+        except Exception: fail += 1
+    return {'ok': True, 'made': done, 'failed': fail, 'left': max(0, len(need) - done - fail)}
+
+
 def sync():
     # ส่งคลังหนังสือ + สถานะ SSD/กำลังผลิต ขึ้นหน้าโรงงานบนเว็บ (ไม่สำเร็จก็ไม่เป็นไร รอบหน้าส่งใหม่)
     try: subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'catalog.py'), '--sync'], capture_output=True, timeout=240)
@@ -137,7 +155,11 @@ def main():
             age = (time.time() - os.path.getmtime(LOCK)) / 60
             if age < 240: print(f'RUNNING {int(age)} นาที # รอบก่อนยังผลิตอยู่ จบรอบนี้'); return
             os.remove(LOCK); print(f'# ลบ .running ที่ค้าง ({int(age)} นาที)')
+        try: thumbs(5)  # รูปปกจริงของเล่มใหม่/ไฟล์เปลี่ยน (หน้าพิมพ์ของแม่) ทีละนิดทุกชั่วโมง
+        except Exception: pass
         a.cmd = 'queue'
+    if a.cmd == 'thumbs':  # รูปย่อปกจริง (หน้า 1 ของ PDF) ให้หน้าพิมพ์ของแม่ · ทำเฉพาะเล่มที่ยังไม่มี/ไฟล์เปลี่ยน
+        print(json.dumps(thumbs(int(a.args[0]) if a.args else 40), ensure_ascii=False)); return
     if a.cmd == 'shop':  # ชื่อสินค้าในร้าน (เช็คว่ามีเล่มนี้แล้วหรือยัง ก่อนผลิต)
         j = api('shop'); print('\n'.join(sorted(p.get('name', '') for p in ((j.get('shop') or {}).get('products') or j.get('products') or []) if p.get('status', 'published') == 'published'))); return
     if a.cmd == 'queue':

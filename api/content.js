@@ -2500,6 +2500,20 @@ ${books}`;
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
     }
+    if (action === 'print_thumbs') { // 🖼 รูปย่อปกจริง (หน้า 1 ของ PDF) สำหรับหน้าพิมพ์ของแม่ · GET = เล่มที่ยังไม่มีรูป/ไฟล์เปลี่ยน · POST {id, sha, image} = เก็บรูป · คีย์ร้าน (Mac ทำด้วย pdftoppm)
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const PR = await import('../lib/printpage.js'), { createHash } = await import('node:crypto'), st = (await sb('shop_state?id=eq.shopee_sheet&select=data'))?.[0]?.data || {};
+      const [shop, links, tm] = await Promise.all([loadShop(), loadLinks(), sb('shop_state?id=eq.print_thumbs&select=data').then((r) => r?.[0]?.data || {})]);
+      const sha = (id) => { const s = String(links[id] || '').trim(); return /^https:\/\//.test(s) ? createHash('sha1').update(s).digest('hex').slice(0, 20) : ''; };
+      if (req.method === 'GET') { const ids = [...new Set(PR.printList(shop).flatMap((x) => x.books.map((b) => b.id)))]; return res.status(200).json({ ok: true, need: ids.filter((id) => sha(id) && (!tm[id] || tm[id].sha !== sha(id))).map((id) => ({ id, sha: sha(id), url: `https://${req.headers.host}/api/content?action=print_pdf&k=${PR.printKey(st.token)}&p=${encodeURIComponent(id)}&part=cover` })) }); }
+      const b = await readBody(req), id = String(b.id || ''), m = String(b.image || '').match(/^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/);
+      if (!sha(id) || b.sha !== sha(id) || !m || m[1].length > 700000) return res.status(400).json({ ok: false, error: 'bad' });
+      const path = `print/thumb-${id}-${b.sha.slice(0, 8)}.jpg`, up = await fetch(`${SB_URL}/storage/v1/object/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' }, body: Buffer.from(m[1], 'base64') });
+      if (!up.ok) return res.status(502).json({ ok: false, error: 'upload ' + up.status });
+      tm[id] = { sha: b.sha, url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, at: new Date().toISOString() };
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'print_thumbs', data: tm, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, url: tm[id].url });
+    }
     if (action === 'fb_report') { // 📊 สรุปคอนเทนต์ Facebook: ผลของแต่ละโพสต์ที่ระบบโพสต์ (ไลก์/คอมเมนต์/แชร์/คนเห็น/วิว) + ภาพรวมเพจ · คีย์ร้าน/แอดมิน · อ่านอย่างเดียว
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
@@ -2825,8 +2839,9 @@ ${books}`;
           else return res.status(400).json({ ok: false });
           await putSO(d); return res.status(200).json({ ok: true });
         }
-        if (action === 'print') { const d = await loadSO(), { isTestOrder } = await import('../lib/shopeeorders.js'), all = Object.values(d.orders).filter((o) => !isTestOrder(o)).sort((x, y) => String(y.at).localeCompare(String(x.at))); res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          return res.status(200).send(PR.printPage(PR.printList(shop), pUrl, { todo: all.filter((o) => !o.done && Date.now() - Date.parse(o.at) < 45 * 864e5), done: all.filter((o) => o.done).sort((x, y) => String(y.done).localeCompare(String(x.done))).slice(0, 10) }, `/api/content?action=print_order&k=${PR.printKey(st.token)}`)); }
+        if (action === 'print') { const [links, tm] = await Promise.all([loadLinks().catch(() => ({})), sb('shop_state?id=eq.print_thumbs&select=data').then((r) => r?.[0]?.data || {}).catch(() => ({}))]), { createHash } = await import('node:crypto'), thumbs = {}; for (const [id, t] of Object.entries(tm)) { const src = String(links[id] || '').trim(); if (src && t && t.sha === createHash('sha1').update(src).digest('hex').slice(0, 20)) thumbs[id] = t.url; } // 🖼 รูปปกจริงจากหน้า 1 ของ PDF (ไม่ใช่รูปหน้าร้าน) ทำโดย Mac: worker.py thumbs
+          const d = await loadSO(), { isTestOrder } = await import('../lib/shopeeorders.js'), all = Object.values(d.orders).filter((o) => !isTestOrder(o)).sort((x, y) => String(y.at).localeCompare(String(x.at))); res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.status(200).send(PR.printPage(PR.printList(shop, thumbs), pUrl, { todo: all.filter((o) => !o.done && Date.now() - Date.parse(o.at) < 45 * 864e5), done: all.filter((o) => o.done).sort((x, y) => String(y.done).localeCompare(String(x.done))).slice(0, 10) }, `/api/content?action=print_order&k=${PR.printKey(st.token)}`)); }
         const id = String(req.query.p || ''), part = req.query.part === 'body' ? 'body' : 'cover', links = await loadLinks(), src = String(links[id] || '').trim();
         const prod = (shop.products || []).find((x) => x.id === id);
         if (!prod || !/^https:\/\//.test(src)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ยังไม่มีไฟล์ของเล่มนี้ แจ้งคุณแดน</p>'); }
