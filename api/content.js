@@ -2846,6 +2846,13 @@ ${books}`;
         const prod = (shop.products || []).find((x) => x.id === id);
         if (!prod || !/^https:\/\//.test(src)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ยังไม่มีไฟล์ของเล่มนี้ แจ้งคุณแดน</p>'); }
         const { createHash } = await import('node:crypto'), base = `print/${createHash('sha1').update(src).digest('hex').slice(0, 20)}`, pub = (n) => `${SB_URL}/storage/v1/object/public/product-images/${base}-${n}.pdf`;
+        if (part === 'cover' && PR.newCover(prod)) { // ปกใหม่ (ตามธีม) ยังไม่ได้ใส่ในไฟล์ PDF → พิมพ์ปกจากรูปปกใหม่เต็มหน้า A4 แทนหน้าแรกเก่า (คุณแดน 11 ต.ค. 69 "ขอปกแบบรูปแก้แล้ว ไม่เอารูปเก่า")
+          const nc = PR.newCover(prod), cpath = `${base}-cover-${createHash('sha1').update(nc).digest('hex').slice(0, 8)}.pdf`, cpub = `${SB_URL}/storage/v1/object/public/product-images/${cpath}`;
+          const h2 = await fetch(cpub, { method: 'HEAD' }).catch(() => null); if (h2 && h2.ok) return res.redirect(302, cpub);
+          try { const ir = await fetch(nc); if (!ir.ok) throw new Error('โหลดรูปปกไม่ได้ ' + ir.status); const bytes = await PR.imagePdf(Buffer.from(await ir.arrayBuffer()));
+            const u = await fetch(`${SB_URL}/storage/v1/object/product-images/${cpath}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/pdf', 'x-upsert': 'true' }, body: bytes }); if (!u.ok) throw new Error('อัปโหลดไม่ได้ ' + u.status);
+            return res.redirect(302, cpub); } catch (e) { console.error('print new cover', e); } // ทำไม่ได้ ใช้หน้าแรกของไฟล์แทน
+        }
         const head = await fetch(pub(part), { method: 'HEAD' }).catch(() => null);
         if (head && head.ok) return res.redirect(302, pub(part));
         try {
