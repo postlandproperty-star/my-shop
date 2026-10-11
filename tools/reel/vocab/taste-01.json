@@ -1,0 +1,14 @@
+{
+  "id": "taste-01",
+  "title": "รสชาติ ภาษาอังกฤษพูดว่าไง?",
+  "scene": "at a busy Thai street food stall at night with warm string lights, she holds a small plate and a spoon, tasting different dishes",
+  "seconds": 12,
+  "words": [
+    ["Sweet", "สวีท", "หวาน", "she tastes and smiles happily"],
+    ["Sour", "ซาว-เออะ", "เปรี้ยว", "she squints and puckers her lips"],
+    ["Salty", "ซอล-ที่", "เค็ม", "she raises her eyebrows"],
+    ["Bitter", "บิท-เทอะ", "ขม", "she grimaces a little"],
+    ["Spicy", "สไป-ซี่", "เผ็ด", "she fans her mouth with her hand"],
+    ["Bland", "แบลนด์", "จืด", "she shrugs with a flat face"]
+  ]
+}
