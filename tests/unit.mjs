@@ -139,12 +139,12 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const tt = await (await A.route(orig, 'https://texttospeech.googleapis.com/v1/text:synthesize?key=x', { body: JSON.stringify({ input: { ssml: '<speak>Hello <break/>there</speak>' }, voice: { languageCode: 'en-US', name: 'en-US-Chirp3-HD-Charon' }, audioConfig: { speakingRate: 0.85 } }) })).json();
   const el = await A.route(orig, 'https://api.elevenlabs.io/v1/text-to-speech/J5M1BLQpOJ3qx2FU6EG0?output_format=mp3_44100_128', { body: JSON.stringify({ text: 'สวัสดีค่ะ', model_id: 'eleven_v3' }) });
   const pass = await A.route(orig, 'https://api.stripe.com/v1/x', {});
-  const ttsCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].voice === 'Charon'), thCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].language_code === 'th-TH');
+  const ttsCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].voice === 'Charon'), thCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].language_code === 'Thai (Thailand)');
   process.env.FAL_KEY = ''; const off = await A.route(orig, 'https://api.openai.com/v1/chat/completions', { body: '{}' }); if (had) process.env.FAL_KEY = had; else delete process.env.FAL_KEY;
   ok('🔀 งาน AI ผ่าน fal: Gemini ข้อความ → OpenRouter (JSON · เสียงแนบ) ตอบรูปแบบ Gemini · รูป Gemini → nano-banana/edit · รูป OpenAI → gpt-image-2 · Google TTS → Gemini TTS เสียงเดิม · ElevenLabs เสียงใช้ไม่ได้ → เสียงไทย Gemini · อื่นๆ ไม่แตะ · ไม่มี FAL_KEY = เจ้าเดิม',
     g.candidates[0].content.parts[0].text === '{"ok":1}' && gc.model === 'google/gemini-2.5-flash' && gc.response_format.type === 'json_object' && gc.messages[0].content[1].input_audio.format === 'webm'
     && /nano-banana\/edit$/.test(calls.find((c) => /nano-banana/.test(c[0]))[0]) && im.candidates[0].content.parts[0].inlineData.data === Buffer.from('BYTES').toString('base64')
     && calls.find((c) => /gpt-image-2$/.test(c[0]))[1].image_size.height === 1536 && oi.data[0].b64_json === Buffer.from('BYTES').toString('base64')
     && !!ttsCall && ttsCall[1].prompt === 'Hello there' && !!ttsCall[1].style_instructions && tt.audioContent === Buffer.from('BYTES').toString('base64')
-    && el.status === 200 && !!thCall && pass === null && off === null, JSON.stringify({ g: gc && gc.model, n: calls.length })); }
+    && el.status === 200 && !!thCall && thCall[1].language_code === 'Thai (Thailand)' && ttsCall[1].language_code === 'English (US)' && A.ttsLang('en-GB') === 'English (UK)' && A.ttsLang('xx') === '' && pass === null && off === null, JSON.stringify({ g: gc && gc.model, n: calls.length })); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
