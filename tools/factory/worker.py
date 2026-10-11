@@ -157,6 +157,8 @@ def main():
             os.remove(LOCK); print(f'# ลบ .running ที่ค้าง ({int(age)} นาที)')
         try: thumbs(5)  # รูปปกจริงของเล่มใหม่/ไฟล์เปลี่ยน (หน้าพิมพ์ของแม่) ทีละนิดทุกชั่วโมง
         except Exception: pass
+        try: subprocess.run(['node', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'content', 'card.mjs'), 'auto'], capture_output=True, timeout=300, cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # 🖼 การ์ดความรู้ลงเพจ: เติมคิวให้มีรอโพสต์ 4 ใบ (วันละ 2)
+        except Exception: pass
         a.cmd = 'queue'
     if a.cmd == 'thumbs':  # รูปย่อปกจริง (หน้า 1 ของ PDF) ให้หน้าพิมพ์ของแม่ · ทำเฉพาะเล่มที่ยังไม่มี/ไฟล์เปลี่ยน
         print(json.dumps(thumbs(int(a.args[0]) if a.args else 40), ensure_ascii=False)); return

@@ -2500,6 +2500,36 @@ ${books}`;
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
     }
+    if (action === 'card') { // 🖼 การ์ดความรู้ลงเพจ (lib/cards.js) · คีย์ร้าน (Mac: tools/content/card.mjs) · op: status (นับคิว) / gen (AI แต่ง + ช่องเวลา + ลิงก์อัปโหลดรูป) / post (เข้าคิวเป็นฉบับร่างให้พี่ต้นตรวจ)
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const C = await import('../lib/cards.js'), b = await readBody(req), nowIso = new Date().toISOString();
+      const upcoming = await sb(`posts?notes=ilike.*card:*&status=in.(draft,approved,needs_owner)&scheduled_at=gte.${nowIso}&select=scheduled_at&limit=100`).catch(() => []);
+      const hist = (await sb('shop_state?id=eq.cards&select=data'))?.[0]?.data || { made: [] };
+      if (b.op === 'status') return res.status(200).json({ ok: true, upcoming: upcoming.length, slot: C.nextSlot(upcoming.map((x) => x.scheduled_at)), made: hist.made.length });
+      if (b.op === 'gen') {
+        const G = process.env.GEMINI_API_KEY; if (!G) return res.status(503).json({ ok: false, error: 'no gemini' });
+        const series = C.SERIES.some((x) => x.k === b.series) ? b.series : C.SERIES[hist.made.length % C.SERIES.length].k, avoid = hist.made.slice(-30).map((x) => x.title).join(' | ');
+        let card = null, err = '';
+        for (let t = 0; t < 2 && !card; t++) { try { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: C.cardPrompt(series, avoid) }] }], generationConfig: { temperature: 0.9, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } }) }); const j = await r.json().catch(() => ({})); card = C.normCard((j?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join(''), series); if (!card) err = j?.error?.message || 'รูปแบบไม่ถูก'; } catch (e) { err = e.message; } }
+        if (!card) return res.status(502).json({ ok: false, error: 'AI: ' + err });
+        hist.made = hist.made.concat({ title: card.title, series, at: nowIso }).slice(-300);
+        await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'cards', data: hist, updated_at: nowIso }], prefer: 'resolution=merge-duplicates,return=minimal' });
+        const path = `cards/${nowIso.slice(0, 10)}-${series}-${Math.random().toString(36).slice(2, 8)}.png`, r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', 'x-upsert': 'true' }, body: '{}' }), sj = await r.json().catch(() => ({}));
+        if (!r.ok || !sj.url) return res.status(500).json({ ok: false, error: 'signed url ' + r.status });
+        return res.status(200).json({ ok: true, card, slot: C.nextSlot(upcoming.map((x) => x.scheduled_at)), upload_url: `${SB_URL}/storage/v1${sj.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}` });
+      }
+      if (b.op === 'post') {
+        const card = b.card || {}, img = String(b.image_url || ''), slot = String(b.slot || '');
+        if (!img.startsWith(`${SB_URL}/storage/v1/object/public/product-images/cards/`) || isNaN(Date.parse(slot)) || !String(card.caption || '').trim()) return res.status(400).json({ ok: false, error: 'bad' });
+        if (upcoming.some((x) => new Date(x.scheduled_at).toISOString().slice(0, 13) === new Date(slot).toISOString().slice(0, 13))) return res.status(409).json({ ok: false, error: 'ช่องเวลานี้มีการ์ดแล้ว' });
+        const text = (String(card.caption).trim() + '\n\nฝึกฟรีต่อ 👉 sheetlabth.com/ielts\n\n' + (Array.isArray(card.hashtags) ? card.hashtags : []).slice(0, 6).map((h) => '#' + String(h).replace(/[^\p{L}\p{N}_]/gu, '')).filter((h) => h.length > 1).join(' ')).slice(0, 2000);
+        const row = { status: 'draft', source: 'designer', kind: 'tip', text, image_url: img, scheduled_at: new Date(slot).toISOString(), notes: `card:${String(card.series || '').slice(0, 20)} · ${String(card.title || '').slice(0, 60)}`, ...((await channelCol()) ? { channel: 'facebook' } : {}) };
+        const shopP = await loadShop().catch(() => ({ products: [] })), pol = checkPolicy(row, shopP); if (pol.level !== 'ok') { row.notes = [row.notes, policyMark(pol)].join('\n').slice(0, 1500); if (pol.level === 'block') row.status = 'needs_owner'; }
+        const ins = await sb('posts', { method: 'POST', body: [row], prefer: 'return=representation' });
+        return res.status(200).json({ ok: true, id: ins?.[0]?.id, status: row.status, scheduled_at: row.scheduled_at, policy: pol.level });
+      }
+      return res.status(400).json({ ok: false, error: 'op' });
+    }
     if (action === 'print_edition') { // 📄 ฉบับพิมพ์กระชับของเล่ม (หน้าพิมพ์ของแม่ใช้แทนไฟล์เต็ม · ลูกค้าแบบไฟล์ยังได้ไฟล์เต็ม) · คีย์ร้าน · op: sign (ลิงก์อัปโหลด + ลิงก์ QR ไฟล์เต็ม) / set / clear
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const b = await readBody(req), id = String(b.id || ''), shop = await loadShop(), prod = (shop.products || []).find((x) => x.id === id);
