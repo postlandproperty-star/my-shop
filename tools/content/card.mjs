@@ -5,6 +5,7 @@
 import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path'; import { chromium } from 'playwright-core'; import { termRe, oneEmoji } from '../../lib/cards.js';
 
 const args = process.argv.slice(2), dry = args.includes('--dry'), si = args.indexOf('--series'), series = si >= 0 ? args[si + 1] : '';
+const ji = args.indexOf('--json'), given = ji >= 0 ? JSON.parse(fs.readFileSync(args[ji + 1], 'utf8')) : null; // --json cards.json = เนื้อหาการ์ดที่เขียนไว้แล้ว [{series, ...card}] ไม่ต้องใช้ AI ร้าน
 const KEY = process.env.CONTENT_KEY || fs.readFileSync(path.join(os.homedir(), '.config/sheetlab/content-key'), 'utf8').slice(0, 48).trim();
 const API = 'https://sheetlabth.com/api/content?action=card';
 const call = async (body) => { const r = await fetch(API, { method: 'POST', headers: { 'x-content-key': KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const j = await r.json(); if (!j.ok) throw new Error(j.error || r.status); return j; };
@@ -62,13 +63,13 @@ export { passageHtml, listHtml, render, photo };
 if (import.meta.url === 'file://' + path.resolve(process.argv[1] || '')) await main();
 async function main() {
 const mode = args.find((a) => /^(auto|\d+)$/.test(a)) || '1';
-let n = Number(mode) || 0;
+let n = given ? given.length : Number(mode) || 0;
 if (mode === 'auto') { const st = await call({ op: 'status' }); n = Math.max(0, Math.min(2, 4 - st.upcoming)); if (!n) { console.log(JSON.stringify({ ok: true, upcoming: st.upcoming, made: 0 })); process.exit(0); } }
 const b = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true }), out = [];
 try {
   for (let i = 0; i < n; i++) {
     try {
-      const g = await call({ op: 'gen', ...(series ? { series } : {}) }), c = g.card;
+      const gc = given && given[i], g = await call({ op: 'gen', ...(gc ? { series: gc.series, card: gc } : series ? { series } : {}) }), c = g.card;
       const ph = c.type === 'passage' ? await photo(c.photo || c.title) : null;
       const { png, ok } = await render(b, c.type === 'list' ? listHtml(c) : passageHtml(c, ph), c.type);
       if (!ok) { out.push({ skip: 'ข้อความยาวเกินการ์ด', title: c.title }); continue; }

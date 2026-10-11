@@ -2507,10 +2507,11 @@ ${books}`;
       const hist = (await sb('shop_state?id=eq.cards&select=data'))?.[0]?.data || { made: [] };
       if (b.op === 'status') return res.status(200).json({ ok: true, upcoming: upcoming.length, slot: C.nextSlot(upcoming.map((x) => x.scheduled_at)), made: hist.made.length });
       if (b.op === 'gen') {
-        const G = process.env.GEMINI_API_KEY; if (!G) return res.status(503).json({ ok: false, error: 'no gemini' });
+        const G = process.env.GEMINI_API_KEY;
         const series = C.SERIES.some((x) => x.k === b.series) ? b.series : C.SERIES[hist.made.length % C.SERIES.length].k, avoid = hist.made.slice(-30).map((x) => x.title).join(' | ');
-        let card = null, err = '';
-        for (let t = 0; t < 2 && !card; t++) { try { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: C.cardPrompt(series, avoid) }] }], generationConfig: { temperature: 0.9, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } }) }); const j = await r.json().catch(() => ({})); card = C.normCard((j?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join(''), series); if (!card) err = j?.error?.message || 'รูปแบบไม่ถูก'; } catch (e) { err = e.message; } }
+        let card = b.card ? C.normCard(b.card, series) : null, err = b.card && !card ? 'การ์ดที่ส่งมารูปแบบไม่ถูก' : ''; // ส่งเนื้อหาการ์ดมาเองได้ (เช่น Claude เขียน ตอน AI ร้านใช้ไม่ได้)
+        if (b.card && !card) return res.status(400).json({ ok: false, error: err }); if (!card && !G) return res.status(503).json({ ok: false, error: 'no gemini' });
+        for (let t = 0; t < 2 && !card && !b.card; t++) { try { const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(G)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: C.cardPrompt(series, avoid) }] }], generationConfig: { temperature: 0.9, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } }) }); const j = await r.json().catch(() => ({})); card = C.normCard((j?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join(''), series); if (!card) err = j?.error?.message || 'รูปแบบไม่ถูก'; } catch (e) { err = e.message; } }
         if (!card) return res.status(502).json({ ok: false, error: 'AI: ' + err });
         hist.made = hist.made.concat({ title: card.title, series, at: nowIso }).slice(-300);
         await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'cards', data: hist, updated_at: nowIso }], prefer: 'resolution=merge-duplicates,return=minimal' });
