@@ -29,7 +29,8 @@ def font(kind, sz):
 def req(url, body=None, method=None, timeout=120):
     r = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None, method=method or ('POST' if body is not None else 'GET'),
                                headers={'Authorization': 'Key ' + KEY, 'Content-Type': 'application/json'})
-    return json.loads(urllib.request.urlopen(r, timeout=timeout).read())
+    try: return json.loads(urllib.request.urlopen(r, timeout=timeout).read())
+    except urllib.error.HTTPError as e: raise SystemExit(f'fal {e.code} {url.split("/requests/")[0]}: {e.read()[:400]}')
 
 
 def fal(endpoint, body, wait=900):
@@ -117,6 +118,33 @@ def title(text, fn):
     im.save(fn); return fn
 
 
+def thai_tts(text, fn, voice='Kore'):
+    """เสียงผู้บรรยายไทยนอกจอ (Gemini TTS บน fal ~2 บาท/1,000 ตัวอักษร) · คุณแดน 12 ต.ค. 69 อยากให้มีเสียงไทย"""
+    if os.path.exists(fn): return fn
+    last = None
+    for t in ([text] if isinstance(text, str) else text):  # ข้อความสั้นมากบางคำ Gemini TTS ไม่ยอมอ่าน → ลองประโยคถัดไป
+        try:
+            j = fal('fal-ai/gemini-3.1-flash-tts', {'prompt': t, 'voice': voice, 'language_code': 'Thai (Thailand)', 'output_format': 'mp3',
+                                                   'style_instructions': 'Speak Thai naturally like a friendly young teacher, bright, clear and fairly quick. No pause before or after.'})
+            download(j['audio']['url'], fn); return fn
+        except SystemExit as e: last = e
+    raise last
+
+
+def trim(fn):
+    """ตัดช่วงเงียบหัว-ท้ายของเสียงไทย จะได้ไม่ต้องเร่งเสียงให้เข้าช่องว่างระหว่างคำ"""
+    out = fn.replace('.mp3', '-trim.mp3')
+    if not os.path.exists(out):
+        cut = 'silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.03'
+        subprocess.run([FF, '-y', '-loglevel', 'error', '-i', fn, '-af', f'{cut},areverse,{cut},areverse', out], check=True)
+    return out
+
+
+def dur(fn):
+    m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', subprocess.run([FF, '-i', fn], capture_output=True, text=True).stderr)
+    return int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3]) if m else 0.0
+
+
 def main():
     spec = json.load(open(sys.argv[1], encoding='utf-8')); out = sys.argv[2]
     work = os.path.join(HERE, '.vocab_work', spec['id']); os.makedirs(work, exist_ok=True)
@@ -138,15 +166,46 @@ def main():
     spans = word_times(raw, words); ok = bool(spans)
     if not spans: spans, ok = speech_spans(raw, len(words), secs)
     ov = [title(spec['title'], os.path.join(work, 'title.png'))] + [card(w[0], w[1], w[2], os.path.join(work, f'c{i}.png')) for i, w in enumerate(words)]
-    # ตัวหนังสือแต่ละคำขึ้นตั้งแต่เริ่มพูดจนถึงคำถัดไป
-    starts = [max(0.0, s[0] - 0.15) for s in spans]; ends = starts[1:] + [float(secs)]
-    args = [FF, '-y', '-i', raw] + sum((['-i', p] for p in ov), [])
-    fc = f'[0:v]scale={W}:{H}:flags=lanczos,setsar=1[v0];[v0][1:v]overlay=0:0[v1]'
-    for i in range(len(words)):
+    # เสียงไทย: เปิดคลิปด้วยหัวข้อ (ภาพนิ่งเฟรมแรกระหว่างพูด) แล้วพูด "แปลว่า …" ต่อท้ายคำอังกฤษทุกคำ · ช่องว่างไม่พอ = ภาพหยุดรอสั้นๆ (ไม่เร่งเสียงจนทับคำถัดไป)
+    # "thai_voice": false = ไม่ใส่เสียงไทย
+    th = spec.get('thai_voice', True); voice = spec.get('thai_voice_name', 'Kore'); n = len(words)
+    cuts = [min(secs, spans[i][1] + 0.08) for i in range(n)]
+    pre, extra, th_clips, sp = 0.0, [0.0] * n, [], [1.0] * n
+    if th:
+        intro = trim(thai_tts(spec.get('intro') or spec['title'].replace('?', ''), os.path.join(work, 'th-intro.mp3'), voice))
+        pre = round(dur(intro) + 0.3, 2); th_clips.append((intro, 0.1, 1.0))
+        for i, w in enumerate(words):
+            f = trim(thai_tts([f'แปลว่า {w[2]}', f'คำนี้แปลว่า {w[2]}', f'{w[2]} ค่ะ', f'ก็คือ {w[2]}'], os.path.join(work, f'th-{i}.mp3'), voice)); d = dur(f)  # คำเดียวโดดๆ ติดตัวกรองของ Gemini TTS
+            room = (spans[i + 1][0] - 0.08 - cuts[i]) if i + 1 < n else (secs - cuts[i] - 0.3)
+            sp[i] = min(1.15, max(1.0, d / max(room, 0.01))); extra[i] = round(max(0.0, d / sp[i] - room), 2)
+            th_clips.append((f, None, sp[i], i))
+    shift = lambda t: pre + t + sum(extra[j] for j in range(n) if cuts[j] <= t - 1e-6)
+    total = pre + secs + sum(extra)
+    starts = [shift(max(0.0, s[0] - 0.15)) for s in spans]; ends = starts[1:] + [total]
+    args = [FF, '-y', '-i', raw] + sum((['-i', p] for p in ov), []) + sum((['-i', c[0]] for c in th_clips), [])
+    # ตัดวิดีโอเป็นช่วงละคำ หยุดภาพท้ายช่วงตามเวลาที่เสียงไทยต้องใช้ แล้วต่อกลับ
+    bounds = [0.0] + cuts + [float(secs)]; segs = []
+    fc = ''
+    for j in range(n + 1):
+        a0, a1 = bounds[j], bounds[j + 1]
+        if a1 - a0 < 0.02: continue
+        ex = extra[j] if j < n else 0.0; st = pre if j == 0 else 0.0
+        fc += (f'[0:v]trim=start={a0:.3f}:end={a1:.3f},setpts=PTS-STARTPTS,scale={W}:{H}:flags=lanczos,setsar=1,fps=24,'
+               f'tpad=start_duration={st}:start_mode=clone:stop_duration={ex}:stop_mode=clone[sv{j}];'
+               f'[0:a]atrim=start={a0:.3f}:end={a1:.3f},asetpts=PTS-STARTPTS,aformat=sample_rates=44100:channel_layouts=stereo,adelay={int(st * 1000)}|{int(st * 1000)},apad=pad_dur={ex}[sa{j}];')
+        segs.append(j)
+    fc += ''.join(f'[sv{j}][sa{j}]' for j in segs) + f'concat=n={len(segs)}:v=1:a=1[cv][ca];[cv][1:v]overlay=0:0[v1]'
+    for i in range(n):
         fc += f';[v{i + 1}][{i + 2}:v]overlay=0:0:enable=\'between(t,{starts[i]:.2f},{ends[i]:.2f})\'[v{i + 2}]'
-    args += ['-filter_complex', fc, '-map', f'[v{len(words) + 1}]', '-map', '0:a?', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p',
+    base = 1 + len(ov); mix = ['[ca]']
+    for k, c in enumerate(th_clips):
+        at = c[1] if c[1] is not None else pre + cuts[c[3]] + sum(extra[j] for j in range(c[3]))  # ทันทีหลังคำอังกฤษ (ช่วงภาพหยุดรอ)
+        d = int(at * 1000); fc += f';[{base + k}:a]aformat=sample_rates=44100:channel_layouts=stereo,atempo={c[2]:.3f},adelay={d}|{d},volume=1.5[t{k}]'; mix.append(f'[t{k}]')
+    fc += ';' + ''.join(mix) + f'amix=inputs={len(mix)}:normalize=0:duration=longest[aout]'
+    args += ['-filter_complex', fc, '-map', f'[v{n + 1}]', '-map', '[aout]', '-t', f'{total:.2f}', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p',
              '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out]
-    subprocess.run(args, check=True, capture_output=True)
+    r = subprocess.run(args, capture_output=True, text=True)
+    if r.returncode: raise SystemExit(r.stderr[-1500:])
     print(json.dumps({'out': out, 'spans': [[round(a, 2), round(b, 2)] for a, b in spans], 'timed_by_voice': ok}))
 
 
