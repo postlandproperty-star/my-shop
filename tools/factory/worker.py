@@ -138,6 +138,8 @@ def main():
             if age < 240: print(f'RUNNING {int(age)} นาที # รอบก่อนยังผลิตอยู่ จบรอบนี้'); return
             os.remove(LOCK); print(f'# ลบ .running ที่ค้าง ({int(age)} นาที)')
         a.cmd = 'queue'
+    if a.cmd == 'shop':  # ชื่อสินค้าในร้าน (เช็คว่ามีเล่มนี้แล้วหรือยัง ก่อนผลิต)
+        j = api('shop'); print('\n'.join(sorted(p.get('name', '') for p in ((j.get('shop') or {}).get('products') or j.get('products') or []) if p.get('status') == 'published'))); return
     if a.cmd == 'queue':
         j = api('factory', query='&status=queued&by=mac')
         sync()
