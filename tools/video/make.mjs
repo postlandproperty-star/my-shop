@@ -21,7 +21,7 @@ const KEY = fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_
 const V = { q: ['en-US', 'en-US-Chirp3-HD-Kore'], r: ['en-AU', 'en-AU-Chirp3-HD-Puck'], n: ['en-US', 'en-US-Chirp3-HD-Charon'] };
 let chars = 0;
 // แถบความคืบหน้าในหลังบ้าน: ตั้ง JOB_ID + CONTENT_KEY แล้วสคริปต์บอกเว็บเองทุกขั้น (ไม่สำเร็จก็ทำต่อ)
-const JOB = process.env.JOB_ID || '', CK = process.env.CONTENT_KEY || ''; let lastP = -1;
+const JOB = process.env.JOB_ID || '', CK = process.env.CONTENT_KEY || (() => { try { return fs.readFileSync(path.join(process.env.HOME || '', '.config/sheetlab/content-key'), 'utf8').slice(0, 48).trim(); } catch (e) { return ''; } })(); let lastP = -1;
 async function progress(pct, note) { if (!JOB || !CK || pct === lastP) return; lastP = pct; try { await fetch('https://sheetlabth.com/api/content?action=factory_progress', { method: 'POST', headers: { 'x-content-key': CK, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: JOB, pct, note }) }); } catch (e) {} }
 const ff = (...a) => execFileSync(FFMPEG, ['-y', '-loglevel', 'error', ...a]);
 function probe(f) { try { execFileSync(FFMPEG, ['-i', f], { stdio: 'pipe' }); } catch (e) { const m = String(e.stderr).match(/Duration: (\d+):(\d+):([\d.]+)/); if (m) return +m[1] * 3600 + +m[2] * 60 + +m[3]; } return 0; }

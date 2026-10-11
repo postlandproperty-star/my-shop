@@ -18,7 +18,14 @@
 # ไฟล์เสียงไม่อัปขึ้นร้าน (อยู่ Google Drive ตาม QR ในเล่ม)
 import json, os, io, sys, argparse, subprocess, urllib.request
 
-KEY = os.environ.get('CONTENT_KEY', '')
+def _key():
+    # คีย์ร้าน: ตัวแปร CONTENT_KEY หรืออ่านเองจาก ~/.config/sheetlab/content-key (48 ตัวแรก) · งานโรงงานจึงรันคำสั่งสั้นๆ ไม่ต้องมี KEY=$(...) ที่ต้องกดอนุญาตทุกรอบ (คุณแดน 11 ต.ค. 69)
+    k = os.environ.get('CONTENT_KEY', '')
+    if k: return k
+    try:
+        with open(os.path.expanduser('~/.config/sheetlab/content-key')) as f: return f.read()[:48].strip()
+    except Exception: return ''
+KEY = _key()
 BASE = 'https://sheetlabth.com/api/content'
 LOCK = '/Volumes/PortableSSD/Sheetlab/_factory/.running'  # กำลังผลิต (แอป Mac / หน้าโรงงานบนเว็บแสดงสถานะ) · รอบถัดไปไม่ผลิตซ้อน
 
@@ -123,6 +130,14 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument('cmd'); ap.add_argument('args', nargs='*')
     ap.add_argument('--cover'); ap.add_argument('--listing'); ap.add_argument('--sku', default=''); ap.add_argument('--audio-path', default=''); ap.add_argument('--audio-drive', default=''); ap.add_argument('--summary', default=''); ap.add_argument('--images', nargs='*', default=[])
     a = ap.parse_args()
+    if a.cmd == 'start':  # ข้อ 0 + 1.1 ของงานโรงงานในคำสั่งเดียว: SSD → กันรันซ้อน → คิว (แทนคำสั่ง bash ยาวที่ต้องกดอนุญาตทุกรอบ)
+        import time
+        if not os.path.isdir('/Volumes/PortableSSD/Sheetlab'): sync(); print('NOSSD # SSD ไม่ได้เสียบ แจ้งเว็บแล้ว จบรอบนี้'); return
+        if os.path.exists(LOCK):
+            age = (time.time() - os.path.getmtime(LOCK)) / 60
+            if age < 240: print(f'RUNNING {int(age)} นาที # รอบก่อนยังผลิตอยู่ จบรอบนี้'); return
+            os.remove(LOCK); print(f'# ลบ .running ที่ค้าง ({int(age)} นาที)')
+        a.cmd = 'queue'
     if a.cmd == 'queue':
         j = api('factory', query='&status=queued&by=mac')
         sync()
