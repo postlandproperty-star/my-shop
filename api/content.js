@@ -2500,6 +2500,21 @@ ${books}`;
       if (req.query.record) await recordHealth(h);
       return res.status(200).json(h);
     }
+    if (action === 'print_edition') { // 📄 ฉบับพิมพ์กระชับของเล่ม (หน้าพิมพ์ของแม่ใช้แทนไฟล์เต็ม · ลูกค้าแบบไฟล์ยังได้ไฟล์เต็ม) · คีย์ร้าน · op: sign (ลิงก์อัปโหลด + ลิงก์ QR ไฟล์เต็ม) / set / clear
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const b = await readBody(req), id = String(b.id || ''), shop = await loadShop(), prod = (shop.products || []).find((x) => x.id === id);
+      if (!prod) return res.status(404).json({ ok: false, error: 'ไม่พบสินค้า' });
+      const eds = (await sb('shop_state?id=eq.print_editions&select=data'))?.[0]?.data || {}, putE = () => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'print_editions', data: eds, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      if (b.op === 'sign') {
+        const path = `print/edition-${id.replace(/[^a-z0-9]/gi, '')}-${Date.now()}.pdf`, r = await fetch(`${SB_URL}/storage/v1/object/upload/sign/product-images/${path}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json', 'x-upsert': 'true' }, body: '{}' });
+        const j = await r.json().catch(() => ({})); if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: 'signed url ' + r.status });
+        const st = (await sb('shop_state?id=eq.shopee_sheet&select=data'))?.[0]?.data || {}, { bundleSig } = await import('../lib/shopeesheet.js'), PR = await import('../lib/printpage.js');
+        return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, full: `https://${req.headers.host}/api/content?action=shopee_dl&b=${encodeURIComponent(id)}&s=${bundleSig(st.token, id)}`, cover: `https://${req.headers.host}/api/content?action=print_pdf&k=${PR.printKey(st.token)}&p=${encodeURIComponent(id)}&part=cover`, body: `https://${req.headers.host}/api/content?action=print_pdf&k=${PR.printKey(st.token)}&p=${encodeURIComponent(id)}&part=body`, current: eds[id] || null });
+      }
+      if (b.op === 'set') { if (!String(b.url || '').startsWith(`${SB_URL}/storage/v1/object/public/product-images/print/edition-`)) return res.status(400).json({ ok: false, error: 'url' }); eds[id] = { url: String(b.url), pages: Number(b.pages) || 0, note: String(b.note || '').slice(0, 200), at: new Date().toISOString() }; await putE(); return res.status(200).json({ ok: true, edition: eds[id] }); }
+      if (b.op === 'clear') { delete eds[id]; await putE(); return res.status(200).json({ ok: true }); }
+      return res.status(400).json({ ok: false, error: 'op' });
+    }
     if (action === 'print_thumbs') { // 🖼 รูปย่อปกจริง (หน้า 1 ของ PDF) สำหรับหน้าพิมพ์ของแม่ · GET = เล่มที่ยังไม่มีรูป/ไฟล์เปลี่ยน · POST {id, sha, image} = เก็บรูป · คีย์ร้าน (Mac ทำด้วย pdftoppm)
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const PR = await import('../lib/printpage.js'), { createHash } = await import('node:crypto'), st = (await sb('shop_state?id=eq.shopee_sheet&select=data'))?.[0]?.data || {};
@@ -2841,8 +2856,8 @@ ${books}`;
         }
         if (action === 'print') { const [links, tm] = await Promise.all([loadLinks().catch(() => ({})), sb('shop_state?id=eq.print_thumbs&select=data').then((r) => r?.[0]?.data || {}).catch(() => ({}))]), { createHash } = await import('node:crypto'), thumbs = {}; for (const [id, t] of Object.entries(tm)) { const src = String(links[id] || '').trim(); if (src && t && t.sha === createHash('sha1').update(src).digest('hex').slice(0, 20)) thumbs[id] = t.url; } // 🖼 รูปปกจริงจากหน้า 1 ของ PDF (ไม่ใช่รูปหน้าร้าน) ทำโดย Mac: worker.py thumbs
           const d = await loadSO(), { isTestOrder } = await import('../lib/shopeeorders.js'), all = Object.values(d.orders).filter((o) => !isTestOrder(o)).sort((x, y) => String(y.at).localeCompare(String(x.at))); res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          return res.status(200).send(PR.printPage(PR.printList(shop, thumbs), pUrl, { todo: all.filter((o) => !o.done && Date.now() - Date.parse(o.at) < 45 * 864e5), done: all.filter((o) => o.done).sort((x, y) => String(y.done).localeCompare(String(x.done))).slice(0, 10) }, `/api/content?action=print_order&k=${PR.printKey(st.token)}`)); }
-        const id = String(req.query.p || ''), part = req.query.part === 'body' ? 'body' : 'cover', links = await loadLinks(), src = String(links[id] || '').trim();
+          const eds = (await sb('shop_state?id=eq.print_editions&select=data').catch(() => []))?.[0]?.data || {}; return res.status(200).send(PR.printPage(PR.printList(shop, thumbs, eds), pUrl, { todo: all.filter((o) => !o.done && Date.now() - Date.parse(o.at) < 45 * 864e5), done: all.filter((o) => o.done).sort((x, y) => String(y.done).localeCompare(String(x.done))).slice(0, 10) }, `/api/content?action=print_order&k=${PR.printKey(st.token)}`)); }
+        const id = String(req.query.p || ''), part = req.query.part === 'body' ? 'body' : 'cover', links = await loadLinks(), eds = (await sb('shop_state?id=eq.print_editions&select=data').catch(() => []))?.[0]?.data || {}, src = String(eds[id]?.url || links[id] || '').trim(); // ฉบับพิมพ์กระชับ (ถ้ามี) แทนไฟล์เต็มของลูกค้า
         const prod = (shop.products || []).find((x) => x.id === id);
         if (!prod || !/^https:\/\//.test(src)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ยังไม่มีไฟล์ของเล่มนี้ แจ้งคุณแดน</p>'); }
         const { createHash } = await import('node:crypto'), base = `print/${createHash('sha1').update(src).digest('hex').slice(0, 20)}`, pub = (n) => `${SB_URL}/storage/v1/object/public/product-images/${base}-${n}.pdf`;
