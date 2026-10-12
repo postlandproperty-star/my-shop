@@ -2679,8 +2679,14 @@ ${books}`;
     if (action === 'audio_lib') { // 🎧 รายชื่อไฟล์เสียงต่อเล่ม (Mac อัปโหลดเข้า R2 แล้วส่งมา) → หน้าเล่นเสียง /audio/<SKU> · GET = รายการเล่ม · POST {book} = เพิ่ม/แทนเล่มนั้น
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const rows = await sb('shop_state?id=eq.audio_lib&select=data'); const D = rows?.[0]?.data || { books: {} }; D.books = D.books || {};
+      if (req.method !== 'POST' && req.query.products) { // เล่มที่มีไฟล์เสียง (ให้ Mac หาโฟลเดอร์แล้วอัปขึ้น R2)
+        const shop = await loadShop(); const A = /แทร็ก|mp3|🎧|เสียงอ่าน/i;
+        const list = (shop.products || []).filter((p) => p.type !== 'bundle' && !Array.isArray(p.items) && p.sku && (p.audioDrive || p.audio === true || A.test([p.name, p.specs, p.features].join(' ')))).map((p) => ({ sku: p.sku, name: p.name, status: p.status, drive: p.audioDrive || '', cover: p.bookCover || (p.images || [])[0] || '', toc: String(p.toc || '').slice(0, 4000) }));
+        return res.status(200).json({ ok: true, products: list });
+      }
       if (req.method !== 'POST') return res.status(200).json({ ok: true, books: Object.fromEntries(Object.entries(D.books).map(([k, v]) => [k, { title: v.title, tracks: (v.tracks || []).length, at: v.at, base: v.base }])) });
       const b = (await readBody(req)).book || {}; const sku = String(b.sku || '').toUpperCase();
+      if (Array.isArray(b.files) && !b.tracks) { const AP = await import('../lib/audioPlayer.js'); b.tracks = AP.buildBook({ sku, base: b.base, files: b.files.map((x) => String(x.f || x)), secs: Object.fromEntries(b.files.map((x) => [String(x.f || x), Number(x.sec) || 0])) }).tracks; } // ชื่อแทร็กไทยคิดที่เซิร์ฟเวอร์ (ตัวเดียวกับหน้าเล่นเสียง)
       if (!/^SL-[A-Z0-9-]{2,12}$/.test(sku) || !/^https:\/\//.test(String(b.base || '')) || !Array.isArray(b.tracks) || !b.tracks.length) return res.status(400).json({ ok: false, error: 'ต้องมี sku, base (https), tracks' });
       const T = (s, n) => String(s ?? '').slice(0, n);
       D.books[sku] = { sku, title: T(b.title, 200), cover: /^https:\/\//.test(String(b.cover || '')) ? T(b.cover, 500) : '', base: T(b.base, 300).replace(/\/$/, ''),
