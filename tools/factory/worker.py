@@ -73,6 +73,8 @@ def to_drive(src, folder, name):
     # คัดลอกไฟล์เข้า Google Drive ในเครื่อง แล้วรอจน Drive ให้ id จริง (สูงสุด 3 นาที) → ลิงก์ /view หรือ '' ถ้าไม่ได้
     import shutil, time
     gd = os.path.join(os.path.expanduser('~/Library/CloudStorage/GoogleDrive-postland.property@gmail.com/My Drive/Sheetlab'), folder)
+    # ไฟล์ซ่อน ._xxx ของ macOS บน SSD (4KB) เคยถูกหยิบแทนวิดีโอจริง 36 บท (12 ต.ค. 69) → ไม่รับไฟล์เล็กผิดปกติ
+    if os.path.basename(src).startswith('.') or os.path.getsize(src) < 100000: raise SystemExit(f'ไฟล์ผิดปกติ ไม่ส่งขึ้น Drive: {src} ({os.path.getsize(src)} ไบต์)')
     os.makedirs(gd, exist_ok=True); dst = os.path.join(gd, name); shutil.copyfile(src, dst)
     for _ in range(36):
         try: fid = subprocess.run(['xattr', '-p', 'com.google.drivefs.item-id#S', dst], capture_output=True, text=True).stdout.strip()
@@ -203,7 +205,7 @@ def main():
         unlock()
     elif a.cmd == 'done-video':
         job, d = a.args[0], os.path.expanduser(a.args[1])
-        mp4 = next((os.path.join(d, f) for f in os.listdir(d) if f.endswith('.mp4')), None)
+        mp4 = next((os.path.join(d, f) for f in sorted(os.listdir(d)) if f.endswith('.mp4') and not f.startswith('.') and os.path.getsize(os.path.join(d, f)) > 100000), None)
         if not mp4: sys.exit('ไม่พบไฟล์ .mp4')
         yt = json.load(open(os.path.join(d, 'yt.json'), encoding='utf-8')) if os.path.exists(os.path.join(d, 'yt.json')) else {}
         api('factory_progress', {'id': job, 'pct': 92, 'note': 'คัดลอกคลิปเข้า Google Drive'})
@@ -233,7 +235,7 @@ def main():
         unlock()
     elif a.cmd == 'done-lesson':
         job, d = a.args[0], os.path.expanduser(a.args[1])
-        mp4 = next((os.path.join(d, f) for f in sorted(os.listdir(d)) if f.endswith('.mp4')), None)
+        mp4 = next((os.path.join(d, f) for f in sorted(os.listdir(d)) if f.endswith('.mp4') and not f.startswith('.') and os.path.getsize(os.path.join(d, f)) > 100000), None)
         if not mp4: sys.exit('ไม่พบไฟล์ .mp4')
         sp = os.path.join(d, 'spec.json'); spec = json.load(open(sp, encoding='utf-8')) if os.path.exists(sp) else {}
         info = {'lesson_no': spec.get('n'), 'lesson_title': spec.get('title'), 'course_slug': spec.get('course')}
