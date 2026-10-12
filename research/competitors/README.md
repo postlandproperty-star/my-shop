@@ -1,0 +1,21 @@
+# คู่แข่ง: หนังสือ/ชีทเรียน ไทย + Amazon KDP (เก็บข้อมูล 12 ต.ค. 2026)
+
+ข้อมูลดิบสำหรับแชทที่จะพัฒนาสินค้าต่อ อ่านไฟล์ `.md` เพื่อดูสรุปและโอกาส ใช้ไฟล์ `.csv` ถ้าจะกรอง/เทียบตัวเลข
+
+| ไฟล์ | ตลาด |
+|---|---|
+| `th-kp-exam.md` / `.csv` | ข้อสอบ ก.พ. ภาค ก (และท้องถิ่น/ตำรวจ/ครู) ในไทย |
+| `th-english-learning.md` / `.csv` | ชีท/ebook/คอร์สภาษาอังกฤษภาษาไทย (TOEIC, IELTS, อังกฤษทำงาน, phonics เด็ก) |
+| `us-amazon-kdp.md` / `.csv` | Amazon KDP อเมริกา (แบบฝึกเด็ก, ESL, TOEIC/IELTS, เล่มตามเทศกาล) + กฎ KDP |
+
+CSV ทุกไฟล์ใช้หัวคอลัมน์เดียวกัน รวมกันได้เลย:
+`market,segment,name,type,platform,url,price,currency,format,pages,covers,rating,reviews,sold,strengths,weaknesses,gap,seen_date`
+
+ข้อควรรู้
+- ตัวเลขยอดขาย/รีวิว/ราคา คือที่เห็นตามวันที่ใน `seen_date` เปลี่ยนได้ ช่องที่หาไม่เจอใส่ `-` (ไม่ได้เดา)
+- ห้ามคัดลอกเนื้อหาคู่แข่งหรือข้อสอบจริงของ ก.พ. ใช้เพื่อหาช่องว่างและตั้งราคาเท่านั้น
+
+ก๊อปลง SSD บน Mac (หลัง `git pull`):
+```
+cp -R ~/Projects/my-shop/research/competitors "/Volumes/PortableSSD/Sheetlab/วิจัยคู่แข่ง"
+```
