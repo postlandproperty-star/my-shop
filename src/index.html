@@ -715,6 +715,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .paysafe svg{flex:none;margin-top:3px;color:#16a34a}
 .stripe-w{color:#635BFF;font-family:Arial,Helvetica,sans-serif;font-weight:800;letter-spacing:-.3px}
 .sp-perks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0;font-size:14px;color:var(--muted)}
+.sp-up{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:10px 14px;border:1.5px dashed var(--brand);border-radius:12px;background:color-mix(in srgb,var(--brand) 7%,var(--surface));color:var(--ink);text-decoration:none;font-size:15px;line-height:1.45}.sp-up b{color:var(--brand)}.sp-up em{font-style:normal;margin-left:auto;white-space:nowrap;font-weight:600;color:var(--brand)}
 .sp-info .hero-cta{margin-top:6px}.sp-info .proof{color:var(--muted)}
 /* preview pages */
 .pv{display:grid;gap:14px;max-width:560px;margin:0 auto}
@@ -2688,6 +2689,12 @@ const vidEmbed=u=>{u=String(u||'');let m=u.match(/drive\.google\.com\/file\/d\/(
    ไม่มี teaser: ใช้บทเต็มจาก Drive (เฉพาะเมื่อยืนยันแล้วว่าเปิดได้แบบไม่ล็อกอิน) */
 const crsTeaser=p=>/^https:\/\/\S+\.mp4$/i.test(String(p.teaser||''))?p.teaser:'';
 const crsHasPv=p=>!!(crsTeaser(p)||p.videoOk&&vidEmbed(p.sampleLink));
+/* 📦 เล่มเดี่ยวที่อยู่ในชุด: บอกตั้งแต่จอแรกว่าซื้อเป็นชุดคุ้มกว่า (รายงานสัปดาห์ 12 ต.ค. 69: แอดเล่ม ฿179 แทบไม่กำไร คนกดออก 86% · ชุดขายดีกว่า) · ไม่เปลี่ยนราคา */
+function setUpsell(p){if(!p||isBundle(p)||!p.id)return '';
+  const sets=D.products.filter(b=>isBundle(b)&&b.status==='published'&&Array.isArray(b.items)&&b.items.includes(p.id)&&b.items.length>1&&Number(b.price)>Number(p.price)&&/^[a-z0-9-]+$/i.test(b.slug||''));
+  if(!sets.length)return '';const b=sets.sort((x,y)=>x.price/x.items.length-y.price/y.items.length)[0],n=b.items.length,per=Math.round(b.price/n);
+  if(per>=Number(p.price))return '';
+  return `<a class="sp-up" href="/p/${esc(b.slug)}"><span aria-hidden="true">📦</span><span><b>คุ้มกว่า:</b> เล่มนี้อยู่ใน${esc(String(b.name).split('·')[0].trim().slice(0,60))} ${n} เล่ม ${baht(b.price)} · เฉลี่ยเล่มละ ${baht(per)}</span><em>ดูชุด ›</em></a>`;}
 function crsPreview(p){const t=crsTeaser(p),e=p.videoOk&&vidEmbed(p.sampleLink);if(!t&&!e)return '';
   const cover=/^https:\/\//.test(String(p.teaserCover||''))?p.teaserCover:'';
   return `<section class="section" id="crs-preview"><div class="wrap"><h2>ดูตัวอย่างฟรี</h2><p class="fine" style="margin:-8px 0 12px">${t?'กดเล่นได้เลย ไม่ต้องสมัคร · ลองทำโจทย์จริง 1 ข้อ แล้วดูเฉลยแบบในคอร์ส':'กดเล่นได้เลย ไม่ต้องสมัคร · ทุกบทเป็นแบบนี้: สอนเทคนิค แล้วฝึกทำจริงพร้อมเฉลย'}</p>
@@ -2749,6 +2756,7 @@ function shopView(){
         ${prev.length?`<a class="btn btn-line" href="#preview">ดูตัวอย่างเนื้อหา</a>`:''}
         ${p.sampleLink||kind==='course'&&crsHasPv(p)?(kind==='course'&&crsHasPv(p)?`<a class="btn btn-line" href="#crs-preview">▶ ดูตัวอย่างฟรี</a>`:`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">${kind==='course'?'▶ ดูบทเรียนตัวอย่างฟรี':'ดาวน์โหลดตัวอย่างฟรี'}</a>`):''}
       </div>
+      ${setUpsell(p)}
       ${payLogos(0)}
       ${p.proof?`<p class="proof">${esc(p.proof)}</p>`:''}
     </div>

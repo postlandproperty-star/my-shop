@@ -235,6 +235,8 @@ try {
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: มีปุ่มซื้อ`, await page.locator('[data-a="qrOpen"], [data-a="toCheckout"]').count() > 0);
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: มีปุ่ม + เพิ่ม`, await page.locator('[data-a="cartAdd"]').count() > 0);
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: แถบบนมีปุ่ม "ดูสินค้าทั้งหมด" ไป /store`, await page.locator('.sp-topbar a[href="/store"]').count() === 1);
+      if (p.type !== 'bundle') { const up = await page.evaluate((pid) => { const sets = D.products.filter((b) => b.type === 'bundle' && b.status === 'published' && (b.items || []).includes(pid) && b.items.length > 1 && b.price / b.items.length < D.products.find((x) => x.id === pid).price); const a = document.querySelector('.sp-up'); return { want: sets.length > 0, has: !!a, href: a ? a.getAttribute('href') : '', ok: !a || sets.some((b) => a.getAttribute('href') === '/p/' + b.slug) }; }, p.id);
+        pass(`[${kind}] หน้าขายเล่ม: เล่มที่อยู่ในชุดมีป้าย 📦 คุ้มกว่า ลิงก์ไปหน้าชุด (ไม่อยู่ในชุด = ไม่มีป้าย)`, up.want === up.has && up.ok, JSON.stringify(up)); }
       await page.locator('#checkout').scrollIntoViewIfNeeded().catch(() => {});
       await layout(page, `[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}`);
       if (p.type !== 'bundle') { const sk = await page.evaluate(async (pid) => { const w = (ms) => new Promise((r) => setTimeout(r, ms)), me = D.products.find((x) => x.id === pid), other = D.products.find((x) => x.id !== pid && cartOk(x) && Number(x.price) !== Number(me.price));
