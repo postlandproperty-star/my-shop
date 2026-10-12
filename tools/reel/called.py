@@ -28,31 +28,47 @@ def pixabay_key():
     return open(PXKEY).read().strip() if os.path.exists(PXKEY) else os.environ.get('PIXABAY_KEY', '')
 
 
-def find_video(q, fn):
-    """คลิปจาก Pixabay ที่ตรงคำค้นที่สุด ยาวพอ (≥4 วิ) · คืน path หรือ None"""
+def looks_like(img_url, word, hint):
+    """ให้ AI ดูภาพตัวอย่างของคลิป ว่าเห็น {word} ชัดจริงไหม (แท็ก Pixabay ไม่แม่น เช่น grater ได้คลิปเบคอน) · ~0.01 บาท/ภาพ"""
+    try:
+        j = V.req('https://fal.run/openrouter/router/openai/v1/chat/completions', {'model': 'google/gemini-2.5-flash', 'max_tokens': 5, 'messages': [{'role': 'user', 'content': [
+            {'type': 'text', 'text': f'Does this image clearly and prominently show a {word} ({hint})? A viewer must be able to tell what a "{word}" is from this image alone. Answer only YES or NO.'},
+            {'type': 'image_url', 'image_url': {'url': img_url}}]}]}, timeout=60)
+        return 'YES' in str(j['choices'][0]['message']['content']).upper()
+    except SystemExit as e: print('vision:', e, file=sys.stderr); return False
+
+
+def find_video(q, fn, word='', hint=''):
+    """คลิปจาก Pixabay ที่ AI ดูแล้วเห็น {word} ชัด (ลองคลิปที่แท็กตรงที่สุด 6 คลิป) · ไม่เจอ = None (ใช้รูป AI แทน)"""
     key = pixabay_key()
     if not key: return None
     if os.path.exists(fn): return fn
-    url = f'https://pixabay.com/api/videos/?key={urllib.parse.quote(key)}&q={urllib.parse.quote(q)}&safesearch=true&per_page=20'
-    try: hits = json.loads(urllib.request.urlopen(url, timeout=60).read()).get('hits', [])
+    if os.path.exists(fn + '.none'): return None
+    url = f'https://pixabay.com/api/videos/?key={urllib.parse.quote(key)}&q={urllib.parse.quote(q)}&safesearch=true&per_page=30'
+    try: hits = json.loads(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (SheetLab reels)'}), timeout=60).read()).get('hits', [])  # ไม่ใส่ UA = Pixabay ตอบ 403
     except Exception as e: print('pixabay:', e, file=sys.stderr); return None
-    words = set(re.findall(r'[a-z]+', q.lower()))
+    words = set(re.findall(r'[a-z]+', (q + ' ' + word).lower()))
     def score(h):
         tags = set(re.findall(r'[a-z]+', h.get('tags', '').lower()))
         v = h['videos'].get('medium') or {}
         return (len(words & tags), 1 if v.get('height', 0) >= v.get('width', 1) else 0, -abs(h.get('duration', 0) - 12))
-    ok = [h for h in hits if h.get('duration', 0) >= 4 and (h['videos'].get('medium') or {}).get('url')]
-    if not ok: return None
-    best = max(ok, key=score)
-    if not (words & set(re.findall(r'[a-z]+', best.get('tags', '').lower()))): return None  # ไม่มีแท็กตรงเลย = ไม่เดา
-    V.download(best['videos']['medium']['url'], fn); return fn
+    ok = sorted([h for h in hits if h.get('duration', 0) >= 4 and (h['videos'].get('medium') or {}).get('url')], key=score, reverse=True)
+    for h in ok[:6]:
+        th = (h['videos'].get('medium') or {}).get('thumbnail') or h.get('picture_id') and f"https://i.vimeocdn.com/video/{h['picture_id']}_640x360.jpg"
+        if th and looks_like(th, word or q, hint or q):
+            V.download(h['videos']['medium']['url'], fn); return fn
+    open(fn + '.none', 'w').write(q); return None
 
 
-def ai_image(prompt, fn):
-    if not os.path.exists(fn):
-        j = V.fal('fal-ai/flux/schnell', {'prompt': f'{prompt}. Realistic photo, centered, well lit, clean background, no text.', 'image_size': {'width': 1024, 'height': 1024}, 'num_inference_steps': 4})
-        V.download(j['images'][0]['url'], fn)
-    return fn
+def ai_image(word, hint, fn):
+    """ข้อที่หาคลิปจริงไม่เจอ: รูป AI ที่เห็น {word} ชัดกลางภาพ (flux schnell ~0.1 บาท) · AI ตรวจแล้วไม่ใช่ = ลองอีกครั้งด้วย nano-banana (~1.4 บาท)"""
+    if os.path.exists(fn): return fn
+    prompt = f'A realistic close-up photo of a {word} ({hint}). The {word} itself is large, sharp and clearly visible in the center, in a natural home or everyday setting, well lit. No text.'
+    j = V.fal('fal-ai/flux/schnell', {'prompt': prompt, 'image_size': {'width': 1024, 'height': 1024}, 'num_inference_steps': 4})
+    u = j['images'][0]['url']
+    if not looks_like(u, word, hint):
+        j = V.fal('fal-ai/nano-banana', {'prompt': prompt, 'aspect_ratio': '1:1', 'output_format': 'jpeg'}); u = j['images'][0]['url']
+    V.download(u, fn); return fn
 
 
 def en_tts(texts, fn):
@@ -168,8 +184,8 @@ def build(spec, out):
     work = os.path.join(HERE, '.called_work', spec['id']); os.makedirs(work, exist_ok=True)
     items = spec['items']; n = len(items); media = []
     for i, it in enumerate(items):
-        v = find_video(it[5], os.path.join(work, f'v{i}.mp4'))
-        media.append((v, True) if v else (ai_image(it[6] if len(it) > 6 else it[5], os.path.join(work, f'img{i}.jpg')), False))
+        v = find_video(it[5], os.path.join(work, f'vv{i}.mp4'), it[0], f'{it[2]} · {it[3]}')
+        media.append((v, True) if v else (ai_image(it[0], it[6] if len(it) > 6 else f'{it[2]} · {it[3]}', os.path.join(work, f'im{i}.jpg')), False))
     intro = V.trim(V.thai_tts(spec.get('intro') or spec['title'], os.path.join(work, 'th-intro.mp3'), VOICE_TH)); intro_len = V.dur(intro) + 0.6
     cta = V.trim(V.thai_tts(f'{spec.get("question") or "ทายถูกกี่ข้อ คอมเมนต์บอกหน่อย"}ค่ะ กดติดตามไว้ มีคลิปใหม่ทุกวันค่ะ', os.path.join(work, 'th-cta.mp3'), VOICE_TH)); cta_len = V.dur(cta) + 0.9
     qpng = q_card(os.path.join(work, 'q.png')); segs, sounds = [], [(intro, 0.15)]; t = 0.0
