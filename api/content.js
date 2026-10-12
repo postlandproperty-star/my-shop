@@ -2676,6 +2676,19 @@ ${books}`;
       if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `สร้างลิงก์อัปโหลดไม่ได้ (${r.status}) ${JSON.stringify(j).slice(0, 120)}` });
       return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, public_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, method: 'PUT', content_type: String(body.type || 'video/mp4') });
     }
+    if (action === 'audio_lib') { // 🎧 รายชื่อไฟล์เสียงต่อเล่ม (Mac อัปโหลดเข้า R2 แล้วส่งมา) → หน้าเล่นเสียง /audio/<SKU> · GET = รายการเล่ม · POST {book} = เพิ่ม/แทนเล่มนั้น
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const rows = await sb('shop_state?id=eq.audio_lib&select=data'); const D = rows?.[0]?.data || { books: {} }; D.books = D.books || {};
+      if (req.method !== 'POST') return res.status(200).json({ ok: true, books: Object.fromEntries(Object.entries(D.books).map(([k, v]) => [k, { title: v.title, tracks: (v.tracks || []).length, at: v.at, base: v.base }])) });
+      const b = (await readBody(req)).book || {}; const sku = String(b.sku || '').toUpperCase();
+      if (!/^SL-[A-Z0-9-]{2,12}$/.test(sku) || !/^https:\/\//.test(String(b.base || '')) || !Array.isArray(b.tracks) || !b.tracks.length) return res.status(400).json({ ok: false, error: 'ต้องมี sku, base (https), tracks' });
+      const T = (s, n) => String(s ?? '').slice(0, n);
+      D.books[sku] = { sku, title: T(b.title, 200), cover: /^https:\/\//.test(String(b.cover || '')) ? T(b.cover, 500) : '', base: T(b.base, 300).replace(/\/$/, ''),
+        chapters: Object.fromEntries(Object.entries(b.chapters || {}).slice(0, 80).map(([k, v]) => [String(Number(k) || 0), T(v, 120)])),
+        tracks: b.tracks.slice(0, 2000).map((t) => ({ f: T(t.f, 200), n: Number(t.n) || 0, ch: Number(t.ch) || 0, label: T(t.label, 120), sec: Number(t.sec) || 0 })).filter((t) => t.f), at: new Date().toISOString() };
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'audio_lib', data: D, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, sku, tracks: D.books[sku].tracks.length, url: `${await siteUrl()}/audio/${sku}` });
+    }
     if (action === 'tts') {
       // เสียงพากย์ไทยจาก ElevenLabs (คีย์เก็บใน Vercel env ELEVEN_KEY ไม่เคยส่งออกไปให้ทีม): POST {text, voice?, speed?} -> {url} ไฟล์ mp3 เก็บใน storage product-images/reels/  GET &list=1 -> รายชื่อเสียงในบัญชี
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });

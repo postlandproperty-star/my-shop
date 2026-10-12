@@ -81,6 +81,10 @@
       "destination": "/api/page?vip=home"
     },
     {
+      "source": "/audio/:sku",
+      "destination": "/api/page?audio=:sku"
+    },
+    {
       "source": "/ielts",
       "destination": "/api/page?ielts=hub"
     },

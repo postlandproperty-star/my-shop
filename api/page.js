@@ -11,6 +11,7 @@ import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
 import { vipPage, vipReviewPage, accountPage, vipMockPage, vipWritePage, vipSpeakPage, appPage } from '../lib/vipPage.js';
 import { bandCalcPage } from '../lib/ieltsTools.js';
 import * as IL from '../lib/ieltsLib.js';
+import * as AP from '../lib/audioPlayer.js';
 import { PWA_MANIFEST, SW_JS } from '../lib/pwa.js';
 import { loadVip, vipSellable } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
@@ -193,6 +194,15 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));
     return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE }));
+  }
+  const audioQ = String(req.query.audio || '').toUpperCase();
+  if (audioQ) { // 🎧 หน้าเล่นเสียงประกอบหนังสือ /audio/SL-048 (QR ในเล่ม) · ไฟล์อยู่ R2 · รายชื่อแทร็กใน shop_state audio_lib
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    const [shop, lib] = await Promise.all([loadShop().catch(() => ({ settings: {} })), sbSelect('shop_state?id=eq.audio_lib&select=data').then((r) => r?.[0]?.data || {}).catch(() => ({}))]);
+    const book = /^SL-[A-Z0-9-]{2,12}$/.test(audioQ) ? (lib.books || {})[audioQ] : null;
+    if (!book) { res.setHeader('Cache-Control', 'no-store'); return res.status(404).send(AP.playerPage({ sku: audioQ.slice(0, 16), title: 'ไม่พบไฟล์เสียงของเล่มนี้', tracks: [] }, { settings: shop.settings, site: NEW_SITE })); }
+    res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300');
+    return res.status(200).send(AP.playerPage(book, { settings: shop.settings, site: NEW_SITE, start: AP.startTrack(book, req.query) }));
   }
   const ieltsQ = String(req.query.ielts || '');
   if (ieltsQ) { // 📚 คลัง IELTS ฟรี (lib/ieltsLib.js): /ielts /ielts/samples[/slug] /ielts/dictation[/slug] /ielts/daily

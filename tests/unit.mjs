@@ -149,4 +149,9 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
     && el.status === 200 && !!thCall && thCall[1].language_code === 'Thai (Thailand)' && ttsCall[1].language_code === 'English (US)' && A.ttsLang('en-GB') === 'English (UK)' && A.ttsLang('xx') === '' && pass === null && off === null, JSON.stringify({ g: gc && gc.model, n: calls.length })); }
 { const F = await import('../lib/fb.js');
   ok('🎬 ปกคลิป Reels: คลิป x.mp4 → ปก x-cover.jpg ที่อัปโหลดคู่กัน · รูปไม่ใช่คลิป = ไม่มีปก', F.coverOf('https://s/reels/1-a.mp4') === 'https://s/reels/1-a-cover.jpg' && F.coverOf('https://s/reels/1-a.MP4?v=2') === 'https://s/reels/1-a-cover.jpg' && F.coverOf('https://s/a.jpg') === ''); }
+{ const AP = await import('../lib/audioPlayer.js'); const b = AP.buildBook({ sku: 'SL-044', title: 'T <x>', base: 'https://a.r2.dev/SL-044/', files: ['02-ch01-dialogue2-slow.mp3', '01-ch01-dialogue1-normal.mp3', '36-ch06-listening-normal.mp3', 'cover.jpg'], chapters: { 1: 'ที่คลินิก' } });
+  const h = AP.playerPage(b, { site: 'https://s', start: AP.startTrack(b, { ch: 6 }) });
+  ok('🎧 หน้าเล่นเสียง /audio/SKU: ชื่อไฟล์ → บท + ชื่อไทย (บทสนทนา 1 · ช้า) · เรียงตามเลข · ไม่เอาไฟล์ที่ไม่ใช่เสียง · ?ch=6 เริ่มบท 6 · กัน HTML · noindex',
+    b.tracks.length === 3 && b.tracks[0].n === 1 && AP.trackInfo('01-ch01-dialogue1-slow.mp3').label === 'บทสนทนา 1 · ช้า 🐢' && AP.trackInfo('36-ch06-listening-normal.mp3').ch === 6
+    && AP.startTrack(b, { ch: 6 }) === 36 && AP.startTrack(b, { t: 2 }) === 2 && h.includes('บทที่ 1 · ที่คลินิก') && h.includes('https://a.r2.dev/SL-044/02-ch01-dialogue2-slow.mp3') && !h.includes('T <x>') && /noindex/.test(h) && h.includes('"start":36')); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
