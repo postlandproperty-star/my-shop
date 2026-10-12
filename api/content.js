@@ -2676,8 +2676,9 @@ ${books}`;
       if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `สร้างลิงก์อัปโหลดไม่ได้ (${r.status}) ${JSON.stringify(j).slice(0, 120)}` });
       return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, public_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, method: 'PUT', content_type: String(body.type || 'video/mp4') });
     }
-    if (action === 'audio_lib') { // 🎧 รายชื่อไฟล์เสียงต่อเล่ม (Mac อัปโหลดเข้า R2 แล้วส่งมา) → หน้าเล่นเสียง /audio/<SKU> · GET = รายการเล่ม · POST {book} = เพิ่ม/แทนเล่มนั้น
-      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+    if (action === 'audio_lib') { // 🎧 รายชื่อไฟล์เสียงต่อเล่ม (Mac อัปโหลดเข้า R2 แล้วส่งมา) → หน้าเล่นเสียง /audio/<SKU> · GET = รายการเล่ม (แอดมินดูได้) · POST {book} = เพิ่ม/แทนเล่มนั้น (คีย์ร้าน)
+      const adminA = req.method !== 'POST' && req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!adminA && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const rows = await sb('shop_state?id=eq.audio_lib&select=data'); const D = rows?.[0]?.data || { books: {} }; D.books = D.books || {};
       if (req.method !== 'POST' && req.query.products) { // เล่มที่มีไฟล์เสียง (ให้ Mac หาโฟลเดอร์แล้วอัปขึ้น R2)
         const shop = await loadShop(); const A = /แทร็ก|mp3|🎧|เสียงอ่าน/i;

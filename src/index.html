@@ -1540,7 +1540,15 @@ const audioDriveOf=p=>[p.audioDrive,(String(p.freshNote||'').match(DRIVE_RE)||[]
 const audioSearch=p=>'https://drive.google.com/drive/search?q='+encodeURIComponent('type:folder '+String(p.name||'').replace(/[^A-Za-z0-9& ]+/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,4).join(' '));
 const audioBooks=d=>isBundle(d)||d.type==='bundle'?(d.items||[]).map(getProduct).filter(hasAudio):hasAudio(d)?[d]:[];
 const AUDIO_ERR='เล่มนี้มีไฟล์เสียงใน Google Drive: ตั้งโฟลเดอร์เสียงเป็น "ทุกคนที่มีลิงก์" แล้วติ๊กยืนยันในกล่อง 🎧 ก่อนเผยแพร่';
-function audioBox(d){const L=audioBooks(d);if(!L.length)return '';if(FLIB.d===null&&!FLIB.loading)loadFacLib();
+/* 🎧 ไฟล์เสียงที่ย้ายขึ้นเว็บแล้ว (Cloudflare R2 · หน้าเล่นเสียง /audio/SKU · 12 ต.ค. 69): ไม่ต้องตั้งแชร์ Drive · Drive เดิมเก็บไว้ให้ QR เล่มเก่า */
+const AUDLIB={d:null,loading:false};
+function loadAudLib(){if(AUDLIB.loading)return;AUDLIB.loading=true;adminApi('/api/content?action=audio_lib').then(j=>{AUDLIB.d=j&&j.ok?(j.books||{}):{};}).catch(()=>{AUDLIB.d={};}).then(()=>{AUDLIB.loading=false;render(true);});}
+const audOnWeb=b=>{const x=AUDLIB.d&&b&&b.sku&&AUDLIB.d[String(b.sku).toUpperCase()];return x&&x.tracks>0?x:null;};
+const audioReady=d=>!!d.audioOk||(audioBooks(d).length>0&&audioBooks(d).every(audOnWeb));
+function audioBox(d){const L=audioBooks(d);if(!L.length)return '';if(FLIB.d===null&&!FLIB.loading)loadFacLib();if(AUDLIB.d===null&&!AUDLIB.loading)loadAudLib();
+  if(L.every(audOnWeb))return `<section class="card aud ok"><b>🎧 ไฟล์เสียงอยู่บนเว็บแล้ว ลูกค้ากดฟังได้ทันที ไม่ต้องตั้งแชร์ Google Drive</b>
+    <ul class="fine aud-steps">${L.map(b=>`<li><a class="aud-go" href="/audio/${esc(String(b.sku).toUpperCase())}" target="_blank" rel="noopener noreferrer">▶ เปิดหน้าเล่นเสียง ${L.length>1?esc(String(b.name).slice(0,30))+' ':''}(${audOnWeb(b).tracks} แทร็ก) ↗</a> <span>· QR เล่มใหม่ใช้ลิงก์ sheetlabth.com/audio/${esc(String(b.sku).toUpperCase())}</span></li>`).join('')}</ul>
+    <span class="fine">ไฟล์เดิมใน Google Drive เก็บไว้ อย่าลบ (QR ในเล่มที่ขายไปแล้วยังชี้ไปที่ Drive)</span></section>`;
   if(!isBundle(d)&&d.type!=='bundle'&&audBad(d.audioDrive)){const u=audioLib(d);if(u)d.audioDrive=u;} // เจอในรายชื่อจาก Mac → จำไว้กับสินค้า (บันทึกพร้อมกดบันทึก)
   const ok=!!d.audioOk,links=[...new Set(L.map(audioDriveOf).filter(Boolean))],miss=L.filter(b=>!audioDriveOf(b));
   return `<section class="card aud${ok?' ok':''}"><b>🎧 ${L.length>1?`มีไฟล์เสียง ${L.length} เล่ม`:'เล่มนี้มีไฟล์เสียง'} ใน Google Drive (ลูกค้าสแกน QR ในเล่มแล้วเปิดฟัง)</b>
@@ -2360,7 +2368,7 @@ function saveBundleDraft(el){
   const d=S.draft,isNew=S.edit==='new',selfId=isNew?null:S.edit;
   if(el.dataset.status)d.status=el.dataset.status;
   /* ยังไม่ติ๊กยืนยันไฟล์เสียง: บันทึกเสมอ (เดิมไม่บันทึกอะไรเลย ปก/รูปที่ทำไว้หาย 10 ต.ค. 69) · ชุดที่ขายอยู่ = ขายต่อ + เตือน · ยังไม่เคยขาย = ฉบับร่าง */
-  let audWarn='';if(d.status==='published'&&audioBooks(d).length&&!d.audioOk){const cur=selfId&&getProduct(selfId);audWarn=cur&&cur.status==='published'?'live':'draft';if(audWarn==='draft')d.status='draft';}
+  let audWarn='';if(d.status==='published'&&audioBooks(d).length&&!audioReady(d)){const cur=selfId&&getProduct(selfId);audWarn=cur&&cur.status==='published'?'live':'draft';if(audWarn==='draft')d.status='draft';}
   const bad=bundleErr(d,selfId);if(bad)return bad;
   const data=bundleData(d);
   let saved;
@@ -7076,7 +7084,7 @@ function act(a,el){
     case 'cancelEdit':if(S.tab==='courses'){CRS.ed=null;CRS.lt=null;CRS.le='';}S.aiRun=(S.aiRun||0)+1;S.bxImg='';S.coverBusy=false;bxSnapUndo();S.edit=null;S.draft=null;S.err='';S.coverOpen=false;S.coverImg=null;S.coverPrompt=null;S.imgSet=null;render(false);break;
     case 'rmImg':S.draft.images.splice(Number(el.dataset.i),1);render(true);break;
     case 'mvImg':{const L=S.draft[el.dataset.k]||[],i=Number(el.dataset.i),j=i+Number(el.dataset.d);if(j<0||j>=L.length)break;[L[i],L[j]]=[L[j],L[i]];render(true);pvPost(0);break;}
-    case 'togglePub':{const p=getProduct(id);if(p&&p.status!=='published'&&audioBooks(p).length&&!p.audioOk){toast('🎧 '+AUDIO_ERR+' (เปิดแก้ไขแล้วติ๊ก)');break;}p.status=p.status==='published'?'draft':'published';if(p.status==='published')delete p.fresh;if(p.status==='published'&&!p.publishedAt){p.publishedAt=Date.now();adDraftSoon(p.id);}save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
+    case 'togglePub':{const p=getProduct(id);if(p&&p.status!=='published'&&audioBooks(p).length&&!audioReady(p)){toast('🎧 '+AUDIO_ERR+' (เปิดแก้ไขแล้วติ๊ก)');break;}p.status=p.status==='published'?'draft':'published';if(p.status==='published')delete p.fresh;if(p.status==='published'&&!p.publishedAt){p.publishedAt=Date.now();adDraftSoon(p.id);}save();render(true);toast(p.status==='published'?'เผยแพร่เซลเพจแล้ว':'เปลี่ยนเป็นฉบับร่างแล้ว');break;}
     case 'dupProduct':{
       const p=getProduct(id);let slug=p.slug+'-copy',n=2;while(slugTaken(slug))slug=p.slug+'-copy'+n++;
       const nid='p'+Date.now().toString(36);
@@ -7108,7 +7116,7 @@ function act(a,el){
       if(!name){S.err='กรอกชื่อสินค้า';render(true);break;}
       /* ยังไม่ได้ติ๊กยืนยันไฟล์เสียง/วิดีโอ: เดิมไม่บันทึกอะไรเลย (คุณแดนทำชุดรูปใหม่แล้วกดเผยแพร่ รูปหาย 10 ต.ค. 69) → ตอนนี้บันทึกทุกอย่างที่แก้เสมอ
          ขายอยู่แล้ว = ขายต่อ + เตือน · ยังไม่เคยขาย = บันทึกเป็นฉบับร่าง (ยังไม่เปิดขายจนกว่าจะติ๊ก) */
-      const mediaErr=d.status==='published'&&(d.kind==='course'&&!d.videoOk?VIDEO_ERR:hasAudio(d)&&!d.audioOk?AUDIO_ERR:'');let mediaWarn='';
+      const mediaErr=d.status==='published'&&(d.kind==='course'&&!d.videoOk?VIDEO_ERR:hasAudio(d)&&!audioReady(d)?AUDIO_ERR:'');let mediaWarn='';
       if(mediaErr){const cur=selfId&&getProduct(selfId);if(cur&&cur.status==='published')mediaWarn='live';else{d.status='draft';mediaWarn='draft';}}
       if(!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)){S.err='ชื่อในลิงก์ใช้ได้เฉพาะ a-z ตัวเลข และ - เช่น calculus-1-summary';render(true);break;}
       if(slugTaken(slug,selfId)){S.err='ชื่อในลิงก์นี้ถูกใช้แล้ว เลือกชื่ออื่น';render(true);break;}
