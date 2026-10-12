@@ -2692,9 +2692,13 @@ const crsHasPv=p=>!!(crsTeaser(p)||p.videoOk&&vidEmbed(p.sampleLink));
 /* 📦 เล่มเดี่ยวที่อยู่ในชุด: บอกตั้งแต่จอแรกว่าซื้อเป็นชุดคุ้มกว่า (รายงานสัปดาห์ 12 ต.ค. 69: แอดเล่ม ฿179 แทบไม่กำไร คนกดออก 86% · ชุดขายดีกว่า) · ไม่เปลี่ยนราคา */
 function setUpsell(p){if(!p||isBundle(p)||!p.id)return '';
   const sets=D.products.filter(b=>isBundle(b)&&b.status==='published'&&Array.isArray(b.items)&&b.items.includes(p.id)&&b.items.length>1&&Number(b.price)>Number(p.price)&&/^[a-z0-9-]+$/i.test(b.slug||''));
-  if(!sets.length)return '';const b=sets.sort((x,y)=>x.price/x.items.length-y.price/y.items.length)[0],n=b.items.length,per=Math.round(b.price/n);
+  if(!sets.length)return '';
+  // ชุดที่ตรงสายกับเล่มนี้ก่อน (เล่ม TOEIC → ชุด TOEIC ไม่ใช่ชุด IELTS) แล้วค่อยดูราคาต่อเล่ม
+  const tok=t=>new Set(String(t).toUpperCase().match(/[A-Z]{3,}/g)||[]),mine=tok(p.name),rel=b=>[...tok(b.name)].filter(w=>mine.has(w)).length;
+  const b=sets.sort((x,y)=>rel(y)-rel(x)||x.price/x.items.length-y.price/y.items.length)[0],n=b.items.length,per=Math.round(b.price/n);
   if(per>=Number(p.price))return '';
-  return `<a class="sp-up" href="/p/${esc(b.slug)}"><span aria-hidden="true">📦</span><span><b>คุ้มกว่า:</b> เล่มนี้อยู่ใน${esc(String(b.name).split('·')[0].trim().slice(0,60))} ${n} เล่ม ${baht(b.price)} · เฉลี่ยเล่มละ ${baht(per)}</span><em>ดูชุด ›</em></a>`;}
+  const nm=String(b.name).split('·')[0].replace(/\s*\d+\s*เล่ม\s*$/,'').trim().slice(0,60);
+  return `<a class="sp-up" href="/p/${esc(b.slug)}"><span aria-hidden="true">📦</span><span><b>คุ้มกว่า:</b> เล่มนี้อยู่ใน ${esc(nm)} ${n} เล่ม ${baht(b.price)} · เฉลี่ยเล่มละ ${baht(per)}</span><em>ดูชุด ›</em></a>`;}
 function crsPreview(p){const t=crsTeaser(p),e=p.videoOk&&vidEmbed(p.sampleLink);if(!t&&!e)return '';
   const cover=/^https:\/\//.test(String(p.teaserCover||''))?p.teaserCover:'';
   return `<section class="section" id="crs-preview"><div class="wrap"><h2>ดูตัวอย่างฟรี</h2><p class="fine" style="margin:-8px 0 12px">${t?'กดเล่นได้เลย ไม่ต้องสมัคร · ลองทำโจทย์จริง 1 ข้อ แล้วดูเฉลยแบบในคอร์ส':'กดเล่นได้เลย ไม่ต้องสมัคร · ทุกบทเป็นแบบนี้: สอนเทคนิค แล้วฝึกทำจริงพร้อมเฉลย'}</p>
