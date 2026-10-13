@@ -248,14 +248,14 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     return res.status(200).send(topicPage(t, topicItems(t, { articles, quizzes, products: shop.products }), { settings: shop.settings, site: NEW_SITE, all: live }));
   }
   const gov = String(req.query.gov || '');
-  if (gov) { // งานราชการ /gov และ /gov/<slug>
+  if (gov) { // โซนสอบราชการ /gov และ /gov/<slug>: ข้อสอบฟรี + ชีท ก.พ.
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=600');
-    const shop = await loadShop().catch(() => ({ products: [], settings: {} }));
-    if (gov === '_index') return res.status(200).send(govIndex({ settings: shop.settings, site: NEW_SITE }));
+    const [shop, articles, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadArticles(), loadQuizzes()]);
+    const o = { settings: shop.settings, site: NEW_SITE, quizzes, articles, products: shop.products };
+    if (gov === '_index') return res.status(200).send(govIndex(o));
     const x = govBySlug(gov);
-    if (!x) { res.statusCode = 404; return res.end(govIndex({ settings: shop.settings, site: NEW_SITE })); }
-    const [articles, quizzes] = await Promise.all([loadArticles(), loadQuizzes()]);
-    return res.status(200).send(govPage(x, { settings: shop.settings, site: NEW_SITE, quizzes, articles, products: shop.products }));
+    if (!x) { res.statusCode = 404; return res.end(govIndex(o)); }
+    return res.status(200).send(govPage(x, o));
   }
   const learn = String(req.query.learn || '');
   if (learn) { // คลังความรู้ /learn และ /learn/<slug>
