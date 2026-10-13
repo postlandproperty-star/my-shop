@@ -133,6 +133,14 @@
       "destination": "/api/page?gov=_index"
     },
     {
+      "source": "/gov/learn/:slug",
+      "destination": "/api/page?gov=learn/:slug"
+    },
+    {
+      "source": "/gov/quiz/:slug",
+      "destination": "/api/page?gov=quiz/:slug"
+    },
+    {
       "source": "/gov/:slug",
       "destination": "/api/page?gov=:slug"
     },
