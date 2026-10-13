@@ -305,7 +305,7 @@ try {
     try { page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/__gov`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
       const gi = await page.evaluate(() => ({ quiz: document.querySelectorAll('[data-kind="quiz"]').length, sheet: document.querySelectorAll('a[data-kind="sheet"][href^="/p/"]').length, exam: document.querySelectorAll('[data-kind="exam"]').length, foot: !!document.querySelector('footer a[href="/gov"]'), nav: !!document.querySelector('.nav a[href="/gov"]'), h1: document.querySelectorAll('h1').length, watch: !!document.querySelector('#gv-form, .gv-st'), subj: document.querySelectorAll('.gv-chips button[data-g="s"]:not([data-v=""])').length }));
-      pass(`[${kind}] สอบราชการ /gov: ข้อสอบฟรี + ชีท + สนามสอบ · ลิงก์อยู่ท้ายเว็บ (ไม่อยู่ในเมนูหลัก) · ไม่มีส่วนประกาศ`, gi.quiz === 2 && gi.sheet === 1 && gi.subj === 2 && gi.exam === GOV_EXAMS.length && gi.foot && !gi.nav && gi.h1 === 1 && !gi.watch, JSON.stringify(gi));
+      pass(`[${kind}] สอบราชการ /gov: ข้อสอบฟรี + ชีท + สนามสอบ · ไม่แตะเมนูหลัก · ไม่มีส่วนประกาศ`, gi.quiz === 2 && gi.sheet === 1 && gi.subj === 2 && gi.exam === GOV_EXAMS.length && !gi.nav && gi.h1 === 1 && !gi.watch, JSON.stringify(gi));
       const vis = () => page.evaluate(() => ({ n: [...document.querySelectorAll('.gv-job')].filter((e) => !e.hidden).length, empty: !document.getElementById('gv-empty').hidden }));
       await page.click('.gv-chips button[data-v="sheet"]'); const f1 = await vis();
       await page.fill('#gv-q', 'zzzz'); const f2 = await vis();

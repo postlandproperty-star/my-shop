@@ -2509,7 +2509,7 @@ function shopHead(p){
 }
 /* ===== หน้าร้าน (หน้าแรก sheetlabth.com) =====
    ชุดเด่นก่อน ตามด้วยเล่มเดี่ยว ทุกอย่างที่เผยแพร่ขึ้นเอง ถ้าเผยแพร่ไม่ถึง 2 รายการ หน้าแรกเปิดหน้าขายเลยเหมือนเดิม */
-const CATS={notion:'Notion Template',grammar:'Grammar',vocab:'คำศัพท์',listening:'Listening',reading:'Reading',mock:'ข้อสอบเสมือนจริง',ielts:'IELTS',tgat:'TGAT / A-Level',kp:'สอบ ก.พ.','kp-think':'ก.พ. คิดวิเคราะห์','kp-law':'ก.พ. ข้าราชการที่ดี',speak:'สนทนา',work:'ภาษาอังกฤษทำงาน / เที่ยว',general:'ภาษาอังกฤษทั่วไป'};
+const CATS={notion:'Notion Template',grammar:'Grammar',vocab:'คำศัพท์',listening:'Listening',reading:'Reading',mock:'ข้อสอบเสมือนจริง',ielts:'IELTS',tgat:'TGAT / A-Level',kp:'สอบ ก.พ.',speak:'สนทนา',work:'ภาษาอังกฤษทำงาน / เที่ยว',general:'ภาษาอังกฤษทั่วไป'};
 const STORE_MIN=2,CHAT_URL='https://m.me/1264839566720049';
 const REVIEWS=(()=>{try{return (window.__SHOP__&&window.__SHOP__.reviews)||{};}catch(e){return {};}})(); // รีวิวจากผู้ซื้อจริง {productId:{avg,count,items}}
 const starStr=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
@@ -2525,7 +2525,7 @@ const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}c
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
 const TOPICS_LIVE=(()=>{try{return (window.__SHOP__&&window.__SHOP__.topics)||[];}catch(e){return [];}})(),STORE_FAQ=(()=>{try{return (window.__SHOP__&&window.__SHOP__.faq)||[];}catch(e){return [];}})(); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว + คำถามที่พบบ่อย (ฝังมาจากเซิร์ฟเวอร์)
 const DAILY=(()=>{try{return (window.__SHOP__&&window.__SHOP__.daily)||null;}catch(e){return null;}})(),LEVELQ=(()=>{try{return (window.__SHOP__&&window.__SHOP__.level)||null;}catch(e){return null;}})();
-const LEARN_CATS={grammar:'Grammar',vocab:'คำศัพท์',tips:'เทคนิคทำข้อสอบ',listening:'Listening',reading:'Reading',ielts:'IELTS',tgat:'TGAT / A-Level',kp:'สอบ ก.พ.','kp-think':'ก.พ. คิดวิเคราะห์','kp-law':'ก.พ. ข้าราชการที่ดี',work:'อังกฤษทำงาน',speak:'สนทนา'};
+const LEARN_CATS={grammar:'Grammar',vocab:'คำศัพท์',tips:'เทคนิคทำข้อสอบ',listening:'Listening',reading:'Reading',ielts:'IELTS',tgat:'TGAT / A-Level',kp:'สอบ ก.พ.',work:'อังกฤษทำงาน',speak:'สนทนา'};
 const TITLE0=document.title;
 const SELL={both:['ทั้งหน้าร้านและ salepage','ขึ้นหน้าร้าน และทีมทำโพสต์/แอดพาเข้าหน้าขาย'],salepage:['salepage อย่างเดียว','ไม่ขึ้นหน้าร้าน เข้าได้จากลิงก์หรือแอดเท่านั้น'],store:['หน้าร้านอย่างเดียว','ขึ้นหน้าร้าน ทีมไม่ทำโพสต์ขายตรง']};
 function sellPicker(d){const v=SELL[d.sell]?d.sell:'both';return `<div class="field"><span class="lbl" id="lbl-sell">ขายที่ไหน</span><div class="sellpick" role="radiogroup" aria-labelledby="lbl-sell">${Object.entries(SELL).map(([k,x])=>`<label class="${v===k?'on':''}"><input type="radio" name="sell" data-d="sell" value="${k}" ${v===k?'checked':''}><b>${x[0]}</b><span>${x[1]}</span></label>`).join('')}</div></div>`;}
@@ -2544,7 +2544,7 @@ function stHead(on,chat){const n=(k,href,l,go)=>`<a href="${href}"${go?' data-go
   // เมนูเดียวกับหน้าอื่นของเว็บ (SITE_NAV ใน lib/quiz.js) ทุกบริการ: หน้าแรก · ร้านชีท · ข้อสอบฟรี · ความรู้ · VIP + บัญชีของฉัน
   return `<header class="st-top"><div class="wrap wide st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a><span class="st-topr"><a class="st-chat st-acc" href="/account">👤 บัญชีของฉัน</a><a class="st-chat" href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a></span></div>
     <nav class="wrap wide st-nav" aria-label="เมนูหลัก">${n('home','/','หน้าแรก',1)}${n('store','/store','ร้านชีท',1)}${n('quiz','/quiz','ข้อสอบฟรี')}${n('learn','/learn','ความรู้')}${n('vip','/vip','👑 VIP')}</nav></header>`;}
-function stFoot(chat){return `<footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}<a href="/store" data-go="">ร้านค้า</a> · <a href="/free">🎁 ชีทแจกฟรี</a> · <a href="/gov">สอบราชการ</a> · ${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/account">บัญชีของฉัน</a> · <a href="/vip">สมาชิก VIP</a> · <a href="/app">📲 แอปฝึกข้อสอบ</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
+function stFoot(chat){return `<footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}<a href="/store" data-go="">ร้านค้า</a> · <a href="/free">🎁 ชีทแจกฟรี</a> · ${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/account">บัญชีของฉัน</a> · <a href="/vip">สมาชิก VIP</a> · <a href="/app">📲 แอปฝึกข้อสอบ</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
     <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;}
 const catalogView=()=>storeView(true);
 function storeView(catalog){
