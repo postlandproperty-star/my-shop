@@ -3229,8 +3229,8 @@ async function shopeeImgs(){const d=S.draft;if(!d)return;const bun=isBundle(d)||
   S.zipBusy='';render(true);}
 async function shopeeCopy(){const d=S.draft;if(!d)return;const key=shopeeKey(d),bun=isBundle(d),books=bun?(d.items||[]).map(getProduct).filter(Boolean):[d];
   S.shopee={key,busy:true};render(true);
-  const pages=books.reduce((a,b)=>a+pagesOf(b),0),audio=books.some(hasAudio); // ใช้ตัวตรวจเดียวกับกล่อง 🎧 (เดิมจับคำว่า "ไฟล์เสียง | ไม่มี" เป็นมีเสียง → ข้อความ Shopee บอกลูกค้าผิด 11 ต.ค. 69)
-  try{const j=await adminPost('/api/content?action=shopee_copy',{name:d.name,headline:d.headline,desc:d.desc,features:bun?'':d.features,forwho:d.forwho,notfor:d.notfor,faq:d.faq,toc:bun?'':d.toc,specs:bun?'':d.specs,pages,audio,books:bun?books.map(b=>b.name):[]});
+  const audio=books.some(hasAudio); // ใช้ตัวตรวจเดียวกับกล่อง 🎧 (เดิมจับคำว่า "ไฟล์เสียง | ไม่มี" เป็นมีเสียง → ข้อความ Shopee บอกลูกค้าผิด 11 ต.ค. 69)
+  try{const j=await adminPost('/api/content?action=shopee_copy',{name:d.name,headline:d.headline,desc:d.desc,features:bun?'':d.features,forwho:d.forwho,notfor:d.notfor,faq:d.faq,toc:bun?'':d.toc,specs:bun?'':d.specs,ids:books.map(b=>b.id),audio,books:bun?books.map(b=>b.name):[]});
     if(!j||!j.ok)throw new Error((j&&j.error)||'ไม่สำเร็จ');S.shopee={key,text:j.text,ai:j.ai};}
   catch(e){S.shopee={key,err:'สร้างไม่สำเร็จ: '+(e.message||e)};}render(true);}
 function noteBox(p){if(!p||!p.freshNote)return '';const parts=String(p.freshNote).split(' · ').filter(Boolean);

@@ -53,6 +53,9 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
 { const html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8'), api = fs.readFileSync(path.join(root, 'api/content.js'), 'utf8'); const called = [...new Set([...html.matchAll(/action=(ads_[a-z_]+)/g)].map((m) => m[1]))];
   const i0 = api.indexOf("if (action.startsWith('ads_auto')) {"), blk = api.slice(i0, api.indexOf("error: 'unknown action'", i0)); const bad = [...blk.matchAll(/action === '([a-z_]+)'/g)].map((m) => m[1]).filter((a) => !a.startsWith('ads_auto')); const missing = called.filter((a) => !api.includes(`'${a}'`));
   ok('โฆษณา: ทุกคำสั่ง ads_ ที่หลังบ้านเรียก มีตัวรับในเซิร์ฟเวอร์ (กัน "unknown action")', !bad.length && !missing.length, JSON.stringify({ bad, missing })); }
+{ const api = fs.readFileSync(path.join(root, 'api/content.js'), 'utf8'); const noPages = eval(api.match(/const noPages = (.+);\n/)[1]);
+  const out = noPages('หนังสือ 120 หน้า (ประมาณ 300 หน้า) อ่านง่าย\nจำนวนหน้า | 120\nขนาด | A4\nแบบฝึก 500 ข้อ ดูหน้าที่ 5\nรวม 88 pages');
+  ok('Shopee: ข้อความเล่มพิมพ์ไม่พูดจำนวนหน้าเลย (เล่มพิมพ์ตัดเหลือ ≤50 หน้า · 13 ต.ค. 69) แต่ไม่ตัดคำว่า หน้าที่/ข้อมูลอื่น', !/\d\s*(หน้า(?!ที่)|pages?)|จำนวนหน้า/i.test(out) && /500 ข้อ/.test(out) && /หน้าที่ 5/.test(out) && /A4/.test(out) && !/,pages,audio/.test(fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')), out); }
 { const SO = await import('../lib/shopeeorders.js'); const html = fs.readFileSync(path.join(root, 'tests/fixture-shopee-mail.html'), 'utf8');
   const qp = (str) => Buffer.from(str, 'utf8').toString('binary').replace(/[^\x20-\x3C\x3E-\x7E\n]/g, (c) => '=' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')).replace(/(.{70})/g, '$1=\n');
   const subj = '=?UTF-8?B?' + Buffer.from('ถึงเวลาจัดส่งสินค้าหมายเลข #2610096TESTAB1 แล้ว!').toString('base64') + '?=';
