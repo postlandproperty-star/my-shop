@@ -384,6 +384,15 @@ try {
       }, [v, bundle && bundle.id]);
       await page.waitForTimeout(400);
       pass(`[${kind}] หลังบ้าน ${name}: เปิดได้`, !err, err);
+      if (v === 'products') { // เมนู ⬇ ดาวน์โหลด: หน้าวาดใหม่ (ข้อมูลโหลดเสร็จ) แล้วเมนูต้องยังเปิดอยู่ · เลือกรายการแล้วได้ไฟล์และเมนูปิด · กดที่อื่นเมนูปิด (คุณแดน 13 ต.ค. "กดแล้วเด้งกลับเอง")
+        const dd = { sum: await page.locator('.pt-dd summary').click({ timeout: 4000 }).then(() => true).catch(() => false) }; await page.waitForTimeout(150);
+        dd.afterRender = await page.evaluate(async () => { render(true); await new Promise((r) => setTimeout(r, 80)); render(true); await new Promise((r) => setTimeout(r, 80)); const d = document.querySelector('.pt-dd'); return !!(d && d.open); });
+        const dl = page.waitForEvent('download', { timeout: 5000 }).then((d) => d.suggestedFilename()).catch(() => '');
+        await page.locator('.pt-dd [data-a="exportCsv"]').click({ timeout: 4000 }).catch(() => {}); dd.file = await dl;
+        dd.closed = await page.evaluate(() => { const d = document.querySelector('.pt-dd'); return !!d && !d.open && !S.ptDd; });
+        await page.locator('.pt-dd summary').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(100); await page.locator('h3', { hasText: 'สินค้าและเซลเพจ' }).click({ timeout: 4000 }).catch(() => {});
+        dd.outside = await page.evaluate(() => { render(true); const d = document.querySelector('.pt-dd'); return !!d && !d.open; });
+        pass(`[${kind}] สินค้า: เมนู ⬇ ดาวน์โหลด ไม่เด้งปิดเองตอนหน้าวาดใหม่ · เลือกรายการแล้วได้ไฟล์และเมนูปิด · กดที่อื่นปิด`, dd.sum && dd.afterRender && /\.csv$/.test(dd.file) && dd.closed && dd.outside, JSON.stringify(dd)); }
       if (v !== 'bundle') { const sv = await page.evaluate(() => ({ svc: document.querySelectorAll('.svc-main button').length, on: (document.querySelector('.svc-main button[aria-pressed="true"]') || {}).dataset?.v || '', four: document.querySelectorAll('.svf-row .svf').length }));
         const want = { home: 'all', todo: 'all', orders: 'shop', products: 'shop', ads: 'shop', seo: 'learn', insights: 'learn', factory: 'factory', vip: 'vip' }[v];
         pass(`[${kind}] หลังบ้าน ${name}: เมนูแบ่งตามบริการ (อยู่ในบริการ ${want})${['all'].includes(want) ? '' : ' + แถบ 4 ช่อง'}`, sv.svc === 6 && sv.on === want && (want === 'all' ? sv.four === 0 : sv.four === 4), JSON.stringify(sv)); }

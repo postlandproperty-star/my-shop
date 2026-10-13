@@ -4416,7 +4416,7 @@ function productsTab(){
   <div class="pt-head">
     <h3 class="h3" style="margin:0">สินค้าและเซลเพจ</h3>
     <span class="row" style="gap:8px;flex-wrap:wrap">
-      <details class="pt-dd"><summary class="btn btn-line btn-sm">⬇ ดาวน์โหลด ▾</summary><div class="pt-menu">
+      <details class="pt-dd" data-keep="ptDd" ${S.ptDd?'open':''}><summary class="btn btn-line btn-sm">⬇ ดาวน์โหลด ▾</summary><div class="pt-menu">
         <button class="pt-a" data-a="exportCsv">ข้อมูลสินค้าทั้งหมด (Excel)</button>
         <button class="pt-a" data-a="exportShopee">🛒 ไฟล์ลง Shopee (เล่มพิมพ์)</button>
         <button class="pt-a" data-a="storeBanners" ${S.zipBusy?'disabled':''}>${S.zipBusy==='bnr'?'กำลังทำแบนเนอร์...':'🌐 แบนเนอร์หน้าร้านเว็บ (แบบ Shopee)'}</button>
@@ -7289,6 +7289,8 @@ document.addEventListener('click',e=>{
     // ลิงก์ไปหน้าจ่ายเงิน: รอให้ Pixel ส่งเหตุการณ์ออกไปก่อนเปลี่ยนหน้า ไม่งั้นเบราว์เซอร์ตัดคำขอทิ้ง (Meta ไม่เห็น InitiateCheckout)
     const href=tr.tagName==='A'&&tr.getAttribute('href');
     if(href&&pixelReady&&!tr.target&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey){e.preventDefault();setTimeout(()=>{location.href=href;},350);}}
+  // เมนู ⬇ ดาวน์โหลด: จำว่าเปิดอยู่ (หน้าวาดใหม่ตอนข้อมูลโหลดเสร็จแล้วเมนูเด้งปิดเอง · คุณแดน 13 ต.ค. 69) → ปิดเมื่อเลือกรายการหรือกดที่อื่น
+  if(S.ptDd&&!e.target.closest('.pt-dd summary')&&(e.target.closest('.pt-menu .pt-a')||!e.target.closest('.pt-dd'))){S.ptDd=false;const d=document.querySelector('.pt-dd');if(d)d.open=false;}
   const el=e.target.closest('[data-a]');if(el){if(el.dataset.a==='payGo'||el.dataset.a==='cartPay')e.preventDefault();act(el.dataset.a,el);}
 });
 document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.keep)S[t.dataset.keep]=t.open;},true);
