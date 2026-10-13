@@ -4985,6 +4985,7 @@ function readlabView(){
     ${plan?`<details class="rl-plan"><summary>📝 แผนสัปดาห์จากพี่ปลัด · ${new Date(plan.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</summary><p style="white-space:pre-wrap;margin:6px 0 0">${esc(plan.text)}</p></details>`:''}
   </div>
   <div class="chips" role="group" aria-label="กรองโพสต์ เพจราชการ">${[['queue','คิว'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']].map(([k,l])=>`<button class="chip" data-a="rlf" data-v="${k}" aria-pressed="${f===k}">${l} ${cnt[k]}</button>`).join('')}<button class="chip" data-a="rlRefresh">รีเฟรช</button></div>
+  ${(()=>{const rd=(RL.data.posts||[]).filter(x=>x.status==='draft'&&x.channel!=='threads'&&(x.image_url||x.video_url));return f==='queue'&&rd.length?`<p class="card fine rl-bulk">📦 คลังโพสต์: ร่างที่มีรูปพร้อมแล้ว <b>${rd.length}</b> ชิ้น ระบบตั้งเวลาให้วันละ 2 โพสต์ (10:00 และ 19:00) <button class="btn btn-sm btn-dark" data-a="rlApproveAll">✓ อนุมัติทั้ง ${rd.length} ชิ้น ให้โพสต์ตามเวลา</button><br>โพสต์ขึ้นเพจแล้วจะย้ายออกจากคิวไปอยู่แท็บ "โพสต์แล้ว" เอง</p>`:'';})()}
   ${list.length?list.map(card).join(''):`<p class="card fine">${f==='queue'?'ยังไม่มีโพสต์ในคิว ทีมเพจราชการ จะเริ่มส่งร่างในรอบถัดไป (น้องติว จันทร์ พุธ ศุกร์ 09:00)':'ยังไม่มีโพสต์'}</p>`}`;
 }
 const RLC={choose:null,msg:''};
@@ -6636,6 +6637,8 @@ function act(a,el){
     case 'rlf':S.rlf=el.dataset.v;render(true);break;
     case 'rlexp':{S.rlexp=S.rlexp||{};if(S.rlexp[id])delete S.rlexp[id];else S.rlexp[id]=1;render(true);break;}
     case 'rlRefresh':RL.data=null;loadRL();render(true);break;
+    case 'rlApproveAll':{const rd=(RL.data&&RL.data.posts||[]).filter(x=>x.status==='draft'&&x.channel!=='threads'&&(x.image_url||x.video_url));if(!rd.length||!confirm(`อนุมัติ ${rd.length} โพสต์ ให้ขึ้นเพจราชการตามเวลาที่ระบบตั้งไว้ (วันละ 2 โพสต์)?`))break;el.disabled=true;el.textContent='กำลังอนุมัติ...';
+      (async()=>{let n=0;for(const x of rd){try{const j=await rlApi('rl_update',{id:x.id,op:'approve'});if(j&&j.ok!==false)n++;}catch(e){}}toast(`อนุมัติแล้ว ${n} โพสต์ ระบบจะโพสต์ตามเวลาเอง ✅`);RL.data=null;loadRL();render(true);})();break;}
     case 'rlcfgOpen':S.rlcfg=!S.rlcfg;render(true);break;
     case 'igOpen':S.igOpen=!S.igOpen;FB.igMsg='';render(true);break;
     case 'igConnect':case 'rlIgConnect':{const rl=a==='rlIgConnect',tid=rl?'#rl-ig-token':'#ig-token',ta=$(tid),token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}

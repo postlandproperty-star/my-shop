@@ -674,6 +674,7 @@ const RL_GUIDE = `== เพจราชการ คู่มือแบรน�
 ช่องทาง: facebook 250-1,200 ตัวอักษร ประโยคแรกหยุดนิ้ว 1 บรรทัด ปิดด้วยคำถามหรือชวนเซฟ/แชร์ แฮชแท็กไม่เกิน 3 เช่น #สอบกพ #ภาคก #สอบราชการ · threads ไม่เกิน 500 ตัวอักษร ไม่ใส่แฮชแท็ก
 รูป: การ์ด 4:5 สีเพจ เหลือง #F5C518 กรมท่า #1E3A8A ขาว ดำ (theme yellow | navy | white) ข้อความบนการ์ดวางด้วยโค้ด ไม่มีรูปคนจริง ไม่ใช้ตราหรือโลโก้หน่วยงานราชการจริง
 ห้ามเด็ดขาด: รับประกันสอบผ่าน คำว่า "ผ่านชัวร์" "ข้อสอบจริง/ข้อสอบหลุด" อ้างว่าเป็นหน่วยงานรัฐหรือเพจทางการ ข่าวที่ไม่มีแหล่งทางการ เนื้อหาการเมือง ศาสนา คัดลอกโพสต์หรือข้อสอบลิขสิทธิ์ของสถาบันอื่น ใส่ข้อมูลส่วนตัวของใคร
+ตอนนี้เพจยังไม่มีบัญชี Threads: เขียนเฉพาะ facebook (ส่ง threads ระบบจะไม่รับ) · ไม่ต้องใส่ scheduled_at ระบบจองเวลาให้เอง วันละ 2 โพสต์ (10:00 และ 19:00 น.) ต่อคิวในคลัง
 คุณแดนเป็นคนอนุมัติทุกโพสต์ในแท็บ คอนเทนต์ > เพจราชการ (เชื่อมเพจแล้ว อนุมัติแล้วระบบโพสต์ให้ตามเวลา)
 ดู recent: status rejected = คุณแดนไม่เอา, edited = คุณแดนแก้ก่อนโพสต์, owner_note = คำติชม ให้เรียนรู้จากสิ่งเหล่านี้`;
 const FORMAT_BOARD = `== รูปแบบคอนเทนต์ที่คุณแดนสั่งเพิ่ม (30 ก.ย. 2569) ใช้ทุกสัปดาห์ ==
@@ -1716,8 +1717,14 @@ ${books}`;
         const src = RL_TEAM[body.source] ? String(body.source) : 'rl_writer';
         const seen = new Set(D.posts.map((x) => String(x.text).replace(/\s+/g, '').slice(0, 80)));
         const added = [], errors = [];
+        // คลังโพสต์ (คุณแดน 14 ต.ค. 69): โพสต์ facebook ที่ไม่ได้ระบุเวลา → ระบบจองช่องเวลาให้เอง วันละ 2 ช่อง 09:55 / 18:55 น. ไทย (รอบโพสต์อัตโนมัติ 10:00 และ 19:05) ต่อจากชิ้นล่าสุดในคลัง
+        const thOk = threadsConnected(await loadThreads('readlab').catch(() => ({})));
+        const taken = new Set(D.posts.filter((x) => x.channel !== 'threads' && ['draft', 'approved'].includes(x.status) && x.scheduled_at).map((x) => x.scheduled_at));
+        const nextSlot = () => { const t0 = Date.now() + 2 * 3600e3, d0 = new Date(); d0.setUTCHours(0, 0, 0, 0);
+          for (let k = 0; k < 400; k++) for (const m of [2 * 60 + 55, 11 * 60 + 55]) { const t = new Date(d0.getTime() + k * 864e5 + m * 60e3); const iso = t.toISOString(); if (t.getTime() > t0 && !taken.has(iso)) { taken.add(iso); return iso; } } return null; };
         for (const x of (Array.isArray(body.posts) ? body.posts : []).slice(0, 10)) {
           const channel = x?.channel === 'threads' ? 'threads' : 'facebook';
+          if (channel === 'threads' && !thOk) { errors.push('เพจราชการยังไม่มีบัญชี Threads ตอนนี้เขียนเฉพาะ facebook'); continue; }
           const text = String(x?.text || '').replace(/\r/g, '').trim();
           const kind = RL_KIND[x?.kind] && !['quote', 'book', 'habit'].includes(x.kind) ? x.kind : 'quiz';
           if (kind === 'sale' && !(D.cfg.sale_url && text.includes(D.cfg.sale_url))) { errors.push('โพสต์ขายต้องมีลิงก์สินค้า (cfg.sale_url) และใช้ได้เมื่อคุณแดนตั้งลิงก์แล้วเท่านั้น'); continue; }
@@ -1727,7 +1734,7 @@ ${books}`;
           const key = text.replace(/\s+/g, '').slice(0, 80); if (seen.has(key)) { errors.push('ซ้ำกับโพสต์เดิม'); continue; } seen.add(key);
           if ((x.image_url && !media(x.image_url)) || (x.video_url && !media(x.video_url))) { errors.push('รูป/คลิปต้องอัปโหลดผ่าน rl_media'); continue; }
           const id = 'rl' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-          D.posts.push({ id, source: src, channel, kind, text, image_url: media(x.image_url) || null, video_url: media(x.video_url) || null, book: String(x.book || '').slice(0, 160), notes: String(x.notes || '').slice(0, 400), scheduled_at: /^\d{4}-\d\d-\d\d/.test(String(x.scheduled_at || '')) ? String(x.scheduled_at) : null, status: 'draft', created_at: now });
+          D.posts.push({ id, source: src, channel, kind, text, image_url: media(x.image_url) || null, video_url: media(x.video_url) || null, book: String(x.book || '').slice(0, 160), notes: String(x.notes || '').slice(0, 400), scheduled_at: /^\d{4}-\d\d-\d\d/.test(String(x.scheduled_at || '')) ? String(x.scheduled_at) : channel === 'facebook' ? nextSlot() : null, status: 'draft', created_at: now });
           added.push(id);
         }
         D.posts = D.posts.filter((x) => x.status !== 'rejected').slice(-350).concat(D.posts.filter((x) => x.status === 'rejected').slice(-50)).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
