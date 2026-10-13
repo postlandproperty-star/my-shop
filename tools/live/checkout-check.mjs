@@ -20,9 +20,11 @@ for (const c of CASES) {
   let ok = false, why = '';
   try {
     await page.goto(`${SITE}/p/${slug}?utm_source=livecheck`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    const email = page.locator('#checkout #qr-email').first(); await email.waitFor({ state: 'attached', timeout: 20000 }); await email.scrollIntoViewIfNeeded();
-    await email.fill('live-check@example.com');
-    await page.locator('#checkout [data-a="qrMake"]').first().click({ timeout: 10000 });
+    await page.waitForLoadState('load').catch(() => {}); await page.waitForTimeout(1500); // หน้าวาดใหม่ตอนโหลดข้อมูลสินค้าเสร็จ รอให้นิ่งก่อน
+    for (let t = 0; t < 3; t++) { // ถ้าหน้าวาดช่องใหม่ทับระหว่างกด ให้หาใหม่แล้วลองอีกครั้ง
+      try { const email = page.locator('#checkout #qr-email').first(); await email.waitFor({ state: 'visible', timeout: 20000 }); await email.fill('live-check@example.com'); await page.locator('#checkout [data-a="qrMake"]').first().click({ timeout: 10000 }); break; }
+      catch (e) { if (t === 2) throw e; await page.waitForTimeout(1000); }
+    }
     for (let i = 0; i < 40 && !hits.length; i++) await page.waitForTimeout(250);
     ok = hits.length > 0; why = ok ? `คำขอ QR ออกไป ${hits.length} ครั้ง` : 'กดชำระเงินแล้วไม่มีคำขอ QR';
   } catch (e) { why = String(e.message || e).split('\n')[0].slice(0, 200); }
