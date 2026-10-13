@@ -305,8 +305,14 @@ try {
     // 3.52) งานราชการ /gov: รายการสนามสอบ + หน้าสนามสอบ (ตาราง ข้อสอบฟรี ลิงก์ประกาศทางการ) + กรอกอีเมลรับแจ้งเตือน
     try { page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/__gov`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
-      const gi = await page.evaluate(() => ({ items: document.querySelectorAll('.gv-list .gv-it').length, on: document.querySelector('.nav a.on')?.getAttribute('href') || '', h1: document.querySelectorAll('h1').length }));
-      pass(`[${kind}] งานราชการ /gov: รายการสนามสอบครบ + เมนูงานราชการถูกเลือก`, gi.items === GOV_EXAMS.length && gi.on === '/gov' && gi.h1 === 1, JSON.stringify(gi));
+      const gi = await page.evaluate(() => ({ items: document.querySelectorAll('.gv-jobs .gv-job').length, foot: !!document.querySelector('footer a[href="/gov"]'), nav: !!document.querySelector('.nav a[href="/gov"]'), h1: document.querySelectorAll('h1').length }));
+      pass(`[${kind}] งานราชการ /gov: รายการสนามสอบครบ + ลิงก์อยู่ท้ายเว็บ (ยังไม่อยู่ในเมนูหลัก)`, gi.items === GOV_EXAMS.length && gi.foot && !gi.nav && gi.h1 === 1, JSON.stringify(gi));
+      const vis = () => page.evaluate(() => ({ n: [...document.querySelectorAll('.gv-job')].filter((e) => !e.hidden).length, empty: !document.getElementById('gv-empty').hidden, count: document.getElementById('gv-n').textContent }));
+      await page.click('.gv-chips button[data-v="teacher"]'); const f1 = await vis();
+      await page.fill('#gv-q', 'zzzz'); const f2 = await vis();
+      await page.click('#gv-reset'); const f3 = await vis();
+      await page.fill('#gv-q', 'ท้องถิ่น'); const f4 = await vis(); await page.fill('#gv-q', '');
+      pass(`[${kind}] งานราชการ /gov: ตัวกรองประเภท + ค้นหา + ไม่พบผลลัพธ์ + ล้างตัวกรอง`, f1.n === 1 && !f1.empty && f2.n === 0 && f2.empty && f3.n === GOV_EXAMS.length && !f3.empty && f4.n >= 1 && f4.n < GOV_EXAMS.length, JSON.stringify([f1, f2, f3, f4]));
       await layout(page, `[${kind}] งานราชการ /gov`); await page.screenshot({ path: path.join(OUT, `gov-index-${kind}.png`), fullPage: true });
       await page.goto(`${BASE}/__gov/kp-phak-kor`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
       const gp = await page.evaluate(() => ({ rows: document.querySelectorAll('.gv-tb tbody tr').length, quiz: !!document.querySelector('a[href^="/quiz/kp-english-10"]'), src: [...document.querySelectorAll('.gv-src a')].map((a) => a.hostname), st: document.querySelector('.gv-st')?.textContent || '', ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((x) => JSON.parse(x.textContent)['@type']) }));
@@ -333,7 +339,7 @@ try {
       await page.goto(`${BASE}/__account`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.ac-ord', { timeout: 4000 });
       const ac = await page.evaluate(() => ({ dl: document.querySelectorAll('.ac-dl').length, mock: !!document.querySelector('a[href="/vip/mock"]'), review: /สมุดจุดพลาด \(3 ข้อ\)/.test(document.body.innerText), nav: [...document.querySelectorAll('.nav a')].map((a) => a.getAttribute('href')), acc: !!document.querySelector('.hd-acc.on') }));
       pass(`[${kind}] บัญชีของฉัน: ชีทที่ซื้อ (ปุ่มโหลดทุกไฟล์) + สถานะ VIP + ทางไปข้อสอบเสมือนจริง/สมุดจุดพลาด`, ac.dl === 2 && ac.mock && ac.review && ac.acc, JSON.stringify(ac));
-      pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท ข้อสอบฟรี ความรู้ งานราชการ VIP)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
+      pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท ข้อสอบฟรี ความรู้ VIP)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
       await layout(page, `[${kind}] บัญชีของฉัน`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'account-mobile.png'), fullPage: true });
       { const go = await page.evaluate(() => (document.querySelector('.cs-go') || {}).getAttribute?.('href') || '');
         await page.goto(`${BASE}/__learn`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.lc', { timeout: 4000 });
