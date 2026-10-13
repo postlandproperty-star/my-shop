@@ -24,6 +24,8 @@ const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'li
 const { vipPage, accountPage, vipMockPage, appPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
 const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
+const { GOV_EXAMS, govIndex, govPage } = await import(path.join(ROOT, '..', 'lib/gov.js'));
+const GOVW = [];
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
 const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const IMGSWAP = []; const RENEW = []; const PHOQ = []; let PHOKEY = true; const RCVPOST = []; const PDFCOV = []; const CRSPOST = []; const BULK = [];
@@ -42,6 +44,9 @@ const server = http.createServer((req, res) => {
   if (u === '/__learn') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(learnPage({ site: BASE })); }
   if (u === '/__account' || u === '/__mock') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(u === '/__account' ? accountPage({ site: BASE }) : vipMockPage({ site: BASE })); }
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
+  if (u === '/__gov') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(govIndex({ site: BASE })); }
+  const gm = u.match(/^\/__gov\/([a-z-]+)$/); const gx = gm && GOV_EXAMS.find((x) => x.slug === gm[1]);
+  if (gx) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(govPage(gx, { site: BASE, quizzes: [{ slug: 'kp-english-10', title: 'ข้อสอบภาษาอังกฤษ ก.พ. 10 ข้อ', cat: 'kp', questions: [1, 2, 3] }], articles: [], products: SHOP.products })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
   if (tp) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(topicPage(tp, topicItems(tp, { articles: T_ART, quizzes: T_QZ, products: SHOP.products }), { site: BASE, all: TOPICS })); }
   const ti = u.match(/^\/topic-img\/([a-z-]+)\.jpg$/); if (ti) { const f = path.join(SRC, 'topics', ti[1] + '.jpg'); if (fs.existsSync(f)) { res.setHeader('Content-Type', 'image/jpeg'); return res.end(fs.readFileSync(f)); } res.statusCode = 404; return res.end(); }
@@ -90,6 +95,7 @@ async function newPage(kind) {
     if (/action=ads_auto(&|$)/.test(url) && AD) return route.fulfill({ json: { ok: true, items: [AD, LIVE], access: { ok: true, account: { currency: 'AUD' } } } }); // ร่างแอด 2 รูป + แอดทดสอบ 3 รูปที่วิ่งมา 6 วัน
     if (/action=ads_auto_status/.test(url) && AD) return route.fulfill({ json: { ok: true, access: { ok: true }, currency: 'AUD', rate: 0.04, history: [], ads: LIVE_ADS, tz: 7, daily: AD_DAILY, shopDaily: AD_SHOPD } });
     if (/action=cover/.test(url)) { try { COVER_CALLS.push(JSON.parse(route.request().postData() || '{}')); } catch (e) {} return route.fulfill({ json: { ok: true, image: 'data:image/png;base64,' + PNG.toString('base64') } }); }
+    if (/\/api\/order\?m=govwatch/.test(url)) { try { GOVW.push(JSON.parse(route.request().postData() || '{}')); } catch (e) {} return route.fulfill({ json: { ok: true } }); }
     if (/\/api\/order\?m=free/.test(url)) return route.fulfill({ json: { ok: true, file: `${BASE}/free-file/toeic-confusing-50.pdf` } });
     if (/action=insights/.test(url)) return route.fulfill({ json: { ok: true, ready: true, events: 120, totals: { sessions: 40, views: 90, bounce: 55, perSession: 2.3, mobile: 80 }, daily: [{ d: '2026-10-01', n: 12 }, { d: '2026-10-02', n: 28 }], funnel: { product: 30, add: 8, buy: 6, pay: 4, paid: 2 }, pages: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct75: 40, pct100: 25, exitRate: 50, exits: 10 }], articles: [{ p: '/learn/toeic-tense-guide', views: 20, avg: 140, pct100: 25 }], exits: [{ p: '/p/x', exits: 6, exitRate: 60 }], clicks: [{ k: 'cartAdd', n: 9 }, { k: 'link:/p/toeic-750', n: 5 }, { k: 'out:m.me', n: 2 }], sources: [{ k: 'google', n: 20 }, { k: 'ad:toeic-checkout', n: 10 }], orderSources: [{ k: 'fb-toeic-test', n: 2 }], quizzes: [{ slug: 'toeic-tense-quiz', starts: 10, done: 6, avg: 70 }], hardest: [{ slug: 'toeic-tense-quiz', i: 3, rate: 20, n: 10 }] } });
     if (/action=vip_admin/.test(url)) return route.fulfill({ json: { ok: true, ready: false, sql: 'create table members (...);', settings: { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 }, page: { title: 'SheetLab VIP', sub: 'ฝึกต่อเนื่อง', perks: [{ t: 'คลังข้อสอบ', free: true, vip: 'yes' }, { t: 'สมุดจุดพลาด', free: false, vip: 'yes' }], faq: [{ q: 'ต้องตั้งรหัสไหม', a: 'ไม่ต้อง' }] } }, stats: null } });
@@ -296,6 +302,22 @@ try {
       await page.context().close();
     } catch (e) { pass(`[${kind}] หัวข้อ ${slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
+    // 3.52) งานราชการ /gov: รายการสนามสอบ + หน้าสนามสอบ (ตาราง ข้อสอบฟรี ลิงก์ประกาศทางการ) + กรอกอีเมลรับแจ้งเตือน
+    try { page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.goto(`${BASE}/__gov`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
+      const gi = await page.evaluate(() => ({ items: document.querySelectorAll('.gv-list .gv-it').length, on: document.querySelector('.nav a.on')?.getAttribute('href') || '', h1: document.querySelectorAll('h1').length }));
+      pass(`[${kind}] งานราชการ /gov: รายการสนามสอบครบ + เมนูงานราชการถูกเลือก`, gi.items === GOV_EXAMS.length && gi.on === '/gov' && gi.h1 === 1, JSON.stringify(gi));
+      await layout(page, `[${kind}] งานราชการ /gov`); await page.screenshot({ path: path.join(OUT, `gov-index-${kind}.png`), fullPage: true });
+      await page.goto(`${BASE}/__gov/kp-phak-kor`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
+      const gp = await page.evaluate(() => ({ rows: document.querySelectorAll('.gv-tb tbody tr').length, quiz: !!document.querySelector('a[href^="/quiz/kp-english-10"]'), src: [...document.querySelectorAll('.gv-src a')].map((a) => a.hostname), st: document.querySelector('.gv-st')?.textContent || '', ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((x) => JSON.parse(x.textContent)['@type']) }));
+      pass(`[${kind}] งานราชการ ก.พ.: ตาราง 3 วิชา + ข้อสอบฟรี + ลิงก์ประกาศ .go.th + สถานะ + FAQ schema`, gp.rows === 3 && gp.quiz && gp.src.length >= 1 && gp.src.every((h) => /\.go\.th$/.test(h)) && !!gp.st && gp.ld.includes('FAQPage'), JSON.stringify(gp));
+      await layout(page, `[${kind}] งานราชการ ก.พ.`);
+      const n0 = GOVW.length; await page.fill('#gv-email', `gov-${kind}@test.co`); await page.click('#gv-form button'); await page.waitForSelector('#gv-done:not([hidden])');
+      pass(`[${kind}] งานราชการ: กรอกอีเมล → ส่งไปบันทึก (สนาม kp-phak-kor) + ขึ้นข้อความบันทึกแล้ว`, GOVW.length === n0 + 1 && GOVW[n0].slug === 'kp-phak-kor' && GOVW[n0].email === `gov-${kind}@test.co`, JSON.stringify(GOVW[n0] || {}));
+      await page.screenshot({ path: path.join(OUT, `gov-kp-${kind}.png`), fullPage: true });
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] งานราชการ: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
     // 3.55) ชีทแจกฟรี: กรอกอีเมล → ปุ่มดาวน์โหลด + ชวนติดตามเพจ (ไม่บังคับไลก์)
     try { page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/__free`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(300);
@@ -311,7 +333,7 @@ try {
       await page.goto(`${BASE}/__account`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.ac-ord', { timeout: 4000 });
       const ac = await page.evaluate(() => ({ dl: document.querySelectorAll('.ac-dl').length, mock: !!document.querySelector('a[href="/vip/mock"]'), review: /สมุดจุดพลาด \(3 ข้อ\)/.test(document.body.innerText), nav: [...document.querySelectorAll('.nav a')].map((a) => a.getAttribute('href')), acc: !!document.querySelector('.hd-acc.on') }));
       pass(`[${kind}] บัญชีของฉัน: ชีทที่ซื้อ (ปุ่มโหลดทุกไฟล์) + สถานะ VIP + ทางไปข้อสอบเสมือนจริง/สมุดจุดพลาด`, ac.dl === 2 && ac.mock && ac.review && ac.acc, JSON.stringify(ac));
-      pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท ข้อสอบฟรี ความรู้ VIP)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
+      pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท ข้อสอบฟรี ความรู้ งานราชการ VIP)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
       await layout(page, `[${kind}] บัญชีของฉัน`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'account-mobile.png'), fullPage: true });
       { const go = await page.evaluate(() => (document.querySelector('.cs-go') || {}).getAttribute?.('href') || '');
         await page.goto(`${BASE}/__learn`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.lc', { timeout: 4000 });

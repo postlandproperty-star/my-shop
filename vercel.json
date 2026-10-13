@@ -129,6 +129,14 @@
       "destination": "/api/page?vip=review"
     },
     {
+      "source": "/gov",
+      "destination": "/api/page?gov=_index"
+    },
+    {
+      "source": "/gov/:slug",
+      "destination": "/api/page?gov=:slug"
+    },
+    {
       "source": "/topic/:slug",
       "destination": "/api/page?topic=:slug"
     },
