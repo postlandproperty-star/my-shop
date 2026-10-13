@@ -24,7 +24,7 @@ const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'li
 const { vipPage, accountPage, vipMockPage, appPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
 const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
-const { GOV_EXAMS, govIndex, govPage } = await import(path.join(ROOT, '..', 'lib/gov.js'));
+const { GOV_EXAMS, govIndex, govPage, govArticlePage, govQuizPage, GOV_ARTICLES, GOV_QUIZZES } = await import(path.join(ROOT, '..', 'lib/gov.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
 const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const IMGSWAP = []; const RENEW = []; const PHOQ = []; let PHOKEY = true; const RCVPOST = []; const PDFCOV = []; const CRSPOST = []; const BULK = [];
@@ -45,6 +45,7 @@ const server = http.createServer((req, res) => {
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
   const GQ = [{ slug: 'kp-english-10', title: 'ข้อสอบภาษาอังกฤษ ก.พ. 10 ข้อ', cat: 'kp', questions: [1, 2, 3] }, { slug: 'kp-think-10', title: 'อนุกรมเลข ก.พ. 10 ข้อ', cat: 'kp-think', questions: [1, 2] }], GP = [...SHOP.products.filter((p) => p.status === 'published' && p.type !== 'bundle').slice(0, 2).map((p, i) => ({ ...p, kind: i ? 'course' : 'sheet', price: 179, name: (i ? 'คอร์สอังกฤษ ก.พ. ' : 'ชีทอังกฤษ ก.พ. ') + p.name }))];
   if (u === '/__gov') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(govIndex({ site: BASE, quizzes: GQ, products: GP })); }
+  const gl = u.match(/^\/__gov\/(learn|quiz)\/([a-z0-9-]+)$/); if (gl) { const x = (gl[1] === 'learn' ? GOV_ARTICLES : GOV_QUIZZES).find((y) => y.slug === gl[2]); if (x) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(gl[1] === 'learn' ? govArticlePage(x, { site: BASE, products: GP }) : govQuizPage(x, { site: BASE, products: GP })); } }
   const gm = u.match(/^\/__gov\/([a-z-]+)$/); const gx = gm && GOV_EXAMS.find((x) => x.slug === gm[1]);
   if (gx) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(govPage(gx, { site: BASE, quizzes: GQ, products: GP })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
@@ -304,8 +305,8 @@ try {
     // 3.52) โซนสอบราชการ /gov: ข้อสอบฟรี + ชีท + สนามสอบ (ค้นหา/กรอง/ไม่พบผลลัพธ์) และหน้าสนามสอบ (ตาราง ข้อสอบ ชีท ไม่มีวันรับสมัคร)
     try { page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/__gov`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
-      const gi = await page.evaluate(() => ({ h1: document.querySelectorAll('h1').length, tabs: [...document.querySelectorAll('.gc-tabs a')].map((a) => a.getAttribute('href')), quiz: document.querySelectorAll('#practice .gc-row[href^="/quiz/"]').length, sheets: document.querySelectorAll('#sheets .gc-p').length, courses: document.querySelectorAll('#courses .gc-p').length, free: !!document.getElementById('free'), exams: document.querySelectorAll('#exams .gc-row').length, nav: !!document.querySelector('.nav a[href="/gov"]'), foot: !!document.querySelector('footer a[href="/gov"]'), bg: getComputedStyle(document.body).backgroundColor, cta: document.querySelector('.gc-hero .gc-b1')?.getAttribute('href') || '' }));
-      pass(`[${kind}] สอบราชการ /gov แบบเรียบ: แถบลัดเฉพาะส่วนที่มีของ + ข้อสอบฟรี + ชีท + คอร์ส + สนามสอบ (แจกฟรีไม่มี = ไม่แสดง) · ปุ่มหลักไปข้อสอบ · สีร้านเดิม · ลิงก์ท้ายเว็บ ไม่อยู่ในเมนูหลัก`, gi.h1 === 1 && gi.tabs.join() === '#practice,#sheets,#courses,#exams' && gi.quiz === 2 && gi.sheets === 1 && gi.courses === 1 && !gi.free && gi.exams === GOV_EXAMS.length && !gi.nav && gi.foot && /^\/quiz\//.test(gi.cta), JSON.stringify(gi));
+      const gi = await page.evaluate(() => ({ h1: document.querySelectorAll('h1').length, tabs: [...document.querySelectorAll('.gc-tabs a')].map((a) => a.getAttribute('href')), quiz: (document.querySelector('#practice .gc-more')?.click(), document.querySelectorAll('#practice .gc-row:not([hidden])').length), sheets: document.querySelectorAll('#sheets .gc-p').length, courses: document.querySelectorAll('#courses .gc-p').length, free: !!document.getElementById('free'), exams: document.querySelectorAll('#exams .gc-row').length, nav: !!document.querySelector('.nav a[href="/gov"]'), foot: !!document.querySelector('footer a[href="/gov"]'), bg: getComputedStyle(document.body).backgroundColor, cta: document.querySelector('.gc-hero .gc-b1')?.getAttribute('href') || '' }));
+      pass(`[${kind}] สอบราชการ /gov แบบเรียบ: แถบลัดเฉพาะส่วนที่มีของ + ข้อสอบฟรี + ชีท + คอร์ส + สนามสอบ (แจกฟรีไม่มี = ไม่แสดง) · ปุ่มหลักไปข้อสอบ · สีร้านเดิม · ลิงก์ท้ายเว็บ ไม่อยู่ในเมนูหลัก`, gi.h1 === 1 && gi.tabs.join() === '#practice,#sheets,#courses,#learn,#exams' && gi.quiz === 2 + GOV_QUIZZES.length && gi.sheets === 1 && gi.courses === 1 && !gi.free && gi.exams === GOV_EXAMS.length && !gi.nav && gi.foot && /^\/gov\/quiz\//.test(gi.cta), JSON.stringify(gi));
       await page.click('.gc-tabs a[href="#exams"]'); await page.waitForTimeout(400);
       const sy = await page.evaluate(() => { const r = document.getElementById('exams').getBoundingClientRect(), t = document.querySelector('.gc-tabs').getBoundingClientRect(); return { top: Math.round(r.top), tabsBottom: Math.round(t.bottom) }; });
       pass(`[${kind}] สอบราชการ /gov: กดแถบลัด → เลื่อนไปส่วนนั้น ไม่โดนแถบลัดบัง`, sy.top >= sy.tabsBottom - 2 && sy.top < 400, JSON.stringify(sy));
@@ -314,7 +315,19 @@ try {
       await page.goto(`${BASE}/__gov/kp-phak-kor`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
       const gp = await page.evaluate(() => ({ rows: document.querySelectorAll('.gv-tb tbody tr').length, quiz: !!document.querySelector('#practice a[href^="/quiz/kp-english-10"]'), sheet: !!document.querySelector('#sheets a[href^="/p/"]'), off: [...document.querySelectorAll('a[target=_blank]')].map((a) => a.hostname).filter((h) => !/\.go\.th$/.test(h) && !/m\.me|facebook/.test(h)), ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((x) => JSON.parse(x.textContent)['@type']) }));
       pass(`[${kind}] สอบราชการ ก.พ.: ตาราง 3 วิชา + ข้อสอบฟรี + ชีท + ลิงก์ทางการ .go.th + FAQ schema`, gp.rows === 3 && gp.quiz && gp.sheet && !gp.off.length && gp.ld.includes('FAQPage'), JSON.stringify(gp));
-      await layout(page, `[${kind}] สอบราชการ ก.พ.`); await page.screenshot({ path: path.join(OUT, `gov-kp-${kind}.png`), fullPage: true });
+      await layout(page, `[${kind}] สอบราชการ ก.พ.`);
+      // บทความและข้อสอบของโซน /gov/learn /gov/quiz: ลิงก์อยู่ในโซน ไม่ส่งออกไป /learn หรือ /quiz กลาง
+      for (const a of GOV_ARTICLES) { await page.goto(`${BASE}/__gov/learn/${a.slug}`, { waitUntil: 'domcontentloaded' });
+        const ga = await page.evaluate(() => ({ h1: document.querySelectorAll('h1').length, canon: document.querySelector('link[rel=canonical]').getAttribute('href'), out: [...document.querySelectorAll('main > article a[href^="/"], main > .gc-row, main > .gc-list a, main > .gc-grid a')].map((x) => x.getAttribute('href').split('?')[0]).filter((h) => !/^\/(gov|p\/)/.test(h)), quiz: !!document.querySelector('a[href^="/gov/quiz/"]') }));
+        if (!(ga.h1 === 1 && ga.canon.endsWith(`/gov/learn/${a.slug}`) && !ga.out.length && (!a.quiz_slug || ga.quiz))) { pass(`[${kind}] บทความโซนราชการ ${a.slug}`, false, JSON.stringify(ga)); } }
+      pass(`[${kind}] บทความโซนราชการ ${GOV_ARTICLES.length} เรื่อง: หัวข้อเดียว canonical /gov/learn ลิงก์อยู่ในโซน มีปุ่มไปข้อสอบคู่กัน`, true);
+      await layout(page, `[${kind}] บทความโซนราชการ`);
+      const gq = GOV_QUIZZES.find((q) => q.subject === 'think') || GOV_QUIZZES[0];
+      await page.goto(`${BASE}/__gov/quiz/${gq.slug}`, { waitUntil: 'domcontentloaded' });
+      await page.click('.q button[data-k="0"]');
+      const gz = await page.evaluate(() => ({ canon: document.querySelector('link[rel=canonical]').getAttribute('href'), title: document.title, n: document.querySelectorAll('.q').length, shown: !!document.querySelector('.q .ex') && getComputedStyle(document.querySelector('.q .ex')).display !== 'none', out: [...document.querySelectorAll('main a[href^="/quiz/"], main a[href^="/learn/"]')].length }));
+      pass(`[${kind}] ข้อสอบโซนราชการ ${gq.slug}: canonical /gov/quiz · ชื่อหน้าไม่ใช่ TOEIC · ตอบแล้วเห็นเฉลย · ไม่ลิงก์ออกไป /quiz /learn`, gz.canon.endsWith(`/gov/quiz/${gq.slug}`) && !/TOEIC/.test(gz.title) && gz.n === gq.questions.length && gz.shown && !gz.out, JSON.stringify(gz));
+      await layout(page, `[${kind}] ข้อสอบโซนราชการ`); await page.screenshot({ path: path.join(OUT, `gov-quiz-${kind}.png`), fullPage: true }); await page.screenshot({ path: path.join(OUT, `gov-kp-${kind}.png`), fullPage: true });
       await page.context().close();
     } catch (e) { pass(`[${kind}] สอบราชการ: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
