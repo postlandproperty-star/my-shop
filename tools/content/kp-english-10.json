@@ -1,0 +1,29 @@
+{
+  "source": "writer",
+  "slug": "kp-english-10",
+  "title": "ข้อสอบภาษาอังกฤษ ก.พ. ฟรี 10 ข้อ พร้อมเฉลยภาษาไทย",
+  "desc": "ลองทำข้อสอบภาษาอังกฤษแนว ก.พ. ภาค ก 10 ข้อ บทสนทนา คำศัพท์ ไวยากรณ์ และการอ่าน พร้อมเฉลยอธิบายเป็นภาษาไทยทุกข้อ",
+  "cat": "kp",
+  "questions": [
+    { "q": "A: Could you tell me where the post office is?\nB: ______", "choices": ["Sure. It's next to the bank.", "Yes, I could.", "No, it isn't mine.", "I'm fine, thank you."], "answer": 0,
+      "explain": "A ถามทาง (Could you tell me where...?) คำตอบที่เหมาะคือบอกตำแหน่ง ส่วน Yes, I could. ตอบแค่ว่าทำได้แต่ไม่ได้บอกทาง จึงไม่ตอบคำถาม" },
+    { "q": "A: I'm sorry I'm late. The traffic was terrible.\nB: ______", "choices": ["You're welcome.", "Congratulations!", "Don't worry. We haven't started yet.", "Yes, I'm late too."], "answer": 2,
+      "explain": "เมื่อมีคนขอโทษ ให้ตอบปลอบว่าไม่เป็นไร Don't worry. ส่วน You're welcome. ใช้ตอบคำขอบคุณ ไม่ใช่คำขอโทษ" },
+    { "q": "The meeting has been ______ until next Monday because the director is sick.", "choices": ["promoted", "postponed", "prevented", "provided"], "answer": 1,
+      "explain": "postpone = เลื่อนออกไป ประโยคบอกว่าประชุมถูกเลื่อนไปวันจันทร์หน้าเพราะผู้อำนวยการป่วย promote = เลื่อนตำแหน่ง prevent = ป้องกัน provide = จัดหาให้" },
+    { "q": "Applicants must ______ the form and return it before the closing date.", "choices": ["compete", "compare", "comply", "complete"], "answer": 3,
+      "explain": "complete the form = กรอกแบบฟอร์มให้ครบ compete = แข่งขัน compare = เปรียบเทียบ comply = ปฏิบัติตาม (ใช้ comply with)" },
+    { "q": "She ______ in this department since 2020.", "choices": ["has worked", "works", "is working", "worked"], "answer": 0,
+      "explain": "since + จุดเวลาในอดีต บอกว่าทำมาตั้งแต่ตอนนั้นจนถึงตอนนี้ ใช้ Present Perfect คือ has/have + V3 จึงตอบ has worked" },
+    { "q": "If it rains tomorrow, we ______ the event indoors.", "choices": ["would hold", "held", "will hold", "had held"], "answer": 2,
+      "explain": "If + Present Simple (rains) เป็นเงื่อนไขที่เกิดขึ้นได้จริงในอนาคต ประโยคหลักใช้ will + V1 จึงตอบ will hold" },
+    { "q": "NOTICE: The district office will be closed next Friday for staff training. Online services will remain available. Documents submitted on that day will be processed the following Monday. For urgent matters, please call the hotline.\n\nWhy will the office be closed?", "choices": ["Because of a public holiday", "Because staff will attend training", "Because the online system is broken", "Because the office is moving"], "answer": 1,
+      "explain": "ประกาศบอกว่า closed next Friday for staff training คือปิดเพราะเจ้าหน้าที่ไปอบรม ตัวเลือกอื่นไม่มีในประกาศ" },
+    { "q": "NOTICE: The district office will be closed next Friday for staff training. Online services will remain available. Documents submitted on that day will be processed the following Monday. For urgent matters, please call the hotline.\n\nWhat can people still use on Friday?", "choices": ["The front counter", "The meeting room", "The staff training", "Online services"], "answer": 3,
+      "explain": "Online services will remain available = บริการออนไลน์ยังใช้ได้ตามปกติ remain available แปลว่ายังใช้งานได้อยู่" },
+    { "q": "NOTICE: The district office will be closed next Friday for staff training. Online services will remain available. Documents submitted on that day will be processed the following Monday. For urgent matters, please call the hotline.\n\nWhen will documents submitted on Friday be processed?", "choices": ["The following Monday", "On the same Friday", "Next Thursday", "After two weeks"], "answer": 0,
+      "explain": "ประกาศบอกว่า processed the following Monday คือจะดำเนินการในวันจันทร์ถัดไป ข้อสอบการอ่านมักถามรายละเอียดแบบนี้ ให้หาคำในคำถามแล้วกลับไปดูประโยคเดียวกันในบทอ่าน" },
+    { "q": "NOTICE: The district office will be closed next Friday for staff training. Online services will remain available. Documents submitted on that day will be processed the following Monday. For urgent matters, please call the hotline.\n\nThe word \"urgent\" is closest in meaning to ______.", "choices": ["unimportant", "expensive", "needing quick action", "finished"], "answer": 2,
+      "explain": "urgent = เร่งด่วน ต้องรีบจัดการ ความหมายใกล้เคียงที่สุดคือ needing quick action ข้อถามความหมายคำศัพท์ให้ลองแทนคำตอบลงในประโยคแล้วดูว่าความหมายยังเข้ากันไหม" }
+  ]
+}

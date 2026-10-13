@@ -24,6 +24,7 @@ const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'li
 const { vipPage, accountPage, vipMockPage, appPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
 const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
+const { GOV_EXAMS, govIndex, govPage } = await import(path.join(ROOT, '..', 'lib/gov.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
 const MARKS = [];
 const CARDHITS = []; let CARDMODE = false; const ORDERHITS = []; const IMGSWAP = []; const RENEW = []; const PHOQ = []; let PHOKEY = true; const RCVPOST = []; const PDFCOV = []; const CRSPOST = []; const BULK = [];
@@ -42,6 +43,10 @@ const server = http.createServer((req, res) => {
   if (u === '/__learn') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(learnPage({ site: BASE })); }
   if (u === '/__account' || u === '/__mock') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(u === '/__account' ? accountPage({ site: BASE }) : vipMockPage({ site: BASE })); }
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
+  const GQ = [{ slug: 'kp-english-10', title: 'ข้อสอบภาษาอังกฤษ ก.พ. 10 ข้อ', cat: 'kp', questions: [1, 2, 3] }, { slug: 'kp-think-10', title: 'อนุกรมเลข ก.พ. 10 ข้อ', cat: 'kp-think', questions: [1, 2] }], GP = [...SHOP.products.filter((p) => p.status === 'published').slice(0, 1).map((p) => ({ ...p, name: 'ชีทอังกฤษ ก.พ. ' + p.name }))];
+  if (u === '/__gov') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(govIndex({ site: BASE, quizzes: GQ, products: GP })); }
+  const gm = u.match(/^\/__gov\/([a-z-]+)$/); const gx = gm && GOV_EXAMS.find((x) => x.slug === gm[1]);
+  if (gx) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(govPage(gx, { site: BASE, quizzes: GQ, products: GP })); }
   const tm = u.match(/^\/__topic\/([a-z-]+)$/); const tp = tm && TOPICS.find((x) => x.slug === tm[1]);
   if (tp) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(topicPage(tp, topicItems(tp, { articles: T_ART, quizzes: T_QZ, products: SHOP.products }), { site: BASE, all: TOPICS })); }
   const ti = u.match(/^\/topic-img\/([a-z-]+)\.jpg$/); if (ti) { const f = path.join(SRC, 'topics', ti[1] + '.jpg'); if (fs.existsSync(f)) { res.setHeader('Content-Type', 'image/jpeg'); return res.end(fs.readFileSync(f)); } res.statusCode = 404; return res.end(); }
@@ -295,6 +300,26 @@ try {
         await page.evaluate(() => localStorage.removeItem('sb-lpeqaorswhwzlplsaqpe-auth-token')); } await page.screenshot({ path: path.join(OUT, `topic-${slug}-${kind}.png`), fullPage: true });
       await page.context().close();
     } catch (e) { pass(`[${kind}] หัวข้อ ${slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
+    // 3.52) โซนสอบราชการ /gov: ข้อสอบฟรี + ชีท + สนามสอบ (ค้นหา/กรอง/ไม่พบผลลัพธ์) และหน้าสนามสอบ (ตาราง ข้อสอบ ชีท ไม่มีวันรับสมัคร)
+    try { page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.goto(`${BASE}/__gov`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
+      const gi = await page.evaluate(() => ({ quiz: document.querySelectorAll('[data-kind="quiz"]').length, sheet: document.querySelectorAll('a[data-kind="sheet"][href^="/p/"]').length, exam: document.querySelectorAll('[data-kind="exam"]').length, foot: !!document.querySelector('footer a[href="/gov"]'), nav: !!document.querySelector('.nav a[href="/gov"]'), h1: document.querySelectorAll('h1').length, watch: !!document.querySelector('#gv-form, .gv-st'), subj: document.querySelectorAll('.gv-chips button[data-g="s"]:not([data-v=""])').length }));
+      pass(`[${kind}] สอบราชการ /gov: ข้อสอบฟรี + ชีท + สนามสอบ · ไม่แตะเมนูหลัก · ไม่มีส่วนประกาศ`, gi.quiz === 2 && gi.sheet === 1 && gi.subj === 2 && gi.exam === GOV_EXAMS.length && !gi.nav && gi.h1 === 1 && !gi.watch, JSON.stringify(gi));
+      const vis = () => page.evaluate(() => ({ n: [...document.querySelectorAll('.gv-job')].filter((e) => !e.hidden).length, empty: !document.getElementById('gv-empty').hidden }));
+      await page.click('.gv-chips button[data-v="sheet"]'); const f1 = await vis();
+      await page.fill('#gv-q', 'zzzz'); const f2 = await vis();
+      await page.click('#gv-reset'); const f3 = await vis();
+      await page.fill('#gv-q', 'ท้องถิ่น'); const f4 = await vis(); await page.fill('#gv-q', '');
+      await page.click('.gv-chips button[data-g="s"][data-v="think"]'); const f5 = await vis(); await page.click('.gv-chips button[data-g="s"][data-v=""]');
+      pass(`[${kind}] สอบราชการ /gov: กรองชีท + ค้นหา + ไม่พบผลลัพธ์ + ล้างตัวกรอง + กรองวิชา (คิดวิเคราะห์)`, f1.n === 1 && !f1.empty && f2.n === 0 && f2.empty && f3.n === 3 + GOV_EXAMS.length && f4.n >= 1 && f4.n < f3.n && f5.n === 1 + GOV_EXAMS.filter((x) => x.subjects.includes('think')).length, JSON.stringify([f1, f2, f3, f4, f5]));
+      await layout(page, `[${kind}] สอบราชการ /gov`); await page.screenshot({ path: path.join(OUT, `gov-index-${kind}.png`), fullPage: true });
+      await page.goto(`${BASE}/__gov/kp-phak-kor`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(200);
+      const gp = await page.evaluate(() => ({ rows: document.querySelectorAll('.gv-tb tbody tr').length, quiz: !!document.querySelector('#practice a[href^="/quiz/kp-english-10"]'), sheet: !!document.querySelector('#sheets a[href^="/p/"]'), off: [...document.querySelectorAll('a[target=_blank]')].map((a) => a.hostname).filter((h) => !/\.go\.th$/.test(h) && !/m\.me|facebook/.test(h)), ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((x) => JSON.parse(x.textContent)['@type']) }));
+      pass(`[${kind}] สอบราชการ ก.พ.: ตาราง 3 วิชา + ข้อสอบฟรี + ชีท + ลิงก์ทางการ .go.th + FAQ schema`, gp.rows === 3 && gp.quiz && gp.sheet && !gp.off.length && gp.ld.includes('FAQPage'), JSON.stringify(gp));
+      await layout(page, `[${kind}] สอบราชการ ก.พ.`); await page.screenshot({ path: path.join(OUT, `gov-kp-${kind}.png`), fullPage: true });
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] สอบราชการ: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
     // 3.55) ชีทแจกฟรี: กรอกอีเมล → ปุ่มดาวน์โหลด + ชวนติดตามเพจ (ไม่บังคับไลก์)
     try { page = await newPage(kind); page.setDefaultTimeout(8000);

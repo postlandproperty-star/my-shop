@@ -100,7 +100,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const today = new Date().toISOString().slice(0, 10);
     const [quizzes, articles, ilib] = await Promise.all([loadQuizzes(), loadArticles(), sbSelect('shop_state?id=eq.ielts_lib&select=data').then((r) => r?.[0]?.data || {}).catch(() => ({}))]);
     const topics = TOPICS.filter((t) => topicReady(topicItems(t, { articles, quizzes, products: shop.products }))).map((t) => `/topic/${t.slug}`);
-    const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/ielts-band-calculator', '/ielts', '/ielts/samples', '/ielts/dictation', '/ielts/daily', ...(ilib.samples || []).map((x) => `/ielts/samples/${x.slug}`), ...(ilib.dict || []).map((x) => `/ielts/dictation/${x.slug}`), '/privacy', '/refund'];
+    const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(await import('../lib/gov.js').then((G) => ['/gov', ...G.GOV_EXAMS.map((x) => `/gov/${x.slug}`)]).catch(() => [])), ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/ielts-band-calculator', '/ielts', '/ielts/samples', '/ielts/dictation', '/ielts/daily', ...(ilib.samples || []).map((x) => `/ielts/samples/${x.slug}`), ...(ilib.dict || []).map((x) => `/ielts/dictation/${x.slug}`), '/privacy', '/refund'];
     res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=3600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
@@ -245,6 +245,17 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const live = TOPICS.filter((x) => topicReady(topicItems(x, { articles, quizzes, products: shop.products })));
     if (!t) { res.statusCode = 404; return res.end(topicPage(TOPICS[0], topicItems(TOPICS[0], { articles, quizzes, products: shop.products }), { settings: shop.settings, site: NEW_SITE, all: live })); }
     return res.status(200).send(topicPage(t, topicItems(t, { articles, quizzes, products: shop.products }), { settings: shop.settings, site: NEW_SITE, all: live }));
+  }
+  const gov = String(req.query.gov || '');
+  if (gov) { // โซนสอบราชการ /gov และ /gov/<slug>: ข้อสอบฟรี + ชีท ก.พ.
+    res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=600');
+    const [shop, articles, quizzes] = await Promise.all([loadShop().catch(() => ({ products: [], settings: {} })), loadArticles(), loadQuizzes()]);
+    const G = await import('../lib/gov.js'); // โหลดเฉพาะหน้า /gov: โค้ดโซนนี้พังจะไม่กระทบหน้าอื่น
+    const o = { settings: shop.settings, site: NEW_SITE, quizzes, articles, products: shop.products };
+    if (gov === '_index') return res.status(200).send(G.govIndex(o));
+    const x = G.govBySlug(gov);
+    if (!x) { res.statusCode = 404; return res.end(G.govIndex(o)); }
+    return res.status(200).send(G.govPage(x, o));
   }
   const learn = String(req.query.learn || '');
   if (learn) { // คลังความรู้ /learn และ /learn/<slug>
