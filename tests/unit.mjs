@@ -56,6 +56,8 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
 { const api = fs.readFileSync(path.join(root, 'api/content.js'), 'utf8'); const noPages = eval(api.match(/const noPages = (.+);\n/)[1]);
   const out = noPages('หนังสือ 120 หน้า (ประมาณ 300 หน้า) อ่านง่าย\nจำนวนหน้า | 120\nขนาด | A4\nแบบฝึก 500 ข้อ ดูหน้าที่ 5\nรวม 88 pages');
   ok('Shopee: ข้อความเล่มพิมพ์ไม่พูดจำนวนหน้าเลย (เล่มพิมพ์ตัดเหลือ ≤50 หน้า · 13 ต.ค. 69) แต่ไม่ตัดคำว่า หน้าที่/ข้อมูลอื่น', !/\d\s*(หน้า(?!ที่)|pages?)|จำนวนหน้า/i.test(out) && /500 ข้อ/.test(out) && /หน้าที่ 5/.test(out) && /A4/.test(out) && !/,pages,audio/.test(fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')), out); }
+{ const SO = await import('../lib/shopeeorders.js'); const a = SO.lookupPage({ base: '/s' }), b = SO.lookupPage({ base: '/s', sn: 'X1', items: [{ name: 'A', kind: 'print', books: [] }] }), ty = (h) => (h.match(/<section class="ty"[\s\S]*?<\/section>/) || [''])[0];
+  ok('Shopee /s: กราฟิกขอบคุณ + ขอ 5 ดาว ทั้งหน้าใส่เลขและหน้ารายการ · ขอเมื่อพอใจ ไม่มีของแลกรีวิว (กติกา Shopee)', /ขอบคุณค่ะ/.test(ty(a)) && /ขอบคุณค่ะ/.test(ty(b)) && /5 ดาว/.test(ty(a)) && /ถ้าพอใจ/.test(ty(a)) && !/โค้ด|ส่วนลด|ลด\s*\d|ของแถม|แลก/.test(ty(a)) && (ty(a).match(/<svg/g) || []).length === 6); }
 { const SO = await import('../lib/shopeeorders.js'); const html = fs.readFileSync(path.join(root, 'tests/fixture-shopee-mail.html'), 'utf8');
   const qp = (str) => Buffer.from(str, 'utf8').toString('binary').replace(/[^\x20-\x3C\x3E-\x7E\n]/g, (c) => '=' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')).replace(/(.{70})/g, '$1=\n');
   const subj = '=?UTF-8?B?' + Buffer.from('ถึงเวลาจัดส่งสินค้าหมายเลข #2610096TESTAB1 แล้ว!').toString('base64') + '?=';
