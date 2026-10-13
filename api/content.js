@@ -17,7 +17,7 @@ import '../lib/ai.js'; // งาน AI ทั้งหมดผ่าน fal.ai 
 import { loadShop, loadLinks, verifyAdmin, sbPatch, stripe, piToSession, loadTestEmails } from '../lib/shop.js';
 import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
-import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl } from '../lib/fb.js';
+import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl, linkPageFromUser } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { saleKit } from '../lib/salepost.js';
 import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
@@ -1348,6 +1348,14 @@ export default async function handler(req, res) {
       list = list.filter((b) => !b.used).concat(list.filter((b) => b.used).slice(-30)).slice(-120);
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'idea_bank', data: { list }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, added, left: list.filter((b) => !b.used).length });
+    }
+    if (action === 'fb_link_page') { // เชื่อมเพจแบรนด์อื่น (gov = ติวสอบ ก.พ.) ด้วยสิทธิ์ Facebook เดิมของ SheetLab · ไม่ส่งโทเค็นกลับ
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      const b = await readBody(req);
+      try { return res.status(200).json(await linkPageFromUser(String(b.brand || ''), String(b.page || ''))); }
+      catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
     }
     if (action === 'paywatch') { // ตรวจตัวเฝ้าปุ่มจ่ายเงิน (คีย์ร้าน/แอดมิน อ่านอย่างเดียว ไม่ส่งเตือน): 3 ชม.ล่าสุด กี่คนกดจ่าย กี่ QR
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   const admin = await verifyAdmin(req.headers.authorization);
   if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
   const action = String(req.query.action || 'status');
-  const brand = req.query.brand === 'readlab' ? 'readlab' : ''; // ?brand=readlab = เพจ ReadLab (เก็บแยกจาก SheetLab)
+  const brand = ['readlab', 'gov'].includes(req.query.brand) ? req.query.brand : ''; // ?brand=readlab / gov = เพจแบรนด์อื่น (เก็บแยกจาก SheetLab) // ?brand=readlab = เพจ ReadLab (เก็บแยกจาก SheetLab)
   try {
     if (action === 'status') {
       const fb = await loadFb(brand);
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       const page = want ? pages.find((p) => p.id === want) : pages.length === 1 ? pages[0] : null;
       if (!page) return res.status(200).json({ ok: true, choose: pages.map((p) => ({ id: p.id, name: p.name, followers: p.followers_count || 0 })) });
       const info = await fbGet(page.id, { access_token: page.access_token, fields: 'id,name,followers_count,link' });
-      if (brand === 'readlab') { const other = await loadFb(); if (other && other.pageId === page.id) return res.status(400).json({ ok: false, error: `เพจ "${info.name}" เป็นเพจของ SheetLab เลือกเพจ ReadLab แทน` }); }
+      if (brand) { const other = await loadFb(); if (other && other.pageId === page.id) return res.status(400).json({ ok: false, error: `เพจ "${info.name}" เป็นเพจของ SheetLab เลือกเพจอื่นแทน` }); }
       const row = { pageId: page.id, pageName: info.name, token: page.access_token, userToken, userName: user.name, connectedAt: new Date().toISOString(), brand };
       let ig = null; try { ig = await findIg(row); } catch (e) { console.error('ig', e.message); }
       await saveFb({ ...row, ...(ig || {}), igCheckedAt: new Date().toISOString() });
