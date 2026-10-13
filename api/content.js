@@ -20,7 +20,7 @@ import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl, linkPageFromUser } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { saleKit } from '../lib/salepost.js';
-import { adsAccess, launchAd, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
+import { adsAccess, launchAd, isGovProduct, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
 import { sendRecoveries, recoverStatus, recoverCfg } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
@@ -1668,7 +1668,7 @@ ${books}`;
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       const isKey = keyOk(req);
       if (!admin && !isKey) return res.status(401).json({ ok: false, error: 'bad key' });
-      const RL_TEAM = { rl_lead: 'พี่บุ๊ค', rl_writer: 'น้องมิว', rl_design: 'น้องพิกเซล', rl_clip: 'น้องรีล' };
+      const RL_TEAM = { rl_lead: 'พี่ปลัด', rl_writer: 'น้องติว', rl_design: 'น้องสี', rl_clip: 'น้องจับเวลา' };
       const RL_KIND = { quiz: 'ข้อสอบวันละข้อ', trick: 'เทคนิคทำข้อสอบ', law: 'สรุปกฎหมาย', news: 'ข่าวสอบ', life: 'ชีวิตราชการ', question: 'ชวนคุย', sale: 'ขายของ', reel: 'คลิป Reels', quote: 'ข้อคิดจากการอ่าน (เดิม)', book: 'แนะนำหนังสือ (เดิม)', habit: 'นิสัยการอ่าน (เดิม)' };
       const RL_PREFIX = `${SB_URL}/storage/v1/object/public/product-images/readlab/`;
       const rows = await sb('shop_state?id=eq.readlab&select=data'); const D = rows?.[0]?.data || {};
@@ -1734,7 +1734,7 @@ ${books}`;
         await save();
         return res.status(200).json({ ok: added.length > 0, added, errors });
       }
-      if (action === 'rl_attach') { // น้องพิกเซล/น้องรีลผูกรูปหรือคลิปกับร่างที่มีอยู่
+      if (action === 'rl_attach') { // น้องสี/น้องจับเวลาผูกรูปหรือคลิปกับร่างที่มีอยู่
         const x = D.posts.find((y) => y.id === String(body.id || ''));
         if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบโพสต์' });
         if (x.status === 'published') return res.status(400).json({ ok: false, error: 'โพสต์แล้ว แก้ไม่ได้' });
@@ -1743,7 +1743,7 @@ ${books}`;
         if (img) x.image_url = img; if (vid) x.video_url = vid; x.media_by = RL_TEAM[body.source] ? String(body.source) : 'rl_design'; x.updated_at = now;
         await save(); return res.status(200).json({ ok: true, id: x.id });
       }
-      if (action === 'rl_note') { // แผนสัปดาห์/รายงานของพี่บุ๊ค
+      if (action === 'rl_note') { // แผนสัปดาห์/รายงานของพี่ปลัด
         const text = String(body.text || '').trim().slice(0, 4000);
         if (text.length < 20) return res.status(400).json({ ok: false, error: 'ข้อความสั้นเกินไป' });
         D.notes.push({ by: RL_TEAM[body.source] ? String(body.source) : 'rl_lead', kind: body.kind === 'report' ? 'report' : 'plan', text, at: now }); D.notes = D.notes.slice(-40);
@@ -3443,7 +3443,10 @@ ${books}`;
         if (shop.products.find((p) => p.id === x.productId)?.kind === 'course') x.description = 'คอร์สวิดีโอ · เรียนได้ทันทีหลังจ่าย'; // ร่างเก่าที่ยังเขียนว่า PDF
         await saveAdsAuto(items);
         try {
-          const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency });
+          const gp = shop.products.find((p) => p.id === x.productId), gov = isGovProduct(gp, shop.products); // ก.พ. = กลุ่มเป้าหมายสายราชการ + เพจราชการ
+          const govPage = gov ? await loadFb('readlab').catch(() => null) : null;
+          if (gov && !govPage) throw new Error('สินค้า ก.พ. ต้องยิงในนามเพจราชการ แต่ยังไม่ได้เชื่อมเพจ');
+          const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency, audience: gov ? 'gov' : '', page: govPage });
           const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
           Object.assign(y, { text, headline, image, platforms: r.platforms, note: r.note || null, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad, ads: r.ads || [r.ad] }, launchImages: r.images || [image], objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
           await saveAdsAuto(cur);
