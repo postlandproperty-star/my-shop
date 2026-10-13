@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ReadLab media maker (ทีม ReadLab: น้องพิกเซล ทำการ์ด, น้องรีล ทำคลิป)
+"""เพจราชการ media maker (เดิม ReadLab · 13 ต.ค. 69 เปลี่ยนเป็นเพจ "ประกาศสอบ งานราชการ ติว ก.พ. ภาค ก" · ทีม: น้องพิกเซล ทำการ์ด, น้องรีล ทำคลิป)
 
 การ์ดโพสต์ 4:5 (1080x1350):
   python3 tools/readlab/make.py card spec.json out.png
@@ -8,18 +8,21 @@
 คลิป Reels แนวตั้ง (1080x1920) ตัวหนังสือ + ภาพประกอบ + เพลงแต่งเอง ไม่มีเสียงพากย์:
   python3 tools/readlab/make.py reel spec.json out.mp4
   spec: {"slides": [{"text": "...", "sub": "..."}, ...], "bg": ["canva1.jpg", ...], "theme": "cream", "music_mood": "lofi|chill|ukulele"}
-  สไลด์แรก = ประโยคหยุดนิ้ว, สไลด์สุดท้ายระบบใส่ "ติดตาม ReadLab" ให้เอง
+  สไลด์แรก = ประโยคหยุดนิ้ว, สไลด์สุดท้ายระบบใส่ "กดติดตามเพจ ติวสอบ ก.พ." ให้เอง · theme: yellow (ค่าเริ่ม) | navy | white (เดิม cream/green/terra ยังใช้ได้)
 
 ข้อความภาษาไทยตัดบรรทัดเองไม่ได้ (ไม่มีเว้นวรรค) ให้ใส่ \\n ตรงที่อยากขึ้นบรรทัดใหม่ บรรทัดละไม่เกินประมาณ 16 ตัวอักษรไทย
 ต้องมี: pip install pillow และ ffmpeg (npm i ffmpeg-static ที่รากโปรเจกต์ มีอยู่แล้วใน package.json)
 """
 import sys, os, json, subprocess, hashlib, unicodedata
-from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps, features
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONTS = os.path.join(HERE, '..', 'reel', 'fonts')
 sys.path.insert(0, os.path.join(HERE, '..', 'reel'))
-THEMES = {  # พื้น, หมึก, สีเน้น
+THEMES = {  # พื้น, หมึก, สีเน้น · yellow/navy/white = สีเพจราชการ (โลโก้วงกลมเหลือง ก.พ.)
+    'yellow': ((245, 197, 24), (17, 17, 17), (30, 58, 138)),
+    'navy': ((30, 58, 138), (255, 255, 255), (245, 197, 24)),
+    'white': ((255, 255, 255), (17, 17, 17), (30, 58, 138)),
     'cream': ((255, 248, 238), (43, 33, 24), (217, 101, 59)),
     'green': ((47, 93, 80), (255, 248, 238), (242, 196, 120)),
     'terra': ((217, 101, 59), (255, 248, 238), (255, 232, 200)),
@@ -60,24 +63,39 @@ def fit(d, text, kind, start, maxw, maxh, spacing=1.35, minsz=36):
         sz -= 4
     f = font(kind, minsz); return f, wrap(d, text, f, maxw), minsz
 
+# Pillow ที่ไม่มี raqm วางวรรณยุกต์ทับสระบน (ที่ → ที ไม้เอกหายใต้สระ) → ถอดวรรณยุกต์ที่ซ้อนสระบนออก แล้ววาดยกขึ้นเอง
+UPPER, TONES = set('\u0e31\u0e34\u0e35\u0e36\u0e37\u0e47'), set('\u0e48\u0e49\u0e4a\u0e4b\u0e4c')
+try: RAQM = features.check('raqm')
+except Exception: RAQM = False
+
+def thai_text(d, xy, text, f, fill, sz=None):
+    if RAQM or not any(c in TONES for c in text): d.text(xy, text, font=f, fill=fill); return
+    base, marks = '', []
+    for i, c in enumerate(text):
+        if c in TONES and i > 0 and text[i - 1] in UPPER: marks.append((len(base), c))
+        else: base += c
+    d.text(xy, base, font=f, fill=fill)
+    lift = (sz or getattr(f, 'size', 40)) * 0.2
+    for k, c in marks: d.text((xy[0] + d.textlength(base[:k], font=f), xy[1] - lift), c, font=f, fill=fill)
+
 def draw_block(d, lines, f, sz, cx, top, fill, spacing=1.35):
     y = top
     for l in lines:
-        w = d.textlength(l, font=f); d.text((cx - w / 2, y), l, font=f, fill=fill); y += sz * spacing
+        w = d.textlength(l, font=f); thai_text(d, (cx - w / 2, y), l, f, fill, sz); y += sz * spacing
     return y
 
 def cover(im, w, h):
     return ImageOps.fit(im.convert('RGB'), (w, h), Image.LANCZOS)
 
 def wordmark(d, x, y, ink, acc, sz=40, anchor='l'):
-    f = font('xb', sz); t1, t2 = 'Read', 'Lab'
+    f = font('xb', sz); t1, t2 = 'ติวสอบ ', 'ก.พ. ภาค ก'
     w = d.textlength(t1, font=f) + d.textlength(t2, font=f)
     x0 = x - w / 2 if anchor == 'c' else x
-    d.text((x0, y), t1, font=f, fill=ink); d.text((x0 + d.textlength(t1, font=f), y), t2, font=f, fill=acc)
+    thai_text(d, (x0, y), t1, f, ink, sz); thai_text(d, (x0 + d.textlength(t1, font=f), y), t2, f, acc, sz)
 
 def card(spec, out):
     W, H = 1080, 1350
-    bgc, ink, acc = THEMES.get(spec.get('theme'), THEMES['cream'])
+    bgc, ink, acc = THEMES.get(spec.get('theme'), THEMES['yellow'])
     im = Image.new('RGB', (W, H), bgc); d = ImageDraw.Draw(im)
     text, sub = str(spec.get('text', '')).strip(), str(spec.get('sub', '') or '').strip()
     if spec.get('bg') and os.path.exists(spec['bg']):
@@ -88,13 +106,13 @@ def card(spec, out):
         total = len(ls) * sz * 1.35; top = ih + 60 + max(0, (H - ih - 250 - total) / 2)
         y = draw_block(d, ls, f, sz, W / 2, top, ink)
     else:
-        d.text((90, 150), '“', font=font('xb', 220), fill=acc)
+        if spec.get('theme') in ('cream', 'green', 'terra'): d.text((90, 150), '“', font=font('xb', 220), fill=acc)  # เครื่องหมายคำพูดเฉพาะธีมเดิม (การ์ดข้อสอบ/กฎหมายไม่ใช่คำคม)
         f, ls, sz = fit(d, text, 'sb', 88, W - 200, H - 560)
         total = len(ls) * sz * 1.35; top = 380 + max(0, (H - 560 - total) / 2) - 60
         y = draw_block(d, ls, f, sz, W / 2, top, ink)
     if sub:
         fs = font('md', 36); sl = wrap(d, sub, fs, W - 220)[:2]
-        draw_block(d, sl, fs, 36, W / 2, min(y + 26, H - 230), acc if spec.get('theme') in (None, 'cream') else ink)
+        draw_block(d, sl, fs, 36, W / 2, min(y + 26, H - 230), acc if spec.get('theme') in (None, 'cream', 'yellow', 'white') else ink)
     d.line([90, H - 130, W - 90, H - 130], fill=acc, width=3)
     wordmark(d, W / 2, H - 110, ink, acc, 44, 'c')
     im.save(out, quality=92)
@@ -109,7 +127,7 @@ def find_ff():
 
 def slide_png(spec, i, s, bgpath, path, last=False):
     W, H = 1080, 1920
-    bgc, ink, acc = THEMES.get(spec.get('theme'), THEMES['cream'])
+    bgc, ink, acc = THEMES.get(spec.get('theme'), THEMES['yellow'])
     if bgpath and os.path.exists(bgpath):
         im = cover(Image.open(bgpath), W, H).filter(ImageFilter.GaussianBlur(3))
         veil = Image.new('RGB', (W, H), bgc); im = Image.blend(im, veil, 0.55)
@@ -133,7 +151,7 @@ def reel(spec, out):
     FF = find_ff(); work = os.path.join(os.path.dirname(os.path.abspath(out)) or '.', '.readlab_work'); os.makedirs(work, exist_ok=True)
     slides = list(spec.get('slides') or [])[:8]
     if not slides: raise SystemExit('ต้องมี slides อย่างน้อย 1 สไลด์')
-    slides.append({'text': spec.get('outro', 'ติดตาม ReadLab\nอ่านวันละนิด ชีวิตเปลี่ยนเยอะ'), 'sub': spec.get('outro_sub', 'กดติดตามไว้ อ่านไปด้วยกัน')})
+    slides.append({'text': spec.get('outro', 'กดติดตามเพจ\nติวสอบ ก.พ. ทุกวัน'), 'sub': spec.get('outro_sub', 'ประกาศสอบ งานราชการ ติว ก.พ. ภาค ก')})
     bgs = spec.get('bg') or []; segs = []
     for i, s in enumerate(slides):
         png = os.path.join(work, f's{i:02d}.png'); last = i == len(slides) - 1

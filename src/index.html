@@ -4665,7 +4665,7 @@ let POSTS=[],postsLoaded=false;
 const KIND_TH={salepage:'รายงาน salepage',store:'รายงานหน้าร้าน',deck:'สไลด์รายงาน',handoff:'รับงานแทนคุณแดน',reply:'สั่งงาน',brief:'โจทย์ให้ทีม',meeting:'บันทึกประชุม',people:'รายงานทีม (ฝ่ายบุคคล)',handbook:'คู่มือพนักงาน',tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
 let FB={},TH={};
-(function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){const rl=q.get('brand')==='readlab';if(rl){S.tab='content';S.cbrand='readlab';}setTimeout(()=>{toast(q.get('threads')==='ok'?(rl?'เชื่อม Threads ReadLab เรียบร้อย โพสต์ที่อนุมัติจะขึ้นเอง':'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ'):'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
+(function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){const rl=q.get('brand')==='readlab';if(rl){S.tab='content';S.cbrand='readlab';}setTimeout(()=>{toast(q.get('threads')==='ok'?(rl?'เชื่อม Threads เพจราชการ เรียบร้อย โพสต์ที่อนุมัติจะขึ้นเอง':'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ'):'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
 async function loadThStatus(){try{const j=await adminApi('/api/threads?action=status');if(j.ok)TH=Object.assign(TH,{connected:j.connected,user:j.user,app:j.app,redirect:j.redirect});}catch(e){}}
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app,ig:j.ig||null});}catch(e){}}
 async function adminPost(path,body){return authFetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});}
@@ -4919,19 +4919,19 @@ function meetingTab(){
   </div>
   ${!postsLoaded?'<p class="fine">กำลังโหลด...</p>':teamFeed(notes)}`;
 }
-/* ReadLab: เพจการอ่านแยกจาก SheetLab (สร้างผู้ติดตามก่อน) ข้อมูลจาก action=rl_list ไม่ปนกับคิวโพสต์ SheetLab */
+/* เพจราชการ: เพจการอ่านแยกจาก SheetLab (สร้างผู้ติดตามก่อน) ข้อมูลจาก action=rl_list ไม่ปนกับคิวโพสต์ SheetLab */
 const RL={data:null,loading:false};
 const RL_TEAM={
-  rl_lead:{name:'พี่บุ๊ค',role:'หัวหน้าทีม ReadLab · วางแผนธีมรายสัปดาห์ เขียนโพสต์ชวนคุย ดูยอดผู้ติดตาม',sched:'ทุกอาทิตย์ 19:00',img:AV+'accessoriesProbability=100&seed=rlbook&top=shortWaved&hairColor=4a312c&accessories=round&clothing=collarAndSweater&clothesColor=2f5d50&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=edb98a&backgroundColor=e7dcc8'},
-  rl_writer:{name:'น้องมิว',role:'นักเขียน ReadLab · ข้อคิดจากการอ่าน แนะนำหนังสือ นิสัยการอ่าน',sched:'จันทร์ พุธ ศุกร์ 09:00',img:AV+'accessoriesProbability=0&seed=rlmew&top=longButNotTooLong&hairColor=2c1b18&clothing=hoodie&clothesColor=d9653b&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fde2cf'},
-  rl_design:{name:'น้องพิกเซล',role:'นักออกแบบ ReadLab · การ์ดคำคมและภาพประกอบจาก Canva',sched:'จันทร์ พุธ ศุกร์ 11:00',img:AV+'accessoriesProbability=0&seed=rlpixel&top=bun&hairColor=b58143&clothing=overall&clothesColor=ffafb9&eyes=happy&eyebrows=upDownNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fbe7ef'},
-  rl_clip:{name:'น้องรีล',role:'ทำคลิปสั้น ReadLab · Reels ข้อคิดจากหนังสือ',sched:'อังคาร เสาร์ 10:30',img:AV+'accessoriesProbability=100&seed=rlreel&top=shortCurly&hairColor=2c1b18&accessories=sunglasses&clothing=graphicShirt&clothesColor=2f5d50&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=d7eadf'},
+  rl_lead:{name:'พี่บุ๊ค',role:'หัวหน้าทีมเพจราชการ · วางแผนวิชา/หัวข้อรายสัปดาห์ ตรวจข่าวสอบจากเว็บทางการ เขียนโพสต์ชวนคุย ดูยอดผู้ติดตาม',sched:'ทุกอาทิตย์ 19:00',img:AV+'accessoriesProbability=100&seed=rlbook&top=shortWaved&hairColor=4a312c&accessories=round&clothing=collarAndSweater&clothesColor=2f5d50&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=edb98a&backgroundColor=e7dcc8'},
+  rl_writer:{name:'น้องมิว',role:'นักเขียนเพจราชการ · ข้อสอบวันละข้อ เทคนิคทำข้อสอบ สรุปกฎหมาย (ตรวจตัวบทจริง) ชีวิตราชการ',sched:'จันทร์ พุธ ศุกร์ 09:00',img:AV+'accessoriesProbability=0&seed=rlmew&top=longButNotTooLong&hairColor=2c1b18&clothing=hoodie&clothesColor=d9653b&eyes=happy&eyebrows=defaultNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fde2cf'},
+  rl_design:{name:'น้องพิกเซล',role:'นักออกแบบเพจราชการ · การ์ดข้อสอบ/สรุปกฎหมาย สีเหลือง-กรมท่าของเพจ',sched:'จันทร์ พุธ ศุกร์ 11:00',img:AV+'accessoriesProbability=0&seed=rlpixel&top=bun&hairColor=b58143&clothing=overall&clothesColor=ffafb9&eyes=happy&eyebrows=upDownNatural&mouth=smile&skinColor=ffdbb4&backgroundColor=fbe7ef'},
+  rl_clip:{name:'น้องรีล',role:'ทำคลิปสั้นเพจราชการ · Reels เทคนิคทำข้อสอบ ก.พ. / ข้อสอบจับเวลา',sched:'อังคาร เสาร์ 10:30',img:AV+'accessoriesProbability=100&seed=rlreel&top=shortCurly&hairColor=2c1b18&accessories=sunglasses&clothing=graphicShirt&clothesColor=2f5d50&eyes=default&eyebrows=default&mouth=smile&skinColor=d08b5b&backgroundColor=d7eadf'},
 };
-const RL_KIND={quote:'ข้อคิดจากการอ่าน',book:'แนะนำหนังสือ',habit:'นิสัยการอ่าน',question:'ชวนคุย',reel:'คลิป Reels'};
+const RL_KIND={quiz:'ข้อสอบวันละข้อ',trick:'เทคนิคทำข้อสอบ',law:'สรุปกฎหมาย',news:'ข่าวสอบ',life:'ชีวิตราชการ',question:'ชวนคุย',sale:'ขายของ',reel:'คลิป Reels',quote:'ข้อคิดจากการอ่าน (เดิม)',book:'แนะนำหนังสือ (เดิม)',habit:'นิสัยการอ่าน (เดิม)'};
 function loadRL(){if(RL.loading)return;RL.loading=true;adminApi('/api/content?action=rl_list').then(j=>{RL.data=j&&j.ok?j:{posts:[],notes:[],followers:[],cfg:{},counts:{}};}).catch(()=>{RL.data={posts:[],notes:[],followers:[],cfg:{},counts:{},err:1};}).then(()=>{RL.loading=false;render(true);});}
 function rlApi(action,body){return authFetch('/api/content?action='+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});}
 function readlabView(){
-  if(!RL.data){loadRL();return '<p class="fine">กำลังโหลด ReadLab...</p>';}
+  if(!RL.data){loadRL();return '<p class="fine">กำลังโหลด เพจราชการ...</p>';}
   const d=RL.data,cfg=d.cfg||{},posts=(d.posts||[]).slice().reverse();
   const f=S.rlf||'queue',exp=S.rlexp||{};
   const inQ=x=>['draft','approved','failed','publishing'].includes(x.status);
@@ -4968,15 +4968,15 @@ function readlabView(){
   const connected=!!(cfg.fb_page||cfg.threads);
   return `
   <div class="card rl-head">
-    <div class="row" style="justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">📚 ReadLab</h3><span class="fine">เพจการอ่าน · สร้างผู้ติดตามก่อน ยังไม่ขายของ · แยกจาก SheetLab ทั้งหมด</span></div>
-    <details class="rl-teamd"><summary><span class="rl-avs">${Object.values(RL_TEAM).map(m=>`<img src="${m.img}" alt="" width="32" height="32">`).join('')}</span><span>ทีม ReadLab ${Object.keys(RL_TEAM).length} คน · ${Object.values(RL_TEAM).map(m=>esc(m.name)).join(' ')}</span></summary>
+    <div class="row" style="justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">🏛 เพจราชการ</h3><span class="fine">ประกาศสอบ งานราชการ ติว ก.พ. ภาค ก · สร้างผู้ติดตามแล้วขายชุด ก.พ. · แยกจาก SheetLab ทั้งหมด</span></div>
+    <details class="rl-teamd"><summary><span class="rl-avs">${Object.values(RL_TEAM).map(m=>`<img src="${m.img}" alt="" width="32" height="32">`).join('')}</span><span>ทีมเพจราชการ ${Object.keys(RL_TEAM).length} คน · ${Object.values(RL_TEAM).map(m=>esc(m.name)).join(' ')}</span></summary>
       <div class="rl-team">${Object.entries(RL_TEAM).map(([k,m])=>`<div class="rl-mem"><img src="${m.img}" alt="" width="44" height="44"><span><b>${esc(m.name)}</b><small>${esc(m.role)}</small><small class="fine">🕘 ${esc(m.sched)}</small></span></div>`).join('')}</div></details>
     <div class="rl-fol">
       <span>👥 ผู้ติดตาม ${last?`Facebook <b>${num(last.fb)}</b> ${dlt(last.fb,prev&&prev.fb)} · Threads <b>${num(last.th)}</b> ${dlt(last.th,prev&&prev.th)}${last.ig!=null?` · Instagram <b>${num(last.ig)}</b> ${dlt(last.ig,prev&&prev.ig)}`:''} <span class="fine">(${esc(last.date)})</span>`:'<span class="fine">ยังไม่มีข้อมูล</span>'}</span>
       <button class="btn btn-line btn-sm" data-a="rlcfgOpen">${S.rlcfg?'ปิด':'อัปเดตยอด / ตั้งค่าเพจ'}</button>
     </div>
     ${S.rlcfg?`<div class="rl-cfg">
-      <label class="fine">ชื่อเพจ Facebook<input class="input" id="rl-fbp" value="${esc(cfg.fb_page||'')}" placeholder="เช่น ReadLab - ห้องทดลองการอ่าน"></label>
+      <label class="fine">ชื่อเพจ Facebook<input class="input" id="rl-fbp" value="${esc(cfg.fb_page||'')}" placeholder="เช่น ประกาศสอบ งานราชการ ติว ก.พ. ภาค ก"></label>
       <label class="fine">บัญชี Threads<input class="input" id="rl-thu" value="${esc(cfg.threads||'')}" placeholder="เช่น readlab.th"></label>
       <label class="fine">ผู้ติดตาม Facebook วันนี้<input class="input" id="rl-fb" type="number" min="0" inputmode="numeric" value="${last?last.fb:''}"></label>
       <label class="fine">ผู้ติดตาม Threads วันนี้<input class="input" id="rl-th" type="number" min="0" inputmode="numeric" value="${last?last.th:''}"></label>
@@ -4984,8 +4984,8 @@ function readlabView(){
     ${rlConnBox(C)}
     ${plan?`<details class="rl-plan"><summary>📝 แผนสัปดาห์จากพี่บุ๊ค · ${new Date(plan.at).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</summary><p style="white-space:pre-wrap;margin:6px 0 0">${esc(plan.text)}</p></details>`:''}
   </div>
-  <div class="chips" role="group" aria-label="กรองโพสต์ ReadLab">${[['queue','คิว'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']].map(([k,l])=>`<button class="chip" data-a="rlf" data-v="${k}" aria-pressed="${f===k}">${l} ${cnt[k]}</button>`).join('')}<button class="chip" data-a="rlRefresh">รีเฟรช</button></div>
-  ${list.length?list.map(card).join(''):`<p class="card fine">${f==='queue'?'ยังไม่มีโพสต์ในคิว ทีม ReadLab จะเริ่มส่งร่างในรอบถัดไป (น้องมิว จันทร์ พุธ ศุกร์ 09:00)':'ยังไม่มีโพสต์'}</p>`}`;
+  <div class="chips" role="group" aria-label="กรองโพสต์ เพจราชการ">${[['queue','คิว'],['published','โพสต์แล้ว'],['rejected','ปัดตก'],['all','ทั้งหมด']].map(([k,l])=>`<button class="chip" data-a="rlf" data-v="${k}" aria-pressed="${f===k}">${l} ${cnt[k]}</button>`).join('')}<button class="chip" data-a="rlRefresh">รีเฟรช</button></div>
+  ${list.length?list.map(card).join(''):`<p class="card fine">${f==='queue'?'ยังไม่มีโพสต์ในคิว ทีมเพจราชการ จะเริ่มส่งร่างในรอบถัดไป (น้องมิว จันทร์ พุธ ศุกร์ 09:00)':'ยังไม่มีโพสต์'}</p>`}`;
 }
 const RLC={choose:null,msg:''};
 /* Instagram: ใช้โทเค็นเพจเดิม + สิทธิ์ IG · คลิป Reels ที่ขึ้นเพจจะลง IG Reels ด้วย */
@@ -5001,30 +5001,30 @@ const igBadge=line=>{const m=String(line||'').match(/^IG (✓|รอประม
 function rlConnBox(C){
   const fbOk=!!C.fb,thOk=!!C.th,o=S.rlConn||'';
   return `<div class="rl-conn">
-    <div class="rl-ch"><span><b>Facebook</b> ${fbOk?`✅ ${esc(C.fb.name||'เพจ ReadLab')}`:'○ ยังไม่เชื่อม'}</span>${fbOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="fb">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="fb">ยกเลิก</button></span>`:`<button class="btn ${o==='fb'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="fb">${o==='fb'?'ปิด':'เชื่อมเพจ ReadLab'}</button>`}</div>
-    <div class="rl-ch"><span><b>Threads</b> ${thOk?`✅ @${esc(C.th.username||'')}`:'○ ยังไม่เชื่อม'}</span>${thOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="th">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="th">ยกเลิก</button></span>`:`<button class="btn ${o==='th'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="th">${o==='th'?'ปิด':'เชื่อม Threads ReadLab'}</button>`}</div>
-    <div class="rl-ch"><span><b>Instagram</b> ${fbOk&&C.fb.ig?`✅ @${esc(C.fb.ig)} · คลิปที่ขึ้นเพจลง IG Reels ด้วย`:'○ ยังไม่เชื่อม'}</span>${fbOk&&C.fb.ig?`<button class="btn btn-line btn-sm" data-a="igCheck" data-v="readlab">ตรวจอีกครั้ง</button>`:fbOk?`<button class="btn ${o==='ig'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="ig">${o==='ig'?'ปิด':'เชื่อม IG ReadLab'}</button>`:'<span class="fine">เชื่อมเพจก่อน</span>'}</div>
-    ${o==='ig'&&fbOk&&!C.fb.ig?igSteps('เพจ ReadLab','rl-ig-token','rlIgConnect',RLC.msg):''}
+    <div class="rl-ch"><span><b>Facebook</b> ${fbOk?`✅ ${esc(C.fb.name||'เพจ เพจราชการ')}`:'○ ยังไม่เชื่อม'}</span>${fbOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="fb">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="fb">ยกเลิก</button></span>`:`<button class="btn ${o==='fb'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="fb">${o==='fb'?'ปิด':'เชื่อมเพจ เพจราชการ'}</button>`}</div>
+    <div class="rl-ch"><span><b>Threads</b> ${thOk?`✅ @${esc(C.th.username||'')}`:'○ ยังไม่เชื่อม'}</span>${thOk?`<span class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="rlConnTest" data-v="th">ทดสอบ</button><button class="btn btn-line btn-sm" data-a="rlConnOff" data-v="th">ยกเลิก</button></span>`:`<button class="btn ${o==='th'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="th">${o==='th'?'ปิด':'เชื่อม Threads เพจราชการ'}</button>`}</div>
+    <div class="rl-ch"><span><b>Instagram</b> ${fbOk&&C.fb.ig?`✅ @${esc(C.fb.ig)} · คลิปที่ขึ้นเพจลง IG Reels ด้วย`:'○ ยังไม่เชื่อม'}</span>${fbOk&&C.fb.ig?`<button class="btn btn-line btn-sm" data-a="igCheck" data-v="readlab">ตรวจอีกครั้ง</button>`:fbOk?`<button class="btn ${o==='ig'?'btn-line':'btn-cta'} btn-sm" data-a="rlConnOpen" data-v="ig">${o==='ig'?'ปิด':'เชื่อม IG เพจราชการ'}</button>`:'<span class="fine">เชื่อมเพจก่อน</span>'}</div>
+    ${o==='ig'&&fbOk&&!C.fb.ig?igSteps('เพจ เพจราชการ','rl-ig-token','rlIgConnect',RLC.msg):''}
     ${fbOk||thOk?`<p class="fine" style="margin:6px 0 0">ช่องที่เชื่อมแล้ว: โพสต์ที่อนุมัติจะขึ้นเองวันละ 2 รอบ (10:00 และ 19:05 น.) รอบละไม่เกิน 2 ชิ้นต่อช่อง ยอดผู้ติดตามดึงจริงทุกครั้งที่เปิดหน้านี้ · ไม่เติมแฮชแท็ก SheetLab</p>`:`<p class="fine" style="margin:6px 0 0">ยังไม่เชื่อม: อนุมัติแล้วกด "คัดลอกข้อความ" ไปโพสต์เอง แล้วกด "โพสต์เองแล้ว ✓"</p>`}
-    ${o==='fb'&&!fbOk?`<div class="rl-howto"><b>เชื่อมเพจ Facebook ReadLab (ทำครั้งเดียว ~3 นาที)</b><ol>
-      <li>สร้างเพจ ReadLab ด้วยบัญชี Facebook เดียวกับที่เป็นแอดมินเพจ SheetLab</li>
+    ${o==='fb'&&!fbOk?`<div class="rl-howto"><b>เชื่อมเพจ Facebook เพจราชการ (ทำครั้งเดียว ~3 นาที)</b><ol>
+      <li>สร้างเพจ เพจราชการ ด้วยบัญชี Facebook เดียวกับที่เป็นแอดมินเพจ SheetLab</li>
       <li>เปิด <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer">Graph API Explorer</a> → Meta App เลือก<b>แอปเดิมที่ใช้กับ SheetLab</b> → Permissions ใส่ <code>pages_show_list</code> <code>pages_manage_posts</code> <code>pages_read_engagement</code> <code>publish_video</code> <code>read_insights</code></li>
-      <li>กด <b>Generate Access Token</b> ตอน Facebook ถามว่าให้สิทธิ์เพจไหน <b>ติ๊กเพจ ReadLab ด้วย</b> (ถ้าเคยเลือกแค่ SheetLab ให้กด "แก้ไขการตั้งค่าเดิม / Edit previous settings" แล้วเพิ่ม ReadLab)</li>
-      <li>คัดลอกโทเค็นในช่อง Access Token มาวางด้านล่าง กดเชื่อม ถ้ามีหลายเพจให้เลือก ReadLab</li></ol>
+      <li>กด <b>Generate Access Token</b> ตอน Facebook ถามว่าให้สิทธิ์เพจไหน <b>ติ๊กเพจ เพจราชการ ด้วย</b> (ถ้าเคยเลือกแค่ SheetLab ให้กด "แก้ไขการตั้งค่าเดิม / Edit previous settings" แล้วเพิ่ม เพจราชการ)</li>
+      <li>คัดลอกโทเค็นในช่อง Access Token มาวางด้านล่าง กดเชื่อม ถ้ามีหลายเพจให้เลือก เพจราชการ</li></ol>
       <textarea class="input" id="rl-fb-token" rows="3" placeholder="วางโทเค็นที่นี่ (ระบบแลกเป็นโทเค็นเพจแบบไม่หมดอายุ เก็บแยกจาก SheetLab)"></textarea>
-      ${RLC.choose?`<p class="fine" style="margin-top:8px">เลือกเพจ ReadLab:</p><div class="row" style="gap:8px;flex-wrap:wrap">${RLC.choose.map(c=>`<button class="btn btn-dark btn-sm" data-a="rlFbConnect" data-page="${esc(c.id)}">${esc(c.name)} (${c.followers} ผู้ติดตาม)</button>`).join('')}</div>`:''}
+      ${RLC.choose?`<p class="fine" style="margin-top:8px">เลือกเพจ เพจราชการ:</p><div class="row" style="gap:8px;flex-wrap:wrap">${RLC.choose.map(c=>`<button class="btn btn-dark btn-sm" data-a="rlFbConnect" data-page="${esc(c.id)}">${esc(c.name)} (${c.followers} ผู้ติดตาม)</button>`).join('')}</div>`:''}
       <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="rlFbConnect">เชื่อมเพจ</button></div>${RLC.msg?`<p class="fine" style="margin-top:8px">${esc(RLC.msg)}</p>`:''}</div>`:''}
-    ${o==='th'&&!thOk?`<div class="rl-howto"><b>เชื่อม Threads ReadLab (ทำครั้งเดียว)</b><ol>
-      <li>สมัคร Threads ReadLab (Threads ใช้บัญชี Instagram ตั้งต้น ให้สร้าง Instagram ReadLab ก่อน)</li>
-      <li>เพิ่มบัญชีนี้เป็นผู้ทดสอบของแอปเดิม: <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps</a> → แอปที่ใช้กับ SheetLab → <b>App roles → Roles → Add People → Threads Tester</b> → พิมพ์ชื่อผู้ใช้ Threads ReadLab</li>
-      <li>ในแอป Threads (บัญชี ReadLab): <b>Settings → Account → Website permissions → Invites</b> → กด Accept</li>
-      <li>ในเบราว์เซอร์นี้ เปิด <a href="https://www.threads.net/" target="_blank" rel="noopener noreferrer">threads.net</a> <b>ออกจากระบบบัญชี SheetLab</b> แล้วเข้าสู่ระบบด้วยบัญชี ReadLab</li>
+    ${o==='th'&&!thOk?`<div class="rl-howto"><b>เชื่อม Threads เพจราชการ (ทำครั้งเดียว)</b><ol>
+      <li>สมัคร Threads เพจราชการ (Threads ใช้บัญชี Instagram ตั้งต้น ให้สร้าง Instagram เพจราชการ ก่อน)</li>
+      <li>เพิ่มบัญชีนี้เป็นผู้ทดสอบของแอปเดิม: <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">developers.facebook.com/apps</a> → แอปที่ใช้กับ SheetLab → <b>App roles → Roles → Add People → Threads Tester</b> → พิมพ์ชื่อผู้ใช้ Threads เพจราชการ</li>
+      <li>ในแอป Threads (บัญชี เพจราชการ): <b>Settings → Account → Website permissions → Invites</b> → กด Accept</li>
+      <li>ในเบราว์เซอร์นี้ เปิด <a href="https://www.threads.net/" target="_blank" rel="noopener noreferrer">threads.net</a> <b>ออกจากระบบบัญชี SheetLab</b> แล้วเข้าสู่ระบบด้วยบัญชี เพจราชการ</li>
       <li>กลับมากดปุ่มด้านล่าง → กดอนุญาต → ระบบพากลับมาหน้านี้เอง (ถ้าเผลอเป็นบัญชี SheetLab ระบบจะไม่รับ)</li></ol>
       <div class="row" style="gap:8px;margin-top:10px"><button class="btn btn-cta btn-sm" data-a="rlThGo">ไปหน้าอนุญาต Threads</button></div></div>`:''}
   </div>`;
 }
 function contentTab(){
-  const brandBar=`<div class="brand-seg" role="group" aria-label="เลือกเพจ"><button data-a="cbrand" data-v="sheetlab" aria-pressed="${S.cbrand!=='readlab'}">SheetLab</button><button data-a="cbrand" data-v="readlab" aria-pressed="${S.cbrand==='readlab'}">📚 ReadLab${RL.data&&RL.data.counts&&RL.data.counts.draft?` <span class="nb">${RL.data.counts.draft}</span>`:''}</button></div>`;
+  const brandBar=`<div class="brand-seg" role="group" aria-label="เลือกเพจ"><button data-a="cbrand" data-v="sheetlab" aria-pressed="${S.cbrand!=='readlab'}">SheetLab</button><button data-a="cbrand" data-v="readlab" aria-pressed="${S.cbrand==='readlab'}">🏛 เพจราชการ${RL.data&&RL.data.counts&&RL.data.counts.draft?` <span class="nb">${RL.data.counts.draft}</span>`:''}</button></div>`;
   if(S.cbrand==='readlab')return brandBar+readlabView();
   return brandBar+sheetlabContent();
 }
@@ -6652,7 +6652,7 @@ function act(a,el){
         RLC.choose=null;RLC.msg='';S.rlConn='';RL.data=null;loadRL();toast('เชื่อมเพจ "'+j.page.name+'" แล้ว');}).catch(()=>{RLC.msg='เชื่อมต่อไม่ได้';render(true);});break;}
     case 'rlThGo':adminApi('/api/threads?action=authurl&brand=readlab').then(j=>{if(j&&j.ok&&j.url)location.href=j.url;else toast((j&&j.error)||'สร้างลิงก์ไม่ได้');});break;
     case 'rlConnTest':{const fb=el.dataset.v==='fb';adminApi(fb?'/api/fb?action=test&brand=readlab':'/api/threads?action=test&brand=readlab').then(j=>toast(j&&j.ok?(fb?'เพจ "'+j.page.name+'" ใช้งานได้ · ผู้ติดตาม '+j.page.followers:'Threads @'+j.user.username+' ใช้งานได้'):'ใช้ไม่ได้: '+((j&&j.error)||''))).catch(()=>toast('เชื่อมต่อไม่ได้'));break;}
-    case 'rlConnOff':{const fb=el.dataset.v==='fb';if(!confirm(fb?'ยกเลิกการเชื่อมเพจ ReadLab? โพสต์อัตโนมัติช่องนี้จะหยุด':'ยกเลิกการเชื่อม Threads ReadLab?'))break;adminPost(fb?'/api/fb?action=disconnect&brand=readlab':'/api/threads?action=disconnect&brand=readlab').then(()=>{RL.data=null;loadRL();toast('ยกเลิกแล้ว');});break;}
+    case 'rlConnOff':{const fb=el.dataset.v==='fb';if(!confirm(fb?'ยกเลิกการเชื่อมเพจ เพจราชการ? โพสต์อัตโนมัติช่องนี้จะหยุด':'ยกเลิกการเชื่อม Threads เพจราชการ?'))break;adminPost(fb?'/api/fb?action=disconnect&brand=readlab':'/api/threads?action=disconnect&brand=readlab').then(()=>{RL.data=null;loadRL();toast('ยกเลิกแล้ว');});break;}
     case 'rlpub':{el.disabled=true;el.textContent='กำลังโพสต์...';rlApi('rl_update',{id,op:'publish_now'}).then(j=>{const L=RL.data&&RL.data.posts||[],i=L.findIndex(y=>y.id===id);if(j&&j.post&&i>=0)L[i]=j.post;toast(j&&j.ok?'โพสต์ขึ้นแล้ว':'โพสต์ไม่ผ่าน: '+((j&&j.error)||''));render(true);});break;}
     case 'rlcopy':{const x=(RL.data&&RL.data.posts||[]).find(y=>y.id===id);const t=$('#rlt-'+id);copyText((t?t.value:x&&x.text)||'','คัดลอกข้อความแล้ว');break;}
     case 'rlcfgSave':{const b={fb_page:$('#rl-fbp').value,threads:$('#rl-thu').value};const fb=$('#rl-fb').value,th=$('#rl-th').value;if(fb!==''||th!==''){b.fb=Number(fb)||0;b.th=Number(th)||0;}
