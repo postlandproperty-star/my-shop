@@ -1,0 +1,18 @@
+# เช็กหน้าจ่ายเงินบนเว็บจริง (sheetlabth.com) ตาม CLAUDE.md · รันเมื่อ push ขึ้น branch live-check หรือกด Run workflow ในแท็บ Actions
+# ดักคำขอ QR ไว้ ไม่สร้างการจ่ายเงินจริง
+name: live-check
+on:
+  workflow_dispatch:
+  push:
+    branches: [live-check]
+jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --no-audit --no-fund
+      - run: node tools/live/checkout-check.mjs https://sheetlabth.com
+        env: { CHROME_PATH: /usr/bin/google-chrome }
