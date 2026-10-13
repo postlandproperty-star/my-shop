@@ -44,8 +44,8 @@ if (target) {
   for (const [k, c] of use.entries()) {
     const q = quota[k]; const range = []; for (let i = c.st; i < c.en; i++) range.push(i);
     const ans = range.find((i) => ANS.test(top(pages[i])));
-    const body = range.filter((i) => i !== ans).slice(0, ans != null && q >= 3 ? q - 1 : q);
-    body.forEach((i) => keep.push(i)); if (ans != null && q >= 3) keep.push(ans);
+    const wa = ans != null && q >= 3, body = (wa ? range.filter((i) => i !== ans) : range).slice(0, wa ? q - 1 : q); // โควตาน้อย = เอาหน้าตามลำดับ (ไม่ทิ้งหน้าเฉลย แล้วได้ไม่ครบโควตา · SL-W07 ได้ 41 หน้า)
+    body.forEach((i) => keep.push(i)); if (wa) keep.push(ans);
   }
   sets = use.map((_, k) => k + 1);
 } else if (trim) { // หน้าแรกที่เป็นเนื้อหาจริง (ลิขสิทธิ์ / วิธีใช้ / สารบัญ / คำนำ) · หน้าก่อนนั้น = ปกซ้อน ตัดออก
