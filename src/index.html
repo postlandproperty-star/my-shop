@@ -1176,9 +1176,9 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .st-main .st-bundles.st-bgrid .st-bimg,.st-main .st-bundles.st-bgrid .st-stack{width:100%!important}.st-main .st-bundles.st-bgrid .st-bhead{-webkit-line-clamp:2}
 .st-main .st-bundles.st-bgrid .st-bwrap .st-add.st-badd{margin:0 10px 10px}
 @media(max-width:700px){.st-main .st-bundles.st-bgrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}.st-main .st-bundles.st-bgrid .st-binfo b{font-size:15px}.st-main .st-bundles.st-bgrid .st-kicker{white-space:normal}.st-main .st-bundles.st-bgrid .st-bhead{display:none}}
-.bst-slides{display:grid;grid-auto-flow:column;grid-auto-columns:100%;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 14px;border-radius:14px;scrollbar-width:none}.bst-slides::-webkit-scrollbar{display:none}
-.bst-slide{scroll-snap-align:start;padding:0;border:0;background:none;cursor:pointer;border-radius:14px;overflow:hidden;display:block}.bst-slide img{width:100%;height:auto;aspect-ratio:2/1;object-fit:cover;display:block}
-@media(min-width:900px){.bst-slides{grid-auto-columns:calc(50% - 5px)}}
+.bst-slides{display:grid;grid-template-columns:1fr;gap:10px;margin:0 0 14px} /* แบนเนอร์เรียงลงมาทีละรูป ไม่ต้องเลื่อนข้าง (คุณแดน 14 ต.ค. 69) */
+.bst-slide{padding:0;border:0;background:none;cursor:pointer;border-radius:14px;overflow:hidden;display:block}.bst-slide img{width:100%;height:auto;aspect-ratio:2/1;object-fit:cover;display:block}
+@media(min-width:900px){.bst-slides{grid-template-columns:1fr 1fr}}
 .bst-toph{margin:4px 0 10px}
 /* ชุดสุดคุ้ม: ปุ่มเพิ่มอยู่ในการ์ดเดียวกัน · 2 ชุดขึ้นไปเรียงเท่ากันสวย (คุณแดน 5 ต.ค. 69) */
 .st-main .st-bundles{display:grid;grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:12px;overflow:visible}
