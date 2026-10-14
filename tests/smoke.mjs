@@ -384,7 +384,7 @@ try {
       await page.fill('#sl-le', 'buyer@test.co'); await page.click('#sl-lf button'); await page.waitForSelector('#sl-cf:not([hidden])', { timeout: 4000 });
       const codeShown = await page.evaluate(() => /ใส่รหัส 6 หลัก/.test(document.getElementById('sl-ls').textContent) && document.activeElement && document.activeElement.id === 'sl-lc');
       await layout(page, `[${kind}] แอป SheetLab (/app)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'app-mobile.png'), fullPage: true });
-      pass(`[${kind}] ห้องเรียนของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เป็น VIP = ล็อกและพาไปหน้า VIP · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '/vip' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
+      pass(`[${kind}] บัญชีของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เป็น VIP = ล็อกและพาไปหน้า VIP · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '/vip' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
       await page.context().close();
     } catch (e) { pass(`[${kind}] แอป SheetLab: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
