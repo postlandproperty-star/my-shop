@@ -1793,7 +1793,7 @@ const validLink=l=>l&&/^https?:\/\//.test(l)&&!l.includes('ใส่ลิงก
 const isNotion=l=>/^https:\/\/([a-z0-9-]+\.)?notion\.(site|so)\//i.test(l||''); // สินค้าเทมเพลต Notion: ลิงก์ Duplicate แทนไฟล์ดาวน์โหลด
 const dlBtn=(l,name)=>!isNotion(l)&&ownFile(l)?`<a class="btn btn-cta btn-block" href="${esc(dlHref(l,name))}" rel="noopener noreferrer">⬇ ดาวน์โหลด${name?' '+name:'ไฟล์'}</a>`:isNotion(l)?linkBtn(l,'เปิดเทมเพลต Notion'+(name?': '+name:''))+'<p class="fine" style="margin:4px 0 0">เปิดลิงก์แล้วกดปุ่ม <b>Duplicate</b> มุมขวาบน เทมเพลตจะถูกคัดลอกเข้า Notion ของคุณ (ใช้บัญชี Notion ฟรีได้)</p>':linkBtn(l,'ดาวน์โหลด'+(name?' '+name:'ไฟล์'));
 // ไฟล์ในคลังร้าน: ใส่ ?download= ให้มือถือ/คอมดาวน์โหลดเป็นไฟล์ชื่ออ่านรู้เรื่อง แทนการเปิดดูในแท็บ
-const ownFile=l=>/\/storage\/v1\/object\/public\/product-images\//.test(String(l||''));
+const ownFile=l=>/\/storage\/v1\/object\/public\/product-images\/|^https:\/\/pub-fdfc380c67f149de994eac621d6b147c\.r2\.dev\//.test(String(l||'')); // ไฟล์ร้านบน Supabase หรือ R2 (ย้าย 14 ต.ค. 69)
 const dlHref=(l,name)=>ownFile(l)?l.split('?')[0]+'?download='+encodeURIComponent(String(name||'sheetlab').replace(/[\\/:*?"<>|]+/g,' ').slice(0,80).trim()+'.pdf'):l;
 const linkBtn=(l,label)=>validLink(l)?`<a class="btn btn-cta btn-block" href="${esc(l)}" target="_blank" rel="noopener noreferrer">${label}</a>`:`<p class="fine" style="color:var(--bad)">ลิงก์ดาวน์โหลดยังไม่ถูกตั้งค่า ทางร้านจะส่งไฟล์ให้ทางแชทโดยตรง</p>`;
 const getOrder=id=>D.orders.find(o=>o.id===id);
@@ -2131,7 +2131,7 @@ function bxSnapUndo(){if(!S.bxSnap)return;let ch=0;
   const files=S.bxNew||[];S.bxSnap=null;S.bxDrop=[];S.bxNew=[];if(ch)save();files.forEach(bxDropFile);}
 function bxSnapCommit(){const files=S.bxDrop||[];S.bxSnap=null;S.bxDrop=[];S.bxNew=[];files.forEach(bxDropFile);}
 async function bxPdfCover(b){if(!b.bookCover)throw new Error('ยังไม่มีปกใหม่');const src=b.linkOrig||b.link;
-  if(!src||!/\/storage\/v1\/object\/public\/product-images\//.test(src))throw new Error('ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน ใส่ปกให้อัตโนมัติไม่ได้');
+  if(!src||!ownFile(src))throw new Error('ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน ใส่ปกให้อัตโนมัติไม่ได้');
   const flat=b.coverMode==='theme'?b.bookCover:await uploadImage(await toJpeg(await bxAiRaw(BX_FLAT,[b.bookCover],'3:4'),1400)); // ปกตามธีมเป็นปกแบนอยู่แล้ว ไม่ต้องใช้ AI
   const r=await authFetch('/api/content?action=pdf_cover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdf:src,image:flat,name:b.slug||'',title:b.name||''})});
   if(!r||!r.ok)throw new Error((r&&r.error)||'ใส่ปกในไฟล์ไม่สำเร็จ');
@@ -2141,7 +2141,7 @@ async function bxPdfCover(b){if(!b.bookCover)throw new Error('ยังไม่
   save();if(prev)bxDropFile(prev);return r;}
 /* กด "บันทึกและเผยแพร่" แล้วสินค้ามีปกตามธีมใหม่ → เอาปก (แบบแบน ไม่มีพื้นขาว) ไปแทนหน้าแรกของไฟล์ PDF ให้ (คุณแดน 10 ต.ค. 69) · ไฟล์ต้นฉบับเก็บไว้ (linkOrig) */
 function pdfThemeCover(p){if(!p||p.status!=='published'||p.coverMode!=='theme'||!p.bookCover||p.pdfFrom===p.bookCover||isBundle(p)||pfmt(p)!=='pdf')return;
-  const src=p.linkOrig||p.link;if(!src||!/\/storage\/v1\/object\/public\/product-images\/.*\.pdf(\?|$)/i.test(src)){toast('ปกใหม่ยังไม่ได้ใส่ในไฟล์ PDF: ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน');return;}
+  const src=p.linkOrig||p.link;if(!src||!ownFile(src)||!/\.pdf(\?|$)/i.test(src)){toast('ปกใหม่ยังไม่ได้ใส่ในไฟล์ PDF: ไฟล์ของเล่มนี้ไม่ได้อยู่ในคลังร้าน');return;}
   toast('กำลังใส่ปกใหม่เป็นหน้าแรกของไฟล์ PDF...');bxPdfCover(p).then(r=>{const q=getProduct(p.id);if(q&&q!==p){Object.assign(q,{link:p.link,linkOrig:p.linkOrig,pdfCover:p.pdfCover,pdfFrom:p.pdfFrom});save();}toast(`ใส่ปกใหม่ในไฟล์ PDF แล้ว (${r.pages} หน้า) ลูกค้าคนต่อไปได้ไฟล์ที่มีปกใหม่`);render(true);}).catch(e=>toast('ใส่ปกในไฟล์ PDF ไม่สำเร็จ: '+(e.message||e)));}
 // เก็บแค่ไฟล์ต้นฉบับ + รุ่นที่ใช้อยู่ รุ่นก่อนหน้าลบทิ้งหลังบันทึกแล้ว (ไม่เปลือง storage)
 // ห้ามลบไฟล์ PDF รุ่นเก่า (คุณแดน 10 ต.ค. 69): ลูกค้าที่ซื้อไปแล้วได้ลิงก์รุ่นนั้นในอีเมล ลบแล้วลูกค้าเปิดไม่ได้ (404) · เก็บทุกรุ่นไว้ (ไฟล์ละไม่กี่ MB)

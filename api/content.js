@@ -542,10 +542,12 @@ async function cleanupReels() {
 // สร้างรูป 1 รูปจาก OpenAI (gpt-image*) หรือ Google (gemini-*image*) คืน {b64, mime} · โมเดลที่ไม่รู้จักใช้ค่าตั้งต้น
 const IMG_MODEL_RE = /^(gpt-image|chatgpt-image|gemini-)[a-z0-9.\-]{0,40}$/;
 // refs = รูปต้นแบบ (เช่น ปกจริงของแต่ละเล่ม) ให้ AI ใช้อ้างอิง ไม่ต้องวาดปกขึ้นเอง · รับเฉพาะรูปในคลังร้าน สูงสุด 10 รูป
+// ไฟล์ของร้านอยู่ได้ 2 ที่: Supabase Storage (เดิม) หรือ Cloudflare R2 path เดียวกัน (ย้ายแล้ว 14 ต.ค. 69) · ตัวตรวจ "ไฟล์ในคลังร้าน" ต้องรับทั้งคู่
+const R2_PUB = 'https://pub-fdfc380c67f149de994eac621d6b147c.r2.dev/';
+const isOwnUrl = (u, sub = '') => { const x = String(u || ''); return x.startsWith(`${SB_URL}/storage/v1/object/public/product-images/${sub}`) || x.startsWith(R2_PUB + sub); };
 async function loadRefs(refs) {
-  const own = `${SB_URL}/storage/v1/object/public/product-images/`;
   const out = [];
-  for (const u of (Array.isArray(refs) ? refs : []).map(String).filter((x) => x.startsWith(own)).slice(0, 10)) {
+  for (const u of (Array.isArray(refs) ? refs : []).map(String).filter((x) => isOwnUrl(x)).slice(0, 10)) {
     try { const r = await fetch(u); if (!r.ok) continue; const b = Buffer.from(await r.arrayBuffer()); if (b.length > 6e6) continue; out.push({ mime: r.headers.get('content-type') || 'image/jpeg', b64: b.toString('base64'), buf: b }); } catch (e) {}
   }
   return out;
@@ -2152,7 +2154,7 @@ ${books}`;
       if (!PT || !BOARD) return res.status(400).json({ ok: false, error: 'ยังไม่ได้ตั้งค่า PINTEREST_TOKEN / PINTEREST_BOARD_ID บน Vercel' });
       const body = await readBody(req);
       const img = String(body.image_url || ''), link = String(body.link || '');
-      if (!img.startsWith(`${SB_URL}/storage/v1/object/public/product-images/`)) return res.status(400).json({ ok: false, error: 'image_url ต้องเป็นรูปในคลังของร้าน' });
+      if (!isOwnUrl(img)) return res.status(400).json({ ok: false, error: 'image_url ต้องเป็นรูปในคลังของร้าน' });
       if (!/^https:\/\/([a-z0-9-]+\.)?(gumroad\.com|notion\.site|notion\.so|sheetlabth\.com)\//i.test(link)) return res.status(400).json({ ok: false, error: 'link ต้องไป Gumroad / Notion / sheetlabth.com' });
       const log = await pinRows();
       if (log.some((x) => x.image_url === img && x.title === String(body.title || ''))) return res.status(400).json({ ok: false, error: 'Pin นี้เคยโพสต์แล้ว' });
@@ -2345,7 +2347,7 @@ ${books}`;
       const body = await readBody(req);
       const own = `${SB_URL}/storage/v1/object/public/product-images/`;
       const pdfUrl = String(body.pdf || '').split('?')[0], imgUrl = String(body.image || '').split('?')[0];
-      if (!pdfUrl.startsWith(own) || !imgUrl.startsWith(own)) return res.status(400).json({ ok: false, error: 'ไฟล์ต้องอยู่ในคลังของร้าน' });
+      if (!isOwnUrl(pdfUrl) || !isOwnUrl(imgUrl)) return res.status(400).json({ ok: false, error: 'ไฟล์ต้องอยู่ในคลังของร้าน' });
       try {
         const { PDFDocument } = await import('pdf-lib');
         const [pr, ir] = await Promise.all([fetch(pdfUrl), fetch(imgUrl)]);
@@ -2966,14 +2968,18 @@ ${books}`;
         const id = String(req.query.p || ''), part = req.query.part === 'body' ? 'body' : 'cover', links = await loadLinks(), eds = (await sb('shop_state?id=eq.print_editions&select=data').catch(() => []))?.[0]?.data || {}, src = String(eds[id]?.url || links[id] || '').trim(); // ฉบับพิมพ์กระชับ (ถ้ามี) แทนไฟล์เต็มของลูกค้า
         const prod = (shop.products || []).find((x) => x.id === id);
         if (!prod || !/^https:\/\//.test(src)) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.status(404).send('<!doctype html><meta charset="utf-8"><p>ยังไม่มีไฟล์ของเล่มนี้ แจ้งคุณแดน</p>'); }
+        // ไฟล์ปก/เนื้อหาที่แยกแล้ว: มีบน R2 (ส่งออกฟรี · ย้ายโดย tools/r2/offload.py) ใช้ R2 ก่อน ไม่งั้น Supabase (14 ต.ค. 69)
+        const onR2 = async (path) => { const u = `https://pub-fdfc380c67f149de994eac621d6b147c.r2.dev/${path}`; const h = await fetch(u, { method: 'HEAD' }).catch(() => null); return h && h.ok ? u : ''; };
         const { createHash } = await import('node:crypto'), base = `print/${createHash('sha1').update(src).digest('hex').slice(0, 20)}`, pub = (n) => `${SB_URL}/storage/v1/object/public/product-images/${base}-${n}.pdf`;
         if (part === 'cover' && PR.newCover(prod)) { // ปกใหม่ (ตามธีม) ยังไม่ได้ใส่ในไฟล์ PDF → พิมพ์ปกจากรูปปกใหม่เต็มหน้า A4 แทนหน้าแรกเก่า (คุณแดน 11 ต.ค. 69 "ขอปกแบบรูปแก้แล้ว ไม่เอารูปเก่า")
           const nc = PR.newCover(prod), cpath = `${base}-cover-${createHash('sha1').update(nc).digest('hex').slice(0, 8)}.pdf`, cpub = `${SB_URL}/storage/v1/object/public/product-images/${cpath}`;
+          const r2c = await onR2(cpath); if (r2c) return res.redirect(302, r2c);
           const h2 = await fetch(cpub, { method: 'HEAD' }).catch(() => null); if (h2 && h2.ok) return res.redirect(302, cpub);
           try { const ir = await fetch(nc); if (!ir.ok) throw new Error('โหลดรูปปกไม่ได้ ' + ir.status); const bytes = await PR.imagePdf(Buffer.from(await ir.arrayBuffer()));
             const u = await fetch(`${SB_URL}/storage/v1/object/product-images/${cpath}`, { method: 'POST', headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/pdf', 'x-upsert': 'true' }, body: bytes }); if (!u.ok) throw new Error('อัปโหลดไม่ได้ ' + u.status);
             return res.redirect(302, cpub); } catch (e) { console.error('print new cover', e); } // ทำไม่ได้ ใช้หน้าแรกของไฟล์แทน
         }
+        const r2p = await onR2(`${base}-${part}.pdf`); if (r2p) return res.redirect(302, r2p);
         const head = await fetch(pub(part), { method: 'HEAD' }).catch(() => null);
         if (head && head.ok) return res.redirect(302, pub(part));
         try {

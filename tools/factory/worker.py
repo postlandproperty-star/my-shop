@@ -165,6 +165,14 @@ def main():
         except Exception: pass
         try: subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reel', 'called.py'), 'daily'], capture_output=True, timeout=1500)  # คลิป What is this called? วิดีโอฟรี Pixabay วันละ 2 คลิป (12:00/21:00) ทำทีละคลิปต่อรอบ
         except Exception: pass
+        # ☁️ ย้ายไฟล์ใหม่ใน Supabase Storage ขึ้น Cloudflare R2 วันละครั้ง (ส่งออกฟรี · Supabase เกินโควต้าจนเว็บล่ม 14 ต.ค. 69) · ไฟล์เดิมใน Supabase ไม่ลบ
+        stamp = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.r2_offload_day')
+        today = time.strftime('%Y-%m-%d')
+        if not os.path.exists(stamp) or open(stamp).read().strip() != today:
+            try:
+                subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'r2', 'offload.py'), 'products', 'sets', 'print', 'factory', 'posts', 'readlab', 'ads', 'learn', 'cards', 'ielts', 'briefs', 'reels'], capture_output=True, timeout=1800)
+                open(stamp, 'w').write(today)
+            except Exception: pass
         a.cmd = 'queue'
     if a.cmd == 'thumbs':  # รูปย่อปกจริง (หน้า 1 ของ PDF) ให้หน้าพิมพ์ของแม่ · ทำเฉพาะเล่มที่ยังไม่มี/ไฟล์เปลี่ยน
         print(json.dumps(thumbs(int(a.args[0]) if a.args else 40), ensure_ascii=False)); return
