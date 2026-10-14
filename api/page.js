@@ -184,7 +184,8 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   if (req.query.app === '1') { // หน้าแอป (เปิดจากไอคอนบนหน้าจอ)
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));
-    return res.status(200).send(appPage({ settings: shop.settings, site: NEW_SITE }));
+    const VT = await import('../lib/vocab.js').then((VC) => Object.fromEntries(Object.keys(VC.LEVELS).map((lv) => [lv, VC.levelCount(lv)]))).catch(() => null);
+    return res.status(200).send(appPage({ settings: shop.settings, site: NEW_SITE, vocab: VT }));
   }
   if (req.query.mylearn === '1') { // หน้าเรียนคอร์ส (แบบ Udemy): คอร์สของฉัน + หน้าเล่นวิดีโอ
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
@@ -194,7 +195,8 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   if (req.query.acct === '1') { // บัญชีของฉัน: บัญชีเดียวทุกบริการ (ข้อมูลโหลดหลังเข้าระบบ)
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     const shop = await loadShop().catch(() => ({ settings: {} }));
-    return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE }));
+    const VT = await import('../lib/vocab.js').then((VC) => Object.fromEntries(Object.keys(VC.LEVELS).map((lv) => [lv, VC.levelCount(lv)]))).catch(() => null);
+    return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE, vocab: VT }));
   }
   const vocabQ = String(req.query.vocab || '');
   if (vocabQ) { // 📚 คำศัพท์ 3000 คำที่ต้องรู้ (lib/vocab.js): /vocab /vocab/a1 /vocab/a1/3 /vocab/review?k=a1.3,a2.1 · ฟรี FREE_UNITS บทแรกของทุกระดับ บทที่เหลือ = VIP

@@ -74,7 +74,7 @@ async function vip(req, res, m) {
   if (m === 'vip_speak') { // 🎙 ตรวจ IELTS Speaking ด้วย AI (lib/speaking.js) · เก็บในตาราง member_writing (task sp:p1/p2/p3) โควตาแยกจาก Writing · ผลเก่าเปิดด้วย vip_write_get
     const SP = await import('../lib/speaking.js');
     let mem = null; if (me) { try { mem = await V.refreshMember(await V.getMember(me)); } catch (e) {} }
-    const active = V.isActive(mem), monthStart = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 8) + '01T00:00:00+07:00';
+    const active = V.isActive(mem) || (!!me && V.freeForMembers(settings)), monthStart = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 8) + '01T00:00:00+07:00';
     const quota = async () => { if (!me) return { used: 0, left: 0 }; const used = active ? await V.writingUsed(me, new Date(monthStart).toISOString(), 'speak') : await V.writingUsed(me, '', 'speak'); const cap = active ? V.WRITE_CAP : V.WRITE_FREE; return { used, cap, left: Math.max(0, cap - used) }; };
     if (req.method === 'GET') return res.status(200).json({ ok: true, email: me, active, open: pub.open, ...(await quota()), history: me ? await V.listWriting(me, 'speak').catch(() => []) : [], questions: SP.QUESTIONS, parts: SP.PARTS });
     if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบด้วยอีเมลก่อน' });
@@ -90,7 +90,7 @@ async function vip(req, res, m) {
   if (m === 'vip_write' || m === 'vip_write_get') { // ✍️ ตรวจ IELTS Writing ด้วย AI (lib/writing.js) · ต้องเข้าระบบด้วยอีเมล · สมาชิก = WRITE_CAP ครั้ง/เดือน · ยังไม่เป็นสมาชิก = ทดลองฟรี WRITE_FREE ครั้ง
     const W = await import('../lib/writing.js');
     let mem = null; if (me) { try { mem = await V.refreshMember(await V.getMember(me)); } catch (e) {} }
-    const active = V.isActive(mem), monthStart = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 8) + '01T00:00:00+07:00';
+    const active = V.isActive(mem) || (!!me && V.freeForMembers(settings)), monthStart = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 8) + '01T00:00:00+07:00';
     const quota = async () => { if (!me) return { used: 0, left: 0 }; const used = active ? await V.writingUsed(me, new Date(monthStart).toISOString()) : await V.writingUsed(me); const cap = active ? V.WRITE_CAP : V.WRITE_FREE; return { used, cap, left: Math.max(0, cap - used) }; };
     if (m === 'vip_write_get') { if (!me) return res.status(401).json({ ok: false, error: 'เข้าสู่ระบบก่อน' }); const r = await V.getWriting(me, req.query.id); if (!r) return res.status(404).json({ ok: false, error: 'ไม่พบ' }); return res.status(200).json({ ok: true, item: { id: r.id, at: r.created_at, prompt: r.prompt, essay: r.essay, result: r.result } }); }
     if (req.method === 'GET') return res.status(200).json({ ok: true, email: me, active, open: pub.open, ...(await quota()), history: me ? await V.listWriting(me).catch(() => []) : [], prompts: W.PROMPTS, tasks: Object.fromEntries(Object.entries(W.TASKS).map(([k, t]) => [k, { name: t.name, min: t.min }])) });

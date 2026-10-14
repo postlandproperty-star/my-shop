@@ -2323,8 +2323,8 @@ ${books}`;
         return res.status(200).json({ ok: true, settings: v });
       }
       const [settings, ready] = await Promise.all([V.loadVip(), V.tablesReady()]);
-      let stats = null; if (ready) { try { stats = await V.memberStats(); } catch (e) {} }
-      return res.status(200).json({ ok: true, settings, ready, sql: ready ? '' : V.VIP_SQL, stats });
+      let stats = null, dir = null; if (ready) { try { stats = await V.memberStats(); } catch (e) {} if (admin) { try { dir = await V.memberDirectory(); } catch (e) { console.error('member dir', e.message); } } } // รายชื่อ/อีเมลลูกค้า: คุณแดนเท่านั้น (คีย์ทีมไม่ได้)
+      return res.status(200).json({ ok: true, settings, ready, sql: ready ? '' : V.VIP_SQL, stats, dir });
     }
     if (action === 'seo_topics') { // แท็บ SEO: หน้ารวมหัวข้อแต่ละหน้ามีของเท่าไหร่ ขึ้น Google แล้วไหม + บทความ/แบบทดสอบล่าสุด
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

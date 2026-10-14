@@ -142,6 +142,7 @@ footer{padding:28px 0 110px;text-align:center}
 .vp-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto;gap:6px;align-items:center;margin-bottom:6px}.vp-chk{display:flex;gap:4px;align-items:center;white-space:nowrap}.vp-row select.input{width:auto}
 @media(max-width:640px){.vp-row{grid-template-columns:auto 1fr auto auto}.vp-row>input.input{grid-column:1/-1}}
 .vp-faq{display:grid;gap:6px;border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px}
+.mem-fold{margin-top:14px}.mem-fold>summary{cursor:pointer;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.mem-fold>summary::before{content:'▸';color:var(--muted)}.mem-fold[open]>summary::before{content:'▾'}.mem-bar{height:10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);overflow:hidden;margin:10px 0 12px}.mem-bar i{display:block;height:100%;background:linear-gradient(90deg,#2440E8,#0F7A55)}.vipstats i{display:block;font-style:normal;font-size:11.5px}.mem-tbl{display:grid;gap:0}.mem-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.mem-row b{word-break:break-all}.mem-p{text-align:right}.mem-p b{font-size:18px;display:block}
 .vipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.vipf{display:grid;gap:4px;font-size:13px;color:var(--muted)}.vipsql{white-space:pre-wrap;word-break:break-word;font-size:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0;max-height:160px;overflow:auto}.vipstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}.vipstats div{display:flex;flex-direction:column;background:var(--bg);border-radius:10px;padding:8px 10px}.vipstats b{font-size:20px}.vipstats span{font-size:12.5px;color:var(--muted)}
 .st-h1{font-family:var(--font-head);font-weight:500;font-size:clamp(24px,5vw,30px);margin:0}.st-cathead .fine{margin:4px 0 0}.st-cat{gap:16px}.st-cat .st-bundles{margin-bottom:0}
 /* ร้านค้า /store แบบ Shopee (clean): หัวร้าน · แท็บติดบนจอ · การ์ดรูปเต็มขอบ ราคาส้ม */
@@ -6282,14 +6283,33 @@ const SEOT={d:null,loading:false};
 const VIPA={d:null,loading:false,busy:false,pg:null,gBusy:false};
 function loadVipAdmin(){if(VIPA.loading)return;VIPA.loading=true;adminApi('/api/content?action=vip_admin').then(j=>{VIPA.d=j||{};}).catch(()=>{VIPA.d={};}).then(()=>{VIPA.loading=false;render(true);});}
 /* แท็บ 👑 สมาชิก: ตั้งค่าทุกอย่างของ VIP ที่เดียว (ราคา เปิดรับ ข้อความหน้า ให้สิทธิ์เอง) + หน้าที่ลูกค้าเห็นอยู่ข้างๆ */
-function vipView(){return `<div class="wrap wide vipv" style="padding:0 16px 60px">${svcNav()}<h2 class="h3" style="margin:0 0 4px">👑 สมาชิก VIP</h2><p class="fine" style="margin:0 0 12px">ตั้งค่าทุกอย่างของสมาชิกในหน้านี้ · ${vipPageLink()}</p>
-  ${vipCard()}${vipPageCard()}${vipGrantCard()}</div>`;}
+// 👥 จัดการสมาชิก (คุณแดน 14 ต.ค. 69: เปลี่ยนจาก "สมาชิก VIP" · ใช้ฟรี 100% ครบ 100 คนค่อยคุยเรื่องเก็บเงิน) → ตัวเลข + รายชื่อก่อน · ราคา/ข้อความหน้า/ให้สิทธิ์ พับไว้ด้านล่าง
+function vipView(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d;
+  return `<div class="wrap wide vipv" style="padding:0 16px 60px">${svcNav()}<h2 class="h3" style="margin:0 0 4px">👥 จัดการสมาชิก</h2><p class="fine" style="margin:0 0 12px">สมัครฟรีด้วยอีเมลหรือ Google · ช่วงเปิดตัวใช้ได้ทุกอย่างฟรี · ครบ 100 คนค่อยตั้งราคา · ${vipPageLink()}</p>
+  ${!d?'<section class="card"><p class="fine">กำลังโหลดสมาชิก...</p></section>':memSummary(d)+memList(d)}
+  <details class="card mem-fold" id="vip-grant" ${(window.MEMO||{})["vip-grant"]?'open':''} ontoggle="(window.MEMO=window.MEMO||{})[this.id]=this.open"><summary><b>🎁 ให้สิทธิ์ VIP เอง</b> <span class="fine">ทดลอง/ของขวัญ/ชดเชย</span></summary>${vipGrantCard()}</details>
+  <details class="card mem-fold" id="vip-set" ${(window.MEMO||{})["vip-set"]?'open':''} ontoggle="(window.MEMO=window.MEMO||{})[this.id]=this.open"><summary><b>💰 ราคาและการเปิดขาย VIP</b> <span class="fine">ทำตอนสมาชิกครบ 100 คน</span></summary>${vipCard()}</details>
+  <details class="card mem-fold" id="vip-page" ${(window.MEMO||{})["vip-page"]?'open':''} ontoggle="(window.MEMO=window.MEMO||{})[this.id]=this.open"><summary><b>📝 ข้อความหน้าสมาชิก /vip</b> <span class="fine">สิทธิ์ ฟรี/VIP · คำถามที่พบบ่อย</span></summary>${vipPageCard()}</details></div>`;}
+function memSummary(d){const m=(d.dir||{}).sum;if(!m)return d.ready?'':`<section class="card"><p class="fine">ยังไม่มีตารางสมาชิก</p></section>`;const pct=Math.min(100,Math.round(m.total/m.goal*100));
+  const k=(n,l,sub)=>`<div><b>${n}</b><span>${l}</span>${sub?`<i class="fine">${sub}</i>`:''}</div>`;
+  return `<section class="card mem-sum"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">สมาชิก ${m.total} / ${m.goal} คน</h3><span class="fine">${m.total>=m.goal?'🎉 ครบเป้าแล้ว ถึงเวลาคุยเรื่องราคา':'อีก '+(m.goal-m.total)+' คนถึงเป้า'}</span></div>
+    <div class="mem-bar"><i style="width:${pct}%"></i></div>
+    <div class="vipstats">${k(m.today,'สมัครวันนี้')}${k(m.week,'สมัคร 7 วัน')}${k(m.learners,'ฝึกคำศัพท์ 7 วัน','กลับมาเรียนจริง')}${k(m.optin,'ยินยอมรับอีเมล','ส่งเตือน/โปรได้')}${k(m.vip+m.gift,'VIP',m.gift?`ให้สิทธิ์เอง ${m.gift}`:'')}${m.pending?k(m.pending,'ขอรหัสแต่ยังไม่ยืนยัน'):''}</div></section>`;}
+function memList(d){const L=(d.dir||{}).list;if(!L)return '';const f=S.memF||'all',T=Math.floor((Date.now()+252e5)/864e5);
+  const rows=L.filter(m=>f==='all'||(f==='optin'&&m.optin)||(f==='learn'&&m.lastDay>=T-6)||(f==='vip'&&m.tier!=='free'));
+  const dd=x=>x?new Date(x).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}):'–';
+  const tier=m=>m.tier==='vip'?`<span class="badge ok">VIP${m.plan==='lifetime'?' ตลอดชีพ':''}</span>`:m.tier==='gift'?'<span class="badge">VIP ให้เอง</span>':'<span class="badge gray">สมาชิก</span>';
+  const chip=(k,l,n)=>`<button class="chip" data-a="memF" data-v="${k}" aria-pressed="${f===k}">${l} ${n}</button>`;
+  return `<section class="card" style="margin-top:14px"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">รายชื่อสมาชิก</h3><button class="btn btn-line btn-sm" data-a="memCopy">📋 คัดลอกอีเมลที่ยินยอม (${L.filter(m=>m.optin).length})</button></div>
+    <div class="row" style="gap:6px;flex-wrap:wrap;margin:10px 0">${chip('all','ทั้งหมด',L.length)}${chip('learn','ฝึกอยู่',L.filter(m=>m.lastDay>=T-6).length)}${chip('optin','ยินยอมรับอีเมล',L.filter(m=>m.optin).length)}${chip('vip','VIP',L.filter(m=>m.tier!=='free').length)}</div>
+    <input class="input" type="search" placeholder="ค้นหาอีเมล" aria-label="ค้นหาอีเมลสมาชิก" oninput="var q=this.value.toLowerCase();document.querySelectorAll('.mem-row').forEach(function(r){r.hidden=q&&r.dataset.e.indexOf(q)<0;})" style="margin-bottom:8px">
+    ${rows.length?`<div class="mem-tbl">${rows.map(m=>`<div class="mem-row" data-e="${esc(m.email.toLowerCase())}"><div><b>${esc(m.email)}</b> ${tier(m)}${m.optin?' <span title="ยินยอมรับอีเมล">✉️</span>':''}<br><span class="fine">สมัคร ${dd(m.joined)} · เข้าล่าสุด ${dd(m.last)}${m.until&&m.plan!=='lifetime'?' · VIP ถึง '+dd(m.until):''}</span></div><div class="mem-p"><b>${m.words}</b><span class="fine">คำ · ${m.units} บท${m.lastDay?` · ฝึกล่าสุด ${m.lastDay>=T?'วันนี้':m.lastDay===T-1?'เมื่อวาน':(T-m.lastDay)+' วันก่อน'}`:''}</span></div><button class="chip" data-a="memGift" data-v="${esc(m.email)}" title="ให้สิทธิ์ VIP">🎁</button></div>`).join('')}</div>`:'<p class="fine">ยังไม่มีสมาชิกในกลุ่มนี้</p>'}</section>`;}
 /* ปุ่มเปิดหน้าลูกค้า: ยังไม่เปิดรับ = หน้าตัวอย่าง (เห็นราคาแต่กดสมัครไม่ได้) · เปิดแล้ว = หน้าจริง */
 function vipPageHref(){const v=(VIPA.d&&VIPA.d.settings)||{};return v.open?'/vip':'/vip?preview=1';}
 function vipPageLink(){return `<a class="chip" href="${vipPageHref()}" target="_blank" rel="noopener">👀 เปิดหน้าลูกค้า /vip ↗</a>`;}
 function vipPg(){const s=VIPA.d&&VIPA.d.settings;if(!VIPA.pg&&s)VIPA.pg=JSON.parse(JSON.stringify(s.page||{title:'',sub:'',perks:[],faq:[]}));return VIPA.pg;}
 function vipPageCard(){if(!VIPA.d||!VIPA.d.settings)return '';const p=vipPg(),sel=(v,x)=>v===x?'selected':'';
-  return `<section class="card vipa" id="vip-page" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">📝 ข้อความบนหน้า /vip</h3><p class="fine" style="margin:0 0 10px">แก้ได้อิสระ กดบันทึกแล้วหน้าลูกค้าเปลี่ยนทันที</p>
+  return `<section class="vipa" style="margin-top:10px"><p class="fine" style="margin:0 0 10px">แก้ได้อิสระ กดบันทึกแล้วหน้าลูกค้าเปลี่ยนทันที</p>
     <label class="vipf">หัวข้อใหญ่<input class="input" data-vp="title" maxlength="60" value="${esc(p.title)}"></label>
     <label class="vipf" style="margin-top:8px">คำโปรยใต้หัวข้อ<textarea class="input" data-vp="sub" rows="2" maxlength="220">${esc(p.sub)}</textarea></label>
     <h4 style="margin:16px 0 6px">ได้อะไรบ้าง <span class="fine" style="font-weight:400">(ตารางเทียบ ฟรี / VIP)</span></h4>
@@ -6301,21 +6321,18 @@ function vipPageCard(){if(!VIPA.d||!VIPA.d.settings)return '';const p=vipPg(),se
     <div class="row" style="gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap"><button class="btn btn-sm pt-new" data-a="vpSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึกข้อความหน้า'}</button>${vipPageLink()}<button class="chip" data-a="vpReset">${S.confirm==='vpReset'?'กดอีกครั้งเพื่อใช้ข้อความตั้งต้น':'ใช้ข้อความตั้งต้น'}</button></div>
   </section>`;}
 function vipGrantCard(){const d=VIPA.d;if(!d||!d.ready)return '';
-  return `<section class="card vipa" style="margin-top:14px"><h3 class="h3" style="margin:0 0 4px">🎁 ให้สิทธิ์ VIP เอง</h3><p class="fine" style="margin:0 0 10px">ลองระบบเองโดยไม่ต้องจ่าย หรือให้เป็นของขวัญ/ชดเชยลูกค้า · ต่อจากวันหมดอายุเดิม · ระบบส่งอีเมลต้อนรับพร้อมลิงก์เข้าระบบให้</p>
+  return `<section class="vipa" style="margin-top:10px"><p class="fine" style="margin:0 0 10px">ลองระบบเองโดยไม่ต้องจ่าย หรือให้เป็นของขวัญ/ชดเชยลูกค้า · ต่อจากวันหมดอายุเดิม · ระบบส่งอีเมลต้อนรับพร้อมลิงก์เข้าระบบให้</p>
     <div class="row" style="gap:8px;flex-wrap:wrap"><input class="input" type="email" data-f="vgEmail" value="${esc(S.form.vgEmail||'')}" placeholder="อีเมลคนที่จะให้สิทธิ์" aria-label="อีเมลคนที่จะให้สิทธิ์" style="flex:1;min-width:200px"><select class="input" data-f="vgDays" aria-label="จำนวนวัน" style="width:auto">${[[7,'7 วัน'],[30,'30 วัน'],[90,'90 วัน'],[365,'1 ปี']].map(([n,l])=>`<option value="${n}" ${String(S.form.vgDays||30)===String(n)?'selected':''}>${l}</option>`).join('')}</select><button class="btn btn-sm pt-new" data-a="vipGrant" ${VIPA.gBusy?'disabled':''}>${VIPA.gBusy?'กำลังให้สิทธิ์...':'ให้สิทธิ์'}</button></div></section>`;}
 
-function vipCard(){if(VIPA.d===null&&!VIPA.loading)loadVipAdmin();const d=VIPA.d;
-  if(!d)return '<section class="card" style="margin-top:14px"><p class="fine">กำลังโหลดสมาชิก VIP...</p></section>';
+function vipCard(){const d=VIPA.d;
+  if(!d)return '';
   const v=d.settings||{packs:{}},st=d.stats,num=(id,val,l)=>`<label class="vipf">${l}<input class="input" type="number" min="0" step="1" id="${id}" value="${Number(val)||0}"></label>`;
-  return `<section class="card vipa" id="vip-set"><div class="row" style="justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 class="h3" style="margin:0">👑 สมาชิก VIP ${v.open?'<span class="badge ok">เปิดรับอยู่</span>':'<span class="badge gray">ยังไม่เปิด</span>'}</h3><a class="chip" href="/vip" target="_blank" rel="noopener">ดูหน้า /vip ↗</a></div>
-    <p class="fine" style="margin:4px 0 10px">สมัครด้วยอีเมล (ไม่มีรหัสผ่าน) · บัตรตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้ · PromptPay จ่ายล่วงหน้าเป็นก้อน · ตอนนี้ VIP ได้ "สมุดจุดพลาด" เก็บข้อที่ผิดจากคลังข้อสอบให้ทวน</p>
+  return `<div class="vipa" style="margin-top:10px"><p class="fine" style="margin:0 0 10px">${v.open?'<span class="badge ok">เปิดขายอยู่</span> ':'<span class="badge gray">ยังไม่เปิดขาย = สมาชิกใช้ฟรีทุกอย่าง</span> '}บัตรตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้ · PromptPay จ่ายล่วงหน้าหรือจ่ายครั้งเดียวตลอดชีพ</p>
     ${!d.ready?`<div class="adt-msg"><b>ขั้นแรก (ครั้งเดียว):</b> สร้างตารางสมาชิก เปิด Supabase → SQL Editor → วาง SQL นี้แล้วกด Run แล้วกดรีเฟรชการ์ดนี้<pre class="vipsql">${esc(d.sql||'')}</pre><div class="row" style="gap:6px"><button class="btn btn-line btn-sm" data-a="vipSqlCopy">📋 คัดลอก SQL</button><button class="btn btn-line btn-sm" data-a="vipReload">รีเฟรช</button></div></div>`:''}
     <div class="vipgrid">${num('vip-m',v.monthly,'บัตร รายเดือน (บาท/เดือน)')}${num('vip-y',v.yearly,'บัตร รายปี (บาท/ปี)')}${num('vip-p1',v.packs[1],'PromptPay 1 เดือน')}${num('vip-p3',v.packs[3],'PromptPay 3 เดือน')}${num('vip-p12',v.packs[12],'PromptPay 12 เดือน')}${num('vip-life',v.life||0,'PromptPay ตลอดชีพ (จ่ายครั้งเดียว)')}</div>
     <label class="row" style="gap:8px;margin:10px 0"><input type="checkbox" id="vip-open" ${v.open?'checked':''} ${d.ready?'':'disabled'}> <span>เปิดรับสมาชิก (หน้า /vip แสดงราคาและให้สมัครได้)</span></label>
-    <div class="row" style="gap:8px;align-items:center"><button class="btn btn-sm pt-new" data-a="vipSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึก'}</button><span class="fine">ใส่ 0 = ไม่ขายแบบนั้น · ยังไม่ติ๊กเปิดรับ = ช่วงเปิดตัว สมาชิกฟรีใช้ได้ทุกอย่าง (ยกเว้นตรวจด้วย AI) · ตลาดไทยแนวนี้ประมาณ ฿99–299/เดือน</span></div>
-    ${st?`<div class="vipstats"><div><b>${st.active}</b><span>สมาชิกที่ใช้งานอยู่</span></div><div><b>${st.card}</b><span>ต่ออายุบัตรอัตโนมัติ</span></div><div><b>${st.leaving}</b><span>ยกเลิกการต่ออายุแล้ว</span></div><div><b>${st.total}</b><span>เคยเป็นสมาชิกทั้งหมด</span></div></div>
-      <h4 style="margin:14px 0 6px">สมาชิกที่ใช้งานอยู่ ${st.recent.length?`(${st.recent.length})`:''}</h4>${st.recent.length?`<div class="seo-tbl">${st.recent.map(m=>`<div><span>${esc(m.email)}</span><span class="fine">${m.plan==='gift'?'🎁 ให้สิทธิ์เอง':m.plan&&String(m.plan).startsWith('prepaid')?'PromptPay '+String(m.plan).split('-')[1]+' เดือน':m.plan==='yearly'?'บัตร รายปี':'บัตร รายเดือน'} · ถึง ${new Date(m.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}${m.cancel?' · <b>ยกเลิกต่ออายุ</b>':''}</span></div>`).join('')}</div>`:'<p class="fine">ยังไม่มีสมาชิก</p>'}`:''}
-  </section>`;}
+    <div class="row" style="gap:8px;align-items:center"><button class="btn btn-sm pt-new" data-a="vipSave" ${VIPA.busy?'disabled':''}>${VIPA.busy?'กำลังบันทึก...':'บันทึก'}</button><span class="fine">ใส่ 0 = ไม่ขายแบบนั้น · ยังไม่ติ๊กเปิดรับ = ช่วงเปิดตัว สมาชิกฟรีใช้ได้ทุกอย่าง (รวมตรวจด้วย AI 30 ครั้ง/เดือน) · ตลาดไทยแนวนี้ประมาณ ฿99–299/เดือน</span></div>
+  </div>`;}
 function loadSeoTopics(){if(SEOT.loading)return;SEOT.loading=true;adminApi('/api/content?action=seo_topics').then(j=>{SEOT.d=j||{};}).catch(()=>{SEOT.d={};}).then(()=>{SEOT.loading=false;render(true);});}
 function seoTab(){if(SEOT.d===null&&!SEOT.loading)loadSeoTopics();const d=SEOT.d||{},T=d.topics||[],R=d.recent||[],tt=d.totals||{};
   const wk=R.filter(x=>Date.now()-Date.parse(x.at)<7*864e5);
@@ -6351,7 +6368,7 @@ const SVC=[
   {k:'all',i:'📊',l:'ภาพรวม',tabs:[['home','📊','ภาพรวม'],['todo','✅','เช็คลิสต์']]},
   {k:'shop',i:'🛒',l:'ร้านชีท',tabs:[['orders','🧾','ออเดอร์'],['products','🛍️','สินค้า'],['ads','📣','โฆษณา'],['coupons','🏷️','โค้ดส่วนลด'],['chatbot','💬','แชทบอทเพจ'],['courses','🎓','คอร์สเรียน'],['reviews','⭐','รีวิว'],['pay','⚙️','ตั้งค่าร้าน']]},
   {k:'learn',i:'📚',l:'คอนเทนต์+SEO',tabs:[['seo','🔎','SEO'],['content','✍️','โพสต์'],['videos','🎬','คลิป YouTube'],['insights','📈','พฤติกรรม']]},
-  {k:'vip',i:'👑',l:'สมาชิก',view:'vip'},
+  {k:'vip',i:'👥',l:'จัดการสมาชิก',view:'vip'},
   {k:'factory',i:'🏭',l:'โรงงาน',view:'factory'},
   {k:'team',i:'👥',l:'ทีม',tabs:[['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก']]},
 ];
@@ -6374,8 +6391,8 @@ function svcFour(k){
   if(k==='shop'){const fr=D.products.filter(p=>p.fresh&&p.status!=='published').length,aw=(ADA.items||[]).filter(x=>x.status==='pending').length;
     h=B('📊','ตัวเลข','ยอดขาย · ออเดอร์','tab','orders')+B('✅','ต้องทำ',fr||aw?[fr?`สินค้ารอเผยแพร่ ${fr}`:'',aw?`แอดรอกด ${aw}`:''].filter(Boolean).join(' · '):'ไม่มีงานค้าง',fr?'goNew':aw?'goAds':'tab',fr||aw?'':'products',fr||aw)+B('⚙️','ตั้งค่า','ชำระเงิน · Pixel · ร้าน','tab','pay')+P('หน้าลูกค้า','ร้านชีท ↗','/store');}
   else if(k==='learn')h=B('📊','ตัวเลข','Google · คนเข้าเว็บ','tab','seo')+B('✅','ต้องทำ','โพสต์และบทความรอตรวจ','tab','content')+B('⚙️','ตั้งค่า','หน้ารวมหัวข้อ · พฤติกรรม','tab','insights')+P('หน้าลูกค้า','ข้อสอบฟรี ↗','/quiz');
-  else if(k==='vip'){const d=VIPA.d||{},v=d.settings||{},todo=!d.ready?'สร้างตารางสมาชิก (SQL)':!v.open?'ตั้งราคา แล้วเปิดรับ':'';
-    h=B('📊','ตัวเลข','สมาชิก · ต่ออายุ','svcGo','#vip-set')+B('✅','ต้องทำ',todo||'ไม่มีงานค้าง','svcGo','#vip-set',!!todo)+B('⚙️','ตั้งค่า','ราคา · ข้อความหน้า · ให้สิทธิ์','svcGo','#vip-page')+P('หน้าลูกค้า','หน้า /vip ↗',vipPageHref());}
+  else if(k==='vip'){const d=VIPA.d||{},sm=(d.dir||{}).sum,todo=!d.ready?'สร้างตารางสมาชิก (SQL)':sm&&sm.total>=sm.goal?'ครบ 100 คน: ตั้งราคา':'';
+    h=B('📊','ตัวเลข',sm?`สมาชิก ${sm.total}/${sm.goal} · ฝึกอยู่ ${sm.learners}`:'สมาชิก · ฝึกอยู่','svcGo','.mem-sum')+B('✅','ต้องทำ',todo||'ไม่มีงานค้าง','svcGo','#vip-set',!!todo)+B('⚙️','ตั้งค่า','ราคา · ข้อความหน้า · ให้สิทธิ์','svcGo','#vip-page')+P('หน้าลูกค้า','หน้า /vip ↗',vipPageHref());}
   else if(k==='factory'){const n=svcWork('factory');
     h=B('📊','ตัวเลข','คิว · กำลังผลิต','facTab','queue')+B('✅','ต้องทำ',n?`ตรวจไฟล์ ${n} เล่ม`:'ไม่มีงานค้าง','facTab','review',n)+B('⚙️','ตั้งค่า','สั่งเล่มใหม่','facTab','order')+P('หน้าลูกค้า','ของที่ลงขายแล้ว ↗','/store');}
   return h?`<div class="svf-row">${h}</div>`:'';}
@@ -6448,7 +6465,7 @@ function render(keep){
   const isAdmin=hasAdminAccess();
   $('#bar').style.display=isAdmin?'':'none';
   setHtml($('#bar-note'),isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a><br><span id="live-pill" class="live-pill">${livePillText()}</span>`:'');
-  setHtml($('#seg'),isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory','vip','catalog'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button><button data-a="toVip" aria-pressed="${v==='vip'}">👑 สมาชิก</button>`:''); // แถบหลังบ้านตามคุณแดนทุกหน้า (ลูกค้าไม่เห็น)
+  setHtml($('#seg'),isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory','vip','catalog'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button><button data-a="toVip" aria-pressed="${v==='vip'}">👥 จัดการสมาชิก</button>`:''); // แถบหลังบ้านตามคุณแดนทุกหน้า (ลูกค้าไม่เห็น)
   if(S.loading){setHtml($('#app'),`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`);return;}
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
@@ -6519,7 +6536,7 @@ function act(a,el){
       const last=(S.svcLast||{})[s.k],t=s.tabs.some(x=>x[0]===last)?last:s.tabs[0][0];
       if(S.view!=='admin'){S.tab=t;go('admin');}
       act('tab',{dataset:{v:t}});break;}
-    case 'svcGo':{const t=document.querySelector(el.dataset.v);if(t){if(t.tagName==='DETAILS')t.open=true;t.scrollIntoView({behavior:'smooth',block:'start'});}break;}
+    case 'svcGo':{const t=document.querySelector(el.dataset.v);if(t){if(t.tagName==='DETAILS'){t.open=true;(window.MEMO=window.MEMO||{})[t.id]=true;}t.scrollIntoView({behavior:'smooth',block:'start'});}break;}
     case 'toFactory':FJOBS=null;FAC.jobs=null;FCFG.cfg=null;S.fnew=S.fnew||{title:'',cat:'TOEIC Grammar',pages:'',price:'',audience:'',notes:''};go('factory');break;
     case 'flCat':S.flcat=el.dataset.v;render(true);break;
     case 'facTab':S.facTab=el.dataset.v;render(true);break;
@@ -6612,6 +6629,9 @@ function act(a,el){
       VIPA.gBusy=true;render(true);adminPost('/api/content?action=vip_admin',{grant:{email,days}}).then(j=>{VIPA.gBusy=false;if(j&&j.ok){S.form.vgEmail='';if(j.stats)VIPA.d=Object.assign(VIPA.d||{},{stats:j.stats});toast(`🎁 ให้สิทธิ์ ${email} ถึง ${new Date(j.until).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})} แล้ว${j.mailed?' ส่งอีเมลต้อนรับแล้ว':' (ส่งอีเมลไม่สำเร็จ ให้เขาขอลิงก์เข้าระบบที่หน้า /vip เอง)'}`);}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.gBusy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
     case 'vipSqlCopy':copyText((VIPA.d||{}).sql||'','คัดลอก SQL แล้ว ไปวางใน Supabase → SQL Editor');break;
     case 'vipReload':VIPA.d=null;loadVipAdmin();render(true);break;
+    case 'memF':S.memF=el.dataset.v;render(true);break;
+    case 'memCopy':{const L=((VIPA.d||{}).dir||{}).list||[];copyText(L.filter(m=>m.optin).map(m=>m.email).join('\n'),'คัดลอกอีเมลที่ยินยอมแล้ว (ใช้กับ Facebook Custom Audience หรือส่งข่าวได้)');break;}
+    case 'memGift':{S.form.vgEmail=el.dataset.v;render(true);(window.MEMO=window.MEMO||{})['vip-grant']=true;setTimeout(()=>{const g=$('#vip-grant');if(g){g.open=true;g.scrollIntoView({behavior:'smooth',block:'center'});}},50);break;}
     case 'vipSave':{const g=k=>Math.max(0,Math.round(Number(($('#'+k)||{}).value)||0)),body={monthly:g('vip-m'),yearly:g('vip-y'),packs:{1:g('vip-p1'),3:g('vip-p3'),12:g('vip-p12')},life:g('vip-life'),open:!!($('#vip-open')||{}).checked};
       if(body.open&&!body.monthly&&!body.yearly&&!body.life&&!body.packs[1]&&!body.packs[3]&&!body.packs[12]){toast('ใส่ราคาอย่างน้อย 1 แบบก่อนเปิดรับ');break;}
       VIPA.busy=true;render(true);adminPost('/api/content?action=vip_admin',body).then(j=>{VIPA.busy=false;if(j&&j.ok){VIPA.d=Object.assign(VIPA.d||{},{settings:j.settings});toast(j.settings.open?'บันทึกแล้ว เปิดรับสมาชิก VIP':'บันทึกแล้ว');}else toast('ไม่สำเร็จ: '+((j&&j.error)||''));render(true);}).catch(()=>{VIPA.busy=false;toast('เชื่อมต่อไม่ได้');render(true);});break;}
