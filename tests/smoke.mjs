@@ -371,7 +371,7 @@ try {
       pass(`[${kind}] ข้อสอบเสมือนจริง: จับเวลา ตอบ ส่ง → คะแนน 1/3 เฉลยทุกข้อ ข้อผิด/ไม่ตอบเข้าสมุดจุดพลาด`, during.n === 3 && /^\d+:\d\d$/.test(during.t) && /2\/3/.test(during.cnt) && res.score === '1/3' && res.right === 3 && res.wrong === 1 && /เข้าสมุดจุดพลาดแล้ว/.test(res.saved) && res.hist === 1 && JSON.stringify(MARKS.map((x) => x.ok)) === '[true,false,false]', JSON.stringify({ during, res, marks: MARKS.length }));
       await layout(page, `[${kind}] ข้อสอบเสมือนจริง (ผลคะแนน)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'mock-mobile.png'), fullPage: true });
       await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.st-grid, .st-svc', { timeout: 6000 }).catch(() => {});
-      const home = await page.evaluate(() => ({ nav: [...document.querySelectorAll('.st-nav a')].map((a) => a.getAttribute('href')), svc: document.querySelectorAll('.st-svcc').length, acc: !!document.querySelector('.st-top a[href="/account"]') }));
+      const home = await page.evaluate(() => ({ nav: [...document.querySelectorAll('.st-nav a')].map((a) => a.getAttribute('href')), svc: document.querySelectorAll('.st-svcc').length, acc: !!document.querySelector('.st-top a.st-acc[href^="/account"]') && /สมัครสมาชิก/.test(document.querySelector('.st-acc').textContent) })); // ยังไม่เข้าระบบ = ปุ่ม "สมัครสมาชิก"
       pass(`[${kind}] หน้าแรก: เมนูเดียวกับหน้าอื่น + การ์ด 3 บริการ + ปุ่มบัญชีของฉัน`, JSON.stringify(home.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])) && home.svc === 3 && home.acc, JSON.stringify(home));
       await page.context().close();
     } catch (e) { pass(`[${kind}] บัญชี/ข้อสอบเสมือนจริง: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
@@ -384,7 +384,7 @@ try {
       await page.fill('#sl-le', 'buyer@test.co'); await page.click('#sl-lf button'); await page.waitForSelector('#sl-cf:not([hidden])', { timeout: 4000 });
       const codeShown = await page.evaluate(() => /ใส่รหัส 6 หลัก/.test(document.getElementById('sl-ls').textContent) && document.activeElement && document.activeElement.id === 'sl-lc');
       await layout(page, `[${kind}] แอป SheetLab (/app)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'app-mobile.png'), fullPage: true });
-      pass(`[${kind}] บัญชีของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เข้าระบบ = ปุ่มสมาชิกพาไปช่องสมัคร · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '#hb-buy' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
+      pass(`[${kind}] บัญชีของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เข้าระบบ = ปุ่มสมาชิกพาไปช่องสมัคร · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '#join' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
       await page.context().close();
     } catch (e) { pass(`[${kind}] แอป SheetLab: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 

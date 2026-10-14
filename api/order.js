@@ -11,6 +11,7 @@ const liveQuizzes = async () => ((await sbSelect('shop_state?id=eq.quizzes&selec
 const originOf = (req) => `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
 async function vip(req, res, m) {
   const origin = originOf(req), me = V.sessionEmail(req);
+  if (me && !/(?:^|;\s*)slin=1/.test(String(req.headers.cookie || ''))) res.setHeader('Set-Cookie', V.IN_COOKIE); // คนที่เข้าระบบไว้ก่อนมีคุกกี้นี้
   if (m === 'vip_auth') { // ลิงก์จากอีเมล → ตั้งคุกกี้ แล้วกลับหน้า /vip
     const email = V.readToken(req.query.t, 'login'), back = req.query.n === 'account' ? '/account' : '/vip';
     if (!email) { res.writeHead(302, { Location: `${back}?e=link` }); return res.end(); }
