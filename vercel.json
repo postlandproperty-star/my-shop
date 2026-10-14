@@ -73,6 +73,22 @@
       "destination": "/api/page?mylearn=1"
     },
     {
+      "source": "/vocab",
+      "destination": "/api/page?vocab=home"
+    },
+    {
+      "source": "/vocab/review",
+      "destination": "/api/page?vocab=review"
+    },
+    {
+      "source": "/vocab/:lv",
+      "destination": "/api/page?vocab=:lv"
+    },
+    {
+      "source": "/vocab/:lv/:u",
+      "destination": "/api/page?vocab=:lv&u=:u"
+    },
+    {
       "source": "/account",
       "destination": "/api/page?acct=1"
     },

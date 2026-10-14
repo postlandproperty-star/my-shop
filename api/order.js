@@ -93,6 +93,14 @@ async function vip(req, res, m) {
     const row = await V.saveWriting({ email: me, task, prompt, essay, result, band: result.band.overall, via: out.via });
     return res.status(200).json({ ok: true, id: row?.id || null, result, left: Math.max(0, q.left - 1), cap: q.cap, active });
   }
+  if (m === 'vip_vocab' || m === 'vip_vocab_save') { // 📚 ความคืบหน้าคำศัพท์ /vocab (เข้าระบบแล้วเท่านั้น · ไม่เข้าระบบ = เก็บในเบราว์เซอร์อย่างเดียว)
+    if (!me) return res.status(200).json({ ok: true, email: null });
+    const VC = await import('../lib/vocab.js');
+    if (m === 'vip_vocab') return res.status(200).json({ ok: true, email: me, data: VC.cleanProgress(await V.getVocab(me).catch(() => null)) });
+    if (req.method !== 'POST') return res.status(405).json({ ok: false });
+    const raw = json(req).data; if (JSON.stringify(raw || {}).length > 400e3) return res.status(413).json({ ok: false });
+    await V.saveVocab(me, VC.cleanProgress(raw)); return res.status(200).json({ ok: true });
+  }
   if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
   const b = json(req);
   if (m === 'course_visit') { if (!me) return res.status(200).json({ ok: false }); try { const C = await import('../lib/courses.js'); await C.visit(me); } catch (e) {} return res.status(200).json({ ok: true }); }
