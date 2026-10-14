@@ -120,7 +120,7 @@ footer{padding:28px 0 110px;text-align:center}
 .st-logo{font-family:var(--font-head);font-size:22px;color:var(--brand);text-decoration:none}.st-logo::before{content:'';display:inline-block;width:1.25em;height:1.25em;background:url(/icon-48.png) center/contain no-repeat;vertical-align:-.25em;margin-right:.3em}
 .st-svc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.st-svcc{display:flex;gap:12px;align-items:flex-start;text-decoration:none;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px}.st-svcc:hover{border-color:var(--brand)}.st-svcc>span:last-child{display:flex;flex-direction:column;gap:4px}.st-svcc b{font-size:17px}.st-svci{font-size:28px;line-height:1}.st-svcc .st-go{color:var(--brand);font-weight:600;font-size:14px}
 @media(max-width:720px){.st-svc{grid-template-columns:1fr;gap:8px}.st-svcc{padding:12px}}
-.st-nav{gap:4px}@media(max-width:440px){.st-nav{gap:0}.st-nav a{font-size:13.5px;padding:8px 2px;letter-spacing:-.1px}}
+.st-nav{gap:4px}@media(max-width:440px){.st-nav{gap:0}.st-nav a{font-size:13px;padding:8px 1px;letter-spacing:-.2px}}
 .st-topr{display:flex;gap:8px;align-items:center}@media(max-width:400px){.st-acc{font-size:13px;padding:5px 10px}}
 .st-chat{font-weight:600;color:var(--ink);text-decoration:none;border:1.5px solid var(--line);border-radius:999px;padding:5px 14px;font-size:14px}
 .st-hero{background:var(--brand);color:var(--hero-ink);padding:26px 0 24px}
@@ -2541,9 +2541,9 @@ function shelves(p){const t=(p.name+' '+(p.headline||'')).toLowerCase(),o=[];
   if(!o.filter(k=>k!=='bundle').length)o.push('other');return o;}
 /* หัว/ท้ายของหน้าแรกและร้านค้า: เมนูเดียวกันทุกหน้า หน้าแรก · ร้านค้า · คลังข้อสอบ · คลังความรู้ */
 function stHead(on,chat){const n=(k,href,l,go)=>`<a href="${href}"${go?' data-go=""':''}${on===k?' class="on" aria-current="page"':''}>${l}</a>`;
-  // เมนูเดียวกับหน้าอื่นของเว็บ (SITE_NAV ใน lib/quiz.js) ทุกบริการ: หน้าแรก · ร้านชีท · ข้อสอบฟรี · ความรู้ · VIP + บัญชีของฉัน
+  // เมนูเดียวกับหน้าอื่นของเว็บ (SITE_NAV ใน lib/quiz.js) ทุกบริการ: หน้าแรก · ร้านชีท · คำศัพท์ · ข้อสอบฟรี · ความรู้ · VIP + บัญชีของฉัน
   return `<header class="st-top"><div class="wrap wide st-top-in"><a class="st-logo" href="/" data-go="">SheetLab</a><span class="st-topr"><a class="st-chat st-acc" href="/account">👤 บัญชีของฉัน</a><a class="st-chat" href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a></span></div>
-    <nav class="wrap wide st-nav" aria-label="เมนูหลัก">${n('home','/','หน้าแรก',1)}${n('store','/store','ร้านชีท',1)}${n('quiz','/quiz','ข้อสอบฟรี')}${n('learn','/learn','ความรู้')}${n('vip','/vip','👑 VIP')}</nav></header>`;}
+    <nav class="wrap wide st-nav" aria-label="เมนูหลัก">${n('home','/','หน้าแรก',1)}${n('store','/store','ร้านชีท',1)}${n('vocab','/vocab','คำศัพท์')}${n('quiz','/quiz','ข้อสอบฟรี')}${n('learn','/learn','ความรู้')}${n('vip','/vip','👑 VIP')}</nav></header>`;}
 function stFoot(chat){return `<footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}<a href="/store" data-go="">ร้านค้า</a> · <a href="/free">🎁 ชีทแจกฟรี</a> · <a href="/gov">🏛️ สอบราชการ</a> · ${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/account">บัญชีของฉัน</a> · <a href="/vip">สมาชิก VIP</a> · <a href="/app">📲 แอปฝึกข้อสอบ</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
     <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;}
 const catalogView=()=>storeView(true);
