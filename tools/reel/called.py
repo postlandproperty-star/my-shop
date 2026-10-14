@@ -245,6 +245,7 @@ def new_spec(used):
 
 
 def daily(dry=False):
+    V.single_run('called')  # ทีละรอบ (รันซ้อนแล้วไฟล์พัง 14 ต.ค. 69)
     if not pixabay_key(): print(json.dumps({'skip': 'ยังไม่มีคีย์ Pixabay (~/.config/sheetlab/pixabay-key)'})); return
     now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
     st = json.load(open(STATE)) if os.path.exists(STATE) else {'done': [], 'slots': []}
@@ -259,11 +260,12 @@ def daily(dry=False):
     if not spec: spec = new_spec([s['id'] for s in bank]); bank.append(spec); json.dump(bank, open(BANK, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     out = os.path.join(HERE, '.called_work', spec['id'] + '.mp4'); info = build(spec, out)
     if dry: print(json.dumps(info, ensure_ascii=False)); return
-    up = V.shop('upload_sign', {'name': spec['id'] + '.mp4', 'type': 'video/mp4', 'folder': 'reels'})
-    put = lambda url, fn, ct: urllib.request.urlopen(urllib.request.Request(url, data=open(fn, 'rb').read(), method='PUT', headers={'Content-Type': ct, 'x-upsert': 'true'}), timeout=300)
-    put(up['upload_url'], out, 'video/mp4')
-    cpath = up['public_url'].split('/product-images/')[1].replace('.mp4', '-cover.jpg')
-    put(V.shop('upload_sign', {'name': 'cover.jpg', 'type': 'image/jpeg', 'overwrite': cpath})['upload_url'], info['cover'], 'image/jpeg')
+    V.video_ok(out)
+    # คลิป+ปกขึ้น Cloudflare R2 ตรง (ส่งออกฟรี · Supabase เกินโควต้าจนเว็บล่ม 14 ต.ค. 69) · ปกอยู่คู่คลิป <คลิป>-cover.jpg
+    sys.path.insert(0, os.path.join(V.ROOT, 'tools', 'r2')); import r2
+    rkey = f"reels/{int(time.time() * 1000)}-{spec['id']}.mp4"
+    up = {'public_url': r2.put_file(out, rkey, 'video/mp4')}
+    r2.put_file(info['cover'], rkey.replace('.mp4', '-cover.jpg'), 'image/jpeg')
     cap = spec.get('caption') or f'{spec["title"]} 🤔\n{spec.get("question") or "ทายถูกกี่ข้อ คอมเมนต์บอกหน่อย"} 👇\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #SheetLab'
     at = (nxt - datetime.timedelta(hours=7)).strftime('%Y-%m-%dT%H:%M:%SZ')
     row = {'text': cap, 'video_url': up['public_url'], 'kind': 'reel', 'source': 'clip', 'scheduled_at': at,

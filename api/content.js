@@ -2688,6 +2688,31 @@ ${books}`;
       const files = jobs.filter((j) => j.status === 'done' && j.file_url).map((j) => ({ id: j.id, title: j.title, file_url: j.file_url, pages: j.pages, price: j.price, done_at: j.done_at, purpose: j.purpose }));
       return res.status(200).json({ ok: true, links, files });
     }
+    if (action === 'r2_list' || action === 'r2_rewrite') { // ☁️ ย้ายไฟล์จาก Supabase Storage ไป Cloudflare R2 (ส่งออกฟรี · 14 ต.ค. 69 หลัง Supabase เกินโควต้า) · Mac ก๊อปไฟล์ (tools/r2/offload.py) แล้วสั่งเปลี่ยนลิงก์ที่นี่ · ไฟล์เดิมใน Supabase ไม่ลบ
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const SBPUB = `${SB_URL}/storage/v1/object/public/product-images/`, R2PUB = 'https://pub-fdfc380c67f149de994eac621d6b147c.r2.dev/';
+      const H = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' };
+      if (action === 'r2_list') { // ไฟล์ทั้งหมดในโฟลเดอร์ (รวมโฟลเดอร์ย่อย) → [{path, size, type}]
+        const folder = String(req.query.folder || '').replace(/[^A-Za-z0-9_-]/g, ''); if (!folder) return res.status(400).json({ ok: false, error: 'folder' });
+        const out = []; const walk = async (prefix, depth) => { for (let off = 0; off < 20000; off += 1000) {
+          const r = await fetch(`${SB_URL}/storage/v1/object/list/product-images`, { method: 'POST', headers: H, body: JSON.stringify({ prefix, limit: 1000, offset: off, sortBy: { column: 'name', order: 'asc' } }) });
+          const j = await r.json().catch(() => []); if (!r.ok || !Array.isArray(j)) throw new Error('list ' + r.status);
+          for (const x of j) { const p = `${prefix}/${x.name}`; if (!x.id && depth < 4) await walk(p, depth + 1); else if (x.id) out.push({ path: p, size: x.metadata?.size || 0, type: x.metadata?.mimetype || '' }); }
+          if (j.length < 1000) break; } };
+        try { await walk(folder, 0); } catch (e) { return res.status(500).json({ ok: false, error: String(e.message || e) }); }
+        return res.status(200).json({ ok: true, folder, files: out, sb_prefix: SBPUB, r2_prefix: R2PUB });
+      }
+      // r2_rewrite {paths:[...]}: เปลี่ยนลิงก์ทุกที่ในระบบจาก Supabase → R2 (ไฟล์ต้องก๊อปขึ้น R2 ที่ path เดียวกันแล้ว) · แถว shop_state คง updated_at เดิม (หลังบ้านไม่เตือนว่าข้อมูลถูกแก้)
+      const body = await readBody(req); const paths = (Array.isArray(body.paths) ? body.paths : []).map(String).filter((p) => /^[A-Za-z0-9._\/ -]+$/.test(p) && !p.includes('..')).slice(0, 2000);
+      if (!paths.length) return res.status(400).json({ ok: false, error: 'paths' });
+      const pairs = paths.flatMap((p) => { const enc = p.split('/').map(encodeURIComponent).join('/'); return [[SBPUB + p, R2PUB + p], ...(enc !== p ? [[SBPUB + enc, R2PUB + p]] : [])]; });
+      let postsN = 0; const rowsN = [];
+      for (const [a, b] of pairs) { const r = await fetch(`${SB_URL}/rest/v1/posts?image_url=eq.${encodeURIComponent(a)}`, { method: 'PATCH', headers: { ...H, Prefer: 'return=representation' }, body: JSON.stringify({ image_url: b }) }); const j = await r.json().catch(() => []); if (Array.isArray(j)) postsN += j.length; }
+      const all = await sb('shop_state?select=id,data,updated_at');
+      for (const row of all || []) { let t = JSON.stringify(row.data), n = 0; for (const [a, b] of pairs) if (t.includes(a)) { n += t.split(a).length - 1; t = t.split(a).join(b); }
+        if (n) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: row.id, data: JSON.parse(t), updated_at: row.updated_at }], prefer: 'resolution=merge-duplicates,return=minimal' }); rowsN.push(`${row.id}:${n}`); } }
+      return res.status(200).json({ ok: true, posts: postsN, rows: rowsN });
+    }
     if (action === 'upload_sign') {
       // ขอลิงก์อัปโหลดไฟล์เข้า storage โดยตรง (key หรือแอดมิน): POST {name, type, folder?} -> {upload_url, public_url} แล้ว PUT ไฟล์ไปที่ upload_url พร้อม Content-Type
       const adminUp = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;

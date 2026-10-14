@@ -321,7 +321,25 @@ def threads_text(cap):
     return (body + (' ' + tags[0] if tags else ''))[:490]
 
 
+# รันได้ทีละรอบ (14 ต.ค. 69: เครื่องเรียก daily ซ้อน 3 รอบพร้อมกัน → ทำคลิปเดียวกัน เขียนทับไฟล์จนพัง จอดำ/ไม่มีเสียง และโพสต์ซ้ำ 3 ครั้ง)
+_LOCKS = []
+def single_run(name):
+    import fcntl
+    f = open(os.path.join('/tmp', f'sheetlab-{name}.lock'), 'w')
+    try: fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError: print(json.dumps({'skip': f'{name} กำลังทำงานอยู่อีกรอบ'})); sys.exit(0)
+    _LOCKS.append(f)
+
+
+def video_ok(path):
+    """ถอดรหัสคลิปทั้งไฟล์ ต้องไม่มี error (กันไฟล์พังหลุดขึ้นเพจ)"""
+    r = subprocess.run([FF, '-v', 'error', '-i', path, '-f', 'null', '-'], capture_output=True, text=True)
+    bad = [l for l in r.stderr.splitlines() if l.strip()]
+    if r.returncode != 0 or bad: raise SystemExit(f'คลิปเสีย ไม่อัปโหลด: {path} ({len(bad)} errors) {bad[:1]}')
+
+
 def daily(dry=False):
+    single_run('vocab')
     now = datetime.datetime.utcnow() + datetime.timedelta(hours=7); today = now.strftime('%Y-%m-%d')
     st = json.load(open(STATE)) if os.path.exists(STATE) else {'done': [], 'last': ''}
     if st.get('last') == today: print(json.dumps({'skip': 'วันนี้ทำคลิปคำศัพท์แล้ว'})); return
@@ -340,12 +358,12 @@ def daily(dry=False):
             except SystemExit: pass
         raise
     if dry: print(json.dumps(info, ensure_ascii=False)); return
-    up = shop('upload_sign', {'name': spec['id'] + '.mp4', 'type': 'video/mp4', 'folder': 'reels'})
-    put = lambda url, fn, ct: urllib.request.urlopen(urllib.request.Request(url, data=open(fn, 'rb').read(), method='PUT', headers={'Content-Type': ct, 'x-upsert': 'true'}), timeout=300)
-    put(up['upload_url'], out, 'video/mp4')
-    # ปกอยู่คู่คลิป (<คลิป>-cover.jpg) ระบบโพสต์หาเองตามชื่อ
-    cpath = up['public_url'].split('/product-images/')[1].replace('.mp4', '-cover.jpg')
-    put(shop('upload_sign', {'name': 'cover.jpg', 'type': 'image/jpeg', 'overwrite': cpath})['upload_url'], info['cover'], 'image/jpeg')
+    video_ok(out)
+    # คลิป+ปกขึ้น Cloudflare R2 ตรง (ส่งออกฟรี · Supabase เกินโควต้าจนเว็บล่ม 14 ต.ค. 69) · ปกอยู่คู่คลิป <คลิป>-cover.jpg
+    sys.path.insert(0, os.path.join(ROOT, 'tools', 'r2')); import r2
+    rkey = f"reels/{int(time.time() * 1000)}-{spec['id']}.mp4"
+    up = {'public_url': r2.put_file(out, rkey, 'video/mp4')}
+    r2.put_file(info['cover'], rkey.replace('.mp4', '-cover.jpg'), 'image/jpeg')
     at = (now.replace(hour=19, minute=0, second=0, microsecond=0) if now.hour < 18 else (now + datetime.timedelta(days=1)).replace(hour=19, minute=0, second=0, microsecond=0)) - datetime.timedelta(hours=7)
     cap = spec.get('caption') or f'{spec["title"]} 🗣️\n{spec.get("question") or "คำไหนใช้บ่อยที่สุด คอมเมนต์บอกหน่อย"} 👇\n🤖 คลิปนี้สร้างด้วย AI\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #SheetLab'
     # ลงทุกช่องทาง (คุณแดน 12 ต.ค. 69): เพจ Facebook (ระบบส่งต่อ Instagram Reels เอง) + Threads
