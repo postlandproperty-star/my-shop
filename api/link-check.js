@@ -11,10 +11,13 @@ export default async function handler(req, res) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 8000);
-    const r = await fetch(url, { redirect: 'follow', signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (link check)', 'Accept-Language': 'th,en' } });
+    // ไฟล์ตรง (Supabase/R2): ขอแค่ไบต์แรก ไม่ดาวน์โหลดทั้งไฟล์ (เดิมโหลด PDF เต็มวันละ ~940MB จน Supabase เกินโควต้า 14 ต.ค. 69)
+    const direct = !/google\.com/.test(url);
+    const r = await fetch(url, { redirect: 'follow', signal: ctrl.signal, headers: { 'User-Agent': 'Mozilla/5.0 (link check)', 'Accept-Language': 'th,en', ...(direct ? { Range: 'bytes=0-0' } : {}) } });
     clearTimeout(t);
     const finalUrl = r.url || url;
     const ctype = r.headers.get('content-type') || '';
+    if (!/text\/html/.test(ctype)) { try { await r.body?.cancel(); } catch (e) {} }
     let title = '';
     if (/text\/html/.test(ctype)) {
       const html = (await r.text()).slice(0, 200000);
