@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { newSiteLive, NEW_SITE } from '../lib/site.js';
 import { policyPage, POLICY_DOCS } from '../lib/policies.js';
 import { quizPage, quizIndex, articlePage, articleIndex, dailyPick, dailyPage } from '../lib/quiz.js';
-import { sbSelect } from '../lib/shop.js';
+import { sbSelect, cached } from '../lib/shop.js';
 import { TOPICS, topicItems, topicReady, topicCount, topicPage } from '../lib/topics.js';
 import { STORE_FAQ, storeFaqLd } from '../lib/storefaq.js';
 import { vipPage, vipReviewPage, accountPage, vipMockPage, vipWritePage, vipSpeakPage, appPage } from '../lib/vipPage.js';
@@ -19,8 +19,8 @@ import { FREEBIES, freeBySlug, freePage } from '../lib/free.js';
 import { splitHtml } from '../lib/split.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
-async function loadQuizzes() { try { const r = await sbSelect('shop_state?id=eq.quizzes&select=data'); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
-async function loadArticles() { try { const r = await sbSelect('shop_state?id=eq.articles&select=data'); return (r?.[0]?.data?.list || []).filter((a) => a.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
+async function loadQuizzes() { try { const r = await cached('quizzes', 60e3, () => sbSelect('shop_state?id=eq.quizzes&select=data')); return (r?.[0]?.data?.list || []).filter((q) => q.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
+async function loadArticles() { try { const r = await cached('articles', 60e3, () => sbSelect('shop_state?id=eq.articles&select=data')); return (r?.[0]?.data?.list || []).filter((a) => a.status !== 'hidden').sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || ''))); } catch (e) { return []; } }
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SB_KEY = 'sb_publishable_q4qdE3WFYdH15Klf7TToSQ_Tbh87eNs';
@@ -42,14 +42,15 @@ function productLd(p, url, desc, img, rv) {
   return `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
 }
 
-async function loadShop() {
-  const r = await fetch(`${SB_URL}/rest/v1/shop_state?id=eq.main&select=data`, {
-    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
-  });
-  if (!r.ok) return { products: [], settings: {} };
-  const rows = await r.json();
-  const data = rows?.[0]?.data || {};
-  return { products: data.products || [], settings: data.settings || {} };
+async function loadShop() { // แคช 30 วินาที (ลดการอ่านแถว main ~500KB ทุกหน้า · 14 ต.ค. 69) · โหลดพลาดไม่เก็บแคช
+  try {
+    return await cached('page-main', 30e3, async () => {
+      const r = await fetch(`${SB_URL}/rest/v1/shop_state?id=eq.main&select=data`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
+      if (!r.ok) throw new Error('shop ' + r.status);
+      const data = (await r.json())?.[0]?.data || {};
+      return { products: data.products || [], settings: data.settings || {} };
+    });
+  } catch (e) { return { products: [], settings: {} }; }
 }
 
 export default async function handler(req, res) {

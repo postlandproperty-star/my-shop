@@ -4920,6 +4920,11 @@ function meetingTab(){
   ${!postsLoaded?'<p class="fine">กำลังโหลด...</p>':teamFeed(notes)}`;
 }
 /* เพจราชการ: เพจการอ่านแยกจาก SheetLab (สร้างผู้ติดตามก่อน) ข้อมูลจาก action=rl_list ไม่ปนกับคิวโพสต์ SheetLab */
+/* คลิปในหลังบ้าน: แสดงรูปปก (<คลิป>-cover.jpg) แทนวิดีโอ · เปิดดูแล้วค่อยโหลดวิดีโอตอนกดเล่น (preload none)
+   เดิม <video preload=metadata> ถูกวาดใหม่ทุกครั้งที่หน้ารีเฟรช → โหลดคลิปซ้ำวันละ ~2GB จน Supabase ปิดบริการ (14 ต.ค. 69) */
+const VID_PH='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 120"><rect width="90" height="120" fill="#1f2937"/><text x="45" y="68" font-size="30" text-anchor="middle">🎬</text></svg>');
+const vidCover=u=>String(u||'').replace(/\.(mp4|mov|m4v)(\?.*)?$/i,'-cover.jpg');
+const vidOpen=u=>`<video src="${esc(u)}" poster="${esc(vidCover(u))}" controls playsinline preload="none" style="width:100%;max-height:420px;border-radius:12px;background:#000"></video>`;
 const RL={data:null,loading:false};
 const RL_TEAM={
   rl_lead:{name:'พี่ปลัด',role:'หัวหน้าทีมเพจราชการ · วางแผนวิชา/หัวข้อรายสัปดาห์ ตรวจข่าวสอบจากเว็บทางการ เขียนโพสต์ชวนคุย ดูยอดผู้ติดตาม',sched:'ทุกอาทิตย์ 19:00',img:AV+'accessoriesProbability=100&seed=rlbook&top=shortWaved&hairColor=4a312c&accessories=round&clothing=collarAndSweater&clothesColor=2f5d50&eyes=default&eyebrows=defaultNatural&mouth=smile&skinColor=edb98a&backgroundColor=e7dcc8'},
@@ -4944,7 +4949,7 @@ function readlabView(){
   const C=d.connect||{},auto=ch=>ch==='threads'?!!C.th:!!C.fb;
   const ST={draft:['รออนุมัติ','warn'],approved:['อนุมัติแล้ว รอโพสต์','ok'],publishing:['กำลังโพสต์','warn'],failed:['โพสต์ไม่ผ่าน','bad'],published:['โพสต์แล้ว','gray'],rejected:['ปัดตก','gray']};
   const card=x=>{const open=!!exp[x.id],st=ST[x.status]||[x.status,'gray'],m=RL_TEAM[x.source]||{name:x.source,img:AV+'seed='+x.source},ed=x.status!=='published';
-    const media=x.video_url?`<video class="${open?'':'thumb'}" src="${esc(x.video_url)}${open?'':'#t=0.5'}" ${open?'controls':'muted'} playsinline preload="metadata" style="${open?'width:100%;max-height:420px;border-radius:12px;background:#000':''}"></video>`:x.image_url?`<img class="${open?'':'thumb'}" src="${esc(x.image_url)}" alt="" loading="lazy" style="${open?'width:100%;border-radius:12px':''}">`:(x.channel==='facebook'&&x.kind!=='reel'?'<span class="noimg" title="น้องสีจะทำรูปให้รอบถัดไป">🖼️<br>รอรูป</span>':'<span class="noimg" title="โพสต์ข้อความล้วน">💬<br>ข้อความ</span>');
+    const media=x.video_url?(open?vidOpen(x.video_url):`<img class="thumb" src="${esc(vidCover(x.video_url))}" alt="คลิป" loading="lazy" onerror="this.onerror=null;this.src=VID_PH">`):x.image_url?`<img class="${open?'':'thumb'}" src="${esc(x.image_url)}" alt="" loading="lazy" style="${open?'width:100%;border-radius:12px':''}">`:(x.channel==='facebook'&&x.kind!=='reel'?'<span class="noimg" title="น้องสีจะทำรูปให้รอบถัดไป">🖼️<br>รอรูป</span>':'<span class="noimg" title="โพสต์ข้อความล้วน">💬<br>ข้อความ</span>');
     return `<div class="post ${open?'':'compact'}">${media}<div>
       <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="badge gray">${x.channel==='threads'?'Threads':'Facebook'}</span> ${igBadge(x.ig)}<span class="fine">${esc(RL_KIND[x.kind]||x.kind)}</span></span><span class="fine row" style="gap:6px"><img class="rl-by" src="${m.img}" alt="" width="22" height="22">${esc(m.name)}</span></div>
       ${x.book?`<p class="fine" style="margin:4px 0 0">📖 ${esc(x.book)}</p>`:''}
@@ -5047,7 +5052,7 @@ function sheetlabContent(){
   const dayLabel=t=>{if(!t)return 'ยังไม่กำหนดเวลา';const k=dayKey(t),now=Date.now();if(k===dayKey(now))return 'วันนี้';if(k===dayKey(now+864e5))return 'พรุ่งนี้';if(k===dayKey(now-864e5))return 'เมื่อวาน';return new Date(t).toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'});};
   const isVid=u=>/\.(mp4|mov|m4v)(\?|$)/i.test(u||'');
   const card=p=>{const st=STATUS_TH[p.status]||[p.status,'gray'];const editable=['draft','needs_owner','approved','failed','rejected'].includes(p.status);const open=!!exp[p.id];
-    const thumb=p.image_url?(isVid(p.image_url)?(open?`<video src="${esc(p.image_url)}" controls playsinline preload="metadata" style="width:100%;max-height:420px;border-radius:12px;background:#000"></video>`:`<video class="thumb" src="${esc(p.image_url)}#t=0.5" muted playsinline preload="metadata" data-a="pexp" data-id="${p.id}"></video>`):`<img src="${esc(p.image_url)}" alt="" data-a="pexp" data-id="${p.id}">`):`<div class="noimg" data-a="pexp" data-id="${p.id}">ไม่มีรูป</div>`;
+    const thumb=p.image_url?(isVid(p.image_url)?(open?vidOpen(p.image_url):`<img class="thumb" src="${esc(vidCover(p.image_url))}" alt="คลิป" loading="lazy" onerror="this.onerror=null;this.src=VID_PH" data-a="pexp" data-id="${p.id}">`):`<img src="${esc(p.image_url)}" alt="" data-a="pexp" data-id="${p.id}">`):`<div class="noimg" data-a="pexp" data-id="${p.id}">ไม่มีรูป</div>`;
     const t=when(p);
     return `<div class="post ${open?'':'compact'}" data-pid="${p.id}">
       ${thumb}
