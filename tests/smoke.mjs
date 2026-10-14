@@ -346,7 +346,7 @@ try {
       await page.goto(`${BASE}/__account`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.ac-ord', { timeout: 4000 });
       const ac = await page.evaluate(() => ({ dl: document.querySelectorAll('.ac-dl').length, mock: !!document.querySelector('a[href="/vip/mock"]'), review: /สมุดจุดพลาด \(3 ข้อ\)/.test(document.body.innerText), nav: [...document.querySelectorAll('.nav a')].map((a) => a.getAttribute('href')), acc: !!document.querySelector('.hd-acc.on') }));
       pass(`[${kind}] บัญชีของฉัน: ชีทที่ซื้อ (ปุ่มโหลดทุกไฟล์) + สถานะ VIP + ทางไปข้อสอบเสมือนจริง/สมุดจุดพลาด`, ac.dl === 2 && ac.mock && ac.review && ac.acc, JSON.stringify(ac));
-      pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท คำศัพท์ ข้อสอบฟรี ความรู้ VIP)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
+      pass(`[${kind}] เมนูหลักหน้าเซิร์ฟเวอร์ตรงกับชุดกลาง (หน้าแรก ร้านชีท คำศัพท์ ข้อสอบฟรี ความรู้)`, JSON.stringify(ac.nav) === JSON.stringify(SITE_NAV.map((x) => x[1])), ac.nav.join(' '));
       await layout(page, `[${kind}] บัญชีของฉัน`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'account-mobile.png'), fullPage: true });
       { const go = await page.evaluate(() => (document.querySelector('.cs-go') || {}).getAttribute?.('href') || '');
         await page.goto(`${BASE}/__learn`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.lc', { timeout: 4000 });
@@ -384,7 +384,7 @@ try {
       await page.fill('#sl-le', 'buyer@test.co'); await page.click('#sl-lf button'); await page.waitForSelector('#sl-cf:not([hidden])', { timeout: 4000 });
       const codeShown = await page.evaluate(() => /ใส่รหัส 6 หลัก/.test(document.getElementById('sl-ls').textContent) && document.activeElement && document.activeElement.id === 'sl-lc');
       await layout(page, `[${kind}] แอป SheetLab (/app)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'app-mobile.png'), fullPage: true });
-      pass(`[${kind}] บัญชีของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เป็น VIP = ล็อกและพาไปหน้า VIP · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '/vip' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
+      pass(`[${kind}] บัญชีของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เข้าระบบ = ปุ่มสมาชิกพาไปช่องสมัคร · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '#hb-buy' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
       await page.context().close();
     } catch (e) { pass(`[${kind}] แอป SheetLab: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
@@ -392,8 +392,8 @@ try {
     for (const mode of ['closed', 'open']) try {
       page = await newPage(kind); page.setDefaultTimeout(8000);
       await page.goto(`${BASE}/__vip/${mode}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(500);
-      const v = await page.evaluate(() => ({ soon: document.body.innerText.includes('เร็วๆ นี้'), buy: document.querySelectorAll('.vp-buy').length, packs: document.querySelectorAll('.vp-pack').length, login: !!document.querySelector('#sl-lf') }));
-      pass(`[${kind}] VIP ${mode === 'open' ? 'เปิดรับ: ราคา 2 แบบบัตร + PromptPay 2 แบบ + ฟอร์มเข้าระบบ' : 'ยังไม่เปิด: ขึ้นเร็วๆ นี้ ไม่มีปุ่มสมัคร'}`, mode === 'open' ? v.buy === 2 && v.packs === 2 && v.login && !v.soon : v.soon && !v.buy && !v.packs, JSON.stringify(v));
+      const v = await page.evaluate(() => ({ soon: document.body.innerText.includes('เร็วๆ นี้'), launch: document.body.innerText.includes('ช่วงเปิดตัว'), buy: document.querySelectorAll('.vp-buy').length, packs: document.querySelectorAll('.vp-pack').length, login: !!document.querySelector('#sl-lf') }));
+      pass(`[${kind}] VIP ${mode === 'open' ? 'เปิดรับ: ราคา 2 แบบบัตร + PromptPay 2 แบบ + ฟอร์มเข้าระบบ' : 'ยังไม่เปิดขาย: ช่วงเปิดตัวสมัครสมาชิกฟรี (ฟอร์มสมัคร) ไม่มีปุ่มจ่าย'}`, mode === 'open' ? v.buy === 2 && v.packs === 2 && v.login && !v.soon && !v.launch : v.launch && v.login && !v.buy && !v.packs, JSON.stringify(v));
       await layout(page, `[${kind}] หน้า VIP ${mode}`);
       if (mode === 'open') await page.screenshot({ path: path.join(OUT, `vip-${kind}.png`), fullPage: true });
       await page.context().close();

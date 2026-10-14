@@ -101,7 +101,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const today = new Date().toISOString().slice(0, 10);
     const [quizzes, articles, ilib] = await Promise.all([loadQuizzes(), loadArticles(), sbSelect('shop_state?id=eq.ielts_lib&select=data').then((r) => r?.[0]?.data || {}).catch(() => ({}))]);
     const topics = TOPICS.filter((t) => topicReady(topicItems(t, { articles, quizzes, products: shop.products }))).map((t) => `/topic/${t.slug}`);
-    const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(await import('../lib/gov.js').then((G) => ['/gov', ...G.GOV_EXAMS.map((x) => `/gov/${x.slug}`), ...G.GOV_ARTICLES.map((a) => `/gov/learn/${a.slug}`), ...G.GOV_QUIZZES.map((q) => `/gov/quiz/${q.slug}`)]).catch(() => [])), ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), '/vocab', ...['a1', 'a2', 'b1', 'b2'].flatMap((lv) => [`/vocab/${lv}`, `/vocab/${lv}/1`, `/vocab/${lv}/2`, `/vocab/${lv}/3`]), '/ielts-band-calculator', '/ielts', '/ielts/samples', '/ielts/dictation', '/ielts/daily', ...(ilib.samples || []).map((x) => `/ielts/samples/${x.slug}`), ...(ilib.dict || []).map((x) => `/ielts/dictation/${x.slug}`), '/privacy', '/refund'];
+    const urls = ['/', '/store', ...FREEBIES.map((f) => `/free/${f.slug}`), ...topics, ...(await import('../lib/gov.js').then((G) => ['/gov', ...G.GOV_EXAMS.map((x) => `/gov/${x.slug}`), ...G.GOV_ARTICLES.map((a) => `/gov/learn/${a.slug}`), ...G.GOV_QUIZZES.map((q) => `/gov/quiz/${q.slug}`)]).catch(() => [])), ...(articles.length ? ['/learn', ...articles.map((a) => `/learn/${a.slug}`)] : []), ...shop.products.filter((x) => x.status === 'published' && /^[a-z0-9-]+$/.test(x.slug || '')).map((x) => `/p/${x.slug}`), ...(quizzes.length ? ['/quiz', ...quizzes.map((q) => `/quiz/${q.slug}`)] : []), ...(await import('../lib/vocab.js').then((VC) => ['/vocab', ...Object.keys(VC.LEVELS).flatMap((lv) => [`/vocab/${lv}`, ...(VC.loadLevel(lv)?.units || []).map((u) => `/vocab/${lv}/${u.id}`)])]).catch(() => [])), '/ielts-band-calculator', '/ielts', '/ielts/samples', '/ielts/dictation', '/ielts/daily', ...(ilib.samples || []).map((x) => `/ielts/samples/${x.slug}`), ...(ilib.dict || []).map((x) => `/ielts/dictation/${x.slug}`), '/privacy', '/refund'];
     res.setHeader('Content-Type', 'application/xml; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=3600');
     return res.status(200).send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${NEW_SITE}${u}</loc><lastmod>${today}</lastmod>${u.startsWith('/p/') || u.startsWith('/quiz') || u.startsWith('/learn') || u === '/' ? '<changefreq>weekly</changefreq>' : ''}</url>`).join('\n')}\n</urlset>\n`);
   }
@@ -201,14 +201,12 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const VC = await import('../lib/vocab.js');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     const shop = await loadShop().catch(() => ({ settings: {}, products: [] })), o = { settings: shop.settings || {}, site: NEW_SITE };
-    const access = async () => { const V = await import('../lib/members.js'), me = V.sessionEmail(req); if (!me) return { me: null, ok: false }; if ((await import('../lib/shop.js')).isAdminEmail(me)) return { me, ok: true }; try { return { me, ok: V.isActive(await V.refreshMember(await V.getMember(me))) }; } catch (e) { return { me, ok: false }; } };
     if (vocabQ === 'home') { res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600'); return res.status(200).send(VC.homePage(o)); }
     if (vocabQ === 'review') {
       res.setHeader('Cache-Control', 'no-store');
       const keys = [...new Set(String(req.query.k || '').split(',').filter((k) => /^(a1|a2|b1|b2)\.\d{1,3}$/.test(k)))].slice(0, 12);
       const want = keys.map((k) => { const [lv, id] = k.split('.'); return { lv, u: (VC.loadLevel(lv)?.units || []).find((x) => x.id === Number(id)) }; }).filter((x) => x.u);
-      const a = want.some((x) => !VC.isFree(x.u.id)) ? await access() : { ok: false };
-      const words = want.filter((x) => VC.isFree(x.u.id) || a.ok).flatMap((x) => x.u.words.map((w) => ({ ...w, lv: x.lv, u: x.u.id })));
+      const words = want.flatMap((x) => x.u.words.map((w) => ({ ...w, lv: x.lv, u: x.u.id }))); // มีเฉพาะคำที่เคยฝึก (ถึงรอบทวน) ในเบราว์เซอร์นั้นอยู่แล้ว
       return res.status(200).send(VC.reviewPage(words, { ...o, needK: !keys.length }));
     }
     const d = VC.loadLevel(vocabQ);
@@ -217,10 +215,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const ui = d.units.findIndex((x) => x.id === Number(req.query.u)), u = d.units[ui];
     if (!u) { res.writeHead(302, { Location: `/vocab/${vocabQ}` }); return res.end(); }
     const product = VC.pickUpsell(vocabQ, shop.products || []), next = d.units[ui + 1] || null;
-    if (VC.isFree(u.id)) { res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600'); return res.status(200).send(VC.unitPage(vocabQ, u, { ...o, product, next, nextLocked: !!next && !VC.isFree(next.id) })); }
-    res.setHeader('Cache-Control', 'no-store');
-    const a = await access();
-    if (!a.ok) return res.status(200).send(VC.lockedPage(vocabQ, u, { ...o, loggedIn: !!a.me, vipOpen: vipSellable(await loadVip()), product }));
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=600'); // หน้าเหมือนกันทุกคน (สิทธิ์ฝึกตรวจในเบราว์เซอร์)
     return res.status(200).send(VC.unitPage(vocabQ, u, { ...o, product, next }));
   }
   const audioQ = String(req.query.audio || '').toUpperCase();

@@ -255,6 +255,25 @@ async function igFollowers(fb) { if (!fb || !fb.igUserId) return null; try { con
 const withIg = (notes, line) => (IG_LINE.test(notes || '') ? String(notes).replace(IG_LINE, line) : [notes, line].filter(Boolean).join('\n')).slice(0, 1500);
 // ReadLab: โพสต์ที่คุณแดนอนุมัติขึ้นเพจ/Threads ของ ReadLab เอง (บัญชีแยกจาก SheetLab ไม่เติมแฮชแท็ก SheetLab)
 // รอบอัตโนมัติไม่เกิน 2 ชิ้นต่อช่องทาง เรียงตามเวลาที่กำหนด (ไม่กำหนด = รอบถัดไป) · onlyId = คุณแดนกดโพสต์ตอนนี้
+// 📚 อีเมลเตือนทวนคำศัพท์ (/vocab) วันละครั้ง: เฉพาะสมาชิกที่ติ๊กยินยอม (members.marketing) · มีคำถึงรอบ ≥3 คำ · ฝึกภายใน 14 วันล่าสุด (ไม่ตามคนที่เลิกเล่นนานแล้ว) · สูงสุด 150 ฉบับ/วัน (โควตา Gmail)
+async function vocabRemind() {
+  const today = Math.floor((Date.now() + 252e5) / 864e5), st = (await sb('shop_state?id=eq.vocab_remind&select=data'))?.[0]?.data || {};
+  if (st.day === today) return { skipped: true };
+  await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'vocab_remind', data: { day: today, at: new Date().toISOString() }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  const V = await import('../lib/members.js'), emails = (await V.remindTargets()).map((r) => r.email), origin = await siteUrl();
+  let sent = 0;
+  for (let i = 0; i < emails.length && sent < 150; i += 50) {
+    for (const r of await V.vocabRows(emails.slice(i, i + 50))) {
+      const w = r.data?.w || {}, days = (r.data?.days || []).map(Number), due = Object.values(w).filter((v) => Number(v?.[1]) <= today).length;
+      if (due < 3 || !days.some((d) => d >= today - 14)) continue;
+      let streak = 0, t = days.includes(today) ? today : today - 1; while (days.includes(t)) { streak++; t--; }
+      try { await V.sendVocabReminder(r.email, due, streak, origin); sent++; } catch (e) { console.error('remind mail', e.message); }
+      if (sent >= 150) break;
+    }
+  }
+  await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'vocab_remind', data: { day: today, sent, at: new Date().toISOString() }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  return { sent };
+}
 async function publishReadlab(onlyId = '') {
   const fb = await ensureIg(await loadFb('readlab')); let th = await loadThreads('readlab'); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
   if (!fb && !th) return { ok: false, skipped: 'ยังไม่ได้เชื่อมบัญชีเพจราชการ' };
@@ -3505,6 +3524,7 @@ ${books}`;
       if (!admin && !cronOk(req) && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       let readlab = null; // เพจ/Threads ReadLab (บัญชีแยก) รอบเดียวกัน
       if (!req.query.id) { try { readlab = await publishReadlab(); } catch (e) { readlab = { ok: false, error: String(e.message || e) }; } }
+      if (!req.query.id && cronOk(req)) { try { await vocabRemind(); } catch (e) { console.error('vocab remind', e.message); } } // 📚 เตือนทวนคำศัพท์ วันละครั้ง (cron 19:05 ไทย)
       const fb = await ensureIg(await loadFb());
       let th = await loadThreads(); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
       if (!fb && !th) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)', readlab });
