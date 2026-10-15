@@ -3,7 +3,7 @@
 // ใช้: node tools/vocab/build.mjs plan a1 36   → วางแผนบท (หัวข้อ + คำ)
 //      node tools/vocab/build.mjs more b2 34   → เพิ่มบทต่อจากที่มี (ไม่ซ้ำคำทุกระดับ)
 //      node tools/vocab/build.mjs fill a1       → เขียนความหมาย/ตัวอย่างให้ทุกบทที่ยังไม่ครบ (รันซ้ำได้)
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs';
 import { homedir } from 'node:os';
 const KEY = readFileSync(`${homedir()}/.config/sheetlab/fal-key`, 'utf8').trim();
 // ชุดคำศัพท์ (ต้องตรงกับ DECKS ใน lib/vocab.js) · ชุดสอบ (15 ต.ค. 69) ใช้อีโมจิแทนรูป (e) ไม่มีค่ารูป
@@ -17,7 +17,7 @@ const DESC = { a1: 'CEFR A1 (very first everyday words)', a2: 'CEFR A2 (elementa
 const LV = Object.keys(DESC), EXAM = (lv) => !/^[ab][12]$/.test(lv);
 const file = (lv) => new URL(`../../src/vocab/${lv}.json`, import.meta.url);
 const load = (lv) => (existsSync(file(lv)) ? JSON.parse(readFileSync(file(lv), 'utf8')) : null);
-const save = (lv, d) => writeFileSync(file(lv), JSON.stringify(d));
+const save = (lv, d) => { const t = file(lv).pathname + '.tmp'; writeFileSync(t, JSON.stringify(d)); renameSync(t, file(lv)); }; // เขียนไฟล์ชั่วคราวแล้วค่อยแทน ไฟล์ไม่ว่างเปล่าถ้าล่มกลางทาง
 
 async function ai(prompt, model = 'google/gemini-2.5-flash') {
   for (let i = 0; i < 4; i++) {
@@ -30,6 +30,8 @@ async function ai(prompt, model = 'google/gemini-2.5-flash') {
   }
   throw new Error('AI failed');
 }
+// อีโมจิ: เก็บเฉพาะตัวอีโมจิ (ตัดตัวหนังสือที่ AI แถมมา) ตัดตามตัวอักษรจริง ไม่ผ่าครึ่งอีโมจิ
+const emo = (x) => Array.from(String(x || '').replace(/[A-Za-z0-9\s'".,()-]+/g, '')).slice(0, 4).join('');
 const clean = (w) => String(w || '').trim().toLowerCase().replace(/\s+/g, ' ');
 
 async function plan(lv, n, keep = false) { // keep = ต่อจากบทที่มีอยู่ (เพิ่มบท)
@@ -49,7 +51,7 @@ Return JSON: {"units":[{"t":"short English topic","th":"short Thai topic name","
     for (const u of p.units || []) {
       const words = []; for (const w of u.words || []) { const c = clean(w); if (c && !seen.has(c) && /^[a-z][a-z' -]*$/.test(c)) { seen.add(c); words.push({ w: c }); } }
       if (words.length > 22) words.length = 22;
-      if (words.length >= (EXAM(lv) ? 16 : 12) && units.length < n) units.push({ id: units.length + 1, t: String(u.t).slice(0, 60), th: String(u.th).slice(0, 40), ...(EXAM(lv) && u.e ? { e: String(u.e).slice(0, 8) } : {}), words });
+      if (words.length >= (EXAM(lv) ? 16 : 12) && units.length < n) units.push({ id: units.length + 1, t: String(u.t).slice(0, 60), th: String(u.th).slice(0, 40), ...(EXAM(lv) && emo(u.e) ? { e: emo(u.e) } : {}), words });
     }
     save(lv, { level: lv, units }); console.log(lv, units.length, 'units', units.reduce((a, u) => a + u.words.length, 0), 'words');
   }
@@ -73,7 +75,7 @@ Return JSON: {"items":[{"w":"word","pos":"","th":"","def":"","ex":"","exth":""${
   let ok = 0;
   for (const x of need) {
     const g = by[x.w]; if (!g) continue;
-    const y = { w: x.w, pos: String(g.pos || '').slice(0, 20), th: String(g.th || '').slice(0, 60), def: String(g.def || '').slice(0, 140), ex: String(g.ex || '').slice(0, 160), exth: String(g.exth || '').slice(0, 200), ...(EXAM(lv) && g.e ? { e: String(g.e).slice(0, 8) } : {}) };
+    const y = { w: x.w, pos: String(g.pos || '').slice(0, 20), th: String(g.th || '').slice(0, 60), def: String(g.def || '').slice(0, 140), ex: String(g.ex || '').slice(0, 160), exth: String(g.exth || '').slice(0, 200), ...(EXAM(lv) && emo(g.e) ? { e: emo(g.e) } : {}) };
     if (!badDef(y) && y.th && y.ex.toLowerCase().includes(x.w.split(' ')[0].slice(0, 3))) { Object.assign(x, y); ok++; }
   }
   return need.length - ok;
