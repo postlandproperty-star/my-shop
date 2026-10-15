@@ -2709,6 +2709,17 @@ ${books}`;
       const files = jobs.filter((j) => j.status === 'done' && j.file_url).map((j) => ({ id: j.id, title: j.title, file_url: j.file_url, pages: j.pages, price: j.price, done_at: j.done_at, purpose: j.purpose }));
       return res.status(200).json({ ok: true, links, files });
     }
+    if (action === 'orig_move') { // 🔒 ย้ายไฟล์ต้นฉบับเต็มที่เคยหลุดในหน้าเว็บ (15 ต.ค. 69) ไปที่อยู่ใหม่เดาไม่ได้ ใน Supabase Storage (ย้าย ไม่ลบ) · คีย์ร้าน · รับเฉพาะ factory/ sets/ → orig/<สุ่ม>/
+      if (!keyOk(req) || req.method !== 'POST') return res.status(401).json({ ok: false });
+      const H = { apikey: SECRET, Authorization: `Bearer ${SECRET}`, 'Content-Type': 'application/json' }, b = await readBody(req), out = [];
+      for (const mv of (Array.isArray(b.moves) ? b.moves : []).slice(0, 60)) {
+        const from = String(mv.from || ''), to = String(mv.to || ''), base = from.split('/').pop();
+        if (!/^(factory|sets)\//.test(from) || from.includes('..') || !/\.pdf$/i.test(from) || to !== `orig/${String(mv.to).split('/')[1]}/${base}` || !/^orig\/[0-9a-f]{24}\//.test(to)) { out.push({ from, ok: false, error: 'bad path' }); continue; }
+        const r = await fetch(`${SB_URL}/storage/v1/object/move`, { method: 'POST', headers: H, body: JSON.stringify({ bucketId: 'product-images', sourceKey: from, destinationKey: to }) });
+        out.push({ from, ok: r.ok, status: r.status, error: r.ok ? undefined : (await r.text()).slice(0, 120) });
+      }
+      return res.status(200).json({ ok: true, out });
+    }
     if (action === 'r2_list' || action === 'r2_rewrite') { // ☁️ ย้ายไฟล์จาก Supabase Storage ไป Cloudflare R2 (ส่งออกฟรี · 14 ต.ค. 69 หลัง Supabase เกินโควต้า) · Mac ก๊อปไฟล์ (tools/r2/offload.py) แล้วสั่งเปลี่ยนลิงก์ที่นี่ · ไฟล์เดิมใน Supabase ไม่ลบ
       if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       const SBPUB = `${SB_URL}/storage/v1/object/public/product-images/`, R2PUB = 'https://pub-fdfc380c67f149de994eac621d6b147c.r2.dev/';

@@ -388,6 +388,20 @@ try {
       await page.context().close();
     } catch (e) { pass(`[${kind}] แอป SheetLab: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
+    // 3.55) หน้าขายส่งข้อมูลเต็มแค่เล่มที่เปิด เล่มอื่นเป็นข้อมูลการ์ด (_lite) → เปิดเล่มนั้นแล้วต้องโหลดข้อมูลเต็มมาแสดงครบ (api/page.js ?shopfull=1)
+    try {
+      page = await newPage(kind); page.setDefaultTimeout(8000);
+      const P = SHOP.products.find((x) => x.status === 'published' && x.type !== 'bundle' && x.features), DET = ['desc', 'features', 'faq', 'pains', 'forwho', 'specs', 'previews', 'notfor', 'proof', 'terms', 'authorBio', 'guarantee'];
+      const lite = { ...SHOP, products: SHOP.products.map((x) => { if (x.id !== P.id) return x; const o = { ...x, _lite: 1 }; DET.forEach((k) => delete o[k]); return o; }) };
+      let full = 0; await page.route(/shopfull=1/, (r) => { full++; return r.fulfill({ json: { products: SHOP.products } }); });
+      await page.addInitScript((s) => { window.__SHOP__ = s; }, lite);
+      await page.goto(`${BASE}/p/${P.slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(1200);
+      const firstLine = String(P.features).split('\n')[0].trim().slice(0, 18);
+      const got = await page.evaluate((t) => ({ txt: document.body.innerText.includes(t), lite: !!(D.products.find((x) => x._lite)) }), firstLine);
+      pass(`[${kind}] หน้าขาย: เล่มที่มีแค่ข้อมูลการ์ด → โหลดข้อมูลเต็มครั้งเดียวแล้วแสดงรายละเอียดครบ`, full === 1 && got.txt && !got.lite, JSON.stringify({ full, ...got }));
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] หน้าขาย: โหลดข้อมูลเต็มตามหลัง`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
     // 3.6) หน้าสมาชิก VIP: ยังไม่เปิด = "เร็วๆ นี้" · เปิดแล้ว = ราคาจากหลังบ้าน + ปุ่มสมัคร + ฟอร์มเข้าระบบด้วยอีเมล
     for (const mode of ['closed', 'open']) try {
       page = await newPage(kind); page.setDefaultTimeout(8000);

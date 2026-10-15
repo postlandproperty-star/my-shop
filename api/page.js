@@ -53,6 +53,21 @@ async function loadShop() { // แคช 30 วินาที (ลดการ�
   } catch (e) { return { products: [], settings: {} }; }
 }
 
+// ข้อมูลสินค้าที่ส่งให้หน้าเว็บ (สาธารณะ) · ตัดฉบับร่างที่ไม่อยู่ในชุดที่ขาย + ช่องหลังบ้าน (linkOrig = ไฟล์เต็มที่ขาย ห้ามหลุด 15 ต.ค. 69)
+// focus = id ของเล่มที่กำลังดู (+ เล่มในชุด/ของแถม/ข้อเสนอเพิ่ม) ส่งข้อมูลเต็ม · เล่มอื่นส่งแค่ข้อมูลการ์ด (_lite) หน้าเบาลงมาก
+// เบราว์เซอร์ดึงข้อมูลเต็มที่เหลือจาก ?shopfull=1 เฉพาะตอนเปิดดูเล่มอื่น (fullLoad ใน src/index.html) · หลังบ้านโหลดข้อมูลเต็มจากระบบเสมอ
+const ADMIN_ONLY = ['linkOrig', 'link', 'planLinks', 'fromJob', 'copyDone', 'shopeeAt', 'coverSig', 'coverV', 'autoPrice', 'pdfFrom', 'shopeeName', 'fromSet', 'fromSetName', 'pvFrom', 'pdfCover', 'coverPrice'];
+const DETAIL = ['desc', 'features', 'faq', 'pains', 'forwho', 'specs', 'previews', 'notfor', 'proof', 'terms', 'authorBio', 'guarantee', 'freshNote', 'oldCovers'];
+function pubProducts(products, focus = null) {
+  const inUse = new Set(products.filter((x) => x.status === 'published').flatMap((x) => [...(x.items || []), ...(x.bonusIds || []), x.bumpProductId].filter(Boolean)));
+  return products.filter((x) => x.status === 'published' || inUse.has(x.id)).map((x) => {
+    const o = { ...x }; for (const k of ADMIN_ONLY) delete o[k];
+    if (focus && !focus.has(x.id)) { for (const k of DETAIL) delete o[k]; if (o.kind !== 'course') delete o.toc; o._lite = 1; }
+    return o;
+  });
+}
+const focusOf = (products, slug) => { const p = /^[a-z0-9-]+$/.test(slug) ? products.find((x) => x.slug === slug && x.status === 'published') : null; return new Set(p ? [p.id, ...(p.items || []), ...(p.bonusIds || []), p.bumpProductId].filter(Boolean) : []); };
+
 export default async function handler(req, res) {
   const slug = String(req.query.slug || '');
   // ย้ายไปโดเมนใหม่: เปิดจากที่อยู่เดิม (.vercel.app) หลังโดเมนใหม่พร้อม → ส่งไปหน้าเดียวกันบน sheetlabth.com
@@ -198,6 +213,11 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const VT = await import('../lib/vocab.js').then((VC) => Object.fromEntries(Object.keys(VC.LEVELS).map((lv) => [lv, VC.levelCount(lv)]))).catch(() => null);
     return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE, vocab: VT }));
   }
+  if (req.query.shopfull === '1') { // ข้อมูลสินค้าเต็ม (สาธารณะ) ให้หน้าเว็บโหลดตามหลังเมื่อเปิดดูเล่มอื่น
+    const shop = await loadShop();
+    res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=10, stale-while-revalidate=60');
+    return res.status(200).send(JSON.stringify({ products: pubProducts(shop.products) }));
+  }
   const vocabQ = String(req.query.vocab || '');
   if (vocabQ) { // 📚 คำศัพท์ 3000 คำที่ต้องรู้ (lib/vocab.js): /vocab /vocab/a1 /vocab/a1/3 /vocab/review?k=a1.3,a2.1 · ฟรี FREE_UNITS บทแรกของทุกระดับ บทที่เหลือ = VIP
     const VC = await import('../lib/vocab.js');
@@ -328,12 +348,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
     const topics = TOPICS.map((t) => { const it = topicItems(t, { articles: ar, quizzes: qz, products: shop.products }); return topicReady(it) ? { slug: t.slug, name: t.name, n: topicCount(it) } : null; }).filter(Boolean); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว (หน้าร้านโชว์เป็นทางลัด)
-    // ข้อมูลสินค้าที่ฝังในหน้า (สาธารณะ): ตัดฉบับร่างที่ไม่อยู่ในชุดที่ขาย + ช่องที่ใช้เฉพาะหลังบ้าน · linkOrig = ไฟล์เต็มที่ขาย ห้ามหลุด (15 ต.ค. 69)
-    // หลังบ้านโหลดข้อมูลเต็มจากระบบทับก่อนแก้/บันทึกเสมอ จึงไม่ทำให้ข้อมูลหาย · หน้าเบาลง ~100KB
-    const inUse = new Set(shop.products.filter((x) => x.status === 'published').flatMap((x) => [...(x.items || []), ...(x.bonusIds || []), x.bumpProductId].filter(Boolean)));
-    const ADMIN_ONLY = ['linkOrig', 'link', 'planLinks', 'fromJob', 'copyDone', 'shopeeAt', 'coverSig', 'coverV', 'autoPrice', 'pdfFrom', 'shopeeName', 'fromSet', 'fromSetName', 'pvFrom', 'pdfCover', 'coverPrice'];
-    const pubProducts = shop.products.filter((x) => x.status === 'published' || inUse.has(x.id)).map((x) => { const o = { ...x }; for (const k of ADMIN_ONLY) delete o[k]; return o; });
-    const inline = JSON.stringify({ products: pubProducts, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
+    const inline = JSON.stringify({ products: pubProducts(shop.products, focusOf(shop.products, slug)), settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';

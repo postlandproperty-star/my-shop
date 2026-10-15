@@ -1291,6 +1291,7 @@ function save(){
   saveTimer=setTimeout(flushRemote,400);
 }
 async function flushRemote(retry){
+  if(D.products.some(p=>p._lite)){toast('ข้อมูลสินค้ายังโหลดไม่ครบ รอสักครู่แล้วกดบันทึกอีกครั้ง');savePending=true;return false;} // ข้อมูลการ์ด (_lite) จากหน้าเว็บห้ามบันทึกทับข้อมูลเต็ม
   if(!savePending||!sb||!sbSession)return false;
   savePending=false;
   const chk=await sb.from('shop_state').select('id,updated_at').in('id',['main','private']);
@@ -1306,7 +1307,7 @@ async function flushRemote(retry){
   // ลิงก์ไฟล์สินค้า (link) เป็นความลับ: แยกออกจากข้อมูลสาธารณะไปเก็บในแถว private
   const pub=pick(D,PUBLIC_KEYS),links={};
   pub.products=D.products.map(p=>{links[p.id]=p.link||'';const q=Object.assign({},p);delete q.link;
-    if(q.linkOrig)links[p.id+'#orig']=String(q.linkOrig);delete q.linkOrig; // ไฟล์ต้นฉบับก่อนใส่ปกใหม่ = ไฟล์เต็มที่ขาย ความลับเหมือน link (15 ต.ค. 69 เคยหลุดอยู่ในหน้าเว็บสาธารณะ)
+    if(q.linkOrig)links[p.id+'#orig']=String(q.linkOrig);delete q.linkOrig;delete q._lite; // ไฟล์ต้นฉบับก่อนใส่ปกใหม่ = ไฟล์เต็มที่ขาย ความลับเหมือน link (15 ต.ค. 69 เคยหลุดอยู่ในหน้าเว็บสาธารณะ)
     if(q.planLinks){Object.entries(q.planLinks).forEach(([k,v])=>{if(String(v||'').trim())links[p.id+'@'+k]=String(v);});delete q.planLinks;} // ไฟล์ของแถมแพ็กเกจชุด = ความลับ
     return q;});
   const priv=pick(D,PRIVATE_KEYS);priv.links=links;
@@ -1791,6 +1792,10 @@ function track(name,data){
   D.events=D.events.slice(0,60);saveCache();
 }
 const getProduct=id=>D.products.find(p=>p.id===id);
+// หน้าขายส่งข้อมูลเต็มมาแค่เล่มที่เปิด เล่มอื่นเป็นข้อมูลการ์ด (_lite) · เปิดดูเล่มอื่นค่อยโหลดข้อมูลเต็มครั้งเดียว (api/page.js ?shopfull=1)
+let FULL=null;
+function needsFull(p){return !!p&&(p._lite||[...(p.items||[]),...(p.bonusIds||[]),p.bumpProductId].some(id=>{const x=id&&getProduct(id);return x&&x._lite;}));}
+function fullLoad(){if(FULL)return FULL;FULL=fetch('/api/page?shopfull=1').then(r=>r.json()).then(j=>{(j.products||[]).forEach(f=>{const x=getProduct(f.id);if(x&&x._lite){Object.assign(x,f);delete x._lite;}});render(true);}).catch(()=>{FULL=null;});return FULL;}
 const validLink=l=>l&&/^https?:\/\//.test(l)&&!l.includes('ใส่ลิงก์');
 const isNotion=l=>/^https:\/\/([a-z0-9-]+\.)?notion\.(site|so)\//i.test(l||''); // สินค้าเทมเพลต Notion: ลิงก์ Duplicate แทนไฟล์ดาวน์โหลด
 const dlBtn=(l,name)=>!isNotion(l)&&ownFile(l)?`<a class="btn btn-cta btn-block" href="${esc(dlHref(l,name))}" rel="noopener noreferrer">⬇ ดาวน์โหลด${name?' '+name:'ไฟล์'}</a>`:isNotion(l)?linkBtn(l,'เปิดเทมเพลต Notion'+(name?': '+name:''))+'<p class="fine" style="margin:4px 0 0">เปิดลิงก์แล้วกดปุ่ม <b>Duplicate</b> มุมขวาบน เทมเพลตจะถูกคัดลอกเข้า Notion ของคุณ (ใช้บัญชี Notion ฟรีได้)</p>':linkBtn(l,'ดาวน์โหลด'+(name?' '+name:'ไฟล์'));
@@ -6468,6 +6473,7 @@ function render(keep){
   setHtml($('#bar-note'),isAdmin?`หลังบ้าน<br><span style="word-break:break-all">${esc(sbSession.user.email)}</span> · <a href="#" data-a="logout">ออกจากระบบ</a><br><span id="live-pill" class="live-pill">${livePillText()}</span>`:'');
   setHtml($('#seg'),isAdmin?`<button data-a="toStore" aria-pressed="${v==='store'}">หน้าร้าน</button><button data-a="toShop" aria-pressed="${!['admin','store','factory','vip','catalog'].includes(v)}">salepage</button><button data-a="toAdmin" aria-pressed="${v==='admin'}">หลังบ้าน</button><button data-a="toFactory" aria-pressed="${v==='factory'}">โรงงาน</button><button data-a="toVip" aria-pressed="${v==='vip'}">👥 จัดการสมาชิก</button>`:''); // แถบหลังบ้านตามคุณแดนทุกหน้า (ลูกค้าไม่เห็น)
   if(S.loading){setHtml($('#app'),`<div class="wrap" style="padding:60px 16px;text-align:center"><p class="muted">กำลังโหลด...</p></div>`);return;}
+  if(v==='shop'&&needsFull(curProduct()))fullLoad();
   const csY=(document.getElementById('cs-in')||{}).scrollTop||0;
   const cIn=document.getElementById('chat-new'),cVal=cIn?cIn.value:'',cFoc=cIn&&document.activeElement===cIn;
   setHtml($('#app'),({factory:()=>hasAdminAccess()?factoryView():loginView(),vip:()=>hasAdminAccess()?vipView():loginView(),store:()=>storeView(false),catalog:catalogView,order:orderView,cart:cartView,shop:shopView,pay:payView,thanks:thanksView,admin:adminView,login:loginView}[v])());
