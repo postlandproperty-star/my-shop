@@ -7,7 +7,7 @@
 <!--OG-START--><meta property="og:type" content="website"><meta property="og:title" content="ร้านหนังสือ/ชีทเรียน"><meta property="og:description" content="ชีทสรุปและอีบุ๊ก PDF ชำระเงินแล้วดาวน์โหลดได้ทันที"><meta name="twitter:card" content="summary_large_image"><!--OG-END-->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Mitr:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Mitr:wght@500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Mitr:wght@500;600&display=swap" rel="stylesheet"></noscript><!-- ฟอนต์ไม่บล็อกการแสดงหน้า (มือถือ 4G ช้าลง ~0.3 วิ) แสดงด้วยฟอนต์เครื่องก่อนแล้วสลับ -->
 <!--SHOP-DATA-->
 <style>
 :root{
@@ -1306,6 +1306,7 @@ async function flushRemote(retry){
   // ลิงก์ไฟล์สินค้า (link) เป็นความลับ: แยกออกจากข้อมูลสาธารณะไปเก็บในแถว private
   const pub=pick(D,PUBLIC_KEYS),links={};
   pub.products=D.products.map(p=>{links[p.id]=p.link||'';const q=Object.assign({},p);delete q.link;
+    if(q.linkOrig)links[p.id+'#orig']=String(q.linkOrig);delete q.linkOrig; // ไฟล์ต้นฉบับก่อนใส่ปกใหม่ = ไฟล์เต็มที่ขาย ความลับเหมือน link (15 ต.ค. 69 เคยหลุดอยู่ในหน้าเว็บสาธารณะ)
     if(q.planLinks){Object.entries(q.planLinks).forEach(([k,v])=>{if(String(v||'').trim())links[p.id+'@'+k]=String(v);});delete q.planLinks;} // ไฟล์ของแถมแพ็กเกจชุด = ความลับ
     return q;});
   const priv=pick(D,PRIVATE_KEYS);priv.links=links;
@@ -1344,7 +1345,7 @@ async function loadRemote(){
   const merged=Object.assign({},main.data,priv&&priv.data?priv.data:{});
   privLoaded=!!(priv&&priv.data);const links=(priv&&priv.data&&priv.data.links)||{};delete merged.links;
   needsMigrate=!!sbSession&&(main.data.products||[]).some(p=>p.link);
-  merged.products=(merged.products||[]).map(p=>{const o=Object.assign({},p,{link:p.link||links[p.id]||''});if(p.type==='bundle'){o.planLinks={};Object.keys(links).forEach(k=>{if(k.startsWith(p.id+'@'))o.planLinks[k.slice(p.id.length+1)]=links[k];});}return o;});
+  merged.products=(merged.products||[]).map(p=>{const o=Object.assign({},p,{link:p.link||links[p.id]||''});if(!o.linkOrig&&links[p.id+'#orig'])o.linkOrig=links[p.id+'#orig'];if(p.type==='bundle'){o.planLinks={};Object.keys(links).forEach(k=>{if(k.startsWith(p.id+'@'))o.planLinks[k.slice(p.id.length+1)]=links[k];});}return o;});
   if(!sbSession){ // ลูกค้าเห็นแค่ข้อมูลสาธารณะ ส่วนออเดอร์ทดลองของเขาอยู่ในแคชเครื่องเขาเอง
     const cached=load()||{};
     PRIVATE_KEYS.forEach(k=>{if(merged[k]===undefined)merged[k]=cached[k]||[];});

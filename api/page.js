@@ -328,7 +328,12 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
     const topics = TOPICS.map((t) => { const it = topicItems(t, { articles: ar, quizzes: qz, products: shop.products }); return topicReady(it) ? { slug: t.slug, name: t.name, n: topicCount(it) } : null; }).filter(Boolean); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว (หน้าร้านโชว์เป็นทางลัด)
-    const inline = JSON.stringify({ products: shop.products, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
+    // ข้อมูลสินค้าที่ฝังในหน้า (สาธารณะ): ตัดฉบับร่างที่ไม่อยู่ในชุดที่ขาย + ช่องที่ใช้เฉพาะหลังบ้าน · linkOrig = ไฟล์เต็มที่ขาย ห้ามหลุด (15 ต.ค. 69)
+    // หลังบ้านโหลดข้อมูลเต็มจากระบบทับก่อนแก้/บันทึกเสมอ จึงไม่ทำให้ข้อมูลหาย · หน้าเบาลง ~100KB
+    const inUse = new Set(shop.products.filter((x) => x.status === 'published').flatMap((x) => [...(x.items || []), ...(x.bonusIds || []), x.bumpProductId].filter(Boolean)));
+    const ADMIN_ONLY = ['linkOrig', 'link', 'planLinks', 'fromJob', 'copyDone', 'shopeeAt', 'coverSig', 'coverV', 'autoPrice', 'pdfFrom', 'shopeeName', 'fromSet', 'fromSetName', 'pvFrom', 'pdfCover', 'coverPrice'];
+    const pubProducts = shop.products.filter((x) => x.status === 'published' || inUse.has(x.id)).map((x) => { const o = { ...x }; for (const k of ADMIN_ONLY) delete o[k]; return o; });
+    const inline = JSON.stringify({ products: pubProducts, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';
@@ -366,7 +371,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
         `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}">`,
         `<meta name="description" content="${esc(desc)}">`,
         `<link rel="canonical" href="${NEW_SITE}/p/${esc(p.slug)}">`,
-        img && p.type !== 'bundle' ? `<link rel="preload" as="image" href="${esc(img)}" fetchpriority="high">` : '', // รูปหลักเริ่มโหลดทันที ไม่ต้องรอสคริปต์วาดหน้า
+        img ? `<link rel="preload" as="image" href="${esc(img)}" fetchpriority="high">` : '', // รูปหลักเริ่มโหลดทันที ไม่ต้องรอสคริปต์วาดหน้า
         productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img, rvAll[p.id]),
       ].join('');
       out = out
