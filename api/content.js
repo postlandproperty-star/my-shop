@@ -2303,14 +2303,14 @@ ${books}`;
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
     }
-    if (action === 'vip_admin') { // สมาชิก VIP: ราคา/เปิดรับ (คุณแดนเท่านั้น) + ตัวเลขสมาชิก (ทีมอ่านได้)
+    if (action === 'vip_admin') { // สมาชิก Pro: ราคา/เปิดรับ (คุณแดนเท่านั้น) + ตัวเลขสมาชิก (ทีมอ่านได้)
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       const V = await import('../lib/members.js');
       if (req.method === 'POST') {
         if (!admin) return res.status(403).json({ ok: false, error: 'ราคาเป็นของคุณแดน' });
         const b = await readBody(req);
-        if (b.grant) { // ให้สิทธิ์ VIP เอง (ทดลอง/ของขวัญ) + ส่งอีเมลต้อนรับพร้อมลิงก์เข้าระบบ
+        if (b.grant) { // ให้สิทธิ์ Pro เอง (ทดลอง/ของขวัญ) + ส่งอีเมลต้อนรับพร้อมลิงก์เข้าระบบ
           const email = String(b.grant.email || '').trim().toLowerCase(), days = Math.round(Number(b.grant.days) || 0);
           if (!V.okEmail(email)) return res.status(400).json({ ok: false, error: 'อีเมลไม่ถูกต้อง' });
           if (!(days >= 1 && days <= 400)) return res.status(400).json({ ok: false, error: 'จำนวนวัน 1–400' });

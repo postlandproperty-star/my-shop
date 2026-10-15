@@ -5,7 +5,7 @@ import { fulfill } from '../lib/fulfill.js';
 import { createQrPayment } from '../lib/shop.js';
 import * as V from '../lib/members.js';
 
-// ---------- สมาชิก VIP (/vip) ?m=vip_* ----------
+// ---------- สมาชิก Pro (/vip) ?m=vip_* ----------
 const json = (req) => { let b = req.body; if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } } return b || {}; };
 const liveQuizzes = async () => ((await sbSelect('shop_state?id=eq.quizzes&select=data'))?.[0]?.data?.list || []).filter((x) => x.status !== 'hidden');
 const originOf = (req) => `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`;
@@ -27,7 +27,7 @@ async function vip(req, res, m) {
   if (m === 'vip_sync') { // กลับจากหน้าจ่ายบัตรของ Stripe: เปิดสิทธิ์ทันที (ไม่ต้องรอ webhook) แล้วเข้าระบบให้เลย
     const id = String(req.query.session_id || '');
     if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(id)) { res.writeHead(302, { Location: '/vip' }); return res.end(); }
-    try { const s = await stripe('GET', `checkout/sessions/${id}`); if (s.payment_status === 'paid' && s.metadata?.vip) { const r = await fulfill(s, { origin }); const email = r.email || String(s.customer_details?.email || s.customer_email || '').toLowerCase(); if (V.okEmail(email)) { res.writeHead(302, { 'Set-Cookie': V.sessionCookie(email), Location: '/vip?welcome=1' }); return res.end(); } } } catch (e) { console.error('vip sync', e); }
+    try { const s = await stripe('GET', `checkout/sessions/${id}`); if ((s.payment_status === 'paid' || (s.mode === 'subscription' && s.status === 'complete' && s.payment_status === 'no_payment_required')) && s.metadata?.vip) { const r = await fulfill(s, { origin }); const email = r.email || String(s.customer_details?.email || s.customer_email || '').toLowerCase(); if (V.okEmail(email)) { res.writeHead(302, { 'Set-Cookie': V.sessionCookie(email), Location: '/vip?welcome=1' }); return res.end(); } } } catch (e) { console.error('vip sync', e); }
     res.writeHead(302, { Location: '/vip?welcome=1' }); return res.end();
   }
   const settings = await V.loadVip();
@@ -40,7 +40,7 @@ async function vip(req, res, m) {
     const unlocked = active || (await unlockedOf(me));
     return res.status(200).json({ ok: true, email: me, active, unlocked, review, until: mem?.paid_until || null, plan: mem?.plan || null, card: !!mem?.stripe_sub, cancelAt: mem?.cancel_at || null, settings: pub });
   }
-  if (m === 'vip_mock' && req.method === 'GET') { // ข้อสอบเสมือนจริง: ชุดที่ทำได้ + สถานะสมาชิก (ดูรายการได้ทุกคน เริ่มทำได้เฉพาะ VIP)
+  if (m === 'vip_mock' && req.method === 'GET') { // ข้อสอบเสมือนจริง: ชุดที่ทำได้ + สถานะสมาชิก (ดูรายการได้ทุกคน เริ่มทำได้เฉพาะ Pro)
     const M = await import('../lib/mock.js');
     let active = false; if (me) { try { active = await unlockedOf(me); } catch (e) {} } // สมาชิกฟรีช่วงเปิดตัวทำได้ด้วย
     return res.status(200).json({ ok: true, email: me, active, open: pub.open, kinds: M.mockKinds(await liveQuizzes()) });
@@ -81,7 +81,7 @@ async function vip(req, res, m) {
     const b = json(req), part = SP.PARTS[b.part] ? b.part : 'p1', question = String(b.question || '').trim().slice(0, 800), secs = Math.max(0, Math.min(200, Number(b.secs) || 0));
     if (question.length < 10) return res.status(400).json({ ok: false, error: 'เลือกคำถามก่อน' });
     if (secs < 5) return res.status(400).json({ ok: false, error: 'เสียงสั้นเกินไป พูดอย่างน้อย 5 วินาที' });
-    const q = await quota(); if (q.left <= 0) return res.status(403).json({ ok: false, error: active ? `ใช้ครบ ${q.cap} ครั้งของเดือนนี้แล้ว เริ่มใหม่วันที่ 1` : 'ใช้สิทธิ์ทดลองฟรีแล้ว สมัคร VIP เพื่อฝึกพูดได้ทุกวัน', needVip: !active });
+    const q = await quota(); if (q.left <= 0) return res.status(403).json({ ok: false, error: active ? `ใช้ครบ ${q.cap} ครั้งของเดือนนี้แล้ว เริ่มใหม่วันที่ 1` : 'ใช้สิทธิ์ทดลองฟรีแล้ว สมัคร Pro เพื่อฝึกพูดได้ทุกวัน', needVip: !active });
     let out; try { out = await SP.checkSpeaking({ part, question, audio: String(b.audio || ''), secs }); } catch (e) { return res.status(e.bad ? 400 : 503).json({ ok: false, error: e.message }); }
     const shop = await (await import('../lib/shop.js')).loadShop().catch(() => ({ products: [] })), result = { ...out.result, books: SP.recommend(out.result, shop.products) };
     const row = await V.saveWriting({ email: me, task: 'sp:' + part, prompt: question, essay: result.transcript, result, band: result.band.overall, via: out.via });
@@ -99,7 +99,7 @@ async function vip(req, res, m) {
     if (prompt.length < 20) return res.status(400).json({ ok: false, error: 'ใส่โจทย์ก่อน (หรือกดสุ่มโจทย์)' });
     if (n < 60) return res.status(400).json({ ok: false, error: `เรียงความสั้นไป (${n} คำ) ต้องมีอย่างน้อย 60 คำ` });
     if (n > 900) return res.status(400).json({ ok: false, error: `ยาวเกิน 900 คำ (${n} คำ)` });
-    const q = await quota(); if (q.left <= 0) return res.status(403).json({ ok: false, error: active ? `ใช้ครบ ${q.cap} ครั้งของเดือนนี้แล้ว เริ่มใหม่วันที่ 1` : 'ใช้สิทธิ์ทดลองฟรีแล้ว สมัคร VIP เพื่อตรวจได้ทุกสัปดาห์', needVip: !active });
+    const q = await quota(); if (q.left <= 0) return res.status(403).json({ ok: false, error: active ? `ใช้ครบ ${q.cap} ครั้งของเดือนนี้แล้ว เริ่มใหม่วันที่ 1` : 'ใช้สิทธิ์ทดลองฟรีแล้ว สมัคร Pro เพื่อตรวจได้ทุกสัปดาห์', needVip: !active });
     let out; try { out = await W.checkWriting({ task, prompt, essay, image: task === 't1a' ? String(b.image || '') : '' }); } catch (e) { return res.status(503).json({ ok: false, error: e.message }); }
     const shop = await (await import('../lib/shop.js')).loadShop().catch(() => ({ products: [] })), result = { ...out.result, books: W.recommend(out.result, shop.products) };
     const row = await V.saveWriting({ email: me, task, prompt, essay, result, band: result.band.overall, via: out.via });
@@ -150,15 +150,16 @@ async function vip(req, res, m) {
   if (m === 'vip_buy') { // บัตร: ตัดอัตโนมัติรายเดือน/รายปี ยกเลิกเองได้
     const plan = b.plan === 'yearly' ? 'yearly' : 'monthly', price = settings[plan];
     if (!settings.open || !(price > 0)) return res.status(400).json({ ok: false, error: 'ยังไม่เปิดรับสมาชิกแบบนี้' });
-    const name = plan === 'yearly' ? 'SheetLab VIP รายปี' : 'SheetLab VIP รายเดือน', md = { vip: '1', plan, email: me, productId: 'vip', productName: name };
-    const s = await stripe('POST', 'checkout/sessions', { mode: 'subscription', customer_email: me, locale: 'th', line_items: [{ quantity: 1, price_data: { currency: 'thb', unit_amount: price * 100, recurring: { interval: plan === 'yearly' ? 'year' : 'month' }, product_data: { name } } }], metadata: md, subscription_data: { metadata: md }, success_url: `${origin}/api/order?m=vip_sync&session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${origin}/vip` });
+    const name = plan === 'yearly' ? 'SheetLab Pro รายปี' : 'SheetLab Pro รายเดือน', md = { vip: '1', plan, email: me, productId: 'vip', productName: name };
+    const prev = await V.getMember(me).catch(() => null), trial = plan === 'monthly' && !prev?.stripe_sub; // ทดลองฟรี 3 วัน ครั้งแรกครั้งเดียว (เคยสมัครตัดบัตรแล้ว = ไม่ได้ทดลองซ้ำ)
+    const s = await stripe('POST', 'checkout/sessions', { mode: 'subscription', customer_email: me, locale: 'th', line_items: [{ quantity: 1, price_data: { currency: 'thb', unit_amount: price * 100, recurring: { interval: plan === 'yearly' ? 'year' : 'month' }, product_data: { name } } }], metadata: md, subscription_data: { metadata: md, ...(trial ? { trial_period_days: 3 } : {}) }, success_url: `${origin}/api/order?m=vip_sync&session_id={CHECKOUT_SESSION_ID}`, cancel_url: `${origin}/vip` });
     return res.status(200).json({ ok: true, url: s.url });
   }
   if (m === 'vip_qr') { // PromptPay: จ่ายล่วงหน้าเป็นก้อน (ตัดอัตโนมัติไม่ได้)
     const life = b.months === 'life', months = life ? 'life' : [1, 3, 12].includes(Number(b.months)) ? Number(b.months) : 0, price = life ? settings.life : settings.packs[months] || 0;
     if (!settings.open || !months || !(price > 0)) return res.status(400).json({ ok: false, error: 'ยังไม่เปิดรับสมาชิกแบบนี้' });
-    if (life) { const q = await createQrPayment({ amount: price, email: me, description: 'SheetLab VIP ตลอดชีพ', metadata: { vip: '1', months: 'life', productId: 'vip', productName: 'SheetLab VIP ตลอดชีพ' } }); return res.status(200).json({ ok: true, ...q }); }
-    const q = await createQrPayment({ amount: price, email: me, description: `SheetLab VIP ${months} เดือน`, metadata: { vip: '1', months: String(months), productId: 'vip', productName: `SheetLab VIP ${months} เดือน` } });
+    if (life) { const q = await createQrPayment({ amount: price, email: me, description: 'SheetLab Pro ตลอดชีพ', metadata: { vip: '1', months: 'life', productId: 'vip', productName: 'SheetLab Pro ตลอดชีพ' } }); return res.status(200).json({ ok: true, ...q }); }
+    const q = await createQrPayment({ amount: price, email: me, description: `SheetLab Pro ${months} เดือน`, metadata: { vip: '1', months: String(months), productId: 'vip', productName: `SheetLab Pro ${months} เดือน` } });
     return res.status(200).json({ ok: true, ...q });
   }
   if (m === 'vip_cancel') { // ยกเลิกการตัดบัตรรอบถัดไป ใช้ได้จนหมดรอบที่จ่ายแล้ว
@@ -169,7 +170,7 @@ async function vip(req, res, m) {
     await V.putMember({ email: me, cancel_at: at }); return res.status(200).json({ ok: true, cancelAt: at });
   }
   if (['vip_mark', 'vip_marks', 'vip_mistakes', 'vip_mock'].includes(m)) {
-    if (!(await unlockedOf(me))) return res.status(403).json({ ok: false, error: 'สำหรับสมาชิก VIP' });
+    if (!(await unlockedOf(me))) return res.status(403).json({ ok: false, error: 'สำหรับสมาชิก Pro' });
     if (m === 'vip_mark') {
       const quiz = String(b.quiz || ''), q = Number(b.q);
       if (!/^[a-z0-9-]{3,80}$/.test(quiz) || !(q >= 0 && q < 50)) return res.status(400).json({ ok: false });

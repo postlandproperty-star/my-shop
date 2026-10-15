@@ -3,7 +3,7 @@
   คำ:  vocab/w/<slug>.jpg  (เฉพาะคำนาม กริยา คุณศัพท์)  ·  ปกบท: vocab/u/<level>-<id>.jpg
 แล้วติดธง img=1 ใน src/vocab/<level>.json · รันซ้ำได้ (ข้ามรูปที่มีบน R2 แล้ว)
 ใช้: python3 tools/vocab/images.py [a1 a2 b1 b2] [--limit N]"""
-import io, json, re, sys, threading, urllib.request
+import io, json, re, sys, threading, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from PIL import Image
@@ -31,10 +31,11 @@ def fal(prompt):
 def job(key, prompt, mark):
     try:
         if not r2.exists(key):
-            for i in range(2):
+            for i in range(6): # 429 = fal จำกัดความถี่ รอแล้วลองใหม่ (เพิ่มเวลารอทีละขั้น)
                 try: r2.put_bytes(fal(prompt), key, 'image/jpeg'); break
                 except Exception as e:
-                    if i: raise
+                    if i == 5 or '429' not in str(e) and i: raise
+                    time.sleep(5 * (i + 1))
         with lock: mark()
         return 1
     except Exception as e:
@@ -52,7 +53,7 @@ def run(levels, limit):
                 tasks.append((f'vocab/w/{slug(x["w"])}.jpg', f'{STYLE} Scene: {x["ex"].rstrip(".")}. ({x["def"].rstrip(".")})', (lambda x=x: x.__setitem__('img', 1))))
         tasks = tasks[:limit] if limit else tasks
         print(lv, len(tasks), 'images', flush=True); n = 0
-        with ThreadPoolExecutor(16) as ex:
+        with ThreadPoolExecutor(4) as ex:
             for i, ok in enumerate(ex.map(lambda t: job(*t), tasks)):
                 n += ok
                 if i % 50 == 49:
