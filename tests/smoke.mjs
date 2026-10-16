@@ -248,6 +248,11 @@ try {
           const A = [...document.querySelectorAll('#listen audio')], r = { n: A.length, lazy: A.every((x) => x.preload === 'none'), btn: !!document.querySelector('a[href="#listen"]'), txt: (document.querySelector('#listen .fine') || {}).textContent || '', bad: A.some((x) => !/^https:/.test(x.getAttribute('src'))) };
           me.audioDemo = keep; render(true); r.gone = !document.querySelector('#listen'); return r; }, p.id);
         pass(`[${kind}] หน้าขายเล่ม: มีไฟล์เสียง → กล่อง 🎧 ฟังตัวอย่าง (ไม่เกิน 3 แทร็ก · ไม่โหลดไฟล์จนกดเล่น · ปุ่มบนไปที่กล่อง · ลิงก์แปลกไม่ขึ้น) · ไม่มีไฟล์เสียง = ไม่มีกล่อง`, au.n === 3 && au.lazy && au.btn && /3 จาก 40/.test(au.txt) && !au.bad && au.gone, au); }
+      if (p.type === 'bundle') { const au = await page.evaluate(async (pid) => { const set = D.products.find((x) => x.id === pid), B = (set.items || []).map((id) => D.products.find((x) => x.id === id)).filter(Boolean), keep = B.map((b) => b.audioDemo);
+          B.forEach((b, i) => { b.audioDemo = i < 2 ? { n: 10 + i, t: [{ u: `https://r2.test/b${i}.mp3`, l: 'แทร็ก 1' }] } : undefined; }); render(true); await new Promise((r) => setTimeout(r, 50));
+          const A = [...document.querySelectorAll('#listen audio')], r = { books: B.length, n: A.length, lazy: A.every((x) => x.preload === 'none'), btn: !!document.querySelector('a[href="#listen"]'), txt: (document.querySelector('#listen .fine') || {}).textContent || '' };
+          B.forEach((b, i) => { b.audioDemo = keep[i]; }); render(true); r.gone = !document.querySelector('#listen') || keep.some(Boolean); return r; }, p.id);
+        pass(`[${kind}] หน้าขายชุด: เล่มในชุดมีไฟล์เสียง → กล่อง 🎧 ฟังตัวอย่าง (แทร็กแรกของแต่ละเล่ม · ไม่โหลดจนกดเล่น · ปุ่มบนไปที่กล่อง · รวมจำนวนแทร็ก)`, au.books < 2 || (au.n === 2 && au.lazy && au.btn && /รวม 21 แทร็ก/.test(au.txt) && au.gone), au); }
       await page.locator('#checkout').scrollIntoViewIfNeeded().catch(() => {});
       await layout(page, `[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}`);
       if (p.type !== 'bundle') { const sk = await page.evaluate(async (pid) => { const w = (ms) => new Promise((r) => setTimeout(r, ms)), me = D.products.find((x) => x.id === pid), other = D.products.find((x) => x.id !== pid && cartOk(x) && Number(x.price) !== Number(me.price));

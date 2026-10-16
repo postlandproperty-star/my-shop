@@ -2433,7 +2433,7 @@ function bundleView(p){
       <div class="sp-perks"><span>⚡ รับไฟล์ทุกเล่มทันทีหลังชำระเงิน</span><span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${pvN?`<span>👀 ดูตัวอย่างได้ ${pvN} เล่ม</span>`:''}</div>
       <div class="hero-cta">
         <button class="btn btn-buy" data-a="toCheckout">${plans.length>1?'ดูแพ็กเกจและสั่งซื้อ':'สั่งซื้อและรับไฟล์ทันที'}</button>
-        ${pvN?`<a class="btn btn-line" href="#bx-preview">ดูตัวอย่างเนื้อหา</a>`:''}
+        ${pvN?`<a class="btn btn-line" href="#bx-preview">ดูตัวอย่างเนื้อหา</a>`:''}${books.some(b=>b.audioDemo&&b.audioDemo.n)?`<a class="btn btn-line" href="#listen">🎧 ฟังตัวอย่างเสียง</a>`:''}
       </div>
       ${payLogos(0)}
     </div>
@@ -2458,6 +2458,9 @@ function bundleView(p){
       <div class="bx-pvtabs">${books.map((b,i)=>`<button data-a="bxPv" data-v="${i}" aria-pressed="${i===pvSel}">เล่ม ${i+1}</button>`).join('')}</div>
       <div class="bx-pv">${pv.length?pv.map((u,k)=>`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer"><img src="${esc(u)}" width="1100" height="1556" loading="lazy" alt="หน้าตัวอย่างที่ ${k+1} ของ ${esc(books[pvSel].name)}"></a>`).join(''):`<div class="bx-empty"><b>${esc(books[pvSel]?books[pvSel].name:'')}</b><br>ยังไม่มีหน้าตัวอย่างของเล่มนี้</div>`}</div>
     </section>
+    ${(()=>{const L=books.map(b=>({b,x:b.audioDemo&&Array.isArray(b.audioDemo.t)?b.audioDemo.t.find(x=>x&&/^https:\/\//.test(x.u)):null})).filter(y=>y.x),all=L.reduce((a,y)=>a+(Number(y.b.audioDemo.n)||0),0); // 🎧 ชุด: แทร็กแรกของแต่ละเล่มที่มีเสียง (ไม่เกิน 3 เล่ม · โหลดเมื่อกดเล่น)
+      return L.length?`<section class="bx-sec" id="listen"><h2>🎧 ฟังตัวอย่างไฟล์เสียง</h2><p class="fine" style="margin:4px 0 10px">ในชุดมี ${L.length} เล่มที่มีไฟล์เสียง รวม ${all} แทร็ก · ซื้อแล้วสแกน QR ในเล่มฟังบนมือถือได้ทันที ไม่ต้องโหลดแอป</p>
+      <div class="lsn">${L.slice(0,3).map(y=>`<div class="lsn-row"><b>${esc(String(y.b.name).replace(/\s+/g,' ').slice(0,48))}</b><span class="fine">${esc(y.x.l)}</span><audio controls preload="none" controlslist="nodownload" src="${esc(y.x.u)}"></audio></div>`).join('')}</div></section>`:'';})()}
 
     <section class="bx-sec" id="checkout"><h2>เลือกแพ็กเกจ</h2>
       ${plans.length?`<div class="bx-plans">${plans.map(x=>`<button class="bx-plan" data-a="bxPlan" data-slug="${esc(p.slug)}" data-v="${x.key}" aria-pressed="${sel&&sel.key===x.key}">${x.key===p.planDefault&&plans.length>1?'<span class="bx-best">คุ้มที่สุด</span>':''}<h3>${esc(x.name)}</h3><div class="bx-pp">${baht(x.price)}${x.fullPrice>x.price?` <s>${baht(x.fullPrice)}</s>`:''}</div><ul>${lines2(x.features).map(f=>`<li>${esc(f)}</li>`).join('')}</ul></button>`).join('')}</div>`:'<p class="fine">ยังไม่ได้ตั้งราคาแพ็กเกจ</p>'}
