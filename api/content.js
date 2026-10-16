@@ -1783,7 +1783,7 @@ ${books}`;
         if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบโพสต์' });
         const op = String(body.op || '');
         if (typeof body.text === 'string' && body.text.trim() && body.text.trim() !== x.text) { x.text = body.text.trim().slice(0, 2200); x.edited = true; }
-        if ('scheduled_at' in body) x.scheduled_at = body.scheduled_at ? String(body.scheduled_at) : null;
+        if ('scheduled_at' in body) { const t = Date.parse(body.scheduled_at || ''); x.scheduled_at = body.scheduled_at && t ? new Date(t).toISOString() : null; if (x.status === 'failed') { x.status = 'approved'; delete x.error; } } // ตั้งเวลาใหม่ให้โพสต์ที่ล้มเหลว = นัดโพสต์ใหม่
         if (typeof body.owner_note === 'string') x.owner_note = body.owner_note.slice(0, 300);
         if (op === 'approve') x.status = 'approved';
         else if (op === 'reject') x.status = 'rejected';
