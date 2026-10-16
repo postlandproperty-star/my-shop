@@ -5667,8 +5667,11 @@ function adfModel(){
   const names=sales.flatMap(x=>(x.tags||[]).concat(String(x.name).toLowerCase())),since=Math.min(...sales.map(x=>Date.parse(x.start)||Date.now()));
   const real=(D.orders||[]).filter(o=>o.status==='paid'&&o.campaign&&names.includes(String(o.campaign).toLowerCase())&&o.created>=since-864e5);
   const recent=(D.orders||[]).filter(o=>o.status==='paid'&&o.created>Date.now()-60*864e5&&o.amount>0);
+  const rv=real.reduce((a,o)=>a+o.amount,0);
+  // ใช้ออเดอร์จริงที่มาจากแอด (ร้านนับเอง) แทนตัวเลข Facebook ถ้ามีพอ · Facebook นับซ้ำ/นับคนที่เห็นแอดแล้วซื้อทีหลัง เคยนับ 78 ครั้ง ขณะที่ร้านได้จริง 35 (16 ต.ค. 69 ประเมินเกินจริง 2 เท่า)
+  if(real.length>=5)return {sales,clicks,spend,n:real.length,val:rv,fbN:n,daily,real:{n:real.length,v:rv},aov:rv/real.length,aovSrc:`ออเดอร์จริงจากแอด ${real.length} รายการ`,src:'shop'};
   const aov=recent.length>=5?recent.reduce((a,o)=>a+o.amount,0)/recent.length:n&&val?val/n:179;
-  return {sales,clicks,spend,n,val,daily,real:{n:real.length,v:real.reduce((a,o)=>a+o.amount,0)},aov,aovSrc:recent.length>=5?`ออเดอร์จริง ${recent.length} รายการ 60 วันล่าสุด`:'ที่ Facebook นับ'};
+  return {sales,clicks,spend,n,val,fbN:n,daily,real:{n:real.length,v:rv},aov,aovSrc:recent.length>=5?`ออเดอร์จริง ${recent.length} รายการ 60 วันล่าสุด`:'ที่ Facebook นับ',src:'fb'};
 }
 function adfCalc(m,budget,days){
   const c=m.spend/m.n,z=1.645,lo=Math.max(.5,m.n-z*Math.sqrt(m.n)),extra=m.n<20?1.5:m.n<50?1.25:1.1;
@@ -5696,7 +5699,7 @@ function adsForecast(){
   if(!m.n)return `<section class="card" style="margin-top:14px">${head}</div><p class="fine">ยังไม่มีการซื้อที่วัดได้จากแอด (ใช้ไป ${money(m.clicks.reduce((a,x)=>a+x.spendTHB,0))}) ประเมินไม่ได้ รอให้มีคนซื้อผ่านแอดก่อน</p></section>`;
   const conf=m.n<20?['red','🔴 ข้อมูลน้อย','ช่วงที่ประเมินยังกว้าง']:m.n<50?['amber','🟡 พอใช้','']:['green','🟢 แม่น',''];
   const cl=m.clicks.reduce((a,x)=>({s:a.s+x.spendTHB,p:a.p+x.purchases}),{s:0,p:0});
-  return `<section class="card adf" style="margin-top:14px">${head}<span class="adf-conf adf-${conf[0]}">${conf[1]} · จาก ${m.n} การซื้อ${conf[2]?' · '+conf[2]:''}</span></div>
+  return `<section class="card adf" style="margin-top:14px">${head}<span class="adf-conf adf-${conf[0]}">${conf[1]} · จาก ${m.n} ${m.src==='shop'?'ออเดอร์จริงในร้าน':'การซื้อที่ Facebook นับ'}${conf[2]?' · '+conf[2]:''}</span></div>${m.src==='shop'&&m.fbN>m.n?`<p class="fine" style="margin:4px 0 0">Facebook นับว่าขายได้ ${m.fbN} ครั้ง แต่ออเดอร์จริงที่จ่ายเงินในร้านจากแอดมี ${m.n} รายการ (ค่าแอดรวม ${money(m.spend)} · ได้จริง ${money(m.real.v)}) จึงคิดจากตัวเลขจริง</p>`:''}
     <div class="adf-in"><label>ค่าแอด (บาท)<input class="input" type="number" inputmode="numeric" min="0" step="100" value="${esc(ADF.budget)}" data-adf="budget"></label>
       <label>ใน<select class="input" data-adf="days">${[3,7,14,30].map(d=>`<option value="${d}" ${ADF.days==d?'selected':''}>${d} วัน</option>`).join('')}</select></label>
       <div class="adf-pre">${[700,1000,3000,5000].map(v=>`<button class="chip" data-a="adfSet" data-v="${v}">${money(v)}</button>`).join('')}</div></div>
