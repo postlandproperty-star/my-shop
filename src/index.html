@@ -719,6 +719,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .sp-up{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:10px 14px;border:1.5px dashed var(--brand);border-radius:12px;background:color-mix(in srgb,var(--brand) 7%,var(--surface));color:var(--ink);text-decoration:none;font-size:15px;line-height:1.45}.sp-up b{color:var(--brand)}.sp-up em{font-style:normal;margin-left:auto;white-space:nowrap;font-weight:600;color:var(--brand)}
 .sp-info .hero-cta{margin-top:6px}.sp-info .proof{color:var(--muted)}
 /* preview pages */
+.lsn{display:grid;gap:10px;max-width:640px}.lsn-row{display:grid;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface,#fff)}.lsn-row b{font-size:16px}.lsn-row audio{width:100%;height:40px}
 .pv{display:grid;gap:14px;max-width:560px;margin:0 auto}
 .pvp{display:block;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;padding:0;box-shadow:0 4px 14px rgba(15,27,51,.08);position:relative}
 .pvp img{display:block;width:100%;height:auto}
@@ -2735,6 +2736,7 @@ function shopView(){
   if(!faqs.length)faqs=[['ได้รับไฟล์เมื่อไหร่','ทันทีที่ชำระเงินสำเร็จ ลิงก์จะขึ้นในหน้าถัดไปและส่งไปที่อีเมลของคุณ'],['ถ้าไม่ได้รับอีเมลต้องทำอย่างไร','ตรวจสอบโฟลเดอร์สแปมก่อน หากยังไม่พบ ติดต่อทีมงานพร้อมเลขออเดอร์ เราส่งลิงก์ให้ใหม่ได้ทันที']];
   const imgs=p.images||[];
   const prev=p.previews||[];
+  let lsn=p.audioDemo&&Array.isArray(p.audioDemo.t)?{n:Number(p.audioDemo.n)||0,t:p.audioDemo.t.filter(x=>x&&/^https:\/\//.test(x.u)).slice(0,3)}:null;if(lsn&&!lsn.t.length)lsn=null; // 🎧 ตัวอย่างเสียง (ใส่จากเซิร์ฟเวอร์ · ไฟล์โหลดเมื่อกดเล่น)
   loadSold();const sold=(SOLD&&SOLD[p.id])||0;
   const off=p.fullPrice>p.price?Math.round((1-p.price/p.fullPrice)*100):0;
   const live=p.promoEnd&&p.promoEnd>Date.now();
@@ -2767,7 +2769,7 @@ function shopView(){
       <div class="sp-perks">${kind==='course'?'<span>🎓 เข้าเรียนได้ทันทีหลังชำระเงิน</span><span>📱 เรียนบนมือถือหรือคอม</span><span>📈 ดูความคืบหน้าได้</span>':'<span>⚡ รับไฟล์ทันทีหลังชำระเงิน</span>'}<span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${prev.length?`<span>👀 ดูตัวอย่างได้ ${prev.length} หน้า</span>`:''}</div>
       <div class="hero-cta">
         <button class="btn btn-buy" data-a="toCheckout">${kind==='course'?'สมัครเรียนและเข้าเรียนทันที':'สั่งซื้อและรับไฟล์ทันที'}</button>
-        ${prev.length?`<a class="btn btn-line" href="#preview">ดูตัวอย่างเนื้อหา</a>`:''}
+        ${prev.length?`<a class="btn btn-line" href="#preview">ดูตัวอย่างเนื้อหา</a>`:''}${lsn?`<a class="btn btn-line" href="#listen">🎧 ฟังตัวอย่างเสียง</a>`:''}
         ${p.sampleLink||kind==='course'&&crsHasPv(p)?(kind==='course'&&crsHasPv(p)?`<a class="btn btn-line" href="#crs-preview">▶ ดูตัวอย่างฟรี</a>`:`<a class="btn btn-line" href="${esc(p.sampleLink)}" target="_blank" rel="noopener noreferrer">${kind==='course'?'▶ ดูบทเรียนตัวอย่างฟรี':'ดาวน์โหลดตัวอย่างฟรี'}</a>`):''}
       </div>
       ${setUpsell(p)}
@@ -2794,6 +2796,11 @@ function shopView(){
 
   ${kind==='course'?crsCurriculum(p):''}
 
+  ${lsn?`<section class="section" id="listen"><div class="wrap">
+    <h2>🎧 ฟังตัวอย่างไฟล์เสียง</h2>
+    <p class="fine" style="margin:-8px 0 12px">ตัวอย่าง ${lsn.t.length} จาก ${lsn.n} แทร็ก · ซื้อแล้วได้ครบทุกแทร็ก สแกน QR ในเล่มฟังบนมือถือได้ทันที ไม่ต้องโหลดแอป</p>
+    <div class="lsn">${lsn.t.map(x=>`<div class="lsn-row"><b>${esc(x.l)}</b><audio controls preload="none" controlslist="nodownload" src="${esc(x.u)}"></audio></div>`).join('')}</div>
+  </div></section>`:''}
   ${prev.length?`<section class="section" id="preview"><div class="wrap">
     <h2>ดูตัวอย่างเนื้อหา</h2>
     <p class="fine" style="margin:-8px 0 12px">หน้าจริงจากไฟล์ ${prev.length} หน้า กดที่หน้าเพื่อขยาย</p>

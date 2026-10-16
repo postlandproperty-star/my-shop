@@ -66,6 +66,9 @@ function pubProducts(products, focus = null) {
     return o;
   });
 }
+// 🎧 ใส่ตัวอย่างเสียง 3 แทร็กแรกให้เล่มที่มีไฟล์เสียงบน R2 (รายชื่อแทร็กจาก shop_state audio_lib · แคช 5 นาที)
+const loadAudioLib = () => cached('audio-lib', 300e3, () => sbSelect('shop_state?id=eq.audio_lib&select=data').then((r) => r?.[0]?.data || {})).catch(() => ({}));
+const withAudio = (list, lib) => list.map((x) => { const b = !x._lite && x.sku && (lib.books || {})[String(x.sku).toUpperCase()], d = b && AP.demoOf(b); return d ? { ...x, audioDemo: d } : x; });
 const focusOf = (products, slug) => { const p = /^[a-z0-9-]+$/.test(slug) ? products.find((x) => x.slug === slug && x.status === 'published') : null; return new Set(p ? [p.id, ...(p.items || []), ...(p.bonusIds || []), p.bumpProductId].filter(Boolean) : []); };
 
 export default async function handler(req, res) {
@@ -214,9 +217,9 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     return res.status(200).send(accountPage({ settings: shop.settings, site: NEW_SITE, vocab: VT }));
   }
   if (req.query.shopfull === '1') { // ข้อมูลสินค้าเต็ม (สาธารณะ) ให้หน้าเว็บโหลดตามหลังเมื่อเปิดดูเล่มอื่น
-    const shop = await loadShop();
+    const [shop, alib] = await Promise.all([loadShop(), loadAudioLib()]);
     res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=10, stale-while-revalidate=60');
-    return res.status(200).send(JSON.stringify({ products: pubProducts(shop.products) }));
+    return res.status(200).send(JSON.stringify({ products: withAudio(pubProducts(shop.products), alib) }));
   }
   const vocabQ = String(req.query.vocab || '');
   if (vocabQ) { // 📚 คำศัพท์ 3000 คำที่ต้องรู้ (lib/vocab.js): /vocab /vocab/a1 /vocab/a1/3 /vocab/review?k=a1.3,a2.1 · ฟรี FREE_UNITS บทแรกของทุกระดับ บทที่เหลือ = VIP
@@ -338,6 +341,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   try {
     const shop = await loadShop();
     // แท็กยืนยันโดเมนกับ Meta (Facebook) ต้องอยู่ใน HTML ดิบของทุกหน้า รวมหน้าแรก
+    const audP = slug ? loadAudioLib() : null; // เริ่มโหลดพร้อมกับข้อมูลอื่น (หน้าขายเท่านั้น)
     const verify = String(shop.settings.fbDomainVerify || '').trim();
     if (/^[A-Za-z0-9_-]{5,100}$/.test(verify)) {
       out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
@@ -349,7 +353,8 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
     const topics = TOPICS.map((t) => { const it = topicItems(t, { articles: ar, quizzes: qz, products: shop.products }); return topicReady(it) ? { slug: t.slug, name: t.name, n: topicCount(it) } : null; }).filter(Boolean); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว (หน้าร้านโชว์เป็นทางลัด)
-    const inline = JSON.stringify({ products: pubProducts(shop.products, focusOf(shop.products, slug)), settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
+    const alib = slug ? await audP : {};
+    const inline = JSON.stringify({ products: withAudio(pubProducts(shop.products, focusOf(shop.products, slug)), alib), settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
     out = out.replace('<!--SHOP-DATA-->', `<script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';

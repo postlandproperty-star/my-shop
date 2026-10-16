@@ -243,6 +243,11 @@ try {
       pass(`[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}: แถบบนมีปุ่ม "ดูสินค้าทั้งหมด" ไป /store`, await page.locator('.sp-topbar a[href="/store"]').count() === 1);
       if (p.type !== 'bundle') { const up = await page.evaluate((pid) => { const sets = D.products.filter((b) => b.type === 'bundle' && b.status === 'published' && (b.items || []).includes(pid) && b.items.length > 1 && b.price / b.items.length < D.products.find((x) => x.id === pid).price); const a = document.querySelector('.sp-up'); return { want: sets.length > 0, has: !!a, href: a ? a.getAttribute('href') : '', ok: !a || sets.some((b) => a.getAttribute('href') === '/p/' + b.slug) }; }, p.id);
         pass(`[${kind}] หน้าขายเล่ม: เล่มที่อยู่ในชุดมีป้าย 📦 คุ้มกว่า ลิงก์ไปหน้าชุด (ไม่อยู่ในชุด = ไม่มีป้าย)`, up.want === up.has && up.ok, JSON.stringify(up)); }
+      if (p.type !== 'bundle') { const au = await page.evaluate(async (pid) => { const me = D.products.find((x) => x.id === pid), keep = me.audioDemo;
+          me.audioDemo = { n: 40, t: [1, 2, 3, 4].map((i) => ({ u: i === 3 ? 'javascript:x' : `https://r2.test/a${i}.mp3`, l: 'แทร็ก ' + i })) }; render(true); await new Promise((r) => setTimeout(r, 50));
+          const A = [...document.querySelectorAll('#listen audio')], r = { n: A.length, lazy: A.every((x) => x.preload === 'none'), btn: !!document.querySelector('a[href="#listen"]'), txt: (document.querySelector('#listen .fine') || {}).textContent || '', bad: A.some((x) => !/^https:/.test(x.getAttribute('src'))) };
+          me.audioDemo = keep; render(true); r.gone = !document.querySelector('#listen'); return r; }, p.id);
+        pass(`[${kind}] หน้าขายเล่ม: มีไฟล์เสียง → กล่อง 🎧 ฟังตัวอย่าง (ไม่เกิน 3 แทร็ก · ไม่โหลดไฟล์จนกดเล่น · ปุ่มบนไปที่กล่อง · ลิงก์แปลกไม่ขึ้น) · ไม่มีไฟล์เสียง = ไม่มีกล่อง`, au.n === 3 && au.lazy && au.btn && /3 จาก 40/.test(au.txt) && !au.bad && au.gone, au); }
       await page.locator('#checkout').scrollIntoViewIfNeeded().catch(() => {});
       await layout(page, `[${kind}] หน้าขาย ${p.type === 'bundle' ? 'ชุด' : 'เล่ม'}`);
       if (p.type !== 'bundle') { const sk = await page.evaluate(async (pid) => { const w = (ms) => new Promise((r) => setTimeout(r, ms)), me = D.products.find((x) => x.id === pid), other = D.products.find((x) => x.id !== pid && cartOk(x) && Number(x.price) !== Number(me.price));
