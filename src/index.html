@@ -716,6 +716,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .paysafe svg{flex:none;margin-top:3px;color:#16a34a}
 .stripe-w{color:#635BFF;font-family:Arial,Helvetica,sans-serif;font-weight:800;letter-spacing:-.3px}
 .sp-perks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0;font-size:14px;color:var(--muted)}
+.sf{margin:12px 0;padding:16px}.sf-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.sf-h b{font-size:17px}.sf-ex{display:flex;gap:6px}.sf-row{display:flex;gap:8px;align-items:end;margin-top:10px}.sf-l{display:grid;gap:3px;flex:1;font-size:13px;color:var(--muted)}.sf-l select{width:100%}.sf-ar{padding-bottom:10px;font-weight:700;color:var(--muted)}.sf-res{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}.sf-why{margin:0 0 10px;font-size:14.5px;line-height:1.55}.sf-ps{display:grid;gap:8px}.sf-p{display:flex;gap:8px;align-items:center;flex:1;min-width:200px;padding:8px;border:1px solid var(--line);border-radius:12px;color:inherit;text-decoration:none;background:var(--surface)}.sf-p img{width:52px;height:52px;object-fit:cover;border-radius:8px}.sf-p span{display:grid;gap:2px;font-size:14px}.sf-p em{font-style:normal;color:#E8432E;font-weight:700}.sf-plus{font-weight:700;font-size:18px;color:var(--muted)}.sf-cta{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 6px}.sf-note{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
 .sp-try{display:flex;align-items:center;gap:10px;margin:6px 0 4px;padding:9px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:inherit;text-decoration:none;font-size:14.5px}.sp-try em{margin-left:auto;font-style:normal;color:var(--brand);font-weight:600;white-space:nowrap}
 .sp-up{display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:10px 14px;border:1.5px dashed var(--brand);border-radius:12px;background:color-mix(in srgb,var(--brand) 7%,var(--surface));color:var(--ink);text-decoration:none;font-size:15px;line-height:1.45}.sp-up b{color:var(--brand)}.sp-up em{font-style:normal;margin-left:auto;white-space:nowrap;font-weight:600;color:var(--brand)}
 .sp-info .hero-cta{margin-top:6px}.sp-info .proof{color:var(--muted)}
@@ -2660,6 +2661,33 @@ function stHead(on,chat){const n=(k,href,l,go)=>`<a href="${href}"${go?' data-go
 function stFoot(chat){return `<footer class="fine st-foot"><b>SheetLab</b><br>${TOPICS_LIVE.length?`<span class="st-ftop">${TOPICS_LIVE.map(t=>`<a href="/topic/${esc(t.slug)}">${esc(t.name)}</a>`).join(' · ')}</span><br>`:''}<a href="/store" data-go="">ร้านค้า</a> · <a href="/free">🎁 ชีทแจกฟรี</a> · <a href="/gov">🏛️ สอบราชการ</a> · ${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/account">บัญชีของฉัน</a> · <a href="/vip">สมาชิก Pro</a> · <a href="/app">📲 แอปฝึกข้อสอบ</a> · <a href="${esc(chat)}" target="_blank" rel="noopener noreferrer">ทักแชท</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a>
     <br><span>TOEIC เป็นเครื่องหมายการค้าจดทะเบียนของ ETS ร้านไม่มีส่วนเกี่ยวข้องหรือได้รับการรับรองจาก ETS</span></footer>`;}
 const catalogView=()=>storeView(true);
+/* 🎯 หาชุดที่ใช่ (คุณแดน 16 ต.ค. 69): ลูกค้าเลือกสอบ + คะแนนตอนนี้ + คะแนนที่ต้องการ → แนะนำชุด (ช่องว่างมาก/เป้าสูง = แพ็กครบที่สุดก่อน) · ไม่การันตีคะแนน */
+const SF_IELTS=['3.5','4.0','4.5','5.0','5.5','6.0','6.5','7.0','7.5','8.0','8.5','9.0'],SF_TOEIC=['ยังไม่เคยสอบ',...Array.from({length:18},(_,i)=>String(100+i*50))];
+function sfPick(slug,re){const L=D.products.filter(p=>p.status==='published'&&cartOk(p));return L.find(p=>p.slug===slug)||L.find(p=>re.test(p.name||''));}
+function scoreFinder(){const f=S.sf||(S.sf={exam:'ielts',cur:'',tgt:''}),ie=f.exam==='ielts',opts=ie?SF_IELTS:SF_TOEIC;
+  const curOpts=ie?['ยังไม่เคยสอบ',...opts.slice(0,-1)]:opts.slice(0,-1),tgtOpts=ie?opts.slice(3):opts.slice(6).concat(['990']).filter((v,i,a)=>a.indexOf(v)===i&&v!=='ยังไม่เคยสอบ');
+  const sel=(k,L,ph)=>`<label class="sf-l"><span>${ph}</span><select class="input" data-sf="${k}">${['',...L].map(v=>`<option value="${esc(v)}" ${f[k]===v?'selected':''}>${v||'เลือก'}</option>`).join('')}</select></label>`;
+  return `<section class="sf card"><div class="sf-h"><b>🎯 หาชุดที่ใช่ใน 10 วินาที</b><div class="sf-ex">${[['ielts','IELTS'],['toeic','TOEIC']].map(([k,l])=>`<button type="button" class="chip" data-a="sfExam" data-v="${k}" aria-pressed="${f.exam===k}">${l}</button>`).join('')}</div></div>
+    <div class="sf-row">${sel('cur',curOpts,'คะแนนตอนนี้')}<span class="sf-ar" aria-hidden="true">→</span>${sel('tgt',tgtOpts,'คะแนนที่อยากได้')}</div>${f.tgt?scoreReco(f):''}</section>`;}
+function scoreReco(f){const ie=f.exam==='ielts',num=v=>v&&v!=='ยังไม่เคยสอบ'?Number(v):null,cur=num(f.cur),tgt=num(f.tgt);if(tgt==null)return '';
+  const gap=cur==null?(ie?2:400):tgt-cur;if(gap<=0)return `<p class="sf-note">คะแนนตอนนี้ถึงเป้าแล้ว 🎉 ลองตั้งเป้าให้สูงขึ้น หรือทำข้อสอบเสมือนจริงรักษาฟอร์ม</p>`;
+  let pick,why,wk;
+  if(ie){const b7=sfPick('ielts-band-7-10-reading-mock-writing-spe',/IELTS Band 7 ครบชุด/i),all=sfPick('ielts-9',/IELTS ครบชุด/i),big=tgt>=7||gap>=1;
+    pick=(big?[b7,all]:[all,b7]).filter(Boolean);if(!big&&pick.length>1&&gap<1)pick=[pick[0],pick[1]];
+    why=big?`จาก ${cur==null?'ยังไม่เคยสอบ':cur} ไป ${tgt} ต้องอัปทั้งพื้นฐาน 4 ทักษะ และเทคนิค Band 7+ (Reading จับเวลา · Writing Task 2 · Speaking) จึงแนะนำใช้ 2 ชุดคู่กัน`:`ขยับอีก ${gap.toFixed(1)} Band ชุดครบ 4 ทักษะพร้อมแพลนอ่าน 45 วันตรงที่สุด อยากได้ Band 7 ในอนาคต เพิ่มชุด Band 7 ได้`;
+    wk=Math.max(4,Math.round(gap/0.5*6));}
+  else{const course=sfPick('toeic-750-course',/TOEIC.*คอร์ส/i),set=sfPick('toeic-750-10',/TOEIC 750\+ ครบชุด/i),big=gap>=150||cur==null||cur<450;
+    pick=(big?[course,set]:[set,course]).filter(Boolean);
+    why=big?`จาก ${cur==null?'ยังไม่เคยสอบ':cur} ไป ${tgt} ควรเรียนเป็นขั้นตอนกับคอร์สวิดีโอ แล้วฝึกข้อสอบจริงจากชุด 10 เล่ม (Listening · Reading · คำศัพท์ · แกรมมาร์)`:`ขยับอีก ${gap} คะแนน ชุด 10 เล่มฝึกครบทุกพาร์ตพอ ถ้าอยากมีคนสอนเป็นขั้นตอน เพิ่มคอร์สได้`;
+    wk=Math.max(3,Math.round(gap/100*5));}
+  if(!pick.length)return '<p class="sf-note">กำลังเตรียมชุดสำหรับเป้านี้ ดูสินค้าทั้งหมดด้านล่างได้เลย</p>';
+  const pr=p=>fromPrice(p),full=p=>{if(isBundle(p)){const s2=bundleBooks(p).reduce((a,b)=>a+(Number(b.price)||0),0);return Math.max(s2,Number(p.fullPrice)||0);}return Math.max(Number(p.fullPrice)||0,pr(p));};
+  const both=pick.length>1,tot=pick.reduce((a,p)=>a+pr(p),0),totFull=pick.reduce((a,p)=>a+full(p),0);
+  const card=p=>`<a class="sf-p" href="/p/${esc(p.slug)}" data-go="${esc(p.id)}">${(p.images||[])[0]?`<img src="${esc(p.images[0])}" alt="" loading="lazy">`:''}<span><b>${esc(p.name)}</b><em>${baht(pr(p))}</em></span></a>`;
+  return `<div class="sf-res"><p class="sf-why">${esc(why)}</p>
+    <div class="sf-ps">${pick.map(card).join('')}</div>
+    <div class="sf-cta"><button type="button" class="btn btn-cta" data-a="sfAdd" data-ids="${esc(pick.map(p=>p.id).join(','))}">🛒 ${both?`เอาทั้ง ${pick.length} อย่าง ${baht(tot)}`:`เอาชุดนี้ ${baht(tot)}`}</button>${both?`<button type="button" class="btn btn-line" data-a="sfAdd" data-ids="${esc(pick[0].id)}">เอาแค่ ${esc(String(pick[0].name).split(/[(·]/)[0].trim().slice(0,30))} ${baht(pr(pick[0]))}</button>`:''}</div>
+    <p class="sf-note">${totFull>tot?`ซื้อแยกทีละเล่มปกติ ${baht(totFull)} · `:''}ได้ไฟล์ทันทีหลังจ่าย เริ่มฝึกได้วันนี้ · ผลจริงขึ้นกับพื้นฐานและเวลาฝึก ไม่การันตีคะแนน</p></div>`;}
 function storeView(catalog){
   loadSold();
   const all=storeItems(),sold=id=>(SOLD&&SOLD[id])||0;
@@ -2707,6 +2735,7 @@ function storeView(catalog){
     <header class="st-shop"><span class="st-shop-logo" aria-hidden="true">SL</span><div class="st-shop-id"><h1>ร้านค้า SheetLab</h1><p>ชีทสรุปเตรียมสอบภาษาอังกฤษ อธิบายภาษาไทย</p></div>
       <div class="st-shop-stats"><div><b>${all.length}</b><span>สินค้า</span></div><div><b>${soldAll>=SOLD_MIN?soldAll.toLocaleString('th-TH'):'ใหม่'}</b><span>${soldAll>=SOLD_MIN?'ขายแล้ว':'เพิ่งเปิดร้าน'}</span></div><div><b>${rc?'★ '+ravg.toFixed(1):'-'}</b><span>${rc?rc+' รีวิว':'ยังไม่มีรีวิว'}</span></div></div>
       <ul class="st-shop-trust"><li>ดูหน้าตัวอย่างก่อนซื้อ</li><li>รับไฟล์ทันทีหลังจ่าย</li><li>ไฟล์มีปัญหา คืนเงินเต็มจำนวน</li></ul></header>
+    ${f==='all'&&!PV?scoreFinder():''}
     <div class="st-bar">${chips.length>1?`<div class="st-tabs" role="group" aria-label="หมวดสินค้า">${chips.map(c=>`<button type="button" data-a="scat" data-v="${c[0]}" aria-pressed="${f===c[0]}">${esc(c[1].replace(/^📦\s*/,''))}</button>`).join('')}</div>`:''}
       ${f!=='bundle'&&shown.length>1?`<div class="st-sort"><span class="fine">เรียงตาม</span>${sb('pop','ยอดนิยม')}${sb('new','ล่าสุด')}<button type="button" data-a="ssort" data-v="${so==='asc'?'desc':'asc'}" aria-pressed="${so==='asc'||so==='desc'}">ราคา ${so==='desc'?'↓':'↑'}</button><span class="fine st-count">${list.length+shownB.length} รายการ</span></div>`:''}</div>
     ${f==='all'&&BNR.length?`<section class="bst-slides" aria-label="โปรโมชันร้าน">${BNR.map(x=>`<button type="button" class="bst-slide" data-a="scat" data-v="${esc(x.to||'all')}" aria-label="${esc(x.alt||'ดูสินค้า')}"><img src="${esc(x.img)}" alt="${esc(x.alt||'')}" width="2000" height="1000" loading="lazy"></button>`).join('')}</section>`:''}
@@ -7009,6 +7038,9 @@ function act(a,el){
     case 'exportOne':{const p=getProduct(el.dataset.id);if(p)exportCsv(p);break;}
     case 'exportOneImgs':{const p=getProduct(el.dataset.id);if(p&&!S.zipBusy)exportImgs(p);break;}
     case 'facAiToggle':FAC.aiOff=Object.assign(FAC.aiOff||{},{[el.dataset.id]:!el.checked});break;
+    case 'sfExam':S.sf=Object.assign(S.sf||{},{exam:el.dataset.v,cur:'',tgt:''});render(true);break;
+    case 'sfAdd':{const ids=String(el.dataset.ids||'').split(',').filter(Boolean);let n=0;for(const x of ids){const p=D.products.find(y=>y.id===x);if(!cartOk(p)||CART.includes(x))continue;CART.push(x);n++;track('AddToCart',{content_name:p.name,value:fromPrice(p),currency:'THB',content_ids:[x]});}
+      CART=CART.slice(-20);cartSave();S.cart=true;drawCart._f=false;drawCart();toast(n?`เพิ่มลงตะกร้า ${n} อย่างแล้ว`:'อยู่ในตะกร้าแล้ว');break;}
     case 'cartAdd':case 'cartAddIn':{const p=D.products.find(x=>x.id===id);if(!cartOk(p))break;if(!CART.includes(id)){if(cartCovered(id)){toast('เล่มนี้อยู่ในชุดที่เพิ่มไว้แล้ว');S.cart=true;drawCart._f=false;drawCart();break;}CART.push(id);CART=CART.slice(-20);cartSave();track('AddToCart',Object.assign({content_name:p.name,value:cartPrice(p),currency:'THB'},S.src?{campaign:S.src}:{}));}
       // กดเพิ่มแล้วเปิดหน้าต่าง "✓ เพิ่มแล้ว" + แนะนำเล่มอื่น + ปุ่มชำระเงิน (แบบ Shopee) อยู่หน้าเดิม ไม่พาไปไหน
       S.cartJust=id;S.cart=true;if(a==='cartAdd')drawCart._f=false;render(true);drawCart();break;}
@@ -7585,6 +7617,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('scroll',e=>{const t=e.target;if(t&&t.id==='sp-car'){const c=document.getElementById('sp-count');if(c){const n=t.children.length;const i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));c.textContent='📷 '+(Math.min(n,i+1))+'/'+n;}const th=document.querySelectorAll('#sp-thumbs .sp-th');const ii=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));th.forEach((b,k)=>b.classList.toggle('on',k===ii));}},true);
 document.addEventListener('change',e=>{
   const t=e.target;
+  if(t.dataset&&t.dataset.sf){S.sf=S.sf||{exam:'ielts'};S.sf[t.dataset.sf]=t.value;render(true);if(t.dataset.sf==='tgt'||S.sf.tgt)track('sfReco',{});return;}
   if(t.dataset&&t.dataset.bxfile){const id=t.dataset.bxfile,f=t.files&&t.files[0];t.value='';const b=getProduct(id);if(!f||!b)return;if(f.size>45*1024*1024){toast('ไฟล์ใหญ่เกิน 45 MB');return;}
     if(!confirm(`เปลี่ยนไฟล์ของ "${b.name}" เป็น ${f.name}?\nลูกค้าที่ซื้อหลังจากนี้จะได้ไฟล์ใหม่`))return;S.bxFile=id;render(true);
     authFetch('/api/content?action=file_uploadurl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:f.name})}).then(async u=>{if(!u||!u.ok)throw new Error((u&&u.error)||'ขอที่อัปโหลดไม่ได้');const put=await fetch(u.upload_url,{method:'PUT',headers:{'Content-Type':'application/pdf','x-upsert':'true'},body:f});if(!put.ok)throw new Error('อัปโหลดไม่สำเร็จ ('+put.status+')');b.link=u.file_url;save();toast('เปลี่ยนไฟล์แล้ว');})
