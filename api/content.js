@@ -603,10 +603,12 @@ async function autopilotRun({ dry = false, cfg = null } = {}) {
   const since = new Date(Date.now() - 14 * 864e5).toISOString();
   const [ords, priv] = await Promise.all([sb(`orders?status=eq.paid&paid_at=gte.${since}&select=campaign,amount,paid_at,email&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
   const isTest = testOrder(null, priv?.[0]?.data?.testEmails), real = (ords || []).filter((o) => !isTest(o) && o.campaign);
-  const m0 = new Date(Date.now() + (daily?.tz ?? 10) * 36e5).toISOString().slice(0, 8) + '01', monthSpent = (daily?.rows || []).filter((r) => r.d >= m0).reduce((x, r) => x + (r.s || 0), 0);
+  const tzh = daily?.tz ?? 10, m0 = new Date(Date.now() + tzh * 36e5).toISOString().slice(0, 8) + '01', on0 = cfg.onAt ? new Date(Date.parse(cfg.onAt) + tzh * 36e5).toISOString().slice(0, 10) : '', from = on0 > m0 ? on0 : m0; // นับยอดใช้ตั้งแต่วันที่เปิด (ถ้าเปิดเดือนนี้)
+  const monthSpent = (daily?.rows || []).filter((r) => r.d >= from).reduce((x, r) => x + (r.s || 0), 0);
   const camps = campaignsOf(st, real, daily), plan = planBudget(cfg, camps, { monthSpent });
   const brief = (c) => ({ id: c.id, name: c.name, daily: c.dailyTHB, spend7: Math.round(c.spend7), orders7: c.orders7, rev7: c.rev7, roas7: c.roas7 == null ? null : Math.round(c.roas7 * 100) / 100, running: c.running, end: c.end, ctr7: c.ctr7, ctrPrev: c.ctrPrev });
   const acts = plan.actions.map((a) => ({ type: a.type, id: a.c.id, name: a.c.name, from: a.from, to: a.to, days: a.days, why: a.why }));
+  if (dry && !cfg.on) { const p2 = planBudget({ ...cfg, onAt: new Date().toISOString() }, camps, { monthSpent: (daily?.rows || []).filter((r) => r.d >= new Date(Date.now() + tzh * 36e5).toISOString().slice(0, 10)).reduce((x, r) => x + (r.s || 0), 0) }); plan.actions = p2.actions; plan.notes = p2.notes; plan.info = p2.info; } // ดูแผนตอนยังปิด = ถ้าเปิดวันนี้
   if (dry) return { ok: true, dry: true, info: plan.info, actions: acts, notes: plan.notes.map((n) => n.text), camps: camps.map(brief) };
   const now = Date.now(), done = [];
   for (const a of plan.actions) {
@@ -3537,7 +3539,7 @@ ${books}`;
       if (action === 'ads_auto_pilot_set') { // 🤖 เปิด/ปิด · งบเดือน · บูสต์ (เฉพาะคุณแดน · เงิน)
         if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
         const cfg = await loadAP(); const was = !!cfg.on;
-        if (typeof body.on === 'boolean') cfg.on = body.on;
+        if (typeof body.on === 'boolean') { if (body.on && !cfg.on) cfg.onAt = new Date().toISOString(); cfg.on = body.on; }
         if (body.monthTHB != null) { const m = Math.round(Number(body.monthTHB) || 0); if (m < 1000 || m > 500000) return res.status(400).json({ ok: false, error: 'งบเดือนต้องอยู่ระหว่าง ฿1,000–500,000' }); cfg.monthTHB = m; }
         if (body.boost) { const b = body.boost, x = Math.round(Number(b.extraTHB) || 0), d = Math.round(Number(b.days) || 7); if (!/^\d{6,30}$/.test(String(b.campaignId || '')) || x < 100 || x > 200000 || d < 1 || d > 30) return res.status(400).json({ ok: false, error: 'บูสต์: ใส่เงิน ฿100 ขึ้นไป และ 1–30 วัน' });
           cfg.boosts = [...(cfg.boosts || []).filter((y) => y.campaignId !== String(b.campaignId) && Date.parse(y.end) > Date.now()), { campaignId: String(b.campaignId), name: String(b.name || '').slice(0, 80), extraTHB: x, days: d, baseTHB: Math.round(Number(b.baseTHB) || 0), start: new Date().toISOString(), end: new Date(Date.now() + d * 864e5).toISOString() }]; }
