@@ -884,7 +884,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .adf-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .adf-c{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0;background:var(--bg)}
 .adf-c span{font-size:12px;color:var(--mut,#64748b)}.adf-c b{font-size:20px}.adf-c small{font-size:12px;color:var(--mut,#64748b)}
-.adf-c em{font-style:normal;font-size:13px;font-weight:700}.adf-c em.up{color:#047857}.adf-c em.down{color:#BE123C}
+.adf-c .adf-pc{flex-basis:100%}.adf-c .adf-pc b{font-size:14px;color:var(--ink,#0F1B33)}.adf-c em{font-style:normal;font-size:13px;font-weight:700}.adf-c em.up{color:#047857}.adf-c em.down{color:#BE123C}
 .adf-mid{border-color:#2440E8;box-shadow:0 0 0 1px #2440E8 inset}
 .adf-warn{margin:10px 0 0;padding:8px 12px;border-radius:10px;background:#FFFBEB;border:1px solid #FDE68A;font-size:13px;color:#92400E}
 .adf-src{margin-top:10px}.adf-src summary{cursor:pointer;font-size:13px}
@@ -5685,8 +5685,9 @@ function adfOut(){
   const m=adfModel();if(!m||!m.n)return '';
   const B=Math.max(0,Number(ADF.budget)||0),Dd=Math.max(1,Number(ADF.days)||7);if(!B)return '<p class="fine">ใส่งบก่อน</p>';
   const {r,scale}=adfCalc(m,B,Dd),money=n=>'฿'+Math.round(n).toLocaleString('th-TH'),rng=(a,b)=>a===b?a:a+'–'+b;
-  const col=(k,l)=>{const x=r[k];return `<div class="adf-c adf-${k}"><span>${l}</span><b>${money(x.rev)}</b><small>${Math.round(x.orders)} ออเดอร์ · ต้นทุน ${money(x.cpa)}/ออเดอร์</small><em class="${x.profit>=0?'up':'down'}">${x.profit>=0?'กำไร':'ขาดทุน'} ${money(Math.abs(x.profit))}</em></div>`;};
-  return `<p class="adf-sum">ใส่ค่าแอด <b>${money(B)}</b> ใน ${Dd} วัน (วันละ ${money(B/Dd)}) → คาดว่าได้ <b>${rng(Math.round(r.bad.orders),Math.round(r.good.orders))} ออเดอร์</b> รายได้ประมาณ <b>${money(r.bad.rev)}–${money(r.good.rev)}</b></p>
+  const pc=x=>Math.round(x.rev/B*100),gp=x=>Math.round(x.profit/B*100); // 💯 ลงเท่านี้ได้คืนกี่ % (คุณแดน 16 ต.ค. 69)
+  const col=(k,l)=>{const x=r[k];return `<div class="adf-c adf-${k}"><span>${l}</span><b>${money(x.rev)}</b><small>${Math.round(x.orders)} ออเดอร์ · ต้นทุน ${money(x.cpa)}/ออเดอร์</small><em class="${x.profit>=0?'up':'down'}">${x.profit>=0?'กำไร':'ขาดทุน'} ${money(Math.abs(x.profit))} (${gp(x)>=0?'+':''}${gp(x)}%)</em><small class="adf-pc">ได้คืน <b>${pc(x)}%</b> ของค่าแอด · ลง ฿100 ได้คืน ${money(x.rev/B*100)}</small></div>`;};
+  return `<p class="adf-sum">ใส่ค่าแอด <b>${money(B)}</b> ใน ${Dd} วัน (วันละ ${money(B/Dd)}) → คาดว่าได้ <b>${rng(Math.round(r.bad.orders),Math.round(r.good.orders))} ออเดอร์</b> รายได้ประมาณ <b>${money(r.bad.rev)}–${money(r.good.rev)}</b> = ได้คืน <b>${pc(r.bad)}–${pc(r.good)}%</b> ของค่าแอด (เกิน 100% = ได้เงินมากกว่าที่ลง)</p>
     <div class="adf-cols">${col('bad','แบบแย่')}${col('mid','แบบกลาง (น่าจะเป็น)')}${col('good','แบบดี (เท่าตอนนี้)')}</div>
     ${scale>=1.5?`<p class="adf-warn">⚠️ งบวันละ ${money(B/Dd)} มากกว่าที่แอดเคยใช้จริง (วันละ ${money(m.daily)}) ประมาณ ${scale.toFixed(1)} เท่า ยิ่งเพิ่มงบเร็ว ต้นทุนต่อออเดอร์มักแพงขึ้น แนะนำเพิ่มทีละ 20-30% ทุก 3-4 วัน</p>`:''}
     <p class="fine" style="margin:8px 0 0">จุดคุ้มทุน: ต้นทุนต่อออเดอร์ต้องไม่เกิน <b>${money(m.aov)}</b> (ยอดเฉลี่ยต่อออเดอร์ ${m.aovSrc}) ถ้าเกินนี้แอดเริ่มขาดทุน</p>`;
