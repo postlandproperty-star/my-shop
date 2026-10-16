@@ -589,6 +589,45 @@ async function adAlarm({ force = false, dry = false } = {}) {
   for (const [, t] of fresh) await addTodo({ text: `🚨 ${t}`, type: 'do', from: 'manager' }).catch(() => {});
   return { ok: true, red, amber, emailed: true };
 }
+// ยิงแอดจากร่าง (ใช้ทั้งปุ่ม ✅ ตกลง ของคุณแดน และออโต้ไพลอตทดลองชุดใหม่) · คืน { code, json }
+async function launchAutoItem(id, body = {}) {
+  const R = (code, json) => ({ code, json });
+  const items = await loadAdsAuto(); const x = items.find((y) => y.id === String(id || ''));
+  if (!x) return R(404, { ok: false, error: 'ไม่พบแอดนี้' });
+  const fb = await loadFb();
+        if (!['pending', 'failed'].includes(x.status)) return R(400, { ok: false, error: 'แอดนี้ยิงไปแล้ว' });
+        const daily = Math.round(Number(body.dailyTHB) || 0), days = Math.round(Number(body.days) || 0);
+        if (daily < 50 || daily > 2000) return R(400, { ok: false, error: 'งบต่อวันต้องอยู่ระหว่าง ฿50 - ฿2,000' });
+        if (days < 1 || days > 30) return R(400, { ok: false, error: 'จำนวนวันต้อง 1-30 วัน' });
+        const text = String(body.text || x.text).trim().slice(0, 1500), headline = String(body.headline || x.headline).trim().slice(0, 60);
+        const image = /^https:\/\/\S+$/.test(String(body.image || '')) ? String(body.image).slice(0, 500) : x.image;
+        const multi = Array.isArray(body.multi) ? body.multi.filter((u) => /^https:\/\/\S+$/.test(String(u))).map((u) => String(u).slice(0, 500)).slice(0, 4) : (x.multi || []);
+        const platforms = Array.isArray(body.platforms) ? body.platforms.filter((p) => ['facebook', 'instagram', 'threads'].includes(p)) : [];
+        if (text.length < 20) return R(400, { ok: false, error: 'ข้อความแอดสั้นเกินไป' });
+        const acc = await adsAccess(fb);
+        if (!acc.ok) return R(400, { ok: false, error: acc.error, reason: acc.reason });
+        const shop = await loadShop();
+        Object.assign(x, { text, headline, image, multi, platforms, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() });
+        if (shop.products.find((p) => p.id === x.productId)?.kind === 'course') x.description = 'คอร์สวิดีโอ · เรียนได้ทันทีหลังจ่าย'; // ร่างเก่าที่ยังเขียนว่า PDF
+        await saveAdsAuto(items);
+        try {
+          const gp = shop.products.find((p) => p.id === x.productId), gov = isGovProduct(gp, shop.products); // ก.พ. = กลุ่มเป้าหมายสายราชการ + เพจราชการ
+          const govPage = gov ? await loadFb('readlab').catch(() => null) : null;
+          if (gov && !govPage) throw new Error('สินค้า ก.พ. ต้องยิงในนามเพจราชการ แต่ยังไม่ได้เชื่อมเพจ');
+          const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency, audience: gov ? 'gov' : '', page: govPage });
+          const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
+          Object.assign(y, { text, headline, image, platforms: r.platforms, note: r.note || null, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad, ads: r.ads || [r.ad] }, launchImages: r.images || [image], objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
+          await saveAdsAuto(cur);
+          // แคมเปญในหลังบ้านร้าน (ชื่อเดียวกับ utm_campaign) ให้ตารางแคมเปญ/ยอดขายนับตรง
+          try { const pr = await sb('shop_state?id=eq.private&select=data'); const data = pr?.[0]?.data || {}; data.campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
+            if (!data.campaigns.some((c) => c.name === x.campaign)) { data.campaigns.push({ id: 'c' + Date.now().toString(36), name: x.campaign, productId: x.productId, spend: 0, auto: true }); await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' }); } } catch (e) { console.error('ads camp', e.message); }
+          await chatEvent('analyst', pick([`ยิงแอด "${String(x.name).slice(0, 40)}" แล้วครับ งบ ฿${daily}/วัน ${days} วัน เดี๋ยวผมเฝ้าตัวเลขให้`, `แอดสินค้าใหม่วิ่งแล้วครับ ฿${daily}/วัน ผมจะรายงานต้นทุนต่อการซื้อทุกวัน`]), 'ads');
+          return R(200, { ok: true, item: y });
+        } catch (e) {
+          const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id); Object.assign(y, { status: 'failed', error: String(e.message || e).slice(0, 400) }); await saveAdsAuto(cur);
+          return R(400, { ok: false, error: y.error, item: y });
+        }
+      }
 // 🤖 ออโต้ไพลอตแอด (lib/autopilot.js) · cron วันละครั้ง + ตอนคุณแดนกดเปิด · dry = ดูแผนอย่างเดียว ไม่เปลี่ยนอะไร
 const loadAP = async () => ({ ...AP_DEFAULT, ...((await sb('shop_state?id=eq.ad_autopilot&select=data'))?.[0]?.data || {}) });
 const saveAP = (d) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ad_autopilot', data: d, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
@@ -604,11 +643,17 @@ async function autopilotRun({ dry = false, cfg = null } = {}) {
   const [ords, priv] = await Promise.all([sb(`orders?status=eq.paid&paid_at=gte.${since}&select=campaign,amount,paid_at,email&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
   const isTest = testOrder(null, priv?.[0]?.data?.testEmails), real = (ords || []).filter((o) => !isTest(o) && o.campaign);
   const tzh = daily?.tz ?? 10, m0 = new Date(Date.now() + tzh * 36e5).toISOString().slice(0, 8) + '01', on0 = cfg.onAt ? new Date(Date.parse(cfg.onAt) + tzh * 36e5).toISOString().slice(0, 10) : '', from = on0 > m0 ? on0 : m0; // นับยอดใช้ตั้งแต่วันที่เปิด (ถ้าเปิดเดือนนี้)
-  const monthSpent = (daily?.rows || []).filter((r) => r.d >= from).reduce((x, r) => x + (r.s || 0), 0);
-  const camps = campaignsOf(st, real, daily), plan = planBudget(cfg, camps, { monthSpent });
+  const preview = dry && !cfg.on, from2 = preview ? new Date(Date.now() + tzh * 36e5).toISOString().slice(0, 10) : from; // ดูแผนตอนยังปิด = ถ้าเปิดวันนี้
+  const monthSpent = (daily?.rows || []).filter((r) => r.d >= from2).reduce((x, r) => x + (r.s || 0), 0);
+  const camps = campaignsOf(st, real, daily), shop = await loadShop(), items = await loadAdsAuto();
+  for (const c of camps) { const it = items.find((i) => i.fb?.campaign === c.id), pr = it && shop.products.find((x) => x.id === it.productId); if (pr) c.bundle = pr.type === 'bundle'; } // แอดที่ร้านสร้าง: รู้ว่าเป็นชุดหรือเล่มเดี่ยว
+  const plan = planBudget(preview ? { ...cfg, onAt: new Date().toISOString() } : cfg, camps, { monthSpent });
+  // 🧪 ชุดใหม่ที่ยังไม่เคยยิงแอด (ไม่มีร่าง/แอดเดิมของสินค้านี้ · คุณแดนปัดตกร่างไว้ = ไม่ยิง) ราคา ≥ ฿500 มีรูป · ใหม่สุดก่อน
+  const priceOf = (p) => { const pl = (p.plans || []).filter((x) => x && x.on !== false && Number(x.price) >= 1); const d = pl.find((x) => x.key === p.planDefault) || pl[0]; return d ? Number(d.price) : Number(p.price) || 0; };
+  const newSets = shop.products.filter((p) => p.type === 'bundle' && p.status === 'published' && priceOf(p) >= 500 && ((p.images || []).length || p.cover) && !items.some((i) => i.productId === p.id) && !adsTestProduct(p))
+    .sort((a, b) => String(b.publishedAt || '').localeCompare(String(a.publishedAt || ''))).slice(0, plan.newTests?.slots || 0);
   const brief = (c) => ({ id: c.id, name: c.name, daily: c.dailyTHB, spend7: Math.round(c.spend7), orders7: c.orders7, rev7: c.rev7, roas7: c.roas7 == null ? null : Math.round(c.roas7 * 100) / 100, running: c.running, end: c.end, ctr7: c.ctr7, ctrPrev: c.ctrPrev });
-  const acts = plan.actions.map((a) => ({ type: a.type, id: a.c.id, name: a.c.name, from: a.from, to: a.to, days: a.days, why: a.why }));
-  if (dry && !cfg.on) { const p2 = planBudget({ ...cfg, onAt: new Date().toISOString() }, camps, { monthSpent: (daily?.rows || []).filter((r) => r.d >= new Date(Date.now() + tzh * 36e5).toISOString().slice(0, 10)).reduce((x, r) => x + (r.s || 0), 0) }); plan.actions = p2.actions; plan.notes = p2.notes; plan.info = p2.info; } // ดูแผนตอนยังปิด = ถ้าเปิดวันนี้
+  const acts = plan.actions.map((a) => ({ type: a.type, id: a.c.id, name: a.c.name, from: a.from, to: a.to, days: a.days, why: a.why })).concat(newSets.map((p) => ({ type: 'test', name: p.name, to: plan.newTests.dailyTHB, days: 7, why: 'ชุดใหม่ ยังไม่เคยยิงแอด · ทดลอง 7 วัน' })));
   if (dry) return { ok: true, dry: true, info: plan.info, actions: acts, notes: plan.notes.map((n) => n.text), camps: camps.map(brief) };
   const now = Date.now(), done = [];
   for (const a of plan.actions) {
@@ -620,6 +665,13 @@ async function autopilotRun({ dry = false, cfg = null } = {}) {
     } catch (e) { err = String(e.message || e).slice(0, 200); }
     cfg.camp = cfg.camp || {}; cfg.camp[c.id] = { ...(cfg.camp[c.id] || {}), ...(err ? {} : { changedAt: new Date(now).toISOString() }) };
     const line = { at: new Date(now).toISOString(), type: a.type, name: c.name, from: a.from, to: a.to, days: a.days, why: a.why, ...(err ? { err } : {}) };
+    cfg.log = [line, ...(cfg.log || [])].slice(0, 120); done.push(line);
+  }
+  for (const p of newSets) { // 🧪 เริ่มทดลองชุดใหม่: ร่างจากรูป/ข้อความของสินค้าเอง (ไม่ใช้รูป AI) แล้วยิง 7 วัน
+    let err = '';
+    try { const d = await draftAd(p.id, { by: 'autopilot', force: true }); const r = await launchAutoItem(d.item.id, { dailyTHB: plan.newTests.dailyTHB, days: 7 }); if (!r.json.ok) err = r.json.error || 'ยิงไม่สำเร็จ'; }
+    catch (e) { err = String(e.message || e).slice(0, 200); }
+    const line = { at: new Date(now).toISOString(), type: 'test', name: p.name, to: plan.newTests.dailyTHB, days: 7, why: 'เริ่มทดลองชุดใหม่', ...(err ? { err } : {}) };
     cfg.log = [line, ...(cfg.log || [])].slice(0, 120); done.push(line);
   }
   // เตือน (ส่งซ้ำได้ทุก 7 วันต่อเรื่อง) + สรุปทุกวันจันทร์
@@ -3630,38 +3682,7 @@ ${books}`;
         x.status = on ? 'live' : 'paused'; x.updated_at = new Date().toISOString(); await saveAdsAuto(items); return res.status(200).json({ ok: true, item: x });
       }
       if (action === 'ads_auto_launch') {
-        if (!['pending', 'failed'].includes(x.status)) return res.status(400).json({ ok: false, error: 'แอดนี้ยิงไปแล้ว' });
-        const daily = Math.round(Number(body.dailyTHB) || 0), days = Math.round(Number(body.days) || 0);
-        if (daily < 50 || daily > 2000) return res.status(400).json({ ok: false, error: 'งบต่อวันต้องอยู่ระหว่าง ฿50 - ฿2,000' });
-        if (days < 1 || days > 30) return res.status(400).json({ ok: false, error: 'จำนวนวันต้อง 1-30 วัน' });
-        const text = String(body.text || x.text).trim().slice(0, 1500), headline = String(body.headline || x.headline).trim().slice(0, 60);
-        const image = /^https:\/\/\S+$/.test(String(body.image || '')) ? String(body.image).slice(0, 500) : x.image;
-        const multi = Array.isArray(body.multi) ? body.multi.filter((u) => /^https:\/\/\S+$/.test(String(u))).map((u) => String(u).slice(0, 500)).slice(0, 4) : (x.multi || []);
-        const platforms = Array.isArray(body.platforms) ? body.platforms.filter((p) => ['facebook', 'instagram', 'threads'].includes(p)) : [];
-        if (text.length < 20) return res.status(400).json({ ok: false, error: 'ข้อความแอดสั้นเกินไป' });
-        const acc = await adsAccess(fb);
-        if (!acc.ok) return res.status(400).json({ ok: false, error: acc.error, reason: acc.reason });
-        const shop = await loadShop();
-        Object.assign(x, { text, headline, image, multi, platforms, dailyTHB: daily, days, status: 'launching', updated_at: new Date().toISOString() });
-        if (shop.products.find((p) => p.id === x.productId)?.kind === 'course') x.description = 'คอร์สวิดีโอ · เรียนได้ทันทีหลังจ่าย'; // ร่างเก่าที่ยังเขียนว่า PDF
-        await saveAdsAuto(items);
-        try {
-          const gp = shop.products.find((p) => p.id === x.productId), gov = isGovProduct(gp, shop.products); // ก.พ. = กลุ่มเป้าหมายสายราชการ + เพจราชการ
-          const govPage = gov ? await loadFb('readlab').catch(() => null) : null;
-          if (gov && !govPage) throw new Error('สินค้า ก.พ. ต้องยิงในนามเพจราชการ แต่ยังไม่ได้เชื่อมเพจ');
-          const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency, audience: gov ? 'gov' : '', page: govPage });
-          const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
-          Object.assign(y, { text, headline, image, platforms: r.platforms, note: r.note || null, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad, ads: r.ads || [r.ad] }, launchImages: r.images || [image], objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
-          await saveAdsAuto(cur);
-          // แคมเปญในหลังบ้านร้าน (ชื่อเดียวกับ utm_campaign) ให้ตารางแคมเปญ/ยอดขายนับตรง
-          try { const pr = await sb('shop_state?id=eq.private&select=data'); const data = pr?.[0]?.data || {}; data.campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
-            if (!data.campaigns.some((c) => c.name === x.campaign)) { data.campaigns.push({ id: 'c' + Date.now().toString(36), name: x.campaign, productId: x.productId, spend: 0, auto: true }); await sb('shop_state?id=eq.private', { method: 'PATCH', body: { data, updated_at: new Date().toISOString() }, prefer: 'return=minimal' }); } } catch (e) { console.error('ads camp', e.message); }
-          await chatEvent('analyst', pick([`ยิงแอด "${String(x.name).slice(0, 40)}" แล้วครับ งบ ฿${daily}/วัน ${days} วัน เดี๋ยวผมเฝ้าตัวเลขให้`, `แอดสินค้าใหม่วิ่งแล้วครับ ฿${daily}/วัน ผมจะรายงานต้นทุนต่อการซื้อทุกวัน`]), 'ads');
-          return res.status(200).json({ ok: true, item: y });
-        } catch (e) {
-          const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id); Object.assign(y, { status: 'failed', error: String(e.message || e).slice(0, 400) }); await saveAdsAuto(cur);
-          return res.status(400).json({ ok: false, error: y.error, item: y });
-        }
+        { const r = await launchAutoItem(x.id, body); return res.status(r.code).json(r.json); }
       }
       return res.status(400).json({ ok: false, error: 'unknown action' });
     }
