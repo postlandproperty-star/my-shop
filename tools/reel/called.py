@@ -32,7 +32,7 @@ def looks_like(img_url, word, hint):
     """ให้ AI ดูภาพตัวอย่างของคลิป ว่าเห็น {word} ชัดจริงไหม (แท็ก Pixabay ไม่แม่น เช่น grater ได้คลิปเบคอน) · ~0.01 บาท/ภาพ"""
     try:
         j = V.req('https://fal.run/openrouter/router/openai/v1/chat/completions', {'model': 'google/gemini-2.5-flash', 'max_tokens': 5, 'messages': [{'role': 'user', 'content': [
-            {'type': 'text', 'text': f'Does this image clearly and prominently show a {word} ({hint})? A viewer must be able to tell what a "{word}" is from this image alone. Answer only YES or NO.'},
+            {'type': 'text', 'text': f'Is this a real camera photo (not a cartoon, 3D render or illustration) where a {word} ({hint}) is the main, clearly visible subject? A viewer must be able to tell what a "{word}" is from this image alone. Answer only YES or NO.'},
             {'type': 'image_url', 'image_url': {'url': img_url}}]}]}, timeout=60)
         return 'YES' in str(j['choices'][0]['message']['content']).upper()
     except SystemExit as e: print('vision:', e, file=sys.stderr); return False
@@ -52,7 +52,7 @@ def find_video(q, fn, word='', hint=''):
         tags = set(re.findall(r'[a-z]+', h.get('tags', '').lower()))
         v = h['videos'].get('medium') or {}
         return (len(words & tags), 1 if v.get('height', 0) >= v.get('width', 1) else 0, -abs(h.get('duration', 0) - 12))
-    ok = sorted([h for h in hits if h.get('duration', 0) >= 4 and (h['videos'].get('medium') or {}).get('url')], key=score, reverse=True)
+    ok = sorted([h for h in hits if h.get('type', 'film') == 'film' and h.get('duration', 0) >= 4 and (h['videos'].get('medium') or {}).get('url')], key=score, reverse=True)
     for h in ok[:6]:
         th = (h['videos'].get('medium') or {}).get('thumbnail') or h.get('picture_id') and f"https://i.vimeocdn.com/video/{h['picture_id']}_640x360.jpg"
         if th and looks_like(th, word or q, hint or q):

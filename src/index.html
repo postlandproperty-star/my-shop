@@ -5869,6 +5869,9 @@ function adAdvice(c,R){const cur=R?R.cur:null,a0=c.ads[0],price=Number(a0.price)
   if((!cur.ord&&early)||(roas!=null&&roas<1&&early))return ['wait','⏳ รอข้อมูล · ปล่อยวิ่งต่อ',`ใช้ไป ${adMoney(sp)}${cur.ord?` ได้ ${cur.ord} ออเดอร์`:''} ยังน้อยเกินจะตัดสิน (รอให้ถึง ${adMoney(thr)} และวิ่งครบ 3 วัน)`];
   if(roas<1)return ['stop','⛔ ควรหยุด',`ขาดทุน ${adMoney(loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}: จ่าย ฿1 ได้คืน ฿${roas.toFixed(2)}) · ${ctr<0.01?'คนไม่ค่อยคลิก รูปไม่ดึงดูด ถ้าจะลองใหม่ให้เปลี่ยนรูป':'คนคลิกเยอะแต่ไม่ซื้อ ลองเปลี่ยนสินค้าที่ยิงเป็นชุดที่ขายดีแทน'} · ย้ายงบไปแคมเปญที่ ROAS สูงกว่า`];
   if(roas<1.5)return ['meh','🟡 เสมอตัว · ลองเปลี่ยนรูป',`ROAS ${roas.toFixed(2)} เกือบคุ้มทุน ลองรูป/ข้อความใหม่ก่อนเพิ่มงบ`];
+  const apc=AP.d&&AP.d.cfg;
+  // ออโต้ไพลอตเปิดอยู่: ระบบปรับงบเองทุกวันตามเพดานงบเดือน · กดปรับเองจะถูกปรับกลับรอบถัดไป (คุณแดน 17 ต.ค. 69 "กดแล้วก็เหมือนเดิม") → ทางเพิ่มเงินจริงคือ บูสต์/งบเดือน
+  if(roas>=3&&(cur.ord||0)>=3&&apc&&apc.on)return ['up','🤖 ขายดี · ระบบให้งบเต็มเพดานแล้ว',`ROAS ${roas.toFixed(2)} กำไร ${adMoney(-loss)} ใน ${N} วัน · ออโต้ไพลอตปรับงบเองทุกวันในเพดาน ${adMoney(apc.monthTHB||0)}/เดือน ไม่ต้องกด "ต่อ/ปรับงบ" (กดไประบบจะปรับกลับ) · อยากให้ขายเพิ่ม: กด 🚀 บูสต์ หรือเพิ่มงบเดือน`];
   if(roas>=3&&(cur.ord||0)>=3)return ['up','🚀 ควรเพิ่มงบ',`กำไร ${adMoney(-loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}) · เพิ่มทีละ 20–30%${c.daily?` (${adMoney(c.daily)} → ${adMoney(Math.round(c.daily*1.25/10)*10)}/วัน)`:''} ทุก 3–4 วัน ถ้าเพิ่มเร็วไปต้นทุนต่อออเดอร์มักแพงขึ้น`];
   return ['ok','✅ ปล่อยวิ่งต่อ',`กำไร ${adMoney(-loss)} ใน ${N} วัน (ROAS ${roas.toFixed(2)}) · ได้ ${cur.ord||0} ออเดอร์ ถ้าได้ถึง 3 ออเดอร์และ ROAS เกิน 3 ค่อยเพิ่มงบ`];}
 /* ⏩ ต่ออายุ / ปรับงบแอดเดิม (คุณแดน 10 ต.ค. 69 "แอดหมดอายุไปเอง ควรต่อมั้ย"): เลือกจำนวนวัน + งบต่อวัน (แนะนำตามผล) แล้วกดยืนยัน · รูป/ข้อความเหมือนเดิม */
@@ -5877,6 +5880,7 @@ function adRenewBox(c,R){const v=adAdvice(c,R)||[],cur=c.daily||0,sug=v[0]==='up
   return `<div class="adt-wide aded adrenew"><div class="aded-h"><b>⏩ ต่ออายุ / ปรับงบ · ${esc(c.name)}</b><button class="chip" data-a="adsRenew" data-id="${esc(c.id)}">ปิด</button></div>
     <p class="fine" style="margin:0">${c.end?(left<=0?'แอดนี้หมดอายุแล้ว':`เหลืออีก ${left} วัน (ถึง ${new Date(c.end).toLocaleDateString('th-TH',{day:'numeric',month:'short'})})`)+' · ต่อแล้วนับต่อจากวันจบเดิม':'แอดนี้ไม่มีวันจบ (วิ่งจนกว่าจะหยุด) ปรับได้แค่งบ'} · รูป ข้อความ กลุ่มเป้าหมายเหมือนเดิม</p>
     ${c.end?`<span class="adq-lbl">ต่ออีกกี่วัน</span><div class="adq-plats">${[0,3,7,14].map(n=>`<button class="chip" data-a="adsRenewDays" data-v="${n}" aria-pressed="${d===n}">${n?n+' วัน':'ไม่ต่อ (ปรับงบอย่างเดียว)'}</button>`).join('')}</div>`:''}
+    ${AP.d&&AP.d.cfg&&AP.d.cfg.on?'<p class="fine" style="margin:0">🤖 ออโต้ไพลอตเปิดอยู่: งบต่อวันที่ตั้งตรงนี้ ระบบจะปรับให้อยู่ในเพดานงบเดือนรอบถัดไป · อยากเพิ่มจริงใช้ 🚀 บูสต์ (ต่ออายุใช้ได้ตามปกติ)</p>':''}
     <label class="adq-lbl" for="adrenew-b">งบต่อวัน (บาท) <span class="fine">ตอนนี้ ${adMoney(cur)}/วัน${sug>cur?` · แนะนำ ${adMoney(sug)} (+25% เพราะ${esc(v[1]||'')})`:''} · เพิ่มทีละไม่เกิน 20–30% ทุก 3–4 วัน ต้นทุนต่อออเดอร์จะไม่พุ่ง</span></label>
     <input class="input" id="adrenew-b" type="number" min="50" max="2000" step="10" value="${esc(bud)}" style="max-width:160px">
     ${ADST.renewErr?`<p class="err" style="margin:0">${esc(ADST.renewErr)}</p>`:''}
