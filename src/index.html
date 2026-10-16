@@ -2102,7 +2102,7 @@ async function examCover(b,i,n,st){await thFont();const W=900,H=1200,c=document.
     x.fillStyle=ac2;x.font=K(700,30);x.letterSpacing='8px';x.fillText((band?'BAND '+band.replace(/\s/g,'')+' · ':'')+'PRACTICE · ANSWERS',mx,92);x.letterSpacing='0px';
     let y=330;const sz=fit(head,900,W-mx*2,240,110);x.fillStyle='#fff';x.font=K(900,sz);x.fillText(head,mx-6,y);
     if(rest){x.fillStyle=ac2;x.letterSpacing='6px';lines(rest,700,52,W-mx*2,2).forEach(l=>{y+=72;x.font=K(700,52);x.fillText(l,mx,y);});x.letterSpacing='0px';}
-    if(num){const ns=fit(num,900,W-mx*2-160,340,160);y+=ns*.92;x.fillStyle=ac;x.font=K(900,ns);x.fillText(num,mx-8,y);const nw=x.measureText(num).width;if(unit){x.font=K(700,46);x.fillText(unit,mx+nw+10,y);}}
+    if(num){const ns=fit(num,900,W-mx*2-160,340,160);y+=ns*.92;x.fillStyle=ac;x.font=K(900,ns);x.fillText(num,mx-8,y);const nw=x.measureText(num).width;if(unit){x.font=K(700,46);if(mx+nw+10+x.measureText(unit).width>W-mx){y+=56;x.fillText(unit,mx,y);}else x.fillText(unit,mx+nw+10,y);}}
     y+=30;if(sub){x.fillStyle='rgba(255,255,255,.85)';lines(sub,700,38,W-mx*2,2).forEach(l=>{y+=54;x.font=K(700,38);x.fillText(l,mx,y);});}
     y+=16;checks.forEach(t=>{y+=52;tick(t,y,'rgba(255,255,255,.85)');});
     logo(ac,'#fff',bg,H-56);vol('#fff');}
