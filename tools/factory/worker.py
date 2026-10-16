@@ -161,8 +161,10 @@ def main():
         except Exception: pass
         try: subprocess.run(['node', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'content', 'card.mjs'), 'auto'], capture_output=True, timeout=300, cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # 🖼 การ์ดความรู้ลงเพจ: เติมคิวให้มีรอโพสต์ 4 ใบ (วันละ 2)
         except Exception: pass
-        try: subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reel', 'vocab.py'), 'daily'], capture_output=True, timeout=1500)  # คลิปคำศัพท์ AI วันละ 1 คลิป (ทำแล้ววันนี้ = ข้ามเอง)
-        except Exception: pass
+        # ⏸ คลิปคำศัพท์ AI ปิดไว้ (คุณแดน 16 ต.ค. 69 "มั่วมาก": คนในภาพ/วิดีโอ/เสียงไทย/คำอ่านทำด้วย AI ผิดเพี้ยน) · รอทำใหม่แบบวิดีโอจริง + เสียงอังกฤษ
+        if False:
+            try: subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reel', 'vocab.py'), 'daily'], capture_output=True, timeout=1500)  # คลิปคำศัพท์ AI วันละ 1 คลิป (ทำแล้ววันนี้ = ข้ามเอง)
+            except Exception: pass
         try: subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reel', 'called.py'), 'daily'], capture_output=True, timeout=1500)  # คลิป What is this called? วิดีโอฟรี Pixabay วันละ 2 คลิป (12:00/21:00) ทำทีละคลิปต่อรอบ
         except Exception: pass
         # ☁️ ย้ายไฟล์ใหม่ใน Supabase Storage ขึ้น Cloudflare R2 วันละครั้ง (ส่งออกฟรี · Supabase เกินโควต้าจนเว็บล่ม 14 ต.ค. 69) · ไฟล์เดิมใน Supabase ไม่ลบ
