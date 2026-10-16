@@ -247,7 +247,8 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const book = /^SL-[A-Z0-9-]{2,12}$/.test(audioQ) ? (lib.books || {})[audioQ] : null;
     if (!book) { res.setHeader('Cache-Control', 'no-store'); return res.status(404).send(AP.playerPage({ sku: audioQ.slice(0, 16), title: 'ไม่พบไฟล์เสียงของเล่มนี้', tracks: [] }, { settings: shop.settings, site: NEW_SITE })); }
     res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300');
-    return res.status(200).send(AP.playerPage(book, { settings: shop.settings, site: NEW_SITE, start: AP.startTrack(book, req.query) }));
+    const demo = req.query.demo === '1' ? { href: (() => { const p = (shop.products || []).find((x) => String(x.sku || '').toUpperCase() === audioQ && x.slug); return p ? `/p/${p.slug}` : '/store'; })() } : null;
+    return res.status(200).send(AP.playerPage(book, { settings: shop.settings, site: NEW_SITE, start: demo ? 0 : AP.startTrack(book, req.query), demo }));
   }
   const ieltsQ = String(req.query.ielts || '');
   if (ieltsQ) { // 📚 คลัง IELTS ฟรี (lib/ieltsLib.js): /ielts /ielts/samples[/slug] /ielts/dictation[/slug] /ielts/daily

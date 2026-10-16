@@ -173,6 +173,10 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   ok('🎧 หน้าเล่นเสียง /audio/SKU: ชื่อไฟล์ → บท + ชื่อไทย (บทสนทนา 1 · ช้า) · เรียงตามเลข · ไม่เอาไฟล์ที่ไม่ใช่เสียง · ?ch=6 เริ่มบท 6 · กัน HTML · noindex',
     b.tracks.length === 3 && b.tracks[0].n === 1 && AP.trackInfo('01-ch01-dialogue1-slow.mp3').label === 'บทสนทนา 1 · ช้า 🐢' && AP.trackInfo('36-ch06-listening-normal.mp3').ch === 6
     && AP.startTrack(b, { ch: 6 }) === 36 && AP.startTrack(b, { t: 2 }) === 2 && h.includes('บทที่ 1 · ที่คลินิก') && h.includes('https://a.r2.dev/SL-044/02-ch01-dialogue2-slow.mp3') && !h.includes('T <x>') && /noindex/.test(h) && h.includes('"start":36')); }
+{ const AP = await import('../lib/audioPlayer.js'); const b = AP.buildBook({ sku: 'SL-9', title: 'T', base: 'https://a', files: ['1-a.mp3', '2-a.mp3', '3-a.mp3', '4-a.mp3', '5-a.mp3'] });
+  const d = AP.playerPage(b, { demo: { href: '/p/book' } }), f = AP.playerPage(b, {});
+  ok('🎧 ลิงก์ตัวอย่างเสียง ?demo=1: ฟังได้แค่ 3 แทร็กแรก (ไฟล์แทร็ก 4–5 ไม่อยู่ในหน้า) + ปุ่มไปหน้าขาย · ลิงก์ปกติยังครบทุกแทร็ก',
+    (d.match(/class="ap-row"/g) || []).length === AP.DEMO_N && !d.includes('https://a/4-a.mp3') && d.includes('href="/p/book"') && d.includes('3 จาก 5') && (f.match(/class="ap-row"/g) || []).length === 5 && !f.includes('ap-buy"')); }
 { const PRL = await import('../lib/printpage.js'); const shop = { products: [{ id: 'a', status: 'published', name: 'A', specs: '' }, { id: 'n', status: 'published', name: 'Planner', cat: 'notion', specs: '' }, { id: 's', status: 'published', type: 'bundle', name: 'Set', items: ['a', 'n'] }] };
   const off = PRL.printList(shop, {}, {}).find((x) => x.id === 's'), on = PRL.printList(shop, {}, { n: { pages: 21, url: 'u' } }).find((x) => x.id === 's');
   ok('🖨 หน้าพิมพ์: เทมเพลต Notion ในชุดไม่ขึ้นให้พิมพ์ · มีฉบับพิมพ์ (สมุดแพลนเนอร์) แล้วขึ้นครบทุกเล่ม', off.books.length === 1 && on.books.length === 2 && on.books[1].pages === 21); }
