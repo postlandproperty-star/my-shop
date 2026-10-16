@@ -553,6 +553,40 @@ async function adWatch() {
   if (warned.length) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ads_watch', data: st, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); await chatEvent('analyst', `เจอแอดใช้เงินแต่ยังขายไม่ได้ ${warned.length} ตัวครับ ขึ้นเช็คลิสต์ให้คุณแดนตัดสินแล้ว`, 'ads'); }
   return { ok: true, warned };
 }
+// 🚨 สัญญาณเตือนร้ายแรงเรื่องแอด (คุณแดน 16 ต.ค. 69 "เอาแบบแจ้งเตือนร้ายแรงเลย"): เช็คทุก 3 ชม. (ตอนมีคนเข้าเว็บ) + cron
+// 🔴 บัญชีโฆษณาใช้งานไม่ได้/ค้างจ่าย · แอดถูกปฏิเสธ/มีปัญหา · แคมเปญที่วิ่งอยู่ 7 วันใช้เงินเกิน 2 เท่าราคาสินค้าแต่ไม่มีออเดอร์จริง · 7 วันขาดทุน (ยอดขายจริง < ค่าแอด)
+// 🟠 7 วันได้คืนต่ำกว่า 1.5 เท่า (แนบไปกับอีเมลเมื่อมี 🔴) · อีเมล + งานบนบอร์ด · เรื่องเดิมเตือนซ้ำได้ทุก 24 ชม. · ไม่หยุดแอดเอง (คุณแดนตัดสินใจ)
+async function adAlarm({ force = false, dry = false } = {}) {
+  const st = (await sb('shop_state?id=eq.ad_alarm&select=data'))?.[0]?.data || {}, now = Date.now();
+  if (!force && now - (st.at || 0) < 3 * 36e5) return { ok: true, skipped: 'recent' };
+  const save = (x) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ad_alarm', data: { ...st, ...x }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  if (!dry) await save({ at: now });
+  const fb = await loadFb().catch(() => null); if (!fb?.userToken) return { ok: false, skipped: 'no token' };
+  const red = [], amber = [], money = (n) => '฿' + Math.round(n).toLocaleString('th-TH');
+  const acc = await adsAccess(fb).catch((e) => ({ ok: false, reason: 'account', error: String(e.message || e) }));
+  if (!acc.ok && acc.reason === 'account') red.push(['acct', `บัญชีโฆษณาใช้งานไม่ได้: ${acc.error} · แอดทุกตัวจะหยุด · เปิดหน้าชำระเงิน: ${acc.billing || 'Ads Manager → Billing'}`]);
+  if (acc.ok) {
+    const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() });
+    const since = new Date(now - 7 * 864e5).toISOString();
+    const [ords, priv] = await Promise.all([sb(`orders?status=eq.paid&paid_at=gte.${since}&select=campaign,amount,email&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
+    const isTest = testOrder(null, priv?.[0]?.data?.testEmails), real = (ords || []).filter((o) => !isTest(o) && o.campaign);
+    for (const a of r.ads.filter((x) => ['DISAPPROVED', 'WITH_ISSUES', 'PENDING_BILLING_INFO'].includes(x.status))) red.push(['ad:' + a.id, `แอด "${a.campaign || a.name}" ${a.label}${a.reasons?.length ? ': ' + a.reasons[0] : ''}`]);
+    const camps = new Map(); for (const a of r.ads.filter((x) => ['run', 'fix', 'review'].includes(x.group))) { const k = a.campaignId || a.campaign; const c = camps.get(k) || { name: a.campaign || a.name, price: a.price, spend: 0, tags: new Set() }; c.spend += a.week.spendTHB || 0; [a.tag, a.campaign].filter(Boolean).forEach((t) => c.tags.add(t.toLowerCase())); camps.set(k, c); }
+    for (const [k, c] of camps) {
+      const m = real.filter((o) => c.tags.has(String(o.campaign).toLowerCase())), rev = m.reduce((x, o) => x + (Number(o.amount) || 0), 0), roas = c.spend ? rev / c.spend : 0;
+      if (c.spend >= Math.max(2 * c.price, 400) && !m.length) red.push(['burn:' + k, `แอด "${c.name}" 7 วันใช้ไป ${money(c.spend)} แต่ไม่มีออเดอร์จริงเลย (เกิน 2 เท่าของราคาสินค้า ${money(c.price)}) → แนะนำหยุด หรือเปลี่ยนรูป/หน้าขาย`]);
+      else if (c.spend >= 500 && roas < 1) red.push(['loss:' + k, `แอด "${c.name}" 7 วันขาดทุน: ค่าแอด ${money(c.spend)} ได้ยอดขายจริง ${money(rev)} (${m.length} ออเดอร์ · คืน ${roas.toFixed(2)} เท่า) → แนะนำลดงบหรือหยุด`]);
+      else if (c.spend >= 500 && roas < 1.5) amber.push(['weak:' + k, `แอด "${c.name}" 7 วันได้คืนแค่ ${roas.toFixed(2)} เท่า (ค่าแอด ${money(c.spend)} · ยอดจริง ${money(rev)}) กำไรบาง ลองกด 💡 แนะนำ`]);
+    }
+  }
+  const sent = st.sent || {}, fresh = red.filter(([k]) => now - (sent[k] || 0) > 24 * 36e5);
+  if (dry || !fresh.length) return { ok: true, red, amber, emailed: false };
+  for (const [k] of red) sent[k] = now; await save({ at: now, sent });
+  const site = await siteUrl().catch(() => 'https://sheetlabth.com'), li = (x, c) => x.map(([, t]) => `<li style="margin:0 0 8px;color:${c}">${escH(t)}</li>`).join('');
+  await ownerMail(`🚨 แอดมีปัญหาร้ายแรง ${red.length} เรื่อง`, `<p style="margin:0 0 10px"><b>ต้องดูด่วน</b> (ระบบยังไม่ได้หยุดแอดให้ คุณแดนตัดสินใจ)</p><ul style="padding-left:18px;margin:0 0 10px">${li(red, '#BE123C')}</ul>${amber.length ? `<p style="margin:0 0 6px"><b>ควรเช็ก</b></p><ul style="padding-left:18px;margin:0">${li(amber, '#B45309')}</ul>` : ''}`, { button: ['เปิดหลังบ้าน → โฆษณา', `${site}/?admin`] });
+  for (const [, t] of fresh) await addTodo({ text: `🚨 ${t}`, type: 'do', from: 'manager' }).catch(() => {});
+  return { ok: true, red, amber, emailed: true };
+}
 // คลิป Reels ที่โพสต์ครบทุกช่องแล้ว (เพจ/IG/Threads เก็บคลิปไว้เองแล้ว) ลบไฟล์ออกจากคลังร้าน ไม่ให้พื้นที่เต็ม (คุณแดนสั่ง 1 ต.ค. 69)
 // ลบเมื่อ: ทุกโพสต์ที่ใช้คลิปนั้นโพสต์แล้วหรือถูกปัดตก · โพสต์ล่าสุดผ่านมาแล้ว 3 วัน (เผื่อโพสต์ซ้ำ) · ไม่มี IG ที่ยังประมวลผลค้าง · คลิปที่ถูกปัดตกทั้งหมดลบหลัง 14 วัน
 async function cleanupReels() {
@@ -1140,7 +1174,7 @@ export default async function handler(req, res) {
       let reelclean = null; // คลิปที่โพสต์แล้ว ลบออกจากคลังร้าน
       if (cronOk(req)) { try { reelclean = await cleanupReels(); } catch (e) { reelclean = { ok: false, error: String(e.message || e) }; } }
       let adwatch = null; // เฝ้าเงินค่าแอด
-      if (cronOk(req)) { try { adwatch = await adWatch(); } catch (e) { adwatch = { ok: false, error: String(e.message || e) }; } }
+      if (cronOk(req)) { try { adwatch = await adWatch(); } catch (e) { adwatch = { ok: false, error: String(e.message || e) }; } try { adwatch.alarm = await adAlarm({ force: true }); } catch (e) { console.error('ad alarm', e.message); } }
       let adsdraft = null; // สินค้าเผยแพร่ใหม่ → ร่างแอดรอคุณแดนกดตกลง
       if (cronOk(req)) { try { adsdraft = await ensureAdDrafts(); } catch (e) { adsdraft = { ok: false, error: String(e.message || e) }; } }
       return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft, reelclean, adwatch });
@@ -1423,6 +1457,7 @@ export default async function handler(req, res) {
       if (/bot|crawl|spider|slurp|facebookexternalhit|headless|preview|lighthouse/i.test(String(req.headers['user-agent'] || ''))) return res.status(204).end();
       try { const I = await import('../lib/insights.js'); await I.saveEvents(I.cleanEvents(await readBody(req))); } catch (e) { if (!e.missing) console.error('ev', e.message); }
       try { await payWatch(); } catch (e) { console.error('paywatch', e.message); }
+      try { await adAlarm(); } catch (e) { console.error('ad alarm', e.message); }
       return res.status(204).end();
     }
     if (action === 'insights') { // แท็บ 📈 พฤติกรรม (แอดมิน/ทีมอ่าน)
@@ -3387,6 +3422,7 @@ ${books}`;
       return res.status(400).json({ ok: false, error: 'unknown action' });
     }
     if (action === 'ad_watch') { if (!keyOk(req)) return res.status(401).json({ ok: false }); return res.status(200).json(await adWatch()); }
+    if (action === 'ad_alarm') { if (!keyOk(req)) return res.status(401).json({ ok: false }); return res.status(200).json(await adAlarm({ force: true, dry: req.query.send !== '1' })); } // ตรวจดูเฉย ๆ (ไม่ส่งอีเมล) · send=1 ส่งจริง
     if (action === 'reel_cleanup') { if (!keyOk(req)) return res.status(401).json({ ok: false }); return res.status(200).json(await cleanupReels()); }
     if (action === 'storage_usage') { // ขนาดไฟล์ใน bucket product-images แยกตามโฟลเดอร์บนสุด (ดูว่าใกล้เต็มโควตาไหม)
       if (!keyOk(req) && !(req.headers.authorization && await verifyAdmin(req.headers.authorization))) return res.status(401).json({ ok: false });
