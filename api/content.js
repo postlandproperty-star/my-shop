@@ -564,6 +564,7 @@ async function adAlarm({ force = false, dry = false } = {}) {
   const fb = await loadFb().catch(() => null); if (!fb?.userToken) return { ok: false, skipped: 'no token' };
   const red = [], amber = [], money = (n) => '฿' + Math.round(n).toLocaleString('th-TH');
   const acc = await adsAccess(fb).catch((e) => ({ ok: false, reason: 'account', error: String(e.message || e) }));
+  if (!acc.ok && acc.reason === 'rate') return { ok: true, skipped: 'facebook rate limit' }; // ดึงข้อมูลไม่ได้ชั่วคราว ไม่ใช่ปัญหา ไม่เตือน
   if (!acc.ok && acc.reason === 'account') red.push(['acct', `บัญชีโฆษณาใช้งานไม่ได้: ${acc.error} · แอดทุกตัวจะหยุด · เปิดหน้าชำระเงิน: ${acc.billing || 'Ads Manager → Billing'}`]);
   if (acc.ok) {
     const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() });
@@ -3457,7 +3458,7 @@ ${books}`;
       if (action === 'ads_auto_status') { // สถานะแอดทุกตัวในบัญชีจาก Facebook (อ่านอย่างเดียว ทีมดูได้)
         const fb = await loadFb().catch(() => null);
         const acc = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) }));
-        if (!fb?.userToken || (acc.reason === 'token' || acc.reason === 'perm')) return res.status(200).json({ ok: false, access: acc, error: acc.error });
+        if (!fb?.userToken || ['token', 'perm', 'rate'].includes(acc.reason)) return res.status(200).json({ ok: false, access: acc, error: acc.error });
         try { const r = await adsStatus(fb, { currency: acc.account?.currency || 'AUD', priceOf: await adPriceOf() });
           const [history, daily] = await Promise.all([adsHistory(fb, r.rate).catch(() => null), adsDaily(fb, r.rate, 60).catch((e) => { console.error('ads daily', e.message); return null; })]); // ประเมินรายได้ + กราฟรายวัน (ไม่มีก็ไม่เป็นไร)
           let shopDaily = null;
