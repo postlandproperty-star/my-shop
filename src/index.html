@@ -884,7 +884,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .adf-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .adf-c{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:3px;min-width:0;background:var(--bg)}
 .adf-c span{font-size:12px;color:var(--mut,#64748b)}.adf-c b{font-size:20px}.adf-c small{font-size:12px;color:var(--mut,#64748b)}
-.adf-c .adf-pc{flex-basis:100%}.adf-c .adf-pc b{font-size:14px;color:var(--ink,#0F1B33)}.adf-c em{font-style:normal;font-size:13px;font-weight:700}.adf-c em.up{color:#047857}.adf-c em.down{color:#BE123C}
+.cv-lang{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.adf-c .adf-pc{flex-basis:100%}.adf-c .adf-pc b{font-size:14px;color:var(--ink,#0F1B33)}.adf-c em{font-style:normal;font-size:13px;font-weight:700}.adf-c em.up{color:#047857}.adf-c em.down{color:#BE123C}
 .adf-mid{border-color:#2440E8;box-shadow:0 0 0 1px #2440E8 inset}
 .adf-warn{margin:10px 0 0;padding:8px 12px;border-radius:10px;background:#FFFBEB;border:1px solid #FDE68A;font-size:13px;color:#92400E}
 .adf-src{margin-top:10px}.adf-src summary{cursor:pointer;font-size:13px}
@@ -2013,7 +2013,7 @@ function thPick(want){const ut={},uc={};for(const p of D.products){const m=Strin
   const theme=TH_THEMES[want]||/^kw-/.test(want)?want:least(all,k=>ut[k]||0);
   return {theme,layout:least(EX_BY[theme]||TH_LAYOUTS,l=>uc[theme+l]||0),pal:Math.floor(Math.random()*TH_PAL.length),off:Math.floor(Math.random()*8)};}
 // ข้อความบนปกจากชื่อสินค้า: หัวข้อ = ชื่อภาษาอังกฤษช่วงยาวสุด · ป้าย = จำนวน (500 คำ) · บรรทัดรอง = ภาษาไทย
-function thText(b){const name=String(b.name||'').replace(/\([^)]*\)/g,' ').replace(/\b(PDF|e-?book)\b|ไฟล์/gi,' ').replace(/\s+/g,' ').trim(); // ไม่มีคำว่า PDF/ไฟล์ บนปก ใช้ขาย Shopee (เล่มพิมพ์) ได้ด้วย
+function thText(b,lang){lang=lang||cvLang();const name=String(b.name||'').replace(/\([^)]*\)/g,' ').replace(/\b(PDF|e-?book)\b|ไฟล์/gi,' ').replace(/\s+/g,' ').trim(); // ไม่มีคำว่า PDF/ไฟล์ บนปก ใช้ขาย Shopee (เล่มพิมพ์) ได้ด้วย
   // ป้ายจำนวน: เลือกตัวเลขที่ใหญ่สุดที่มีหน่วย (500 ข้อ ดีกว่า 15 จุด) · "ข้อสอบ" ไม่ใช่หน่วย "ข้อ"
   const cms=[...name.matchAll(/([\d,]+)\s*(คู่คำ|คำ|ข้อ(?!สอบ|ความ)|สำนวน|ตัวย่อ|ประโยค|วัน(?!ละ)|บท|หัวข้อ|เรื่อง|จุด|ชุด|สัปดาห์|เทคนิค|แบบฟอร์ม|เล่ม)/g)].sort((a,c)=>Number(c[1].replace(/,/g,''))-Number(a[1].replace(/,/g,'')));const cm=cms[0];
   const rest=cms.reduce((r,m)=>r.replace(m[0],' '),name); // ตัดทุก "ตัวเลข+หน่วย" ออกก่อนหาชื่ออังกฤษ (BY TOPIC 20 หัวข้อ → BY TOPIC)
@@ -2022,8 +2022,14 @@ function thText(b){const name=String(b.name||'').replace(/\([^)]*\)/g,' ').repla
   let sub='';for(const w of words){if((sub+' '+w).trim().length>34)break;sub=(sub+' '+w).trim();}
   const title=(lat||sub.split(' ').slice(0,2).join(' ')).toUpperCase();if(!lat)sub='';
   // ปกเป็นภาษาอังกฤษทั้งหมด (คุณแดน 16 ต.ค. 69 "ดูอินเตอร์ ดูแพงขึ้น"): หน่วยนับ + คำบรรยายแปลจากคำในชื่อ · ชื่อไทยล้วนใช้คำแปลที่รู้จัก
+  if(lang==='th'){const feats=thFeatEn(name).map(t=>TH_FEAT_TH[t]||t);return {title,sub,count:cm?`${cm[1]} ${cm[2]}`:'',feats,lang};} // 🇹🇭 ปกภาษาไทย (เลือกได้ · คุณแดน 16 ต.ค. 69)
   const en=TH_EN_NAME.find(([r])=>r.test(name)),tEn=lat?title:en?en[1]:title,feats=thFeatEn(name);
-  return {title:tEn,sub:feats.slice(0,2).join(' · '),count:cm?`${cm[1]} ${TH_UNIT_EN[cm[2]]||cm[2]}`:'',feats};}
+  return {title:tEn,sub:feats.slice(0,2).join(' · '),count:cm?`${cm[1]} ${TH_UNIT_EN[cm[2]]||cm[2]}`:'',feats,lang:'en'};}
+// ภาษาบนปก: อังกฤษ (ค่าเริ่มต้น ดูอินเตอร์) หรือไทย · จำไว้ในเครื่อง
+const cvLang=()=>{try{return localStorage.getItem('sl_cvlang')==='th'?'th':'en';}catch(e){return 'en';}};
+const TH_FEAT_TH={'With Audio':'มีเสียงประกอบ','With Answers':'เฉลยละเอียด','Model Answers':'คำตอบตัวอย่าง','Model Essays':'เรียงความตัวอย่าง','Full Scripts':'สคริปต์เต็ม','Thai Translations':'แปลไทย','Study Plan':'แพลนอ่าน','Example Sentences':'ตัวอย่างประโยค','Practice Exercises':'แบบฝึกหัด','Complete Set':'ครบชุด','Practice Tests':'ข้อสอบเสมือนจริง'};
+const CV_TXT={en:{audio:'With Audio · Scan QR to Listen',series:'SHEETLAB · ENGLISH SERIES',pa:'PRACTICE · ANSWERS',master:c=>`OVER ${c} TO MASTER`,ess:'ESSENTIAL',ex:'WITH EXAMPLES',band:'BAND',book:(i,n)=>`BOOK ${i}/${n}`,over:'Over'},
+  th:{audio:'เสียงประกอบ สแกน QR ฟังได้ทันที',series:'SHEETLAB · ชุดติวสอบ',pa:'ข้อสอบ · เฉลย',master:c=>`รวม ${c} ที่ต้องรู้`,ess:'ฉบับจำเป็น',ex:'มีตัวอย่าง',band:'BAND',book:(i,n)=>`เล่ม ${i}/${n}`,over:'รวม'}};
 const TH_UNIT_EN={'คำ':'WORDS','ข้อ':'QUESTIONS','สำนวน':'IDIOMS','คู่คำ':'COLLOCATIONS','ตัวย่อ':'ABBREVIATIONS','ประโยค':'SENTENCES','วัน':'DAYS','บท':'UNITS','หัวข้อ':'TOPICS','เรื่อง':'TOPICS','จุด':'KEY POINTS','ชุด':'TESTS','สัปดาห์':'WEEKS','เทคนิค':'TECHNIQUES','แบบฟอร์ม':'FORMS','เล่ม':'BOOKS'};
 const TH_EN_NAME=[[/ก\.?\s?พ\.?/,'CIVIL SERVICE EXAM'],[/ม\.\s?[1-3]|ม\.ต้น/,'LOWER SECONDARY ENGLISH'],[/ม\.\s?[4-6]|ม\.ปลาย/,'UPPER SECONDARY ENGLISH'],[/คณิต/,'MATH'],[/ภาษาไทย/,'THAI LANGUAGE'],[/คำศัพท์/,'VOCABULARY'],[/ไวยากรณ์|แกรมมาร์/,'GRAMMAR']];
 const thFeatEn=name=>[[/ไฟล์เสียง|เสียง|audio|mp3|listening|ฟัง/i,'With Audio'],[/เฉลย|answer/i,'With Answers'],[/คำตอบตัวอย่าง|sample answer|model answer/i,'Model Answers'],[/เรียงความ|essay/i,'Model Essays'],[/สคริปต์|script/i,'Full Scripts'],[/คำแปล|แปล/i,'Thai Translations'],[/แพลน|plan/i,'Study Plan'],[/ตัวอย่างประโยค|ประโยค/,'Example Sentences'],[/แบบฝึกหัด|exercise/i,'Practice Exercises'],[/ครบชุด|complete/i,'Complete Set'],[/ข้อสอบ|test/i,'Practice Tests']].filter(([r])=>r.test(name)).map(z=>z[1]).filter((t,k,a)=>a.indexOf(t)===k);
@@ -2066,7 +2072,7 @@ async function themeCover(b,i,n,st){if(EX_BY[st.theme]||EX_LAYOUTS.includes(st.l
   const sp=x.createLinearGradient(0,0,36,0);sp.addColorStop(0,'rgba(0,0,0,.2)');sp.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=sp;x.fillRect(0,0,36,H);
   // หัว: ป้าย SheetLab + เล่มที่
   x.font=K(700,30);const bw=x.measureText('SheetLab').width+44;x.fillStyle='rgba(255,255,255,.94)';x.beginPath();x.roundRect?x.roundRect(mx,48,bw,50,25):x.rect(mx,48,bw,50);x.fill();x.fillStyle='#1a1a1a';x.textBaseline='middle';x.fillText('SheetLab',mx+22,74);
-  if(n>1){x.fillStyle=ink;x.globalAlpha=.9;x.textAlign='right';x.fillText(`BOOK ${i+1}/${n}`,W-56,74);x.textAlign='left';x.globalAlpha=1;}
+  if(n>1){x.fillStyle=ink;x.globalAlpha=.9;x.textAlign='right';x.fillText(CV_TXT[cvLang()].book(i+1,n),W-56,74);x.textAlign='left';x.globalAlpha=1;}
   // ข้อความ
   x.textBaseline='alphabetic';let y=y0;x.fillStyle=ink;
   if(ser){x.font=K(700,38);x.globalAlpha=.9;x.fillText(ser,mx,y+38);x.globalAlpha=1;y+=52;}
@@ -2082,15 +2088,15 @@ async function examCover(b,i,n,st){await thFont();const W=900,H=1200,c=document.
   const words=(tx.title||tx.sub||'SheetLab').split(' ').filter(Boolean),head=words[0].length<=8||words.length===1?words[0]:words.slice(0,2).join(' '),rest=words.slice(head.split(' ').length).join(' ');
   const num=(tx.count.match(/[\d,]+/)||[''])[0],unit=tx.count.replace(num,'').trim(),band=(name.match(/band\s*(\d(?:\.\d)?\s*\+?)/i)||[])[1];
   const plain=t=>t&&!THNO.test(t);
-  const fe=[...(hasAudio(b)?['With Audio · Scan QR to Listen']:[]),...tx.feats.filter(t=>!(hasAudio(b)&&t==='With Audio'))],checks=fe.slice(1,3),sub=(fe[0]||'').toUpperCase(); // ภาษาอังกฤษล้วน
+  const LT=CV_TXT[tx.lang==='th'?'th':'en'],fe=[...(hasAudio(b)?[LT.audio]:[]),...tx.feats.filter(t=>!(hasAudio(b)&&/^(With Audio|มีเสียงประกอบ)$/.test(t)))],th=tx.lang==='th'&&tx.sub&&!THNO.test(tx.sub),checks=th?fe.slice(0,2):fe.slice(1,3),sub=th?tx.sub:(fe[0]||'').toUpperCase(); // อังกฤษ: บรรทัดรอง = จุดเด่นแรก · ไทย: บรรทัดรอง = คำอธิบายไทยจากชื่อสินค้า
   const lines=(t,w,sz,maxW,max)=>{x.font=K(w,sz);return thLines(x,t,maxW,max);};
   const logo=(col,box,mark,y)=>{x.fillStyle=box;rr(mx,y-34,44,44,11);x.fill();x.fillStyle=mark;rr(mx+11,y-23,22,22,5);x.fill();x.fillStyle=col;x.font=K(700,38);x.textBaseline='alphabetic';x.fillText('SheetLab',mx+60,y);};
   const tick=(t,y,col)=>{x.strokeStyle=col;x.lineWidth=4;rr(mx,y-28,30,30,5);x.stroke();x.beginPath();x.moveTo(mx+7,y-13);x.lineTo(mx+13,y-6);x.lineTo(mx+24,y-21);x.stroke();x.fillStyle=col;x.font=K(700,32);x.fillText(t,mx+46,y);};
-  const vol=col=>{if(n>1){x.fillStyle=col;x.font=K(700,32);x.textAlign='right';x.globalAlpha=.85;x.fillText(`BOOK ${i+1}/${n}`,W-mx,92);x.globalAlpha=1;x.textAlign='left';}};
+  const vol=col=>{if(n>1){x.fillStyle=col;x.font=K(700,32);x.textAlign='right';x.globalAlpha=.85;x.fillText(LT.book(i+1,n),W-mx,92);x.globalAlpha=1;x.textAlign='left';}};
   x.textBaseline='alphabetic';
   if(L==='F'){x.fillStyle=bg;x.fillRect(0,0,W,H);
     x.save();x.translate(W-560,H-470);x.transform(1,0,-.53,1,0,0);[ac,ac2,'rgba(255,255,255,.85)','rgba(0,0,0,.35)'].forEach((col,k)=>{x.fillStyle=col;x.fillRect(150*k+40,k*112,900,82);});x.restore();
-    let sz=fit(head,900,W-mx*2,270,120);x.fillStyle='#fff';x.font=K(900,sz);let y=90+sz*.86;x.fillText(head,mx-6,y);
+    let sz=fit(head,900,W-mx*2,270,60);x.fillStyle='#fff';x.font=K(900,sz);let y=90+sz*.86;x.fillText(head,mx-6,y);
     const ns=num?fit(num,900,380,230,110):0;x.font=K(900,ns);const nw=num?x.measureText(num).width:0,top=y+30;
     if(num){x.fillStyle=ac;x.textAlign='right';x.fillText(num,W-mx,top+ns*.78);x.textAlign='left';if(unit){x.font=K(700,36);x.textAlign='right';x.fillText(unit,W-mx,top+ns*.78+48);x.textAlign='left';}}
     if(rest){x.fillStyle='#fff';lines(rest,700,60,W-mx*2-(num?nw+30:0),3).forEach(l=>{y+=70;x.font=K(700,60);x.fillText(l,mx,y);});}
@@ -2099,23 +2105,23 @@ async function examCover(b,i,n,st){await thFont();const W=900,H=1200,c=document.
     logo('#fff','#fff',bg,H-56);vol('#fff');}
   else if(L==='G'){x.fillStyle=bg;x.fillRect(0,0,W,H);
     x.lineWidth=64;x.strokeStyle=ac;x.beginPath();x.arc(W-30,40,250,0,7);x.stroke();x.lineWidth=34;x.strokeStyle=ac2;x.beginPath();x.arc(W+20,-20,150,0,7);x.stroke();
-    x.fillStyle=ac2;x.font=K(700,30);x.letterSpacing='8px';x.fillText((band?'BAND '+band.replace(/\s/g,'')+' · ':'')+'PRACTICE · ANSWERS',mx,92);x.letterSpacing='0px';
-    let y=330;const sz=fit(head,900,W-mx*2,240,110);x.fillStyle='#fff';x.font=K(900,sz);x.fillText(head,mx-6,y);
+    x.fillStyle=ac2;x.font=K(700,30);x.letterSpacing='8px';x.fillText((band?'BAND '+band.replace(/\s/g,'')+' · ':'')+LT.pa,mx,92);x.letterSpacing='0px';
+    let y=330;const sz=fit(head,900,W-mx*2,240,60);x.fillStyle='#fff';x.font=K(900,sz);x.fillText(head,mx-6,y);
     if(rest){x.fillStyle=ac2;x.letterSpacing='6px';lines(rest,700,52,W-mx*2,2).forEach(l=>{y+=72;x.font=K(700,52);x.fillText(l,mx,y);});x.letterSpacing='0px';}
     if(num){const ns=fit(num,900,W-mx*2-160,340,160);y+=ns*.92;x.fillStyle=ac;x.font=K(900,ns);x.fillText(num,mx-8,y);const nw=x.measureText(num).width;if(unit){x.font=K(700,46);if(mx+nw+10+x.measureText(unit).width>W-mx){y+=56;x.fillText(unit,mx,y);}else x.fillText(unit,mx+nw+10,y);}}
     y+=30;if(sub){x.fillStyle='rgba(255,255,255,.85)';lines(sub,700,38,W-mx*2,2).forEach(l=>{y+=54;x.font=K(700,38);x.fillText(l,mx,y);});}
     y+=16;checks.forEach(t=>{y+=52;tick(t,y,'rgba(255,255,255,.85)');});
     logo(ac,'#fff',bg,H-56);vol('#fff');}
-  else if('IJKL'.includes(L)){const O=(w,sz)=>`${w} ${sz}px Oswald,Kanit,sans-serif`,SF=sz=>`700 ${sz}px 'Playfair Display',Georgia,serif`;
+  else if('IJKL'.includes(L)){const O=(w,sz)=>`${w} ${sz}px Oswald,Kanit,sans-serif`,SF=sz=>`700 ${sz}px 'Playfair Display',Kanit,Georgia,serif`;
     const tw=[...new Set((String(b.toc||'')+' '+String(b.features||'')+' '+name).match(/\b[a-z]{5,12}\b/g)||[])].filter(w=>!/^(https?|answer|practice|questions?|vocabulary|english)$/.test(w));
     const VW=[...tw,...'meticulous resilient eloquent pragmatic candid diligent profound vivid tenacious subtle ambiguous coherent concise elaborate inevitable lucid notable obscure plausible rigorous serene thrive versatile wary zealous benevolent cultivate deliberate emerge foster genuine hinder imply mitigate nuance prevail reluctant scrutiny sustain'.split(' ')];
     const T=(tx.title||'VOCABULARY').split(' ').filter(Boolean),cnt=num?`${num} ${unit}`.trim():'',tc=w=>/^(IELTS|TOEIC|TOEFL|CU-TEP|TGAT|GAT|PAT|MP3|[ABC][12]|[0-9].*)$/.test(w)?w:w.charAt(0)+w.slice(1).toLowerCase(); // ตัวย่อ (IELTS) คงตัวใหญ่
     if(L==='I'){x.fillStyle=bg;x.fillRect(0,0,W,H);x.font=O(600,34);x.fillStyle='rgba(255,255,255,.09)';let k=0;for(let yy=40;yy<H+40;yy+=52){let xx=-((yy*7)%160),row='';while(xx<W){const w=VW[(k++)%VW.length];x.fillText(w,xx,yy);xx+=x.measureText(w+' · ').width;}}
-      x.fillStyle=ac2;x.font=O(600,26);x.letterSpacing='6px';x.fillText('SHEETLAB · ENGLISH SERIES',mx,96);x.letterSpacing='0px';x.fillRect(mx+430,86,W-mx*2-430,3);
+      x.fillStyle=ac2;x.font=O(600,26);x.letterSpacing='6px';x.fillText(LT.series,mx,96);x.letterSpacing='0px';x.fillRect(mx+430,86,W-mx*2-430,3);
       let y=H*.2;const tl=T.length<=4?T:[T.slice(0,Math.ceil(T.length/2)).join(' '),T.slice(Math.ceil(T.length/2)).join(' ')];
       tl.forEach((w,k)=>{let sz=tl.length===1?190:150;x.font=O(700,sz);while(sz>70&&x.measureText(w).width>W-mx*2){sz-=6;x.font=O(700,sz);}y+=sz*.98;x.fillStyle=k===tl.length-1?ac:'#fff';x.fillText(w,mx,y);});
-      y+=40;x.fillStyle='#fff';const lines2=[sub,cnt?`OVER ${cnt} TO MASTER`:''].filter(Boolean);lines2.forEach(t=>{lines(t,600,38,W-mx*2,2).forEach(l=>{y+=50;x.font=O(600,38);x.fillText(l,mx,y);});});
-      let px=mx;[cnt||'ESSENTIAL',band?'BAND '+band.replace(/\s/g,''):'WITH EXAMPLES'].forEach((t,k)=>{x.font=O(700,28);const w=x.measureText(t).width+36;x.fillStyle=k?'#fff':ac;x.fillRect(px,H-170,w,50);x.fillStyle=k?bg:'#16181D';x.fillText(t,px+18,H-135);px+=w+12;});
+      y+=40;x.fillStyle='#fff';const lines2=[sub,cnt?LT.master(cnt):''].filter(Boolean);lines2.forEach(t=>{lines(t,600,38,W-mx*2,2).forEach(l=>{y+=50;x.font=O(600,38);x.fillText(l,mx,y);});});
+      let px=mx;[cnt||LT.ess,band?'BAND '+band.replace(/\s/g,''):LT.ex].forEach((t,k)=>{x.font=O(700,28);const w=x.measureText(t).width+36;x.fillStyle=k?'#fff':ac;x.fillRect(px,H-170,w,50);x.fillStyle=k?bg:'#16181D';x.fillText(t,px+18,H-135);px+=w+12;});
       logo(ac,ac,bg,H-56);vol('#fff');}
     else if(L==='J'){x.fillStyle=bg;x.fillRect(0,0,W,H);x.strokeStyle='rgba(255,255,255,.18)';x.lineWidth=26;[[60,H-140,110],[W-40,H-60,170],[W-90,120,60]].forEach(([cx,cy,r])=>{x.beginPath();x.arc(cx,cy,r,0,7);x.stroke();});
       const cx=W/2,cy=330,R=230,P=26;x.fillStyle='#fff';x.beginPath();for(let k=0;k<P*2;k++){const a=k*Math.PI/P,r=k%2?R:R*.9;x.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);}x.closePath();x.fill();
@@ -2128,7 +2134,7 @@ async function examCover(b,i,n,st){await thFont();const W=900,H=1200,c=document.
       x.fillStyle='#F6F1E4';x.beginPath();x.arc(cx,cy,R,0,7);x.fill();x.strokeStyle=bg;x.lineWidth=5;x.beginPath();x.arc(cx,cy,R-26,0,7);x.stroke();
       x.textAlign='right';const right=W-70,half=Math.ceil(T.length/2);let y=cy-(T.length*120+(cnt?150:60)+(sub?60:0))/2-40;
       T.map(tc).forEach((w,k)=>{let sz=118;x.font=SF(sz);while(sz>56&&x.measureText(w).width>W*.74){sz-=6;x.font=SF(sz);}y+=sz*1.05;x.fillStyle=k<half&&T.length>1?'#1B1B1B':bg;x.fillText(w,right,y);});
-      y+=34;x.fillStyle='#1B1B1B';x.fillRect(right-260,y,260,3);y+=60;x.font=`italic ${SF(36)}`;x.fillStyle='#3a3a3a';if(cnt){x.fillText(`Over ${num}`,right,y);y+=46;x.fillText(unit.toLowerCase(),right,y);y+=46;}
+      y+=34;x.fillStyle='#1B1B1B';x.fillRect(right-260,y,260,3);y+=60;x.font=`italic ${SF(36)}`;x.fillStyle='#3a3a3a';if(cnt){x.fillText(`${LT.over} ${num}`,right,y);y+=46;x.fillText(unit.toLowerCase(),right,y);y+=46;}
       if(sub){x.font=SF(28);x.fillText(sub.replace(/ · /g,' & '),right,y+20);}
       x.textAlign='left';logo('#F6F1E4','#F6F1E4',bg,H-56);vol('#F6F1E4');}
     else {x.fillStyle='#fff';x.fillRect(0,0,W,H);const bw=150;x.fillStyle=bg;x.fillRect(0,0,bw,H);
@@ -2141,7 +2147,7 @@ async function examCover(b,i,n,st){await thFont();const W=900,H=1200,c=document.
       y+=40;const CC=[bg,ac2,ac,'#0F1B33','#E8432E','#3DDC97'],cw=(rw-16)/2;VW.slice(0,8).forEach((w,k)=>{const cx2=lx+(k%2)*(cw+16),cy2=y+Math.floor(k/2)*74;if(cy2>H-200)return;x.fillStyle=CC[k%CC.length];rr(cx2,cy2,cw,58,12);x.fill();x.fillStyle=CC[k%CC.length]===ac||CC[k%CC.length]===ac2?'#16181D':'#fff';x.font=K(700,32);x.textAlign='center';x.fillText(w,cx2+cw/2,cy2+40);x.textAlign='left';});
       x.save();x.translate(lx-mx,0);logo(bg,bg,'#fff',H-56);x.restore();vol(bg);}}
   else {x.fillStyle='#fff';x.fillRect(0,0,W,H);const bh=H*.5;x.fillStyle=bg;x.fillRect(0,0,W,bh);
-    let y=110;const sz=fit(head,900,W-mx*2,250,110);x.fillStyle='#fff';x.font=K(900,sz);y+=sz*.86;x.fillText(head,mx-6,y);
+    let y=110;const sz=fit(head,900,W-mx*2,250,60);x.fillStyle='#fff';x.font=K(900,sz);y+=sz*.86;x.fillText(head,mx-6,y);
     if(rest){const rl=lines(rest,800,70,W-mx*2,2);rl.forEach((l,k)=>{y+=80;x.font=K(800,70);x.fillStyle=k?'rgba(255,255,255,.75)':'#fff';x.fillText(l,mx,y);});}
     const R=130,cx=W-mx-R+10,cy=bh;x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,R+10,0,7);x.fill();x.fillStyle=bg===EX_PAL[1][0]?'#16181D':'#0F1B33';x.beginPath();x.arc(cx,cy,R,0,7);x.fill();
     const big=band?band.replace(/\s/g,''):num,small=band?'BAND':unit;
@@ -2367,6 +2373,7 @@ function bundleForm(){
     <div class="bxi-style"><span class="bxi-lab">แบบปก</span><div class="kind-seg" role="group" aria-label="แบบปก"><button data-a="bxStyle" data-v="mode:orig" aria-pressed="${st.mode!=='new'}">📘 ตามปกเดิม</button><button data-a="bxStyle" data-v="mode:new" aria-pressed="${st.mode==='new'}">✨ ออกแบบใหม่</button><button data-a="bxStyle" data-v="mode:theme" aria-pressed="${st.mode==='theme'}">🎨 ปกตามธีม (ฟรี)</button></div></div>
     ${st.mode==='theme'?`<div class="bxi-pal th-pick"><button class="chip${st.theme==='auto'?' on':''}" data-a="bxTheme" data-v="auto" aria-pressed="${st.theme==='auto'}">🎲 สุ่มแบบไม่ซ้ำ</button>${Object.entries(TH_THEMES).map(([k,v])=>`<button class="chip${st.theme===k?' on':''}" data-a="bxTheme" data-v="${k}" aria-pressed="${st.theme===k}">${v[1]} ${esc(v[0])}</button>`).join('')}${Object.entries(TH_KW).map(([k,v])=>`<button class="chip${st.theme==='kw-'+k?' on':''}" data-a="bxTheme" data-v="kw-${k}" aria-pressed="${st.theme==='kw-'+k}">${v[1]} ${esc(v[0])}</button>`).join('')}
       <span class="th-kw"><input class="input" data-thkw="1" placeholder="หรือพิมพ์คำอังกฤษ เช่น cat, coffee" value="${esc(/^kw-/.test(st.theme)&&!TH_KW[st.theme.slice(3)]?st.theme.slice(3):'')}" aria-label="ธีมจากคำ"><button class="chip" data-a="bxThemeKw">🔎 ใช้คำนี้</button></span></div>
+      <p class="fine" style="margin:0 0 6px"><span class="cv-lang">ภาษาบนปก <button class="chip${cvLang()==='en'?' on':''}" data-a="coverLang" data-v="en" aria-pressed="${cvLang()==='en'}">🇬🇧 อังกฤษ</button><button class="chip${cvLang()==='th'?' on':''}" data-a="coverLang" data-v="th" aria-pressed="${cvLang()==='th'}">🇹🇭 ไทย</button></span></p>
       <p class="fine" style="margin:0 0 8px">ไม่ใช้ AI ไม่เสียเงิน · ทุกเล่มในชุดใช้ธีมเดียวกันแต่สีพื้นและตัวการ์ตูนไม่ซ้ำกัน · ระบบเลือกธีม/แบบจัดวางที่ร้านยังใช้น้อยให้ ชุดอื่นจะได้ไม่เหมือนกัน · ตัวหนังสือไทยพิมพ์ตรงตามชื่อสินค้า${S.thSet?` · รอบนี้: <b>${esc(thThemeName(S.thSet))}</b> แบบ ${S.thSet.layout} <button class="chip" data-a="bxThemeNew">🎲 สุ่มใหม่</button>`:''}</p>`:''}
     ${st.mode==='new'?`<div class="bxi-pal">${Object.entries(BX_PAL).map(([k,v])=>`<button class="chip${st.pal===k?' on':''}" data-a="bxStyle" data-v="pal:${k}" aria-pressed="${st.pal===k}">${esc(v[0])}</button>`).join('')}</div>
       <div class="bxi-refs"><span class="fine">รูปตัวอย่างปกที่ชอบ (ไม่บังคับ สูงสุด 3 รูป · ใช้แทนโทนสีด้านบน ไม่ใช้ปกเดิมของเล่ม)</span><div class="bxi-refrow">${(st.refs||[]).map((u,k)=>`<span class="bxi-ref"><img src="${esc(u)}" alt="รูปตัวอย่าง ${k+1}"><button data-a="bxRefDel" data-v="${k}" aria-label="เอารูปนี้ออก">×</button></span>`).join('')}${(st.refs||[]).length<3?`<label class="bxi-refadd">${S.bxRefUp?'กำลังอัป...':'+ เพิ่มรูปตัวอย่าง'}<input type="file" accept="image/*" hidden data-bxref="1"></label>`:''}</div></div>
@@ -3400,7 +3407,7 @@ async function vidCheck(c,d){const urls=vidUrls(c);if(!urls.length)return null;S
     const bad=res.filter(r=>r.state!=='public').length;if(d&&res.length&&!bad)d.videoOk=true;toast(bad?`🔒 ยังเปิดไม่ได้ ${bad} บท แชร์โฟลเดอร์ Courses เป็น "ทุกคนที่มีลิงก์" ก่อน`:'✅ วิดีโอทุกบทเปิดได้แบบไม่ล็อกอิน');return {bad,n:res.length};}
   catch(e){toast('ตรวจไม่สำเร็จ ลองใหม่');return null;}finally{S.vidBusy=false;render(true);}}
 /* ตัวสร้างปกด้วย AI (ใช้ทั้งหน้าแก้สินค้าและหน้าแก้คอร์ส) · คอร์ส: สร้างทีละรูป ไม่มีชุด 5 รูป (ชุดนั้นทำมาสำหรับหนังสือ) */
-function aiCoverBox(d){return `    <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><button class="btn btn-line btn-sm" data-a="coverTheme" ${S.coverBusy?'disabled':''}>🎲 ปกตามธีม (ฟรี)</button><button class="btn btn-line btn-sm" data-a="coverTheme" data-v="exam" ${S.coverBusy?'disabled':''}>📘 ปกสไตล์หนังสือสอบ (ฟรี)</button><button class="btn btn-line btn-sm" data-a="coverTheme" data-v="vocab" ${S.coverBusy?'disabled':''}>📗 ปกสไตล์หนังสือคำศัพท์ (ฟรี)</button>${pfmt(d)==='notion'?'':`<button class="btn btn-line btn-sm" data-a="themeSetGen" ${S.coverBusy?'disabled':''}>🖼 ชุดรูป 5 รูปตามธีม (ฟรี)</button>`}<span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
+function aiCoverBox(d){return `    <div class="field aicover"><div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="coverOpen">🎨 ${S.coverOpen?'ปิดตัวสร้างปก':'สร้างปกด้วย AI'}</button><button class="btn btn-line btn-sm" data-a="coverTheme" ${S.coverBusy?'disabled':''}>🎲 ปกตามธีม (ฟรี)</button><button class="btn btn-line btn-sm" data-a="coverTheme" data-v="exam" ${S.coverBusy?'disabled':''}>📘 ปกสไตล์หนังสือสอบ (ฟรี)</button><button class="btn btn-line btn-sm" data-a="coverTheme" data-v="vocab" ${S.coverBusy?'disabled':''}>📗 ปกสไตล์หนังสือคำศัพท์ (ฟรี)</button><span class="cv-lang">ภาษาบนปก <button class="chip${cvLang()==='en'?' on':''}" data-a="coverLang" data-v="en" aria-pressed="${cvLang()==='en'}">🇬🇧 อังกฤษ</button><button class="chip${cvLang()==='th'?' on':''}" data-a="coverLang" data-v="th" aria-pressed="${cvLang()==='th'}">🇹🇭 ไทย</button></span>${pfmt(d)==='notion'?'':`<button class="btn btn-line btn-sm" data-a="themeSetGen" ${S.coverBusy?'disabled':''}>🖼 ชุดรูป 5 รูปตามธีม (ฟรี)</button>`}<span class="fine">ใช้ OpenAI แบบเดียวกับ ChatGPT ครั้งละ 1 รูป</span></div>
       ${S.coverOpen?`<div class="aic-box"><label for="e-cover-prompt">คำสั่งทำปก (แก้ได้)</label><textarea class="input" id="e-cover-prompt" data-cp="1" rows="7">${esc(S.coverPrompt==null?coverPrompt(d):S.coverPrompt)}</textarea>
         <div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px">${imgSetReal(d)?`<div class="kind-seg" role="group" aria-label="รูปแรกของชุด" style="margin:0 0 6px"><button data-a="imgFirst" data-v="ai" aria-pressed="${S.imgFirst!=='real'}">🎨 รูปแรกให้ AI ออกแบบ</button><button data-a="imgFirst" data-v="real" aria-pressed="${S.imgFirst==='real'}">📕 ใช้ปกจริงเป็นรูปแรก</button></div>`:''}${pfmt(d)==='course'?'':`<button class="btn btn-cta btn-sm" data-a="imgSetGen" ${S.coverBusy?'disabled':''}>${S.imgSet&&S.coverBusy?'กำลังสร้างชุด 5 รูป...':'✨ สร้างชุดภาพสินค้า 5 รูป'}</button>`}${S.coverBusy?'<button class="btn btn-danger btn-sm" data-a="aiStop">⏹ หยุดสร้างรูป</button>':''}<button class="btn btn-dark btn-sm" data-a="coverGen" ${S.coverBusy?'disabled':''}>${S.coverBusy?'กำลังสร้าง... (ประมาณ 20-60 วินาที)':S.coverImg?'สร้างใหม่อีกรูป':'สร้างรูป'}</button><button class="btn btn-line btn-sm" data-a="coverReset">ใช้คำสั่งตั้งต้น</button></div>
         <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><label class="fine">โมเดล <select class="input" data-imgset="model" style="width:auto;display:inline-block;padding:6px 8px">${IMG_MODELS.map(m=>`<option value="${m[0]}" ${imgModel()===m[0]?'selected':''}>${esc(m[1])}</option>`).join('')}</select></label>
@@ -6711,6 +6718,7 @@ function act(a,el){
       themeCover(S.draft,0,1,Object.assign({series:''},ch)).then(u=>{S.coverImg=u;S.coverFlat=u;S.draft.coverKey=`theme:${ch.theme}:${ch.layout}:${ch.pal}:${ch.off}`;S.draft.coverMode='theme';toast(`ได้ปกธีม${thThemeName(ch)} · กดอีกครั้งเพื่อสุ่มใหม่`);})
         .catch(e=>{S.coverErr='ทำปกไม่สำเร็จ: '+(e.message||e);}).then(()=>{S.coverBusy=false;render(true);});break;}
     case 'coverOpen':S.coverOpen=!S.coverOpen;S.coverErr='';render(true);break;
+    case 'coverLang':try{localStorage.setItem('sl_cvlang',el.dataset.v==='th'?'th':'en');}catch(e){}toast(el.dataset.v==='th'?'ปกที่ทำต่อจากนี้เป็นภาษาไทย':'ปกที่ทำต่อจากนี้เป็นภาษาอังกฤษ');render(true);break;
     case 'coverGen':coverGen();break;
     case 'imgSetGen':imgSetGen();break;
     case 'imgSetUse':imgSetUse();break;
