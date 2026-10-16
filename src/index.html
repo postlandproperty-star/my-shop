@@ -1308,7 +1308,7 @@ async function flushRemote(retry){
   const now=new Date().toISOString();
   // ลิงก์ไฟล์สินค้า (link) เป็นความลับ: แยกออกจากข้อมูลสาธารณะไปเก็บในแถว private
   const pub=pick(D,PUBLIC_KEYS),links={};
-  pub.products=D.products.map(p=>{links[p.id]=p.link||'';const q=Object.assign({},p);delete q.link;
+  pub.products=D.products.map(p=>{links[p.id]=p.link||'';const q=Object.assign({},p);delete q.link;delete q.audioDemo;
     if(q.linkOrig)links[p.id+'#orig']=String(q.linkOrig);delete q.linkOrig;delete q._lite; // ไฟล์ต้นฉบับก่อนใส่ปกใหม่ = ไฟล์เต็มที่ขาย ความลับเหมือน link (15 ต.ค. 69 เคยหลุดอยู่ในหน้าเว็บสาธารณะ)
     if(q.planLinks){Object.entries(q.planLinks).forEach(([k,v])=>{if(String(v||'').trim())links[p.id+'@'+k]=String(v);});delete q.planLinks;} // ไฟล์ของแถมแพ็กเกจชุด = ความลับ
     return q;});
@@ -1353,6 +1353,8 @@ async function loadRemote(){
     const cached=load()||{};
     PRIVATE_KEYS.forEach(k=>{if(merged[k]===undefined)merged[k]=cached[k]||[];});
   }
+  const aud=new Map((D.products||[]).filter(p=>p.audioDemo).map(p=>[p.id,p.audioDemo])); // 🎧 ตัวอย่างเสียงมาจากเซิร์ฟเวอร์ (ไม่อยู่ใน shop_state) เก็บไว้ให้หน้าขายยังมีกล่องฟังตัวอย่าง
+  merged.products.forEach(p=>{if(aud.has(p.id))p.audioDemo=aud.get(p.id);});
   D=normalize(merged);
   if(sbSession&&ensureSkus())setTimeout(save,0); // สินค้าที่ยังไม่มี SKU ได้เลขอัตโนมัติ
   if(sbSession){
