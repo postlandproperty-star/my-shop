@@ -19,6 +19,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl, linkPageFromUser, schedulePagePost, deletePagePost } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
+import { AP_DEFAULT, campaignsOf, planBudget } from '../lib/autopilot.js';
 import { saleKit } from '../lib/salepost.js';
 import { adsAccess, launchAd, isGovProduct, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
@@ -587,6 +588,52 @@ async function adAlarm({ force = false, dry = false } = {}) {
   await ownerMail(`🚨 แอดมีปัญหาร้ายแรง ${red.length} เรื่อง`, `<p style="margin:0 0 10px"><b>ต้องดูด่วน</b> (ระบบยังไม่ได้หยุดแอดให้ คุณแดนตัดสินใจ)</p><ul style="padding-left:18px;margin:0 0 10px">${li(red, '#BE123C')}</ul>${amber.length ? `<p style="margin:0 0 6px"><b>ควรเช็ก</b></p><ul style="padding-left:18px;margin:0">${li(amber, '#B45309')}</ul>` : ''}`, { button: ['เปิดหลังบ้าน → โฆษณา', `${site}/?admin`] });
   for (const [, t] of fresh) await addTodo({ text: `🚨 ${t}`, type: 'do', from: 'manager' }).catch(() => {});
   return { ok: true, red, amber, emailed: true };
+}
+// 🤖 ออโต้ไพลอตแอด (lib/autopilot.js) · cron วันละครั้ง + ตอนคุณแดนกดเปิด · dry = ดูแผนอย่างเดียว ไม่เปลี่ยนอะไร
+const loadAP = async () => ({ ...AP_DEFAULT, ...((await sb('shop_state?id=eq.ad_autopilot&select=data'))?.[0]?.data || {}) });
+const saveAP = (d) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ad_autopilot', data: d, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+async function autopilotRun({ dry = false, cfg = null } = {}) {
+  cfg = cfg || await loadAP(); if (!dry && !cfg.on) return { ok: true, skipped: 'off' };
+  const fb = await loadFb().catch(() => null); if (!fb?.userToken) return { ok: false, error: 'ยังไม่ได้เชื่อม Facebook' };
+  const acc = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) }));
+  if (!acc.ok) return { ok: false, error: acc.error, rate: acc.reason === 'rate' };
+  const currency = acc.account?.currency || 'AUD';
+  const st = await adsStatus(fb, { currency, priceOf: await adPriceOf() });
+  const daily = await adsDaily(fb, st.rate, 31).catch(() => null);
+  const since = new Date(Date.now() - 14 * 864e5).toISOString();
+  const [ords, priv] = await Promise.all([sb(`orders?status=eq.paid&paid_at=gte.${since}&select=campaign,amount,paid_at,email&limit=2000`), sb('shop_state?id=eq.private&select=data')]);
+  const isTest = testOrder(null, priv?.[0]?.data?.testEmails), real = (ords || []).filter((o) => !isTest(o) && o.campaign);
+  const m0 = new Date(Date.now() + (daily?.tz ?? 10) * 36e5).toISOString().slice(0, 8) + '01', monthSpent = (daily?.rows || []).filter((r) => r.d >= m0).reduce((x, r) => x + (r.s || 0), 0);
+  const camps = campaignsOf(st, real, daily), plan = planBudget(cfg, camps, { monthSpent });
+  const brief = (c) => ({ id: c.id, name: c.name, daily: c.dailyTHB, spend7: Math.round(c.spend7), orders7: c.orders7, rev7: c.rev7, roas7: c.roas7 == null ? null : Math.round(c.roas7 * 100) / 100, running: c.running, end: c.end, ctr7: c.ctr7, ctrPrev: c.ctrPrev });
+  const acts = plan.actions.map((a) => ({ type: a.type, id: a.c.id, name: a.c.name, from: a.from, to: a.to, days: a.days, why: a.why }));
+  if (dry) return { ok: true, dry: true, info: plan.info, actions: acts, notes: plan.notes.map((n) => n.text), camps: camps.map(brief) };
+  const now = Date.now(), done = [];
+  for (const a of plan.actions) {
+    const c = a.c; let err = '';
+    try {
+      if (a.type === 'pause') await setCampaignStatus(fb, c.id, 'PAUSED');
+      else if (a.type === 'budget') await extendCampaign(fb, { campaignId: c.id, adsetIds: c.adsetIds, dailyTHB: a.to, budgetOn: c.budgetOn, currency });
+      else if (a.type === 'extend') await extendCampaign(fb, { campaignId: c.id, adsetIds: c.adsetIds, end: c.end || '', days: a.days, currency });
+    } catch (e) { err = String(e.message || e).slice(0, 200); }
+    cfg.camp = cfg.camp || {}; cfg.camp[c.id] = { ...(cfg.camp[c.id] || {}), ...(err ? {} : { changedAt: new Date(now).toISOString() }) };
+    const line = { at: new Date(now).toISOString(), type: a.type, name: c.name, from: a.from, to: a.to, days: a.days, why: a.why, ...(err ? { err } : {}) };
+    cfg.log = [line, ...(cfg.log || [])].slice(0, 120); done.push(line);
+  }
+  // เตือน (ส่งซ้ำได้ทุก 7 วันต่อเรื่อง) + สรุปทุกวันจันทร์
+  cfg.mail = cfg.mail || {}; const site = await siteUrl().catch(() => 'https://sheetlabth.com'), btn = ['เปิดหลังบ้าน → โฆษณา', `${site}/?admin`];
+  const fresh = plan.notes.filter((n) => now - (cfg.mail[n.key] || 0) > 7 * 864e5);
+  if (fresh.length) { for (const n of fresh) { cfg.mail[n.key] = now; await addTodo({ text: '🤖 ' + n.text, type: 'do', from: 'manager' }).catch(() => {}); }
+    await ownerMail(`🤖 ออโต้ไพลอตแอด: ${fresh.length} เรื่องที่ควรดู`, `<ul style="padding-left:18px;margin:0">${fresh.map((n) => `<li style="margin:0 0 8px">${escH(n.text)}</li>`).join('')}</ul><p class="fine" style="margin:10px 0 0">ระบบไม่เปลี่ยนรูปแอดเอง คุณแดนเลือกเอง</p>`, { button: btn }); }
+  const tday = new Date(now + 7 * 36e5); if (tday.getUTCDay() === 1 && cfg.mail.weekly !== tday.toISOString().slice(0, 10)) {
+    cfg.mail.weekly = tday.toISOString().slice(0, 10);
+    const spend7 = camps.reduce((x, c) => x + c.spend7, 0), rev7 = camps.reduce((x, c) => x + c.rev7, 0), wk = (cfg.log || []).filter((l) => now - Date.parse(l.at) < 7 * 864e5);
+    const rows = camps.filter((c) => c.spend7 > 0).sort((a, b) => b.rev7 - a.rev7).map((c) => `<tr><td style="padding:4px 8px 4px 0">${escH(c.name)}</td><td style="padding:4px 8px">฿${Math.round(c.spend7).toLocaleString('th-TH')}</td><td style="padding:4px 8px">฿${c.rev7.toLocaleString('th-TH')}</td><td style="padding:4px 0">${c.roas7 == null ? '–' : c.roas7.toFixed(1) + ' เท่า'}</td></tr>`).join('');
+    const L = { budget: (l) => `ปรับงบ "${l.name}" ฿${l.from}→฿${l.to}/วัน (${l.why})`, pause: (l) => `หยุด "${l.name}" (${l.why})`, extend: (l) => `ต่ออายุ "${l.name}" ${l.days} วัน (${l.why})` };
+    await ownerMail(`🤖 สรุปแอดสัปดาห์นี้: ลง ฿${Math.round(spend7).toLocaleString('th-TH')} ได้ ฿${rev7.toLocaleString('th-TH')}`, `<p style="margin:0 0 8px">7 วันล่าสุด ค่าแอด <b>฿${Math.round(spend7).toLocaleString('th-TH')}</b> ยอดขายจริงจากแอด <b>฿${rev7.toLocaleString('th-TH')}</b> (ได้คืน ${spend7 ? (rev7 / spend7).toFixed(1) : '–'} เท่า) · งบเดือนนี้ใช้ไป ฿${plan.info.monthSpent.toLocaleString('th-TH')} จาก ฿${cfg.monthTHB.toLocaleString('th-TH')}</p><table style="font-size:14px;border-collapse:collapse;margin:0 0 10px"><tr><th align="left">แอด</th><th align="left">ค่าแอด</th><th align="left">ยอดขาย</th><th align="left">ได้คืน</th></tr>${rows}</table><p style="margin:0 0 4px"><b>ระบบทำอะไรไปบ้าง</b></p><ul style="padding-left:18px;margin:0">${wk.map((l) => `<li>${escH((L[l.type] || ((x) => x.type))(l))}${l.err ? ' ⚠️ ' + escH(l.err) : ''}</li>`).join('') || '<li>ไม่ได้เปลี่ยนอะไร</li>'}</ul>`, { button: btn });
+  }
+  await saveAP(cfg);
+  return { ok: true, info: plan.info, done, notes: fresh.map((n) => n.text) };
 }
 // คลิป Reels ที่โพสต์ครบทุกช่องแล้ว (เพจ/IG/Threads เก็บคลิปไว้เองแล้ว) ลบไฟล์ออกจากคลังร้าน ไม่ให้พื้นที่เต็ม (คุณแดนสั่ง 1 ต.ค. 69)
 // ลบเมื่อ: ทุกโพสต์ที่ใช้คลิปนั้นโพสต์แล้วหรือถูกปัดตก · โพสต์ล่าสุดผ่านมาแล้ว 3 วัน (เผื่อโพสต์ซ้ำ) · ไม่มี IG ที่ยังประมวลผลค้าง · คลิปที่ถูกปัดตกทั้งหมดลบหลัง 14 วัน
@@ -1175,7 +1222,7 @@ export default async function handler(req, res) {
       let reelclean = null; // คลิปที่โพสต์แล้ว ลบออกจากคลังร้าน
       if (cronOk(req)) { try { reelclean = await cleanupReels(); } catch (e) { reelclean = { ok: false, error: String(e.message || e) }; } }
       let adwatch = null; // เฝ้าเงินค่าแอด
-      if (cronOk(req)) { try { adwatch = await adWatch(); } catch (e) { adwatch = { ok: false, error: String(e.message || e) }; } try { adwatch.alarm = await adAlarm({ force: true }); } catch (e) { console.error('ad alarm', e.message); } }
+      if (cronOk(req)) { try { adwatch = await adWatch(); } catch (e) { adwatch = { ok: false, error: String(e.message || e) }; } try { adwatch.alarm = await adAlarm({ force: true }); } catch (e) { console.error('ad alarm', e.message); } try { adwatch.pilot = await autopilotRun(); } catch (e) { console.error('autopilot', e.message); } }
       let adsdraft = null; // สินค้าเผยแพร่ใหม่ → ร่างแอดรอคุณแดนกดตกลง
       if (cronOk(req)) { try { adsdraft = await ensureAdDrafts(); } catch (e) { adsdraft = { ok: false, error: String(e.message || e) }; } }
       return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft, reelclean, adwatch });
@@ -3455,6 +3502,10 @@ ${books}`;
         if (fb && fb.userToken && req.query.stats) for (const x of items.filter((y) => y.fb?.campaign && ['live', 'ended', 'paused'].includes(y.status)).slice(0, 8)) { try { x.stats = await campaignStats(fb, x.fb.campaign); } catch (e) {} }
         return res.status(200).json({ ok: true, items, access, defaults: ADS_DEFAULT });
       }
+      if (action === 'ads_auto_pilot') { // 🤖 ดูการตั้งค่า + แผนรอบถัดไป (ไม่เปลี่ยนอะไร)
+        const cfg = await loadAP(); let plan = null; try { plan = await autopilotRun({ dry: true, cfg }); } catch (e) { plan = { ok: false, error: String(e.message || e) }; }
+        return res.status(200).json({ ok: true, cfg: { on: !!cfg.on, monthTHB: cfg.monthTHB, testShare: cfg.testShare, boosts: cfg.boosts || [], log: (cfg.log || []).slice(0, 40) }, plan });
+      }
       if (action === 'ads_auto_status') { // สถานะแอดทุกตัวในบัญชีจาก Facebook (อ่านอย่างเดียว ทีมดูได้)
         const fb = await loadFb().catch(() => null);
         const acc = await adsAccess(fb).catch((e) => ({ ok: false, error: String(e.message || e) }));
@@ -3483,6 +3534,19 @@ ${books}`;
       }
       if (req.method !== 'POST') return res.status(405).json({ ok: false });
       const body = await readBody(req);
+      if (action === 'ads_auto_pilot_set') { // 🤖 เปิด/ปิด · งบเดือน · บูสต์ (เฉพาะคุณแดน · เงิน)
+        if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
+        const cfg = await loadAP(); const was = !!cfg.on;
+        if (typeof body.on === 'boolean') cfg.on = body.on;
+        if (body.monthTHB != null) { const m = Math.round(Number(body.monthTHB) || 0); if (m < 1000 || m > 500000) return res.status(400).json({ ok: false, error: 'งบเดือนต้องอยู่ระหว่าง ฿1,000–500,000' }); cfg.monthTHB = m; }
+        if (body.boost) { const b = body.boost, x = Math.round(Number(b.extraTHB) || 0), d = Math.round(Number(b.days) || 7); if (!/^\d{6,30}$/.test(String(b.campaignId || '')) || x < 100 || x > 200000 || d < 1 || d > 30) return res.status(400).json({ ok: false, error: 'บูสต์: ใส่เงิน ฿100 ขึ้นไป และ 1–30 วัน' });
+          cfg.boosts = [...(cfg.boosts || []).filter((y) => y.campaignId !== String(b.campaignId) && Date.parse(y.end) > Date.now()), { campaignId: String(b.campaignId), name: String(b.name || '').slice(0, 80), extraTHB: x, days: d, baseTHB: Math.round(Number(b.baseTHB) || 0), start: new Date().toISOString(), end: new Date(Date.now() + d * 864e5).toISOString() }]; }
+        if (body.unboost) cfg.boosts = (cfg.boosts || []).filter((y) => y.campaignId !== String(body.unboost));
+        cfg.log = [{ at: new Date().toISOString(), type: 'set', why: [typeof body.on === 'boolean' ? (body.on ? 'เปิดออโต้ไพลอต' : 'ปิดออโต้ไพลอต') : '', body.monthTHB != null ? `งบเดือน ฿${cfg.monthTHB}` : '', body.boost ? `บูสต์ +฿${body.boost.extraTHB} ${body.boost.days} วัน` : '', body.unboost ? 'ยกเลิกบูสต์' : ''].filter(Boolean).join(' · ') }, ...(cfg.log || [])].slice(0, 120);
+        await saveAP(cfg);
+        let run = null; if (cfg.on && (!was || body.boost || body.monthTHB != null)) { try { run = await autopilotRun({ cfg }); } catch (e) { run = { ok: false, error: String(e.message || e) }; } } // เปิด/เปลี่ยนงบ/บูสต์ → ปรับทันที
+        return res.status(200).json({ ok: true, run });
+      }
       if (action === 'ads_auto_extend') { // ⏩ ต่ออายุ / ปรับงบแอดเดิม (เฉพาะคุณแดน · เงิน)
         if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
         const campaignId = String(body.campaignId || ''), adsetIds = (Array.isArray(body.adsetIds) ? body.adsetIds : []).map(String).filter((x) => /^\d{6,30}$/.test(x)).slice(0, 10);
