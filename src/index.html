@@ -5047,7 +5047,7 @@ function readlabView(){
   if(!RL.data){loadRL();return '<p class="fine">กำลังโหลด เพจราชการ...</p>';}
   const d=RL.data,cfg=d.cfg||{},posts=(d.posts||[]).slice().reverse();
   const f=S.rlf||'queue',exp=S.rlexp||{};
-  const inQ=x=>['draft','approved','failed','publishing'].includes(x.status);
+  const inQ=x=>['draft','approved','scheduled','failed','publishing'].includes(x.status);
   const cnt={queue:posts.filter(inQ).length,published:posts.filter(x=>x.status==='published').length,rejected:posts.filter(x=>x.status==='rejected').length,all:posts.length};
   const list=posts.filter(x=>f==='queue'?inQ(x):f==='all'?true:x.status===f).sort((a,b)=>f==='queue'?((a.status==='draft'?0:1)-(b.status==='draft'?0:1)):0);
   const num=n=>Number(n||0).toLocaleString('th-TH');
@@ -5055,22 +5055,23 @@ function readlabView(){
   const dlt=(a,b)=>{const x=(a||0)-(b||0);return prev&&x?`<em class="vs ${x>0?'good':'bad'}">${x>0?'+':'−'}${Math.abs(x)}</em>`:'';};
   const plan=(d.notes||[]).filter(n=>n.kind==='plan').slice(-1)[0];
   const C=d.connect||{},auto=ch=>ch==='threads'?!!C.th:!!C.fb;
-  const ST={draft:['รออนุมัติ','warn'],approved:['อนุมัติแล้ว รอโพสต์','ok'],publishing:['กำลังโพสต์','warn'],failed:['โพสต์ไม่ผ่าน','bad'],published:['โพสต์แล้ว','gray'],rejected:['ปัดตก','gray']};
+  const ST={draft:['รออนุมัติ','warn'],approved:['อนุมัติแล้ว รอโพสต์','ok'],scheduled:['📅 ตั้งเวลาใน Facebook แล้ว','ok'],publishing:['กำลังโพสต์','warn'],failed:['โพสต์ไม่ผ่าน','bad'],published:['โพสต์แล้ว','gray'],rejected:['ปัดตก','gray']};
   const card=x=>{const open=!!exp[x.id],st=ST[x.status]||[x.status,'gray'],m=RL_TEAM[x.source]||{name:x.source,img:AV+'seed='+x.source},ed=x.status!=='published';
     const media=x.video_url?(open?vidOpen(x.video_url):`<img class="thumb" src="${esc(vidCover(x.video_url))}" alt="คลิป" loading="lazy" onerror="this.onerror=null;this.src=VID_PH">`):x.image_url?`<img class="${open?'':'thumb'}" src="${esc(x.image_url)}" alt="" loading="lazy" style="${open?'width:100%;border-radius:12px':''}">`:(x.channel==='facebook'&&x.kind!=='reel'?'<span class="noimg" title="น้องสีจะทำรูปให้รอบถัดไป">🖼️<br>รอรูป</span>':'<span class="noimg" title="โพสต์ข้อความล้วน">💬<br>ข้อความ</span>');
     return `<div class="post ${open?'':'compact'}">${media}<div>
       <div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap"><span><span class="badge ${st[1]}">${st[0]}</span> <span class="badge gray">${x.channel==='threads'?'Threads':'Facebook'}</span> ${igBadge(x.ig)}<span class="fine">${esc(RL_KIND[x.kind]||x.kind)}</span></span><span class="fine row" style="gap:6px"><img class="rl-by" src="${m.img}" alt="" width="22" height="22">${esc(m.name)}</span></div>
       ${x.book?`<p class="fine" style="margin:4px 0 0">📖 ${esc(x.book)}</p>`:''}
-      ${open&&ed?`<textarea class="input" id="rlt-${x.id}" style="margin-top:8px;min-height:180px">${esc(x.text)}</textarea><input class="input" id="rln-${x.id}" placeholder="คำติชมถึงทีม (ไม่บังคับ) เช่น สั้นกว่านี้ได้" value="${esc(x.owner_note||'')}" style="margin-top:6px"><label class="fine" style="display:block;margin-top:6px">🕒 เวลาโพสต์ <input class="input" type="datetime-local" id="rls-${x.id}" value="${x.scheduled_at?toLocalInput(Date.parse(x.scheduled_at)):''}" style="width:auto;display:inline-block;padding:6px 8px"> <span>ระบบโพสต์รอบแรกหลังเวลานี้ (10:00 / 19:05 น.) · ว่าง = รอบถัดไป · แก้แล้วกด "บันทึกที่แก้"</span></label>`:open?`<p style="white-space:pre-wrap;margin-top:8px">${esc(x.text)}</p>`:`<p class="ptxt" data-a="rlexp" data-id="${x.id}">${esc(x.text)}</p>`}
+      ${open&&ed?`<textarea class="input" id="rlt-${x.id}" style="margin-top:8px;min-height:180px">${esc(x.text)}</textarea><input class="input" id="rln-${x.id}" placeholder="คำติชมถึงทีม (ไม่บังคับ) เช่น สั้นกว่านี้ได้" value="${esc(x.owner_note||'')}" style="margin-top:6px"><label class="fine" style="display:block;margin-top:6px">🕒 เวลาโพสต์ <input class="input" type="datetime-local" id="rls-${x.id}" value="${x.scheduled_at?toLocalInput(Date.parse(x.scheduled_at)):''}" style="width:auto;display:inline-block;padding:6px 8px"> <span>อนุมัติแล้ว Facebook โพสต์ตรงเวลานี้เป๊ะ (ตั้งล่วงหน้าอย่างน้อย 15 นาที) · ว่าง = ช่องเวลาว่างถัดไป 08:00 / 12:00 / 17:30 / 20:30 · คลิปยังใช้รอบ 10:00 / 19:05</span></label>`:open?`<p style="white-space:pre-wrap;margin-top:8px">${esc(x.text)}</p>`:`<p class="ptxt" data-a="rlexp" data-id="${x.id}">${esc(x.text)}</p>`}
       ${open&&x.notes?`<p class="fine" style="margin-top:6px">หมายเหตุจาก ${esc(m.name)}: ${esc(x.notes)}</p>`:''}
       ${x.status==='failed'&&x.error?`<p class="err" style="margin-top:6px">${esc(x.error)}</p>`:''}
       ${x.status==='approved'&&auto(x.channel)?`<p class="fine" style="margin-top:6px">⏱ จะขึ้นเองรอบถัดไป (10:00 / 19:05 น.)${x.scheduled_at?' หลัง '+fdt(Date.parse(x.scheduled_at)):''}</p>`:''}
+      ${x.status==='scheduled'?`<p class="fine" style="margin-top:6px">📅 Facebook จะโพสต์เองตรงเวลา <b>${x.scheduled_at?fdt(Date.parse(x.scheduled_at)):''}</b> · เปลี่ยนเวลา/ข้อความแล้วกด "บันทึกที่แก้" ระบบตั้งใหม่ให้ · ปัดตก = ยกเลิกใน Facebook ด้วย</p>`:''}
       ${x.status==='published'&&x.auto?`<p class="fine" style="margin-top:6px">🤖 ระบบโพสต์ให้ ${x.published_at?fdt(Date.parse(x.published_at)):''}</p>`:''}
       <div class="acts">
-        ${(x.status==='approved'||x.status==='failed')&&auto(x.channel)?`<button class="btn btn-cta btn-sm" data-a="rlpub" data-id="${x.id}">${x.status==='failed'?'ลองโพสต์ใหม่':'โพสต์ตอนนี้'}</button>`:''}
+        ${['approved','failed','scheduled'].includes(x.status)&&auto(x.channel)?`<button class="btn btn-cta btn-sm" data-a="rlpub" data-id="${x.id}">${x.status==='failed'?'ลองโพสต์ใหม่':'โพสต์ตอนนี้'}</button>`:''}
         ${x.status==='draft'?`<button class="btn btn-cta btn-sm" data-a="rlop" data-op="approve" data-id="${x.id}">อนุมัติ</button>`:''}
         ${x.status==='approved'&&!auto(x.channel)||x.status==='failed'?`<button class="btn btn-dark btn-sm" data-a="rlop" data-op="posted" data-id="${x.id}">โพสต์เองแล้ว ✓</button>`:''}
-        ${['draft','approved','failed'].includes(x.status)?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="reject" data-id="${x.id}">ปัดตก</button>`:''}
+        ${['draft','approved','scheduled','failed'].includes(x.status)?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="reject" data-id="${x.id}">ปัดตก</button>`:''}
         ${x.status==='rejected'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="approve" data-id="${x.id}">เอากลับมา อนุมัติ</button>`:''}
         ${x.status==='published'?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="unpost" data-id="${x.id}">ยังไม่ได้โพสต์</button>`:''}
         ${open&&ed?`<button class="btn btn-line btn-sm" data-a="rlop" data-op="save" data-id="${x.id}">บันทึกที่แก้</button>`:''}

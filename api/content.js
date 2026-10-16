@@ -17,7 +17,7 @@ import '../lib/ai.js'; // งาน AI ทั้งหมดผ่าน fal.ai 
 import { loadShop, loadLinks, verifyAdmin, sbPatch, stripe, piToSession, loadTestEmails } from '../lib/shop.js';
 import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
-import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl, linkPageFromUser } from '../lib/fb.js';
+import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl, linkPageFromUser, schedulePagePost, deletePagePost } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
 import { saleKit } from '../lib/salepost.js';
 import { adsAccess, launchAd, isGovProduct, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
@@ -274,6 +274,30 @@ async function vocabRemind() {
   await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'vocab_remind', data: { day: today, sent, at: new Date().toISOString() }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
   return { sent };
 }
+// 📅 เพจราชการ: โพสต์ที่อนุมัติแล้วส่งไปตั้งเวลาใน Facebook เลย (ขึ้นตรงนาที) · ไม่มีเวลา = ช่องเวลาว่างถัดไป (RL_SLOTS เวลาไทย วันละ 4 รอบ)
+const RL_SLOTS = ['08:00', '12:00', '17:30', '20:30'];
+function rlNextSlot(posts, self) {
+  const used = new Set(posts.filter((y) => y.id !== self.id && ['approved', 'scheduled'].includes(y.status) && y.channel !== 'threads' && y.scheduled_at).map((y) => y.scheduled_at.slice(0, 16)));
+  const min = Date.now() + 20 * 60e3;
+  for (let d = 0; d < 60; d++) for (const t of RL_SLOTS) {
+    const day = new Date(Date.now() + 7 * 36e5 + d * 864e5).toISOString().slice(0, 10), ms = Date.parse(`${day}T${t}:00+07:00`);
+    if (ms > min && !used.has(new Date(ms).toISOString().slice(0, 16))) return new Date(ms).toISOString();
+  }
+  return null;
+}
+async function rlSyncFb(x, before, posts, { schedule = true } = {}) {
+  const fb = await loadFb('readlab').catch(() => null); if (!fb) return;
+  const media = x.video_url || x.image_url || null, can = x.channel !== 'threads' && !isVideoUrl(media);
+  if (x.fb_sched && (x.status !== 'scheduled' || x.scheduled_at !== before.at || x.text !== before.text)) { // แก้/ปัดตก: ลบตัวที่ตั้งไว้ใน Facebook ก่อน
+    try { await deletePagePost(fb, x.fb_sched); } catch (e) { x.error = 'ลบโพสต์ที่ตั้งเวลาไว้ใน Facebook ไม่ได้: ' + String(e.message || e).slice(0, 200); return; }
+    delete x.fb_sched; if (x.status === 'scheduled') x.status = 'approved';
+  }
+  if (!schedule || x.status !== 'approved' || !can || x.fb_sched) return;
+  if (!x.scheduled_at || Date.parse(x.scheduled_at) < Date.now() + 11 * 60e3) x.scheduled_at = rlNextSlot(posts, x);
+  const t = Date.parse(x.scheduled_at || ''); if (!t || t > Date.now() + 70 * 864e5) return;
+  try { x.fb_sched = String(await schedulePagePost(fb, { text: x.text, image_url: media, kind: x.kind, raw: true, brand: 'readlab' }, t)); x.status = 'scheduled'; delete x.error; }
+  catch (e) { x.error = 'ตั้งเวลาใน Facebook ไม่สำเร็จ (จะโพสต์รอบปกติแทน): ' + String(e.message || e).slice(0, 200); }
+}
 async function publishReadlab(onlyId = '') {
   const fb = await ensureIg(await loadFb('readlab')); let th = await loadThreads('readlab'); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
   if (!fb && !th) return { ok: false, skipped: 'ยังไม่ได้เชื่อมบัญชีเพจราชการ' };
@@ -288,6 +312,8 @@ async function publishReadlab(onlyId = '') {
       D = await load(); const y = D.posts.find((z) => z.id === x.id); if (y) y.ig = line; await save(D);
     }
   }
+  if (!onlyId && fb) { let n = 0, ch = false; for (const x of D.posts) { if (n >= 6) break; if (x.status === 'approved' && !x.fb_sched && x.channel !== 'threads' && Date.parse(x.scheduled_at || 0) > Date.now() + 11 * 60e3) { n++; await rlSyncFb(x, { at: x.scheduled_at, text: x.text }, D.posts); ch = true; } } if (ch) await save(D); } // โพสต์อนุมัติที่ค้างคิว: ส่งไปตั้งเวลาใน Facebook ทีละ 6
+  { let ch = false; for (const x of D.posts) if (x.status === 'scheduled' && Date.parse(x.scheduled_at || 0) < Date.now() - 5 * 60e3) { x.status = 'published'; x.published_at = x.scheduled_at; x.post_id = x.fb_sched; x.auto = true; ch = true; } if (ch) await save(D); } // 📅 Facebook โพสต์เองตามเวลาแล้ว
   // ค้าง publishing เกิน 15 นาที (ฟังก์ชันหมดเวลา) = ล้มเหลว ให้คุณแดนเช็คเพจก่อนกดซ้ำ ไม่โพสต์ซ้ำเอง
   let fixed = false; for (const x of D.posts) if (x.status === 'publishing' && Date.now() - Date.parse(x.updated_at || 0) > 15 * 60e3) { x.status = 'failed'; x.error = 'ค้างระหว่างโพสต์ ดูในเพจก่อนว่าขึ้นแล้วหรือยัง ถ้ายังให้กดโพสต์ตอนนี้'; fixed = true; }
   const per = { facebook: 0, threads: 0 };
@@ -1781,7 +1807,7 @@ ${books}`;
       if (action === 'rl_update') { // คุณแดน: approve | reject | edit | posted | unpost | delete
         const x = D.posts.find((y) => y.id === String(body.id || ''));
         if (!x) return res.status(404).json({ ok: false, error: 'ไม่พบโพสต์' });
-        const op = String(body.op || '');
+        const op = String(body.op || ''), before = { at: x.scheduled_at || null, text: x.text, st: x.status };
         if (typeof body.text === 'string' && body.text.trim() && body.text.trim() !== x.text) { x.text = body.text.trim().slice(0, 2200); x.edited = true; }
         if ('scheduled_at' in body) { const t = Date.parse(body.scheduled_at || ''); x.scheduled_at = body.scheduled_at && t ? new Date(t).toISOString() : null; if (x.status === 'failed') { x.status = 'approved'; delete x.error; } } // ตั้งเวลาใหม่ให้โพสต์ที่ล้มเหลว = นัดโพสต์ใหม่
         if (typeof body.owner_note === 'string') x.owner_note = body.owner_note.slice(0, 300);
@@ -1790,7 +1816,9 @@ ${books}`;
         else if (op === 'posted') { x.status = 'published'; x.published_at = now; }
         else if (op === 'unpost') { x.status = 'approved'; delete x.published_at; }
         else if (op === 'delete') D.posts = D.posts.filter((y) => y.id !== x.id);
-        else if (op === 'publish_now') { if (!['approved', 'failed', 'draft'].includes(x.status)) return res.status(400).json({ ok: false, error: 'โพสต์นี้ขึ้นไปแล้ว' }); x.status = 'approved'; }
+        else if (op === 'publish_now') { if (!['approved', 'failed', 'draft', 'scheduled'].includes(x.status)) return res.status(400).json({ ok: false, error: 'โพสต์นี้ขึ้นไปแล้ว' }); x.status = 'approved'; }
+        if (op === 'delete' || op === 'publish_now') { if (x.fb_sched) await rlSyncFb(x, { ...before, at: '' }, D.posts, { schedule: false }); } // โพสต์เลย/ลบ: ยกเลิกตัวที่ตั้งเวลาไว้ใน Facebook ก่อน
+        else await rlSyncFb(x, before, D.posts);
         x.updated_at = now; await save();
         if (op === 'publish_now') { const r = await publishReadlab(x.id); const rows2 = await sb('shop_state?id=eq.readlab&select=data'); const y = (rows2?.[0]?.data?.posts || []).find((z) => z.id === x.id); const rr = (r.results || [])[0]; return res.status(200).json({ ok: !!(rr && rr.ok), error: rr ? rr.error : (r.skipped || 'ยังไม่ได้เชื่อมช่องทางนี้ของ ReadLab'), post: y || x }); }
         return res.status(200).json({ ok: true, post: op === 'delete' ? null : x });
