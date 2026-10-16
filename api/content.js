@@ -3409,6 +3409,10 @@ ${books}`;
               ad.shop = { tag: ad.tag || ad.campaign, orders7: m7.length, rev7: m7.reduce((x, o) => x + (Number(o.amount) || 0), 0), orders30: m.length, rev30: m.reduce((x, o) => x + (Number(o.amount) || 0), 0) }; }
             if (history) for (const h of history) { const tags = new Set(r.ads.filter((a) => a.campaign === h.name).map((a) => (a.tag || a.campaign).toLowerCase()).concat(h.name.toLowerCase())); const m = real.filter((o) => tags.has(String(o.campaign).toLowerCase()) && Date.parse(o.paid_at) >= mo); h.tags = [...tags]; h.shopOrders30 = m.length; h.shopRev30 = m.reduce((x, o) => x + (Number(o.amount) || 0), 0); }
           } catch (e) { console.error('ad shop orders', e.message); }
+          // 💡 ทางเดินลูกค้าบนเว็บของแต่ละแอด 7 วัน (เข้าหน้า → อ่านครึ่งหน้า → ดูหน้าตัวอย่าง → ไปหน้าจ่าย → กดจ่าย) ให้ปุ่ม "แนะนำ" ชี้ว่าคนหลุดตรงไหน
+          try { const F = await sb('rpc/ad_funnel', { method: 'POST', body: { days: 7 } }); const fm = (F || []).map((x) => ({ ...x, t: String(x.src).slice(3).toLowerCase() }));
+            for (const ad of r.ads) { const t = String(ad.tag || ad.campaign || '').toLowerCase(); const f = t && fm.find((x) => x.t === t || (x.t.length >= 30 && t.startsWith(x.t))); if (f) ad.fun = { views: f.views, read50: f.read50, samples: f.samples, checkout: f.checkout, pay: f.pay }; }
+          } catch (e) { console.error('ad funnel', e.message); }
           return res.status(200).json({ ok: true, access: acc, ...r, history, daily: daily && daily.rows, tz: daily && daily.tz, shopDaily }); }
         catch (e) { return res.status(200).json({ ok: false, access: acc, error: String(e.message || e) }); }
       }
