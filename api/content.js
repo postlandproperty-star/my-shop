@@ -2362,7 +2362,7 @@ ${books}`;
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'pins', data: { list: log.slice(-500) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, pin_id: j.id });
     }
-    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_delete' || action === 'review_mail' || action === 'review_send' || action === 'review_add') {
+    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_delete' || action === 'review_mail' || action === 'review_send' || action === 'review_add' || action === 'review_link') {
       // รีวิวผู้ซื้อ: review_submit (สาธารณะ ต้องมีลายเซ็นออเดอร์) · reviews / review_hide (แอดมิน) · review_mail (แอดมิน/key ส่งอีเมลขอรีวิวทันที ?dry=1 ดูอย่างเดียว)
       const RV = await import('../lib/reviews.js');
       if (action === 'review_submit') {
@@ -2405,6 +2405,18 @@ ${books}`;
         return res.status(200).json({ ok: true, saved: items.length, reward: reward ? { code: reward.code, pct: reward.pct, expires: reward.expires } : null });
       }
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (action === 'review_link') { // 📋 ข้อความขอรีวิว + ลิงก์รีวิวของออเดอร์ (มีลายเซ็น) ให้คุณแดนวางในแชท/LINE เอง · รีวิวทางนี้นับดาว Google (18 ต.ค. 69)
+        if (!admin) return res.status(401).json({ ok: false, error: 'เฉพาะคุณแดน' });
+        const sid = String(req.query.sid || '');
+        if (!/^[A-Za-z0-9_-]{6,200}$/.test(sid)) return res.status(400).json({ ok: false, error: 'ออเดอร์ไม่ถูกต้อง' });
+        const rows = await sb(`orders?session_id=eq.${encodeURIComponent(sid)}&status=eq.paid&select=session_id,product_id,product_name`);
+        if (!rows?.length) return res.status(404).json({ ok: false, error: 'ไม่พบออเดอร์ที่จ่ายแล้ว' });
+        const shopL = await loadShop().catch(() => ({ products: [] })), ids = await RV.orderProducts(sid, rows[0].product_id).catch(() => [rows[0].product_id]);
+        const names = ids.map((id) => shopL.products.find((x) => x.id === id)?.name).filter(Boolean), what = names.length > 1 ? `ทั้ง ${names.length} เล่ม` : (names[0] || rows[0].product_name || 'ชีท');
+        const pct = (await import('../lib/rewards.js')).REWARD_PCT || 20, link = `${await siteUrl()}/review?o=${encodeURIComponent(sid)}&t=${RV.reviewToken(sid)}`;
+        const text = `ขอบคุณที่สั่งซื้อ ${String(what).slice(0, 80)} นะคะ 😊\nถ้าได้ลองใช้แล้ว รบกวนช่วยรีวิวสั้นๆ ให้หน่อยได้ไหมคะ ให้กี่ดาวก็ได้ ใช้เวลาไม่ถึง 1 นาที\nรีวิวแล้วรับโค้ดลด ${pct}% สำหรับเล่มถัดไปค่ะ 🎁\n👉 ${link}`;
+        return res.status(200).json({ ok: true, link, text });
+      }
       if (action === 'review_add') { // ✍️ คุณแดนใส่รีวิวจริงที่ลูกค้าเขียนมาทางอื่น (แชท/LINE/Shopee) · ต้องระบุที่มา · ขึ้นหน้าเว็บพร้อมป้ายที่มา · ไม่นับดาว Google
         if (!admin) return res.status(401).json({ ok: false, error: 'เฉพาะคุณแดน' });
         const b = await readBody(req), shopA = await loadShop().catch(() => ({ products: [] })), p = shopA.products.find((x) => x.id === String(b.pid || ''));
