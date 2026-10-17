@@ -211,4 +211,9 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const why = 'งบเดือนไม่พอให้ทุกตัว ยกงบให้ตัวที่ขายดีกว่า', log = [{ type: 'pause', name: 'p1', why }, { type: 'pause', name: 'p2', why }, { type: 'pause', name: 'p3', why: 'คุณแดนกดหยุด' }];
   const plan = (m) => A.planBudget({ ...A.AP_DEFAULT, on: true, monthTHB: m, log }, [run, p1, p2, p3], { monthSpent: 0, now }).actions.filter((x) => x.type === 'resume').map((x) => x.c.id + ':' + x.to);
   ok('🤖 เพิ่มงบเดือนแล้ว → เปิดแอดที่ระบบหยุดเพราะงบไม่พอกลับมา (เฉพาะที่ยังได้คืนถึงเกณฑ์ · ที่คุณแดนหยุดเองไม่แตะ) · งบไม่พอ = ไม่เปิด', JSON.stringify(plan(28000)) === '["p1:99"]' && plan(4000).length === 0, JSON.stringify([plan(28000), plan(4000)])); }
+{ // ⚡ ความเร็วสำคัญรองจากการจ่ายเงิน (คุณแดน 18 ต.ค. 69): กันหน้าลูกค้าอ้วนขึ้นเงียบๆ · เกินงบ = ย้ายโค้ด/ข้อมูลหลังบ้านไป /adm.js (lib/split.js) ก่อนเพิ่มของใหม่
+  const { splitHtml } = await import('../lib/split.js'); const zlib = await import('node:zlib');
+  const H = splitHtml(fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')).html, js = H.slice(H.indexOf('<script>') + 8, H.lastIndexOf('</script>')), css = (H.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || '';
+  const kb = (t) => Math.round(zlib.gzipSync(t).length / 1024), J = kb(js), C = kb(css);
+  ok(`⚡ งบความเร็วหน้าลูกค้า: โค้ด ${J} KB (≤ 95) · CSS ${C} KB (≤ 40) แบบบีบอัด`, J <= 95 && C <= 40, `โค้ด ${J} KB · CSS ${C} KB`); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
