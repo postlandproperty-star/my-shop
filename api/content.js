@@ -2362,7 +2362,7 @@ ${books}`;
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'pins', data: { list: log.slice(-500) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' });
       return res.status(200).json({ ok: true, pin_id: j.id });
     }
-    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_delete' || action === 'review_mail' || action === 'review_send') {
+    if (action === 'review_submit' || action === 'reviews' || action === 'review_hide' || action === 'review_delete' || action === 'review_mail' || action === 'review_send' || action === 'review_add') {
       // รีวิวผู้ซื้อ: review_submit (สาธารณะ ต้องมีลายเซ็นออเดอร์) · reviews / review_hide (แอดมิน) · review_mail (แอดมิน/key ส่งอีเมลขอรีวิวทันที ?dry=1 ดูอย่างเดียว)
       const RV = await import('../lib/reviews.js');
       if (action === 'review_submit') {
@@ -2405,6 +2405,21 @@ ${books}`;
         return res.status(200).json({ ok: true, saved: items.length, reward: reward ? { code: reward.code, pct: reward.pct, expires: reward.expires } : null });
       }
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (action === 'review_add') { // ✍️ คุณแดนใส่รีวิวจริงที่ลูกค้าเขียนมาทางอื่น (แชท/LINE/Shopee) · ต้องระบุที่มา · ขึ้นหน้าเว็บพร้อมป้ายที่มา · ไม่นับดาว Google
+        if (!admin) return res.status(401).json({ ok: false, error: 'เฉพาะคุณแดน' });
+        const b = await readBody(req), shopA = await loadShop().catch(() => ({ products: [] })), p = shopA.products.find((x) => x.id === String(b.pid || ''));
+        const clean = (x, n) => String(x || '').replace(/[<>]/g, '').replace(/\s+\n/g, '\n').trim().slice(0, n);
+        const stars = Math.round(Number(b.stars)), text = clean(b.text, 500), ref = clean(b.ref, 120), src = RV.RV_SRC[b.src] ? b.src : '';
+        if (!p) return res.status(400).json({ ok: false, error: 'เลือกสินค้า' });
+        if (!(stars >= 1 && stars <= 5)) return res.status(400).json({ ok: false, error: 'ให้ดาว 1-5' });
+        if (text.length < 5) return res.status(400).json({ ok: false, error: 'ใส่ข้อความที่ลูกค้าเขียน' });
+        if (!src || !ref) return res.status(400).json({ ok: false, error: 'ต้องระบุที่มา (ช่องทาง + เลขออเดอร์/วันที่แชท)' });
+        if (b.real !== true) return res.status(400).json({ ok: false, error: 'ยืนยันก่อนว่าเป็นข้อความที่ลูกค้าเขียนเองจริง' });
+        const at = /^\d{4}-\d{2}-\d{2}$/.test(String(b.at || '')) && Date.parse(b.at) <= Date.now() ? new Date(b.at + 'T12:00:00+07:00').toISOString() : new Date().toISOString();
+        const d = await RV.loadReviews(), r = { id: 'rvm' + Date.now().toString(36), manual: true, src, ref, product_id: p.id, product_name: p.name, stars, text, name: clean(b.name, 30) || 'ลูกค้า', status: 'live', created_at: at, added_by: admin.email, added_at: new Date().toISOString() };
+        d.list.push(r); await RV.saveReviews(d);
+        return res.status(200).json({ ok: true, review: r });
+      }
       if (action === 'review_mail') {
         if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
         if (req.query.preview) { // ลิงก์หน้ารีวิวของออเดอร์ล่าสุด (ไว้ดูหน้าตา ไม่ส่งอีเมล ไม่บันทึกอะไร)

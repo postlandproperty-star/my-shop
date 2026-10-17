@@ -197,4 +197,7 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
 { const { smFor } = await import('../api/page.js'); const man = { 'u1': 's1', 'u2': 's2', 'u3': 's3', 'c': 'sc' };
   const o = smFor([{ id: 'a', images: ['u1', 'u2'] }, { id: 'b', images: ['u3', 'x'], cover: 'c' }], man, new Set(['b']));
   ok('🖼 รูปขนาดมือถือ: ใส่เฉพาะรูปที่หน้าใช้ (รูปแรกทุกเล่ม + ทุกรูปของเล่มที่เปิด) · รูปที่ยังไม่ย่อ = ไม่ใส่ (ใช้รูปเดิม)', JSON.stringify(o) === JSON.stringify({ u1: 's1', u3: 's3', c: 'sc' }), JSON.stringify(o)); }
+{ const RVm = await import('../lib/reviews.js'); const L = [{ product_id: 'a', stars: 5, text: 'ดีมาก', name: 'A', email_mask: 'ab***@gmail.com', created_at: '2026-10-01' }, { product_id: 'a', stars: 4, text: 'ชอบ', name: 'B', manual: true, src: 'line', ref: 'แชท 12 ต.ค.', email_mask: 'x', created_at: '2026-10-02' }];
+  const all = RVm.reviewSummary(L), ld = RVm.reviewSummary(L.filter((x) => !x.manual)), m = all.a.items.find((x) => x.name === 'B');
+  ok('✍️ รีวิวที่ใส่เองจากช่องทางอื่น: ขึ้นหน้าเว็บพร้อมที่มา (ไม่โชว์ที่มาภายใน/อีเมล) · ดาว Google นับเฉพาะรีวิวผ่านลิงก์ยืนยันการซื้อ', all.a.count === 2 && m.src === 'line' && m.em === '' && !('ref' in m) && ld.a.count === 1 && ld.a.avg === 5, JSON.stringify({ all: all.a.count, ld: ld.a.count, m })); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);

@@ -235,6 +235,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rv-list{display:grid;gap:10px}.rv-item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.rv-item p{margin:6px 0 4px;white-space:pre-wrap}
 .rvreq{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .rv-ver{display:inline-block;font-size:12.5px;color:var(--ok);margin-top:2px}
+.rva-add{margin-bottom:12px;padding:12px 14px}.rva-add summary{cursor:pointer}.rva-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 12px;margin-bottom:8px}.rva-add textarea{width:100%}
 .rvt-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px;margin-bottom:12px}@media(max-width:720px){.rvt-top{grid-template-columns:1fr}}
 .rvt-sum{display:flex;flex-direction:column;gap:2px}.rvt-avg{font-size:40px;line-height:1}.rvt-dist{display:grid;gap:4px;margin-top:10px;font-size:13px}.rvt-dist div{display:grid;grid-template-columns:28px 1fr 24px;gap:8px;align-items:center}.rvt-dist i{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:block}.rvt-dist em{display:block;height:100%;background:#F5B301;border-radius:4px}
 .rvt-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.rvt-sel{width:auto;min-width:0;max-width:100%;padding:6px 10px;font-size:14px}
@@ -2632,10 +2633,11 @@ const starStr=n=>'★'.repeat(Math.round(n))+'☆'.repeat(5-Math.round(n));
 // ดาวรีวิวจากผู้ซื้อจริงใต้ชื่อสินค้าบนหน้าขาย (กดแล้วเลื่อนไปที่รีวิว)
 const rvTop=p=>{const r=REVIEWS[p.id];return r&&r.count?`<button type="button" class="sp-rv" data-a="rvJump"><b>★ ${r.avg.toFixed(1)}</b> <span>${starStr(r.avg)}</span> ${r.count} รีวิวจากผู้ซื้อจริง</button>`:'';};
 const rvLine=p=>{const r=REVIEWS[p.id];return r&&r.count?`<span class="st-rv" aria-label="คะแนน ${r.avg} จาก 5 จาก ${r.count} รีวิว"><b>★ ${r.avg.toFixed(1)}</b> (${r.count})</span>`:'';};
-function rvSection(p,cls){const r=REVIEWS[p.id];if(!r||!r.count)return '';
+const RV_SRC_TH={fb:'แชทเพจ Facebook',line:'LINE',shopee:'Shopee',ig:'Instagram',email:'อีเมล',other:'ช่องทางอื่น'}; // ที่มาของรีวิวที่คุณแดนใส่เอง (ตรงกับ lib/reviews.js RV_SRC)
+function rvSection(p,cls){const r=REVIEWS[p.id];if(!r||!r.count)return '';const mix=r.items.some(x=>x.src);
   return `<section class="${cls}" id="reviews"><div class="${cls==='section'?'wrap':''}"><h2>รีวิวจากผู้ซื้อจริง</h2>
-    <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ทุกรีวิวมาจากคนที่ซื้อจริง</span></div><p class="fine rv-note">ผู้รีวิวได้รับโค้ดส่วนลดเล่มถัดไปเป็นการขอบคุณ ไม่ว่าจะให้กี่ดาว</p>
-    <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div><span class="rv-ver">✓ ผู้ซื้อจริง${x.em?` · ${esc(x.em)}`:''}</span>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
+    <div class="rv-sum"><b>${r.avg.toFixed(1)}</b><span class="rv-stars" aria-hidden="true">${starStr(r.avg)}</span><span class="fine">จาก ${r.count} รีวิว · ${mix?'จากผู้ซื้อจริง ระบุที่มาทุกรีวิว':'ทุกรีวิวมาจากคนที่ซื้อจริง'}</span></div><p class="fine rv-note">ผู้รีวิวได้รับโค้ดส่วนลดเล่มถัดไปเป็นการขอบคุณ ไม่ว่าจะให้กี่ดาว</p>
+    <div class="rv-list">${r.items.map(x=>`<div class="rv-item"><div class="row" style="justify-content:space-between;gap:6px"><b>${esc(x.name)}</b><span class="rv-stars" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span></div><span class="rv-ver">${x.src?`💬 รีวิวจาก${esc(RV_SRC_TH[x.src]||'ช่องทางอื่น')}`:`✓ ผู้ซื้อจริง${x.em?` · ${esc(x.em)}`:''}`}</span>${x.text?`<p>${esc(x.text)}</p>`:''}<span class="fine">${esc(x.at)}</span></div>`).join('')}</div></div></section>`;}
 const VIP_OPEN=(()=>{try{return !!(window.__SHOP__&&window.__SHOP__.vip&&window.__SHOP__.vip.open);}catch(e){return false;}})(); // เปิดรับสมาชิก Pro แล้ว (หน้าแรกโชว์การ์ด Pro)
 const QUIZZES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.quizzes)||[];}catch(e){return [];}})(); // แบบทดสอบฟรีที่เปิดอยู่ (ฝังมากับหน้า)
 const ARTICLES=(()=>{try{return (window.__SHOP__&&window.__SHOP__.articles)||[];}catch(e){return [];}})(); // บทความคลังความรู้
@@ -4379,7 +4381,22 @@ function reviewsTab(){
   const prods=[...new Set(L.map(x=>x.product_name).filter(Boolean))];
   const shown=L.filter(x=>f==='all'||(f==='live'?x.status!=='hidden':f==='hidden'?x.status==='hidden':x.stars<=3)).filter(x=>!pf||x.product_name===pf);
   const dist=[5,4,3,2,1].map(n=>[n,live.filter(x=>x.stars===n).length]);
-  return `<p class="fine" style="margin:0 0 12px">รีวิวมาจากลิงก์ในอีเมลที่ส่งถึงผู้ซื้อเท่านั้น (ลิงก์มีลายเซ็นต่อออเดอร์ บอทปลอมไม่ได้) ทุกรีวิวขึ้นหน้าร้านทันทีพร้อมป้าย "ผู้ซื้อจริง" ซ่อนรีวิวไหนก็ได้ที่นี่</p>
+  const pubs=D.products.filter(p=>p.status==='published').sort((a,b)=>String(a.name).localeCompare(String(b.name),'th'));
+  return `<p class="fine" style="margin:0 0 12px">รีวิวมาจากลิงก์ในอีเมลที่ส่งถึงผู้ซื้อ (ลิงก์มีลายเซ็นต่อออเดอร์ บอทปลอมไม่ได้) ขึ้นหน้าร้านพร้อมป้าย "ผู้ซื้อจริง" และนับเป็นดาวบน Google · รีวิวที่ใส่เองขึ้นพร้อมป้ายที่มา ซ่อนรีวิวไหนก็ได้ที่นี่</p>
+  <details class="card rva-add" data-keep="rvaOpen" ${S.rvaOpen?'open':''}><summary><b>➕ เพิ่มรีวิวจากช่องทางอื่น</b> <span class="fine">ข้อความที่ลูกค้าเขียนมาเองในแชท LINE หรือ Shopee</span></summary>
+    <p class="fine" style="margin:8px 0">ใส่ได้เฉพาะข้อความที่ลูกค้าเขียนเองจริง (ห้ามแต่งรีวิว ผิดกฎหมายคุ้มครองผู้บริโภคและกติกา Facebook/Google) · หน้าเว็บจะขึ้นป้าย "รีวิวจาก…" · ไม่นับเป็นดาวบน Google</p>
+    <div class="rva-grid">
+      <label class="field">สินค้า<select class="input" id="rva-pid"><option value="">เลือกสินค้า</option>${pubs.map(p=>`<option value="${esc(p.id)}">${esc(String(p.name).slice(0,70))}</option>`).join('')}</select></label>
+      <label class="field">ดาว<select class="input" id="rva-stars">${[5,4,3,2,1].map(n=>`<option value="${n}">${'★'.repeat(n)}${'☆'.repeat(5-n)} ${n}</option>`).join('')}</select></label>
+      <label class="field">ชื่อที่แสดง<input class="input" id="rva-name" maxlength="30" placeholder="เช่น คุณพลอย (ถามลูกค้าก่อนใช้ชื่อจริง)"></label>
+      <label class="field">ช่องทาง<select class="input" id="rva-src">${Object.entries(RV_SRC_TH).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
+      <label class="field">ที่มา (เก็บในหลังบ้าน ไม่โชว์ลูกค้า)<input class="input" id="rva-ref" maxlength="120" placeholder="เช่น เลขออเดอร์ / แชทวันที่ 12 ต.ค."></label>
+      <label class="field">วันที่ลูกค้าเขียน<input class="input" id="rva-at" type="date" max="${new Date().toISOString().slice(0,10)}"></label>
+    </div>
+    <label class="field">ข้อความของลูกค้า<textarea class="input" id="rva-text" rows="3" maxlength="500" placeholder="คัดลอกข้อความที่ลูกค้าเขียนมา"></textarea></label>
+    <label class="row" style="gap:8px;margin:8px 0"><input type="checkbox" id="rva-real"> <span>ยืนยันว่าเป็นข้อความที่ลูกค้าเขียนเองจริง</span></label>
+    <button class="btn btn-dark btn-sm" data-a="rvAdd" ${RVA.adding?'disabled':''}>${RVA.adding?'กำลังบันทึก...':'บันทึกรีวิว'}</button>
+  </details>
   <div class="rvt-top">
     <div class="card rvt-sum"><b class="rvt-avg">${live.length?avg.toFixed(1):'–'}</b><span class="rv-stars" aria-hidden="true">${live.length?starStr(avg):'☆☆☆☆☆'}</span><span class="fine">${live.length} รีวิวบนหน้าร้าน${L.length>live.length?` · ซ่อน ${L.length-live.length}`:''}</span>
       <div class="rvt-dist">${dist.map(([n,c])=>`<div><span>${n}★</span><i><em style="width:${live.length?Math.round(c/live.length*100):0}%"></em></i><span>${c}</span></div>`).join('')}</div></div>
@@ -4395,7 +4412,7 @@ function reviewsTab(){
    :!shown.length?'<p class="fine">ไม่มีรีวิวในตัวกรองนี้</p>'
    :`<div class="rvt-list">${shown.map(x=>`<article class="card rvt-card ${x.status==='hidden'?'off':''}">
       <div class="row" style="justify-content:space-between;gap:8px;align-items:flex-start"><div><span class="rv-stars rvt-st" aria-label="${x.stars} ดาว">${starStr(x.stars)}</span> <b>${esc(x.name)}</b>${x.status==='hidden'?' <span class="badge gray">ซ่อนอยู่</span>':''}
-        <div class="fine">✓ ผู้ซื้อจริง${x.email_mask?` · ${esc(x.email_mask)}`:' · ลูกค้าไม่แสดงอีเมล'} · ${esc(x.product_name||'')}</div></div>
+        <div class="fine">${x.manual?`✍️ ใส่เองจาก${esc(RV_SRC_TH[x.src]||'ช่องทางอื่น')} · ที่มา: ${esc(x.ref||'-')}`:`✓ ผู้ซื้อจริง${x.email_mask?` · ${esc(x.email_mask)}`:' · ลูกค้าไม่แสดงอีเมล'}`} · ${esc(x.product_name||'')}</div></div>
         <span class="row" style="gap:6px"><button class="btn ${x.status==='hidden'?'btn-dark':'btn-line'} btn-sm" data-a="rvhide" data-id="${esc(x.id)}" data-v="${x.status==='hidden'?'0':'1'}">${x.status==='hidden'?'แสดงอีกครั้ง':'ซ่อน'}</button><button class="btn btn-line btn-sm" data-a="rvdel" data-id="${esc(x.id)}" title="ลบถาวร เช่น รีวิวที่ลองส่งเอง">${S.confirm==='rvdel:'+x.id?'กดอีกครั้งเพื่อลบ':'ลบ'}</button></span></div>
       ${x.text?`<p class="rvt-text">${esc(x.text)}</p>`:'<p class="fine rvt-text">(ให้ดาวอย่างเดียว ไม่มีความเห็น)</p>'}
       <span class="fine">${new Date(x.created_at).toLocaleString('th-TH',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}${x.updated_at?' · ลูกค้าแก้ไขล่าสุด '+new Date(x.updated_at).toLocaleDateString('th-TH',{day:'numeric',month:'short'}):''}</span></article>`).join('')}</div>`}`;
@@ -7161,6 +7178,9 @@ function act(a,el){
     case 'soRefresh':loadSO(true);break;
     case 'soOpen':S.soOpen=!S.soOpen;break;
     case 'shpSoOpen':S.shpSoOpen=!S.shpSoOpen;break;
+    case 'rvAdd':{const v=id=>(document.getElementById(id)||{}).value||'';const body={pid:v('rva-pid'),stars:Number(v('rva-stars')),name:v('rva-name'),src:v('rva-src'),ref:v('rva-ref'),at:v('rva-at'),text:v('rva-text'),real:!!(document.getElementById('rva-real')||{}).checked};
+      if(!body.pid){toast('เลือกสินค้าก่อน');break;}if(body.text.trim().length<5){toast('ใส่ข้อความที่ลูกค้าเขียน');break;}if(!body.ref.trim()){toast('ใส่ที่มา เช่น เลขออเดอร์หรือวันที่แชท');break;}if(!body.real){toast('ติ๊กยืนยันว่าลูกค้าเขียนเองจริงก่อน');break;}
+      RVA.adding=true;render(true);authFetch('/api/content?action=review_add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(j=>{if(j&&j.ok){toast('เพิ่มรีวิวแล้ว · ขึ้นหน้าเว็บภายใน 1 นาที');S.rvaOpen=false;RVA.list=null;loadRVA();}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');}).catch(()=>toast('บันทึกไม่สำเร็จ')).then(()=>{RVA.adding=false;render(true);});break;}
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที':'แสดงอีกครั้งแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
     case 'adsBudgetRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;const r=adBudgetRec(x);x.dailyTHB=r.daily;x.days=r.days;{const i1=$('#add-'+id),i2=$('#adn-'+id);if(i1)i1.value=r.daily;if(i2)i2.value=r.days;}render(true);toast(`ใส่งบ ฿${r.daily}/วัน × ${r.days} วันแล้ว เงินยังไม่ออกจนกว่าจะกดตกลง`);break;}

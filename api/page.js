@@ -366,7 +366,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
       out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
     }
     // ฝังข้อมูลร้าน (สาธารณะ) ลงหน้าเลย ลูกค้าไม่ต้องรอโหลดไลบรารี+ดึงข้อมูลอีกรอบ
-    const [qz, ar, rvAll, vipSet] = await Promise.all([loadQuizzes(), loadArticles(), import('../lib/reviews.js').then((m) => m.loadReviews().then((d) => m.reviewSummary(d.list))).catch(() => ({})), loadVip().catch(() => null)]);
+    const [qz, ar, rvAll, vipSet] = await Promise.all([loadQuizzes(), loadArticles(), import('../lib/reviews.js').then((m) => m.loadReviews().then((d) => ({ all: m.reviewSummary(d.list), ld: m.reviewSummary(d.list.filter((x) => !x.manual)) }))).catch(() => ({ all: {}, ld: {} })), loadVip().catch(() => null)]);
     const quizList = qz.map((q) => ({ slug: q.slug, title: q.title, cat: q.cat || '', n: q.questions.length }));
     const dp = dailyPick(qz); const daily = dp ? { q: dp.x.q, choices: dp.x.choices, answer: dp.x.answer, explain: dp.x.explain, slug: dp.quiz.slug, title: dp.quiz.title } : null;
     const levelQ = qz.find((q) => q.mode === 'level'); const level = levelQ ? { slug: levelQ.slug, title: levelQ.title, n: levelQ.questions.length } : null;
@@ -374,7 +374,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const topics = TOPICS.map((t) => { const it = topicItems(t, { articles: ar, quizzes: qz, products: shop.products }); return topicReady(it) ? { slug: t.slug, name: t.name, n: topicCount(it) } : null; }).filter(Boolean); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว (หน้าร้านโชว์เป็นทางลัด)
     const alib = slug ? await audP : {};
     const focus = focusOf(shop.products, slug), pubList = withAudio(pubProducts(shop.products, focus), alib), sm = smFor(pubList, await smP, focus);
-    const inline = JSON.stringify({ sm, products: pubList, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
+    const inline = JSON.stringify({ sm, products: pubList, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll.all, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
     // ข้อมูลร้านย้ายจาก <head> มาไว้หลังส่วนบนของหน้าขาย: มือถือวาดปก/ราคาได้ก่อนข้อมูล+โค้ดทั้งร้านโหลดเสร็จ (โค้ดหน้าเว็บอ่าน __SHOP__ ตอนท้ายไฟล์ จึงยังทันเหมือนเดิม)
     const sp = /^[a-z0-9-]+$/.test(slug) && !req.query.view ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
     out = out.replace('<!--SHOP-DATA-->', '').replace('<div id="app"></div>', `<div id="app">${sp ? ssrShell(sp, shop.products, sm) : ''}</div><script>window.__SHOP__=${inline};</script>`);
@@ -415,7 +415,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
         `<meta name="description" content="${esc(desc)}">`,
         `<link rel="canonical" href="${NEW_SITE}/p/${esc(p.slug)}">`,
         img ? `<link rel="preload" as="image" href="${esc(sm[img] || img)}" fetchpriority="high">` : '', // รูปขนาดมือถือ (ตัวเดียวกับที่หน้าแสดง ไม่โหลดซ้ำ 2 รูป) // รูปหลักเริ่มโหลดทันที ไม่ต้องรอสคริปต์วาดหน้า
-        productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img, rvAll[p.id]),
+        productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img, rvAll.ld[p.id]), // ดาว Google = รีวิวผ่านลิงก์ยืนยันการซื้อเท่านั้น (ไม่รวมที่ใส่เอง)
       ].join('');
       out = out
         .replace(/<title>[^<]*<\/title>/, `<title>${esc(p.name)}</title>`)
