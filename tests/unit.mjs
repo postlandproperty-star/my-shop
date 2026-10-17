@@ -200,4 +200,9 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
 { const RVm = await import('../lib/reviews.js'); const L = [{ product_id: 'a', stars: 5, text: 'ดีมาก', name: 'A', email_mask: 'ab***@gmail.com', created_at: '2026-10-01' }, { product_id: 'a', stars: 4, text: 'ชอบ', name: 'B', manual: true, src: 'line', ref: 'แชท 12 ต.ค.', email_mask: 'x', created_at: '2026-10-02' }];
   const all = RVm.reviewSummary(L), ld = RVm.reviewSummary(L.filter((x) => !x.manual)), m = all.a.items.find((x) => x.name === 'B');
   ok('✍️ รีวิวที่ใส่เองจากช่องทางอื่น: ขึ้นหน้าเว็บพร้อมที่มา (ไม่โชว์ที่มาภายใน/อีเมล) · ดาว Google นับเฉพาะรีวิวผ่านลิงก์ยืนยันการซื้อ', all.a.count === 2 && m.src === 'line' && m.em === '' && !('ref' in m) && ld.a.count === 1 && ld.a.avg === 5, JSON.stringify({ all: all.a.count, ld: ld.a.count, m })); }
+{ const A = await import('../lib/autopilot.js'); const now = Date.parse('2026-10-10T05:00:00Z');
+  const c = (id, daily, o) => ({ id, name: id, running: true, dailyTHB: daily, spend7: 1500, orders7: 3, orders14: 5, rev7: 3000, roas7: 2, age: 10, price: 990, ...o });
+  const acts = A.planBudget({ ...A.AP_DEFAULT, on: true, monthTHB: 6000 }, [c('big', 280, { rev7: 5000, roas7: 2.8 }), c('mid', 100, { rev7: 3000, roas7: 2.6 }), c('small', 90, { rev7: 590, roas7: 7.1, spend7: 83, orders7: 1, orders14: 1 }), c('weak', 120, { rev7: 1000, roas7: 1.2 })], { monthSpent: 0, now }).actions;
+  const paused = acts.filter((x) => x.type === 'pause').map((x) => x.c.id);
+  ok('🤖 งบไม่พอให้ทุกตัว → หยุดแอดที่ได้คืนต่ำสุดก่อน (ไม่หยุดตัวใหม่ที่ได้คืนสูงแต่ยอดรวมยังน้อย)', paused.length >= 1 && paused[0] === 'weak' && !paused.includes('small'), JSON.stringify(paused)); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
