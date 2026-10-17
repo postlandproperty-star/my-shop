@@ -188,4 +188,10 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const eom = plan([c('w', 300)], 3000, Date.parse('2026-10-30T05:00:00Z'), 2850).find((x) => x.type === 'budget');
   ok('🤖 ออโต้ไพลอตขยับงบทีละน้อย (Facebook ไม่เริ่มเรียนรู้ใหม่): เพิ่มไม่เกิน 20% · ลดไม่เกิน 30% · แอดขาดทุน/ปลายเดือนตัดได้ทันที',
     up && up.to === 360 && down && down.to === 210 && !!loss && (loss.type === 'pause' || loss.to < 210) && eom && eom.to < 210, JSON.stringify({ up: up && up.to, down: down && down.to, loss: loss && (loss.to || loss.type), eom: eom && eom.to })); }
+{ const { ssrShell } = await import('../api/page.js'); const P = [{ id: 'a', price: 179, fullPrice: 249, name: 'A <b>', headline: 'หัว A', images: ['https://x/a.jpg'] }, { id: 'b', price: 149 },
+    { id: 's', type: 'bundle', name: 'ชุด 2 เล่ม', headline: 'ชุดดี', items: ['a', 'b'], plans: [{ key: 'basic', price: 290 }, { key: 'pro', price: 490 }], price: 290, cover: 'https://x/s.jpg' }];
+  const one = ssrShell(P[0], P), set = ssrShell(P[2], P);
+  ok('⚡ หน้าขายส่วนบนจากเซิร์ฟเวอร์: ปก ชื่อ (เล่มเดี่ยวใช้หัวข้อขาย) ราคา/ราคาเต็ม · ชุด = ราคาแพ็กถูกสุด + ราคาแยกเล่มรวม · กัน HTML · ไม่มีปุ่มที่ต้องใช้โค้ด (data-a)',
+    one.includes('<h1>หัว A</h1>') && one.includes('฿179') && one.includes('฿249') && one.includes('https://x/a.jpg') && set.includes('<h1>ชุด 2 เล่ม</h1>') && set.includes('฿290') && set.includes('฿328') && set.includes('ชุด 2 เล่ม</span>') && set.includes('https://x/s.jpg')
+    && !/data-a=/.test(one + set) && !ssrShell(null, P) && ssrShell({ ...P[0], headline: '', name: '<x>' }, P).includes('&lt;x&gt;')); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
