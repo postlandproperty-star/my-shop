@@ -791,7 +791,7 @@ try {
             act('fcrTab', { dataset: { v: 'order' } }); await w(50); act('fcrGenAll', { dataset: {} }); await w(50); o.gen = !!FCR.gen.title && (FCR.gen.plan || '').split('\n').filter(Boolean).length >= 10 && !!document.querySelector('[data-a="fcrGenMake"]') && document.querySelectorAll('[data-a="fcrDice1"]').length === 3;
             document.querySelector('[data-a="fcrDiceN"]').click(); await w(50); o.dice = (document.querySelector('textarea[data-fcr="multi"]')?.value || '').split('\n').filter(Boolean).length;
             const ta = document.querySelector('textarea[data-fcr="multi"]'); ta.value = 'Listening Part 3 | บทสนทนา 3 คน | ฝึก 3 ข้อ'; ta.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('[data-a="fcrOrderMulti"]').click(); await w(300);
-            o.plan2 = !!document.querySelector('.fcr-plan textarea[data-fcr="plan"]') && !!document.querySelector('[data-a="fcrDicePlan"]') && !!document.querySelector('[data-a="fcrAuto"]');
+            o.plan2 = !!document.querySelector('.fcr-plan textarea[data-fcr="plan"]') && !!document.querySelector('[data-a="fcrDicePlan"]') && (!!document.querySelector('[data-a="fqCrsAuto"]') || /แถบ 🤖/.test((document.querySelector('.fcr-step .sw-row') || {}).textContent || '')); // สวิตช์ผลิตอัตโนมัติย้ายไปแถบใต้กล่องโรงงาน (18 ต.ค. 69)
             S.view = 'admin'; S.tab = 'courses'; CRS.view = 'list'; render(false); await w(50); act('crsView', { dataset: { v: 'students' } }); await w(400);
             o.stu = document.querySelectorAll('.stu-row:not(.pt-th)').length; o.stuEm = /buyer@test\.co/.test(document.querySelector('.stu-row:not(.pt-th)')?.innerText || '');
             act('crsBack', { dataset: {} }); S.tab = 'products'; render(false); return o; });
