@@ -289,6 +289,7 @@ try {
           await page.fill('#checkout #qr-email', 'buyer@test.co'); await page.locator('#checkout .paycard a[data-card]').first().click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(1200);
           pass(`[${kind}] หน้าจ่ายเงิน: ช่องบัตรโหลดไม่ขึ้น (คีย์ผิด/Stripe ล่ม) → พาไปหน้า Stripe แทนเอง พร้อมอีเมล`, CARDHITS.length === 1 && /[?&]e=buyer%40test\.co/.test(CARDHITS[0]), JSON.stringify(CARDHITS)); await page.goto(`${BASE}/p/${p.slug}`, { waitUntil: 'domcontentloaded' }); await page.waitForTimeout(500); }
         CARDMODE = false; }
+      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await page.waitForTimeout(300); // กลับมาจากแอปธนาคาร (เคยดึง /adm.js 900 KB แบบหน้าค้าง 17 ต.ค. 69)
       pass(`[${kind}] หน้าลูกค้า (ร้าน/หน้าขาย/ตะกร้า/จ่ายเงิน) ไม่ต้องโหลดโค้ดหลังบ้าน /adm.js`, await page.evaluate(() => typeof __admOk !== 'undefined' && !__admOk), await page.evaluate(() => (window.__admWhy || '') + ' ' + location.pathname));
       await page.context().close();
     } catch (e) { pass(`[${kind}] หน้าขาย ${p.slug}: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }

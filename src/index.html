@@ -1790,7 +1790,9 @@ const FB_EVENTS={PageView:1,ViewContent:1,InitiateCheckout:1,Purchase:1,Lead:1};
 let pixelReady=false;
 function initPixel(id){
   if(pixelReady||!/^\d{6,20}$/.test(String(id||'')))return;
-  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];var L=function(){if(L.d)return;L.d=1;t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);};
+    // โหลดสคริปต์ Facebook หลังหน้าขายขึ้นครบ (ไม่แย่งเน็ตกับรูปสินค้า · 17 ต.ค. 69) · เหตุการณ์ PageView/ViewContent เข้าคิวไว้ก่อน ไม่หาย · กันพลาด: ไม่เกิน 3 วิ
+    if(b.readyState==='complete')setTimeout(L,300);else f.addEventListener('load',function(){setTimeout(L,300);});setTimeout(L,3000);}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
   fbq('init',String(id));pixelReady=true;
 }
 function track(name,data){
@@ -7969,8 +7971,10 @@ function liveTick(soon){
   if(any){liveAt=now;const p=document.getElementById('live-pill');if(p)p.textContent=livePillText();}
 }
 function livePillText(){return liveAt?'🟢 อัปเดตอัตโนมัติ · ล่าสุด '+new Date(liveAt).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'🟢 อัปเดตอัตโนมัติ';}
-setInterval(()=>liveTick(false),10e3);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')liveTick(true);});
+// เช็คก่อนเรียก liveTick (ฟังก์ชันหลังบ้านอยู่ใน /adm.js): เดิมเรียกทุก 10 วิ/ทุกครั้งกลับมาที่แท็บ ลูกค้าเลยโหลดไฟล์หลังบ้าน 900 KB แบบหน้าค้าง (17 ต.ค. 69 · กลับจากแอปธนาคารหลังสแกน QR ก็โดน)
+const liveHere=()=>!!sbSession&&['admin','factory','vip'].includes(S.view);
+setInterval(()=>{if(liveHere())liveTick(false);},10e3);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&liveHere())liveTick(true);});
 setInterval(()=>{if(S.view==='admin'&&S.tab==='chat'&&sbSession&&document.visibilityState==='visible'&&!CHAT.loading){loadChat().then(()=>render(true));}},60e3);
 setInterval(()=>{if(CHAT.fastUntil>Date.now()&&S.view==='admin'&&S.tab==='chat'&&sbSession&&!CHAT.loading){const n=(CHAT.msgs||[]).length;loadChat().then(()=>{render(true);if((CHAT.msgs||[]).length>n){const b=document.getElementById('chat-end');if(b)b.scrollIntoView({block:'end',behavior:'smooth'});}});}},8e3);
 document.addEventListener('visibilitychange',async()=>{
