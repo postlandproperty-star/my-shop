@@ -3709,7 +3709,7 @@ function facSetBundles(){const all=FAC.all||[];let dirty=false;
     const priceOf=L=>{const n=L.length,sum=L.reduce((a,b)=>a+(Number(b.price)||0),0),pct=n>=9?.5:n>=7?.55:.6,price=sum?end90(sum*pct):0;return {n,sum,pct,price,full:sum>price?sum:0};};
     const note=(n,pr)=>`ชุดจากโรงงาน ${n} เล่ม${pend?` · กำลังผลิตอีก ${pend} เล่ม (เข้าชุดเองเมื่อเสร็จ)`:''} · ราคาคิดตามสูตร ${Math.round(pr.pct*100)}% ของราคาแยกรวม${pr.sum?' ฿'+pr.sum.toLocaleString('th-TH'):''} แก้ได้ · เปิดแก้แล้วกดบันทึก ระบบจัดรูปชุดจากปกให้เอง`;
     if(!bd){if(SETI.bun[name])continue;SETI.bun[name]=1;const pr=priceOf(books),nm=fixName(books.length);
-      bd=Object.assign(blankBundle(),{id:'b'+Date.now().toString(36),name:nm,slug:setSlug(nm),headline:nm,desc:`ครบ ${pr.n} เล่มในชุดเดียว: ${books.map(b=>b.name).join(' · ')}`.slice(0,300),items:books.map(b=>b.id),status:'draft',planDefault:'basic',price:pr.price,fullPrice:pr.full,images:(books[0].images||[]).slice(0,1),fresh:true,fromSetName:name,autoPrice:true,freshNote:note(pr.n,pr)});
+      bd=Object.assign(blankBundle(),{id:'b'+Date.now().toString(36),name:nm,slug:setSlug(nm),headline:nm,desc:setDesc(pr.n,books),items:books.map(b=>b.id),status:'draft',planDefault:'basic',price:pr.price,fullPrice:pr.full,images:(books[0].images||[]).slice(0,1),fresh:true,fromSetName:name,autoPrice:true,freshNote:note(pr.n,pr)});
       bd.plans=bd.plans.map(pl=>pl.key==='basic'?Object.assign({},pl,{name:'ครบชุด '+pr.n+' เล่ม',on:true,price:pr.price,fullPrice:pr.full}):Object.assign({},pl,{on:false}));
       D.products.push(bd);ensureSkus();dirty=true;toast(`📦 ชุด "${nm}" เข้าแท็บมาใหม่แล้ว (${pr.n} เล่ม${pend?` · รออีก ${pend} เล่ม`:''})`);}
     else if(bd.status!=='published'){const add=books.filter(b=>!(bd.items||[]).includes(b.id));
@@ -3789,6 +3789,8 @@ async function setPrep(id){const b0=getProduct(id),d=S.draft;if(!b0||!d||S.edit!
     if(needCover){const u=await uploadImage(await bxCompose(d,books));if(run!==S.aiRun)return;d.cover=u;d.coverAuto=books.map(x=>x.id).join(',');d.coverV=2;d.coverPrice=bxPrice(d);}
     toast(`📦 เตรียมชุดให้แล้ว (${[needCover?'ปกเล่ม · รูปชุด':'',needCopy?'ข้อความขาย':''].filter(Boolean).join(' · ')}) ตรวจแล้วกดบันทึกเพื่อใช้ · กดยกเลิก = ไม่เปลี่ยน`);
   }catch(e){console.error('setPrep',e);}finally{if(run===S.aiRun){S.bxImg='';render(true);}}}
+/* คำอธิบายชุดเริ่มต้น: ใส่ชื่อเล่มทีละเล่มจนเต็ม 300 ตัวอักษร ไม่ตัดกลางคำ (คุณแดน 17 ต.ค. 69 เจอแอดขึ้น "400 ต") · เกิน = "และอีก N เล่ม" */
+function setDesc(n,books){const head=`ครบ ${n} เล่มในชุดเดียว: `;let out=[];for(let i=0;i<books.length;i++){const rest=books.length-i-1,next=head+[...out,books[i].name].join(' · ')+(rest?` · และอีก ${rest} เล่ม`:'');if(next.length>300&&out.length)return head+out.join(' · ')+` · และอีก ${books.length-out.length} เล่ม`;out.push(books[i].name);}return head+out.join(' · ');}
 function setSlug(name){let s=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)||'set';let t=s,i=2;while(D.products.some(p=>p.slug===t))t=s+'-'+i++;return t;}
 function facBox(inFactory){
   if(FAC.jobs===null){loadFacJobs();return '';}

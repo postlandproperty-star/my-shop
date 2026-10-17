@@ -437,7 +437,7 @@ const ADS_AUTO_OFF = '2026-10-05T12:00:00Z';
 function dropAutoDrafts(items) { let n = 0; for (const x of items) if (x.status === 'pending' && String(x.created_at || '') < ADS_AUTO_OFF && !x.picked) { x.status = 'dismissed'; x.note = 'ร่างอัตโนมัติก่อนปิดระบบ เก็บออกให้แล้ว'; x.updated_at = new Date().toISOString(); n++; } return n; }
 async function saveAdsAuto(items) { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ads_auto', data: { items: items.slice(0, 100) }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); }
 const adsTestProduct = (p) => Number(p.price) < 30 || /ทดสอบ|แคลคูลัส|test/i.test(`${p.name} ${p.slug}`);
-function adCopy(p, site) {
+function adCopy(p, site, books = []) {
   const L = (t) => String(t || '').split('\n').map((x) => x.trim()).filter(Boolean);
   const notion = /notion/i.test(`${p.cat} ${p.link}`);
   const course = p.kind === 'course'; // คอร์สวิดีโอ: ไม่ใช่ไฟล์ PDF (คุณแดน 8 ต.ค. 69)
@@ -445,6 +445,8 @@ function adCopy(p, site) {
     const pls = (p.plans || []).filter((x) => x && x.on !== false && Number(x.price) >= 1); const pl = pls.find((x) => x.key === p.planDefault) || pls[0];
     p = { ...p, price: pl ? Number(pl.price) : Number(p.price) || 0, fullPrice: pl && Number(pl.fullPrice) > Number(pl.price) ? Number(pl.fullPrice) : Number(p.fullPrice) || 0, images: (p.images || []).length ? p.images : (p.cover ? [p.cover] : []) };
   }
+  // ชุดที่ยังใช้คำอธิบายเริ่มต้น (ชื่อเล่มต่อกันยาว เคยถูกตัดกลางคำ "400 ต") → แอดเขียนรายชื่อเล่มครบทุกเล่ม ทีละบรรทัด
+  if (p.type === 'bundle' && books.length && (!p.desc || /^ครบ \d+ เล่มในชุดเดียว/.test(p.desc))) p = { ...p, desc: `รวม ${books.length} เล่มในชุดเดียว:\n${books.map((b) => '📘 ' + String(b.name || '').trim()).join('\n')}` };
   const full = Number(p.fullPrice) > Number(p.price) ? ` (ปกติ ฿${Number(p.fullPrice).toLocaleString('th-TH')})` : '';
   const text = [p.headline && p.headline !== p.name ? p.headline : p.name, p.desc || '', L(p.features).slice(0, 4).map((x) => '✅ ' + x).join('\n'),
     `ราคา ฿${Number(p.price).toLocaleString('th-TH')}${full} · ${course ? 'เข้าเรียนได้ทันทีหลังจ่าย' : notion ? 'ได้ลิงก์เทมเพลต Notion ทันทีหลังจ่าย' : 'ได้ไฟล์ PDF ทันทีหลังจ่าย'} สแกน QR จ่ายได้เลย`].filter(Boolean).join('\n\n').slice(0, 1500);
@@ -461,7 +463,7 @@ async function draftAd(productId, { by = 'system', force = false } = {}) {
   const open = items.find((x) => x.productId === p.id && ['pending', 'launching', 'live'].includes(x.status));
   if (open && !force) return { item: open, existed: true };
   const { randomUUID } = await import('node:crypto');
-  const item = { id: randomUUID(), picked: by === 'owner', productId: p.id, name: p.name, price: Number(p.price) || 0, ...adCopy(p, await siteUrl()), ...ADS_DEFAULT, status: 'pending', by, created_at: new Date().toISOString() };
+  const item = { id: randomUUID(), picked: by === 'owner', productId: p.id, name: p.name, price: Number(p.price) || 0, ...adCopy(p, await siteUrl(), p.type === 'bundle' ? (p.items || []).map((id) => shop.products.find((x) => x.id === id)).filter(Boolean) : []), ...ADS_DEFAULT, status: 'pending', by, created_at: new Date().toISOString() };
   items.unshift(item); await saveAdsAuto(items);
   await addTodo({ text: `แอดสินค้าใหม่พร้อมแล้ว "${String(p.name).slice(0, 60)}" งบ ฿${item.dailyTHB}/วัน × ${item.days} วัน (รวม ฿${item.dailyTHB * item.days}) ตรวจข้อความแล้วกดตกลงที่แท็บโฆษณา (ยังไม่เสียเงินจนกว่าจะกดตกลง)`, type: 'decide', from: 'analyst' });
   return { item, existed: false };
