@@ -235,7 +235,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rv-list{display:grid;gap:10px}.rv-item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.rv-item p{margin:6px 0 4px;white-space:pre-wrap}
 .rvreq{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .rv-ver{display:inline-block;font-size:12.5px;color:var(--ok);margin-top:2px}
-.rva-add{margin-bottom:12px;padding:12px 14px}.rva-add summary{cursor:pointer}.rva-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 12px;margin-bottom:8px}.rva-add textarea{width:100%}
+.rva-add{margin-bottom:12px;padding:12px 14px}.rva-q{margin:6px 0}.rva-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;max-height:300px;overflow:auto;padding:2px}.rva-it{display:flex;gap:8px;align-items:center;text-align:left;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font:inherit;color:inherit}.rva-it:hover{border-color:var(--brand)}.rva-it img,.rva-noimg{width:44px;height:44px;object-fit:cover;border-radius:6px;flex:none;display:grid;place-items:center;background:var(--bg)}.rva-it span{display:grid;gap:2px;font-size:13px;line-height:1.3}.rva-it em{font-style:normal;color:var(--muted);font-size:12px}.rva-add summary{cursor:pointer}.rva-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 12px;margin-bottom:8px}.rva-add textarea{width:100%}
 .rvt-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px;margin-bottom:12px}@media(max-width:720px){.rvt-top{grid-template-columns:1fr}}
 .rvt-sum{display:flex;flex-direction:column;gap:2px}.rvt-avg{font-size:40px;line-height:1}.rvt-dist{display:grid;gap:4px;margin-top:10px;font-size:13px}.rvt-dist div{display:grid;grid-template-columns:28px 1fr 24px;gap:8px;align-items:center}.rvt-dist i{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;display:block}.rvt-dist em{display:block;height:100%;background:#F5B301;border-radius:4px}
 .rvt-nums{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}.rvt-sel{width:auto;min-width:0;max-width:100%;padding:6px 10px;font-size:14px}
@@ -1594,7 +1594,7 @@ function tick(){
 }
 setInterval(tick,1000);
 let SOLD=null;
-function loadSold(){if(SOLD!==null)return;SOLD={};fetch('/api/content?action=sold').then(r=>r.json()).then(j=>{if(j&&j.ok){SOLD=j.counts||{};if(S.view==='shop'||!S.view)render(true);}}).catch(()=>{});}
+function loadSold(){if(SOLD!==null)return;SOLD={};fetch('/api/content?action=sold').then(r=>r.json()).then(j=>{if(j&&j.ok){SOLD=j.counts||{};if(S.view==='shop'||!S.view||(S.view==='admin'&&S.tab==='reviews'))render(true);}}).catch(()=>{});}
 function loadScript(src){return new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('โหลดตัวแปลง PDF ไม่ได้'));document.head.appendChild(e);});}
 function parsePages(spec,max){const out=[];String(spec||'3-6').split(',').forEach(part=>{const m=part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)return;const a=+m[1],b=m[2]?+m[2]:a;for(let i=Math.min(a,b);i<=Math.max(a,b);i++)if(i>=1&&i<=max&&!out.includes(i))out.push(i);});return out.slice(0,6);}
 // แปลงหน้า PDF เป็นรูปตัวอย่าง (ลายน้ำ + แถบเลขหน้า) อัปขึ้นคลัง คืนลิงก์รูป · ค่าตั้งต้นหน้า 3-6 (ไฟล์สั้นใช้ 1-4)
@@ -4381,12 +4381,15 @@ function reviewsTab(){
   const prods=[...new Set(L.map(x=>x.product_name).filter(Boolean))];
   const shown=L.filter(x=>f==='all'||(f==='live'?x.status!=='hidden':f==='hidden'?x.status==='hidden':x.stars<=3)).filter(x=>!pf||x.product_name===pf);
   const dist=[5,4,3,2,1].map(n=>[n,live.filter(x=>x.stars===n).length]);
-  const pubs=D.products.filter(p=>p.status==='published').sort((a,b)=>String(a.name).localeCompare(String(b.name),'th'));
+  loadSold();const sold=id=>(SOLD&&SOLD[id])||0; // เลือกสินค้า: ขายดีขึ้นก่อน พร้อมรูปปก (คุณแดน 18 ต.ค. 69)
+  const pubs=D.products.filter(p=>p.status==='published').sort((a,b)=>sold(b.id)-sold(a.id)||String(a.name).localeCompare(String(b.name),'th'));
+  const pk=pubs.find(p=>p.id===RVA.pid);
   return `<p class="fine" style="margin:0 0 12px">รีวิวมาจากลิงก์ในอีเมลที่ส่งถึงผู้ซื้อ (ลิงก์มีลายเซ็นต่อออเดอร์ บอทปลอมไม่ได้) ขึ้นหน้าร้านพร้อมป้าย "ผู้ซื้อจริง" และนับเป็นดาวบน Google · รีวิวที่ใส่เองขึ้นพร้อมป้ายที่มา ซ่อนรีวิวไหนก็ได้ที่นี่</p>
   <details class="card rva-add" data-keep="rvaOpen" ${S.rvaOpen?'open':''}><summary><b>➕ เพิ่มรีวิวจากช่องทางอื่น</b> <span class="fine">ข้อความที่ลูกค้าเขียนมาเองในแชท LINE หรือ Shopee</span></summary>
     <p class="fine" style="margin:8px 0">ใส่ได้เฉพาะข้อความที่ลูกค้าเขียนเองจริง (ห้ามแต่งรีวิว ผิดกฎหมายคุ้มครองผู้บริโภคและกติกา Facebook/Google) · หน้าเว็บจะขึ้นป้าย "รีวิวจาก…" · ไม่นับเป็นดาวบน Google</p>
+    <div class="field"><span>สินค้า${pk?` · <b>${esc(String(pk.name).slice(0,60))}</b> <button class="rvt-link" data-a="rvaPick" data-v="">เปลี่ยน</button>`:''}</span><input type="hidden" id="rva-pid" value="${esc(RVA.pid||'')}">
+      ${pk?'':`<input class="input rva-q" id="rva-q" placeholder="🔎 ค้นหาชื่อสินค้า" autocomplete="off"><div class="rva-pick">${pubs.map(p=>{const im=(p.images||[])[0]||p.cover||'',n=sold(p.id);return `<button type="button" class="rva-it" data-a="rvaPick" data-v="${esc(p.id)}" data-n="${esc(String(p.name).toLowerCase())}">${im?`<img src="${esc(smi(im))}" alt="" loading="lazy">`:'<span class="rva-noimg">📘</span>'}<span><b>${esc(String(p.name).slice(0,80))}</b><em>${n?`🔥 ขายแล้ว ${n}`:'ยังไม่มียอดขาย'}</em></span></button>`;}).join('')}</div>`}</div>
     <div class="rva-grid">
-      <label class="field">สินค้า<select class="input" id="rva-pid"><option value="">เลือกสินค้า</option>${pubs.map(p=>`<option value="${esc(p.id)}">${esc(String(p.name).slice(0,70))}</option>`).join('')}</select></label>
       <label class="field">ดาว<select class="input" id="rva-stars">${[5,4,3,2,1].map(n=>`<option value="${n}">${'★'.repeat(n)}${'☆'.repeat(5-n)} ${n}</option>`).join('')}</select></label>
       <label class="field">ชื่อที่แสดง<input class="input" id="rva-name" maxlength="30" placeholder="เช่น คุณพลอย (ถามลูกค้าก่อนใช้ชื่อจริง)"></label>
       <label class="field">ช่องทาง<select class="input" id="rva-src">${Object.entries(RV_SRC_TH).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label>
@@ -7178,9 +7181,10 @@ function act(a,el){
     case 'soRefresh':loadSO(true);break;
     case 'soOpen':S.soOpen=!S.soOpen;break;
     case 'shpSoOpen':S.shpSoOpen=!S.shpSoOpen;break;
+    case 'rvaPick':RVA.pid=el.dataset.v||'';render(true);break;
     case 'rvAdd':{const v=id=>(document.getElementById(id)||{}).value||'';const body={pid:v('rva-pid'),stars:Number(v('rva-stars')),name:v('rva-name'),src:v('rva-src'),ref:v('rva-ref'),at:v('rva-at'),text:v('rva-text'),real:!!(document.getElementById('rva-real')||{}).checked};
       if(!body.pid){toast('เลือกสินค้าก่อน');break;}if(body.text.trim().length<5){toast('ใส่ข้อความที่ลูกค้าเขียน');break;}if(!body.ref.trim()){toast('ใส่ที่มา เช่น เลขออเดอร์หรือวันที่แชท');break;}if(!body.real){toast('ติ๊กยืนยันว่าลูกค้าเขียนเองจริงก่อน');break;}
-      RVA.adding=true;render(true);authFetch('/api/content?action=review_add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(j=>{if(j&&j.ok){toast('เพิ่มรีวิวแล้ว · ขึ้นหน้าเว็บภายใน 1 นาที');S.rvaOpen=false;RVA.list=null;loadRVA();}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');}).catch(()=>toast('บันทึกไม่สำเร็จ')).then(()=>{RVA.adding=false;render(true);});break;}
+      RVA.adding=true;render(true);authFetch('/api/content?action=review_add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(j=>{if(j&&j.ok){toast('เพิ่มรีวิวแล้ว · ขึ้นหน้าเว็บภายใน 1 นาที');S.rvaOpen=false;RVA.pid='';RVA.list=null;loadRVA();}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');}).catch(()=>toast('บันทึกไม่สำเร็จ')).then(()=>{RVA.adding=false;render(true);});break;}
     case 'rvhide':authFetch('/api/content?action=review_hide',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,hidden:el.dataset.v==='1'})}).then(j=>{if(j&&j.ok){const r=(RVA.list||[]).find(x=>x.id===id);if(r)r.status=j.review.status;toast(j.review.status==='hidden'?'ซ่อนแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที':'แสดงอีกครั้งแล้ว หน้าร้านจะอัปเดตภายใน 5 นาที');}else toast((j&&j.error)||'ไม่สำเร็จ');render(true);});break;
     case 'pfilter':S.pkind=el.dataset.v;render(true);break;
     case 'adsBudgetRec':{const x=(ADA.items||[]).find(y=>y.id===id);if(!x)break;const r=adBudgetRec(x);x.dailyTHB=r.daily;x.days=r.days;{const i1=$('#add-'+id),i2=$('#adn-'+id);if(i1)i1.value=r.daily;if(i2)i2.value=r.days;}render(true);toast(`ใส่งบ ฿${r.daily}/วัน × ${r.days} วันแล้ว เงินยังไม่ออกจนกว่าจะกดตกลง`);break;}
@@ -7597,6 +7601,7 @@ document.addEventListener('toggle',e=>{const t=e.target;if(t&&t.dataset&&t.datas
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target&&e.target.dataset&&e.target.dataset.fqn==='title'){e.preventDefault();fqAct('fqAdd',e.target);}});
 document.addEventListener('input',e=>{
   const t=e.target,ds=t.dataset||{};
+  if(t.id==='rva-q'){const q=t.value.trim().toLowerCase();document.querySelectorAll('.rva-pick .rva-it').forEach(b=>{b.hidden=!!q&&!b.dataset.n.includes(q);});return;}
   if(ds.adf){ADF[ds.adf]=Number(t.value)||0;const o=document.getElementById('adf-out');if(o)o.innerHTML=adfOut();return;}
   if(ds.spc||ds.spcTry){if(ds.spc)S.spc=Object.assign({},S.spc||{},{[ds.spc]:t.type==='checkbox'?t.checked:(Number(t.value)||0)});else S.spcTry=Object.assign({},S.spcTry||{},{[ds.spcTry]:Number(t.value)||0});
     const o=document.getElementById('spc-out');if(o&&S.draft){const k=ds.spcTry,pos=t.selectionStart;o.innerHTML=spcOut(S.draft);if(k){const n=o.querySelector(`[data-spc-try="${k}"]`);if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}}}return;}
