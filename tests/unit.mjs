@@ -180,4 +180,12 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
 { const PRL = await import('../lib/printpage.js'); const shop = { products: [{ id: 'a', status: 'published', name: 'A', specs: '' }, { id: 'n', status: 'published', name: 'Planner', cat: 'notion', specs: '' }, { id: 's', status: 'published', type: 'bundle', name: 'Set', items: ['a', 'n'] }] };
   const off = PRL.printList(shop, {}, {}).find((x) => x.id === 's'), on = PRL.printList(shop, {}, { n: { pages: 21, url: 'u' } }).find((x) => x.id === 's');
   ok('🖨 หน้าพิมพ์: เทมเพลต Notion ในชุดไม่ขึ้นให้พิมพ์ · มีฉบับพิมพ์ (สมุดแพลนเนอร์) แล้วขึ้นครบทุกเล่ม', off.books.length === 1 && on.books.length === 2 && on.books[1].pages === 21); }
+{ const A = await import('../lib/autopilot.js'); const now = Date.parse('2026-10-10T05:00:00Z');
+  const c = (id, daily, o) => ({ id, name: id, running: true, dailyTHB: daily, spend7: 2000, orders7: 5, orders14: 8, rev7: 9000, roas7: 4.5, age: 10, price: 990, ...o });
+  const plan = (camps, monthTHB, at = now, monthSpent = 0) => A.planBudget({ ...A.AP_DEFAULT, on: true, monthTHB }, camps, { monthSpent, now: at }).actions;
+  const up = plan([c('w', 300)], 60000).find((x) => x.type === 'budget'), down = plan([c('w', 300)], 3000).find((x) => x.type === 'budget');
+  const loss = plan([c('l', 300, { roas7: 0.5, rev7: 1000 }), c('w', 300)], 3000).find((x) => x.c.id === 'l');
+  const eom = plan([c('w', 300)], 3000, Date.parse('2026-10-30T05:00:00Z'), 2850).find((x) => x.type === 'budget');
+  ok('🤖 ออโต้ไพลอตขยับงบทีละน้อย (Facebook ไม่เริ่มเรียนรู้ใหม่): เพิ่มไม่เกิน 20% · ลดไม่เกิน 30% · แอดขาดทุน/ปลายเดือนตัดได้ทันที',
+    up && up.to === 360 && down && down.to === 210 && !!loss && (loss.type === 'pause' || loss.to < 210) && eom && eom.to < 210, JSON.stringify({ up: up && up.to, down: down && down.to, loss: loss && (loss.to || loss.type), eom: eom && eom.to })); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
