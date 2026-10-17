@@ -662,6 +662,7 @@ async function autopilotRun({ dry = false, cfg = null } = {}) {
     const c = a.c; let err = '';
     try {
       if (a.type === 'pause') await setCampaignStatus(fb, c.id, 'PAUSED');
+      else if (a.type === 'resume') { if (a.to && Math.abs(a.to - (c.dailyTHB || 0)) >= 10) await extendCampaign(fb, { campaignId: c.id, adsetIds: c.adsetIds, dailyTHB: a.to, budgetOn: c.budgetOn, currency }); await setCampaignStatus(fb, c.id, 'ACTIVE'); }
       else if (a.type === 'budget') await extendCampaign(fb, { campaignId: c.id, adsetIds: c.adsetIds, dailyTHB: a.to, budgetOn: c.budgetOn, currency });
       else if (a.type === 'extend') await extendCampaign(fb, { campaignId: c.id, adsetIds: c.adsetIds, end: c.end || '', days: a.days, currency });
     } catch (e) { err = String(e.message || e).slice(0, 200); }

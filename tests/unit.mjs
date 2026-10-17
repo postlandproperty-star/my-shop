@@ -205,4 +205,10 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const acts = A.planBudget({ ...A.AP_DEFAULT, on: true, monthTHB: 6000 }, [c('big', 280, { rev7: 5000, roas7: 2.8 }), c('mid', 100, { rev7: 3000, roas7: 2.6 }), c('small', 90, { rev7: 590, roas7: 7.1, spend7: 83, orders7: 1, orders14: 1 }), c('weak', 120, { rev7: 1000, roas7: 1.2 })], { monthSpent: 0, now }).actions;
   const paused = acts.filter((x) => x.type === 'pause').map((x) => x.c.id);
   ok('🤖 งบไม่พอให้ทุกตัว → หยุดแอดที่ได้คืนต่ำสุดก่อน (ไม่หยุดตัวใหม่ที่ได้คืนสูงแต่ยอดรวมยังน้อย)', paused.length >= 1 && paused[0] === 'weak' && !paused.includes('small'), JSON.stringify(paused)); }
+{ const A = await import('../lib/autopilot.js'); const now = Date.parse('2026-10-18T05:00:00Z'), end = new Date(now + 6 * 864e5).toISOString();
+  const run = { id: 'r', name: 'run', running: true, dailyTHB: 280, spend7: 1700, orders7: 5, orders14: 9, rev7: 4950, roas7: 2.8, age: 12, price: 990 };
+  const p1 = { id: 'p1', name: 'p1', running: false, ended: false, end, dailyTHB: 99, spend7: 475, orders7: 1, orders14: 2, rev7: 990, roas7: 2.1, age: 8, price: 990 }, p2 = { ...p1, id: 'p2', name: 'p2', roas7: 1.2 }, p3 = { ...p1, id: 'p3', name: 'p3' };
+  const why = 'งบเดือนไม่พอให้ทุกตัว ยกงบให้ตัวที่ขายดีกว่า', log = [{ type: 'pause', name: 'p1', why }, { type: 'pause', name: 'p2', why }, { type: 'pause', name: 'p3', why: 'คุณแดนกดหยุด' }];
+  const plan = (m) => A.planBudget({ ...A.AP_DEFAULT, on: true, monthTHB: m, log }, [run, p1, p2, p3], { monthSpent: 0, now }).actions.filter((x) => x.type === 'resume').map((x) => x.c.id + ':' + x.to);
+  ok('🤖 เพิ่มงบเดือนแล้ว → เปิดแอดที่ระบบหยุดเพราะงบไม่พอกลับมา (เฉพาะที่ยังได้คืนถึงเกณฑ์ · ที่คุณแดนหยุดเองไม่แตะ) · งบไม่พอ = ไม่เปิด', JSON.stringify(plan(28000)) === '["p1:99"]' && plan(4000).length === 0, JSON.stringify([plan(28000), plan(4000)])); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
