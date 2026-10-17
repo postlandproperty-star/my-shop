@@ -1217,6 +1217,15 @@ const MEMBER_TH = { manager: 'พี่ต้น', writer: 'น้องปา�
 async function channelCol() { try { await sb('posts?select=channel&limit=1'); return true; } catch { return false; } }
 const keyOk = (req) => CONTENT_KEY.length >= 16 && req.headers['x-content-key'] === CONTENT_KEY;
 const cronOk = (req) => !!req.headers['x-vercel-cron'] || (process.env.CRON_SECRET && req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`);
+// Vercel Cron จริงส่งแค่ user-agent "vercel-cron/1.0" (ไม่มี x-vercel-cron และไม่มี CRON_SECRET) → งานรายวันใน keepalive/publish ถูกข้ามเงียบๆ (พบ 18 ต.ค. 69:
+// อีเมลขอรีวิวไม่เคยส่งเลย · health หยุดตั้งแต่ 5 ต.ค.) · รับ user-agent นี้ได้ แต่วันละรอบต่องาน (ปลอม user-agent ก็สั่งซ้ำไม่ได้ · งานทำครั้งเดียวต่อออเดอร์อยู่แล้ว)
+const vercelCron = (req) => /^vercel-cron\//.test(String(req.headers['user-agent'] || ''));
+async function cronClaim(key, hours = 20) {
+  const row = (await sb('shop_state?id=eq.cron_runs&select=data'))?.[0]?.data || {}, now = Date.now();
+  if (now - (Date.parse(row[key] || 0) || 0) < hours * 36e5) return false;
+  await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'cron_runs', data: { ...row, [key]: new Date(now).toISOString() }, updated_at: new Date(now).toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+  return true;
+}
 
 async function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -1247,17 +1256,18 @@ export default async function handler(req, res) {
   try {
     if (action === 'keepalive') {
       // Vercel Cron วันละครั้ง กัน Supabase แพ็กฟรีถูกพัก (ย้ายมาจาก api/keepalive.js เพราะ Hobby จำกัด 12 ฟังก์ชัน)
+      const cronRun = cronOk(req) || (vercelCron(req) && await cronClaim('keepalive'));
       const r = await fetch(`${SB_URL}/rest/v1/shop_state?select=id&limit=1`, { headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}` } });
       // รอบเช้า 10:00 กทม. โพสต์ที่อนุมัติและถึงเวลาแล้วขึ้นด้วย (โหมดเร่งผู้ติดตาม: วันละ 2 รอบ 10:00 และ 19:05)
       let morning = null;
-      if (r.ok && cronOk(req)) { try { await (await import('../lib/insights.js')).pruneEvents(90); } catch (e) {} } // พฤติกรรมคนเข้าเว็บเก็บ 90 วัน
-      if (r.ok && cronOk(req) && process.env.GEMINI_API_KEY) { try { // 📅 ข้อสอบ IELTS ประจำวัน: เติมคลังวันละ 5 ข้อ (เท่าที่ใช้ต่อวัน) ไม่ให้ชุดวนซ้ำ · lib/ieltsLib.js
+      if (r.ok && cronRun) { try { await (await import('../lib/insights.js')).pruneEvents(90); } catch (e) {} } // พฤติกรรมคนเข้าเว็บเก็บ 90 วัน
+      if (r.ok && cronRun && process.env.GEMINI_API_KEY) { try { // 📅 ข้อสอบ IELTS ประจำวัน: เติมคลังวันละ 5 ข้อ (เท่าที่ใช้ต่อวัน) ไม่ให้ชุดวนซ้ำ · lib/ieltsLib.js
         const IL = await import('../lib/ieltsLib.js'), lib = (await sb('shop_state?id=eq.ielts_lib&select=data'))?.[0]?.data;
         if (lib && Array.isArray(lib.daily) && lib.daily.length < 600) { const gr = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: IL.dailyPrompt(5, lib.daily.slice(-60).map((x) => x.q.slice(0, 40)).join(' | ')) }] }], generationConfig: { temperature: 0.8, maxOutputTokens: 4096, responseMimeType: 'application/json', thinkingConfig: { thinkingBudget: 0 } } }) });
           const gj = await gr.json().catch(() => ({})), items = IL.normDaily((gj?.candidates?.[0]?.content?.parts || []).map((x) => x.text || '').join(''));
           if (items.length) { lib.daily = lib.daily.concat(items); await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'ielts_lib', data: lib, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' }); } }
       } catch (e) { console.error('ielts daily topup', e); } }
-      if (r.ok && cronOk(req)) {
+      if (r.ok && cronRun) {
         try {
           const pr = await fetch(`https://${req.headers.host}/api/content?action=publish`, { headers: { 'x-content-key': CONTENT_KEY } });
           morning = await pr.json();
@@ -1265,22 +1275,22 @@ export default async function handler(req, res) {
       }
       // พี่การ์ด: ตรวจสุขภาพระบบทุกเช้า บันทึกผลลง log และส่งงานเข้าเช็คลิสต์เมื่อพบปัญหา
       let health = null;
-      if (r.ok && cronOk(req)) { try { health = await runHealth(req.headers.host); await recordHealth(health); } catch (e) { health = { ok: false, error: String(e.message || e) }; } }
+      if (r.ok && cronRun) { try { health = await runHealth(req.headers.host); await recordHealth(health); } catch (e) { health = { ok: false, error: String(e.message || e) }; } }
       let recover = null;
-      if (r.ok && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
+      if (r.ok && cronRun) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
       let qr = null, leadmail = null;
-      if (cronOk(req)) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
-      if (cronOk(req)) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
+      if (cronRun) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
+      if (cronRun) { try { leadmail = await autoLeadMails(); } catch (e) { leadmail = { ok: false, error: String(e.message || e) }; } }
       let reviewmail = null;
-      if (cronOk(req)) { try { const { sendReviewRequests } = await import('../lib/reviews.js'); reviewmail = await sendReviewRequests(); } catch (e) { reviewmail = { ok: false, error: String(e.message || e) }; } }
+      if (cronRun) { try { const { sendReviewRequests } = await import('../lib/reviews.js'); reviewmail = await sendReviewRequests(); } catch (e) { reviewmail = { ok: false, error: String(e.message || e) }; } }
       let feedcats = null; // หมวดสินค้าใหม่ที่ฟีด Google ยังจัดหมวดไม่ตรง → แจ้งคุณแดนในเช็คลิสต์ครั้งเดียวต่อหมวด
-      if (cronOk(req)) { try { feedcats = await checkFeedCategories(); } catch (e) { feedcats = { ok: false, error: String(e.message || e) }; } }
+      if (cronRun) { try { feedcats = await checkFeedCategories(); } catch (e) { feedcats = { ok: false, error: String(e.message || e) }; } }
       let reelclean = null; // คลิปที่โพสต์แล้ว ลบออกจากคลังร้าน
-      if (cronOk(req)) { try { reelclean = await cleanupReels(); } catch (e) { reelclean = { ok: false, error: String(e.message || e) }; } }
+      if (cronRun) { try { reelclean = await cleanupReels(); } catch (e) { reelclean = { ok: false, error: String(e.message || e) }; } }
       let adwatch = null; // เฝ้าเงินค่าแอด
-      if (cronOk(req)) { try { adwatch = await adWatch(); } catch (e) { adwatch = { ok: false, error: String(e.message || e) }; } try { adwatch.alarm = await adAlarm({ force: true }); } catch (e) { console.error('ad alarm', e.message); } try { adwatch.pilot = await autopilotRun(); } catch (e) { console.error('autopilot', e.message); } }
+      if (cronRun) { try { adwatch = await adWatch(); } catch (e) { adwatch = { ok: false, error: String(e.message || e) }; } try { adwatch.alarm = await adAlarm({ force: true }); } catch (e) { console.error('ad alarm', e.message); } try { adwatch.pilot = await autopilotRun(); } catch (e) { console.error('autopilot', e.message); } }
       let adsdraft = null; // สินค้าเผยแพร่ใหม่ → ร่างแอดรอคุณแดนกดตกลง
-      if (cronOk(req)) { try { adsdraft = await ensureAdDrafts(); } catch (e) { adsdraft = { ok: false, error: String(e.message || e) }; } }
+      if (cronRun) { try { adsdraft = await ensureAdDrafts(); } catch (e) { adsdraft = { ok: false, error: String(e.message || e) }; } }
       return res.status(r.ok ? 200 : 502).json({ ok: r.ok, status: r.status, at: new Date().toISOString(), publish: morning, health, recover, qr, leadmail, reviewmail, feedcats, adsdraft, reelclean, adwatch });
     }
     if (action === 'shop') {
@@ -3700,10 +3710,11 @@ ${books}`;
     }
     if (action === 'publish') {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
-      if (!admin && !cronOk(req) && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const cronP = cronOk(req) || (vercelCron(req) && await cronClaim('publish'));
+      if (!admin && !cronP && !keyOk(req)) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
       let readlab = null; // เพจ/Threads ReadLab (บัญชีแยก) รอบเดียวกัน
       if (!req.query.id) { try { readlab = await publishReadlab(); } catch (e) { readlab = { ok: false, error: String(e.message || e) }; } }
-      if (!req.query.id && cronOk(req)) { try { await vocabRemind(); } catch (e) { console.error('vocab remind', e.message); } } // 📚 เตือนทวนคำศัพท์ วันละครั้ง (cron 19:05 ไทย)
+      if (!req.query.id && cronP) { try { await vocabRemind(); } catch (e) { console.error('vocab remind', e.message); } } // 📚 เตือนทวนคำศัพท์ วันละครั้ง (cron 19:05 ไทย)
       const fb = await ensureIg(await loadFb());
       let th = await loadThreads(); th = threadsConnected(th) ? await refreshIfNeeded(th) : null;
       if (!fb && !th) return res.status(200).json({ ok: false, skipped: true, error: 'ยังไม่ได้เชื่อมเพจ Facebook (แท็บคอนเทนต์ → เชื่อมเพจ)', readlab });
@@ -3770,7 +3781,7 @@ ${books}`;
       }
       // รอบ cron เย็น: เตือนคนที่จ่ายไม่เสร็จด้วย
       let recover = null;
-      if (!id && cronOk(req)) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
+      if (!id && cronP) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
       let qr = null; // รอบ publish ของ cron และของน้องคอม (08:00/21:00) เก็บตกออเดอร์ QR ด้วย
       if (!id) { try { qr = await sweepQrPayments(); } catch (e) { qr = { ok: false, error: String(e.message || e) }; } }
       let leadmail = null; // รอบเดียวกัน: น้องคอมส่งอีเมลเตือนคนค้างจ่าย

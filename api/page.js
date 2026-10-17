@@ -83,7 +83,7 @@ export function ssrShell(p, products, sm = {}) {
     + `<section class="spx"><div class="sp-media"><div class="sp-car-wrap"><div class="sp-car">${img ? `<span class="zoom"><img width="1200" height="1200" src="${esc(sm[img] || img)}" alt="${esc(p.name)}" fetchpriority="high"></span>` : ''}</div></div></div>`
     + `<div class="sp-band" style="--hero:${esc(p.color || '#2440E8')}"><div class="wrap sp-band-in"><div class="sp-price"><span class="now">${now >= 1 ? thb(now) : 'ฟรี'}</span>${old > now && now >= 1 ? `<span class="old">${thb(old)}</span>` : ''}</div></div></div>`
     + `<div class="wrap sp-info">${bundle && books.length ? `<span class="bx-kicker">📦 ชุด ${books.length} เล่ม</span>` : ''}<h1>${esc(bundle ? p.name : p.headline || p.name)}</h1>${bundle && p.headline && p.headline !== p.name ? `<p class="lead">${esc(String(p.headline).slice(0, 220))}</p>` : ''}</div></section>`
-    + `<div class="sticky"><div class="sticky-in"><div class="sp-sp"><span class="p">${now >= 1 ? thb(now) : 'ฟรี'}</span></div><span class="btn btn-buy">${bundle ? 'ซื้อชุดนี้' : 'ซื้อเลย'}</span></div></div>`;
+    + `<div class="sticky"><div class="sticky-in"><div class="sp-sp"><span class="p">${now >= 1 ? thb(now) : 'ฟรี'}</span></div><a class="btn btn-buy" href="#buy" onclick="this.textContent='กำลังเปิดหน้าชำระเงิน...'">${bundle ? 'ซื้อชุดนี้' : 'ซื้อเลย'}</a></div></div>`;
 }
 // 🖼 รูปปกขนาดมือถือ (WebP บน R2 ทำโดย tools/r2/imgsm.py บน Mac) · แคช 5 นาที · ใส่เฉพาะรูปที่หน้านี้ใช้ (รูปแรกทุกเล่ม + ทุกรูปของเล่มที่เปิด)
 const loadSm = () => cached('img-sm', 300e3, () => fetch('https://pub-fdfc380c67f149de994eac621d6b147c.r2.dev/sm/manifest.json').then((r) => (r.ok ? r.json() : {}))).catch(() => ({}));

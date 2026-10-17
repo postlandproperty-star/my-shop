@@ -7982,6 +7982,8 @@ document.addEventListener('visibilitychange',async()=>{
   if(document.visibilityState!=='visible'||!sb||!sbSession)return;
   try{const {data}=await sb.auth.getSession();if(!data||!data.session)sessionLost();else sbSession=data.session;}catch(e){}
 });
+function ssrBuy(){if(location.hash!=='#buy'||S.view!=='shop')return;try{history.replaceState(history.state,'',location.pathname+location.search);}catch(e){}const b=document.querySelector('[data-a="toCheckout"]');if(b)b.click();}
+window.addEventListener('hashchange',ssrBuy); // แตะตอนโค้ดกำลังเริ่ม (คลิกค้างคิว) → hash เปลี่ยนทีหลัง
 (async function boot(){
   const inline=window.__SHOP__;
   if(inline&&Array.isArray(inline.products)){ // ข้อมูลฝังมากับหน้า: แสดงได้ทันที
@@ -8012,6 +8014,8 @@ document.addEventListener('visibilitychange',async()=>{
   track('PageView');
   {const p=curProduct();if(p&&S.view==='shop')track('ViewContent',{content_name:p.name,value:p.price,currency:'THB'});}
   render(false);
+  // กดปุ่มซื้อของส่วนบนที่เซิร์ฟเวอร์ส่งมาก่อนโค้ดพร้อม (ลิงก์ #buy) → พร้อมแล้วเปิดหน้าชำระเงินให้เลย ไม่ต้องกดซ้ำ (18 ต.ค. 69)
+  ssrBuy();
 })();
 </script>
 </body>
