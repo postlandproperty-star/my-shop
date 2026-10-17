@@ -72,7 +72,7 @@ const withAudio = (list, lib) => list.map((x) => { const b = !x._lite && x.sku &
 // ⚡ ส่วนบนของหน้าขายทำสำเร็จจากเซิร์ฟเวอร์ (17 ต.ค. 69 "เปิดหน้า salepage ช้ามาก"): ปก ชื่อ ราคา ขึ้นทันทีที่ HTML มาถึง ไม่ต้องรอโค้ดทั้งร้าน
 // ใช้ class เดียวกับหน้าขายจริง โค้ดหน้าเว็บโหลดเสร็จแล้ววาดทับเต็มหน้า (ปุ่มซื้อในนี้ยังกดไม่ได้ จนหน้าเว็บพร้อมไม่กี่วินาที)
 const thb = (n) => '฿' + Math.round(Number(n) || 0).toLocaleString('th-TH');
-export function ssrShell(p, products) {
+export function ssrShell(p, products, sm = {}) {
   if (!p) return '';
   const bundle = p.type === 'bundle', pls = bundle ? (p.plans || []).filter((x) => x && x.on !== false && Number(x.price) >= 1) : [];
   const now = bundle && pls.length ? Math.min(...pls.map((x) => Number(x.price))) : Number(p.price) || 0;
@@ -80,11 +80,14 @@ export function ssrShell(p, products) {
   const old = bundle ? books.reduce((a, b) => a + (Number(b.price) || 0), 0) : Number(p.fullPrice) || 0;
   const img = (p.images || [])[0] || p.cover || '';
   return `<div class="sp-topbar"><div class="wrap wide sp-topbar-in"><a class="st-logo" href="/">SheetLab</a><a class="sp-tostore" href="/store">🛍 ดูสินค้าทั้งหมด</a></div></div>`
-    + `<section class="spx"><div class="sp-media"><div class="sp-car-wrap"><div class="sp-car">${img ? `<span class="zoom"><img width="1200" height="1200" src="${esc(img)}" alt="${esc(p.name)}" fetchpriority="high"></span>` : ''}</div></div></div>`
+    + `<section class="spx"><div class="sp-media"><div class="sp-car-wrap"><div class="sp-car">${img ? `<span class="zoom"><img width="1200" height="1200" src="${esc(sm[img] || img)}" alt="${esc(p.name)}" fetchpriority="high"></span>` : ''}</div></div></div>`
     + `<div class="sp-band" style="--hero:${esc(p.color || '#2440E8')}"><div class="wrap sp-band-in"><div class="sp-price"><span class="now">${now >= 1 ? thb(now) : 'ฟรี'}</span>${old > now && now >= 1 ? `<span class="old">${thb(old)}</span>` : ''}</div></div></div>`
     + `<div class="wrap sp-info">${bundle && books.length ? `<span class="bx-kicker">📦 ชุด ${books.length} เล่ม</span>` : ''}<h1>${esc(bundle ? p.name : p.headline || p.name)}</h1>${bundle && p.headline && p.headline !== p.name ? `<p class="lead">${esc(String(p.headline).slice(0, 220))}</p>` : ''}</div></section>`
     + `<div class="sticky"><div class="sticky-in"><div class="sp-sp"><span class="p">${now >= 1 ? thb(now) : 'ฟรี'}</span></div><span class="btn btn-buy">${bundle ? 'ซื้อชุดนี้' : 'ซื้อเลย'}</span></div></div>`;
 }
+// 🖼 รูปปกขนาดมือถือ (WebP บน R2 ทำโดย tools/r2/imgsm.py บน Mac) · แคช 5 นาที · ใส่เฉพาะรูปที่หน้านี้ใช้ (รูปแรกทุกเล่ม + ทุกรูปของเล่มที่เปิด)
+const loadSm = () => cached('img-sm', 300e3, () => fetch('https://pub-fdfc380c67f149de994eac621d6b147c.r2.dev/sm/manifest.json').then((r) => (r.ok ? r.json() : {}))).catch(() => ({}));
+export const smFor = (list, man, focus) => { const o = {}; for (const x of list) for (const u of (focus.has(x.id) ? [...(x.images || []), x.cover] : [(x.images || [])[0], x.cover])) if (u && man[u]) o[u] = man[u]; return o; };
 const focusOf = (products, slug) => { const p = /^[a-z0-9-]+$/.test(slug) ? products.find((x) => x.slug === slug && x.status === 'published') : null; return new Set(p ? [p.id, ...(p.items || []), ...(p.bonusIds || []), p.bumpProductId].filter(Boolean) : []); };
 
 export default async function handler(req, res) {
@@ -357,7 +360,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   try {
     const shop = await loadShop();
     // แท็กยืนยันโดเมนกับ Meta (Facebook) ต้องอยู่ใน HTML ดิบของทุกหน้า รวมหน้าแรก
-    const audP = slug ? loadAudioLib() : null; // เริ่มโหลดพร้อมกับข้อมูลอื่น (หน้าขายเท่านั้น)
+    const audP = slug ? loadAudioLib() : null, smP = loadSm(); // เริ่มโหลดพร้อมกับข้อมูลอื่น (หน้าขายเท่านั้น)
     const verify = String(shop.settings.fbDomainVerify || '').trim();
     if (/^[A-Za-z0-9_-]{5,100}$/.test(verify)) {
       out = out.replace('<!--OG-START-->', `<meta name="facebook-domain-verification" content="${verify}"><!--OG-START-->`);
@@ -370,10 +373,11 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     const artList = ar.slice(0, 12).map((a) => ({ slug: a.slug, title: a.title, cat: a.cat || '', desc: a.desc, image: a.image || '', mins: Math.max(2, Math.round(a.body.length / 900)) }));
     const topics = TOPICS.map((t) => { const it = topicItems(t, { articles: ar, quizzes: qz, products: shop.products }); return topicReady(it) ? { slug: t.slug, name: t.name, n: topicCount(it) } : null; }).filter(Boolean); // หน้ารวมหัวข้อที่มีเนื้อหาแล้ว (หน้าร้านโชว์เป็นทางลัด)
     const alib = slug ? await audP : {};
-    const inline = JSON.stringify({ products: withAudio(pubProducts(shop.products, focusOf(shop.products, slug)), alib), settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
+    const focus = focusOf(shop.products, slug), pubList = withAudio(pubProducts(shop.products, focus), alib), sm = smFor(pubList, await smP, focus);
+    const inline = JSON.stringify({ sm, products: pubList, settings: shop.settings, coupons: shop.coupons || [], quizzes: quizList, articles: artList, daily, level, reviews: rvAll, topics, faq: STORE_FAQ, vip: { open: !!(vipSet && vipSellable(vipSet)) } }).replace(/<\//g, '<\\/');
     // ข้อมูลร้านย้ายจาก <head> มาไว้หลังส่วนบนของหน้าขาย: มือถือวาดปก/ราคาได้ก่อนข้อมูล+โค้ดทั้งร้านโหลดเสร็จ (โค้ดหน้าเว็บอ่าน __SHOP__ ตอนท้ายไฟล์ จึงยังทันเหมือนเดิม)
     const sp = /^[a-z0-9-]+$/.test(slug) && !req.query.view ? shop.products.find((x) => x.slug === slug && x.status === 'published') : null;
-    out = out.replace('<!--SHOP-DATA-->', '').replace('<div id="app"></div>', `<div id="app">${sp ? ssrShell(sp, shop.products) : ''}</div><script>window.__SHOP__=${inline};</script>`);
+    out = out.replace('<!--SHOP-DATA-->', '').replace('<div id="app"></div>', `<div id="app">${sp ? ssrShell(sp, shop.products, sm) : ''}</div><script>window.__SHOP__=${inline};</script>`);
     // ชื่อร้านจากหลังบ้าน (ถ้ายังไม่ตั้ง ใช้ชื่อแบรนด์) → ชื่อแท็บ/ผลค้นหา Google/พรีวิวของหน้าแรก
     const shopName = String(shop.settings.shopName || '').trim() || 'SheetLab ชีทสรุป TOEIC และแบบฝึกหัด';
     out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(shopName)}</title>`)

@@ -194,4 +194,7 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   ok('⚡ หน้าขายส่วนบนจากเซิร์ฟเวอร์: ปก ชื่อ (เล่มเดี่ยวใช้หัวข้อขาย) ราคา/ราคาเต็ม · ชุด = ราคาแพ็กถูกสุด + ราคาแยกเล่มรวม · กัน HTML · ไม่มีปุ่มที่ต้องใช้โค้ด (data-a)',
     one.includes('<h1>หัว A</h1>') && one.includes('฿179') && one.includes('฿249') && one.includes('https://x/a.jpg') && set.includes('<h1>ชุด 2 เล่ม</h1>') && set.includes('฿290') && set.includes('฿328') && set.includes('ชุด 2 เล่ม</span>') && set.includes('https://x/s.jpg')
     && !/data-a=/.test(one + set) && !ssrShell(null, P) && ssrShell({ ...P[0], headline: '', name: '<x>' }, P).includes('&lt;x&gt;')); }
+{ const { smFor } = await import('../api/page.js'); const man = { 'u1': 's1', 'u2': 's2', 'u3': 's3', 'c': 'sc' };
+  const o = smFor([{ id: 'a', images: ['u1', 'u2'] }, { id: 'b', images: ['u3', 'x'], cover: 'c' }], man, new Set(['b']));
+  ok('🖼 รูปขนาดมือถือ: ใส่เฉพาะรูปที่หน้าใช้ (รูปแรกทุกเล่ม + ทุกรูปของเล่มที่เปิด) · รูปที่ยังไม่ย่อ = ไม่ใส่ (ใช้รูปเดิม)', JSON.stringify(o) === JSON.stringify({ u1: 's1', u3: 's3', c: 'sc' }), JSON.stringify(o)); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
