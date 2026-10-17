@@ -246,6 +246,7 @@ def new_spec(used):
 
 def daily(dry=False):
     V.single_run('called')  # ทีละรอบ (รันซ้อนแล้วไฟล์พัง 14 ต.ค. 69)
+    if V.fal_broke(): print(json.dumps({'skip': 'เครดิต fal หมด (เติมที่ fal.ai/dashboard/billing)'}, ensure_ascii=False)); return
     if not pixabay_key(): print(json.dumps({'skip': 'ยังไม่มีคีย์ Pixabay (~/.config/sheetlab/pixabay-key)'})); return
     now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
     st = json.load(open(STATE)) if os.path.exists(STATE) else {'done': [], 'slots': []}

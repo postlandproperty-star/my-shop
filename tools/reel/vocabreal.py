@@ -184,6 +184,7 @@ def post(info, at_iso=None):
 
 def daily(dry=False):
     V.single_run('vocabreal')
+    if V.fal_broke(): print(json.dumps({'skip': 'เครดิต fal หมด (เติมที่ fal.ai/dashboard/billing)'}, ensure_ascii=False)); return
     now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
     st = json.load(open(STATE)) if os.path.exists(STATE) else {'done': [], 'days': []}
     day = (now if now.hour < 18 else now + datetime.timedelta(days=1)).strftime('%Y-%m-%d')

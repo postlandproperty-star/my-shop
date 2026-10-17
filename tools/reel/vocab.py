@@ -40,7 +40,21 @@ def req(url, body=None, method=None, timeout=120, headers=None):
     r = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None, method=method or ('POST' if body is not None else 'GET'),
                                headers=headers or {'Authorization': 'Key ' + KEY, 'Content-Type': 'application/json'})
     try: return json.loads(urllib.request.urlopen(r, timeout=timeout).read())
-    except urllib.error.HTTPError as e: raise SystemExit(f'fal {e.code} {url.split("/requests/")[0]}: {e.read()[:400].decode("utf-8", "replace")}')
+    except urllib.error.HTTPError as e:
+        msg = e.read()[:400].decode('utf-8', 'replace')
+        if e.code == 403 and 'balance' in msg.lower():  # เครดิต fal หมด: จดไว้ คลิปรายวันจะข้ามไป 3 ชม. ไม่ลองซ้ำจนกินเวลาโรงงาน (17 ต.ค. 69)
+            try: open(FAL_BROKE, 'w').write(str(time.time()))
+            except Exception: pass
+        raise SystemExit(f'fal {e.code} {url.split("/requests/")[0]}: {msg}')
+
+
+FAL_BROKE = os.path.join(HERE, '.fal_broke')
+
+
+def fal_broke(hours=3):
+    """เครดิต fal หมดเมื่อไม่เกิน {hours} ชม. ก่อน → งานที่ใช้ AI ควรข้ามรอบนี้ (คุณแดนเติมเงินที่ fal.ai/dashboard/billing)"""
+    try: return time.time() - float(open(FAL_BROKE).read()) < hours * 3600
+    except Exception: return False
 
 
 def fal(endpoint, body, wait=900):
