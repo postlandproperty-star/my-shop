@@ -6635,7 +6635,7 @@ const SVC=[
   {k:'learn',i:'📚',l:'คอนเทนต์+SEO',tabs:[['seo','🔎','SEO'],['content','✍️','โพสต์'],['videos','🎬','คลิป YouTube'],['insights','📈','พฤติกรรม']]},
   {k:'vip',i:'👥',l:'จัดการสมาชิก',view:'vip'},
   {k:'factory',i:'🏭',l:'โรงงาน',view:'factory'},
-  {k:'team',i:'👥',l:'ทีม',tabs:[['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['docs','📁','ห้องเอกสาร'],['chat','☕','ห้องพัก']]},
+  {k:'team',i:'👥',l:'ทีม',tabs:[['meeting','🗣️','ห้องประชุม'],['team','👥','ทีม'],['docs','📁','ห้องเอกสาร']]}, // ☕ ห้องพักทีมปิดแล้ว (คุณแดน 18 ต.ค. 69 "ไม่มีประโยชน์")
 ];
 const tabBadge=k=>k==='todo'&&todoOpenCount()?`<span class="tcount">${todoOpenCount()}</span>`:k==='meeting'&&unseenNotes()?`<span class="tcount">${unseenNotes()}</span>`:'';
 const svcOfTab=t=>(SVC.find(s=>s.tabs&&s.tabs.some(x=>x[0]===t))||SVC[0]).k;
@@ -6664,6 +6664,7 @@ function svcFour(k){
 function adminView(){
   if(S.tab==='pixel')S.tab='pay';
   if(TODO.items===null&&!TODO.loading&&S.tab!=='todo'){loadTodo().then(()=>render(true));}
+  if(S.tab==='chat')S.tab='meeting'; // ☕ ห้องพักปิดแล้ว: ลิงก์/แท็บเก่าพาไปห้องประชุม
   const body={insights:insightsTab,seo:seoTab,home:homeTab,todo:todoTab,orders:ordersTab,products:productsTab,reviews:reviewsTab,coupons:couponsTab,chatbot:chatbotTab,videos:videosTab,courses:coursesTab,ads:adsTab,pay:payTab,pixel:pixelTab,content:contentTab,team:teamTab,meeting:meetingTab,chat:chatTab,docs:docsTab}[S.tab]();
   return `<div class="wrap wide" style="padding-bottom:60px">
     ${svcNav()}

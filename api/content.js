@@ -375,7 +375,8 @@ async function saveJobs(jobs) { await sb('shop_state?on_conflict=id', { method: 
 async function logNote(source, text, kind = 'log') { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind, source, text: String(text).slice(0, 4000) }], prefer: 'return=minimal' }); } catch (e) { console.error('logNote', e.message); } }
 // ห้องพักทีม: เหตุการณ์จริงในร้านสะท้อนเข้าห้องทันที (ไม่ใช้โมเดล ใช้แม่แบบสุ่ม)
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
-async function chatEvent(source, text, evt) { try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source, text: String(text).slice(0, 200), notes: JSON.stringify({ evt: evt || true }) }], prefer: 'return=minimal' }); } catch (e) {} }
+const LOUNGE_OFF = true; // ☕ ห้องพักทีมปิด (คุณแดน 18 ต.ค. 69 "ไม่มีประโยชน์"): ไม่เขียนแชททีม ไม่เรียก AI ห้องพัก
+async function chatEvent(source, text, evt) { if (LOUNGE_OFF) return; try { await sb('posts', { method: 'POST', body: [{ status: 'note', kind: 'chat', source, text: String(text).slice(0, 200), notes: JSON.stringify({ evt: evt || true }) }], prefer: 'return=minimal' }); } catch (e) {} }
 // โลกภายนอกจริงของกรุงเทพ (ฟรี ไม่ใช้คีย์): อากาศ ฝุ่น วันหยุด เงินเดือน ช่วงรถติด สำหรับ digest ของห้องพัก
 const TH_HOL = { '2026-01-01': 'วันขึ้นปีใหม่', '2026-03-03': 'วันมาฆบูชา', '2026-04-06': 'วันจักรี', '2026-04-13': 'วันสงกรานต์', '2026-04-14': 'วันสงกรานต์', '2026-04-15': 'วันสงกรานต์', '2026-05-01': 'วันแรงงาน', '2026-05-04': 'วันฉัตรมงคล', '2026-06-01': 'ชดเชยวันวิสาขบูชา', '2026-06-03': 'วันเฉลิมพระชนมพรรษาพระราชินี', '2026-07-28': 'วันเฉลิมพระชนมพรรษา ร.10', '2026-07-29': 'วันอาสาฬหบูชา', '2026-07-30': 'วันเข้าพรรษา', '2026-08-12': 'วันแม่', '2026-10-13': 'วันนวมินทรมหาราช', '2026-10-23': 'วันปิยมหาราช', '2026-12-05': 'วันพ่อ', '2026-12-07': 'ชดเชยวันพ่อ', '2026-12-10': 'วันรัฐธรรมนูญ', '2026-12-31': 'วันสิ้นปี', '2027-01-01': 'วันขึ้นปีใหม่' };
 async function worldNow() {
@@ -3404,6 +3405,7 @@ ${books}`;
       return res.status(200).json({ ok: true, engine: ai ? ai.name : 'Claude', configured: !!ai, base, model: ai ? ai.model || null : null, reach, state: await aiState().catch(() => ({})) });
     }
     if (action === 'ai_day' || action === 'ai_reply') {
+      if (LOUNGE_OFF) return res.status(200).json({ ok: true, off: true, note: 'ห้องพักทีมปิดแล้ว' });
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req) && !cronOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
       try {
