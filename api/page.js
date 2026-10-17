@@ -87,7 +87,7 @@ export function ssrShell(p, products, sm = {}) {
 }
 // 🖼 รูปปกขนาดมือถือ (WebP บน R2 ทำโดย tools/r2/imgsm.py บน Mac) · แคช 5 นาที · ใส่เฉพาะรูปที่หน้านี้ใช้ (รูปแรกทุกเล่ม + ทุกรูปของเล่มที่เปิด)
 const loadSm = () => cached('img-sm', 300e3, () => fetch('https://pub-fdfc380c67f149de994eac621d6b147c.r2.dev/sm/manifest.json').then((r) => (r.ok ? r.json() : {}))).catch(() => ({}));
-export const smFor = (list, man, focus) => { const o = {}; for (const x of list) for (const u of (focus.has(x.id) ? [...(x.images || []), x.cover] : [(x.images || [])[0], x.cover])) if (u && man[u]) o[u] = man[u]; return o; };
+export const smFor = (list, man, focus) => { const o = {}; for (const x of list) for (const u of (focus.has(x.id) ? [...(x.images || []), x.cover, x.bookCover] : [(x.images || [])[0], x.cover])) if (u && man[u]) o[u] = man[u]; return o; };
 const focusOf = (products, slug) => { const p = /^[a-z0-9-]+$/.test(slug) ? products.find((x) => x.slug === slug && x.status === 'published') : null; return new Set(p ? [p.id, ...(p.items || []), ...(p.bonusIds || []), p.bumpProductId].filter(Boolean) : []); };
 
 export default async function handler(req, res) {
@@ -414,7 +414,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
         `<meta name="twitter:card" content="${img ? 'summary_large_image' : 'summary'}">`,
         `<meta name="description" content="${esc(desc)}">`,
         `<link rel="canonical" href="${NEW_SITE}/p/${esc(p.slug)}">`,
-        img ? `<link rel="preload" as="image" href="${esc(img)}" fetchpriority="high">` : '', // รูปหลักเริ่มโหลดทันที ไม่ต้องรอสคริปต์วาดหน้า
+        img ? `<link rel="preload" as="image" href="${esc(sm[img] || img)}" fetchpriority="high">` : '', // รูปขนาดมือถือ (ตัวเดียวกับที่หน้าแสดง ไม่โหลดซ้ำ 2 รูป) // รูปหลักเริ่มโหลดทันที ไม่ต้องรอสคริปต์วาดหน้า
         productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img, rvAll[p.id]),
       ].join('');
       out = out

@@ -2506,7 +2506,7 @@ function bundleView(p){
   const off=sum>minP?Math.round((1-minP/sum)*100):0;
   const pvSel=Math.min(S.bxPv||0,Math.max(0,books.length-1));
   const pv=books[pvSel]?(books[pvSel].previews||[]):[];
-  const cover=(b,i)=>{const u=b.bookCover||(b.images&&b.images[0]);return u?`style="background:#fff url('${esc(u)}') center/contain no-repeat"`:`style="background:${esc(b.color||'#2440E8')}"`;};
+  const cover=(b,i)=>{const u=smi(b.bookCover||(b.images&&b.images[0]));return u?`style="background:#fff url('${esc(u)}') center/contain no-repeat"`:`style="background:${esc(b.color||'#2440E8')}"`;};
   const lines2=t=>String(t||'').split('\n').map(x=>x.trim()).filter(Boolean);
   let faqs=lines(p.faq).map(pair);
   if(!faqs.length)faqs=[['ได้รับไฟล์เมื่อไหร่','ทันทีที่ชำระเงินสำเร็จ ลิงก์ทุกเล่มจะขึ้นในหน้านี้และส่งไปที่อีเมลของคุณ'],

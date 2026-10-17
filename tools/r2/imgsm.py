@@ -1,6 +1,6 @@
 """รูปสินค้าขนาดมือถือ (คุณแดน 17 ต.ค. 69 "เปิดหน้า salepage ช้ามาก"): ปกเดิม 1200px JPEG 100–240 KB → WebP กว้าง 800px ราว 30–70 KB
   python3 tools/r2/imgsm.py [--all]   ย่อเฉพาะรูปที่ยังไม่เคยย่อ (--all = ทำใหม่ทุกรูป) · worker.py start เรียกทุกชั่วโมง
-- อ่านรายการสินค้าที่ขายอยู่จากร้าน (action=shop) · รูปต้นฉบับไม่แตะ (หลังบ้าน/ซูมยังใช้รูปเดิม)
+- อ่านรายการสินค้าที่ขายอยู่จากหน้าร้าน (api/page?shopfull=1) · รูปต้นฉบับไม่แตะ (หลังบ้าน/ซูมยังใช้รูปเดิม)
 - เก็บที่ R2 sm/<sha1 ของลิงก์>.webp + sm/manifest.json {ลิงก์เดิม: ลิงก์ย่อ} → api/page.js ใส่ให้หน้าลูกค้า
 """
 import sys, os, io, json, hashlib, urllib.request
@@ -10,7 +10,6 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import r2
 
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
-KEY = open(os.path.expanduser('~/.config/sheetlab/content-key')).read().strip()[:48]
 MAN = 'sm/manifest.json'
 W = 800
 
@@ -20,12 +19,11 @@ def get(url, headers=None):
 
 
 def main(all_=False):
-    shop = json.loads(get('https://sheetlabth.com/api/content?action=shop', {'x-content-key': KEY}))
-    P = (shop.get('shop') or shop).get('products') or []
+    P = json.loads(get('https://sheetlabth.com/api/page?shopfull=1')).get('products') or []  # ข้อมูลสาธารณะเต็ม (มีปกเล่มในชุด bookCover)
     urls = []
     for p in P:
         if p.get('status', 'published') != 'published': continue
-        for u in [*(p.get('images') or []), p.get('cover') or '']:
+        for u in [*(p.get('images') or []), p.get('cover') or '', p.get('bookCover') or '']:
             if isinstance(u, str) and u.startswith('https://') and u not in urls: urls.append(u)
     try: man = {} if all_ else json.loads(get(r2.public_url(MAN) + f'?t={os.getpid()}'))
     except Exception: man = {}
