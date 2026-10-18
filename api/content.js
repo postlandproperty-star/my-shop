@@ -340,13 +340,14 @@ async function publishReadlab(onlyId = '') {
 const ORGANIC_SRC = { store: 'หน้าร้าน', fb_page: 'เพจ Facebook', threads: 'Threads', google: 'Google', instagram: 'Instagram', pinterest: 'Pinterest', line: 'LINE', tiktok: 'TikTok', youtube: 'YouTube', email: 'อีเมล', web: 'เว็บอื่น' };
 const srcGroup = (c) => { const k = String(c || '').trim().toLowerCase(); if (!k) return { g: 'direct', label: 'ไม่ทราบที่มา' }; if (ORGANIC_SRC[k]) return { g: 'organic', label: ORGANIC_SRC[k] }; return { g: 'ads', label: 'แอด ' + c }; }; // ชื่อแคมเปญแอดที่มีคำว่า test (เช่น fb-toeic-test) คือแอดจริง
 // 🚨 เฝ้าปุ่มจ่ายเงิน (คุณแดน 8 ต.ค. 69: ปุ่มเงียบทั้งวันไม่มีใครรู้): ตอนมีคนเข้าเว็บ เช็คทุก 30 นาที
+// ไม่นับรอบทดสอบจ่ายเงินของทีม (utm livecheck จาก tools/livepay.mjs ที่ดัก QR ไว้) · 18 ต.ค. 69 ทดสอบ 8 รอบแล้วเตือนผิด
 // 3 ชม.ล่าสุด ลูกค้า ≥5 คนกด "ชำระเงิน" แต่ Stripe ไม่มี QR ถูกสร้างเลย → อีเมลคุณแดน + งานบนบอร์ด (เตือนซ้ำได้ทุก 6 ชม.)
 async function payWatch() {
   const st = (await sb('shop_state?id=eq.paywatch&select=data'))?.[0]?.data || {}, now = Date.now();
   if (now - (st.at || 0) < 30 * 60e3) return;
   const save = (x) => sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'paywatch', data: { ...st, ...x }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
   await save({ at: now });
-  const since = new Date(now - 3 * 36e5), ev = (await sb(`web_events?at=gte.${since.toISOString()}&ev=eq.click&k=in.(qrMake,cartPay)&select=sid&limit=3000`)) || [];
+  const since = new Date(now - 3 * 36e5), ev = (await sb(`web_events?at=gte.${since.toISOString()}&ev=eq.click&k=in.(qrMake,cartPay)&or=(src.is.null,src.not.ilike.*livecheck*)&select=sid&limit=3000`)) || [];
   const people = new Set(ev.map((e) => e.sid)).size;
   if (people < 5) return;
   const pis = await stripe('GET', `payment_intents?limit=100&created[gte]=${Math.floor(since.getTime() / 1000)}`);
@@ -1569,7 +1570,7 @@ export default async function handler(req, res) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
       const st = (await sb('shop_state?id=eq.paywatch&select=data'))?.[0]?.data || {}, since = new Date(Date.now() - Math.min(48, Math.max(1, Number(req.query.h) || 3)) * 36e5);
-      const ev = (await sb(`web_events?at=gte.${since.toISOString()}&ev=eq.click&k=in.(qrMake,cartPay)&select=sid&limit=3000`)) || [];
+      const ev = (await sb(`web_events?at=gte.${since.toISOString()}&ev=eq.click&k=in.(qrMake,cartPay)&or=(src.is.null,src.not.ilike.*livecheck*)&select=sid&limit=3000`)) || [];
       const pis = await stripe('GET', `payment_intents?limit=100&created[gte]=${Math.floor(since.getTime() / 1000)}`);
       return res.status(200).json({ ok: true, state: st, now: { people: new Set(ev.map((e) => e.sid)).size, taps: ev.length, qr: (pis.data || []).filter((x) => x.metadata?.flow === 'qr').length } });
     }
