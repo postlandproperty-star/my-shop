@@ -1047,6 +1047,9 @@ async function ownerReply(to, text) {
 }
 // ฝ่ายดูแลระบบ "พี่การ์ด": ตรวจสุขภาพระบบด้วยกฎตายตัว (ไม่ใช้ AI) รันทุกเช้าจาก cron keepalive และเรียกเองได้
 async function runHealth(host) {
+  // ตรวจผ่านโดเมนจริงเสมอ (cron ของ Vercel ส่ง host เป็นลิงก์ *.vercel.app ที่ล็อกด้วย Vercel Authentication → ตอบ 200 หน้าล็อกอิน
+  // ทุกช่อง ทำให้แจ้งผิดว่า "ช่องทางแอดมินตอบ 200" และหน้าร้านไม่มี __SHOP__ · 18 ต.ค. 69)
+  try { const h = new URL(await siteUrl()).host; if (h) host = h; } catch (e) {}
   const checks = [];
   const add = (id, ok, level, msg, fix, url) => checks.push({ id, ok, level: ok ? 'ok' : level, msg, fix: ok ? null : fix, url: ok ? null : url || null });
   const t0 = Date.now();
@@ -1158,7 +1161,7 @@ async function shopChecks(add, host) {
     add('delivery', !n, 'bad', n ? `ลูกค้าจ่ายแล้ว ${n} ออเดอร์ แต่ยังไม่ได้รับไฟล์ทางอีเมล (${(stuck || []).slice(0, 3).map((o) => String(o.product_name || '').slice(0, 30)).join(', ')})` : 'ทุกออเดอร์ที่จ่ายแล้วได้รับไฟล์ทางอีเมล', 'เปิดแท็บออเดอร์ เช็คว่าสินค้ามีลิงก์ไฟล์ แล้วกด "ส่งอีเมลซ้ำ"', null);
   } catch (e) {}
   try { const G = await import('../lib/gsc.js'); add('gsc', G.gscConnected(), 'warn', G.gscConnected() ? 'เชื่อม Google Search Console แล้ว (รายงานคำค้นทำงาน)' : 'ยังไม่ได้เชื่อม Google Search Console (ยังไม่เห็นว่าคนค้นคำไหนเจอเว็บ)', 'ทำตามคู่มือในการ์ด 🔎 คำค้นจาก Google บนหน้าภาพรวม', null); } catch (e) {}
-  try { const u = await storageUsage(); const pct = Math.round(u.total_mb / 1024 * 100); add('storage', pct < 80, pct < 95 ? 'warn' : 'bad', `พื้นที่เก็บไฟล์ใช้ ${u.total_mb} MB จาก 1 GB (${pct}%)`, 'ลบไฟล์ที่ไม่ใช้ หรืออัปเกรด Supabase', 'https://supabase.com/dashboard'); } catch (e) {}
+  try { const u = await storageUsage(), gb = Number(process.env.SUPABASE_STORAGE_GB) || 100, pct = Math.round(u.total_mb / (gb * 1024) * 100); add('storage', pct < 80, pct < 95 ? 'warn' : 'bad', `พื้นที่เก็บไฟล์ใช้ ${u.total_mb} MB จาก ${gb} GB (${pct}%)`, 'ลบไฟล์ที่ไม่ใช้ หรืออัปเกรด Supabase', 'https://supabase.com/dashboard'); } catch (e) {}
   try {
     const w = (await sb('shop_state?id=eq.factory_worker&select=data'))?.[0]?.data; const jobs = await loadJobs(); const q = jobs.filter((j) => j.status === 'queued' && !j.paused).length;
     const h = w?.last_seen ? Math.round((Date.now() - Date.parse(w.last_seen)) / 36e5) : null;
