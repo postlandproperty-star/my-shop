@@ -455,16 +455,18 @@ function adCopy(p, site, books = []) {
   return { text, headline: String(p.name || '').slice(0, 40), description: course ? 'คอร์สวิดีโอ · เรียนได้ทันทีหลังจ่าย' : notion ? 'Notion Template · ได้ทันที' : p.type === 'bundle' ? `ชุด ${(p.items || []).length} เล่ม · PDF ได้ทันทีหลังจ่าย` : 'ไฟล์ PDF · ได้ทันทีหลังจ่าย', campaign: camp,
     link: `${site}/p/${p.slug}?utm_source=facebook&utm_medium=paid&utm_campaign=${encodeURIComponent(camp)}&utm_content=auto`, image: (p.images || [])[0] || '' };
 }
-async function draftAd(productId, { by = 'system', force = false } = {}) {
+async function draftAd(productId, { by = 'system', force = false, retarget = '' } = {}) {
   const shop = await loadShop(); const p = shop.products.find((x) => x.id === productId);
   if (!p) throw new Error('ไม่พบสินค้า');
   if (p.status !== 'published') throw new Error('สินค้ายังเป็นฉบับร่าง เผยแพร่ก่อนจึงจะทำแอดได้');
   if (!(p.images || []).length && !p.cover) throw new Error('สินค้ายังไม่มีรูป ใส่รูปก่อนจึงจะทำแอดได้');
   const items = await loadAdsAuto();
-  const open = items.find((x) => x.productId === p.id && ['pending', 'launching', 'live'].includes(x.status));
+  const rt = /^\d{6,30}$/.test(String(retarget)) ? String(retarget) : ''; // 🎯 แอดตามคนเคยเข้าเว็บ (คุณแดน 18 ต.ค. 69) · แคมเปญแยกจากแอดหาคนใหม่ของสินค้าเดียวกัน
+  const open = items.find((x) => x.productId === p.id && ['pending', 'launching', 'live'].includes(x.status) && !!x.retargetId === !!rt);
   if (open && !force) return { item: open, existed: true };
   const { randomUUID } = await import('node:crypto');
   const item = { id: randomUUID(), picked: by === 'owner', productId: p.id, name: p.name, price: Number(p.price) || 0, ...adCopy(p, await siteUrl(), p.type === 'bundle' ? (p.items || []).map((id) => shop.products.find((x) => x.id === id)).filter(Boolean) : []), ...ADS_DEFAULT, status: 'pending', by, created_at: new Date().toISOString() };
+  if (rt) Object.assign(item, { retargetId: rt, campaign: ('auto-rt-' + String(p.slug || p.id)).slice(0, 60), dailyTHB: 120, days: 14, text: `ยังสนใจอยู่ไหมคะ? 👀 ที่เคยเข้ามาดูไว้\n\n${item.text}`.slice(0, 1500), link: String(item.link || '').replace(/utm_campaign=[^&]*/, 'utm_campaign=' + encodeURIComponent(('auto-rt-' + String(p.slug || p.id)).slice(0, 60))) });
   items.unshift(item); await saveAdsAuto(items);
   await addTodo({ text: `แอดสินค้าใหม่พร้อมแล้ว "${String(p.name).slice(0, 60)}" งบ ฿${item.dailyTHB}/วัน × ${item.days} วัน (รวม ฿${item.dailyTHB * item.days}) ตรวจข้อความแล้วกดตกลงที่แท็บโฆษณา (ยังไม่เสียเงินจนกว่าจะกดตกลง)`, type: 'decide', from: 'analyst' });
   return { item, existed: false };
@@ -617,7 +619,7 @@ async function launchAutoItem(id, body = {}) {
           const gp = shop.products.find((p) => p.id === x.productId), gov = isGovProduct(gp, shop.products); // ก.พ. = กลุ่มเป้าหมายสายราชการ + เพจราชการ
           const govPage = gov ? await loadFb('readlab').catch(() => null) : null;
           if (gov && !govPage) throw new Error('สินค้า ก.พ. ต้องยิงในนามเพจราชการ แต่ยังไม่ได้เชื่อมเพจ');
-          const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency, audience: gov ? 'gov' : '', page: govPage });
+          const r = await launchAd(fb, x, { pixelId: shop.settings?.pixelId || '', currency: acc.account.currency, audience: gov ? 'gov' : '', page: govPage, retarget: x.retargetId || '' });
           const cur = await loadAdsAuto(); const y = cur.find((z) => z.id === x.id);
           Object.assign(y, { text, headline, image, platforms: r.platforms, note: r.note || null, dailyTHB: daily, days, status: 'live', fb: { campaign: r.campaign, adset: r.adset, ad: r.ad, ads: r.ads || [r.ad] }, launchImages: r.images || [image], objective: r.objective, currency: r.currency, dailyMinor: r.dailyMinor, launched_at: new Date().toISOString(), ends_at: r.end, error: null });
           await saveAdsAuto(cur);
@@ -3712,7 +3714,7 @@ ${books}`;
       }
       if (action === 'ads_auto_draft') { // ร่างแอด (ไม่เสียเงิน) · คุณแดนเลือกเองเท่านั้น (5 ต.ค. 69)
         if (!admin) return res.status(403).json({ ok: false, error: 'คุณแดนเลือกสินค้ายิงแอดเอง ทีมแนะนำได้ แต่ไม่ร่างแอดเอง' });
-        try { const r = await draftAd(String(body.productId || ''), { by: admin ? 'owner' : 'team', force: !!body.force && !!admin }); return res.status(200).json({ ok: true, ...r }); }
+        try { const r = await draftAd(String(body.productId || ''), { by: admin ? 'owner' : 'team', force: !!body.force && !!admin, retarget: admin ? body.retarget : '' }); return res.status(200).json({ ok: true, ...r }); }
         catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
       }
       if (!admin) return res.status(403).json({ ok: false, error: 'เฉพาะคุณแดน (เกี่ยวกับเงิน)' });
