@@ -136,9 +136,9 @@ async function sb(path, { method = 'GET', body, prefer } = {}) {
 
 
 // โรงงานผลิตชีท: ใบสั่งเก็บใน shop_state id=factory (data.jobs) ไฟล์เก็บใน Supabase Storage bucket product-images/factory/
-const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'fill_id', 'fill_need', 'video_part', 'video_n', 'video_product', 'course_id', 'course_slug', 'lesson_section', 'lesson_title', 'lesson_brief', 'lesson_no']; // fill_id = เติมรายละเอียดหน้าขายที่ยังว่างของสินค้าเดิม (ไม่แก้ข้อความเดิม/ราคา) // export_no = ส่งเล่มที่ผลิตแล้วในคลังบน Mac ขึ้นร้าน (ไม่ผลิตใหม่) · sku = SL-NNN // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
+const FACTORY_FIELDS = ['title', 'category', 'level', 'format', 'amount', 'audience', 'chapters', 'pages', 'price', 'purpose', 'notes', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'fill_id', 'fill_need', 'video_part', 'video_n', 'video_product', 'course_id', 'course_slug', 'lesson_section', 'lesson_title', 'lesson_brief', 'lesson_no', 'cover_for', 'cover_lang']; // cover_for = 🎨 ปกจาก Canva ของสินค้านี้ (cover_lang en/th) · fill_id = เติมรายละเอียดหน้าขายที่ยังว่างของสินค้าเดิม (ไม่แก้ข้อความเดิม/ราคา) // export_no = ส่งเล่มที่ผลิตแล้วในคลังบน Mac ขึ้นร้าน (ไม่ผลิตใหม่) · sku = SL-NNN // set_name/set_no = เล่มในชุดที่สั่งพร้อมกัน · rush = เร่งผลิต (Mac ผลิตต่อกันรวดเดียว)
 // ประเภทงานโรงงาน: pdf (ชีท PDF ค่าเริ่มต้น) | notion (Notion template สร้างใน Notion ของคุณแดน คุณแดนกด Publish เอง)
-const jobKind = (b) => b.kind === 'video' ? 'video' : b.kind === 'lesson' ? 'lesson' : (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
+const jobKind = (b) => b.kind === 'video' ? 'video' : b.kind === 'lesson' ? 'lesson' : b.kind === 'cover' ? 'cover' : (b.kind === 'notion' || /notion/i.test(String(b.category || b.cat || '') + ' ' + String(b.title || b.t || ''))) ? 'notion' : 'pdf';
 const isNotionUrl = (u) => /^https:\/\/([a-z0-9-]+\.)?(notion\.so|notion\.site|app\.notion\.com)\//i.test(String(u || ''));
 // คอมคุณแดน (โรงงานหลัก) แวะมาเมื่อไหร่ล่าสุด → หน้าโรงงานบนเว็บแสดงสถานะ/เตือนถ้าหายไปนาน
 async function workerBeat({ note = '' } = {}) { try { await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'factory_worker', data: { last_seen: new Date().toISOString(), note }, updated_at: '2000-01-01T00:00:00Z' }], prefer: 'resolution=merge-duplicates,return=minimal' }); } catch (e) {} }
@@ -2513,7 +2513,15 @@ ${books}`;
       const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: String(body.ordered_by || 'manager').slice(0, 40) };
       for (const f of FACTORY_FIELDS) if (body[f] != null && body[f] !== '') job[f] = typeof body[f] === 'number' ? body[f] : String(body[f]).slice(0, 2000);
       job.price = Number(job.price || 0); job.kind = jobKind(body); job.lang = body.lang === 'en' ? 'en' : 'th';
-      const jobs = await loadJobs(); jobs.push(job); await saveJobs(jobs);
+      const jobs = await loadJobs();
+      if (job.kind === 'cover') { // 🎨 ปกจาก Canva (คุณแดน 19 ต.ค. 69): งานสั้น ขึ้นหัวคิว · สินค้าละ 1 งานที่ยังไม่เสร็จ
+        if (!admin) return res.status(403).json({ ok: false, error: 'คุณแดนสั่งเองจากหน้าแก้สินค้า' });
+        if (!job.cover_for) return res.status(400).json({ ok: false, error: 'ต้องมีสินค้า' });
+        const open = jobs.find((j) => j.kind === 'cover' && j.cover_for === job.cover_for && ['queued', 'producing'].includes(j.status));
+        if (open) return res.status(200).json({ ok: true, job: open, existed: true });
+        job.lang = 'th'; job.cover_lang = job.cover_lang === 'th' ? 'th' : 'en'; job.prio = 0;
+      }
+      jobs.push(job); await saveJobs(jobs);
       await logNote(job.ordered_by, `สั่งโรงงานผลิตชีท: ${job.title} (${job.pages || '?'} หน้า, ${job.price ? job.price + ' บาท' : 'แจกฟรี'}) เหตุผล: ${job.purpose || '-'}`);
       return res.status(200).json({ ok: true, job });
     }
@@ -2735,8 +2743,9 @@ ${books}`;
           : job.listing === 'pending'
           ? `อนุมัติลงขาย "${job.title}" (${job.pages || '?'} หน้า ราคาที่เสนอ ${job.price} บาท) เปิดแท็บสินค้าและเซลเพจ → จากโรงงาน รออนุมัติ ตรวจไฟล์ ราคา และหน้าตัวอย่าง แล้วกดอนุมัติ`
           : `ตรวจไฟล์ชีทที่โรงงานผลิตเสร็จ "${job.title}" (${job.pages || '?'} หน้า) เปิดดูหน้าแรก หน้า 2 และหน้าสุดท้าย ถ้าผ่านให้ทีมเอาไปแจก/ขายได้`;
-        if (job.kind === 'notion' || job.lang === 'en') try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
-        if (!job.auto && job.kind !== 'video' && job.kind !== 'lesson') await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
+        if (job.kind === 'cover') try { await addTodo({ text: `🎨 ปกจาก Canva เสร็จแล้ว ${(job.images || []).length} แบบ: "${String(job.title).slice(0, 60)}" เปิดหน้าแก้สินค้า → กด "ใช้เป็นปก" แบบที่ชอบ แล้วกดบันทึก`, type: 'decide', from: 'factory', link: (job.images || [])[0] || null }); } catch (e) {}
+        if ((job.kind === 'notion' || job.lang === 'en') && job.kind !== 'cover') try { await addTodo({ text: todoText, type: ['pending', 'global_pending'].includes(job.listing) ? 'decide' : 'do', from: 'factory', link: job.file_url || job.notion_url || null }); } catch (e) { console.error('todo', e.message); }
+        if (!job.auto && !['video', 'lesson', 'cover'].includes(job.kind)) await ownerMail(job.export_no ? `📤 ส่งขึ้นร้านแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}` : `📗 เล่มใหม่เสร็จแล้ว (แท็บมาใหม่): ${job.sku || ''} ${String(job.title).slice(0, 60)}`, `<p style="margin:0 0 8px">${job.pages ? escH(job.pages) + ' หน้า · ' : ''}${Number(job.price) >= 1 ? 'ราคาที่เสนอ ฿' + escH(job.price) : 'ยังไม่ได้ตั้งราคา'}</p>${job.summary ? `<p style="margin:0 0 8px;color:#56637D">${escH(job.summary)}</p>` : ''}${job.file_url ? `<p style="margin:0"><a href="${escH(job.file_url)}">เปิดไฟล์ดูก่อน</a></p>` : ''}<p style="margin:10px 0 0">ตรวจแล้วกด <b>ลงขาย</b> ในหน้าโรงงาน</p>`, { button: ['ตรวจและลงขาย', FAC_PAGE], image: (job.images || [])[0] || '' }).catch(() => {});
       } else if (action === 'factory_progress') { // Mac บอกความคืบหน้า (แถบในหลังบ้าน) ไม่แจ้งเตือน
         job.progress = { pct: Math.max(0, Math.min(100, Math.round(Number(body.pct) || 0))), note: String(body.note || '').slice(0, 120), at: new Date().toISOString() };
       } else if (action === 'factory_listing') { // เติม/แก้ข้อความหน้าขายของงานที่เสร็จแล้ว (ไม่แจ้งเตือนซ้ำ)

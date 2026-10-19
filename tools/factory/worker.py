@@ -188,7 +188,7 @@ def main():
         sync()
         if j.get('paused'): print('[] # คุณแดนกดหยุดโรงงานไว้บนเว็บ ยังไม่ต้องผลิต'); return
         jobs = j.get('jobs', [])  # เรียงตามที่คุณแดนจัดบนเว็บแล้ว (บนสุด = ผลิตก่อน) ไม่รวมเล่มที่พักไว้
-        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'auto', 'course_id', 'course_slug', 'lesson_section', 'lesson_title', 'lesson_brief', 'lesson_no', 'fill_id', 'fill_need', 'fill_url', 'video_part', 'video_n', 'video_product']} for x in jobs], ensure_ascii=False, indent=1))
+        print(json.dumps([{k: x.get(k) for k in ['id', 'kind', 'lang', 'title', 'category', 'level', 'format', 'amount', 'audience', 'pages', 'price', 'purpose', 'notes', 'ordered_by', 'set_name', 'set_no', 'rush', 'export_no', 'sku', 'auto', 'course_id', 'course_slug', 'lesson_section', 'lesson_title', 'lesson_brief', 'lesson_no', 'fill_id', 'fill_need', 'fill_url', 'video_part', 'video_n', 'video_product', 'cover_for', 'cover_lang']} for x in jobs], ensure_ascii=False, indent=1))
     elif a.cmd == 'claim':
         r = api('factory_claim', {'id': a.args[0], 'by': 'mac'}); print(json.dumps(r, ensure_ascii=False)[:300])
         if r.get('ok'):
@@ -280,11 +280,23 @@ def main():
         if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok')}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
+    elif a.cmd == 'done-cover':  # 🎨 ปกจาก Canva: รูป PNG/JPG ที่ export จาก Canva (1–3 แบบ) → จัตุรัส 1200×1200 → ขึ้นหน้าแก้สินค้าให้คุณแดนเลือก
+        from PIL import Image
+        job, urls = a.args[0], []
+        for i, p in enumerate(a.args[1:4]):
+            im = Image.open(os.path.expanduser(p)).convert('RGB'); s = max(im.size)
+            if im.width != im.height: bg = Image.new('RGB', (s, s), im.getpixel((0, 0))); bg.paste(im, ((s - im.width) // 2, (s - im.height) // 2)); im = bg
+            im = im.resize((1200, 1200), Image.LANCZOS); b = io.BytesIO(); im.save(b, 'JPEG', quality=90)
+            urls.append(upload(job, b.getvalue(), f'canva-{i + 1}.jpg', 'image/jpeg'))
+        if not urls: sys.exit('ต้องมีไฟล์รูปอย่างน้อย 1 ไฟล์')
+        r = api('factory_done', {'id': job, 'by': 'mac', 'images': urls, 'summary': a.summary or f'ปกจาก Canva {len(urls)} แบบ'}); print(json.dumps({'ok': r.get('ok'), 'images': len(urls)}, ensure_ascii=False))
+        if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
+        unlock()
     elif a.cmd == 'fail':
         print(json.dumps(api('factory_fail', {'id': a.args[0], 'error': ' '.join(a.args[1:])[:400]}), ensure_ascii=False)[:300])
         unlock()
     else:
-        sys.exit('คำสั่ง: queue | claim | done | fill | done-video | video-img | done-notion | fail')
+        sys.exit('คำสั่ง: queue | claim | done | fill | done-video | video-img | done-notion | done-cover | fail')
 
 
 if __name__ == '__main__':
