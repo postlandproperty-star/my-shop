@@ -127,7 +127,7 @@ def previews(job, pdf):
     return out, n
 
 
-def cover(job, png):
+def cover(job, png, name='cover.jpg'):
     from PIL import Image
     # วางปกทั้งเล่มบนพื้นสว่าง 1200×1200 (ไม่ตัดขอบปก ชื่อเล่มไม่หาย) มีเงาบางๆ ให้ดูเป็นหนังสือ
     from PIL import ImageFilter
@@ -136,7 +136,7 @@ def cover(job, png):
     sh = Image.new('L', (1200, 1200), 0); sh.paste(70, (x + 10, y + 16, x + im.width + 10, y + im.height + 16)); sh = sh.filter(ImageFilter.GaussianBlur(18))
     bg.paste((60, 70, 100), (0, 0), sh); bg.paste(im, (x, y)); im = bg
     b = io.BytesIO(); im.save(b, 'JPEG', quality=88)
-    return upload(job, b.getvalue(), 'cover.jpg', 'image/jpeg')
+    return upload(job, b.getvalue(), name, 'image/jpeg')
 
 
 def unlock():
@@ -280,14 +280,9 @@ def main():
         if a.listing: body['listing'] = json.load(open(os.path.expanduser(a.listing), encoding='utf-8'))
         r = api('factory_done', body); print(json.dumps({'ok': r.get('ok')}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")
-    elif a.cmd == 'done-cover':  # 🎨 ปกจาก Canva: รูป PNG/JPG ที่ export จาก Canva (1–3 แบบ) → จัตุรัส 1200×1200 → ขึ้นหน้าแก้สินค้าให้คุณแดนเลือก
-        from PIL import Image
-        job, urls = a.args[0], []
-        for i, p in enumerate(a.args[1:4]):
-            im = Image.open(os.path.expanduser(p)).convert('RGB'); s = max(im.size)
-            if im.width != im.height: bg = Image.new('RGB', (s, s), im.getpixel((0, 0))); bg.paste(im, ((s - im.width) // 2, (s - im.height) // 2)); im = bg
-            im = im.resize((1200, 1200), Image.LANCZOS); b = io.BytesIO(); im.save(b, 'JPEG', quality=90)
-            urls.append(upload(job, b.getvalue(), f'canva-{i + 1}.jpg', 'image/jpeg'))
+    elif a.cmd == 'done-cover':  # 🎨 ปกจาก Canva: หน้าปกหนังสือแนวตั้ง (1–3 แบบ) วางบนพื้นสว่าง 1200×1200 แบบเดียวกับปกเล่มจากโรงงาน → ขึ้นหน้าแก้สินค้าให้คุณแดนเลือก
+        import time; job, urls, t = a.args[0], [], int(time.time())  # ชื่อไฟล์ไม่ซ้ำรอบก่อน (ทำใหม่แล้วรูปเก่าไม่ค้างในแคช)
+        for i, p in enumerate(a.args[1:7]): urls.append(cover(job, os.path.expanduser(p), f'canva-{t}-{i + 1}.jpg'))
         if not urls: sys.exit('ต้องมีไฟล์รูปอย่างน้อย 1 ไฟล์')
         r = api('factory_done', {'id': job, 'by': 'mac', 'images': urls, 'summary': a.summary or f'ปกจาก Canva {len(urls)} แบบ'}); print(json.dumps({'ok': r.get('ok'), 'images': len(urls)}, ensure_ascii=False))
         if not r.get('ok'): sys.exit(f"แจ้งเสร็จไม่สำเร็จ: {r.get('error')}")

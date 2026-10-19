@@ -2696,7 +2696,7 @@ ${books}`;
         if (!r.ok || !j.url) return res.status(500).json({ ok: false, error: `signed url: ${r.status} ${JSON.stringify(j).slice(0, 200)}` });
         return res.status(200).json({ ok: true, upload_url: `${SB_URL}/storage/v1${j.url}`, file_url: `${SB_URL}/storage/v1/object/public/product-images/${path}`, headers: { 'Content-Type': ctype, 'x-upsert': 'true' } });
       } else if (action === 'factory_done') {
-        if (!['producing', 'queued'].includes(job.status) && !(job.status === 'done' && job.listing === 'pending')) return res.status(409).json({ ok: false, error: `ใบสั่งนี้สถานะ ${job.status} แล้ว (ยกเลิกหรืออนุมัติไปแล้ว) ไม่รับงานเสร็จซ้ำ` });
+        if (!['producing', 'queued'].includes(job.status) && !(job.status === 'done' && (job.listing === 'pending' || job.kind === 'cover'))) return res.status(409).json({ ok: false, error: `ใบสั่งนี้สถานะ ${job.status} แล้ว (ยกเลิกหรืออนุมัติไปแล้ว) ไม่รับงานเสร็จซ้ำ` });
         job.status = 'done'; job.done_at = new Date().toISOString(); if (body.by === 'mac') { job.made_on = 'mac'; await workerBeat({ note: `ผลิตเสร็จ: ${String(job.title).slice(0, 60)}` }); }
         if (body.file_url) job.file_url = String(body.file_url).slice(0, 500);
         if (body.pages) job.pages = Number(body.pages);
