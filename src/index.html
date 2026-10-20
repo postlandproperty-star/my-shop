@@ -2681,13 +2681,14 @@ function scoreFinder(){const f=S.sf||(S.sf={exam:'ielts',cur:'',tgt:''}),ie=f.ex
 function scoreReco(f){const ie=f.exam==='ielts',num=v=>v&&v!=='ยังไม่เคยสอบ'?Number(v):null,cur=num(f.cur),tgt=num(f.tgt);if(tgt==null)return '';
   const gap=cur==null?(ie?2:400):tgt-cur;if(gap<=0)return `<p class="sf-note">คะแนนตอนนี้ถึงเป้าแล้ว 🎉 ลองตั้งเป้าให้สูงขึ้น หรือทำข้อสอบเสมือนจริงรักษาฟอร์ม</p>`;
   let pick,why,wk;
-  if(ie){const b7=sfPick('ielts-band-7-10-reading-mock-writing-spe',/IELTS Band 7 ครบชุด/i),all=sfPick('ielts-9',/IELTS ครบชุด/i),big=tgt>=7||gap>=1;
-    pick=(big?[b7,all]:[all,b7]).filter(Boolean);if(!big&&pick.length>1&&gap<1)pick=[pick[0],pick[1]];
-    why=big?`จาก ${cur==null?'ยังไม่เคยสอบ':cur} ไป ${tgt} ต้องอัปทั้งพื้นฐาน 4 ทักษะ และเทคนิค Band 7+ (Reading จับเวลา · Writing Task 2 · Speaking) จึงแนะนำใช้ 2 ชุดคู่กัน`:`ขยับอีก ${gap.toFixed(1)} Band ชุดครบ 4 ทักษะพร้อมแพลนอ่าน 45 วันตรงที่สุด อยากได้ Band 7 ในอนาคต เพิ่มชุด Band 7 ได้`;
+  // แนะนำชุดเดียว (คุณแดน 20 ต.ค. 69): เป้า 7+ = ชุด Band 7 · ต่ำกว่านั้น = IELTS ครบชุด 13 เล่ม (ครบ 4 ทักษะ + แพลน 45 วัน)
+  if(ie){const b7=sfPick('ielts-band-7-10-reading-mock-writing-spe',/IELTS Band 7 ครบชุด/i),all=sfPick('ielts-9',/IELTS ครบชุด/i),hi=tgt>=7;
+    pick=[(hi?b7:all)||(hi?all:b7)].filter(Boolean);
+    why=pick[0]===b7?`เป้า ${tgt} ต้องใช้เทคนิค Band 7+ ครบ (Reading จับเวลา · ข้อสอบเสมือนจริง · Writing · Speaking) ชุดนี้ตรงที่สุด`:`จาก ${cur==null?'ยังไม่เคยสอบ':cur} ไป ${tgt} ชุดครบ 4 ทักษะพร้อมแพลนอ่าน 45 วันตรงที่สุด เริ่มจากพื้นฐานไปถึงเป้าได้ในชุดเดียว`;
     wk=Math.max(4,Math.round(gap/0.5*6));}
   else{const course=sfPick('toeic-750-course',/TOEIC.*คอร์ส/i),set=sfPick('toeic-750-10',/TOEIC 750\+ ครบชุด/i),big=gap>=150||cur==null||cur<450;
-    pick=(big?[course,set]:[set,course]).filter(Boolean);
-    why=big?`จาก ${cur==null?'ยังไม่เคยสอบ':cur} ไป ${tgt} ควรเรียนเป็นขั้นตอนกับคอร์สวิดีโอ แล้วฝึกข้อสอบจริงจากชุด 10 เล่ม (Listening · Reading · คำศัพท์ · แกรมมาร์)`:`ขยับอีก ${gap} คะแนน ชุด 10 เล่มฝึกครบทุกพาร์ตพอ ถ้าอยากมีคนสอนเป็นขั้นตอน เพิ่มคอร์สได้`;
+    pick=[(big?course:set)||(big?set:course)].filter(Boolean);
+    why=pick[0]===course?`จาก ${cur==null?'ยังไม่เคยสอบ':cur} ไป ${tgt} ควรเรียนเป็นขั้นตอนกับคอร์สวิดีโอ มีคนสอนทีละพาร์ตพร้อมแบบฝึก ชุดนี้ตรงที่สุด`:`ขยับอีก ${gap} คะแนน ชุด 10 เล่มฝึกครบทุกพาร์ต (Listening · Reading · คำศัพท์ · แกรมมาร์) พอแล้ว`;
     wk=Math.max(3,Math.round(gap/100*5));}
   if(!pick.length)return '<p class="sf-note">กำลังเตรียมชุดสำหรับเป้านี้ ดูสินค้าทั้งหมดด้านล่างได้เลย</p>';
   const pr=p=>fromPrice(p),full=p=>{if(isBundle(p)){const s2=bundleBooks(p).reduce((a,b)=>a+(Number(b.price)||0),0);return Math.max(s2,Number(p.fullPrice)||0);}return Math.max(Number(p.fullPrice)||0,pr(p));};
