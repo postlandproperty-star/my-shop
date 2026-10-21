@@ -1568,6 +1568,16 @@ export default async function handler(req, res) {
       try { return res.status(200).json(await linkPageFromUser(String(b.brand || ''), String(b.page || ''))); }
       catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
     }
+    if (action === 'backup_dump') { // 💾 สำรองฐานข้อมูลทั้งหมด (คีย์ร้านเท่านั้น · Mac เก็บลง R2 วันละครั้ง · เตรียมย้ายไป Cloudflare 21 ต.ค. 69) · อ่านอย่างเดียว
+      if (!keyOk(req)) return res.status(401).json({ ok: false });
+      const T = { shop_state: 'id', orders: 'created_at', posts: 'id', members: 'email', member_vocab: 'email', member_mistakes: 'email', member_writing: 'email' }, out = {};
+      for (const [t, ord] of Object.entries(T)) {
+        const rows = []; for (let off = 0; off < 200000; off += 1000) { const r = await sb(`${t}?select=*&order=${ord}.asc&limit=1000&offset=${off}`).catch((e) => { out[`${t}_error`] = String(e.message).slice(0, 200); return []; }); rows.push(...r); if (r.length < 1000) break; }
+        out[t] = rows;
+      }
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({ ok: true, at: new Date().toISOString(), counts: Object.fromEntries(Object.entries(out).filter(([, v]) => Array.isArray(v)).map(([k, v]) => [k, v.length])), tables: out });
+    }
     if (action === 'paywatch') { // ตรวจตัวเฝ้าปุ่มจ่ายเงิน (คีย์ร้าน/แอดมิน อ่านอย่างเดียว ไม่ส่งเตือน): 3 ชม.ล่าสุด กี่คนกดจ่าย กี่ QR
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });

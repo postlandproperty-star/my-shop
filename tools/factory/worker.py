@@ -178,6 +178,13 @@ def main():
                 subprocess.run(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'r2', 'offload.py'), 'products', 'sets', 'print', 'factory', 'posts', 'readlab', 'ads', 'learn', 'cards', 'ielts', 'briefs', 'reels'], capture_output=True, timeout=1800)
                 open(stamp, 'w').write(today)
             except Exception: pass
+        # 💾 สำรองฐานข้อมูลร้านลง R2 วันละครั้ง (เข้ารหัส · เตรียมย้ายไป Cloudflare 21 ต.ค. 69) · เบื้องหลัง ไม่ขวางการผลิต
+        bstamp = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.db_backup_day')
+        if not os.path.exists(bstamp) or open(bstamp).read().strip() != today:
+            try:
+                open(bstamp, 'w').write(today)
+                subprocess.Popen(['python3', os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'r2', 'dbbackup.py')], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            except Exception: pass
         a.cmd = 'queue'
     if a.cmd == 'thumbs':  # รูปย่อปกจริง (หน้า 1 ของ PDF) ให้หน้าพิมพ์ของแม่ · ทำเฉพาะเล่มที่ยังไม่มี/ไฟล์เปลี่ยน
         print(json.dumps(thumbs(int(a.args[0]) if a.args else 40), ensure_ascii=False)); return
