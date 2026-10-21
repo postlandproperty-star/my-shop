@@ -2321,6 +2321,9 @@ ${books}`;
       const cfg = await loadFacCfg().catch(() => ({ paused: false }));
       if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } try { await autoVideo(all); } catch (e) { console.error('autovideo', e.message); } try { await autoLessons(all); } catch (e) { console.error('autolesson', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
       let jobs = st === 'queued' ? queueOrder(all) : all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+      // ⚖️ slim=1 (หน้าโรงงานรีเฟรชเอง): งานที่จบไปเกิน 2 วัน ส่งแค่หัวงาน ไม่ส่งข้อความหน้าขาย/สรุป (เดิมครั้งละ ~470 KB ทุก 30 วิ กินโควตา Vercel) · หน้าเว็บเอาส่วนที่เหลือจากที่โหลดไว้แล้วมารวม
+      if (req.query.slim === '1') { const cut = Date.now() - 2 * 864e5, HEAVY = ['listing_copy', 'global_copy', 'notes', 'purpose', 'lesson_brief', 'summary', 'previews', 'pin_images', 'yt'];
+        jobs = jobs.map((j) => ['queued', 'producing'].includes(j.status) || Date.parse(j.done_at || j.failed_at || j.created_at || 0) > cut ? j : Object.assign(Object.fromEntries(Object.entries(j).filter(([k]) => !HEAVY.includes(k))), { _slim: 1 })); }
       if (!admin && st === 'queued') jobs = cfg.paused ? [] : jobs.filter((j) => !j.paused); // คอม/ทีม: ข้ามเล่มที่พักไว้ และไม่ได้งานเลยตอนคุณแดนหยุดโรงงาน
       if (keyOk(req) && req.query.by === 'mac' && st === 'queued') { try { await sendRecoveries(); } catch (e) { console.error('recover', e.message); } } // 📧 ตามลูกค้าที่ยังไม่จ่ายทุกชั่วโมงที่ Mac เปิด (cron ของ Vercel ได้แค่วันละ 2 รอบ)
       if (keyOk(req) && req.query.by === 'mac') await workerBeat({ note: cfg.paused ? 'เช็คคิว: คุณแดนหยุดโรงงานไว้' : `เช็คคิว ${jobs.length} งาน` }); // คอมคุณแดนมาเช็คคิว

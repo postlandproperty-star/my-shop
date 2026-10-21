@@ -425,7 +425,8 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
     console.error(e); // ถ้าดึงข้อมูลไม่ได้ ก็เสิร์ฟหน้าปกติไปก่อน
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  // หน้าร้าน/หน้าขาย: จำไว้แค่ 10 วินาที แก้หลังบ้านแล้วลูกค้าเห็นของใหม่แทบทันที (เดิม 60 วิ + เสิร์ฟของเก่าอีก 10 นาที)
-  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=10, stale-while-revalidate=20');
+  // ⚖️ โควตา Vercel ฟรี 10 GB/30 วัน ใกล้เต็ม (คุณแดน 21 ต.ค. 69 ให้ลด): จำหน้าไว้ 2 นาที แก้หลังบ้านแล้วลูกค้าเห็นของใหม่ภายใน ~2 นาที
+  // (เดิม: หน้าร้าน/หน้าขาย: จำไว้แค่ 10 วินาที แก้หลังบ้านแล้วลูกค้าเห็นของใหม่แทบทันที (เดิม 60 วิ + เสิร์ฟของเก่าอีก 10 นาที)
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=120, stale-while-revalidate=120');
   res.status(200).send(out.replace('</body>', `${TRACK_JS}</body>`)); // เก็บพฤติกรรมคนเข้าเว็บ (ไม่นับเครื่องแอดมิน)
 }

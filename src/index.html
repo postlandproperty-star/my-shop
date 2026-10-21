@@ -4043,7 +4043,7 @@ const FQ_FORMATS=['ศัพท์ + ความหมาย + ตัวอย�
 function fqColor(t){t=String(t||'').toLowerCase();return /toeic/.test(t)?'#c9a227':/ielts/.test(t)?'#8b5e3c':/tgat|a-level|มหาลัย/.test(t)?'#2f6fd0':/ก\.พ|ราชการ/.test(t)?'#3f9a5a':/ศัพท์|vocab/.test(t)?'#9aa0a8':/grammar|ไวยากรณ์/.test(t)?'#d0534a':/อ่าน|reading|เรื่องสั้น/.test(t)?'#8e5bc4':/พูด|สนทนา|speaking/.test(t)?'#d9822b':/ทำงาน|เที่ยว|business|travel/.test(t)?'#d4679a':/notion/.test(t)?'#111827':'#6b7280';}
 const FQ_CMD='ทำเล่มบนสุดในคิวโรงงาน SheetLab ตอนนี้: รัน python3 ~/Projects/my-shop/tools/factory/worker.py queue แล้วผลิตเล่มแรกตามขั้นตอนเดิม (claim → ผลิต PDF → done) ไม่ต้องรอรอบ';
 let FPAUSED=false,FORDER=[];
-function loadFactoryJobs(silent){if(!silent){FJOBS=[];S.floading=true;}adminApi('/api/content?action=factory').then(r=>{FJOBS=(r&&r.jobs)||[];FWORKER=(r&&r.worker)||null;FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
+function loadFactoryJobs(silent){const old=silent&&FJOBS&&FJOBS.length?new Map(FJOBS.map(j=>[j.id,j])):null;if(!silent){FJOBS=[];S.floading=true;}adminApi('/api/content?action=factory'+(old?'&slim=1':'')).then(r=>{FJOBS=((r&&r.jobs)||[]).map(j=>j._slim&&old&&old.get(j.id)?Object.assign({},old.get(j.id),j):j);FWORKER=(r&&r.worker)||null;FPAUSED=!!(r&&r.paused);FORDER=(r&&r.order)||[];}).catch(()=>{}).then(()=>{S.floading=false;render(true);});}
 function fqRow(j,n,qLen){
   const open=S.fqOpen===j.id,prod=j.status==='producing',e=open?(S.fqe||{}):{};const v=k=>esc(e[k]!=null?e[k]:(j[k]==null?'':j[k]));
   const meta=[j.category,j.pages?j.pages+' หน้า':'',j.kind==='cover'?'🎨 ปกจาก Canva':j.export_no||j.fill_id?'':Number(j.price)>=1?baht(j.price):'แจกฟรี',j.ordered_by==='owner'?'':'สั่งโดย '+(j.ordered_by==='auto'?'ระบบอัตโนมัติ':member(j.ordered_by||'manager').name)].filter(Boolean).join(' · ');
@@ -8018,19 +8018,20 @@ function wireAuth(){
    - เปลี่ยนแท็บ/กลับมาที่หน้าจอ: ข้อมูลเก่ากว่า 20 วินาทีโหลดใหม่ทันที · กำลังพิมพ์อยู่ = ยังไม่รีเฟรช (ไม่ให้ข้อความที่พิมพ์หาย)
    - ของใหม่ในอนาคต: เพิ่มแถวใน LIVE แล้วการ์ดจะสดและตรงกับที่อื่นเอง · หลังกดปุ่มที่เปลี่ยนข้อมูล เรียก liveBump('ชื่อ') */
 const LIVE=[
-  {k:'ads',tabs:['home','ads'],every:60,run:()=>loadAdsStatus()},
-  {k:'adsdraft',tabs:['home','ads'],every:60,run:()=>loadAdsAuto()},
-  {k:'sales',tabs:['home'],every:30,run:()=>loadSO()},
-  {k:'dash',tabs:['home','orders'],every:60,run:()=>{if(!DASH.loading)loadDash().then(()=>render(true));}},
-  {k:'health',tabs:['home','todo'],every:300,run:()=>loadHealth()},
-  {k:'todo',tabs:['home','todo'],every:120,run:()=>{if(!TODO.loading)loadTodo().then(()=>render(true));}},
-  {k:'orders',tabs:['orders'],every:60,run:()=>autoSync()},
+  // ⚖️ ช้าลง (คุณแดน 21 ต.ค. 69): โควตา Vercel ฟรีใกล้เต็ม หน้าหลังบ้านที่เปิดทิ้งไว้ดึงข้อมูลบ่อยเกิน · กดรีเฟรชเองได้ทุกเมื่อ
+  {k:'ads',tabs:['home','ads'],every:180,run:()=>loadAdsStatus()},
+  {k:'adsdraft',tabs:['home','ads'],every:300,run:()=>loadAdsAuto()},
+  {k:'sales',tabs:['home'],every:120,run:()=>loadSO()},
+  {k:'dash',tabs:['home','orders'],every:180,run:()=>{if(!DASH.loading)loadDash().then(()=>render(true));}},
+  {k:'health',tabs:['home','todo'],every:600,run:()=>loadHealth()},
+  {k:'todo',tabs:['home','todo'],every:300,run:()=>{if(!TODO.loading)loadTodo().then(()=>render(true));}},
+  {k:'orders',tabs:['orders'],every:120,run:()=>autoSync()},
   {k:'seo',tabs:['seo','home'],every:900,run:()=>loadSeo()},
   {k:'seotopics',tabs:['seo'],every:300,run:()=>loadSeoTopics()},
-  {k:'insights',tabs:['insights'],every:120,run:()=>loadInsights()},
-  {k:'vip',views:['vip'],every:60,run:()=>loadVipAdmin()},
-  {k:'factory',views:['factory'],every:30,run:()=>loadFactoryJobs(true)},
-  {k:'factoryLib',views:['factory'],every:120,run:()=>loadFacLib()},
+  {k:'insights',tabs:['insights'],every:300,run:()=>loadInsights()},
+  {k:'vip',views:['vip'],every:300,run:()=>loadVipAdmin()},
+  {k:'factory',views:['factory'],every:120,run:()=>loadFactoryJobs(true)},
+  {k:'factoryLib',views:['factory'],every:300,run:()=>loadFacLib()},
 ];
 const LIVEAT={};let liveAt=0;
 function liveBump(k){LIVEAT[k]=0;liveTick(true);}
