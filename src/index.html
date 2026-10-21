@@ -2831,9 +2831,9 @@ async function findOrder(email){
 function navTo(path){try{history.pushState(null,'',path);}catch(e){location.href=path;return;}route();window.scrollTo(0,0);}
 function route(){
   const m=location.pathname.match(/\/p\/([a-z0-9-]+)\/?$/i);
-  if(m){const p=D.products.find(x=>x.slug===m[1]);if(p)selectProduct(p.id);S.view='shop';const c=curProduct();document.title=c?c.name:TITLE0;if(c)track('ViewContent',{content_name:c.name,value:c.price,currency:'THB'});}
+  if(m){const p=D.products.find(x=>x.slug===m[1]);if(p)selectProduct(p.id);S.view='shop';const c=curProduct();document.title=c?seoTitle(c):TITLE0;if(c)track('ViewContent',{content_name:c.name,value:c.price,currency:'THB'});}
   else if(location.pathname==='/order'){S.view='order';document.title='หาออเดอร์ของฉัน · SheetLab';}
-  else if(location.pathname==='/store'&&storeMode()){S.view='catalog';document.title='ร้านค้า · SheetLab';const qc=new URLSearchParams(location.search).get('cat');if(qc)S.scat=qc;}
+  else if(location.pathname==='/store'&&storeMode()){S.view='catalog';document.title='ร้านค้า SheetLab ชีทสรุป TOEIC IELTS และ Notion Template';const qc=new URLSearchParams(location.search).get('cat');if(qc)S.scat=qc;}
   else if(location.pathname==='/checkout'){S.view='cart';document.title='ชำระเงิน · SheetLab';if(!S.sessionId&&cartItems().length)track('InitiateCheckout',Object.assign({content_name:'เลือก '+cartItems().length+' เล่ม',value:cartTotal(),currency:'THB',num_items:cartItems().length},S.src?{campaign:S.src}:{}));}
   else{S.view=storeMode()?'store':'shop';document.title=TITLE0;}
   render(false);
@@ -3258,6 +3258,8 @@ const prodKpis=a=>`<div class="prod-kpis">${a.map(x=>`<div><b>${x[1]}</b><span>$
 const prodLink=p=>`<div class="prod-link"><code title="${esc(DOMAIN+p.slug)}">${esc(DOMAIN.replace(/^https?:\/\//,'')+p.slug)}</code><button class="btn btn-line btn-sm" data-a="copyLink" data-id="${p.id}">คัดลอกลิงก์</button></div>`;
 /* ป้ายประเภทสินค้า (คิดจากข้อมูลจริง ไม่ต้องกรอกเอง) + ข้อความสำหรับค้นหาในแท็บสินค้า */
 const PFMT={pdf:['📄','PDF'],notion:['📒','Notion'],bundle:['📦','ชุด'],course:['🎓','คอร์ส']};
+// 🔎 ชื่อแท็บ = ชื่อบน Google (ตรงกับ seoTitle ใน api/page.js): ชีท/ชุด PDF ต่อท้าย PDF
+const seoTitle=p=>{const n=String(p.name||''),pdf=p.kind!=='course'&&p.cat!=='notion'&&!/notion/i.test(String(p.link||''))&&!/pdf/i.test(n);return n+(pdf?' PDF':'')+' · SheetLab';};
 const pfmt=p=>isBundle(p)?'bundle':p.kind==='course'?'course':(isNotion(p.link)||p.cat==='notion')?'notion':'pdf';
 const ptags=p=>{const f=PFMT[pfmt(p)];return `<span class="badge ptag">${f[0]} ${f[1]}</span>${p.cat&&CATS[p.cat]&&p.cat!=='notion'?`<span class="badge ptag cat">#${esc(CATS[p.cat])}</span>`:''}`;};
 const pq=p=>[p.name,p.headline,PFMT[pfmt(p)][1],p.cat&&CATS[p.cat]||'',p.slug,p.status==='published'?'เผยแพร่':'ร่าง'].join(' ').toLowerCase();

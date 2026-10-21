@@ -32,6 +32,8 @@ const html = SPLIT ? SPLIT.html : RAW;
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ข้อมูลสินค้าแบบที่ Google อ่านได้ (ผลค้นหาแสดงราคา/มีของ) ชุดหนังสือใช้ช่วงราคาของแพ็กเกจ
+// 🔎 ชื่อหน้าสินค้าบน Google (คุณแดน 21 ต.ค. 69 ให้เพิ่มคนเข้าจาก Google): คนค้น "…pdf" "…พร้อมเฉลย pdf" เยอะ → ชีท/ชุด PDF ต่อท้าย PDF · คอร์ส/Notion ไม่ต่อ · หน้าเว็บใช้สูตรเดียวกัน (seoTitle ใน index.html)
+export function seoTitle(p) { const n = String(p.name || ''), pdf = p.kind !== 'course' && p.cat !== 'notion' && !/notion/i.test(String(p.link || '')) && !/pdf/i.test(n); return `${n}${pdf ? ' PDF' : ''} · SheetLab`; }
 function productLd(p, url, desc, img, rv) {
   const plans = p.type === 'bundle' ? (p.plans || []).filter((x) => x.on !== false && Number(x.price) >= 1).map((x) => Number(x.price)) : [];
   const offers = plans.length > 1
@@ -418,7 +420,7 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
         productLd(p, `${NEW_SITE}/p/${p.slug}`, desc, img, rvAll.ld[p.id]), // ดาว Google = รีวิวผ่านลิงก์ยืนยันการซื้อเท่านั้น (ไม่รวมที่ใส่เอง)
       ].join('');
       out = out
-        .replace(/<title>[^<]*<\/title>/, `<title>${esc(p.name)}</title>`)
+        .replace(/<title>[^<]*<\/title>/, `<title>${esc(seoTitle(p))}</title>`)
         .replace(/<!--OG-START-->[\s\S]*?<!--OG-END-->/, tags);
     }
   } catch (e) {
