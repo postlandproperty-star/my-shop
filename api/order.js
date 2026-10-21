@@ -227,7 +227,7 @@ export default async function handler(req, res) {
     if (!F.okEmail(email)) return res.status(400).json({ ok: false, error: 'กรอกอีเมลให้ถูกต้อง' });
     const origin = originOf(req);
     try { await F.claimFree(f, email, { src: b.src, origin }); } catch (e) { console.error('free', e); }
-    return res.status(200).json({ ok: true, file: `${origin}/free-file/${f.file}` });
+    return res.status(200).json({ ok: true, file: F.freeFileUrl(f, origin) });
   }
   if (/^(vip_[a-z_]+|ielts_daily)$/.test(String(req.query.m || ''))) { try { return await vip(req, res, req.query.m); } catch (e) { console.error('vip', e); return res.status(e.missing ? 503 : 500).json({ ok: false, error: e.missing ? 'ระบบสมาชิกยังไม่ได้ตั้งค่าฐานข้อมูล' : 'ระบบขัดข้อง ลองใหม่อีกครั้ง' }); } }
   const id = String(req.query.session_id || '');

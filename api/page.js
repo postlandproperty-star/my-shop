@@ -15,7 +15,7 @@ import * as AP from '../lib/audioPlayer.js';
 import { PWA_MANIFEST, SW_JS } from '../lib/pwa.js';
 import { loadVip, vipSellable } from '../lib/members.js';
 import { TRACK_JS } from '../lib/insights.js';
-import { FREEBIES, freeBySlug, freePage } from '../lib/free.js';
+import { FREEBIES, freeBySlug, freePage, freeListPage } from '../lib/free.js';
 import { splitHtml } from '../lib/split.js';
 
 // แบบทดสอบที่เปิดอยู่ (แถว quizzes อ่านด้วยคีย์ลับฝั่งเซิร์ฟเวอร์)
@@ -210,9 +210,10 @@ ${bundle ? '    <g:is_bundle>yes</g:is_bundle>\n' : ''}    <g:shipping><g:countr
   }
   const freeQ = String(req.query.free || '');
   if (freeQ) { // หน้าแจกชีทฟรี /free และ /free/<slug>
-    const f = freeQ === '_' ? FREEBIES[0] : freeBySlug(freeQ);
-    if (!f) { res.writeHead(302, { Location: '/free' }); return res.end(); }
+    const f = freeQ === '_' ? null : freeBySlug(freeQ);
+    if (!f && freeQ !== '_') { res.writeHead(302, { Location: '/free' }); return res.end(); }
     const shop = await loadShop().catch(() => ({ settings: {}, products: [] }));
+    if (!f) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300'); return res.status(200).send(freeListPage({ settings: shop.settings || {}, site: NEW_SITE })); } // /free = หน้ารวมทุกเล่ม
     const up = (shop.products || []).find((p) => p.id === f.upsell && p.status === 'published') || null;
     res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300');
     return res.status(200).send(freePage(f, { settings: shop.settings || {}, site: NEW_SITE, upsell: up }));
