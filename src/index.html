@@ -1226,7 +1226,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .adq-pw{position:relative}.adq-x{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:#0F1B33;color:#fff;font-size:15px;line-height:24px;padding:0;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3)}.adp-log summary{cursor:pointer;font-size:14px;padding:4px 0}.adp details,.agl details{border:0;padding:2px 0;margin:0;background:none;box-shadow:none}
 .adp{margin:12px 0}.adp.on{border-color:#16a34a}.adp-h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px}.adp-h .adp-sw{margin-left:auto}.adp-m{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:0 0 8px}.adp-m label{display:grid;gap:2px;font-size:13px}.adp-m input{width:140px}.adp-s{margin:6px 0;font-size:14px;line-height:1.6}.adp-a{display:block}.adp-a em{font-style:normal;color:var(--muted);font-size:13px}.adp-log summary{cursor:pointer;font-size:14px}
 .adtip-f{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin:0 0 10px}.adtip-f div{display:grid;gap:1px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px}.adtip-f b{font-size:18px}.adtip-t{display:grid;gap:2px;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);margin-top:6px}.adtip-fix{display:block;margin-top:4px;font-style:normal;font-size:13px;color:#0F7A55;font-weight:600}.adtip-fix.late{color:#B45309}.adtip-t span{font-size:13.5px;color:var(--muted);line-height:1.5}
-.adt-c{text-align:right;display:grid;gap:1px;font-size:14px}.adt-act{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}.adt-act .adt-renew{flex:1 0 100%}.adt-lock{white-space:nowrap}.adt-lockbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--bg);font-size:13px}.adt-lockbar.off{background:var(--warnbg)} /* ปุ่มต่ออายุแถวบนเต็มช่อง ไม่ล้นทับตัวเลข (10 ต.ค. 69) */.adt-act .btn{white-space:nowrap;padding-left:10px;padding-right:10px}.adt-act .adt-ic{padding-left:9px;padding-right:9px}.adt-wide{grid-column:1/-1}.adt-wide p{margin:0}
+.adt-c{text-align:right;display:grid;gap:1px;font-size:14px}.adt-act{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}.adt-act .adt-renew{flex:1 0 100%}.bst-ggw{overflow-x:auto}.bst-ggt{width:100%;border-collapse:collapse;font-size:13px}.bst-ggt th,.bst-ggt td{padding:6px 8px;border-bottom:1px solid var(--line,#E3E8F0);text-align:right;white-space:nowrap}.bst-ggt th:first-child,.bst-ggt td:first-child,.bst-ggt td:nth-child(2){text-align:left}.adt-lock{white-space:nowrap}.adt-lockbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--bg);font-size:13px}.adt-lockbar.off{background:var(--warnbg)} /* ปุ่มต่ออายุแถวบนเต็มช่อง ไม่ล้นทับตัวเลข (10 ต.ค. 69) */.adt-act .btn{white-space:nowrap;padding-left:10px;padding-right:10px}.adt-act .adt-ic{padding-left:9px;padding-right:9px}.adt-wide{grid-column:1/-1}.adt-wide p{margin:0}
 @media (max-width:900px){.adt-hd{display:none}.adt-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 10px}.adt-name{grid-column:1/-1}.adt-c{text-align:left;background:var(--bg);border-radius:8px;padding:6px 8px}.adt-c::before{content:attr(data-l);font-size:11.5px;color:var(--muted)}.adt-act{grid-column:1/-1;justify-content:flex-start}}
 @media (max-width:640px){.adm-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.adm-card b{font-size:18px}.adc-svg{height:170px}.adc-xs span.h{display:none}.adm-q{max-width:none;flex:1 1 100%}}
 .th-kw{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}.th-kw .input{width:230px;padding:6px 10px}
@@ -5972,6 +5972,26 @@ const AP={d:null,loading:false,busy:false,month:'',boost:null,bx:'',bd:'7',goal:
 // 🔒 ล็อกปุ่มแก้แอด (หยุด/ปรับงบ/บูสต์/แก้รูป) ตอนออโต้ไพลอตเปิด (คุณแดน 22 ต.ค. 69 กดพลาดแล้วแอดเรียนรู้ใหม่) · ปลดล็อกชั่วคราว = จนกว่าจะโหลดหน้าใหม่
 function adLocked(){return !!(AP.d&&AP.d.cfg&&AP.d.cfg.on)&&!ADST.unlock;}
 function loadAP(force){if(AP.loading||(AP.d&&!force))return;AP.loading=true;adminApi('/api/content?action=ads_auto_pilot').then(j=>{AP.d=j||{ok:false};}).catch(()=>{AP.d={ok:false};}).then(()=>{AP.loading=false;render(true);});}
+// 🔎 Google Ads (บัญชี 953-253-3805 · คุณแดน 22 ต.ค. 69 "ระบบหลังบ้านเหมือน facebook ads"): ตัวเลขจาก Google Ads Script ทุกชั่วโมง (tools/gads/sync.js) + ออเดอร์จริงที่มาจากแอด Google
+const GA={d:null,loading:false};
+function loadGads(){if(GA.loading)return;GA.loading=true;adminApi('/api/content?action=gads').then(j=>{GA.d=j||{ok:false};}).catch(()=>{GA.d={ok:false};}).finally(()=>{GA.loading=false;render(true);});}
+function adGadsBox(){
+  const head='<b>🔎 Google Ads</b> <a class="fine" href="https://ads.google.com/aw/campaigns?ocid=8622114928" target="_blank" rel="noopener noreferrer">เปิด Google Ads ↗</a>';
+  if(!GA.d){loadGads();return `<section class="card bst-gg">${head} <span class="fine">กำลังโหลด...</span></section>`;}
+  const g=GA.d.data,orders=GA.d.orders||[];
+  if(!g)return `<section class="card bst-gg">${head}<p class="fine">ยังไม่มีข้อมูล · สคริปต์ใน Google Ads ส่งตัวเลขมาทุกชั่วโมง</p></section>`;
+  const N=7,since=new Date(Date.now()-N*864e5+7*36e5).toISOString().slice(0,10),C={};
+  (g.rows||[]).forEach(r=>{const c=C[r.id]=C[r.id]||{name:r.name,st:r.st,budget:r.budget,i:0,k:0,cost:0,conv:0};if(r.st)c.st=r.st;if(r.budget)c.budget=r.budget;if(r.d&&r.d>=since){c.i+=r.i;c.k+=r.k;c.cost+=r.cost;c.conv+=r.conv;}});
+  const L=Object.values(C),cost=L.reduce((x,c)=>x+c.cost,0),real=orders.filter(o=>Date.parse(o.paid_at)>Date.now()-N*864e5),rev=real.reduce((x,o)=>x+(+o.amount||0),0);
+  const ST={ENABLED:'🟢 วิ่งอยู่',PAUSED:'⏸ หยุดไว้',REMOVED:'ลบแล้ว'},n=v=>Math.round(v).toLocaleString('th-TH');
+  const terms=(g.terms||[]).slice().sort((a,b)=>b.k-a.k||b.i-a.i).slice(0,10);
+  return `<section class="card bst-gg">${head}
+    <p class="fine">${N} วันล่าสุด · ค่าแอด ${adMoney(cost)} · ออเดอร์จริงจากแอด Google ${real.length} ออเดอร์ ${adMoney(rev)}${cost?` · ได้คืน ${(rev/cost).toFixed(2)} เท่า`:''} · อัปเดต ${new Date(g.at).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</p>
+    <div class="bst-ggw"><table class="bst-ggt"><thead><tr><th>แคมเปญ</th><th>สถานะ</th><th>งบ/วัน</th><th>เห็น</th><th>คลิก</th><th>CTR</th><th>ค่าแอด</th><th>ต่อคลิก</th></tr></thead><tbody>
+    ${L.map(c=>`<tr><td>${esc(c.name)}</td><td>${ST[c.st]||esc(c.st)}</td><td>${adMoney(c.budget)}</td><td>${n(c.i)}</td><td>${n(c.k)}</td><td>${c.i?(c.k/c.i*100).toFixed(1)+'%':'–'}</td><td>${adMoney(c.cost)}</td><td>${c.k?adMoney(c.cost/c.k):'–'}</td></tr>`).join('')||'<tr><td colspan="8" class="fine">ยังไม่มีแคมเปญ</td></tr>'}
+    </tbody></table></div>
+    ${terms.length?`<p class="fine" style="margin-top:10px"><b>คำที่คนค้นจริง (7 วัน)</b> · ${terms.map(t=>`${esc(t.t)} <span class="fine">(${n(t.k)} คลิก)</span>`).join(' · ')}</p>`:''}
+  </section>`;}
 function adPilotBox(){if(!AP.d){loadAP();return `<section class="card adp"><b>🤖 ออโต้ไพลอต</b> <span class="fine">กำลังโหลด...</span></section>`;}
   const c=AP.d.cfg||{},p=AP.d.plan||{},I=p.info||{},on=!!c.on,acts=p.actions||[];
   const A={budget:x=>`ปรับงบ "${esc(x.name)}" ${adMoney(x.from)}→${adMoney(x.to)}/วัน`,pause:x=>`หยุด "${esc(x.name)}"`,resume:x=>`▶ เปิดกลับ "${esc(x.name)}" ${adMoney(x.to)}/วัน`,extend:x=>`ต่ออายุ "${esc(x.name)}" ${x.days} วัน`,test:x=>`🧪 เริ่มยิงแอดทดลอง "${esc(x.name)}" ${adMoney(x.to)}/วัน ${x.days} วัน`,set:x=>esc(x.why)};
@@ -6051,6 +6071,7 @@ function adsTab(){
       <p class="fine bst-acc">บัญชีโฆษณา: ${accBad?'⚠️ มีปัญหา':A&&A.reason==='rate'?'⏳ ดึงข้อมูลไม่ได้ชั่วคราว (Facebook จำกัดความถี่) แอดยังวิ่งปกติ':A&&A.ok?'✓ ปกติ':'–'}${A&&A.account&&A.account.payment?' · จ่ายด้วย '+esc(A.account.payment):''}${L?(L.capTHB?` · วงเงินเหลือ ${adMoney(L.leftTHB)} จาก ${adMoney(L.capTHB)} · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">แก้วงเงิน ↗</a>`:` · <a href="${esc(L.page)}" target="_blank" rel="noopener noreferrer">ตั้งวงเงินกันเงินหมด ↗</a>`):''}</p></section>
     ${adSafe(adGoalBox,'เส้นชัย')}
     ${adSafe(adPilotBox,'ออโต้ไพลอต')}
+    ${adSafe(adGadsBox,'Google Ads')}
     <section class="adm-list"><div class="adm-head"><h3 class="h3" style="margin:0">รายการโฆษณา</h3><button class="btn btn-sm pt-new" data-a="adsNew">+ สร้างแอดใหม่</button></div>
       ${AP.d&&AP.d.cfg&&AP.d.cfg.on?`<div class="adt-lockbar${ADST.unlock?' off':''}"><span>${ADST.unlock?'🔓 <b>ปลดล็อกอยู่</b> · แก้แอดเอง (หยุด/ปรับงบ/บูสต์/เปลี่ยนรูป) ทำให้ Facebook เริ่มเรียนรู้ใหม่':'🔒 <b>ล็อกอยู่</b> · ออโต้ไพลอตดูแลงบ หยุด และต่ออายุให้เอง ปุ่มแก้แอดซ่อนไว้กันกดพลาด'}</span><button class="chip" data-a="adsLock">${ADST.unlock?'🔒 ล็อกกลับ':'🔓 ปลดล็อกชั่วคราว'}</button></div>`:''}
       <div class="adm-tools"><div class="adm-tf">${[['all','ทั้งหมด',camps.length],['run','🟢 กำลังวิ่ง',run.length],['fix','🔴 ต้องแก้',fix.length],['off','⏸ หยุด/จบ',off.length]].map(x=>`<button class="chip${x[0]==='fix'&&x[2]?' warnchip':''}" data-a="adsTf" data-v="${x[0]}" aria-pressed="${tf===x[0]}">${x[1]} ${x[2]}</button>`).join('')}</div>
@@ -8034,6 +8055,7 @@ const LIVE=[
   // ⚖️ ช้าลง (คุณแดน 21 ต.ค. 69): โควตา Vercel ฟรีใกล้เต็ม หน้าหลังบ้านที่เปิดทิ้งไว้ดึงข้อมูลบ่อยเกิน · กดรีเฟรชเองได้ทุกเมื่อ
   {k:'ads',tabs:['home','ads'],every:180,run:()=>loadAdsStatus()},
   {k:'adsdraft',tabs:['home','ads'],every:300,run:()=>loadAdsAuto()},
+  {k:'gads',tabs:['ads'],every:600,run:()=>loadGads()},
   {k:'sales',tabs:['home'],every:120,run:()=>loadSO()},
   {k:'dash',tabs:['home','orders'],every:180,run:()=>{if(!DASH.loading)loadDash().then(()=>render(true));}},
   {k:'health',tabs:['home','todo'],every:600,run:()=>loadHealth()},
