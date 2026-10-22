@@ -187,7 +187,11 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const loss = plan([c('l', 300, { roas7: 0.5, rev7: 1000 }), c('w', 300)], 3000).find((x) => x.c.id === 'l');
   const eom = plan([c('w', 300)], 3000, Date.parse('2026-10-30T05:00:00Z'), 2850).find((x) => x.type === 'budget');
   ok('🤖 ออโต้ไพลอตขยับงบทีละน้อย (Facebook ไม่เริ่มเรียนรู้ใหม่): เพิ่มไม่เกิน 20% · ลดไม่เกิน 30% · แอดขาดทุน/ปลายเดือนตัดได้ทันที',
-    up && up.to === 360 && down && down.to === 210 && !!loss && (loss.type === 'pause' || loss.to < 210) && eom && eom.to < 210, JSON.stringify({ up: up && up.to, down: down && down.to, loss: loss && (loss.to || loss.type), eom: eom && eom.to })); }
+    up && up.to === 360 && down && down.to === 210 && !!loss && (loss.type === 'pause' || loss.to < 210) && eom && eom.to < 210, JSON.stringify({ up: up && up.to, down: down && down.to, loss: loss && (loss.to || loss.type), eom: eom && eom.to }));
+  const camp = { w: { changedAt: new Date(now - 864e5).toISOString() }, l: { changedAt: new Date(now - 864e5).toISOString() } };
+  const cool = A.planBudget({ ...A.AP_DEFAULT, on: true, monthTHB: 3000, camp }, [c('w', 300, { roas7: 1.3, rev7: 2600 }), c('l', 300, { roas7: 0.5, rev7: 1000 })], { monthSpent: 0, now }).actions;
+  ok('🤖 ออโต้ไพลอตลดงบแคมเปญเดิมห่างกัน ≥ 3 วัน (ไม่ลดทุกวันจนแอดเรียนรู้ใหม่ไม่จบ) · แอดขาดทุนจริงยังลดได้ทันที',
+    !cool.some((x) => x.c.id === 'w') && cool.some((x) => x.c.id === 'l'), JSON.stringify(cool.map((x) => [x.c.id, x.type, x.to]))); }
 { const { ssrShell } = await import('../api/page.js'); const P = [{ id: 'a', price: 179, fullPrice: 249, name: 'A <b>', headline: 'หัว A', images: ['https://x/a.jpg'] }, { id: 'b', price: 149 },
     { id: 's', type: 'bundle', name: 'ชุด 2 เล่ม', headline: 'ชุดดี', items: ['a', 'b'], plans: [{ key: 'basic', price: 290 }, { key: 'pro', price: 490 }], price: 290, cover: 'https://x/s.jpg' }];
   const one = ssrShell(P[0], P), set = ssrShell(P[2], P);
