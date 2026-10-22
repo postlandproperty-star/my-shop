@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🎬 "ทำไมถึงเป็นแบบนั้น?" EP.1 กล่องดำเครื่องบินจริงๆ เป็นสีส้ม (คุณแดน 22 ต.ค. 69) · พากย์ไทย + สอนคำ flight recorder
+     เสียง/เวลาใน why1/data.js (why1/gen.py) · พี่ชีทเป็นพิธีกรมุมจอ -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0F1B33;font-family:K,sans-serif}
+svg{position:absolute;inset:0}
+.pill{position:absolute;top:96px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8}
+.sub{position:absolute;left:30px;right:30px;top:1470px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.sub b{color:#FF4B4B}
+.sub.en{font-size:64px;color:#FFE27A;-webkit-text-stroke:12px #0F1B33}
+.bub{position:absolute;left:60px;right:60px;top:1150px;z-index:7;background:#fff;border:8px solid #0F1B33;border-radius:38px;padding:20px 30px;font-weight:800;font-size:60px;line-height:1.2;color:#0F1B33;text-align:center}
+.bub em{font-style:normal;color:#E8590C}
+.chip{position:absolute;z-index:7;padding:10px 30px;border-radius:24px;background:#FFD43B;border:6px solid #0F1B33;font-weight:800;font-size:72px;color:#0F1B33}
+.word{position:absolute;left:60px;right:60px;z-index:7;background:#fff;border:8px solid #0F1B33;border-radius:30px;padding:16px 36px;display:flex;align-items:baseline;gap:24px;font-weight:800;color:#0F1B33}
+.word{white-space:nowrap}.word span{font-size:72px;color:#E8590C}.word i{font-style:normal;font-size:32px;color:#56637D}.word u{text-decoration:none;font-size:56px;margin-left:auto}
+.title{position:absolute;left:60px;right:60px;top:300px;z-index:7;text-align:center;font-weight:800;font-size:120px;color:#E8590C;-webkit-text-stroke:14px #fff;paint-order:stroke fill}
+[data-in]{opacity:0;transform-origin:center}
+.brand{position:absolute;left:0;right:0;bottom:50px;text-align:center;font-weight:600;font-size:36px;color:#ffffffaa;z-index:8}
+</style></head><body>
+<svg viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5DA9E9"/><stop offset="1" stop-color="#CFE8FB"/></linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1B6CA8"/><stop offset=".55" stop-color="#0B3B66"/><stop offset="1" stop-color="#06213D"/></linearGradient>
+    <g id="BOX"><rect x="-150" y="-110" width="300" height="220" rx="22" fill="currentColor" stroke="#0F1B33" stroke-width="8"/>
+      <path d="M-150 -40 L-80 -110 M-150 40 L-10 -110 M70 110 L150 30 M-10 110 L150 -50" stroke="#fff" stroke-width="16" opacity=".85"/>
+      <rect x="-118" y="-22" width="236" height="64" rx="8" fill="#0F1B33" opacity=".85"/>
+      <text x="0" y="6" text-anchor="middle" font-family="K" font-weight="800" font-size="27" fill="#fff">FLIGHT RECORDER</text><text x="0" y="34" text-anchor="middle" font-family="K" font-weight="600" font-size="20" fill="#fff">DO NOT OPEN</text></g>
+    <g id="PLANE"><path d="M-330 0 C-330 -48 -280 -60 -200 -60 L250 -60 C300 -60 340 -30 350 0 C340 30 300 40 250 40 L-200 40 C-280 40 -330 30 -330 0z" fill="#F4F6FA" stroke="#0F1B33" stroke-width="7"/>
+      <path d="M-250 -58 L-310 -200 L-240 -200 L-170 -58z" fill="#1F6FEB" stroke="#0F1B33" stroke-width="7"/><path d="M-40 10 L-160 150 L-90 150 L60 10z" fill="#C9D3E3" stroke="#0F1B33" stroke-width="7"/>
+      <g fill="#7EC3F2">${''}</g><path d="M300 -38 L330 -10 L300 -10z" fill="#0F1B33"/></g>
+  </defs>
+  <g id="sSky"><rect width="1080" height="1920" fill="url(#sky)"/><g id="clouds"></g><g id="plane1"><use href="#PLANE"/></g></g>
+  <g id="sSea"><rect width="1080" height="1920" fill="url(#sea)"/><path id="surf" d="" fill="#3E8ED0" opacity=".5"/><g id="ship"><path d="M-130 0 h260 l-40 60 h-180z" fill="#E5484D" stroke="#0F1B33" stroke-width="6"/><rect x="-40" y="-70" width="90" height="70" fill="#F4F6FA" stroke="#0F1B33" stroke-width="6"/></g>
+    <path d="M0 1330 C200 1290 400 1350 600 1310 C800 1280 950 1320 1080 1300 L1080 1920 L0 1920z" fill="#C2A878"/><g id="wreck"></g><g id="rings"></g><line id="beam" x1="540" y1="470" x2="540" y2="1210" stroke="#7FE3FF" stroke-width="8" stroke-dasharray="24 18" opacity="0"/></g>
+  <g id="sFire"><rect width="1080" height="1920" fill="#2A1B2E"/><g id="flames"></g><g id="hits"></g></g>
+  <g id="sCard"><rect width="1080" height="1920" fill="#FFF4E2"/><circle cx="900" cy="300" r="260" fill="#FFE2B8"/><circle cx="120" cy="1150" r="200" fill="#FFE2B8"/></g>
+  <g id="sEnd"><rect width="1080" height="1920" fill="#E9F3FF"/><g id="sw"></g></g>
+  <g id="box" style="color:#1C1C1C"><use href="#BOX"/></g>
+  <g id="mag" opacity="0"><circle r="120" fill="#ffffff22" stroke="#FFD43B" stroke-width="18"/><line x1="85" y1="85" x2="180" y2="180" stroke="#FFD43B" stroke-width="26" stroke-linecap="round"/></g>
+  <g id="tail" opacity="0"><circle id="tailring" r="120" fill="none" stroke="#E8590C" stroke-width="14" stroke-dasharray="26 16"/></g>
+  <rect y="1390" width="1080" height="530" fill="#0F1B33" opacity=".86"/>
+  <g id="host"></g>
+</svg>
+<div class="pill" style="left:46px">🤔 ทำไมถึงเป็นแบบนั้น? · EP.1</div>
+<div id="dyn"></div>
+<div class="brand">SheetLab · ชีทสรุป TOEIC IELTS</div>
+<script src="why1/data.js"></script>
+<script src="cast.js"></script>
+<script>
+$('clouds').innerHTML = [[150, 300, 1], [700, 220, 1.3], [420, 520, .8], [880, 600, 1]].map(([x, y, s]) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse rx="110" ry="46" fill="#fff"/><ellipse cx="-60" cy="10" rx="70" ry="36" fill="#fff"/><ellipse cx="70" cy="12" rx="80" ry="38" fill="#fff"/></g>`).join('');
+document.querySelector('#PLANE g').innerHTML = Array.from({ length: 9 }, (_, i) => `<circle cx="${-120 + i * 42}" cy="-22" r="12"/>`).join('');
+$('wreck').innerHTML = [[200, 1270, -20, 160, 60], [380, 1300, 15, 120, 40], [860, 1280, 30, 180, 50], [980, 1320, -10, 90, 36]].map(([x, y, r, w, h]) => `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="8" fill="#8E99A8" stroke="#0F1B33" stroke-width="5" transform="rotate(${r} ${x} ${y})"/>`).join('');
+$('rings').innerHTML = [0, 1, 2].map(() => `<circle class="rg" fill="none" stroke="#7FE3FF" stroke-width="8"/>`).join('');
+$('flames').innerHTML = Array.from({ length: 9 }, (_, i) => `<path class="fl" data-i="${i}" fill="${['#FF922B', '#FFD43B', '#FF6B6B'][i % 3]}"/>`).join('');
+$('hits').innerHTML = Array.from({ length: 8 }, (_, i) => `<line class="ht" data-i="${i}" stroke="#FFD43B" stroke-width="14" stroke-linecap="round"/>`).join('');
+$('sw').innerHTML = [['#FFD43B', 250], ['#FF6EB4', 540], ['#7CFC00', 830]].map(([c, x]) => `<g transform="translate(${x} 1100)"><circle r="110" fill="${c}" stroke="#0F1B33" stroke-width="8"/><text y="40" text-anchor="middle" font-family="K" font-weight="800" font-size="110" fill="#0F1B33">?</text></g>`).join('');
+$('host').innerHTML = `<g id="hg">${SHEETGUY}</g>`;
+
+// ---------- ไทม์ไลน์ ----------
+const L = {}, H = [], SFX = []; let T = 0.4;
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const red = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b>$1</b>');
+for (const ln of window.EP) {
+  const a = T, b = T + ln.dur; L[ln.k] = { a, b, ch: (ln.chunks || []).map((c) => a + c[0]) }; SFX.push([+a.toFixed(2), `why1/${ln.k}.wav`]);
+  if (ln.kind === 'narr') ln.chunks.forEach(([s, e, txt]) => H.push(`<div class="sub" data-in="${(a + s).toFixed(2)}" data-out="${(a + e - 0.02).toFixed(2)}" data-anim="pop">${red(txt)}</div>`));
+  else { H.push(`<div class="bub" data-in="${a.toFixed(2)}" data-out="${(b + 0.6).toFixed(2)}" data-anim="pop">🔊 ${esc(ln.text).replace('flight recorder', '<em>flight recorder</em>')}</div>`); H.push(`<div class="sub en" data-in="${a.toFixed(2)}" data-out="${(b + 0.6).toFixed(2)}" data-anim="none">${esc(ln.th)}</div>`); }
+  T = b + (ln.kind === 'narr' ? 0.4 : 0.7);
+}
+const at = (k, i) => L[k].ch[i];
+H.push(`<div class="title" data-in="${at('n1', 2).toFixed(2)}" data-out="${L.n1.b + 0.3}" data-anim="pop">ไม่ใช่สีดำ!</div>`);
+H.push(`<div class="chip" data-in="${at('n3', 2).toFixed(2)}" data-out="${L.n3.b + 0.3}" data-anim="pop" style="left:80px;top:420px">💥 3,400 G</div>`);
+H.push(`<div class="chip" data-in="${at('n3', 3).toFixed(2)}" data-out="${L.n3.b + 0.3}" data-anim="pop" style="right:80px;top:560px;background:#FF922B">🔥 1,000°C+</div>`);
+H.push(`<div class="chip" data-in="${at('n4', 2).toFixed(2)}" data-out="${L.n4.b + 0.3}" data-anim="pop" style="left:80px;top:620px;background:#7FE3FF">📡 30 วัน</div>`);
+H.push(`<div class="chip" data-in="${at('n5', 1).toFixed(2)}" data-out="${L.n5.b + 0.3}" data-anim="pop" style="left:60px;top:1080px;font-size:56px">หาง = มักเสียหายน้อยสุด</div>`);
+// การ์ดคำศัพท์
+const W0 = L.n6.ch[3];
+H.push(`<div class="word" data-in="${W0.toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:320px;justify-content:center"><span style="font-size:100px">flight recorder</span></div>`);
+H.push(`<div class="word" data-in="${at('n7', 0).toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:520px"><span>flight</span><i>/flaɪt/</i><u>เที่ยวบิน</u></div>`);
+H.push(`<div class="word" data-in="${at('n7', 1).toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:680px"><span>recorder</span><i>/rɪˈkɔːrdər/</i><u>เครื่องบันทึก</u></div>`);
+const E0 = T;
+H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px;top:1450px">เมนต์สีที่คุณเลือก 👇<br><b>+ ติดตาม</b> รอ "ทำไม" ตอนต่อไป</div>`);
+SFX.push([+at('n1', 2).toFixed(2), 'boing'], [+L.n2.a.toFixed(2), 'whoosh'], [+at('n3', 2).toFixed(2), 'pop'], [+at('n3', 3).toFixed(2), 'pop'], [+L.n4.a.toFixed(2), 'whoosh'], [+L.n5.a.toFixed(2), 'whoosh'], [+W0.toFixed(2), 'ding'], [+at('n7', 0).toFixed(2), 'pop'], [+at('n7', 1).toFixed(2), 'pop'], [+E0.toFixed(2), 'tada']);
+window.DURATION = +(E0 + 4.2).toFixed(2); window.SFX = SFX;
+$('dyn').innerHTML = H.join('');
+document.querySelectorAll('.sub').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); while (el.scrollWidth > el.clientWidth && f > 40) { f -= 4; el.style.fontSize = f + 'px'; } });
+const els = [...document.querySelectorAll('[data-in]')];
+const inR = (a, b, t) => t >= a && t < b;
+
+function seek(t) {
+  tick(els, t);
+  const S = t < L.n2.a ? 'sky1' : t < L.n3.a ? 'sea1' : t < L.n4.a ? 'fire' : t < L.n5.a ? 'sea2' : t < L.n6.a ? 'sky2' : t < L.n8.a ? 'card' : 'end';
+  const show = (id, on) => $(id).setAttribute('opacity', on ? 1 : 0);
+  show('sSky', S === 'sky1' || S === 'sky2'); show('sSea', S === 'sea1' || S === 'sea2'); show('sFire', S === 'fire'); show('sCard', S === 'card'); show('sEnd', S === 'end');
+  // เมฆลอย + เครื่องบิน
+  $('clouds').setAttribute('transform', `translate(${-((t * 40) % 300)} 0)`);
+  const pb = Math.sin(t * 2) * 10;
+  if (S === 'sky1') $('plane1').setAttribute('transform', `translate(${540 + Math.sin(t) * 30} ${560 + pb}) scale(.9)`);
+  if (S === 'sky2') $('plane1').setAttribute('transform', `translate(560 ${760 + pb}) scale(1.35)`);
+  // กล่อง: สี ตำแหน่ง ขนาด
+  const orange = t >= at('n1', 2), box = $('box');
+  box.style.color = orange ? '#FF7A00' : '#1C1C1C';
+  let bx = 540, by = 1000, bs = 1.4, rot = 0, bop = 1;
+  if (S === 'sky1') { const p = back(cl((t - at('n1', 2)) / 0.4)); bs = 1.4 * (orange ? 0.9 + 0.1 * p : 1); by = 1050; rot = orange ? (1 - cl((t - at('n1', 2)) / 0.4)) * 30 : 0; }
+  if (S === 'sea1') { bx = 700; by = 1240; bs = 0.75; rot = -12; }
+  if (S === 'fire') { by = 980; bs = 1.5; const sh = inR(at('n3', 2), at('n3', 2) + 0.6, t) ? Math.sin(t * 90) * 14 : 0; bx = 540 + sh; }
+  if (S === 'sea2') { bx = 540; by = 1250; bs = 0.7; }
+  if (S === 'sky2') { bx = 230; by = 610; bs = 0.32; }
+  if (S === 'card') { bx = 540; by = 1130; bs = 0.9; rot = Math.sin(t * 2) * 4; }
+  if (S === 'end') { bx = 540; by = 700; bs = 1.2; }
+  box.setAttribute('transform', `translate(${bx} ${by + (S === 'sea1' || S === 'sea2' ? Math.sin(t * 2) * 6 : 0)}) rotate(${rot}) scale(${bs})`);
+  box.setAttribute('opacity', bop);
+  // ใต้ทะเล: ผิวน้ำ เรือ แว่นขยาย คลื่นสัญญาณ
+  let d = 'M0 470'; for (let x = 0; x <= 1080; x += 40) d += ` L${x} ${470 + Math.sin(x / 70 + t * 3) * 12}`; $('surf').setAttribute('d', d + ' L1080 0 L0 0z');
+  $('ship').setAttribute('transform', `translate(540 ${440 + Math.sin(t * 2.4) * 8}) rotate(${Math.sin(t * 2) * 3})`);
+  $('ship').setAttribute('opacity', S === 'sea2' ? 1 : 0); $('wreck').setAttribute('opacity', S === 'sea1' ? 1 : 0);
+  const mp = cl((t - at('n2', 1)) / 1.6); $('mag').setAttribute('opacity', S === 'sea1' && t > at('n2', 1) ? 1 : 0);
+  $('mag').setAttribute('transform', `translate(${250 + 450 * outc(mp)} ${900 + 320 * outc(mp)})`);
+  document.querySelectorAll('.rg').forEach((c, i) => { const ph = (t * 0.8 + i / 3) % 1; c.setAttribute('cx', 540); c.setAttribute('cy', 1250); c.setAttribute('r', 90 + ph * 520); c.setAttribute('opacity', S === 'sea2' ? 1 - ph : 0); });
+  $('beam').setAttribute('opacity', S === 'sea2' && t > at('n4', 2) ? (Math.sin(t * 8) > 0 ? 0.9 : 0.4) : 0);
+  // ไฟ + แรงกระแทก
+  document.querySelectorAll('.fl').forEach((f) => { const i = +f.dataset.i, x = 140 + i * 100, h = 220 + Math.sin(t * 9 + i * 1.7) * 80 + (t > at('n3', 3) ? 140 : 0); f.setAttribute('d', `M${x - 60} 1390 Q${x - 50} ${1390 - h * 0.6} ${x} ${1390 - h} Q${x + 50} ${1390 - h * 0.6} ${x + 60} 1390z`); f.setAttribute('opacity', S === 'fire' && t > at('n3', 3) - 0.3 ? 0.95 : 0.25); });
+  document.querySelectorAll('.ht').forEach((l) => { const i = +l.dataset.i, an = i / 8 * 6.283, on = S === 'fire' && inR(at('n3', 2), at('n3', 2) + 0.9, t); const r0 = 260 + ((t * 600) % 80); l.setAttribute('x1', 540 + Math.cos(an) * r0); l.setAttribute('y1', 980 + Math.sin(an) * r0); l.setAttribute('x2', 540 + Math.cos(an) * (r0 + 90)); l.setAttribute('y2', 980 + Math.sin(an) * (r0 + 90)); l.setAttribute('opacity', on ? 1 : 0); });
+  // หางเครื่องบิน: วงกลมกะพริบ
+  $('tail').setAttribute('opacity', S === 'sky2' && t > at('n5', 0) + 0.6 ? 1 : 0); $('tail').setAttribute('transform', `translate(230 ${560 + pb}) rotate(${t * 40})`);
+  // พี่ชีท: พิธีกรมุมล่าง เด้งตอนพากย์
+  const talking = window.EP.some((e) => e.kind === 'narr' && inR(L[e.k].a, L[e.k].b, t));
+  $('host').setAttribute('transform', `translate(950 ${1385 - (talking ? Math.abs(Math.sin(t * 7)) * 18 : 0)}) scale(.5)`);
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>
