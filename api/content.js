@@ -3638,6 +3638,23 @@ ${books}`;
       const r = await fetch(`https://graph.facebook.com/v21.0/${pid}/events`, { method: 'POST', body }); const j = await r.json().catch(() => ({}));
       return res.status(200).json({ ok: !!(r.ok && !j.error && j.events_received), received: j.events_received || 0, error: j.error?.message || null, test_code: body.get('test_event_code') });
     }
+    if (action === 'gads_sync') { // 🔎 Google Ads Script (บัญชี 953-253-3805) ส่งตัวเลขแอดมาทุกชั่วโมง · คุณแดน 22 ต.ค. 69 "ระบบหลังบ้านเหมือน facebook ads" · กุญแจแยก private.gadsKey เขียนได้แค่ตัวเลขแอด
+      const priv = (await sb('shop_state?id=eq.private&select=data'))?.[0]?.data || {}, gk = String(req.headers['x-gads-key'] || '');
+      if (!priv.gadsKey || gk.length < 24 || gk !== priv.gadsKey) return res.status(401).json({ ok: false });
+      const b = await readBody(req), num = (v) => Math.round((Number(v) || 0) * 100) / 100, str = (v, n) => String(v ?? '').slice(0, n);
+      const rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 3000).map((r) => ({ d: str(r.d, 10), id: str(r.id, 20), name: str(r.name, 120), st: str(r.st, 20), budget: num(r.budget), i: num(r.i), k: num(r.k), cost: num(r.cost), conv: num(r.conv), val: num(r.val) }));
+      const terms = (Array.isArray(b.terms) ? b.terms : []).slice(0, 200).map((r) => ({ t: str(r.t, 120), g: str(r.g, 80), i: num(r.i), k: num(r.k), cost: num(r.cost), conv: num(r.conv) }));
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'gads', data: { at: new Date().toISOString(), acct: str(b.acct, 20), rows, terms }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, rows: rows.length, terms: terms.length });
+    }
+    if (action === 'gads') { // ตัวเลขแอด Google ล่าสุด (แอดมิน/คีย์ร้าน) + ออเดอร์จริงที่มาจากแอด Google (src google_ads) 30 วัน
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin && !keyOk(req)) return res.status(401).json({ ok: false });
+      const g = (await sb('shop_state?id=eq.gads&select=data'))?.[0]?.data || null;
+      const since = new Date(Date.now() - 30 * 864e5).toISOString();
+      const orders = await sb(`orders?status=eq.paid&campaign=eq.google_ads&paid_at=gte.${since}&select=paid_at,amount,product_name&order=paid_at.desc&limit=200`).catch(() => []);
+      return res.status(200).json({ ok: true, data: g, orders });
+    }
     if (action.startsWith('ads_auto')) {
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       const team = keyOk(req);
