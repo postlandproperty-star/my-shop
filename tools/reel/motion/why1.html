@@ -85,6 +85,9 @@ const E0 = T;
 H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px;top:1360px">เมนต์สีที่คุณเลือก 👇<br><b>+ ติดตาม</b> รอ "ทำไม" ตอนต่อไป</div>`);
 SFX.push([+at('n1', 2).toFixed(2), 'boing'], [+L.n2.a.toFixed(2), 'whoosh'], [+at('n3', 2).toFixed(2), 'pop'], [+at('n3', 3).toFixed(2), 'pop'], [+L.n4.a.toFixed(2), 'whoosh'], [+L.n5.a.toFixed(2), 'whoosh'], [+W0.toFixed(2), 'ding'], [+at('n7', 0).toFixed(2), 'pop'], [+at('n7', 1).toFixed(2), 'pop'], [+E0.toFixed(2), 'tada']);
 window.DURATION = +(E0 + 4.2).toFixed(2); window.SFX = SFX;
+// 🔤 คำอังกฤษเด้งตอนพากย์ถึงคำนั้น (เพิ่ม 23 ต.ค. 69 · ยังไม่ได้อัดใหม่ ตรวจตำแหน่งก่อนอัดครั้งหน้า) · ไม่ซ้ำการ์ด flight recorder / ประโยคอังกฤษ
+const POP = [[at('n1', 0) + 0.3, 'black box', 'กล่องดำ'], [at('n2', 3) + 0.3, 'underwater', 'ใต้น้ำ'], [at('n3', 1) + 0.3, 'impact', 'แรงกระแทก'], [at('n4', 1) + 0.3, 'signal', 'สัญญาณ'], [at('n5', 0) + 0.5, 'tail', 'หางเครื่องบิน']];
+H.push(popWords(POP));
 $('dyn').innerHTML = H.join('');
 document.querySelectorAll('.sub').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); while (el.scrollWidth > el.clientWidth && f > 40) { f -= 4; el.style.fontSize = f + 'px'; } });
 const els = [...document.querySelectorAll('[data-in]')];

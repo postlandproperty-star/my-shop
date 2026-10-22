@@ -119,6 +119,9 @@ const E0 = T;
 H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px">เมนต์ว่าคุณสายไหน 👇<br><b>+ ติดตาม</b> รอ "ทำไม" ตอนต่อไป</div>`);
 SFX.push([+at('n1', 2).toFixed(2), 'boing'], [+at('n2', 2).toFixed(2), 'whoosh'], [+L.n3.a.toFixed(2), 'whoosh'], [+at('n3', 3).toFixed(2), 'pop'], [+L.n4.a.toFixed(2), 'whoosh'], [+at('n5', 2).toFixed(2), 'boing'], [+L.n6.a.toFixed(2), 'chime'], [+at('n7', 1).toFixed(2), 'pop'], [+V0.toFixed(2), 'ding'], [+at('n9', 1).toFixed(2), 'pop'], [+E0.toFixed(2), 'tada']);
 window.DURATION = +(E0 + 4.2).toFixed(2); window.SFX = SFX;
+// 🔤 คำอังกฤษเด้งตอนพากย์ถึงคำนั้น (ไม่ซ้ำการ์ดคำศัพท์ cabin window / window seat / aisle seat) · ตอนรอยร้าวย้ายไปขวาบน ไม่บังมุมหน้าต่าง
+const POP = [[at('n1', 2) + 0.15, 'corner', 'มุม'], [at('n2', 1) + 0.45, 'square', 'สี่เหลี่ยม'], [at('n4', 1) + 0.6, 'pressure', 'แรงดันอากาศ'], [at('n5', 1) + 0.3, 'fatigue', 'โลหะล้า', { top: 262, right: 40 }], [at('n5', 2) + 0.35, 'crack', 'รอยร้าว', { top: 262, right: 40 }], [at('n6', 0) + 0.5, 'rounded', 'โค้งมน']];
+H.push(popWords(POP));
 $('dyn').innerHTML = H.join('');
 document.querySelectorAll('.sub,.chip').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); const max = el.classList.contains('chip') ? 920 : el.clientWidth; while ((el.classList.contains('chip') ? el.scrollWidth > max : el.scrollWidth > el.clientWidth) && f > 36) { f -= 4; el.style.fontSize = f + 'px'; } });
 const els = [...document.querySelectorAll('[data-in]')];

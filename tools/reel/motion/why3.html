@@ -97,6 +97,9 @@ const E0 = T;
 H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px">เมนต์สีที่คุณเลือก 👇<br><b>+ ติดตาม</b> รอ "ทำไม" ตอนต่อไป</div>`);
 SFX.push([+at('n1', 1).toFixed(2), 'boing'], [+L.n2.a.toFixed(2), 'whoosh'], [+at('n2', 3).toFixed(2), 'pop'], [+L.n3.a.toFixed(2), 'whoosh'], [+L.n4.a.toFixed(2), 'whoosh'], [+at('n5', 0).toFixed(2), 'ding'], [+L.n6.a.toFixed(2), 'whoosh'], [+at('n7', 1).toFixed(2), 'pop'], [+at('n7', 2).toFixed(2), 'pop'], [+at('n7', 3).toFixed(2), 'pop'], [+E0.toFixed(2), 'tada']);
 window.DURATION = +(E0 + 4.2).toFixed(2); window.SFX = SFX;
+// 🔤 คำอังกฤษเด้งตอนพากย์ถึงคำนั้น (ไม่ซ้ำการ์ดคำศัพท์ school bus / drop off / pick up) · ฉากที่มีรถอยู่ล่าง ย้ายไปขวาบน ไม่บังรถ
+const POP = [[at('n1', 1) + 0.3, 'yellow', 'สีเหลือง', { top: 580, right: 40 }], [at('n3', 3) + 0.2, 'standard', 'มาตรฐาน', { top: 262, right: 40 }], [at('n4', 0) + 0.5, 'color sample', 'ตัวอย่างสี'], [at('n5', 1) + 0.3, 'visible', 'มองเห็นได้ชัด', { top: 262, right: 40 }], [at('n5', 2) + 0.2, 'dawn', 'เช้ามืด', { top: 262, right: 40 }], [at('n6', 0) + 0.3, 'letters', 'ตัวหนังสือ']];
+H.push(popWords(POP));
 $('dyn').innerHTML = H.join('');
 document.querySelectorAll('.sub').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); while (el.scrollWidth > el.clientWidth && f > 40) { f -= 4; el.style.fontSize = f + 'px'; } });
 const els = [...document.querySelectorAll('[data-in]')];

@@ -51,8 +51,19 @@ function tick(els, t) {
     const a = +el.dataset.in, b = el.dataset.out ? +el.dataset.out : 1e9, k = el.dataset.anim || 'pop';
     const par = el.parentElement && el.parentElement.closest('[data-out]'); const bb = Math.min(b, par ? +par.dataset.out : 1e9);
     if (t < a || t > bb + 0.01) { el.style.opacity = 0; continue; }
-    const p = cl((t - a) / 0.35), q = cl((bb - t) / 0.2);
+    const p = cl((t - a) / (k === 'quick' ? 0.15 : 0.35)), q = cl((bb - t) / 0.2);
     el.style.opacity = k === 'none' ? 1 : Math.min(cl(p * 2.2), q);
-    el.style.transform = k === 'pop' ? `scale(${(0.4 + 0.6 * back(p)) * (0.92 + 0.08 * q)})` : k === 'up' ? `translateY(${(1 - outc(p)) * 160}px)` : '';
+    el.style.transform = k === 'pop' || k === 'quick' ? `scale(${(0.4 + 0.6 * back(p)) * (0.92 + 0.08 * q)})` : k === 'up' ? `translateY(${(1 - outc(p)) * 160}px)` : '';
   }
+}
+
+// 🔤 คำอังกฤษเด้ง (คุณแดน 23 ต.ค. 69 ไม่ใส่ซับอังกฤษเต็ม แต่ให้คำสำคัญเด้งตอนพากย์ถึง): POP = [[วินาที, 'crack', 'รอยร้าว', {top|left|right}], ...]
+// การ์ดเล็กเหนือแถบซับ (ค่าเริ่มต้น top 1175 ชิดซ้าย พ้นพี่ชีทมุมขวา) · เด้งเร็ว 0.15 วิ อยู่ 1.6 วิ · ทีละคำ (ตัวถัดไปมา ตัวเก่าหายก่อน)
+// อยู่ในขอบปลอดภัย IG/FB: ห้ามมีตัวหนังสือบนสุด 250 px และล่างสุด 380 px
+function popWords(list) {
+  if (!document.getElementById('popw-css')) document.head.insertAdjacentHTML('beforeend', `<style id="popw-css">.popw{position:absolute;z-index:9;display:flex;flex-direction:column;align-items:flex-start;padding:10px 30px 12px;border-radius:26px;background:#0F1B33F2;border:5px solid #FFB000;box-shadow:0 10px 0 #0F1B3355;transform-origin:left center}.popw span{font-weight:800;font-size:66px;line-height:1.05;color:#FFC93C;font-family:K,sans-serif}.popw i{font-style:normal;font-weight:600;font-size:34px;color:#fff;font-family:K,sans-serif}</style>`);
+  const L = list.slice().sort((x, y) => x[0] - y[0]);
+  return L.map(([t, en, th, o = {}], i) => { const end = Math.min(t + 1.6, L[i + 1] ? L[i + 1][0] - 0.05 : 1e9);
+    const pos = `top:${o.top ?? 1175}px;` + (o.right != null ? `right:${o.right}px;transform-origin:right center;` : `left:${o.left ?? 50}px;`);
+    return `<div class="popw" data-in="${t.toFixed(2)}" data-out="${end.toFixed(2)}" data-anim="quick" style="${pos}"><span>${en}</span><i>${th}</i></div>`; }).join('');
 }
