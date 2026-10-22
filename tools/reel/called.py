@@ -210,7 +210,7 @@ def build(spec, out):
     if not os.path.exists(tick): sound.make_sfx('tick', tick, Q_SEC - 0.2)
     if not os.path.exists(ding): sound.make_sfx('ding', ding)
     clips = sounds + [(tick, x + 0.1) for x in ticks] + [(ding, x + Q_SEC) for x in ticks]
-    args = [FF, '-y', '-loglevel', 'error', '-i', silent] + sum((['-i', c[0]] for c in clips), []) + ['-stream_loop', '-1', '-i', music]
+    args = [FF, '-y', '-loglevel', 'error', '-i', silent] + sum((['-i', c[0]] for c in clips), []) + ['-stream_loop', '-1', '-t', f'{total + 1:.2f}', '-i', music]  # จำกัดความยาวเพลงวน (เดิมวนไม่จบ ffmpeg ค้าง 20 ต.ค. 69 คลิปหยุดทั้งหมด)
     fc = ''; mix = []
     for k, (f, at) in enumerate(clips):
         ms = int(at * 1000); vol = 1.6 if f.endswith('.mp3') else 0.5
@@ -218,7 +218,8 @@ def build(spec, out):
     fc += f'[{len(clips) + 1}:a]aformat=sample_rates=44100:channel_layouts=stereo,volume=0.12,afade=t=out:st={total - 1:.2f}:d=1[mu];'; mix.append('[mu]')
     fc += ''.join(mix) + f'amix=inputs={len(mix)}:normalize=0:duration=longest[a]'
     args += ['-filter_complex', fc, '-map', '0:v', '-map', '[a]', '-t', f'{total:.2f}', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', out]
-    r = subprocess.run(args, capture_output=True, text=True)
+    try: r = subprocess.run(args, capture_output=True, text=True, timeout=600)
+    except subprocess.TimeoutExpired: raise SystemExit('ffmpeg ค้างเกิน 10 นาที ข้ามรอบนี้')
     if r.returncode: raise SystemExit(r.stderr[-800:])
     frame = os.path.join(work, 'cover-frame.jpg')
     if media[0][1]: subprocess.run([FF, '-y', '-loglevel', 'error', '-ss', '1', '-i', media[0][0], '-frames:v', '1', frame], check=True)
