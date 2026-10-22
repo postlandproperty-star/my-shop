@@ -19,7 +19,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl, linkPageFromUser, schedulePagePost, deletePagePost } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
-import { AP_DEFAULT, campaignsOf, planBudget, goalInfo } from '../lib/autopilot.js';
+import { AP_DEFAULT, campaignsOf, planBudget, goalInfo, planGoogle } from '../lib/autopilot.js';
 import { saleKit } from '../lib/salepost.js';
 import { adsAccess, launchAd, isGovProduct, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
@@ -3642,10 +3642,20 @@ ${books}`;
       const priv = (await sb('shop_state?id=eq.private&select=data'))?.[0]?.data || {}, gk = String(req.headers['x-gads-key'] || '');
       if (!priv.gadsKey || gk.length < 24 || gk !== priv.gadsKey) return res.status(401).json({ ok: false });
       const b = await readBody(req), num = (v) => Math.round((Number(v) || 0) * 100) / 100, str = (v, n) => String(v ?? '').slice(0, n);
+      if (Array.isArray(b.done) && !b.rows) { // ผลที่สคริปต์ปรับงบ/หยุด/เปิดใน Google ตามคำสั่งออโต้ไพลอต · บันทึกเฉพาะที่ไม่สำเร็จ
+        const bad = b.done.slice(0, 20).filter((x) => x && x.err); if (bad.length) { const cfg = await loadAP(); cfg.log = [...bad.map((x) => ({ at: new Date().toISOString(), type: str(x.type, 10), name: str(x.name, 120), why: 'Google ไม่ยอมรับคำสั่ง', err: str(x.err, 200) })), ...(cfg.log || [])].slice(0, 120); await saveAP(cfg); }
+        return res.status(200).json({ ok: true });
+      }
       const rows = (Array.isArray(b.rows) ? b.rows : []).slice(0, 3000).map((r) => ({ d: str(r.d, 10), id: str(r.id, 20), name: str(r.name, 120), st: str(r.st, 20), budget: num(r.budget), i: num(r.i), k: num(r.k), cost: num(r.cost), conv: num(r.conv), val: num(r.val) }));
       const terms = (Array.isArray(b.terms) ? b.terms : []).slice(0, 200).map((r) => ({ t: str(r.t, 120), g: str(r.g, 80), i: num(r.i), k: num(r.k), cost: num(r.cost), conv: num(r.conv) }));
       await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'gads', data: { at: new Date().toISOString(), acct: str(b.acct, 20), rows, terms }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
-      return res.status(200).json({ ok: true, rows: rows.length, terms: terms.length });
+      // 🤖 ออโต้ไพลอตเปิด + ตั้งงบ Google ไว้ → ส่งคำสั่งปรับงบกลับให้สคริปต์ทำใน Google เลย (ไม่ต้องใช้ Google Ads API)
+      let cmds = []; try { const cfg = await loadAP(); if (cfg.on && cfg.gMonthTHB > 0) { const pl = planGoogle(cfg, { rows });
+        if (pl.cmds.length) { const at = new Date().toISOString(), mth = new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 7); cfg.gcamp = { ...(cfg.gcamp || {}) };
+          for (const c of pl.cmds) { cfg.gcamp[c.id] = { changedAt: at }; if (c.type === 'gpause') cfg.gPaused = { month: mth, ids: [...new Set([...(cfg.gPaused?.month === mth ? cfg.gPaused.ids : []), c.id])] }; }
+          if (pl.cmds.some((c) => c.type === 'gresume')) cfg.gPaused = { month: mth, ids: [] };
+          cfg.log = [...pl.cmds.map((c) => ({ at, type: c.type, name: c.name, from: c.from, to: c.to, why: c.why })), ...(cfg.log || [])].slice(0, 120); await saveAP(cfg); cmds = pl.cmds.map(({ type, id, name, to }) => ({ type, id, name, to })); } } } catch (e) { console.error('gads autopilot', e.message); }
+      return res.status(200).json({ ok: true, rows: rows.length, terms: terms.length, cmds });
     }
     if (action === 'gads') { // ตัวเลขแอด Google ล่าสุด (แอดมิน/คีย์ร้าน) + ออเดอร์จริงที่มาจากแอด Google (src google_ads) 30 วัน
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
@@ -3675,7 +3685,8 @@ ${books}`;
         if (plan?.ok && plan.spendMonth != null) { cfg.lastSpend = { month: mth, thb: plan.spendMonth, at: new Date().toISOString() }; await saveAP(cfg).catch(() => {}); }
         const spend = plan?.spendMonth ?? (cfg.lastSpend?.month === mth ? cfg.lastSpend.thb : null);
         const goal = { ...goalInfo({ goal: cfg.goalProfit || 50000, rev, spend: spend || 0 }), spendKnown: spend != null, spendAt: plan?.spendMonth != null ? new Date().toISOString() : cfg.lastSpend?.at || null };
-        return res.status(200).json({ ok: true, cfg: { on: !!cfg.on, monthTHB: cfg.monthTHB, testShare: cfg.testShare, mode: cfg.mode || 'cap', goalProfit: cfg.goalProfit || 50000, targetRoas: cfg.targetRoas || 2.5, boosts: cfg.boosts || [], log: (cfg.log || []).slice(0, 40) }, plan, goal });
+        let gplan = null; if (cfg.gMonthTHB > 0) { try { gplan = planGoogle(cfg, (await sb('shop_state?id=eq.gads&select=data'))?.[0]?.data); } catch (e) { gplan = null; } }
+        return res.status(200).json({ ok: true, gplan, cfg: { on: !!cfg.on, monthTHB: cfg.monthTHB, gMonthTHB: cfg.gMonthTHB || 0, testShare: cfg.testShare, mode: cfg.mode || 'cap', goalProfit: cfg.goalProfit || 50000, targetRoas: cfg.targetRoas || 2.5, boosts: cfg.boosts || [], log: (cfg.log || []).slice(0, 40) }, plan, goal });
       }
       if (action === 'ads_auto_status') { // สถานะแอดทุกตัวในบัญชีจาก Facebook (อ่านอย่างเดียว ทีมดูได้)
         const fb = await loadFb().catch(() => null);
@@ -3713,10 +3724,11 @@ ${books}`;
         if (body.goalProfit != null) { const g = Math.round(Number(body.goalProfit) || 0); if (g < 5000 || g > 1000000) return res.status(400).json({ ok: false, error: 'เป้ากำไรต้องอยู่ระหว่าง ฿5,000–1,000,000' }); cfg.goalProfit = g; }
         if (body.targetRoas != null) { const r = Number(body.targetRoas); if (!(r >= 1.5 && r <= 6)) return res.status(400).json({ ok: false, error: 'เป้าได้คืนต้องอยู่ระหว่าง 1.5–6 เท่า' }); cfg.targetRoas = Math.round(r * 10) / 10; }
         if (body.monthTHB != null) { const m = Math.round(Number(body.monthTHB) || 0); if (m < 1000 || m > 500000) return res.status(400).json({ ok: false, error: 'งบเดือนต้องอยู่ระหว่าง ฿1,000–500,000' }); cfg.monthTHB = m; }
+        if (body.gMonthTHB != null) { const m = Math.round(Number(body.gMonthTHB) || 0); if (m !== 0 && (m < 500 || m > 500000)) return res.status(400).json({ ok: false, error: 'งบ Google ต้องเป็น 0 (ไม่ใช้) หรือ ฿500–500,000' }); cfg.gMonthTHB = m; }
         if (body.boost) { const b = body.boost, x = Math.round(Number(b.extraTHB) || 0), d = Math.round(Number(b.days) || 7); if (!/^\d{6,30}$/.test(String(b.campaignId || '')) || x < 100 || x > 200000 || d < 1 || d > 30) return res.status(400).json({ ok: false, error: 'บูสต์: ใส่เงิน ฿100 ขึ้นไป และ 1–30 วัน' });
           cfg.boosts = [...(cfg.boosts || []).filter((y) => y.campaignId !== String(b.campaignId) && Date.parse(y.end) > Date.now()), { campaignId: String(b.campaignId), name: String(b.name || '').slice(0, 80), extraTHB: x, days: d, baseTHB: Math.round(Number(b.baseTHB) || 0), start: new Date().toISOString(), end: new Date(Date.now() + d * 864e5).toISOString() }]; }
         if (body.unboost) cfg.boosts = (cfg.boosts || []).filter((y) => y.campaignId !== String(body.unboost));
-        cfg.log = [{ at: new Date().toISOString(), type: 'set', why: [typeof body.on === 'boolean' ? (body.on ? 'เปิดออโต้ไพลอต' : 'ปิดออโต้ไพลอต') : '', body.monthTHB != null ? `งบเดือน ฿${cfg.monthTHB}` : '', body.boost ? `บูสต์ +฿${body.boost.extraTHB} ${body.boost.days} วัน` : '', body.unboost ? 'ยกเลิกบูสต์' : '', body.mode ? (body.mode === 'goal' ? `🎯 โหมดเป้ากำไร ฿${cfg.goalProfit} ได้คืน ≥ ${cfg.targetRoas}` : 'โหมดคุมงบ') : ''].filter(Boolean).join(' · ') }, ...(cfg.log || [])].slice(0, 120);
+        cfg.log = [{ at: new Date().toISOString(), type: 'set', why: [typeof body.on === 'boolean' ? (body.on ? 'เปิดออโต้ไพลอต' : 'ปิดออโต้ไพลอต') : '', body.monthTHB != null ? `งบเดือน Facebook ฿${cfg.monthTHB}` : '', body.gMonthTHB != null ? (cfg.gMonthTHB ? `งบเดือน Google ฿${cfg.gMonthTHB}` : 'ไม่ใช้งบ Google (ระบบไม่แตะ Google)') : '', body.boost ? `บูสต์ +฿${body.boost.extraTHB} ${body.boost.days} วัน` : '', body.unboost ? 'ยกเลิกบูสต์' : '', body.mode ? (body.mode === 'goal' ? `🎯 โหมดเป้ากำไร ฿${cfg.goalProfit} ได้คืน ≥ ${cfg.targetRoas}` : 'โหมดคุมงบ') : ''].filter(Boolean).join(' · ') }, ...(cfg.log || [])].slice(0, 120);
         await saveAP(cfg);
         let run = null; if (cfg.on && (!was || body.boost || body.monthTHB != null || body.mode)) { try { run = await autopilotRun({ cfg }); } catch (e) { run = { ok: false, error: String(e.message || e) }; } } // เปิด/เปลี่ยนงบ/บูสต์ → ปรับทันที
         return res.status(200).json({ ok: true, run });

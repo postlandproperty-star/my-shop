@@ -192,6 +192,17 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const cool = A.planBudget({ ...A.AP_DEFAULT, on: true, monthTHB: 3000, camp }, [c('w', 300, { roas7: 1.3, rev7: 2600 }), c('l', 300, { roas7: 0.5, rev7: 1000 })], { monthSpent: 0, now }).actions;
   ok('🤖 ออโต้ไพลอตลดงบแคมเปญเดิมห่างกัน ≥ 3 วัน (ไม่ลดทุกวันจนแอดเรียนรู้ใหม่ไม่จบ) · แอดขาดทุนจริงยังลดได้ทันที',
     !cool.some((x) => x.c.id === 'w') && cool.some((x) => x.c.id === 'l'), JSON.stringify(cool.map((x) => [x.c.id, x.type, x.to]))); }
+{ const A = await import('../lib/autopilot.js'); const now = Date.parse('2026-10-22T05:00:00Z'); // ตุลา 31 วัน → เหลือ 10 วันรวมวันนี้
+  const rows = [{ d: '2026-10-20', id: '1', name: 'SL Search', st: 'ENABLED', budget: 100, cost: 1000 }, { d: '', id: '2', name: 'TOEIC', st: 'ENABLED', budget: 100, cost: 0 }, { d: '', id: '3', name: 'ปิดอยู่', st: 'PAUSED', budget: 100, cost: 0 }];
+  const G = (cfg, at = now, r = rows) => A.planGoogle({ ...A.AP_DEFAULT, on: true, ...cfg }, { rows: r }, { now: at });
+  const off = G({ gMonthTHB: 0 }), spread = G({ gMonthTHB: 5000 }), cap2x = G({ gMonthTHB: 50000 }), small = G({ gMonthTHB: 3000 });
+  const cool = G({ gMonthTHB: 5000, gcamp: { 1: { changedAt: new Date(now - 5 * 36e5).toISOString() } } }), over = G({ gMonthTHB: 1000 });
+  const nextM = G({ gMonthTHB: 5000, gPaused: { month: '2026-10', ids: ['3'] } }, Date.parse('2026-11-01T05:00:00Z'));
+  const to = (p, id) => (p.cmds.find((x) => x.id === id && x.type === 'gbudget') || {}).to;
+  ok('🔎 ออโต้ไพลอต Google: งบ 0 = ไม่แตะ · เกลี่ยงบที่เหลือเท่าๆ กันให้แคมเปญที่เปิด (ไม่แตะตัวที่หยุด) · เพิ่มไม่เกิน 2 เท่า · เปลี่ยน < 10% ไม่ขยับ · ห่าง ≥ 20 ชม. · งบหมดหยุด · เดือนใหม่เปิดกลับเฉพาะตัวที่ระบบหยุด',
+    !off.cmds.length && to(spread, '1') === 200 && to(spread, '2') === 200 && !spread.cmds.some((x) => x.id === '3') && spread.info.allowedDaily === 400 && to(cap2x, '1') === 200
+      && !small.cmds.length && !cool.cmds.some((x) => x.id === '1') && cool.cmds.some((x) => x.id === '2') && over.cmds.filter((x) => x.type === 'gpause').length === 2 && nextM.cmds.some((x) => x.id === '3' && x.type === 'gresume'),
+    JSON.stringify({ spread: spread.cmds.map((x) => [x.id, x.to]), info: spread.info, small: small.cmds.length, over: over.cmds.map((x) => x.type), next: nextM.cmds.map((x) => [x.id, x.type]) })); }
 { const { ssrShell } = await import('../api/page.js'); const P = [{ id: 'a', price: 179, fullPrice: 249, name: 'A <b>', headline: 'หัว A', images: ['https://x/a.jpg'] }, { id: 'b', price: 149 },
     { id: 's', type: 'bundle', name: 'ชุด 2 เล่ม', headline: 'ชุดดี', items: ['a', 'b'], plans: [{ key: 'basic', price: 290 }, { key: 'pro', price: 490 }], price: 290, cover: 'https://x/s.jpg' }];
   const one = ssrShell(P[0], P), set = ssrShell(P[2], P);

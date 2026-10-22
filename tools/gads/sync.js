@@ -1,5 +1,5 @@
 // 🔎 Google Ads Script ของร้าน (บัญชี 953-253-3805) · วางใน Google Ads → Tools → Bulk actions → Scripts · ตั้งให้รันทุกชั่วโมง
-// ส่งตัวเลขแคมเปญรายวัน 30 วัน + คำค้นจริง 7 วัน ไปที่หลังบ้าน (api/content.js action=gads_sync) · อ่านอย่างเดียว ไม่แก้แอด
+// ส่งตัวเลขแคมเปญรายวัน 30 วัน + คำค้นจริง 7 วัน ไปที่หลังบ้าน (api/content.js action=gads_sync) · แก้แอดเฉพาะเมื่อออโต้ไพลอตเปิดและตั้งงบ Google ไว้ (ปรับงบต่อวัน/หยุด/เปิดกลับ)
 // KEY = private.gadsKey ใน shop_state (ใส่ตอนวางสคริปต์ ห้าม commit กุญแจจริง)
 var URL = 'https://sheetlabth.com/api/content?action=gads_sync';
 var KEY = '__GADS_KEY__';
@@ -33,4 +33,21 @@ function main() {
   var res = UrlFetchApp.fetch(URL, { method: 'post', contentType: 'application/json', headers: { 'x-gads-key': KEY },
     payload: JSON.stringify({ acct: AdsApp.currentAccount().getCustomerId(), rows: rows, terms: terms }), muteHttpExceptions: true });
   Logger.log(res.getResponseCode() + ' ' + res.getContentText());
+  // 🤖 ออโต้ไพลอตหลังบ้าน (งบ Google ที่คุณแดนตั้ง) ส่งคำสั่งกลับมา: ปรับงบต่อวัน / หยุดเมื่องบเดือนหมด / เปิดกลับเดือนใหม่
+  var cmds = []; try { cmds = JSON.parse(res.getContentText()).cmds || []; } catch (e) {}
+  var done = [];
+  for (var i = 0; i < cmds.length; i++) {
+    var x = cmds[i], r = { type: x.type, id: x.id, name: x.name };
+    try {
+      var ci = AdsApp.campaigns().withIds([Number(x.id)]).get();
+      if (!ci.hasNext()) throw new Error('ไม่พบแคมเปญ');
+      var camp = ci.next();
+      if (x.type === 'gbudget' && x.to >= 1) camp.getBudget().setAmount(x.to);
+      else if (x.type === 'gpause') camp.pause();
+      else if (x.type === 'gresume') camp.enable();
+      r.ok = true;
+    } catch (e) { r.err = String(e.message || e); }
+    done.push(r); Logger.log(JSON.stringify(r));
+  }
+  if (done.length) UrlFetchApp.fetch(URL, { method: 'post', contentType: 'application/json', headers: { 'x-gads-key': KEY }, payload: JSON.stringify({ done: done }), muteHttpExceptions: true });
 }
