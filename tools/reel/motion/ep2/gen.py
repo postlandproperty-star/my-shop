@@ -1,6 +1,6 @@
 # เสียงบทพูด EP.2 (สัมภาษณ์งาน) + เขียน data.js ให้หน้าแอนิเมชันรู้ความยาวแต่ละประโยค
-# ตอนนี้ใช้เสียงใน Mac (say) เพราะเครดิต fal หมด 22 ต.ค. 69 · ผู้สัมภาษณ์ = Daniel (UK) · มิว = Samantha (US)
-import os, json, subprocess, wave
+# เสียง: voice.py (Gemini TTS ผ่าน fal) · Daniel = ผู้สัมภาษณ์ · Samantha = มิว (ชื่อเดิมจากตอนใช้เสียง Mac)
+import os, sys, json, subprocess, wave
 HERE = os.path.dirname(os.path.abspath(__file__)); FF = os.path.join(HERE, '../../../../node_modules/ffmpeg-static/ffmpeg')
 ROUNDS = [
   {'q': 'So, why do you want this job?', 'w': 'I very like this job.', 'r': 'I really like this job.',
@@ -18,12 +18,7 @@ LINES = {'hook': ('Samantha', "I'm boring with my old job."), 'bye': ('Daniel', 
 for i, r in enumerate(ROUNDS, 1):
     LINES[f'q{i}'] = ('Daniel', r['q']); LINES[f'w{i}'] = ('Samantha', r['w']); LINES[f'r{i}'] = ('Samantha', r['r'])
 dur = {}
-for k, (v, t) in LINES.items():
-    wav = os.path.join(HERE, k + '.wav')
-    if not os.path.exists(wav):
-        aiff = wav[:-4] + '.aiff'
-        subprocess.run(['say', '-v', v, '-r', '168', '-o', aiff, t], check=True)
-        subprocess.run([FF, '-v', 'error', '-y', '-i', aiff, '-ar', '44100', '-ac', '2', wav], check=True); os.remove(aiff)
-    with wave.open(wav) as w: dur[k] = round(w.getnframes() / w.getframerate(), 2)
+sys.path.insert(0, os.path.join(HERE, '..')); import voice  # 22 ต.ค. 69: เครดิต fal กลับมา → เสียง Gemini (ผู้สัมภาษณ์ Puck · มิว Kore) แทนเสียง Mac
+for k, (v, t) in LINES.items(): dur[k] = voice._tts(HERE, k, 'fen' if v == 'Daniel' else 'men', t)
 open(os.path.join(HERE, 'data.js'), 'w', encoding='utf-8').write('window.EP = ' + json.dumps({'rounds': ROUNDS, 'lines': {k: v[1] for k, v in LINES.items()}, 'dur': dur}, ensure_ascii=False) + ';\n')
 print(json.dumps(dur))
