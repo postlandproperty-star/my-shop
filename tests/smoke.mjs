@@ -399,10 +399,24 @@ try {
       const ap = await page.evaluate(() => ({ tiles: document.querySelectorAll('.hb-t').length, big: !!document.querySelector('.hb-big[href="/vocab"]'), lock: document.querySelectorAll('.hb-t.lock').length, vipHref: (document.querySelector('.hb-vip') || {}).getAttribute?.('href'), manifest: !!document.querySelector('link[rel="manifest"]'), ios: !!document.querySelector('meta[name="apple-mobile-web-app-capable"]') }));
       await page.fill('#sl-le', 'buyer@test.co'); await page.click('#sl-lf button'); await page.waitForSelector('#sl-cf:not([hidden])', { timeout: 4000 });
       const codeShown = await page.evaluate(() => /ใส่รหัส 6 หลัก/.test(document.getElementById('sl-ls').textContent) && document.activeElement && document.activeElement.id === 'sl-lc');
+      const opt = await page.evaluate(() => { const b = document.querySelector('.sl-opt'), c = document.getElementById('sl-opt'); return !!b && !!c && !c.checked && b.getBoundingClientRect().height >= 40 && /ยกเลิกได้ทุกเมื่อ/.test(b.textContent); });
+      pass(`[${kind}] ช่องสมัคร: กล่องติ๊กรับอีเมลเตือนทวนเด่นชัด แต่ไม่ติ๊กไว้ให้ก่อน (PDPA)`, opt);
       await layout(page, `[${kind}] แอป SheetLab (/app)`); if (kind === 'mobile') await page.screenshot({ path: path.join(OUT, 'app-mobile.png'), fullPage: true });
       pass(`[${kind}] บัญชีของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เข้าระบบ = ปุ่มสมาชิกพาไปช่องสมัคร · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '#join' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
       await page.context().close();
     } catch (e) { pass(`[${kind}] แอป SheetLab: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
+    // 3.595) สมาชิกใหม่เข้าระบบครั้งแรก (?in=1 ยังไม่เคยฝึก) → ปุ่มใหญ่พาเข้าคำศัพท์ A1 บทที่ 1 · คนที่ฝึกแล้วไม่เห็นปุ่มนี้
+    try { page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.route(/m=vip_acct/, (r) => r.fulfill({ json: { ok: true, email: 'new@test.co', orders: [], courses: [], vip: {}, settings: { open: true } } }));
+      let voc = { ok: true, data: null }; await page.route(/m=vip_vocab/, (r) => r.fulfill({ json: voc }));
+      await page.goto(`${BASE}/__app?in=1`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.hb-go1b', { timeout: 4000 });
+      const href = await page.getAttribute('.hb-go1b', 'href');
+      voc = { ok: true, data: { w: {}, u: { 'a1.1': 80 }, days: [] } }; await page.goto(`${BASE}/__app?in=1`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('.vp-ok', { timeout: 4000 }); await page.waitForTimeout(400);
+      const old = await page.evaluate(() => !!document.querySelector('.hb-go1b'));
+      pass(`[${kind}] สมาชิกใหม่เข้าระบบครั้งแรก: ปุ่มใหญ่ "เริ่มฝึกบทแรกเลย" ไป /vocab/a1/1 · คนที่เคยฝึกแล้วไม่ขึ้น`, href === '/vocab/a1/1' && !old, JSON.stringify({ href, old }));
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] สมาชิกใหม่ → บทที่ 1: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
     // 3.55) หน้าขายส่งข้อมูลเต็มแค่เล่มที่เปิด เล่มอื่นเป็นข้อมูลการ์ด (_lite) → เปิดเล่มนั้นแล้วต้องโหลดข้อมูลเต็มมาแสดงครบ (api/page.js ?shopfull=1)
     try {
