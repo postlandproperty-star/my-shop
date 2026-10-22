@@ -1805,9 +1805,13 @@ function track(name,data){
   if(pixelReady&&FB_EVENTS[name]&&!hasAdminAccess()){ // ไม่นับการเข้าดูของแอดมินเอง
     try{const d=Object.assign({},data||{}),eid=d.event_id;delete d.campaign;delete d.event_id;if(eid)fbq('track',name,d,{eventID:String(eid)});else fbq('track',name,d);}catch(e){} // eventID = รหัสออเดอร์ ให้ Facebook ตัดซ้ำกับ Conversions API ฝั่งเซิร์ฟเวอร์
   }
+  if(name==='Purchase'&&!hasAdminAccess())gadsConv(data||{});
   D.events.unshift({t:Date.now(),name,data:data||{}});
   D.events=D.events.slice(0,60);saveCache();
 }
+// 🔎 Google Ads (คุณแดน 22 ต.ค. 69 บัญชี 953-253-3805): ยอดซื้อจากแอด Google เท่านั้น (มีคุกกี้ _gcl_aw จากลิงก์แอด) → โหลด gtag ตอนซื้อเสร็จ หน้าขายไม่ต้องโหลดสคริปต์เพิ่ม
+const GADS='AW-18530878685',GADS_BUY='AW-18530878685/MiJ-CKiC3KUdEN2Jm4RF';
+function gadsConv(d){try{if(!/(^|; )_gcl_aw=/.test(document.cookie))return;window.dataLayer=window.dataLayer||[];window.gtag=window.gtag||function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',GADS);gtag('event','conversion',{send_to:GADS_BUY,value:Number(d.value)||0,currency:d.currency||'THB',transaction_id:String(d.event_id||'')});const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GADS;document.head.appendChild(s);}catch(e){}}
 const getProduct=id=>D.products.find(p=>p.id===id);
 // หน้าขายส่งข้อมูลเต็มมาแค่เล่มที่เปิด เล่มอื่นเป็นข้อมูลการ์ด (_lite) · เปิดดูเล่มอื่นค่อยโหลดข้อมูลเต็มครั้งเดียว (api/page.js ?shopfull=1)
 let FULL=null;
@@ -7990,7 +7994,10 @@ function applyUrl(){
     else if(!m&&location.pathname==='/'&&S.view==='shop'&&!new URLSearchParams(location.search).has('session_id')&&storeMode())S.view='store';
     const q=new URLSearchParams(location.search);
     const camp=q.get('utm_campaign');
+    // คลิกจากแอด Google: เก็บรหัสคลิก (gclid) เป็นคุกกี้ _gcl_aw แบบที่ gtag อ่าน ไว้นับยอดซื้อตอนจ่ายเสร็จ (ไม่โหลดสคริปต์ Google ตอนเข้าหน้า)
+    const gc=q.get('gclid');if(gc&&/^[\w-]{10,250}$/.test(gc)){try{document.cookie='_gcl_aw=GCL.'+Math.floor(Date.now()/1000)+'.'+gc+';max-age=7776000;path=/;SameSite=Lax;Secure';}catch(e){}}
     if(camp)S.src=camp;
+    else if(gc)S.src='google_ads';
     else{ // ไม่มี utm (ไม่ใช่แอด): เดาที่มาจากเว็บที่กดมา ใช้ดูว่ายอดขายมาจากเพจ/Threads/Google หรือแอด
       let h='';try{h=document.referrer?new URL(document.referrer).hostname.toLowerCase():'';}catch(e){}
       if(h&&h!==location.hostname)S.src=/(^|\.)(facebook\.com|fb\.com|fb\.me)$/.test(h)?'fb_page':/(^|\.)threads\.(net|com)$/.test(h)?'threads':/(^|\.)google\./.test(h)?'google':/(^|\.)instagram\.com$/.test(h)?'instagram':/(^|\.)pinterest\./.test(h)?'pinterest':/(^|\.)line\.me$/.test(h)?'line':/(^|\.)tiktok\.com$/.test(h)?'tiktok':/(^|\.)(youtube\.com|youtu\.be)$/.test(h)?'youtube':/mail\./.test(h)?'email':'web';
