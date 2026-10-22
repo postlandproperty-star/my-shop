@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="th"><head><meta charset="utf-8">
-<!-- 🎬 "ทำไมถึงเป็นแบบนั้น?" EP.1 กล่องดำเครื่องบินจริงๆ เป็นสีส้ม (คุณแดน 22 ต.ค. 69) · พากย์ไทย + สอนคำ flight recorder
+<!-- 📱 กรอบปลอดภัย IG/FB: ไม่มีตัวหนังสือใน 250px บนสุด และ 380px ล่างสุด (หัว Reels / แถบแคปชันบัง)
+     🎬 "ทำไมถึงเป็นแบบนั้น?" EP.1 กล่องดำเครื่องบินจริงๆ เป็นสีส้ม (คุณแดน 22 ต.ค. 69) · พากย์ไทย + สอนคำ flight recorder
      เสียง/เวลาใน why1/data.js (why1/gen.py) · พี่ชีทเป็นพิธีกรมุมจอ -->
 <style>
 @font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
@@ -8,8 +9,8 @@
 *{box-sizing:border-box;margin:0}
 html,body{width:1080px;height:1920px;overflow:hidden;background:#0F1B33;font-family:K,sans-serif}
 svg{position:absolute;inset:0}
-.pill{position:absolute;top:96px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8}
-.sub{position:absolute;left:30px;right:30px;top:1470px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.pill{position:absolute;top:270px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8}
+.sub{position:absolute;left:30px;right:30px;top:1360px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
 .sub b{color:#FF4B4B}
 .sub.en{font-size:64px;color:#FFE27A;-webkit-text-stroke:12px #0F1B33}
 .bub{position:absolute;left:60px;right:60px;top:1150px;z-index:7;background:#fff;border:8px solid #0F1B33;border-radius:38px;padding:20px 30px;font-weight:800;font-size:60px;line-height:1.2;color:#0F1B33;text-align:center}
@@ -17,7 +18,7 @@ svg{position:absolute;inset:0}
 .chip{position:absolute;z-index:7;padding:10px 30px;border-radius:24px;background:#FFD43B;border:6px solid #0F1B33;font-weight:800;font-size:72px;color:#0F1B33}
 .word{position:absolute;left:60px;right:60px;z-index:7;background:#fff;border:8px solid #0F1B33;border-radius:30px;padding:16px 36px;display:flex;align-items:baseline;gap:24px;font-weight:800;color:#0F1B33}
 .word{white-space:nowrap}.word span{font-size:72px;color:#E8590C}.word i{font-style:normal;font-size:32px;color:#56637D}.word u{text-decoration:none;font-size:56px;margin-left:auto}
-.title{position:absolute;left:60px;right:60px;top:300px;z-index:7;text-align:center;font-weight:800;font-size:120px;color:#E8590C;-webkit-text-stroke:14px #fff;paint-order:stroke fill}
+.title{position:absolute;left:60px;right:60px;top:380px;z-index:7;text-align:center;font-weight:800;font-size:120px;color:#E8590C;-webkit-text-stroke:14px #fff;paint-order:stroke fill}
 [data-in]{opacity:0;transform-origin:center}
 .brand{position:absolute;left:0;right:0;bottom:50px;text-align:center;font-weight:600;font-size:36px;color:#ffffffaa;z-index:8}
 </style></head><body>
@@ -42,12 +43,11 @@ svg{position:absolute;inset:0}
   <g id="box" style="color:#1C1C1C"><use href="#BOX"/></g>
   <g id="mag" opacity="0"><circle r="120" fill="#ffffff22" stroke="#FFD43B" stroke-width="18"/><line x1="85" y1="85" x2="180" y2="180" stroke="#FFD43B" stroke-width="26" stroke-linecap="round"/></g>
   <g id="tail" opacity="0"><circle id="tailring" r="120" fill="none" stroke="#E8590C" stroke-width="14" stroke-dasharray="26 16"/></g>
-  <rect y="1390" width="1080" height="530" fill="#0F1B33" opacity=".86"/>
+  <rect y="1320" width="1080" height="600" fill="#0F1B33" opacity=".86"/>
   <g id="host"></g>
 </svg>
 <div class="pill" style="left:46px">🤔 ทำไมถึงเป็นแบบนั้น? · EP.1</div>
 <div id="dyn"></div>
-<div class="brand">SheetLab · ชีทสรุป TOEIC IELTS</div>
 <script src="why1/data.js"></script>
 <script src="cast.js"></script>
 <script>
@@ -78,11 +78,11 @@ H.push(`<div class="chip" data-in="${at('n4', 2).toFixed(2)}" data-out="${L.n4.b
 H.push(`<div class="chip" data-in="${at('n5', 1).toFixed(2)}" data-out="${L.n5.b + 0.3}" data-anim="pop" style="left:60px;top:1080px;font-size:56px">หาง = มักเสียหายน้อยสุด</div>`);
 // การ์ดคำศัพท์
 const W0 = L.n6.ch[3];
-H.push(`<div class="word" data-in="${W0.toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:320px;justify-content:center"><span style="font-size:100px">flight recorder</span></div>`);
-H.push(`<div class="word" data-in="${at('n7', 0).toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:520px"><span>flight</span><i>/flaɪt/</i><u>เที่ยวบิน</u></div>`);
-H.push(`<div class="word" data-in="${at('n7', 1).toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:680px"><span>recorder</span><i>/rɪˈkɔːrdər/</i><u>เครื่องบันทึก</u></div>`);
+H.push(`<div class="word" data-in="${W0.toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:400px;justify-content:center"><span style="font-size:100px">flight recorder</span></div>`);
+H.push(`<div class="word" data-in="${at('n7', 0).toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:600px"><span>flight</span><i>/flaɪt/</i><u>เที่ยวบิน</u></div>`);
+H.push(`<div class="word" data-in="${at('n7', 1).toFixed(2)}" data-out="${L.e2.b + 0.6}" data-anim="pop" style="top:760px"><span>recorder</span><i>/rɪˈkɔːrdər/</i><u>เครื่องบันทึก</u></div>`);
 const E0 = T;
-H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px;top:1450px">เมนต์สีที่คุณเลือก 👇<br><b>+ ติดตาม</b> รอ "ทำไม" ตอนต่อไป</div>`);
+H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px;top:1360px">เมนต์สีที่คุณเลือก 👇<br><b>+ ติดตาม</b> รอ "ทำไม" ตอนต่อไป</div>`);
 SFX.push([+at('n1', 2).toFixed(2), 'boing'], [+L.n2.a.toFixed(2), 'whoosh'], [+at('n3', 2).toFixed(2), 'pop'], [+at('n3', 3).toFixed(2), 'pop'], [+L.n4.a.toFixed(2), 'whoosh'], [+L.n5.a.toFixed(2), 'whoosh'], [+W0.toFixed(2), 'ding'], [+at('n7', 0).toFixed(2), 'pop'], [+at('n7', 1).toFixed(2), 'pop'], [+E0.toFixed(2), 'tada']);
 window.DURATION = +(E0 + 4.2).toFixed(2); window.SFX = SFX;
 $('dyn').innerHTML = H.join('');
@@ -128,7 +128,7 @@ function seek(t) {
   $('tail').setAttribute('opacity', S === 'sky2' && t > at('n5', 0) + 0.6 ? 1 : 0); $('tail').setAttribute('transform', `translate(230 ${560 + pb}) rotate(${t * 40})`);
   // พี่ชีท: พิธีกรมุมล่าง เด้งตอนพากย์
   const talking = window.EP.some((e) => e.kind === 'narr' && inR(L[e.k].a, L[e.k].b, t));
-  $('host').setAttribute('transform', `translate(950 ${1385 - (talking ? Math.abs(Math.sin(t * 7)) * 18 : 0)}) scale(.5)`);
+  $('host').setAttribute('transform', `translate(960 ${1310 - (talking ? Math.abs(Math.sin(t * 7)) * 18 : 0)}) scale(.42)`);
 }
 window.seek = seek; seek(0);
 </script>
