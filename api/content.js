@@ -1286,6 +1286,10 @@ export default async function handler(req, res) {
       // พี่การ์ด: ตรวจสุขภาพระบบทุกเช้า บันทึกผลลง log และส่งงานเข้าเช็คลิสต์เมื่อพบปัญหา
       let health = null;
       if (r.ok && cronRun) { try { health = await runHealth(req.headers.host); await recordHealth(health); } catch (e) { health = { ok: false, error: String(e.message || e) }; } }
+      if (r.ok && cronRun && new Date(Date.now() + 7 * 36e5).getUTCDay() === 1) { try { // ☁️ ทุกวันจันทร์: อีเมลความคืบหน้าย้ายไป Cloudflare (จนกว่าจะครบ 100%)
+        const CF = await import('../lib/cfmove.js'), st = (await sb('shop_state?id=eq.cf_move&select=data'))?.[0]?.data || {}, p = CF.cfProgress(st);
+        if (!p.canCancel || !(st.mail && st.mail.pct === 100)) await ownerMail(`☁️ ย้ายไป Cloudflare ${p.pct}% (รายงานประจำสัปดาห์)`, CF.cfMailBody(p, { prev: st.mail?.pct ?? null, why: 'รายงานประจำสัปดาห์' }), { once: 'cfmove-week' });
+      } catch (e) { console.error('cf_move weekly', e); } }
       let recover = null;
       if (r.ok && cronRun) { try { recover = await sendRecoveries(); } catch (e) { recover = { ok: false, error: String(e.message || e) }; } }
       let qr = null, leadmail = null;
@@ -1567,6 +1571,23 @@ export default async function handler(req, res) {
       const b = await readBody(req);
       try { return res.status(200).json(await linkPageFromUser(String(b.brand || ''), String(b.page || ''))); }
       catch (e) { return res.status(400).json({ ok: false, error: String(e.message || e) }); }
+    }
+    if (action === 'cf_move') { // ☁️ ความคืบหน้าย้ายไป Cloudflare (คีย์ร้าน) · GET ดู · POST { k, f: 0–1, note, mail } อัปเดตขั้น แล้วอีเมลคุณแดนเมื่อเปอร์เซ็นต์ขยับ
+      if (!keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
+      const CF = await import('../lib/cfmove.js'), st = (await sb('shop_state?id=eq.cf_move&select=data'))?.[0]?.data || {};
+      if (req.method !== 'POST') return res.status(200).json({ ok: true, ...CF.cfProgress(st), mail: st.mail || null });
+      const b = await readBody(req), k = String(b.k || '');
+      if (k && !CF.CF_STEPS.some((x) => x.k === k)) return res.status(400).json({ ok: false, error: 'ไม่มีขั้นนี้: ' + k });
+      const before = CF.cfProgress(st), done = { ...(st.done || {}) };
+      if (k) done[k] = { f: Math.max(0, Math.min(1, Number(b.f ?? 1) || 0)), at: new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 10), note: String(b.note || '').slice(0, 200) };
+      const p = CF.cfProgress({ ...st, done }), mail = { ...(st.mail || {}) };
+      let sent = false;
+      if (b.mail !== false && (p.pct !== (mail.pct ?? before.pct) || b.mail === true)) {
+        sent = await ownerMail(`☁️ ย้ายไป Cloudflare ${p.pct}%${p.canCancel ? ' · ยกเลิก Supabase ได้แล้ว' : ''}`, CF.cfMailBody(p, { prev: mail.pct ?? before.pct, why: k ? `เสร็จเพิ่ม: ${CF.CF_STEPS.find((x) => x.k === k).name}` : '' }));
+        if (sent) { mail.pct = p.pct; mail.at = new Date().toISOString(); }
+      }
+      await sb('shop_state?on_conflict=id', { method: 'POST', body: [{ id: 'cf_move', data: { ...st, done, mail }, updated_at: new Date().toISOString() }], prefer: 'resolution=merge-duplicates,return=minimal' });
+      return res.status(200).json({ ok: true, pct: p.pct, sent, next: p.next && p.next.name });
     }
     if (action === 'backup_dump') { // 💾 สำรองฐานข้อมูลทั้งหมด (คีย์ร้านเท่านั้น · Mac เก็บลง R2 วันละครั้ง · เตรียมย้ายไป Cloudflare 21 ต.ค. 69) · อ่านอย่างเดียว
       if (!keyOk(req)) return res.status(401).json({ ok: false });

@@ -220,4 +220,8 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const H = splitHtml(fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')).html, js = H.slice(H.indexOf('<script>') + 8, H.lastIndexOf('</script>')), css = (H.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || '';
   const kb = (t) => Math.round(zlib.gzipSync(t).length / 1024), J = kb(js), C = kb(css);
   ok(`⚡ งบความเร็วหน้าลูกค้า: โค้ด ${J} KB (≤ 95) · CSS ${C} KB (≤ 40) แบบบีบอัด`, J <= 95 && C <= 40, `โค้ด ${J} KB · CSS ${C} KB`); }
+{ const CF = await import('../lib/cfmove.js'); const w = CF.CF_STEPS.reduce((x, s) => x + s.w, 0), p0 = CF.cfProgress({}), p1 = CF.cfProgress({ done: { email: { f: 1 } } });
+  const all = CF.cfProgress({ done: Object.fromEntries(CF.CF_STEPS.map((s) => [s.k, { f: 1 }])) }), html = CF.cfMailBody(p1, { prev: p0.pct });
+  ok('☁️ ความคืบหน้าย้ายไป Cloudflare: น้ำหนักรวม 100 · เริ่ม 14% · เสร็จอีเมล +8% · ครบทุกขั้นถึงบอกยกเลิก Supabase ได้ · อีเมลมีเปอร์เซ็นต์และส่วนที่เพิ่ม',
+    w === 100 && p0.pct === 14 && p1.pct === 22 && !p1.canCancel && all.pct === 100 && all.canCancel && html.includes('22%') && html.includes('(+8%)') && !html.includes('ยกเลิกแผนรายเดือน'), JSON.stringify({ w, p0: p0.pct, p1: p1.pct })); }
 console.log(bad ? `✗ unit ไม่ผ่าน ${bad}` : '✓ unit ผ่านทั้งหมด'); process.exit(bad ? 1 : 0);
