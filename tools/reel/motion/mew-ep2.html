@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🎬 ซีรีส์ "มิวสอบ TOEIC" EP.2 สัมภาษณ์งาน (~1.5 นาที · คุณแดน 22 ต.ค. 69 "คลิปให้ความรู้ภาษาอังกฤษเป็นเรื่องราว 1-2 นาที ที่ hook คนดูได้")
+     โครง: hook (ฉากพลาดที่หนักสุด) → ย้อนเวลา → 5 ข้อ (ถาม → มิวพูดผิด → พี่ชีทสอน → พูดใหม่) → จบค้าง ชวนเมนต์/ติดตาม
+     บทและความยาวเสียงอยู่ใน ep2/data.js (สร้างด้วย ep2/gen.py) -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#EAF0F7;font-family:K,sans-serif}
+svg{position:absolute;inset:0}
+.pill{position:absolute;top:100px;padding:14px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:6}
+.cap{position:absolute;left:30px;right:30px;top:1400px;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:6}
+.ln{font-weight:800;font-size:92px;line-height:1.12;color:#fff;-webkit-text-stroke:14px #0F1B33;paint-order:stroke fill;text-align:center;white-space:nowrap}
+.ln.y{color:#FFD43B}.ln.s{font-size:70px}.ln.xs{font-size:58px}
+.ln.r{background:#E5484D;-webkit-text-stroke:0;padding:4px 30px 12px;border-radius:18px;box-shadow:0 10px 0 #9E2A2E}
+.ln.g{background:#2DBE6C;-webkit-text-stroke:0;padding:4px 30px 12px;border-radius:18px;box-shadow:0 10px 0 #1C7F47}
+.bub{position:absolute;z-index:5;background:#fff;border:8px solid #0F1B33;border-radius:40px;padding:22px 34px;font-weight:800;font-size:58px;line-height:1.2;color:#0F1B33;text-align:center}
+.bub:after{content:"";position:absolute;bottom:-46px;width:0;height:0;border:24px solid transparent;border-top:30px solid #0F1B33}
+.bub.l:after{left:120px}.bub.r:after{right:120px}
+.bub.bad{border-color:#E5484D}.bub.bad:after{border-top-color:#E5484D}
+.bub.ok{border-color:#2DBE6C;background:#F0FCF4}.bub.ok:after{border-top-color:#2DBE6C}
+.bub .x{position:absolute;right:-30px;top:-34px;width:84px;height:84px;border-radius:50%;background:#E5484D;color:#fff;font-size:56px;line-height:76px}
+.bub .v{position:absolute;right:-30px;top:-34px;width:84px;height:84px;border-radius:50%;background:#2DBE6C;color:#fff;font-size:56px;line-height:76px}
+.card{position:absolute;left:50px;right:50px;top:250px;z-index:7;background:#fff;border-radius:40px;border:8px solid #0F1B33;padding:40px 46px 60px;box-shadow:0 18px 0 #0F1B3322}
+.card h3{font-weight:800;font-size:46px;color:#1F6FEB;margin-bottom:22px}
+.card .w{font-weight:800;font-size:60px;color:#E5484D;text-decoration:line-through;text-decoration-thickness:7px;margin-bottom:16px}
+.card .c{font-weight:800;font-size:64px;color:#1C9A55}
+.card .sg{inset:auto;right:24px;bottom:-70px;width:190px;height:245px}.card{padding-right:230px}
+[data-in]{opacity:0;transform-origin:center}
+.brand{position:absolute;left:0;right:0;bottom:56px;text-align:center;font-weight:600;font-size:38px;color:#ffffffcc;z-index:6}
+#tint{position:absolute;inset:0;z-index:4;background:#0F1B33;opacity:0;pointer-events:none}
+</style></head><body>
+<svg viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#EAF0F7"/>
+  <rect x="80" y="230" width="300" height="340" rx="14" fill="#CFE6FF" stroke="#A9BEDA" stroke-width="12"/><line x1="230" y1="230" x2="230" y2="570" stroke="#A9BEDA" stroke-width="10"/>
+  <g transform="translate(960 900)"><rect x="-55" y="0" width="110" height="140" rx="18" fill="#C9744A"/><ellipse cx="-30" cy="-60" rx="40" ry="90" fill="#2DBE6C" transform="rotate(-20 -30 -60)"/><ellipse cx="30" cy="-70" rx="40" ry="100" fill="#22A05A" transform="rotate(18 30 -70)"/></g>
+  <text x="720" y="330" text-anchor="middle" font-family="K" font-weight="800" font-size="44" fill="#B8C6DA">SHEETLAB CO.</text>
+  <g id="iv"></g><g id="mew"></g>
+  <rect y="1180" width="1080" height="740" fill="#7A5236"/><rect y="1180" width="1080" height="30" fill="#9C6B47"/>
+  <rect x="140" y="1225" width="230" height="40" rx="8" fill="#fff" opacity=".9"/><rect x="720" y="1222" width="190" height="46" rx="10" fill="#1F6FEB" opacity=".9"/>
+  <g id="conf"></g>
+</svg>
+<div id="tint"></div>
+<div class="pill" style="left:50px">🎬 มิวสอบ TOEIC · EP.2</div>
+<div class="pill" id="cnt" style="right:50px;background:#E5484D">สัมภาษณ์งาน</div>
+<div id="dyn"></div>
+<div class="brand">SheetLab · ชีทสรุป TOEIC IELTS</div>
+<script src="ep2/data.js"></script>
+<script src="cast.js"></script>
+<script>
+const EP = window.EP, D = EP.dur, R = EP.rounds;
+const QTH = ['ทำไมถึงอยากได้งานนี้?', 'มีประสบการณ์มากแค่ไหน?', 'ทำไมถึงออกจากงานเก่า?', 'เราต้องการคนที่ทำงานภายใต้ความกดดันได้', 'มีคำถามจะถามเราไหม?'];
+$('iv').innerHTML = person('i', { top: '#2B3A55', legs: '#2B3A55', male: true, suit: true, tie: '#1F6FEB', hair: '#C9A15B', brow: '#8A6A35', skin: '#F6D3B8', glasses: true });
+$('mew').innerHTML = person('m', MEW);
+$('conf').innerHTML = Array.from({ length: 36 }, (_, i) => `<rect class="cf" width="22" height="34" rx="4" fill="${['#FFD43B', '#E5484D', '#2DBE6C', '#1F6FEB'][i % 4]}"/>`).join('');
+// ---------- ไทม์ไลน์ ----------
+const SFX = [], H = [], seg = []; // seg = ช่วงอารมณ์/การพูดของตัวละคร
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const cap = (a, b, lines) => H.push(`<div class="cap" data-in="${a}" data-out="${b}" data-anim="none">${lines.map(([t, c = '', d = 0]) => `<div class="ln ${c}" data-in="${a + d}" data-anim="pop">${esc(t)}</div>`).join('')}</div>`);
+const bub = (a, b, who, text, kind = '', mark = '') => H.push(`<div class="bub ${who === 'i' ? 'l' : 'r'} ${kind}" data-in="${a}" data-out="${b}" data-anim="pop" style="${who === 'i' ? 'left:40px;top:330px;max-width:760px' : 'right:40px;top:470px;max-width:820px'}">${esc(text)}${mark ? `<span class="${mark === '✗' ? 'x' : 'v'}" data-in="${a + (kind === 'bad' ? D['w' + (seg.length)] || 0 : 0)}" data-anim="pop">${mark === '✗' ? '✗' : '✓'}</span>` : ''}</div>`);
+// hook: ฉากพลาดหนักสุดก่อน แล้วย้อนเวลา
+bub(0.3, 4.6, 'm', EP.lines.hook, 'bad'); SFX.push([0.5, 'ep2/hook.wav'], [2.3, 'boing']);
+seg.push({ a: 0.5, b: 0.5 + D.hook, who: 'm' }, { a: 2.3, b: 4.8, iv: 'shock', m: 'sad' });
+H.push(`<div class="bub r" style="right:60px;top:380px;border-color:#E5484D;background:#E5484D;color:#fff;font-size:44px;padding:8px 26px" data-in="2.3" data-out="4.6" data-anim="pop">✗ ผิด!</div>`);
+cap(0.3, 4.6, [['พูดประโยคนี้ตอนสัมภาษณ์'], ['= ได้งานยากเลย!', 'r', 1.9]]);
+SFX.push([4.8, 'whoosh']);
+cap(4.9, 8.4, [['⏪ ย้อนไป 5 นาทีก่อน...', 's'], ['5 ประโยคที่คนไทย', 'y', 0.9], ['พูดผิดตอนสัมภาษณ์!', 'y', 1.3]]);
+let T = 8.6; const STARTS = [];
+R.forEach((r, k) => {
+  const i = k + 1; STARTS.push(T);
+  const q0 = T, q1 = q0 + D['q' + i], w0 = q1 + 0.5, w1 = w0 + D['w' + i], x0 = w1 + 0.25, c0 = x0 + 1.1, c1 = c0 + 5.2, r0 = c1 + 0.3, r1 = r0 + D['r' + i], e = r1 + 1.3;
+  bub(q0, w0 - 0.05, 'i', r.q); SFX.push([q0, `ep2/q${i}.wav`]); seg.push({ a: q0, b: q1, who: 'i' });
+  cap(q0, w0 - 0.05, [[QTH[k], 'xs']]);
+  H.push(`<div class="bub r bad" data-in="${w0}" data-out="${c0}" data-anim="pop" style="right:40px;top:470px;max-width:820px">${esc(r.w)}<span class="x" data-in="${x0}" data-anim="pop">✗</span></div>`);
+  SFX.push([w0, `ep2/w${i}.wav`], [x0, 'boing']); seg.push({ a: w0, b: w1, who: 'm' }, { a: x0, b: c0 + 0.2, iv: 'cringe', m: 'sad' });
+  cap(x0, c0, [['ฟังแปลกๆ ไหม? 🤔', 's']]);
+  // การ์ดพี่ชีทสอน
+  H.push(`<div class="card" data-in="${c0}" data-out="${c1}" data-anim="up"><h3>ข้อ ${i}/5 · พี่ชีทสอน</h3><div class="w">✗ ${esc(r.w)}</div><div class="c">✓ ${esc(r.r)}</div><svg class="sg" viewBox="-140 -350 280 360">${SHEETGUY}</svg></div>`);
+  SFX.push([c0, 'pop']); seg.push({ a: c0, b: c1, m: 'think', iv: 'smile' });
+  cap(c0 + 0.2, c1, [[r.th[0], 's'], [r.th[1], 'y', 0.8]]);
+  H.push(`<div class="bub r ok" data-in="${r0}" data-out="${e - 0.1}" data-anim="pop" style="right:40px;top:470px;max-width:820px">${esc(r.r)}<span class="v" data-in="${r1}" data-anim="pop">✓</span></div>`);
+  SFX.push([r0, `ep2/r${i}.wav`], [r1, 'chime']); seg.push({ a: r0, b: r1, who: 'm' }, { a: r1, b: e, iv: 'happy', m: 'happy' });
+  cap(r0, e - 0.1, [['พูดแบบนี้ ✓', 's'], [r.r.length > 26 ? r.r : r.r, 'g xs', 0.3]]);
+  T = e;
+});
+const B0 = T + 0.2;
+bub(B0, B0 + D.bye + 0.6, 'i', EP.lines.bye); SFX.push([B0, 'ep2/bye.wav']); seg.push({ a: B0, b: B0 + D.bye, who: 'i' }, { a: B0 + D.bye, b: 1e9, m: 'shock', iv: 'smile' });
+const E0 = B0 + D.bye + 0.8;
+cap(E0, 1e9, [['มิวจะได้งานไหม?'], ['เคยพูดข้อไหน? เมนต์เลข 1-5', 'y s', 0.8], ['+ ติดตาม รอดู EP.3', 'r s', 1.6]]); SFX.push([E0, 'tada'], [E0 + 1.6, 'pop']);
+window.DURATION = +(E0 + 5.6).toFixed(2); window.SFX = SFX;
+$('dyn').innerHTML = H.join('');
+const els = [...document.querySelectorAll('[data-in]')];
+
+function seek(t) {
+  tick(els, t);
+  // ตัวละคร: พูด = ปากขยับ · อารมณ์ตามช่วง
+  let mm = 'smile', im = 'smile', mT = false, iT = false;
+  for (const s of seg) if (t >= s.a && t < s.b) { if (s.who === 'm') mT = true; if (s.who === 'i') iT = true; if (s.m) mm = s.m; if (s.iv) im = s.iv; }
+  face('m', mT ? 'talk' : mm, t); face('i', iT ? 'talk' : im, t + 1.3);
+  const mb = Math.sin(t * 3) * 5, ib = Math.sin(t * 2.6 + 1) * 4;
+  $('mew').setAttribute('transform', `translate(810 ${1505 + mb}) scale(0.86)`);
+  $('iv').setAttribute('transform', `translate(270 ${1505 + ib}) scale(0.86)`);
+  arms('m', mm === 'happy' ? 165 - Math.sin(t * 10) * 10 : mm === 'shock' ? 160 : 14, mm === 'happy' ? -165 + Math.sin(t * 10) * 10 : mm === 'think' ? 125 : mT ? -40 - Math.sin(t * 6) * 15 : -14);
+  arms('i', im === 'shock' ? 160 : 14, iT ? -50 - Math.sin(t * 5) * 18 : im === 'happy' ? -130 : -14);
+  // ย้อนเวลา: จอมืดวูบ
+  $('tint').style.opacity = t > 4.7 && t < 5.4 ? 0.55 * Math.sin((t - 4.7) / 0.7 * Math.PI) : 0;
+  // ป้ายข้อ
+  const k = STARTS.filter((s) => t >= s).length; $('cnt').textContent = k ? `ข้อ ${k}/5` : 'สัมภาษณ์งาน';
+  // กระดาษสีตอนตอบถูก
+  const last = seg.filter((s) => s.m === 'happy' && t >= s.a).pop(); const tt = last ? t - last.a : -1;
+  document.querySelectorAll('.cf').forEach((c, i) => { if (tt < 0 || tt > 1.6) { c.setAttribute('opacity', 0); return; } const vx = ((i * 37) % 21 - 10) * 30, vy = -700 - ((i * 53) % 9) * 70; c.setAttribute('opacity', 1); c.setAttribute('transform', `translate(${810 + vx * tt} ${700 + vy * tt + 900 * tt * tt}) rotate(${i * 40 + tt * 400})`); });
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🎬 มิว EP.3 "ฝรั่งถามทาง" แนวเรื่องเล่าพากย์ไทย (คุณแดน 22 ต.ค. 69 ชอบแบบ ZIAK Story: พากย์ไทย + ซับทีละท่อน คำสำคัญสีแดง + การ์ด "กฎข้อ" + จบค้าง)
+     เสียงและเวลาอยู่ใน ep3/data.js (ep3/gen.py) · ฉาก BTS สยาม · ตัวละครจาก cast.js -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#9BD0F5;font-family:K,sans-serif}
+svg{position:absolute;inset:0}
+.pill{position:absolute;top:96px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8}
+.sub{position:absolute;left:30px;right:30px;top:1450px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.sub b{color:#FF4B4B}
+.sub.en{font-size:64px;-webkit-text-stroke:12px #0F1B33;color:#FFE27A}
+.sub.th{top:1560px;font-size:64px}
+.bub{position:absolute;z-index:6;background:#fff;border:8px solid #0F1B33;border-radius:38px;padding:18px 30px;font-weight:800;font-size:54px;line-height:1.2;color:#0F1B33;text-align:center;max-width:760px}
+.bub:after{content:"";position:absolute;bottom:-44px;border:22px solid transparent;border-top:28px solid #0F1B33}
+.bub.l:after{left:110px}.bub.r:after{right:110px}
+.bub.bad{border-color:#E5484D}.bub.bad:after{border-top-color:#E5484D}
+.bub.ok{border-color:#2DBE6C;background:#F0FCF4}.bub.ok:after{border-top-color:#2DBE6C}
+.bub em{font-style:normal;background:#FFD43B;border-radius:10px;padding:0 8px}
+.rule{position:absolute;left:46px;right:46px;top:220px;z-index:7;background:#FFF8EC;border:6px solid #0F1B33;border-radius:16px;padding:22px 34px 30px;box-shadow:0 14px 0 #0F1B3330}
+.rule small{display:inline-block;background:#E5484D;color:#fff;font-weight:800;font-size:38px;padding:2px 18px;border-radius:10px;margin-bottom:10px}
+.rule div{font-weight:800;font-size:68px;color:#0F1B33;line-height:1.15}
+[data-in]{opacity:0;transform-origin:center}
+.brand{position:absolute;left:0;right:0;bottom:50px;text-align:center;font-weight:600;font-size:36px;color:#ffffffcc;z-index:8}
+#tint{position:absolute;inset:0;z-index:5;background:#0F1B33;opacity:0}
+</style></head><body>
+<svg viewBox="0 0 1080 1920">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7EC3F2"/><stop offset="1" stop-color="#CDE9FB"/></linearGradient></defs>
+  <rect width="1080" height="1920" fill="url(#sky)"/>
+  <g id="city"></g>
+  <!-- ราง BTS -->
+  <rect x="0" y="560" width="1080" height="70" fill="#B9C2CF"/><rect x="0" y="630" width="1080" height="18" fill="#8E99A8"/>
+  <g fill="#A7B1BF"><rect x="110" y="648" width="60" height="660"/><rect x="520" y="648" width="60" height="660"/><rect x="930" y="648" width="60" height="660"/></g>
+  <g id="train"><rect x="0" y="470" width="900" height="96" rx="26" fill="#F4F6FA" stroke="#5A6577" stroke-width="5"/><rect x="0" y="526" width="900" height="18" fill="#2DBE6C"/><rect x="0" y="544" width="900" height="10" fill="#1F6FEB"/>
+    <g fill="#5A6577">${''}</g></g>
+  <rect x="640" y="660" width="300" height="90" rx="14" fill="#0F1B33"/><text x="790" y="722" text-anchor="middle" font-family="K" font-weight="800" font-size="50" fill="#fff">SIAM สยาม</text>
+  <!-- ทางเท้า + ถนน -->
+  <rect y="1290" width="1080" height="200" fill="#D8CFC0"/><g stroke="#C4BAA9" stroke-width="5">${''}</g>
+  <rect y="1300" width="1080" height="14" fill="#BEB3A1"/>
+  <rect y="1420" width="1080" height="500" fill="#4E5563"/><rect y="1420" width="1080" height="16" fill="#E6C34A"/>
+  <g id="fx"></g><g id="mew"></g><g id="sg"></g>
+  <g id="palace" opacity="0"><g transform="translate(540 760) scale(0.75)"><rect x="-200" y="0" width="400" height="120" fill="#F4E3B5" stroke="#0F1B33" stroke-width="6"/><path d="M-240 0 L0 -150 L240 0z" fill="#E5484D" stroke="#0F1B33" stroke-width="6"/><path d="M-170 -50 L0 -230 L170 -50z" fill="#2DBE6C" stroke="#0F1B33" stroke-width="6"/><path d="M-12 -230 L0 -330 L12 -230z" fill="#FFD43B" stroke="#0F1B33" stroke-width="5"/><rect x="-40" y="40" width="80" height="80" rx="40" fill="#8A5A36"/></g></g>
+  <g id="route" opacity="0"></g>
+  <g id="conf"></g>
+</svg>
+<div id="tint"></div>
+<div class="pill" style="left:46px">🎬 มิวเอาตัวรอดเมืองไทย · EP.3</div>
+<div class="pill" style="right:46px;background:#E5484D">Part 1</div>
+<div id="dyn"></div>
+<div class="brand">SheetLab · ชีทสรุป TOEIC IELTS</div>
+<script src="ep3/data.js"></script>
+<script src="cast.js"></script>
+<script>
+// ---------- ฉาก: ตึก รถไฟ ----------
+const city = []; [[0, 300, 170, '#B7C8DD'], [180, 230, 150, '#A6BAD3'], [340, 330, 190, '#C3D2E5'], [540, 260, 160, '#AFC2DA'], [710, 360, 200, '#BBCBE0'], [920, 280, 170, '#A9BCD5']].forEach(([x, top, w, c]) => {
+  city.push(`<rect x="${x}" y="${top}" width="${w}" height="${1300 - top}" fill="${c}"/>`);
+  for (let yy = top + 30; yy < 540; yy += 56) for (let xx = x + 22; xx < x + w - 30; xx += 46) city.push(`<rect x="${xx}" y="${yy}" width="24" height="30" rx="4" fill="#E9F2FC" opacity=".8"/>`);
+});
+$('city').innerHTML = city.join('');
+$('train').innerHTML += Array.from({ length: 11 }, (_, i) => `<rect x="${30 + i * 80}" y="488" width="56" height="34" rx="8" fill="#5A6577"/>`).join('');
+$('mew').innerHTML = person('m', MEW);
+$('fx').innerHTML = `<rect x="-150" y="-560" width="80" height="240" rx="26" fill="#2B6CB0" stroke="#0F1B33" stroke-width="6"/><g id="f">${person('f', { top: '#F59E0B', legs: '#4B5563', male: true, hair: '#E9C46A', brow: '#B8892F', skin: '#F8D9C2' })}</g>`;
+$('sg').innerHTML = SHEETGUY;
+$('conf').innerHTML = Array.from({ length: 30 }, (_, i) => `<rect class="cf" width="22" height="34" rx="4" fill="${['#FFD43B', '#E5484D', '#2DBE6C', '#1F6FEB'][i % 4]}"/>`).join('');
+$('route').innerHTML = `<g transform="translate(0 760)">${[['🚝', 'BTS', 220], ['⛴️', 'เรือ', 540], ['🏯', 'วัง', 860]].map(([ic, l, x], i) => `<g class="rt" data-i="${i}"><circle cx="${x}" cy="0" r="92" fill="#fff" stroke="#0F1B33" stroke-width="7"/><text x="${x}" y="28" text-anchor="middle" font-size="80">${ic}</text><text x="${x}" y="150" text-anchor="middle" font-family="K" font-weight="800" font-size="48" fill="#0F1B33">${l}</text></g>`).join('')}<path d="M320 0 h120 M640 0 h120" stroke="#0F1B33" stroke-width="10" stroke-dasharray="20 14"/></g>`;
+
+// ---------- ไทม์ไลน์จากบท ----------
+const L = {}, H = [], SFX = []; let T = 0.4;
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const red = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b>$1</b>');
+for (const ln of window.EP) {
+  const a = T, b = T + ln.dur; L[ln.k] = { a, b }; if (!ln.missing) SFX.push([+a.toFixed(2), `ep3/${ln.k}.wav`]);
+  if (ln.kind === 'narr') ln.chunks.forEach(([s, e, txt]) => H.push(`<div class="sub" data-in="${(a + s).toFixed(2)}" data-out="${(a + e - 0.02).toFixed(2)}" data-anim="pop">${red(txt)}</div>`));
+  else {
+    const who = ln.kind === 'fen' ? 'l' : 'r', cls = ln.k === 'm1' ? 'bad' : ln.kind === 'men' && ln.k !== 'm1' ? 'ok' : '';
+    const txt = esc(ln.text).replace('Grand Palace', ln.k === 'f3' ? '<em>Grand Palace</em>' : 'Grand Palace');
+    H.push(`<div class="bub ${who} ${cls}" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="pop" style="${who === 'l' ? 'left:40px' : 'right:40px'};top:${ln.k === 'f3' || ln.k === 'm2' || ln.k === 'm3' ? 580 : 560}px">${txt}</div>`);
+    H.push(`<div class="sub en" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="none">${esc(ln.th)}</div>`);
+  }
+  T = b + (ln.kind === 'narr' ? 0.35 : 0.55);
+}
+// การ์ดกฎ
+const rule = (k, n, txt) => H.push(`<div class="rule" data-in="${L[k].a.toFixed(2)}" data-out="${(L[{ n4: 'f3', n5: 'n5', n6: 'f4' }[k]].b + 0.4).toFixed(2)}" data-anim="pop"><small>กฎข้อ ${n}</small><div>${txt}</div></div>`);
+rule('n4', 1, 'ฟังไม่ทัน ให้ขอพูดซ้ำ'); rule('n5', 2, 'จับแค่คำสำคัญ'); rule('n6', 3, 'ตอบสั้นๆ ทีละขั้น<p style="font-size:52px;margin-top:10px;color:#1F6FEB">🚝 BTS → ⛴️ เรือ → 🏯 วัง</p>');
+// จบ: ฝรั่งชวนคุยต่อ + ชวนเมนต์/ติดตาม
+const E0 = T;
+H.push(`<div class="bub l" data-in="${(L.n7.a + 1.6).toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="left:40px;top:560px">So, where are you from? 😊</div>`);
+H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4.2).toFixed(2)}" data-anim="pop" style="font-size:66px;top:1440px">เคยตอบ <b>Yes</b> ทั้งที่ไม่รู้เรื่องไหม?<br>เมนต์เลย 👇 <b>+ ติดตาม</b> รอ Part 2</div>`);
+SFX.push([+(L.m1.b).toFixed(2), 'boing'], [+(L.n3.a).toFixed(2), 'whoosh'], [+(L.n4.a).toFixed(2), 'ding'], [+(L.n5.a).toFixed(2), 'ding'], [+(L.n6.a).toFixed(2), 'ding'], [+(L.f4.a).toFixed(2), 'chime'], [+(L.n7.a + 1.6).toFixed(2), 'pop'], [+E0.toFixed(2), 'tada']);
+window.DURATION = +(E0 + 4.4).toFixed(2); window.SFX = SFX;
+$('dyn').innerHTML = H.join('');
+// ซับยาวเกินจอ: ย่อตัวอักษรจนพอดี (ไม่ตัดคำไทยกลางคำ)
+document.querySelectorAll('.sub').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); while (el.scrollWidth > el.clientWidth && f > 40) { f -= 4; el.style.fontSize = f + 'px'; } });
+const els = [...document.querySelectorAll('[data-in]')];
+const inL = (k, t, pad = 0) => t >= L[k].a - pad && t < L[k].b + pad;
+
+function seek(t) {
+  tick(els, t);
+  // รถไฟวิ่งผ่านช่วง hook
+  $('train').setAttribute('transform', `translate(${-1000 + ((t * 420) % 3200)} 0)`);
+  // ฝรั่งเดินเข้ามา (ช่วง n1)
+  const walk = cl((t - 1.0) / 3.0), fx = 1250 - 950 * outc(walk);
+  $('fx').setAttribute('transform', `translate(${fx} ${1330 + (walk < 1 ? Math.abs(Math.sin(t * 7)) * -10 : Math.sin(t * 2.5) * 4)}) scale(0.7)`);
+  $('mew').setAttribute('transform', `translate(780 ${1330 + Math.sin(t * 3) * 4}) scale(0.7)`);
+  // อารมณ์/ท่า
+  let fm = 'smile', mm = 'smile';
+  if (t > L.f1.b) mm = 'shock';
+  if (inL('m1', t, 0.3) || (t > L.m1.b && t < L.n3.a)) { fm = 'cringe'; mm = 'shock'; }
+  if (t >= L.n3.a && t < L.m2.a) mm = 'think';
+  if (t >= L.m2.a) mm = 'smile';
+  if (t >= L.f4.a) { fm = 'happy'; mm = 'happy'; }
+  if (t >= L.n7.a + 1.6) mm = 'shock';
+  const talkF = ['f1', 'f2', 'f3', 'f4'].some((k) => inL(k, t)) || (t > L.n7.a + 1.6 && t < L.n7.a + 3), talkM = ['m1', 'm2', 'm3'].some((k) => inL(k, t));
+  face('f', talkF ? 'talk' : fm, t + 1.2); face('m', talkM ? 'talk' : mm, t);
+  arms('f', fm === 'happy' ? 150 : 14, talkF ? -45 - Math.sin(t * 6) * 16 : fm === 'cringe' ? -150 : -14);
+  arms('m', mm === 'shock' ? 160 : mm === 'happy' ? 160 : 14, inL('m3', t) ? -95 : mm === 'shock' ? -160 : mm === 'think' ? 125 : mm === 'happy' ? -160 : -14);
+  // จอมืดตอนพี่ชีทโผล่ (n3)
+  const n3 = inL('n3', t); $('tint').style.opacity = n3 ? 0.35 : 0;
+  const sp = cl((t - L.n3.a) / 0.5);
+  $('sg').setAttribute('opacity', t >= L.n3.a && t < L.n4.a ? 1 : 0);
+  $('sg').setAttribute('transform', `translate(540 ${1230 - 240 * back(sp) - Math.abs(Math.sin(t * 5)) * 20}) scale(1.3)`);
+  $('sg').style.zIndex = 9;
+  // กฎข้อ 2: รูปวัง · กฎข้อ 3: เส้นทาง
+  $('palace').setAttribute('opacity', t >= L.n5.a + 2.5 && t < L.n6.a ? 1 : 0);
+  // กระดาษสีตอนขอบคุณ
+  const tt = t - L.f4.a; document.querySelectorAll('.cf').forEach((c, i) => { if (tt < 0 || tt > 1.6) { c.setAttribute('opacity', 0); return; } const vx = ((i * 37) % 21 - 10) * 30, vy = -700 - ((i * 53) % 9) * 70; c.setAttribute('opacity', 1); c.setAttribute('transform', `translate(${540 + vx * tt} ${900 + vy * tt + 900 * tt * tt}) rotate(${i * 40 + tt * 400})`); });
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>

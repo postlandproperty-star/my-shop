@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🎬 ซีรีส์ "มิวสอบ TOEIC" EP.1 (คุณแดน 22 ต.ค. 69 "เอาแบบมีตัวละคร มีคน มีเรื่องราว คนจะได้กดติดตาม")
+     ตัวละครวาดด้วยโค้ด (ไม่ใช้รูป AI): มิว (พนักงานออฟฟิศ) · หัวหน้า · พี่ชีท (มาสคอต SheetLab) · จบแบบค้างให้ติดตาม EP ถัดไป
+     window.seek(t) วาดเฟรม · render.mjs อัดเป็นวิดีโอ 1080×1920 -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#DCE7F5;font-family:K,sans-serif}
+svg{position:absolute;inset:0}
+#pill{position:absolute;left:60px;top:100px;padding:14px 34px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:44px;z-index:5}
+.cap{position:absolute;left:30px;right:30px;top:1370px;display:flex;flex-direction:column;align-items:center;gap:18px;z-index:5}
+.ln{font-weight:800;font-size:100px;line-height:1.12;color:#fff;-webkit-text-stroke:14px #0F1B33;paint-order:stroke fill;text-align:center;white-space:nowrap}
+.ln.y{color:#FFD43B}.ln.s{font-size:76px}
+.ln.r{background:#E5484D;-webkit-text-stroke:0;padding:4px 34px 14px;border-radius:18px;box-shadow:0 10px 0 #9E2A2E}
+.ln.g{background:#2DBE6C;-webkit-text-stroke:0;padding:4px 34px 14px;border-radius:18px;box-shadow:0 10px 0 #1C7F47}
+[data-in]{opacity:0;transform-box:fill-box;transform-origin:center}
+.brand{position:absolute;left:0;right:0;bottom:60px;text-align:center;font-weight:600;font-size:40px;color:#ffffffcc;z-index:5}
+text{font-family:K}
+</style></head><body>
+<svg viewBox="0 0 1080 1920" id="sv">
+  <!-- ฉากออฟฟิศ (ฉาก 1, 5) -->
+  <g id="office" data-in="0" data-anim="none">
+    <rect width="1080" height="1920" fill="#E4ECF7"/>
+    <rect x="620" y="250" width="340" height="300" rx="14" fill="#BFE0FF" stroke="#9DB4D3" stroke-width="12"/><line x1="790" y1="250" x2="790" y2="550" stroke="#9DB4D3" stroke-width="10"/>
+    <rect y="1240" width="1080" height="680" fill="#55627E"/><rect y="1240" width="1080" height="18" fill="#6B7896"/>
+    <g id="cal" data-in="25.0" data-anim="pop"><rect x="110" y="380" width="330" height="360" rx="22" fill="#fff" stroke="#0F1B33" stroke-width="8"/><rect x="110" y="380" width="330" height="90" rx="22" fill="#E5484D"/><rect x="110" y="440" width="330" height="30" fill="#E5484D"/>
+      <text x="275" y="445" text-anchor="middle" font-weight="800" font-size="46" fill="#fff">วันสอบ</text><text x="275" y="630" text-anchor="middle" font-weight="800" font-size="150" fill="#0F1B33">29</text><text x="275" y="705" text-anchor="middle" font-weight="600" font-size="40" fill="#56637D">วันที่เหลือ</text></g>
+  </g>
+  <!-- ห้องสอบ (ฉาก 2–4) -->
+  <g id="exam" data-in="5.0" data-out="25.0" data-anim="none">
+    <rect width="1080" height="1920" fill="#DDE8D8"/>
+    <rect x="70" y="250" width="940" height="560" rx="30" fill="#2F4A3A" stroke="#7A5A3A" stroke-width="18"/>
+    <text x="130" y="330" font-weight="800" font-size="46" fill="#CFE8D6">Part 2 · ข้อ 1</text>
+    <g id="spk"><path d="M140 390 h40 l50 -40 v120 l-50 -40 h-40z" fill="#FFD43B"/><path id="w1" d="M255 375 q25 35 0 70" stroke="#FFD43B" stroke-width="10" fill="none" stroke-linecap="round"/><path id="w2" d="M285 355 q45 55 0 110" stroke="#FFD43B" stroke-width="10" fill="none" stroke-linecap="round"/></g>
+    <text id="qtx" x="320" y="430" font-weight="600" font-size="44" fill="#fff">Where did you put the coffee?</text>
+    <g id="optA"><rect x="130" y="500" width="820" height="120" rx="24" fill="#fff"/><text x="170" y="580" font-weight="800" font-size="58" fill="#0F1B33">A) I made a copy.</text></g>
+    <g id="optB"><rect x="130" y="650" width="820" height="120" rx="24" fill="#fff"/><text x="170" y="730" font-weight="800" font-size="58" fill="#0F1B33">B) On your desk.</text></g>
+    <g id="xA"><circle cx="890" cy="560" r="52" fill="#E5484D"/><path d="M865 535 l50 50 M915 535 l-50 50" stroke="#fff" stroke-width="14" stroke-linecap="round"/></g>
+    <g id="okB"><circle cx="890" cy="710" r="52" fill="#2DBE6C"/><path d="M862 712 l20 20 l38 -42" stroke="#fff" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+  </g>
+  <g id="boss"></g>
+  <g id="mew"></g>
+  <!-- โต๊ะสอบ (หน้ามิว) -->
+  <g data-in="5.0" data-out="25.0" data-anim="none"><rect y="1150" width="1080" height="770" fill="#A8754C"/><rect y="1150" width="1080" height="24" fill="#C08A5C"/><rect x="380" y="1185" width="320" height="120" rx="10" fill="#fff" stroke="#0F1B33" stroke-width="6" transform="rotate(-4 540 1245)"/></g>
+  <g id="sheetguy"></g>
+  <!-- คำพูด -->
+  <g data-in="0.5" data-out="4.9" data-anim="pop"><path d="M60 230 h640 a40 40 0 0 1 40 40 v150 a40 40 0 0 1 -40 40 h-380 l-70 70 v-70 h-190 a40 40 0 0 1 -40 -40 v-150 a40 40 0 0 1 40 -40z" fill="#fff" stroke="#0F1B33" stroke-width="8"/>
+    <text x="400" y="325" text-anchor="middle" font-weight="800" font-size="56" fill="#0F1B33">เดือนหน้ายื่นคะแนน</text><text x="400" y="405" text-anchor="middle" font-weight="800" font-size="62" fill="#E5484D">TOEIC 600 นะ!</text></g>
+  <g data-in="13.4" data-out="19.4" data-anim="pop"><path d="M120 380 h840 a40 40 0 0 1 40 40 v170 a40 40 0 0 1 -40 40 h-620 l-90 330 l-10 -330 h-120 a40 40 0 0 1 -40 -40 v-170 a40 40 0 0 1 40 -40z" fill="#fff" stroke="#0F1B33" stroke-width="8"/>
+    <text x="540" y="475" text-anchor="middle" font-weight="800" font-size="54" fill="#0F1B33">ฟังคำแรกก่อน!</text><text x="540" y="565" text-anchor="middle" font-weight="800" font-size="62" fill="#1F6FEB">Where = ถามว่าที่ไหน</text></g>
+  <g id="conf"></g>
+</svg>
+<div id="pill">🎬 มิวสอบ TOEIC · EP.1</div>
+
+<div class="cap" data-in="1.6" data-out="4.9" data-anim="none"><div class="ln" data-in="1.6" data-anim="pop">เดือนหน้าต้องได้ 600</div><div class="ln r" data-in="2.5" data-anim="pop">มิวไม่เคยสอบเลย!</div></div>
+<div class="cap" data-in="5.3" data-out="10.0" data-anim="none"><div class="ln" data-in="5.3" data-anim="pop">สอบจริง ข้อแรก</div><div class="ln y" data-in="7.2" data-anim="pop">ฟังทันไหม?</div></div>
+<div class="cap" data-in="10.3" data-out="12.9" data-anim="none"><div class="ln" data-in="10.3" data-anim="pop">ได้ยิน coffee</div><div class="ln r" data-in="10.8" data-anim="pop">เลยตอบ copy ❌</div></div>
+<div class="cap" data-in="13.4" data-out="19.4" data-anim="none"><div class="ln" data-in="13.4" data-anim="pop">พี่ชีทมาช่วย!</div><div class="ln y s" data-in="15.0" data-anim="pop">เสียงคล้าย ≠ คำตอบ</div><div class="ln y s" data-in="16.0" data-anim="pop">ถามที่ไหน → ตอบสถานที่</div></div>
+<div class="cap" data-in="19.6" data-out="24.9" data-anim="none"><div class="ln" data-in="19.6" data-anim="pop">ลองใหม่อีกที</div><div class="ln g" data-in="22.6" data-anim="pop">B) On your desk ✓</div></div>
+<div class="cap" data-in="25.2" data-anim="none"><div class="ln" data-in="25.2" data-anim="pop">มิวจะได้ 600 ไหม?</div><div class="ln y" data-in="26.0" data-anim="pop">เคยโดนแบบมิวไหม?</div><div class="ln r s" data-in="26.8" data-anim="pop">+ ติดตาม รอดู EP.2</div></div>
+<div class="brand">SheetLab · ชีทสรุป TOEIC IELTS</div>
+
+<script>
+window.DURATION = 31;
+window.SFX = [[0.5, 'pop'], [2.0, 'boing'], [5.0, 'whoosh'], [5.6, 'ep1/q.wav'], [7.4, 'ep1/a.wav'], [8.8, 'ep1/b.wav'], [10.2, 'boing'], [13.2, 'pop'], [19.8, 'ep1/q.wav'], [22.4, 'chime'], [22.6, 'tada'], [25.0, 'whoosh'], [26.8, 'pop']];
+const $ = (id) => document.getElementById(id);
+// 🧍 คนวาดด้วยโค้ด: จุดอ้างอิง = เท้า (0,0) สูง ~830
+function person(id, o) {
+  const sk = o.skin || '#F2C29B', hair = o.hair || '#1F1A24';
+  const arm = (side) => `<g id="${id}-arm${side}" transform="translate(${side === 'L' ? -112 : 112} -540)"><rect x="-24" y="-6" width="48" height="150" rx="24" fill="${o.top}"/><rect x="-21" y="120" width="42" height="110" rx="21" fill="${sk}"/><circle cy="232" r="27" fill="${sk}"/></g>`;
+  const hairBack = o.male ? '' : `<path d="M-150 -700 C-160 -860 160 -860 150 -700 L160 -575 C120 -560 90 -570 80 -600 L-80 -600 C-90 -570 -120 -560 -160 -575z" fill="${hair}"/>`;
+  const bangs = o.male ? `<path d="M-125 -720 C-130 -840 130 -850 125 -720 C90 -770 40 -790 -10 -770 C-50 -790 -100 -770 -125 -720z" fill="${hair}"/>`
+    : `<path d="M-128 -705 C-140 -850 140 -850 128 -705 C100 -760 40 -760 10 -790 C-20 -755 -80 -760 -128 -705z" fill="${hair}"/>`;
+  return `<g id="${id}-legs"><rect x="-62" y="-260" width="46" height="250" rx="20" fill="${o.legs}"/><rect x="16" y="-260" width="46" height="250" rx="20" fill="${o.legs}"/><rect x="-78" y="-26" width="68" height="30" rx="14" fill="#0F1B33"/><rect x="10" y="-26" width="68" height="30" rx="14" fill="#0F1B33"/></g>
+    ${arm('L')}${arm('R')}
+    <path d="M-115 -560 Q0 -590 115 -560 L${o.male ? 105 : 140} -250 L${o.male ? -105 : -140} -250z" fill="${o.top}"/>
+    ${o.male ? `<rect x="-105" y="-400" width="210" height="150" fill="${o.legs}"/><path d="M0 -560 l-18 30 l18 150 l18 -150z" fill="#E5484D"/>` : `<path d="M-125 -380 L125 -380 L150 -250 L-150 -250z" fill="${o.legs}"/>`}
+    <rect x="-28" y="-610" width="56" height="60" fill="${sk}"/>
+    ${hairBack}<circle cy="-700" r="122" fill="${sk}"/>${bangs}
+    <circle cx="-62" cy="-655" r="18" fill="#F59AA6" opacity="0" id="${id}-blush1"/><circle cx="62" cy="-655" r="18" fill="#F59AA6" opacity="0" id="${id}-blush2"/>
+    <line id="${id}-brL" x1="-68" y1="-750" x2="-22" y2="-752" stroke="${hair}" stroke-width="10" stroke-linecap="round"/><line id="${id}-brR" x1="22" y1="-752" x2="68" y2="-750" stroke="${hair}" stroke-width="10" stroke-linecap="round"/>
+    <ellipse id="${id}-eyL" cx="-44" cy="-702" rx="14" ry="20" fill="#0F1B33"/><ellipse id="${id}-eyR" cx="44" cy="-702" rx="14" ry="20" fill="#0F1B33"/>
+    ${o.glasses ? `<circle cx="-44" cy="-702" r="34" fill="none" stroke="#0F1B33" stroke-width="7"/><circle cx="44" cy="-702" r="34" fill="none" stroke="#0F1B33" stroke-width="7"/><line x1="-10" y1="-702" x2="10" y2="-702" stroke="#0F1B33" stroke-width="7"/>` : ''}
+    <path id="${id}-mouth" d="M-30 -640 Q0 -615 30 -640" stroke="#7A2E2E" stroke-width="9" fill="#7A2E2E" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="${id}-sweat" d="M140 -790 q22 38 0 52 q-22 -14 0 -52z" fill="#6EC1FF" opacity="0"/>
+    ${o.phones ? `<g id="${id}-phones"><path d="M-140 -700 C-150 -900 150 -900 140 -700" fill="none" stroke="#0F1B33" stroke-width="26" stroke-linecap="round"/><rect x="-170" y="-750" width="56" height="100" rx="24" fill="#1F6FEB" stroke="#0F1B33" stroke-width="6"/><rect x="114" y="-750" width="56" height="100" rx="24" fill="#1F6FEB" stroke="#0F1B33" stroke-width="6"/></g>` : ''}`;
+}
+$('mew').innerHTML = person('m', { top: '#1F6FEB', legs: '#2B3A55', phones: true });
+$('boss').innerHTML = person('b', { top: '#F4F6FA', legs: '#3B4252', male: true, glasses: true, hair: '#3A3A3A', skin: '#E8B48A' });
+// พี่ชีท: กระดาษมีหน้า + แว่น (มาสคอต SheetLab)
+$('sheetguy').innerHTML = `<g id="sg"><path d="M-120 -330 h170 l70 70 v260 h-240z" fill="#fff" stroke="#0F1B33" stroke-width="8" stroke-linejoin="round"/><path d="M50 -330 v70 h70" fill="#DCE7F5" stroke="#0F1B33" stroke-width="8" stroke-linejoin="round"/>
+  <rect x="-85" y="-120" width="170" height="14" rx="7" fill="#9DB4D3"/><rect x="-85" y="-85" width="130" height="14" rx="7" fill="#9DB4D3"/><rect x="-85" y="-50" width="150" height="14" rx="7" fill="#9DB4D3"/>
+  <circle cx="-40" cy="-220" r="30" fill="none" stroke="#1F6FEB" stroke-width="8"/><circle cx="40" cy="-220" r="30" fill="none" stroke="#1F6FEB" stroke-width="8"/><line x1="-10" y1="-220" x2="10" y2="-220" stroke="#1F6FEB" stroke-width="8"/>
+  <circle cx="-40" cy="-220" r="10" fill="#0F1B33"/><circle cx="40" cy="-220" r="10" fill="#0F1B33"/><path d="M-30 -170 Q0 -140 30 -170" stroke="#0F1B33" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path id="sgArm" d="M120 -160 l70 -60" stroke="#0F1B33" stroke-width="12" stroke-linecap="round"/></g>`;
+// กระดาษสีฉลอง
+$('conf').innerHTML = Array.from({ length: 40 }, (_, i) => `<rect class="cf" width="22" height="34" rx="4" fill="${['#FFD43B', '#E5484D', '#2DBE6C', '#1F6FEB'][i % 4]}"/>`).join('');
+
+const cl = (x) => Math.max(0, Math.min(1, x));
+const back = (p) => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+const outc = (p) => 1 - Math.pow(1 - p, 3);
+const els = [...document.querySelectorAll('[data-in]')];
+const MOUTH = { smile: 'M-30 -642 Q0 -612 30 -642', grin: 'M-38 -648 Q0 -585 38 -648z', shock: 'M-20 -650 a20 26 0 1 0 40 0 a20 26 0 1 0 -40 0z', sad: 'M-30 -625 Q0 -652 30 -625', flat: 'M-26 -636 L26 -636', talk: 'M-28 -646 Q0 -605 28 -646z' };
+function face(id, mood, t) {
+  const blink = (t % 3.3) < 0.12 ? 0.12 : 1;
+  const ry = { shock: 27, happy: 7, sad: 18, think: 16 }[mood] || 20;
+  ['eyL', 'eyR'].forEach((e) => $(`${id}-${e}`).setAttribute('ry', ry * blink));
+  $(`${id}-mouth`).setAttribute('d', MOUTH[{ shock: 'shock', happy: 'grin', sad: 'sad', think: 'flat', talk: Math.floor(t * 8) % 2 ? 'talk' : 'flat', determined: 'smile' }[mood] || 'smile']);
+  const br = { sad: 14, shock: 10, think: 6, determined: -12 }[mood] || 0;
+  $(`${id}-brL`).setAttribute('transform', `rotate(${-br} -45 -751) translate(0 ${mood === 'shock' ? -14 : 0})`); $(`${id}-brR`).setAttribute('transform', `rotate(${br} 45 -751) translate(0 ${mood === 'shock' ? -14 : 0})`);
+  $(`${id}-sweat`).setAttribute('opacity', ['shock', 'sad'].includes(mood) ? 1 : 0);
+  $(`${id}-sweat`).setAttribute('transform', `translate(0 ${((t * 40) % 30)})`);
+  [1, 2].forEach((k) => $(`${id}-blush${k}`).setAttribute('opacity', mood === 'happy' ? 0.8 : 0));
+}
+function arms(id, L, R) { $(`${id}-armL`).setAttribute('transform', `translate(-112 -540) rotate(${L})`); $(`${id}-armR`).setAttribute('transform', `translate(112 -540) rotate(${R})`); }
+
+function seek(t) {
+  for (const el of els) {
+    const a = +el.dataset.in, b = el.dataset.out ? +el.dataset.out : 1e9, k = el.dataset.anim || 'pop';
+    const par = el.parentElement && el.parentElement.closest('[data-out]'); const bb = Math.min(b, par ? +par.dataset.out : 1e9);
+    if (t < a || t > bb + 0.01) { el.style.opacity = 0; continue; }
+    const p = cl((t - a) / 0.38), q = cl((bb - t) / 0.2);
+    el.style.opacity = k === 'none' ? 1 : Math.min(cl(p * 2.2), q);
+    el.style.transform = k === 'pop' ? `scale(${(0.4 + 0.6 * back(p)) * (0.92 + 0.08 * q)})` : '';
+  }
+  // ฉาก
+  const S = t < 5 ? 1 : t < 13 ? 2 : t < 19.5 ? 3 : t < 25 ? 4 : 5;
+  const exam = S >= 2 && S <= 4;
+  // มิว: ตำแหน่ง/ขนาด/อารมณ์/ท่าทาง
+  let x = 760, y = 1255, s = 0.95, mood = 'smile', L = 10, R = -10;
+  const bob = Math.sin(t * 3) * 6;
+  if (S === 1) { if (t > 2.0) { mood = 'shock'; L = 160; R = -160; } }
+  if (exam) { x = 540; y = 1520; s = 0.82; }
+  if (S === 2) { mood = t < 10.2 ? 'think' : 'sad'; L = 20; R = t < 9.6 ? -20 : -35; if (t > 10.2) { L = 160; R = -160; } }
+  if (S === 3) { x = 700; mood = t < 15 ? 'sad' : 'think'; L = 20; R = t > 15 ? 125 : -20; }
+  if (S === 4) { mood = t < 22.4 ? 'think' : 'happy'; L = 20; R = -20; if (t > 22.4) { R = -165 + Math.sin(t * 10) * 12; L = 165 - Math.sin(t * 10) * 12; } }
+  if (S === 5) { mood = 'determined'; L = 15; R = t > 25.6 ? -172 + Math.sin(t * 7) * 6 : -15; }
+  const pop = [5, 13, 19.5, 25].reduce((v, c) => (t >= c && t < c + 0.35 ? back(cl((t - c) / 0.35)) : v), 1);
+  $('mew').setAttribute('transform', `translate(${x} ${y + bob}) scale(${s * pop})`);
+  $('m-phones') && $('m-phones').setAttribute('opacity', exam ? 1 : 0);
+  face('m', mood, t); arms('m', L, R);
+  // หัวหน้า (ฉาก 1)
+  $('boss').setAttribute('opacity', S === 1 ? 1 : 0);
+  $('boss').setAttribute('transform', `translate(290 ${1255 + Math.sin(t * 2.5) * 4}) scale(0.98)`);
+  face('b', t > 0.5 && t < 2.6 ? 'talk' : 'flat', t + 1.1); arms('b', 12, t > 0.6 && t < 2.6 ? -120 + Math.sin(t * 9) * 10 : -12);
+  // ห้องสอบ: ลำโพง ตัวเลือก กากบาท/ถูก
+  const speaking = (t > 5.6 && t < 7.2) || (t > 19.8 && t < 21.4);
+  $('w1').setAttribute('opacity', speaking ? (Math.sin(t * 12) > 0 ? 1 : 0.3) : 0.25); $('w2').setAttribute('opacity', speaking ? (Math.sin(t * 12 + 1) > 0 ? 1 : 0.3) : 0.25);
+  $('qtx').setAttribute('opacity', (t > 5.6 && t < 13) || t > 19.8 ? 1 : 0);
+  const showA = (t > 7.4 && t < 13) || t > 21.4, showB = (t > 8.8 && t < 13) || t > 21.6;
+  $('optA').setAttribute('opacity', showA ? 1 : 0); $('optB').setAttribute('opacity', showB ? 1 : 0);
+  $('optA').querySelector('rect').setAttribute('fill', t > 9.8 && t < 13 ? '#FFE3E3' : '#fff');
+  $('optB').querySelector('rect').setAttribute('fill', t > 22.2 && t < 25 ? '#DDF7E7' : '#fff');
+  const xp = cl((t - 10.2) / 0.3), op = cl((t - 22.4) / 0.3);
+  $('xA').setAttribute('opacity', t > 10.2 && t < 13 ? 1 : 0); $('xA').setAttribute('transform', `translate(890 560) scale(${back(xp)}) translate(-890 -560)`);
+  $('okB').setAttribute('opacity', t > 22.4 && t < 25 ? 1 : 0); $('okB').setAttribute('transform', `translate(890 710) scale(${back(op)}) translate(-890 -710)`);
+  // พี่ชีท (ฉาก 3): เด้งเข้าจากซ้าย ยืนบนโต๊ะ
+  const sp = cl((t - 13.2) / 0.5);
+  $('sheetguy').setAttribute('opacity', S === 3 ? 1 : 0);
+  $('sheetguy').setAttribute('transform', `translate(${-200 + 420 * back(sp)} ${1160 - Math.abs(Math.sin(t * 5)) * 26}) scale(1.15)`);
+  $('sgArm').setAttribute('transform', `rotate(${Math.sin(t * 8) * 20} 120 -160)`);
+  // กระดาษสีตอนตอบถูก
+  document.querySelectorAll('.cf').forEach((c, i) => { const tt = t - 22.4; if (tt < 0 || tt > 2.6) { c.setAttribute('opacity', 0); return; } const vx = ((i * 37) % 21 - 10) * 38, vy = -900 - ((i * 53) % 9) * 90; c.setAttribute('opacity', 1); c.setAttribute('transform', `translate(${540 + vx * tt} ${1100 + vy * 0.8 * tt + 900 * tt * tt}) rotate(${i * 40 + tt * 400})`); });
+  // ปฏิทินในฉากสุดท้าย + ซ่อนห้องสอบ
+  $('exam').style.opacity = exam ? 1 : 0;
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>

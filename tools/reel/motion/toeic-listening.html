@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🎬 คลิปแอนิเมชันแนว "ทีละขั้น" (คุณแดน 22 ต.ค. 69 ชอบคลิปการ์ตูนแบน + ตัวหนังสือไทยใหญ่ + จุดบอกขั้น)
+     หน้าเว็บนี้วาดเฟรมตามเวลา: window.seek(t) · window.DURATION · window.SFX = [[วินาที, เสียง]] → render.mjs อัดทีละเฟรมเป็นวิดีโอ 1080×1920 -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#BFD7F5;font-family:K,sans-serif}
+#bg{position:absolute;inset:0;background:linear-gradient(#9EC3EE 0,#CFE2F8 52%,#CFE2F8 58%)}
+#desk{position:absolute;left:0;right:0;top:1130px;bottom:0;background:linear-gradient(#A8754C,#8A5A36 30%,#6E4428)}
+#desk:before{content:"";position:absolute;left:0;right:0;top:0;height:26px;background:#C08A5C}
+.shelf{position:absolute;top:470px;height:16px;background:#7FA6D6;border-radius:8px}
+.book{position:absolute;bottom:0;border-radius:6px 6px 0 0}
+#pill{position:absolute;left:60px;top:110px;padding:14px 34px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:44px}
+#dots{position:absolute;right:60px;top:110px;padding:22px 30px;border-radius:60px;background:#0F1B33E6;display:flex;gap:20px}
+.dot{width:30px;height:30px;border-radius:50%;background:#56637D;color:#fff;font-size:20px;font-weight:800;display:grid;place-items:center}
+.dot.on{background:#2DBE6C}
+#stage{position:absolute;left:0;top:250px;width:1080px;height:900px}
+.cap{position:absolute;left:40px;right:40px;top:1290px;display:flex;flex-direction:column;align-items:center;gap:22px}
+.ln{font-weight:800;font-size:104px;line-height:1.12;color:#fff;-webkit-text-stroke:14px #0F1B33;paint-order:stroke fill;text-align:center;white-space:nowrap}
+.ln.y{color:#FFD43B}
+.ln.r{background:#E5484D;-webkit-text-stroke:0;padding:4px 34px 14px;border-radius:18px;box-shadow:0 10px 0 #9E2A2E}
+.ln.s{font-size:72px}
+.tag{position:absolute;padding:10px 26px;border-radius:40px;font-weight:800;font-size:46px;color:#0F1B33;background:#FFD43B}
+[data-in]{opacity:0;transform-box:fill-box;transform-origin:center}
+.brand{position:absolute;left:0;right:0;bottom:70px;text-align:center;font-weight:600;font-size:40px;color:#F3E2D2}
+</style></head><body>
+<div id="bg"></div>
+<div class="shelf" style="left:90px;width:330px"></div>
+<div style="position:absolute;left:110px;top:360px;width:300px;height:110px">
+  <div class="book" style="left:0;width:46px;height:96px;background:#E5484D"></div><div class="book" style="left:52px;width:40px;height:110px;background:#1F6FEB"></div>
+  <div class="book" style="left:98px;width:52px;height:84px;background:#FFD43B"></div><div class="book" style="left:156px;width:38px;height:104px;background:#2DBE6C"></div>
+</div>
+<div id="desk"></div>
+<div id="pill">🎧 TOEIC Listening ไม่ให้หลุด</div>
+<div id="dots"><span class="dot">1</span><span class="dot">2</span><span class="dot">3</span><span class="dot">4</span><span class="dot">5</span></div>
+
+<svg id="stage" viewBox="0 0 1080 900">
+  <!-- กระดาษคำตอบ (อยู่ทุกฉาก) -->
+  <g id="sheet">
+    <rect x="300" y="400" width="480" height="480" rx="26" fill="#fff" stroke="#0F1B33" stroke-width="8"/>
+    <rect x="350" y="440" width="260" height="26" rx="13" fill="#C9D3E3"/>
+    <g id="rows"></g>
+  </g>
+  <!-- หูฟัง -->
+  <g id="phones" data-in="0.2" data-anim="drop">
+    <path d="M330 420 C330 160 750 160 750 420" fill="none" stroke="#0F1B33" stroke-width="34" stroke-linecap="round"/>
+    <rect x="270" y="380" width="110" height="170" rx="40" fill="#1F6FEB" stroke="#0F1B33" stroke-width="8"/>
+    <rect x="700" y="380" width="110" height="170" rx="40" fill="#1F6FEB" stroke="#0F1B33" stroke-width="8"/>
+  </g>
+  <g id="waves"></g>
+  <!-- ฉาก 0: เครื่องหมายคำถาม -->
+  <g data-in="0.9" data-out="3.4" data-anim="pop"><circle cx="880" cy="190" r="90" fill="#FFD43B" stroke="#0F1B33" stroke-width="8"/><text x="880" y="228" text-anchor="middle" font-family="K" font-weight="800" font-size="120" fill="#0F1B33">?</text></g>
+  <!-- ฉาก 1: ไฮไลต์คำถาม -->
+  <g data-in="4.0" data-out="7.4" data-anim="fade"><rect id="hl" x="340" y="500" width="0" height="56" rx="12" fill="#FFD43B" opacity=".75"/></g>
+  <g data-in="4.3" data-out="7.4" data-anim="pop"><g transform="translate(820 230)"><ellipse cx="0" cy="0" rx="110" ry="70" fill="#fff" stroke="#0F1B33" stroke-width="8"/><circle id="eye" cx="0" cy="0" r="34" fill="#0F1B33"/></g></g>
+  <!-- ฉาก 2: Who When Where -->
+  <g data-in="8.0" data-out="11.4" data-anim="pop"><rect x="70" y="120" width="250" height="110" rx="55" fill="#1F6FEB"/><text x="195" y="195" text-anchor="middle" font-family="K" font-weight="800" font-size="62" fill="#fff">Who?</text></g>
+  <g data-in="8.35" data-out="11.4" data-anim="pop"><rect x="415" y="40" width="250" height="110" rx="55" fill="#2DBE6C"/><text x="540" y="115" text-anchor="middle" font-family="K" font-weight="800" font-size="62" fill="#fff">When?</text></g>
+  <g data-in="8.7" data-out="11.4" data-anim="pop"><rect x="760" y="120" width="260" height="110" rx="55" fill="#E5484D"/><text x="890" y="195" text-anchor="middle" font-family="K" font-weight="800" font-size="62" fill="#fff">Where?</text></g>
+  <!-- ฉาก 3: copy vs coffee -->
+  <g data-in="12.0" data-out="15.4" data-anim="slideL"><rect x="40" y="90" width="400" height="170" rx="28" fill="#fff" stroke="#0F1B33" stroke-width="8"/><text x="240" y="200" text-anchor="middle" font-family="K" font-weight="800" font-size="80" fill="#0F1B33">copy</text></g>
+  <g data-in="12.3" data-out="15.4" data-anim="slideR"><rect x="640" y="90" width="400" height="170" rx="28" fill="#fff" stroke="#0F1B33" stroke-width="8"/><text x="840" y="200" text-anchor="middle" font-family="K" font-weight="800" font-size="80" fill="#0F1B33">coffee</text></g>
+  <g data-in="12.8" data-out="15.4" data-anim="pop"><circle cx="540" cy="175" r="62" fill="#E5484D" stroke="#0F1B33" stroke-width="8"/><text x="540" y="200" text-anchor="middle" font-family="K" font-weight="800" font-size="70" fill="#fff">≠</text></g>
+  <!-- ฉาก 4: นาฬิกา + ลูกศรข้าม -->
+  <g data-in="16.0" data-out="19.4" data-anim="pop"><g transform="translate(170 200)"><circle r="120" fill="#fff" stroke="#0F1B33" stroke-width="10"/><line id="hand" x1="0" y1="0" x2="0" y2="-88" stroke="#E5484D" stroke-width="14" stroke-linecap="round"/><circle r="14" fill="#0F1B33"/></g></g>
+  <g data-in="16.5" data-out="19.4" data-anim="slideR"><path d="M640 200 h220 v-60 l120 100 l-120 100 v-60 h-220z" fill="#2DBE6C" stroke="#0F1B33" stroke-width="8"/></g>
+  <!-- ฉาก 5: ปั้นเอนเกจ (คุณแดน 22 ต.ค. 69 "ต้องปั้น engagement และผู้ติดตาม facebook ด้วย"): เซฟ + คอมเมนต์ + ติดตาม -->
+  <g data-in="20.0" data-anim="pop"><g transform="translate(170 190)"><path d="M-80 -120 h160 v240 l-80 -60 l-80 60z" fill="#FFD43B" stroke="#0F1B33" stroke-width="10" stroke-linejoin="round"/><text x="0" y="10" text-anchor="middle" font-family="K" font-weight="800" font-size="50" fill="#0F1B33">เซฟ</text></g></g>
+  <g data-in="20.5" data-anim="pop"><g transform="translate(880 150)"><path d="M-130 -80 h260 a40 40 0 0 1 40 40 v100 a40 40 0 0 1 -40 40 h-150 l-60 50 v-50 h-50 a40 40 0 0 1 -40 -40 v-100 a40 40 0 0 1 40 -40z" fill="#fff" stroke="#0F1B33" stroke-width="10"/><text x="0" y="35" text-anchor="middle" font-family="K" font-weight="800" font-size="66" fill="#1F6FEB">ข้อ 3!</text></g></g>
+</svg>
+
+<span class="tag" data-in="4.0" data-out="7.4" data-anim="pop" style="left:60px;top:215px">Part 3–4</span>
+<span class="tag" data-in="8.0" data-out="11.4" data-anim="pop" style="left:60px;top:215px;display:none" id="t2">Part 2</span>
+<span class="tag" data-in="12.0" data-out="15.4" data-anim="pop" style="left:60px;top:215px;background:#fff">ตัวหลอกยอดฮิต</span>
+
+<div class="cap" data-in="0.35" data-out="3.4" data-anim="none"><div class="ln" data-in="0.35" data-anim="pop">ฟังทันไหม?</div><div class="ln" data-in="0.85" data-anim="pop">พลาดข้อเดียว</div><div class="ln r" data-in="1.4" data-anim="pop">ตามไม่ทันทั้งชุด!</div></div>
+<div class="cap" data-in="4.0" data-out="7.4" data-anim="none"><div class="ln" data-in="4.0" data-anim="pop">อ่านคำถามก่อน</div><div class="ln y" data-in="4.45" data-anim="pop">เสียงจะเริ่ม</div></div>
+<div class="cap" data-in="8.0" data-out="11.4" data-anim="none"><div class="ln" data-in="8.0" data-anim="pop">ฟังคำแรกให้ชัด</div><div class="ln y" data-in="8.45" data-anim="pop">รู้คำตอบไปครึ่งข้อ</div></div>
+<div class="cap" data-in="12.0" data-out="15.4" data-anim="none"><div class="ln" data-in="12.0" data-anim="pop">เสียงคล้าย</div><div class="ln r" data-in="12.45" data-anim="pop">≠ คำตอบที่ถูก</div></div>
+<div class="cap" data-in="16.0" data-out="19.4" data-anim="none"><div class="ln" data-in="16.0" data-anim="pop">ไม่แน่ใจ เดาไว้</div><div class="ln y" data-in="16.45" data-anim="pop">แล้วไปข้อต่อไปทันที</div></div>
+<div class="cap" data-in="20.0" data-anim="none"><div class="ln" data-in="20.0" data-anim="pop">เซฟไว้ก่อนสอบ!</div><div class="ln y" data-in="20.5" data-anim="pop">พลาดข้อไหนบ่อยสุด?</div><div class="ln r s" data-in="21.1" data-anim="pop">+ ติดตาม มีคลิปใหม่ทุกวัน</div></div>
+<div class="brand">SheetLab · ชีทสรุป TOEIC IELTS</div>
+
+<script>
+window.DURATION = 24.5;
+window.SFX = [[0.35, 'pop'], [1.4, 'boing'], [4.0, 'ding'], [8.0, 'ding'], [12.0, 'ding'], [12.8, 'boing'], [16.0, 'ding'], [20.0, 'tada'], [21.1, 'pop']];
+const STEPS = [4.0, 8.0, 12.0, 16.0, 20.0];
+// แถวช่องฝนคำตอบ A B C D
+const rows = document.getElementById('rows'); let h = '';
+for (let r = 0; r < 6; r++) for (let c = 0; c < 4; c++) h += `<circle class="bub" data-r="${r}" data-c="${c}" cx="${380 + c * 100}" cy="${525 + r * 60}" r="24" fill="#fff" stroke="#0F1B33" stroke-width="5"/>`;
+rows.innerHTML = h;
+const waves = document.getElementById('waves'); waves.innerHTML = [0, 1, 2].map((i) => `<circle class="wv" cx="540" cy="465" r="10" fill="none" stroke="#1F6FEB" stroke-width="6"/>`).join('');
+document.getElementById('t2').style.display = '';
+
+const cl = (x) => Math.max(0, Math.min(1, x));
+const back = (p) => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+const outc = (p) => 1 - Math.pow(1 - p, 3);
+const els = [...document.querySelectorAll('[data-in]')];
+function seek(t) {
+  for (const el of els) {
+    const a = +el.dataset.in, b = el.dataset.out ? +el.dataset.out : 1e9, k = el.dataset.anim || 'pop';
+    // ลูกอยู่ในกล่องคำบรรยาย: หายพร้อมกล่อง
+    const par = el.parentElement && el.parentElement.closest('[data-out]'); const bb = Math.min(b, par ? +par.dataset.out : 1e9);
+    if (t < a || t > bb + 0.01) { el.style.opacity = 0; continue; }
+    const p = cl((t - a) / 0.38), q = cl((bb - t) / 0.22);
+    el.style.opacity = k === 'none' ? 1 : Math.min(cl(p * 2.2), q);
+    const s = k === 'pop' ? 0.4 + 0.6 * back(p) : 1;
+    const dx = k === 'slideL' ? -500 * (1 - outc(p)) : k === 'slideR' ? 500 * (1 - outc(p)) : 0;
+    const dy = k === 'drop' ? -420 * (1 - back(p)) : 0;
+    el.style.transform = k === 'none' ? '' : `translate(${dx}px,${dy}px) scale(${s * (0.92 + 0.08 * q)})`;
+  }
+  // จุดขั้น
+  const step = STEPS.filter((x) => t >= x).length;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i < step));
+  // คลื่นเสียงจากหูฟัง
+  document.querySelectorAll('.wv').forEach((w, i) => { const ph = ((t * 0.9 + i / 3) % 1); w.setAttribute('r', 60 + ph * 320); w.setAttribute('opacity', t > 0.6 ? (1 - ph) * 0.55 : 0); });
+  // หูฟังขยับตามจังหวะ
+  const ph = document.getElementById('phones'); if (t > 0.6) ph.style.transform = `translateY(${Math.sin(t * 6.3) * 6}px)`;
+  // ไฮไลต์วิ่งตามคำถาม + ตามอง
+  document.getElementById('hl').setAttribute('width', 400 * outc(cl((t - 4.2) / 1.2)));
+  document.getElementById('eye').setAttribute('cx', Math.sin(t * 2.4) * 36);
+  // เข็มนาฬิกาหมุน
+  document.getElementById('hand').setAttribute('transform', `rotate(${(t - 16) * 160})`);
+  // ฝนคำตอบทีละช่อง (ฉาก 4: เดาแล้วไปต่อ = ช่องเติมเร็ว)
+  document.querySelectorAll('.bub').forEach((b) => { const r = +b.dataset.r, c = +b.dataset.c, ans = [1, 3, 0, 2, 1, 3][r]; const at = r < 3 ? 2.0 + r * 1.6 : 16.6 + (r - 3) * 0.7; b.setAttribute('fill', c === ans && t > at ? '#0F1B33' : '#fff'); });
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>
