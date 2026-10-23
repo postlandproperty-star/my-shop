@@ -176,7 +176,7 @@ def post(info, at_iso=None):
     rkey = f"reels/{int(time.time() * 1000)}-vocab-{info['lv']}-{info['unit']}.mp4"
     url = r2.put_file(info['out'], rkey, 'video/mp4'); r2.put_file(info['cover'], rkey.replace('.mp4', '-cover.jpg'), 'image/jpeg')
     cap = (f'{info["title"]} 🎧\n{" · ".join(info["words"])}\nคำไหนใช้บ่อยสุด คอมเมนต์เลย 👇\n'
-           f'ฝึกครบทั้งบทฟรี 👉 sheetlabth.com/vocab/{info["lv"]}/{info["unit"]}\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #IELTS\n(ภาพและเสียงสร้างด้วย AI)')
+           f'ฝึกครบทั้งบทฟรี 👉 sheetlabth.com/vocab/{info["lv"]}/{info["unit"]}\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #IELTS')
     row = {'text': cap, 'video_url': url, 'kind': 'reel', 'source': 'clip', **({'scheduled_at': at_iso} if at_iso else {}),
            'notes': f'คลิปคำศัพท์ AI (ตรวจเสียงแล้ว) | {info["lv"]}.{info["unit"]} | {len(info["words"])} คำ | {info["seconds"]} วิ'}
     return V.shop('drafts', {'posts': [row, {**row, 'channel': 'threads', 'text': V.threads_text(cap)}]})

@@ -379,7 +379,7 @@ def daily(dry=False):
     up = {'public_url': r2.put_file(out, rkey, 'video/mp4')}
     r2.put_file(info['cover'], rkey.replace('.mp4', '-cover.jpg'), 'image/jpeg')
     at = (now.replace(hour=19, minute=0, second=0, microsecond=0) if now.hour < 18 else (now + datetime.timedelta(days=1)).replace(hour=19, minute=0, second=0, microsecond=0)) - datetime.timedelta(hours=7)
-    cap = spec.get('caption') or f'{spec["title"]} 🗣️\n{spec.get("question") or "คำไหนใช้บ่อยที่สุด คอมเมนต์บอกหน่อย"} 👇\n🤖 คลิปนี้สร้างด้วย AI\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #SheetLab'
+    cap = spec.get('caption') or f'{spec["title"]} 🗣️\n{spec.get("question") or "คำไหนใช้บ่อยที่สุด คอมเมนต์บอกหน่อย"} 👇\n#คำศัพท์ภาษาอังกฤษ #เรียนภาษาอังกฤษ #TOEIC #SheetLab'
     # ลงทุกช่องทาง (คุณแดน 12 ต.ค. 69): เพจ Facebook (ระบบส่งต่อ Instagram Reels เอง) + Threads
     note = f'คลิป Reels คำศัพท์ AI | {spec["id"]} | ครู{"ผู้ชาย" if spec.get("host") == "m" else "ผู้หญิง"} | {info["seconds"]} วิ | fal ~15 บาท'
     row = {'text': cap, 'video_url': up['public_url'], 'kind': 'reel', 'source': 'clip', 'scheduled_at': at.strftime('%Y-%m-%dT%H:%M:%SZ'), 'notes': note}
