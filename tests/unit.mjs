@@ -206,6 +206,8 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
 { const { thaiFix } = await import('../lib/chatbot.js'); const T = { 'สอบถามได้เลยนะคะค่ะ': 'สอบถามได้เลยนะคะ', 'ได้เลยค่ะค่ะ': 'ได้เลยค่ะ', 'รอสักครู่นะค่ะ': 'รอสักครู่นะคะ', 'สนใจไหมค่ะ': 'สนใจไหมคะ', 'ไฟล์ไม่มีวันหมดอายุค่ะ': 'ไฟล์ไม่มีวันหมดอายุค่ะ', 'ขอบคุณค่ะ สนใจชุดไหนคะ': 'ขอบคุณค่ะ สนใจชุดไหนคะ' };
   const bad = Object.entries(T).filter(([a, b]) => thaiFix(a) !== b).map(([a]) => [a, thaiFix(a)]);
   ok('💬 แชทบอทเพจ: แก้คำลงท้ายผิด (นะคะค่ะ → นะคะ · ค่ะค่ะ → ค่ะ · นะค่ะ → นะคะ · ไหมค่ะ → ไหมคะ) ประโยคที่ถูกอยู่แล้วไม่แตะ', !bad.length, JSON.stringify(bad)); }
+{ const P = await import('../lib/policies.js'); const h = P.policyPage('terms') || ''; const v = JSON.parse((await import('node:fs')).readFileSync(new URL('../vercel.json', import.meta.url), 'utf8')).rewrites;
+  ok('📜 หน้า /terms ข้อตกลงการใช้งาน (TikTok ต้องมี) + ไฟล์ยืนยันเว็บ TikTok มีเส้นทาง', /ข้อตกลงการใช้งาน/.test(h) && /href="\/privacy"/.test(h) && /TikTok/.test(h) && v.some((r) => r.source === '/terms') && v.some((r) => /^\/tiktok\w+\.txt$/.test(r.source)), ''); }
 { const { ssrShell } = await import('../api/page.js'); const P = [{ id: 'a', price: 179, fullPrice: 249, name: 'A <b>', headline: 'หัว A', images: ['https://x/a.jpg'] }, { id: 'b', price: 149 },
     { id: 's', type: 'bundle', name: 'ชุด 2 เล่ม', headline: 'ชุดดี', items: ['a', 'b'], plans: [{ key: 'basic', price: 290 }, { key: 'pro', price: 490 }], price: 290, cover: 'https://x/s.jpg' }];
   const one = ssrShell(P[0], P), set = ssrShell(P[2], P);

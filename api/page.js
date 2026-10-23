@@ -103,6 +103,9 @@ export default async function handler(req, res) {
   }
   const doc = String(req.query.doc || '');
   const seo = String(req.query.seo || '');
+  if (seo === 'tiktok') { // ไฟล์ยืนยันเจ้าของเว็บให้ TikTok for Developers (URL prefix https://sheetlabth.com/) · คุณแดน 24 ต.ค. 69 ต่อ TikTok API
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=3600'); return res.status(200).send('tiktok-developers-site-verification=ChETbSg96OIdrHtkBOrV9NG9okPmNkk7');
+  }
   if (seo === 'robots') { // ให้ Google เก็บหน้าร้าน ไม่เก็บ API และหน้าร่าง
     res.setHeader('Content-Type', 'text/plain; charset=utf-8'); res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=3600');
     return res.status(200).send(`User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /draft/\n\nSitemap: ${NEW_SITE}/sitemap.xml\n`);

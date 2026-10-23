@@ -189,6 +189,14 @@
       "destination": "/api/page?doc=refund"
     },
     {
+      "source": "/terms",
+      "destination": "/api/page?doc=terms"
+    },
+    {
+      "source": "/tiktokChETbSg96OIdrHtkBOrV9NG9okPmNkk7.txt",
+      "destination": "/api/page?seo=tiktok"
+    },
+    {
       "source": "/draft/:name",
       "destination": "/api/page?draft=:name"
     },
