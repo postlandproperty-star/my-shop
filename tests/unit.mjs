@@ -155,17 +155,17 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const gc = calls[0][1];
   const im = await (await A.route(orig, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=x', { body: JSON.stringify({ contents: [{ role: 'user', parts: [{ inlineData: { mimeType: 'image/png', data: 'QQ==' } }, { text: 'cover' }] }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '3:4' } } }) })).json();
   const oi = await (await A.route(orig, 'https://api.openai.com/v1/images/generations', { body: JSON.stringify({ model: 'gpt-image-2', prompt: 'p', size: '1024x1536', quality: 'low' }) })).json();
-  const tt = await (await A.route(orig, 'https://texttospeech.googleapis.com/v1/text:synthesize?key=x', { body: JSON.stringify({ input: { ssml: '<speak>Hello <break/>there</speak>' }, voice: { languageCode: 'en-US', name: 'en-US-Chirp3-HD-Charon' }, audioConfig: { speakingRate: 0.85 } }) })).json();
+  const tt = await (await A.route(orig, 'https://texttospeech.googleapis.com/v1/text:synthesize?key=via-fal', { body: JSON.stringify({ input: { ssml: '<speak>Hello <break/>there</speak>' }, voice: { languageCode: 'en-US', name: 'en-US-Chirp3-HD-Charon' }, audioConfig: { speakingRate: 0.85 } }) })).json();
   const el = await A.route(orig, 'https://api.elevenlabs.io/v1/text-to-speech/J5M1BLQpOJ3qx2FU6EG0?output_format=mp3_44100_128', { body: JSON.stringify({ text: 'สวัสดีค่ะ', model_id: 'eleven_v3' }) });
-  const pass = await A.route(orig, 'https://api.stripe.com/v1/x', {});
+  const pass = await A.route(orig, 'https://api.stripe.com/v1/x', {}), ttFree = await A.route(orig, 'https://texttospeech.googleapis.com/v1/text:synthesize?key=REALGOOGLEKEY', { body: '{}' });
   const ttsCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].voice === 'Charon'), thCall = calls.find((c) => /flash-tts/.test(c[0]) && c[1].language_code === 'Thai (Thailand)');
   process.env.FAL_KEY = ''; const off = await A.route(orig, 'https://api.openai.com/v1/chat/completions', { body: '{}' }); if (had) process.env.FAL_KEY = had; else delete process.env.FAL_KEY;
-  ok('🔀 งาน AI ผ่าน fal: Gemini ข้อความ → OpenRouter (JSON · เสียงแนบ) ตอบรูปแบบ Gemini · รูป Gemini → nano-banana/edit · รูป OpenAI → gpt-image-2 · Google TTS → Gemini TTS เสียงเดิม · ElevenLabs เสียงใช้ไม่ได้ → เสียงไทย Gemini · อื่นๆ ไม่แตะ · ไม่มี FAL_KEY = เจ้าเดิม',
+  ok('🔀 งาน AI ผ่าน fal: Gemini ข้อความ → OpenRouter (JSON · เสียงแนบ) ตอบรูปแบบ Gemini · รูป Gemini → nano-banana/edit · รูป OpenAI → gpt-image-2 · Google TTS ไม่มีคีย์ Google → Gemini TTS เสียงเดิม · มีคีย์ Google จริง = ใช้โควตาฟรีของ Google ตรง · ElevenLabs เสียงใช้ไม่ได้ → เสียงไทย Gemini · อื่นๆ ไม่แตะ · ไม่มี FAL_KEY = เจ้าเดิม',
     g.candidates[0].content.parts[0].text === '{"ok":1}' && gc.model === 'google/gemini-2.5-flash' && gc.response_format.type === 'json_object' && gc.messages[0].content[1].input_audio.format === 'webm'
     && /nano-banana\/edit$/.test(calls.find((c) => /nano-banana/.test(c[0]))[0]) && im.candidates[0].content.parts[0].inlineData.data === Buffer.from('BYTES').toString('base64')
     && calls.find((c) => /gpt-image-2$/.test(c[0]))[1].image_size.height === 1536 && oi.data[0].b64_json === Buffer.from('BYTES').toString('base64')
     && !!ttsCall && ttsCall[1].prompt === 'Hello there' && !!ttsCall[1].style_instructions && tt.audioContent === Buffer.from('BYTES').toString('base64')
-    && el.status === 200 && !!thCall && thCall[1].language_code === 'Thai (Thailand)' && ttsCall[1].language_code === 'English (US)' && A.ttsLang('en-GB') === 'English (UK)' && A.ttsLang('xx') === '' && pass === null && off === null, JSON.stringify({ g: gc && gc.model, n: calls.length })); }
+    && el.status === 200 && !!thCall && thCall[1].language_code === 'Thai (Thailand)' && ttsCall[1].language_code === 'English (US)' && A.ttsLang('en-GB') === 'English (UK)' && A.ttsLang('xx') === '' && pass === null && ttFree === null && off === null, JSON.stringify({ g: gc && gc.model, n: calls.length })); }
 { const F = await import('../lib/fb.js');
   ok('🎬 ปกคลิป Reels: คลิป x.mp4 → ปก x-cover.jpg ที่อัปโหลดคู่กัน · รูปไม่ใช่คลิป = ไม่มีปก', F.coverOf('https://s/reels/1-a.mp4') === 'https://s/reels/1-a-cover.jpg' && F.coverOf('https://s/reels/1-a.MP4?v=2') === 'https://s/reels/1-a-cover.jpg' && F.coverOf('https://s/a.jpg') === ''); }
 { const AP = await import('../lib/audioPlayer.js'); const b = AP.buildBook({ sku: 'SL-044', title: 'T <x>', base: 'https://a.r2.dev/SL-044/', files: ['02-ch01-dialogue2-slow.mp3', '01-ch01-dialogue1-normal.mp3', '36-ch06-listening-normal.mp3', 'cover.jpg'], chapters: { 1: 'ที่คลินิก' } });
@@ -220,6 +220,23 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const pub = T.ttPublic({ clientKey: 'awkey123', clientSecret: 'SUPERSECRET', token: tok(60), user: { display_name: 'sheetlabth' } }), safe = !JSON.stringify(pub).includes('SUPERSECRET') && !JSON.stringify(pub).includes('"a"') && pub.mode === 'inbox' && pub.clientKeyTail === 'y123' && pub.hasApp;
   ok('🎵 TikTok: ลิงก์อนุญาต (client_key · scope 3 สิทธิ์ · redirect /tiktok/callback · state) · โทเค็นเหลือ < 10 นาทีต่ออายุ · บรรทัด TT ในโน้ตไม่ทับ IG · แคปชันไม่มีบรรทัด AI · สถานะที่ส่งหน้าเว็บไม่มีรหัสลับ/โทเค็น',
     url && refresh && conn && lines && cap && safe, JSON.stringify({ url, refresh, conn, lines, cap, safe, notes })); }
+{ const F = await import('../lib/factoryAuto.js'); const now = Date.parse('2026-10-24T05:00:00Z'), h = (n) => new Date(now - n * 3600e3).toISOString();
+  const J = [{ id: 'a', status: 'producing', title: 'VOCAB ป.4–6', started_at: h(100) }, { id: 'b', status: 'producing', title: 'B', started_at: h(30), stale_retry: 1 }, { id: 'c', status: 'producing', title: 'C', started_at: h(30), progress: { at: h(1) } }];
+  const fx = F.fixStale(J, now);
+  const cfg = { auto: { on: true, per_week: 4, sets: ['t'] }, sets: [{ id: 't', name: 'ชุด T', books: [{ t: 'TOEIC GRAMMAR 15 จุด' }] }] };
+  const nb = F.nextBook(cfg, [], ['ข้อสอบ TOEIC GRAMMAR 15 จุด', 'TOEIC GRAMMAR 15 จุด'], [F.BOOK_POOL[0].t]);
+  const g1 = F.bookGate(cfg, [{ status: 'producing', kind: 'lesson', started_at: h(1) }, { status: 'queued', paused: true }], now), g2 = F.bookGate(cfg, [{ status: 'queued', kind: 'pdf' }], now);
+  const g3 = F.bookGate(cfg, [1, 2, 3, 4].map((i) => ({ status: 'done', ordered_by: 'auto', created_at: h(i * 10) })).concat([{ status: 'done', ordered_by: 'auto', export_no: '1', created_at: h(1) }]), now);
+  const c = { id: 'k', plan: 'S|บท 1\nS|บท 2\nS|บท 3\nS|บท 4', lessons: [{ title: 'บท 1' }], auto: { on: true, perWeek: 5 } };
+  const L = (t, st, no, err, failedH) => ({ kind: 'lesson', course_id: 'k', lesson_title: t, status: st, lesson_no: no, error: err, failed_at: failedH != null ? h(failedH) : undefined, created_at: h(200) });
+  const r1 = F.nextLesson(c, [L('บท 2', 'failed', '2', 'ค้างที่สไลด์ 5/61', 50)], now), r2 = F.nextLesson(c, [L('บท 2', 'failed', '2', 'x', 50), L('บท 2', 'failed', '2', 'y', 40)], now);
+  const r3 = F.nextLesson(c, [L('บท 2', 'failed', '2', 'TTS: fal TOP_UP', 1), L('บท 3', 'done', '3')], now), r4 = F.nextLesson(c, [L('บท 2', 'failed', '2', 'เครดิต fal หมด TOP_UP', 30), L('บท 2', 'failed', '2', 'TOP_UP', 26)], now);
+  const done = F.lessonGate({ ...c, lessons: ['บท 1', 'บท 2', 'บท 3', 'บท 4'].map((t) => ({ title: t })) }, [], now);
+  ok('🤖 โรงงานผลิตเอง: งานค้างกำลังผลิต > 12 ชม. ส่งกลับคิว 1 ครั้ง ค้างซ้ำปิดงานพร้อมเหตุผล (มีความคืบหน้าล่าสุดไม่แตะ) · ชุดที่เลือกผลิตครบ → หัวข้อสำรองที่ไม่ซ้ำร้าน/คลัง · บทเรียนคอร์สในคิวและงานที่พักไว้ไม่บังหนังสือ · นับโควตาเฉพาะหนังสือที่ผลิตเอง · บทคอร์สที่ล้มลองใหม่ด้วยเลขบทเดิม (ล้มเพราะเงิน/โควตาไม่นับครั้ง แต่รอ 24 ชม.) · ทำครบแผน = บอกว่าครบ',
+    fx.length === 2 && J[0].status === 'queued' && J[0].stale_retry === 1 && J[1].status === 'failed' && /ค้าง/.test(J[1].error) && J[2].status === 'producing'
+      && nb && nb.book.t === F.BOOK_POOL[1].t && !g1.wait && g2.wait === 'busy' && g3.wait === 'quota' && g3.made7 === 4
+      && r1 && r1.no === 2 && r1.retry && r2 && r2.it.title === 'บท 3' && !r2.retry && r3 && r3.it.title === 'บท 4' && r4 && r4.it.title === 'บท 2' && r4.no === 2 && done.wait === 'done' && /ครบทุกบท/.test(F.gateText(done)),
+    JSON.stringify({ fx, nb: nb && nb.book.t, g1: g1.wait, g2: g2.wait, g3: [g3.wait, g3.made7], r1: r1 && [r1.it.title, r1.no], r2: r2 && r2.it.title, r3: r3 && r3.it.title, r4: r4 && [r4.it.title, r4.no], done: done.wait })); }
 { const { ssrShell } = await import('../api/page.js'); const P = [{ id: 'a', price: 179, fullPrice: 249, name: 'A <b>', headline: 'หัว A', images: ['https://x/a.jpg'] }, { id: 'b', price: 149 },
     { id: 's', type: 'bundle', name: 'ชุด 2 เล่ม', headline: 'ชุดดี', items: ['a', 'b'], plans: [{ key: 'basic', price: 290 }, { key: 'pro', price: 490 }], price: 290, cover: 'https://x/s.jpg' }];
   const one = ssrShell(P[0], P), set = ssrShell(P[2], P);

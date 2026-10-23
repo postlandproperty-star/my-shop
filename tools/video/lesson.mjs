@@ -32,6 +32,11 @@ async function progress(pct, note) { if (!JOB || !CK || pct === lastP) return; l
 // เสียงผ่าน fal.ai (Gemini TTS เสียงชุดเดียวกับ Chirp 3 HD) เมื่อมี ~/.config/sheetlab/fal-key · ไม่มี = Google TTS เดิม
 try { process.env.FAL_KEY = process.env.FAL_KEY || fs.readFileSync(path.join(os.homedir(), '.config/sheetlab/fal-key'), 'utf8').trim(); } catch {}
 const KEY = (() => { try { return fs.readFileSync(path.join(os.homedir(), 'Documents/Academic/.google_tts_key'), 'utf8').trim(); } catch { return 'via-fal'; } })();
+// 🆓 เสียงต้องฟรี (คุณแดน 24 ต.ค. 69): ใช้โควตาฟรีรายเดือนของ Google เท่านั้น · ไม่มีคีย์ Google (จะไปเสียเงินที่ fal) หรือโควตาเดือนนี้เต็ม = หยุดพร้อมเหตุผล (ALLOW_PAID_TTS=1 ข้ามได้ถ้าคุณแดนอนุมัติ)
+if (process.env.ALLOW_PAID_TTS !== '1') {
+  if (KEY === 'via-fal') throw new Error('ไม่มีคีย์ Google TTS (~/Documents/Academic/.google_tts_key) เสียงจะไปเสียเงินที่ fal จึงหยุดไว้');
+  try { const u = JSON.parse(fs.readFileSync('/Volumes/PortableSSD/Sheetlab/_factory/tts_usage.json', 'utf8')); if (u.month === new Date().toISOString().slice(0, 7) && u.chars >= 990000) throw new Error(`โควตาเสียงฟรีของ Google เดือนนี้เต็มแล้ว (${u.chars.toLocaleString()} ตัวอักษร) รอเดือนหน้าแล้วลองใหม่`); } catch (e) { if (/โควตา/.test(e.message)) throw e; }
+}
 const V = { th: ['th-TH', 'th-TH-Chirp3-HD-Kore'], q: ['en-US', 'en-US-Chirp3-HD-Kore'], r: ['en-AU', 'en-AU-Chirp3-HD-Puck'], n: ['en-US', 'en-US-Chirp3-HD-Charon'], m: ['en-GB', 'en-GB-Chirp3-HD-Fenrir'] };
 let chars = 0;
 const ff = (...a) => execFileSync(FFMPEG, ['-y', '-loglevel', 'error', ...a]);

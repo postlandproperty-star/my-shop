@@ -235,7 +235,7 @@ footer{padding:28px 0 110px;text-align:center}
 .rv-list{display:grid;gap:10px}.rv-item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}.rv-item p{margin:6px 0 4px;white-space:pre-wrap}
 .rvreq{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .rv-ver{display:inline-block;font-size:12.5px;color:var(--ok);margin-top:2px}
-.fq-autobar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-4px 0 12px;padding:10px 14px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px}.fq-autot{font-weight:700;font-size:14px}.fq-auto{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 10px;cursor:pointer}.fq-auto.on{border-color:#0F7A55;background:#ECFDF5}.fq-auto span:first-child{display:grid;line-height:1.25}.fq-auto b{font-size:13.5px}.fq-auto small{font-size:12px;color:var(--muted)}
+.fq-st{display:block;font-size:11px;color:var(--muted);margin-top:2px;max-width:260px}.fq-autobar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:-4px 0 12px;padding:10px 14px;background:var(--surface);border:1.5px solid var(--line);border-radius:14px}.fq-autot{font-weight:700;font-size:14px}.fq-auto{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 10px;cursor:pointer}.fq-auto.on{border-color:#0F7A55;background:#ECFDF5}.fq-auto span:first-child{display:grid;line-height:1.25}.fq-auto b{font-size:13.5px}.fq-auto small{font-size:12px;color:var(--muted)}
 .bst-new-acts{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
 .cvc{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}.cvc-note{flex:1;min-width:200px;max-width:420px;padding:6px 10px}.cvc-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}.cvc-it{display:grid;gap:6px;justify-items:center}.cvc-it img{width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
 .pt-pl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-right:8px}
@@ -3906,13 +3906,15 @@ const FAC_SETS=[{id:'toeic750',emoji:'🎯',name:'ชุด TOEIC 750+',goal:'�
   {t:'TOEIC BUSINESS VOCABULARY 600 คำตามสถานการณ์ ประชุม การเงิน HR การตลาด',match:'business vocab',cat:'TOEIC คำศัพท์',pages:100,price:149},
   {t:'TOEIC MOCK TEST เสมือนจริง 5 ชุด 1,000 ข้อ พร้อมตารางแปลงคะแนนโดยประมาณ',match:'mock test',cat:'TOEIC ข้อสอบเสมือนจริง',pages:160,price:249,notes:'ชุดละ 200 ข้อครบทุก Part มีกระดาษคำตอบ ตารางแปลงคะแนนเป็นค่าประมาณ ไม่ใช่เกณฑ์ทางการ'},
   {t:'TOEIC 30-DAY STUDY PLAN แพลนอ่าน 30 วัน + สมุดจดศัพท์ + ตารางติดตามคะแนน',match:'study plan',cat:'อื่นๆ',pages:40,price:69,notes:'แผนวันต่อวันอ้างอิงเล่มอื่นในชุด มีช่องติ๊กและกราฟคะแนน'}]}];
-const FCFG={cfg:null,loading:false};
-function loadFacCfg(){if(FCFG.loading)return;FCFG.loading=true;adminApi('/api/content?action=factory_cfg').then(j=>{FCFG.cfg=j&&j.ok?j.cfg:{sets:null,auto:{on:false,per_week:1,sets:[]}};}).catch(()=>{FCFG.cfg={sets:null,auto:{on:false,per_week:1,sets:[]}};}).then(()=>{FCFG.loading=false;render(true);});}
+const FCFG={cfg:null,loading:false,st:null};
+function loadFacCfg(){if(FCFG.loading)return;FCFG.loading=true;adminApi('/api/content?action=factory_cfg').then(j=>{FCFG.cfg=j&&j.ok?j.cfg:{sets:null,auto:{on:false,per_week:1,sets:[]}};FCFG.st=j&&j.auto_status||null;}).catch(()=>{FCFG.cfg={sets:null,auto:{on:false,per_week:1,sets:[]}};}).then(()=>{FCFG.loading=false;render(true);});}
+/* สถานะจริงของสวิตช์ผลิตอัตโนมัติ (ล่าสุดผลิตเมื่อไหร่/ถัดไป/ทำไมยังไม่หยิบ) โหลดใหม่หลังกดสวิตช์ */
+function facStRefresh(){adminApi('/api/content?action=factory_cfg').then(j=>{if(j&&j.ok){FCFG.st=j.auto_status||null;render(true);}}).catch(()=>{});}
 function facSetList(){return (FCFG.cfg&&FCFG.cfg.sets)||FAC_SETS;}
 function saveFacCfg(patch,msg){
   const body={sets:facSetList(),auto:Object.assign({},(FCFG.cfg&&FCFG.cfg.auto)||{on:false,per_week:1,sets:[]}),...patch};
   S.fbusy=true;render(true);
-  return authFetch('/api/content?action=factory_cfg',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(j=>{if(j&&j.ok){FCFG.cfg=j.cfg;toast(msg||'บันทึกแล้ว');}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{S.fbusy=false;render(true);});
+  return authFetch('/api/content?action=factory_cfg',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(j=>{if(j&&j.ok){FCFG.cfg=j.cfg;toast(msg||'บันทึกแล้ว');facStRefresh();}else toast((j&&j.error)||'บันทึกไม่สำเร็จ');}).catch(()=>toast('เชื่อมต่อไม่ได้')).then(()=>{S.fbusy=false;render(true);});
 }
 function setBookState(b){
   const key=String(b.match||String(b.t).slice(0,18)).toLowerCase();
@@ -4259,10 +4261,10 @@ function facBoard({queued,producing,review,freshD}){
 /* 🤖 สวิตช์ให้ AI ผลิตเองอัตโนมัติ (หนังสือ + ทุกคอร์ส) อยู่แถบบนสุดของโรงงาน (คุณแดน 18 ต.ค. 69 ย้ายมาจากแผงชุด/แผงคอร์ส) · ตั้งชุด/จำนวนต่อสัปดาห์ยังอยู่ที่แผงเดิม */
 function fqAutoBar(){if(!FCFG.cfg&&!FCFG.loading)loadFacCfg();
   const a=(FCFG.cfg&&FCFG.cfg.auto)||{},CL=CRS.list||[];
-  const sw=(on,attrs,label,sub)=>`<label class="fq-auto ${on?'on':''}"><span><b>${label}</b><small>${sub}</small></span><span class="switch"><input type="checkbox" ${attrs} ${on?'checked':''}><span></span></span></label>`;
+  const ST=FCFG.st||{},sw=(on,attrs,label,sub,st)=>`<label class="fq-auto ${on?'on':''}"><span><b>${label}</b><small>${sub}</small>${st?`<small class="fq-st">${esc(st)}</small>`:''}</span><span class="switch"><input type="checkbox" ${attrs} ${on?'checked':''}><span></span></span></label>`;
   return `<div class="fq-autobar"><span class="fq-autot">🤖 ให้ AI ผลิตเอง</span>
-    ${sw(!!a.on,`data-a="autoOn" ${S.fbusy||!FCFG.cfg?'disabled':''} aria-label="หนังสือผลิตอัตโนมัติ"`,'📚 หนังสือ',a.on?`สัปดาห์ละ ${a.per_week||1} เล่ม`:'ปิด · ผลิตเฉพาะที่สั่ง')}
-    ${CL.map(c=>{const au=c.auto||{};return sw(!!au.on,`data-a="fqCrsAuto" data-id="${esc(c.id)}" aria-label="ผลิตบทเรียนอัตโนมัติ ${esc(c.title)}"`,'🎓 '+esc(String(c.title||'คอร์ส').split(/\s+(?:สำหรับ|คอร์ส)/)[0].slice(0,30)),au.on?`สัปดาห์ละ ${au.perWeek||2} บท`:'ปิด · ผลิตเฉพาะที่สั่ง');}).join('')}</div>`;}
+    ${sw(!!a.on,`data-a="autoOn" ${S.fbusy||!FCFG.cfg?'disabled':''} aria-label="หนังสือผลิตอัตโนมัติ"`,'📚 หนังสือ',a.on?`สัปดาห์ละ ${a.per_week||1} เล่ม`:'ปิด · ผลิตเฉพาะที่สั่ง',a.on&&ST.books&&ST.books.text)}
+    ${CL.map(c=>{const au=c.auto||{};return sw(!!au.on,`data-a="fqCrsAuto" data-id="${esc(c.id)}" aria-label="ผลิตบทเรียนอัตโนมัติ ${esc(c.title)}"`,'🎓 '+esc(String(c.title||'คอร์ส').split(/\s+(?:สำหรับ|คอร์ส)/)[0].slice(0,30)),au.on?`สัปดาห์ละ ${au.perWeek||2} บท`:'ปิด · ผลิตเฉพาะที่สั่ง',au.on&&ST.courses&&ST.courses[c.id]&&ST.courses[c.id].text);}).join('')}</div>`;}
 function factoryView(){
   if(FJOBS===null)loadFactoryJobs();
   if(!CRS.list)loadCRS();
@@ -7654,7 +7656,7 @@ function act(a,el){
     case 'fcrDiceN':{const c=CRS.list.find(x=>x.id===FCR.cid),L=lbPick(FCR.cat,Number(FCR.n)||5,c,FCR.multi);if(!L.length){toast('หมวดนี้ใช้หัวข้อครบแล้ว ลองหมวดอื่น หรือพิมพ์เอง');break;}FCR.multi=(FCR.multi.trim()?FCR.multi.trim()+'\n':'')+L.join('\n');toast(`สุ่มให้ ${L.length} บท แก้ได้ก่อนกดสั่ง`);render(true);break;}
     case 'fcrDicePlan':{const c=CRS.list.find(x=>x.id===FCR.cid);if(!c)break;const L=lbPick(FCR.cat,Number(FCR.n)||5,c);if(!L.length){toast('หมวดนี้ใช้หัวข้อครบแล้ว ลองหมวดอื่น');break;}c.plan=(String(c.plan||'').trim()?String(c.plan).trim()+'\n':'')+L.join('\n');toast(`เติมแผน ${L.length} บท กด "บันทึกแผน" เพื่อใช้`);render(true);break;}
     case 'fcrOrderMulti':fcrOrder(fcrLines(FCR.multi).slice(0,20)).then(ok=>{if(ok){FCR.multi='';render(true);}});break;
-    case 'fqCrsAuto':{const c=(CRS.list||[]).find(x=>x.id===el.dataset.id);if(!c)break;c.auto=Object.assign({perWeek:2},c.auto||{},{on:!!el.checked});fcrSaveCourse(c,el.checked?`เปิดผลิตอัตโนมัติ "${c.title}" แล้ว Mac หยิบบทถัดไปในแผนเอง`:`ปิดผลิตอัตโนมัติ "${c.title}" แล้ว`);break;}
+    case 'fqCrsAuto':{const c=(CRS.list||[]).find(x=>x.id===el.dataset.id);if(!c)break;c.auto=Object.assign({perWeek:2},c.auto||{},{on:!!el.checked});setTimeout(facStRefresh,1500);fcrSaveCourse(c,el.checked?`เปิดผลิตอัตโนมัติ "${c.title}" แล้ว Mac หยิบบทถัดไปในแผนเอง`:`ปิดผลิตอัตโนมัติ "${c.title}" แล้ว`);break;}
     case 'fcrAuto':{const c=CRS.list.find(x=>x.id===FCR.cid);if(!c)break;c.auto=Object.assign({perWeek:2},c.auto||{},{on:!!el.checked});fcrSaveCourse(c,el.checked?'เปิดผลิตอัตโนมัติแล้ว Mac หยิบบทถัดไปในแผนเอง':'ปิดผลิตอัตโนมัติแล้ว');break;}
     case 'fcrSavePlan':{const c=CRS.list.find(x=>x.id===FCR.cid);if(c)fcrSaveCourse(c,'บันทึกแผนบทเรียนแล้ว');break;}
     case 'crsSellNow':{const c=CRS.list.find(x=>x.id===el.dataset.id),price=Math.round(Number(CRS.price[el.dataset.id])||0);if(!c)break;

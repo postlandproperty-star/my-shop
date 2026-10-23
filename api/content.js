@@ -19,6 +19,7 @@ import nodemailer from 'nodemailer';
 import { fulfill } from '../lib/fulfill.js';
 import { loadFb, publishToPage, fbGet, ensureIg, publishToInstagram, isVideoUrl, linkPageFromUser, schedulePagePost, deletePagePost } from '../lib/fb.js';
 import { siteUrl } from '../lib/site.js';
+import { fixStale, nextBook, bookGate, nextLesson, lessonGate, gateText } from '../lib/factoryAuto.js';
 import { AP_DEFAULT, campaignsOf, planBudget, goalInfo, planGoogle } from '../lib/autopilot.js';
 import { saleKit } from '../lib/salepost.js';
 import { adsAccess, launchAd, isGovProduct, setCampaignStatus, campaignStats, adsStatus, setAdStatus, adsHistory, adsDaily, swapAdImage, extendCampaign } from '../lib/ads.js';
@@ -194,11 +195,12 @@ const lessonUsed = (c, jobs, t) => c.lessons.some((l) => l.title === t) || jobs.
 async function autoLessons(jobs) {
   const C = await import('../lib/courses.js'); const list = await C.loadCourses(); let n = 0;
   for (const c of list.filter((x) => x.auto?.on && x.plan)) {
+    if (lessonGate(c, jobs).wait) continue; // ปิด/มีบทกำลังทำ/ครบโควตาสัปดาห์/ทำครบแผนแล้ว
+    const nx = nextLesson(c, jobs); if (!nx) continue;
     const mine = jobs.filter((j) => j.kind === 'lesson' && j.course_id === c.id);
-    if (mine.some((j) => ['queued', 'producing'].includes(j.status))) continue;
-    if (mine.filter((j) => j.auto && Date.parse(j.created_at || 0) > Date.now() - 7 * 864e5).length >= (c.auto.perWeek || 2)) continue;
-    const next = planItems(c).find((it) => !lessonUsed(c, jobs, it.title)); if (!next) continue;
-    jobs.push(lessonJob(c, next, c.lessons.length + mine.filter((j) => ['queued', 'producing'].includes(j.status)).length + 1, true)); n++;
+    const job = lessonJob(c, nx.it, nx.no || (c.lessons.length + mine.filter((j) => ['queued', 'producing'].includes(j.status)).length + 1), true);
+    if (nx.retry) job.notes = [`ลองใหม่อัตโนมัติ (รอบก่อนล้ม: ${nx.lastError}) · ถ้ามีไฟล์บทเดิมที่ tools/video/lessons/${c.slug}-L${String(job.lesson_no).padStart(2, '0')}.json ใช้ต่อได้เลย ไม่ต้องเขียนใหม่`, job.notes].filter(Boolean).join('\n').slice(0, 1200);
+    jobs.push(job); n++;
   }
   if (n) await saveJobs(jobs); return n;
 }
@@ -211,25 +213,15 @@ const queueOrder = (jobs) => jobs.filter((j) => j.status === 'queued').sort((a, 
 // ผลิตอัตโนมัติ: ถ้าเปิดไว้และคิวว่าง หยิบเล่มถัดไปในชุดที่เลือก (ยังไม่มีในร้าน ยังไม่เคยสั่ง) เข้าคิว ไม่ใช้ AI
 async function autoFillFactory(jobs) {
   const cfg = await loadFacCfg();
-  if (cfg.paused || !cfg.auto.on || !cfg.sets) return null;
-  if (jobs.some((j) => ['queued', 'producing'].includes(j.status))) return null;
-  const week = Date.now() - 7 * 864e5;
-  if (jobs.filter((j) => j.ordered_by === 'auto' && Date.parse(j.created_at || 0) >= week).length >= Math.min(4, Math.max(1, Number(cfg.auto.per_week) || 1))) return null;
+  if (bookGate(cfg, jobs).wait) return null; // ปิด/โรงงานหยุด/ครบโควตาสัปดาห์/มีหนังสือในคิว (บทเรียนคอร์สในคิวไม่บัง)
   const shop = await loadShop().catch(() => ({ products: [] }));
-  const names = shop.products.map((p) => String(p.name || '').toLowerCase());
-  const used = (t) => jobs.some((j) => (!['cancelled', 'failed'].includes(j.status) || j.dup) && String(j.title || '').slice(0, 24) === String(t).slice(0, 24)); // dup = ยกเลิกเพราะผลิตที่อื่นแล้ว ห้ามหยิบซ้ำ
-  for (const set of cfg.sets.filter((x) => (cfg.auto.sets || []).includes(x.id))) {
-    for (const b of set.books || []) {
-      const key = String(b.match || String(b.t).slice(0, 18)).toLowerCase();
-      if (!b.t || names.some((n) => n.includes(key)) || used(b.t)) continue;
-      const { randomUUID } = await import('node:crypto');
-      const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', kind: jobKind(b), title: String(b.t).slice(0, 200), category: String(b.cat || '').slice(0, 80), pages: Number(b.pages) || undefined, price: Number(b.price) || 0, notes: String(b.notes || '').slice(0, 1000), purpose: `ผลิตอัตโนมัติ: เล่มในชุด ${set.name} (ชีทขาย ผลิตเสร็จแล้วรอคุณแดนอนุมัติลงขาย)` };
-      jobs.push(job); await saveJobs(jobs);
-      await logNote('factory', `ผลิตอัตโนมัติหยิบเล่มถัดไปเข้าคิว: ${job.title} (ชุด ${set.name})`);
-      return job;
-    }
-  }
-  return null;
+  const lib = ((await sb('shop_state?id=eq.factory_library&select=data').catch(() => []))?.[0]?.data?.books || []).map((b) => b.title);
+  const pick = nextBook(cfg, jobs, shop.products.map((p) => String(p.name || '')), lib); if (!pick) return null;
+  const b = pick.book, { randomUUID } = await import('node:crypto');
+  const job = { id: randomUUID(), status: 'queued', created_at: new Date().toISOString(), ordered_by: 'auto', auto: true, kind: jobKind(b), title: String(b.t).slice(0, 200), category: String(b.cat || '').slice(0, 80), pages: Number(b.pages) || undefined, price: Number(b.price) || 0, notes: String(b.notes || '').slice(0, 1000), purpose: `ผลิตอัตโนมัติ: ${pick.from}` };
+  jobs.push(job); await saveJobs(jobs);
+  await logNote('factory', `ผลิตอัตโนมัติหยิบเล่มถัดไปเข้าคิว: ${job.title} (${pick.from})`);
+  return job;
 }
 // ชุดข้อความขายต่างประเทศ (ภาษาอังกฤษ) ที่โรงงานเขียนมา: Gumroad / Notion Gallery / Pinterest / Reddit
 function cleanGlobal(g) {
@@ -2351,6 +2343,7 @@ ${books}`;
       const st = String(req.query.status || '');
       const all = await loadJobs();
       const cfg = await loadFacCfg().catch(() => ({ paused: false }));
+      if (st === 'queued' && keyOk(req)) { try { const fx = fixStale(all); if (fx.length) { await saveJobs(all); await logNote('factory', fx.map((x) => `${x.act === 'requeue' ? 'ส่งกลับเข้าคิว' : 'ปิดงาน'}: ${x.title} (ค้างกำลังผลิต ${x.h} ชม.)`).join(' · ')); } } catch (e) { console.error('stale', e.message); } } // ⏱ งานค้างกำลังผลิตเกิน 12 ชม.
       if (st === 'queued' && keyOk(req)) { try { await autoFillFactory(all); } catch (e) { console.error('autofill', e.message); } try { await autoVideo(all); } catch (e) { console.error('autovideo', e.message); } try { await autoLessons(all); } catch (e) { console.error('autolesson', e.message); } } // รอบผลิตของโรงงานเรียกตรงนี้ก่อนเสมอ
       let jobs = st === 'queued' ? queueOrder(all) : all.filter((j) => !st || j.status === st).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
       // ⚖️ slim=1 (หน้าโรงงานรีเฟรชเอง): งานที่จบไปเกิน 2 วัน ส่งแค่หัวงาน ไม่ส่งข้อความหน้าขาย/สรุป (เดิมครั้งละ ~470 KB ทุก 30 วิ กินโควตา Vercel) · หน้าเว็บเอาส่วนที่เหลือจากที่โหลดไว้แล้วมารวม
@@ -2504,7 +2497,14 @@ ${books}`;
     if (action === 'factory_cfg') { // GET แอดมิน/key · POST เฉพาะคุณแดน {sets:[{id,name,emoji,goal,books:[{t,cat,pages,price,notes,match}]}], auto:{on,per_week,sets:[id]}}
       const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
       if (!admin && !keyOk(req)) return res.status(401).json({ ok: false, error: 'bad key' });
-      if (req.method !== 'POST') return res.status(200).json({ ok: true, cfg: await loadFacCfg() });
+      if (req.method !== 'POST') { // + สถานะจริงของสวิตช์ผลิตอัตโนมัติ (ล่าสุดเมื่อไหร่ / ทำไมยังไม่หยิบ / ถัดไปคืออะไร) ให้บอร์ดบอกตามจริง
+        const cfg = await loadFacCfg(); let auto_status = null;
+        try { const jobs = await loadJobs(), shop = await loadShop().catch(() => ({ products: [] })), lib = ((await sb('shop_state?id=eq.factory_library&select=data').catch(() => []))?.[0]?.data?.books || []).map((b) => b.title);
+          const bg = bookGate(cfg, jobs), nb = nextBook(cfg, jobs, shop.products.map((p) => String(p.name || '')), lib), courses = {};
+          for (const c of await (await import('../lib/courses.js')).loadCourses()) { const g = lessonGate(c, jobs); courses[c.id] = { ...g, text: gateText(g, g.next) }; }
+          auto_status = { books: { ...bg, next: nb ? nb.book.t : null, from: nb ? nb.from : null, text: gateText(bg, nb && nb.book.t) }, courses }; } catch (e) { console.error('auto_status', e.message); }
+        return res.status(200).json({ ok: true, cfg, auto_status });
+      }
       if (!admin) return res.status(403).json({ ok: false, error: 'ตั้งค่าได้เฉพาะคุณแดน' });
       const body = await readBody(req); const old = await loadFacCfg();
       const sets = Array.isArray(body.sets) ? body.sets.slice(0, 20).map((x, i) => ({ id: /^[a-z0-9_-]{2,40}$/i.test(String(x.id || '')) ? String(x.id) : 'set' + Date.now().toString(36) + i, name: String(x.name || 'ชุดใหม่').slice(0, 80), emoji: String(x.emoji || '📚').slice(0, 4), goal: String(x.goal || '').slice(0, 200),

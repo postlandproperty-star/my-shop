@@ -523,6 +523,12 @@ try {
             act('facPanel', { dataset: { v: '' } }); await w(30); r.closed = !document.getElementById('fb-panel');
             FJOBS = keep.F; D.products = keep.P; CRS.list = keep.L; CRS.jobs = keep.J; S.fbF = 'all'; S.ordKind = null; render(true); return r; });
           pass(`[${kind}] โรงงาน (บอร์ด): 4 ช่อง รอคิว → กำลังทำ → รอคุณแดนตรวจ → ขายอยู่ รวมหนังสือ+คอร์ส · ✓ ลงขาย (ยังไม่ตั้งราคา = ปุ่มตั้งราคา) · อนุมัติบทคอร์สทั้งชุด · กรองหนังสือ/คอร์ส · + สั่งผลิตเลือกหนังสือหรือคอร์ส`, bd.q === 2 && bd.p === 2 && bd.r === 4 && bd.qTxt && bd.bar && bd.pub === 1 && bd.price === 2 && bd.appr && bd.live && bd.defCol === 'r' && bd.onlyC && bd.onlyB && bd.seg && bd.segC && bd.crsRev === 2 && bd.closed, JSON.stringify(bd)); }
+        { const st = await page.evaluate(() => { const k = { c: FCFG.cfg, s: FCFG.st, L: CRS.list, ld: FCFG.loading };
+            FCFG.cfg = { sets: [], auto: { on: true, per_week: 4, sets: [] } }; FCFG.loading = true; CRS.list = [{ id: 'k1', title: 'ภาษาอังกฤษ ก.พ. คอร์สออนไลน์', auto: { on: true, perWeek: 5 } }, { id: 'k2', title: 'แกรมมาร์ คอร์สออนไลน์', auto: { on: true, perWeek: 5 } }];
+            FCFG.st = { books: { text: 'ยังไม่เคยผลิตเอง · ถัดไป: IELTS LISTENING MAP' }, courses: { k1: { text: 'ล่าสุด 24 ต.ค. · ถัดไป: Parts of Speech' }, k2: { text: 'ล่าสุด 12 ต.ค. · ทำครบทุกบทในแผนแล้ว' } } };
+            const box = document.createElement('div'); box.innerHTML = fqAutoBar(); const t = [...box.querySelectorAll('.fq-st')].map((x) => x.textContent);
+            FCFG.cfg = k.c; FCFG.st = k.s; CRS.list = k.L; FCFG.loading = k.ld; return t; });
+          pass(`[${kind}] โรงงาน: สวิตช์ "ให้ AI ผลิตเอง" บอกสถานะจริงใต้แต่ละสวิตช์ (ล่าสุดเมื่อไหร่ · ถัดไป · ทำครบแผนแล้ว)`, st.length === 3 && /ถัดไป: IELTS/.test(st[0]) && /Parts of Speech/.test(st[1]) && /ครบทุกบท/.test(st[2]), JSON.stringify(st)); }
         await tab('order'); const o = await page.evaluate(() => ({ title: !!document.getElementById('fq-title'), idea: (document.querySelector('[data-a="fqIdea"]') || {}).textContent || '' }));
         await page.locator('[data-a="ordMode"][data-v="set"]').click({ timeout: 4000 }).catch(() => {}); await page.waitForTimeout(150);
         await page.fill('#so-name', 'IELTS 6.5').catch(() => {}); await page.fill('#so-books', 'IELTS Listening 10 ชุด | 199\nIELTS Reading 10 ชุด\n\nIELTS Writing 50 หัวข้อ | 179').catch(() => {});
