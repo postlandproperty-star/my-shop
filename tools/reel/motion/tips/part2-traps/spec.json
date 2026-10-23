@@ -1,0 +1,159 @@
+{
+ "_facts": "TOEIC Listening Part 2 (Question-Response): 25 ข้อ ฟังคำถาม/ประโยคแล้วเลือกคำตอบ 3 ตัวเลือก (A B C) ข้อสอบไม่พิมพ์ตัวเลือก ต้องฟังอย่างเดียว · ตัวหลอกที่พบบ่อย: เสียงคล้าย, คำซ้ำจากคำถาม, ตอบ Yes/No กับคำถาม Wh-, คำที่เกี่ยวข้องกัน · คำตอบอ้อมๆ มักถูก (สรุปจากแนวข้อสอบทั่วไป ไม่อ้างสถิติ)",
+ "pill": "🎧 TOEIC Part 2 · ตัวหลอก",
+ "cover_at": 1.6,
+ "hook": [
+  "Part 2 ฟังทันแต่",
+  "ยังตอบผิด?",
+  "เพราะโดนตัวหลอก!"
+ ],
+ "n1": "TOEIC Part 2|ฟังทันแต่*ยังตอบผิด*?|เพราะโดน*ตัวหลอก*|มาดู 4 แบบที่เจอบ่อย",
+ "tips": [
+  {
+   "title": [
+    "1. เสียงคล้าย",
+    "≠ คำตอบที่ถูก"
+   ],
+   "th": "แบบแรก|*เสียงคล้าย*|ถามเรื่อง copy|แต่ตัวหลอกพูดว่า *coffee*",
+   "en": [
+    [
+     "fen",
+     "Where can I make some copies?",
+     "ถ่ายเอกสารได้ที่ไหนครับ?"
+    ],
+    [
+     "men",
+     "I'd like some coffee, please.",
+     "ขอกาแฟหน่อยค่ะ (ตัวหลอก!)"
+    ]
+   ],
+   "en_mood": {
+    "x1b": "bad"
+   },
+   "board": "<p class=\"h\">Q: Where can I make some copies?</p><div class=\"opt bad\" data-x=\"x1b\"><b>A</b>I'd like some coffee.<i>✗</i></div><div class=\"opt ok\" data-after=\"x1b\"><b>B</b>On the second floor.<i>✓</i></div>",
+   "pop": [
+    "similar sound",
+    "เสียงคล้าย"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "2. คำซ้ำจากคำถาม",
+    "มักเป็นกับดัก"
+   ],
+   "th": "แบบที่สอง|ตัวเลือกที่*พูดคำเดิม*ซ้ำ|ฟังดูเกี่ยว|แต่*ไม่ได้ตอบคำถาม*",
+   "en": [
+    [
+     "fen",
+     "Did you finish the report?",
+     "ทำรายงานเสร็จหรือยังครับ?"
+    ],
+    [
+     "men",
+     "The report is about sales.",
+     "รายงานเกี่ยวกับยอดขายค่ะ (ตัวหลอก!)"
+    ]
+   ],
+   "en_mood": {
+    "x2b": "bad"
+   },
+   "board": "<p class=\"h\">Q: Did you finish the report?</p><div class=\"opt bad\" data-x=\"x2b\"><b>A</b>The report is about sales.<i>✗</i></div><div class=\"opt ok\" data-after=\"x2b\"><b>B</b>Yes, I sent it this morning.<i>✓</i></div>",
+   "pop": [
+    "repeated word",
+    "คำซ้ำ"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "3. ถาม Wh-",
+    "ห้ามตอบ Yes / No"
+   ],
+   "th": "แบบที่สาม|ถามด้วย *When Where Who*|แต่ตอบ *Yes หรือ No*|ผิดทันที",
+   "en": [
+    [
+     "fen",
+     "When does the meeting start?",
+     "ประชุมเริ่มกี่โมงครับ?"
+    ],
+    [
+     "men",
+     "Yes, it does.",
+     "ใช่ค่ะ (ตัวหลอก!)"
+    ]
+   ],
+   "en_mood": {
+    "x3b": "bad"
+   },
+   "board": "<p class=\"h\">Q: When does the meeting start?</p><div class=\"opt bad\" data-x=\"x3b\"><b>A</b>Yes, it does.<i>✗</i></div><div class=\"opt ok\" data-after=\"x3b\"><b>B</b>At ten o'clock.<i>✓</i></div>",
+   "pop": [
+    "Wh- question",
+    "คำถามขึ้นต้น Wh-"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "4. คำที่เกี่ยวข้อง",
+    "แต่ไม่ใช่คำตอบ"
+   ],
+   "th": "แบบที่สี่|ถามเรื่อง*ตั๋วเครื่องบิน*|ตัวหลอกพูดถึง*สนามบิน*|ฟังเข้ากันแต่*ไม่ได้ตอบ*",
+   "en": [
+    [
+     "fen",
+     "Who's going to book the flight?",
+     "ใครจะจองตั๋วเครื่องบินครับ?"
+    ],
+    [
+     "men",
+     "The airport is very busy.",
+     "สนามบินคนเยอะมากค่ะ (ตัวหลอก!)"
+    ]
+   ],
+   "en_mood": {
+    "x4b": "bad"
+   },
+   "board": "<p class=\"h\">Q: Who's going to book the flight?</p><div class=\"opt bad\" data-x=\"x4b\"><b>A</b>The airport is very busy.<i>✗</i></div><div class=\"opt ok\" data-after=\"x4b\"><b>B</b>Maria will do it.<i>✓</i></div>",
+   "pop": [
+    "related word",
+    "คำที่เกี่ยวข้อง"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "แถม: คำตอบอ้อมๆ",
+    "มักเป็นข้อถูก!"
+   ],
+   "th": "ทริคแถม|คำตอบที่*อ้อมๆ*|เช่น เดี๋ยวเช็กให้|มักเป็น*ข้อที่ถูก*",
+   "en": [
+    [
+     "fen",
+     "Where's the sales report?",
+     "รายงานยอดขายอยู่ไหนครับ?"
+    ],
+    [
+     "men",
+     "Jenny is still working on it.",
+     "เจนนี่ยังทำอยู่เลยค่ะ (ถูก!)"
+    ]
+   ],
+   "en_mood": {
+    "x5b": "ok"
+   },
+   "board": "<p class=\"h\">Q: Where's the sales report?</p><div class=\"opt ok\" data-x=\"x5b\"><b>A</b>Jenny is still working on it.<i>✓</i></div><p class=\"note\" data-after=\"x5b\">ไม่ได้บอกที่อยู่ตรงๆ แต่ตอบคำถามได้</p>",
+   "pop": [
+    "indirect answer",
+    "คำตอบอ้อมๆ"
+   ],
+   "pop_at": 1
+  }
+ ],
+ "z": "เซฟไว้ก่อนสอบ|แล้วเมนต์บอกหน่อย|โดน*ตัวหลอกแบบไหน*บ่อยสุด?",
+ "end_lines": [
+  "เซฟไว้ก่อนสอบ!",
+  "โดนแบบไหนบ่อยสุด?",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

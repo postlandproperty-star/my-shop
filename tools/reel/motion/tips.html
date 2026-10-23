@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 💡 แม่แบบ "เทคนิคสอบ" (ต่อยอดจาก toeic-listening.html ที่คนดู 4.8K · คุณแดน 24 ต.ค. 69 "คนชอบคลิปแบบนี้จริง ทำออกมาเยอะๆ")
+     ห้ามเปิดไฟล์นี้ตรงๆ: tips.py <slug> สร้าง tips-<slug>.html (แทน __EP__ ด้วย slug) แล้วอัดคลิป
+     ข้อมูลตอน: tips/<slug>/spec.json → spec.js (window.SPEC) · เสียง/เวลา: tips/<slug>/data.js (window.EP)
+     ฉาก: ฟ้า + โต๊ะ + กระดานกลางจอ (board HTML ใน spec · ชิ้นที่มี data-c="i" โผล่ตอนพากย์ถึงท่อนที่ i ของเทคนิคนั้น)
+     📱 กรอบปลอดภัย IG/FB: ไม่มีตัวหนังสือใน 250px บนสุด และ 380px ล่างสุด -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#BFD7F5;font-family:K,sans-serif}
+#bg{position:absolute;inset:0;background:linear-gradient(#9EC3EE 0,#CFE2F8 52%,#CFE2F8 58%)}
+#desk{position:absolute;left:0;right:0;top:1160px;bottom:0;background:linear-gradient(#A8754C,#8A5A36 30%,#6E4428)}
+#desk:before{content:"";position:absolute;left:0;right:0;top:0;height:26px;background:#C08A5C}
+.pill{position:absolute;left:46px;top:270px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8;max-width:700px;white-space:nowrap}
+#dots{position:absolute;right:46px;top:272px;padding:18px 24px;border-radius:60px;background:#0F1B33E6;display:flex;gap:14px;z-index:8}
+.dot{width:30px;height:30px;border-radius:50%;background:#56637D;color:#fff;font-size:20px;font-weight:800;display:grid;place-items:center}
+.dot.on{background:#2DBE6C}
+.ttl{position:absolute;left:30px;right:30px;top:372px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:8px}
+.ln{font-weight:800;font-size:92px;line-height:1.1;color:#fff;-webkit-text-stroke:14px #0F1B33;paint-order:stroke fill;text-align:center;white-space:nowrap}
+.ln.y{color:#FFD43B}
+.ln.r{background:#E5484D;-webkit-text-stroke:0;padding:4px 34px 14px;border-radius:18px;box-shadow:0 10px 0 #9E2A2E}
+.board{position:absolute;left:70px;right:70px;top:650px;min-height:380px;z-index:6;background:#fff;border:8px solid #0F1B33;border-radius:30px;box-shadow:0 16px 0 #0F1B3333;padding:26px 34px;color:#0F1B33;overflow:hidden}
+.board .h{font-weight:800;font-size:50px;color:#0F1B33;margin-bottom:14px}
+.board .q{font-weight:800;font-size:52px;line-height:1.2}
+.board .opt{display:flex;align-items:center;gap:18px;font-weight:800;font-size:50px;line-height:1.2;margin:12px 0;padding:8px 18px;border-radius:18px;background:#F1F5FB}
+.board .opt b{display:inline-grid;place-items:center;min-width:58px;height:58px;border-radius:50%;background:#0F1B33;color:#fff;font-size:34px}
+.board .opt.bad{background:#FFE3E3;outline:5px solid #E5484D}.board .opt.ok{background:#E3F9E9;outline:5px solid #2DBE6C}
+.board .opt i{font-style:normal;margin-left:auto;font-size:52px}
+.board .chips{display:flex;flex-wrap:wrap;gap:14px;margin:6px 0 12px}
+.board .chips span{font-weight:800;font-size:52px;padding:4px 22px;border-radius:16px;background:#FFF0D6;border:4px solid #E8590C;color:#E8590C}
+.board .ex{font-weight:800;font-size:46px;line-height:1.25;color:#0F1B33}.board .ex u{text-decoration:none;color:#E8590C}
+.board .note{margin-top:12px;font-weight:600;font-size:38px;color:#56637D}
+.board .big{font-weight:800;font-size:64px;line-height:1.15}
+.board .stamp{position:absolute;right:34px;bottom:30px;font-weight:800;font-size:64px;padding:6px 26px;border-radius:16px;border:7px solid currentColor;transform:rotate(-8deg)}
+.stamp.t{color:#2DBE6C}.stamp.f{color:#E5484D}.stamp.n{color:#7048E8}
+.board .psg{font-weight:600;font-size:40px;line-height:1.35;background:#F1F5FB;border-left:10px solid #1F6FEB;border-radius:12px;padding:12px 18px;margin-bottom:14px}
+.board .psg u{text-decoration:none;background:#FFE27A;border-radius:6px;padding:0 4px}
+.bub{position:absolute;left:46px;right:150px;top:1170px;z-index:7;background:#fff;border:7px solid #0F1B33;border-radius:30px;padding:14px 26px;font-weight:800;font-size:46px;line-height:1.2;color:#0F1B33;text-align:center}
+.bub.bad{border-color:#E5484D}.bub.ok{border-color:#2DBE6C}
+.sub{position:absolute;left:30px;right:30px;top:1365px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:92px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.sub b{color:#FF4B4B}
+.sub.en{font-size:58px;color:#FFE27A;-webkit-text-stroke:12px #0F1B33}
+.hook{position:absolute;left:30px;right:30px;top:640px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:16px}
+.hook .ln{font-size:108px}
+.endc{position:absolute;left:30px;right:30px;top:600px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:22px}
+[data-in]{opacity:0;transform-origin:center}
+</style></head><body>
+<div id="bg"></div>
+<div id="desk"></div>
+<svg viewBox="0 0 1080 1920" style="position:absolute;inset:0;z-index:2"><g id="host"></g></svg>
+<div class="pill" id="pill"></div>
+<div id="dots"></div>
+<div id="dyn"></div>
+<script src="tips/__EP__/spec.js"></script>
+<script src="tips/__EP__/data.js"></script>
+<script src="cast.js"></script>
+<script>
+const S = window.SPEC, N = S.tips.length;
+$('pill').textContent = S.pill;
+$('dots').innerHTML = S.tips.map((_, i) => `<span class="dot">${i + 1}</span>`).join('');
+$('host').innerHTML = `<g id="hg">${SHEETGUY}</g>`;
+const L = {}, H = [], SFX = []; let T = 0.4;
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const red = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b>$1</b>');
+const tipOf = (k) => { const m = /^[tx](\d+)/.exec(k); return m ? +m[1] : 0; };
+for (const ln of window.EP) {
+  const a = T, b = T + ln.dur; L[ln.k] = { a, b, ch: (ln.chunks || []).map((c) => a + c[0]) }; SFX.push([+a.toFixed(2), `tips/__EP__/${ln.k}.wav`]);
+  if (ln.kind === 'narr') ln.chunks.forEach(([s, e, txt]) => H.push(`<div class="sub" data-in="${(a + s).toFixed(2)}" data-out="${(a + e - 0.02).toFixed(2)}" data-anim="pop">${red(txt)}</div>`));
+  else { const i = tipOf(ln.k), tip = S.tips[i - 1] || {}, mood = (tip.en_mood || {})[ln.k] || '';
+    H.push(`<div class="bub ${mood}" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="pop">🔊 ${esc(ln.text)}</div>`);
+    H.push(`<div class="sub en" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="none">${esc(ln.th)}</div>`); }
+  T = b + (ln.kind === 'narr' ? 0.35 : 0.55);
+}
+const at = (k, i) => L[k].ch[Math.min(i, L[k].ch.length - 1)];
+// ฮุก
+const HK = S.hook, H1 = L.n1.b + 0.3;
+H.push(`<div class="hook" data-in="0.15" data-out="${H1.toFixed(2)}" data-anim="none">${HK.map((t, i) => `<div class="ln${i === HK.length - 1 ? ' r' : i ? ' y' : ''}" data-in="${(0.15 + i * 0.45).toFixed(2)}" data-anim="pop">${esc(t)}</div>`).join('')}</div>`);
+// แต่ละเทคนิค: หัวข้อใหญ่ + กระดาน (ชิ้น data-c โผล่ตามท่อนพากย์)
+const STEP = [];
+S.tips.forEach((tp, j) => { const i = j + 1, k = 't' + i, a = L[k].a, keys = window.EP.filter((e) => tipOf(e.k) === i).map((e) => e.k), b = Math.max(...keys.map((x) => L[x].b)) + 0.5; STEP.push(a);
+  H.push(`<div class="ttl" data-in="${a.toFixed(2)}" data-out="${b.toFixed(2)}" data-anim="none">${tp.title.map((t, n) => `<div class="ln${n ? ' y' : ''}" data-in="${(a + n * 0.3).toFixed(2)}" data-anim="pop">${esc(t)}</div>`).join('')}</div>`);
+  const bd = tp.board.replace(/data-c="(\d+)"/g, (_, c) => `data-in="${at(k, +c).toFixed(2)}" data-anim="quick"`).replace(/data-x="(\w+)"/g, (_, x) => `data-in="${L[x].a.toFixed(2)}" data-anim="quick"`).replace(/data-after="(\w+)"/g, (_, x) => `data-in="${(L[x].b + 0.15).toFixed(2)}" data-anim="quick"`);
+  H.push(`<div class="board" data-in="${(a + 0.1).toFixed(2)}" data-out="${b.toFixed(2)}" data-anim="pop">${bd}</div>`);
+  SFX.push([+a.toFixed(2), 'ding']);
+});
+// 🔤 คำอังกฤษเด้ง
+H.push(popWords(S.tips.map((tp, j) => tp.pop && [at('t' + (j + 1), tp.pop_at ?? 1) + 0.2, tp.pop[0], tp.pop[1], { top: 1180 }]).filter(Boolean)));
+// จบ: การ์ดชวนเซฟ/เมนต์/ติดตาม
+const E0 = L.z.a, E1 = L.z.b + 1.6;
+H.push(`<div class="endc" data-in="${E0.toFixed(2)}" data-out="${E1.toFixed(2)}" data-anim="none">${S.end_lines.map((t, i) => `<div class="ln${i === 1 ? ' y' : i === 2 ? ' r' : ''}" data-in="${(E0 + i * 0.5).toFixed(2)}" data-anim="pop" style="${i === 2 ? 'font-size:66px' : ''}">${esc(t)}</div>`).join('')}</div>`);
+SFX.push([0.15, 'boing'], [+(0.15 + (HK.length - 1) * 0.45).toFixed(2), 'pop'], [+E0.toFixed(2), 'tada']);
+window.DURATION = +E1.toFixed(2); window.SFX = SFX;
+$('dyn').innerHTML = H.join('');
+document.querySelectorAll('.sub,.ln,.pill').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); const max = el.classList.contains('ln') ? 1000 : el.classList.contains('pill') ? 700 : el.clientWidth; while (el.scrollWidth > max && f > 34) { f -= 4; el.style.fontSize = f + 'px'; } });
+const els = [...document.querySelectorAll('[data-in]')];
+const inR = (a, b, t) => t >= a && t < b;
+function seek(t) {
+  tick(els, t);
+  const step = STEP.filter((x) => t >= x).length;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i < step));
+  const talking = window.EP.some((e) => e.kind === 'narr' && inR(L[e.k].a, L[e.k].b, t));
+  $('host').setAttribute('transform', `translate(965 ${1330 - (talking ? Math.abs(Math.sin(t * 7)) * 18 : 0)}) scale(.42)`);
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>

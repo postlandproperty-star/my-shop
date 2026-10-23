@@ -1,0 +1,138 @@
+{
+ "_facts": "รีไซเคิลกระดาษแบบทั่วไป: เก็บกระดาษใช้แล้ว → คัดแยกตามชนิด → ผสมน้ำเป็นเยื่อกระดาษ (pulp) → ทำความสะอาด/กรองสิ่งปนเปื้อนและเอาหมึกออก (de-inking) → รีดและทำให้แห้งด้วยลูกกลิ้งร้อน → ม้วนเป็นกระดาษใหม่ไปทำสินค้า · ไม่ระบุตัวเลข",
+ "ep": 4,
+ "cover_at": 1.2,
+ "head": "♻️ How is <span>paper</span> recycled?",
+ "hook": "♻️ กระดาษที่เราทิ้ง<br>ไปไหนต่อ?",
+ "n1": "กระดาษที่เราทิ้ง|กลับมาเป็น*กระดาษใหม่*ได้ยังไง?",
+ "n2": "IELTS Writing Task 1|ชอบออก*แผนภาพแบบนี้*|มาดูวิธีเขียนให้ได้ *Band 7*",
+ "chips": [
+  [
+   "n2",
+   1,
+   "📈 Writing Task 1",
+   "left:60px;top:1130px"
+  ],
+  [
+   "n2",
+   2,
+   "🎯 Band 7",
+   "left:640px;top:1130px;background:#8CE99A"
+  ]
+ ],
+ "stages": [
+  {
+   "name": "Collection",
+   "show": 1,
+   "th": "ขั้นแรก|*เก็บกระดาษใช้แล้ว*|จากบ้านและออฟฟิศ",
+   "en": "First, used paper is collected from homes and offices.",
+   "en_th": "ขั้นแรก กระดาษใช้แล้วถูกเก็บจากบ้านและออฟฟิศ",
+   "passive": "is collected",
+   "pop": [
+    "collect → collected",
+    "เก็บรวบรวม"
+   ],
+   "icon": "<path d=\"M-50 -30 h100 l-12 96 h-76z\" fill=\"#339AF0\" stroke=\"#0F1B33\" stroke-width=\"5\"/><rect x=\"-58\" y=\"-44\" width=\"116\" height=\"16\" rx=\"6\" fill=\"#1C7ED6\" stroke=\"#0F1B33\" stroke-width=\"4\"/><text x=\"0\" y=\"40\" text-anchor=\"middle\" font-size=\"46\">♻️</text><g class=\"bob\"><rect x=\"-30\" y=\"-92\" width=\"44\" height=\"54\" rx=\"3\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"3\" transform=\"rotate(-12)\"/></g>"
+  },
+  {
+   "name": "Sorting",
+   "show": 1,
+   "bg": "#E7F5FF",
+   "th": "จากนั้น|*คัดแยก*|ตามชนิดกระดาษ",
+   "en": "Next, the paper is sorted by type.",
+   "en_th": "ต่อมา กระดาษถูกคัดแยกตามชนิด",
+   "passive": "is sorted",
+   "pop": [
+    "sort → sorted",
+    "คัดแยก"
+   ],
+   "icon": "<rect x=\"-80\" y=\"0\" width=\"46\" height=\"60\" rx=\"6\" fill=\"#FFD43B\" stroke=\"#0F1B33\" stroke-width=\"4\"/><rect x=\"-23\" y=\"0\" width=\"46\" height=\"60\" rx=\"6\" fill=\"#74C0FC\" stroke=\"#0F1B33\" stroke-width=\"4\"/><rect x=\"34\" y=\"0\" width=\"46\" height=\"60\" rx=\"6\" fill=\"#B2F2BB\" stroke=\"#0F1B33\" stroke-width=\"4\"/><g class=\"drop\"><rect x=\"-10\" y=\"-70\" width=\"20\" height=\"26\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"3\"/></g>"
+  },
+  {
+   "name": "Pulping",
+   "show": 1,
+   "th": "นำไป*ผสมน้ำ*|ปั่นจนเป็น*เยื่อกระดาษ*",
+   "en": "After that, it is mixed with water to make pulp.",
+   "en_th": "หลังจากนั้น กระดาษถูกผสมกับน้ำ จนเป็นเยื่อกระดาษ",
+   "passive": "is mixed",
+   "pop": [
+    "pulp",
+    "เยื่อกระดาษ"
+   ],
+   "icon": "<path d=\"M-62 -40 v80 q0 22 22 22 h80 q22 0 22 -22 v-80\" fill=\"#D0EBFF\" stroke=\"#0F1B33\" stroke-width=\"5\"/><g class=\"spin\" data-c=\"0 20\"><path d=\"M-30 20 h60 M0 -10 v60\" stroke=\"#495057\" stroke-width=\"8\" stroke-linecap=\"round\"/></g><path d=\"M-50 -10 q12 -10 24 0 t24 0 t24 0 t24 0\" stroke=\"#74C0FC\" stroke-width=\"5\" fill=\"none\"/>"
+  },
+  {
+   "name": "De-inking",
+   "show": 1,
+   "bg": "#F8F0FC",
+   "th": "*ทำความสะอาด*เยื่อ|และ*เอาหมึกออก*",
+   "en": "Subsequently, the pulp is cleaned and the ink is removed.",
+   "en_th": "ถัดมา เยื่อกระดาษถูกทำความสะอาด และหมึกถูกเอาออก",
+   "passive": "is cleaned",
+   "pop": [
+    "ink",
+    "หมึก"
+   ],
+   "icon": "<rect x=\"-58\" y=\"-20\" width=\"116\" height=\"80\" rx=\"10\" fill=\"#F1F3F5\" stroke=\"#0F1B33\" stroke-width=\"5\"/><g class=\"bob\"><circle cx=\"-24\" cy=\"-40\" r=\"14\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"3\"/><circle cx=\"8\" cy=\"-52\" r=\"10\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"3\"/><circle cx=\"30\" cy=\"-36\" r=\"12\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"3\"/></g><g class=\"drop\"><circle cx=\"0\" cy=\"70\" r=\"8\" fill=\"#343A40\"/></g>"
+  },
+  {
+   "name": "Drying",
+   "show": 1,
+   "th": "*รีด*ผ่านลูกกลิ้งร้อน|ให้*แห้ง*เป็นแผ่น",
+   "en": "Following this, the pulp is pressed and dried by heated rollers.",
+   "en_th": "จากนั้น เยื่อกระดาษถูกรีดและทำให้แห้งด้วยลูกกลิ้งร้อน",
+   "passive": "is pressed",
+   "pop": [
+    "press → pressed",
+    "รีด/กด"
+   ],
+   "icon": "<g class=\"spin\" data-c=\"-34 -18\"><circle cx=\"-34\" cy=\"-18\" r=\"30\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"5\"/><line x1=\"-34\" y1=\"-48\" x2=\"-34\" y2=\"12\" stroke=\"#0F1B33\" stroke-width=\"3\"/></g><g class=\"spin\" data-c=\"34 -18\"><circle cx=\"34\" cy=\"-18\" r=\"30\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"5\"/><line x1=\"4\" y1=\"-18\" x2=\"64\" y2=\"-18\" stroke=\"#0F1B33\" stroke-width=\"3\"/></g><rect x=\"-86\" y=\"22\" width=\"172\" height=\"12\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"3\"/><g class=\"st\"><path d=\"M-10 -66 q8 -10 0 -20\" stroke=\"#FF8787\" stroke-width=\"5\" fill=\"none\"/></g>"
+  },
+  {
+   "name": "New paper",
+   "show": 1,
+   "bg": "#EBFBEE",
+   "th": "สุดท้าย|*ม้วนเป็นกระดาษใหม่*|ไปทำสินค้าต่อ",
+   "en": "Finally, the new paper is rolled up and made into products.",
+   "en_th": "สุดท้าย กระดาษใหม่ถูกม้วน แล้วนำไปทำเป็นสินค้า",
+   "passive": "is rolled",
+   "pop": [
+    "roll → rolled",
+    "ม้วน"
+   ],
+   "icon": "<ellipse cx=\"-10\" cy=\"10\" rx=\"40\" ry=\"50\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"5\"/><ellipse cx=\"-10\" cy=\"10\" rx=\"14\" ry=\"18\" fill=\"#DEE2E6\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path d=\"M-10 -40 h70 v100 h-70\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"5\"/><text x=\"40\" y=\"20\" text-anchor=\"middle\" font-size=\"40\">📦</text>"
+  }
+ ],
+ "recap": {
+  "title": "🏆 สูตร Band 7 เขียน Process",
+  "text": "เคล็ดลับ *Band 7* มีแค่สองอย่าง|ใช้*คำเชื่อมลำดับ*|และประโยค *passive*|is หรือ are ตามด้วย *V3*",
+  "seq": [
+   [
+    "First",
+    "ขั้นแรก"
+   ],
+   [
+    "Next",
+    "ต่อมา"
+   ],
+   [
+    "After that",
+    "หลังจากนั้น"
+   ],
+   [
+    "Subsequently",
+    "ถัดมา"
+   ],
+   [
+    "Following this",
+    "จากนั้น"
+   ],
+   [
+    "Finally",
+    "สุดท้าย"
+   ]
+  ],
+  "v3": "is collected · is rolled"
+ },
+ "end": "บ้านคุณ*แยกขยะ*ไหม?|*เมนต์เลย*"
+}

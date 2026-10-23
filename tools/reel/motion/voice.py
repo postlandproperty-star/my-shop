@@ -15,7 +15,7 @@ TH_VOICE = os.environ.get('TH_VOICE', 'th-TH-Chirp3-HD-Kore')  # เปลี่
 EN_VOICE = {'fen': os.environ.get('EN_MALE', 'bm_george'), 'men': os.environ.get('EN_FEMALE', 'bf_emma')}  # Kokoro อังกฤษสำเนียงบริติช
 KOKORO = os.path.expanduser('~/Documents/Academic/_kit/kokoro/venv/bin/python')
 GKEY = os.path.expanduser('~/Documents/Academic/.google_tts_key')
-USAGE = '/Volumes/PortableSSD/Sheetlab/_factory/tts_usage.json'; CAP = 900_000
+USAGE = '/Volumes/PortableSSD/Sheetlab/_factory/tts_usage.json'; CAP = min(990_000, int(os.environ.get('TTS_CAP', 900_000)))  # TTS_CAP ยกเพดานได้ชั่วคราว แต่ไม่เกิน 990,000 (ฟรี 1 ล้าน)
 
 
 def _norm(x): return re.sub(r'[^0-9a-z\u0E00-\u0E7F]', '', x.lower())
@@ -59,7 +59,7 @@ def _usage():
 
 
 def _google_th(text, mp3):
-    """พากย์ไทยด้วย Google Chirp 3 HD (โควตาฟรี) · เกิน 900,000 ตัวอักษรในเดือนนี้ = หยุด"""
+    """พากย์ไทยด้วย Google Chirp 3 HD (โควตาฟรี) · เกินเพดาน CAP (ค่าเริ่ม 900,000) ในเดือนนี้ = หยุด"""
     import urllib.request, base64
     m, used = _usage(); n = len(text)
     if used + n > CAP: raise SystemExit(f'โควตาเสียงฟรี Google เดือน {m} ใช้ไป {used:,} ตัวอักษร (เพดาน {CAP:,}) · ไม่ทำเสียงที่ต้องจ่าย รอต้นเดือนหน้า หรือรันด้วย VOICE_PREVIEW=1 เพื่อดูเลย์เอาต์')

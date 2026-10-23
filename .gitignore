@@ -26,3 +26,9 @@ tools/reel/motion/process/*/data.js
 tools/reel/motion/process-*.html
 tools/reel/motion/*/*.wav
 tools/reel/motion/*/*.mp3
+tools/reel/motion/tips/*/spec.js
+tools/reel/motion/tips/*/data.js
+tools/reel/motion/tips/*/*.preview
+tools/reel/motion/tips-*.html
+tools/reel/motion/tips/*/*.wav
+tools/reel/motion/tips/*/*.mp3

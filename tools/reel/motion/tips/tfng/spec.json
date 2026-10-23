@@ -1,0 +1,112 @@
+{
+ "_facts": "IELTS Reading: True/False/Not Given = ข้อความตรงกับข้อมูลในบทความ / ขัดกับบทความ / บทความไม่ได้ให้ข้อมูล · Yes/No/Not Given ใช้กับความเห็นหรือข้ออ้างของผู้เขียน (writer's views/claims) · บทความตัวอย่างแต่งเอง",
+ "pill": "📚 IELTS Reading · TFNG",
+ "cover_at": 1.6,
+ "hook": [
+  "True False Not Given",
+  "คนไทยพลาด",
+  "ข้อนี้เยอะสุด!"
+ ],
+ "n1": "IELTS Reading|ข้อ *True False Not Given*|คนไทย*พลาดเยอะสุด*",
+ "tips": [
+  {
+   "title": [
+    "อ่านบทความ",
+    "สั้นๆ ก่อน"
+   ],
+   "th": "สมมติบทความบอกว่า|ห้องสมุด*เปิดปี 1998*|และมี*หนังสือกว่าสองหมื่นเล่ม*",
+   "en": [
+    [
+     "fen",
+     "The city library opened in 1998. It now has over twenty thousand books.",
+     "ห้องสมุดเมืองเปิดปี 1998 ตอนนี้มีหนังสือกว่า 20,000 เล่ม"
+    ]
+   ],
+   "board": "<p class=\"h\">Passage</p><p class=\"psg\">The city library <u>opened in 1998</u>. It now has <u>over 20,000 books</u>, and most visitors come at weekends.</p>",
+   "pop": [
+    "passage",
+    "บทความ"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "TRUE",
+    "ตรงกับบทความ"
+   ],
+   "th": "ข้อความบอกว่า|เปิดใน*ยุค 1990*|ตรงกับปี 1998|ตอบ *True*|ถึงจะใช้คำต่างกันก็ได้",
+   "en": [
+    [
+     "men",
+     "The library opened in the 1990s.",
+     "ห้องสมุดเปิดในยุค 1990"
+    ]
+   ],
+   "board": "<p class=\"psg\">The city library <u>opened in 1998</u>. It now has <u>over 20,000 books</u>, and most visitors come at weekends.</p><p class=\"big\" style=\"margin-right:270px;font-size:54px\">The library opened in the 1990s.</p><span class=\"stamp t\" data-c=\"3\">TRUE</span>",
+   "pop": [
+    "paraphrase",
+    "ใช้คำอื่นแต่ความหมายเดิม"
+   ],
+   "pop_at": 4
+  },
+  {
+   "title": [
+    "FALSE",
+    "ขัดกับบทความ"
+   ],
+   "th": "ข้อความบอกว่า|มีหนังสือ*ไม่ถึงหมื่นเล่ม*|แต่บทความบอก*กว่าสองหมื่น*|ขัดกัน ตอบ *False*",
+   "en": [
+    [
+     "men",
+     "The library has fewer than ten thousand books.",
+     "ห้องสมุดมีหนังสือไม่ถึง 10,000 เล่ม"
+    ]
+   ],
+   "board": "<p class=\"psg\">The city library <u>opened in 1998</u>. It now has <u>over 20,000 books</u>, and most visitors come at weekends.</p><p class=\"big\" style=\"margin-right:270px;font-size:54px\">The library has fewer than 10,000 books.</p><span class=\"stamp f\" data-c=\"3\">FALSE</span>",
+   "pop": [
+    "contradict",
+    "ขัดแย้ง"
+   ],
+   "pop_at": 3
+  },
+  {
+   "title": [
+    "NOT GIVEN",
+    "บทความไม่ได้บอก"
+   ],
+   "th": "ข้อความบอกว่า|เป็นห้องสมุด*ใหญ่ที่สุดในเมือง*|บทความ*ไม่ได้พูดถึงเลย*|ตอบ *Not Given*|ห้ามเดาจากความรู้ตัวเอง",
+   "en": [
+    [
+     "men",
+     "It is the largest library in the city.",
+     "เป็นห้องสมุดที่ใหญ่ที่สุดในเมือง"
+    ]
+   ],
+   "board": "<p class=\"psg\">The city library <u>opened in 1998</u>. It now has <u>over 20,000 books</u>, and most visitors come at weekends.</p><p class=\"big\" style=\"margin-right:270px;font-size:54px\">It is the largest library in the city.</p><span class=\"stamp n\" data-c=\"3\">NOT GIVEN</span>",
+   "pop": [
+    "not mentioned",
+    "ไม่ได้กล่าวถึง"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "แถม: YES / NO",
+    "ใช้กับความเห็นผู้เขียน"
+   ],
+   "th": "ถ้าโจทย์เป็น *Yes No Not Given*|จะถามเรื่อง*ความเห็นของผู้เขียน*|ส่วน *True False* ถาม*ข้อเท็จจริง*",
+   "board": "<p class=\"big\" data-c=\"0\">TRUE / FALSE</p><p class=\"ex\" data-c=\"0\">→ ข้อเท็จจริง (facts)</p><p class=\"big\" data-c=\"1\" style=\"margin-top:22px\">YES / NO</p><p class=\"ex\" data-c=\"1\">→ ความเห็นผู้เขียน (views)</p>",
+   "pop": [
+    "writer's views",
+    "ความเห็นผู้เขียน"
+   ],
+   "pop_at": 1
+  }
+ ],
+ "z": "ข้อไหนที่คุณ*สับสนบ่อยสุด*|False หรือ Not Given?|*เมนต์เลย*",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "False หรือ Not Given?",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

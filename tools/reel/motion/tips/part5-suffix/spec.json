@@ -1,0 +1,98 @@
+{
+ "_facts": "TOEIC Reading Part 5 (Incomplete Sentences) มีข้อแบบเลือกชนิดคำ (word form) · suffix ทั่วไป: นาม -tion -ment -ness -ity · คุณศัพท์ -ful -ive -able -ous · กริยาวิเศษณ์ -ly (ข้อยกเว้น friendly lovely เป็นคุณศัพท์) · หลัง the/ก่อน of = นาม · ขยายกริยา = กริยาวิเศษณ์ · ไม่อ้างว่าใช้ได้ทุกข้อ",
+ "pill": "📖 TOEIC Part 5 · ดูคำท้าย",
+ "cover_at": 1.6,
+ "hook": [
+  "Part 5 ไม่ต้องแปล",
+  "ทั้งประโยค",
+  "ดูแค่คำท้าย!"
+ ],
+ "n1": "TOEIC Part 5|หลายข้อ*ไม่ต้องแปลทั้งประโยค*|ดูแค่*คำท้าย*|ก็รู้ว่าเป็นคำชนิดไหน",
+ "tips": [
+  {
+   "title": [
+    "คำนาม",
+    "ลงท้ายแบบนี้"
+   ],
+   "th": "ลงท้ายด้วย|*tion ment ness ity*|ส่วนใหญ่เป็น*คำนาม*",
+   "board": "<p class=\"h\">คำนาม (noun)</p><div class=\"chips\" data-c=\"1\"><span>-tion</span><span>-ment</span><span>-ness</span><span>-ity</span></div><p class=\"ex\" data-c=\"2\">informa<u>tion</u> · develop<u>ment</u><br>happi<u>ness</u> · abil<u>ity</u></p>",
+   "pop": [
+    "noun",
+    "คำนาม"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "คุณศัพท์",
+    "ลงท้ายแบบนี้"
+   ],
+   "th": "ลงท้ายด้วย|*ful ive able ous*|ส่วนใหญ่เป็น*คุณศัพท์*",
+   "board": "<p class=\"h\">คุณศัพท์ (adjective)</p><div class=\"chips\" data-c=\"1\"><span>-ful</span><span>-ive</span><span>-able</span><span>-ous</span></div><p class=\"ex\" data-c=\"2\">care<u>ful</u> · effect<u>ive</u><br>avail<u>able</u> · fam<u>ous</u></p>",
+   "pop": [
+    "adjective",
+    "คุณศัพท์"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "ลงท้าย -ly",
+    "ส่วนใหญ่ขยายกริยา"
+   ],
+   "th": "ลงท้ายด้วย *ly*|ส่วนใหญ่เป็น*กริยาวิเศษณ์*|แต่ระวัง *friendly*|เป็นคุณศัพท์",
+   "board": "<p class=\"h\">กริยาวิเศษณ์ (adverb)</p><div class=\"chips\" data-c=\"1\"><span>-ly</span></div><p class=\"ex\" data-c=\"1\">quick<u>ly</u> · careful<u>ly</u></p><p class=\"note\" data-c=\"2\">⚠️ friendly · lovely = คุณศัพท์</p>",
+   "pop": [
+    "adverb",
+    "กริยาวิเศษณ์"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "ลองข้อจริง",
+    "หลัง the = คำนาม"
+   ],
+   "th": "ช่องว่าง*หลัง the*|และ*ก่อน of*|ต้องเป็น*คำนาม*|ตอบ *efficiency*",
+   "en": [
+    [
+     "men",
+     "The new system will improve the blank of our team.",
+     "ระบบใหม่จะช่วยเพิ่ม ___ ของทีมเรา"
+    ]
+   ],
+   "board": "<p class=\"q\" style=\"font-size:44px\">The new system will improve the ______ of our team.</p><div class=\"opt \"><b>A</b>efficient<i></i></div><div class=\"opt \"><b>B</b>efficiently<i></i></div><div class=\"opt ok\" data-c=\"3\"><b>C</b>efficiency<i>✓</i></div>",
+   "pop": [
+    "efficiency",
+    "ประสิทธิภาพ"
+   ],
+   "pop_at": 3
+  },
+  {
+   "title": [
+    "ข้อสอง",
+    "ขยายกริยา = -ly"
+   ],
+   "th": "ช่องว่าง*ขยายกริยา read*|ต้องเป็น*กริยาวิเศษณ์*|ตอบ *carefully*",
+   "en": [
+    [
+     "men",
+     "Please read the instructions blank before you begin.",
+     "โปรดอ่านคำแนะนำ ___ ก่อนเริ่ม"
+    ]
+   ],
+   "board": "<p class=\"q\" style=\"font-size:44px\">Please read the instructions ______ before you begin.</p><div class=\"opt \"><b>A</b>careful<i></i></div><div class=\"opt ok\" data-c=\"2\"><b>B</b>carefully<i>✓</i></div><div class=\"opt \"><b>C</b>care<i></i></div>",
+   "pop": [
+    "carefully",
+    "อย่างระมัดระวัง"
+   ],
+   "pop_at": 2
+  }
+ ],
+ "z": "จำคำท้ายแค่นี้|ทำ Part 5 ได้*ไวขึ้นเยอะ*|เมนต์บอกหน่อย|อยากได้ทริคข้อไหนต่อ?",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "อยากได้ทริคไหนต่อ?",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}
