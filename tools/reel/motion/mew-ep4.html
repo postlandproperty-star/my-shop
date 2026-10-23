@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🎬 มิว EP.3 Part 2 "ฝรั่งถามทาง ภาค 2" (คุณแดน 23 ต.ค. 69: EP.3 คนชอบมาก) ต่อจาก mew-ep3.html ฉากเดิม BTS สยาม
+     มิวพูดยาวรวดเดียวจนฝรั่งงง → ใช้กฎข้อ 3 บอกทางไปจตุจักรทีละขั้น · เสียง/เวลาใน ep4/data.js (ep4/gen.py)
+     ขอบปลอดภัย IG/FB: ไม่มีตัวหนังสือบนสุด 250 px และล่างสุด 380 px · คำอังกฤษเด้ง popWords(POP) จาก cast.js -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#9BD0F5;font-family:K,sans-serif}
+svg{position:absolute;inset:0}
+.pill{position:absolute;top:270px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8}
+.sub{position:absolute;left:30px;right:30px;top:1365px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.sub b{color:#FF4B4B}
+.sub.en{font-size:64px;-webkit-text-stroke:12px #0F1B33;color:#FFE27A}
+.sub.th{top:1560px;font-size:64px}
+.bub{position:absolute;z-index:6;background:#fff;border:8px solid #0F1B33;border-radius:38px;padding:18px 30px;font-weight:800;font-size:54px;line-height:1.2;color:#0F1B33;text-align:center;max-width:760px}
+.bub:after{content:"";position:absolute;bottom:-44px;border:22px solid transparent;border-top:28px solid #0F1B33}
+.bub.l:after{left:110px}.bub.r:after{right:110px}
+.bub.bad{border-color:#E5484D}.bub.bad:after{border-top-color:#E5484D}
+.bub.ok{border-color:#2DBE6C;background:#F0FCF4}.bub.ok:after{border-top-color:#2DBE6C}
+.bub em{font-style:normal;background:#FFD43B;border-radius:10px;padding:0 8px}
+.rule{position:absolute;left:46px;right:46px;top:360px;z-index:7;background:#FFF8EC;border:6px solid #0F1B33;border-radius:16px;padding:22px 34px 30px;box-shadow:0 14px 0 #0F1B3330}
+.rule small{display:inline-block;background:#E5484D;color:#fff;font-weight:800;font-size:38px;padding:2px 18px;border-radius:10px;margin-bottom:10px}
+.rule div{font-weight:800;font-size:68px;color:#0F1B33;line-height:1.15}
+[data-in]{opacity:0;transform-origin:center}
+.title{position:absolute;left:40px;right:40px;top:380px;z-index:7;text-align:center;font-weight:800;font-size:104px;line-height:1.1;color:#E5484D;-webkit-text-stroke:14px #fff;paint-order:stroke fill}
+.title small{display:block;font-size:64px;color:#0F1B33}
+.word{position:absolute;left:60px;right:60px;z-index:7;background:#fff;border:8px solid #0F1B33;border-radius:30px;padding:16px 36px;display:flex;align-items:baseline;gap:24px;font-weight:800;color:#0F1B33;white-space:nowrap}
+.word span{font-size:72px;color:#E8590C}.word u{text-decoration:none;font-size:52px;margin-left:auto}
+#tint{position:absolute;inset:0;z-index:5;background:#0F1B33;opacity:0}
+</style></head><body>
+<svg viewBox="0 0 1080 1920">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7EC3F2"/><stop offset="1" stop-color="#CDE9FB"/></linearGradient></defs>
+  <rect width="1080" height="1920" fill="url(#sky)"/>
+  <g id="city"></g>
+  <!-- ราง BTS -->
+  <rect x="0" y="560" width="1080" height="70" fill="#B9C2CF"/><rect x="0" y="630" width="1080" height="18" fill="#8E99A8"/>
+  <g fill="#A7B1BF"><rect x="110" y="648" width="60" height="660"/><rect x="520" y="648" width="60" height="660"/><rect x="930" y="648" width="60" height="660"/></g>
+  <g id="train"><rect x="0" y="470" width="900" height="96" rx="26" fill="#F4F6FA" stroke="#5A6577" stroke-width="5"/><rect x="0" y="526" width="900" height="18" fill="#2DBE6C"/><rect x="0" y="544" width="900" height="10" fill="#1F6FEB"/>
+    <g fill="#5A6577">${''}</g></g>
+  <rect x="640" y="660" width="300" height="90" rx="14" fill="#0F1B33"/><text x="790" y="722" text-anchor="middle" font-family="K" font-weight="800" font-size="50" fill="#fff">SIAM สยาม</text>
+  <!-- ทางเท้า + ถนน -->
+  <rect y="1290" width="1080" height="200" fill="#D8CFC0"/><g stroke="#C4BAA9" stroke-width="5">${''}</g>
+  <rect y="1300" width="1080" height="14" fill="#BEB3A1"/>
+  <rect y="1420" width="1080" height="500" fill="#4E5563"/><rect y="1420" width="1080" height="16" fill="#E6C34A"/>
+  <g id="fx"></g><g id="mew"></g><g id="sg"></g>
+  <g id="route" opacity="0"></g>
+  <g id="conf"></g>
+</svg>
+<div id="tint"></div>
+<div class="pill" style="left:46px">🎬 มิวเอาตัวรอดเมืองไทย · EP.3 <span style="background:#E5484D;border-radius:30px;padding:0 14px;margin-left:6px">Part 2</span></div>
+<div id="dyn"></div>
+<script src="ep4/data.js"></script>
+<script src="cast.js"></script>
+<script>
+// ---------- ฉาก: ตึก รถไฟ (เหมือน EP.3) ----------
+const city = []; [[0, 300, 170, '#B7C8DD'], [180, 230, 150, '#A6BAD3'], [340, 330, 190, '#C3D2E5'], [540, 260, 160, '#AFC2DA'], [710, 360, 200, '#BBCBE0'], [920, 280, 170, '#A9BCD5']].forEach(([x, top, w, c]) => {
+  city.push(`<rect x="${x}" y="${top}" width="${w}" height="${1300 - top}" fill="${c}"/>`);
+  for (let yy = top + 30; yy < 540; yy += 56) for (let xx = x + 22; xx < x + w - 30; xx += 46) city.push(`<rect x="${xx}" y="${yy}" width="24" height="30" rx="4" fill="#E9F2FC" opacity=".8"/>`);
+});
+$('city').innerHTML = city.join('');
+$('train').innerHTML += Array.from({ length: 11 }, (_, i) => `<rect x="${30 + i * 80}" y="488" width="56" height="34" rx="8" fill="#5A6577"/>`).join('');
+$('mew').innerHTML = person('m', MEW);
+$('fx').innerHTML = `<rect x="-150" y="-560" width="80" height="240" rx="26" fill="#2B6CB0" stroke="#0F1B33" stroke-width="6"/><g id="f">${person('f', { top: '#F59E0B', legs: '#4B5563', male: true, hair: '#E9C46A', brow: '#B8892F', skin: '#F8D9C2' })}</g>`;
+$('sg').innerHTML = SHEETGUY;
+$('conf').innerHTML = Array.from({ length: 30 }, (_, i) => `<rect class="cf" width="22" height="34" rx="4" fill="${['#FFD43B', '#E5484D', '#2DBE6C', '#1F6FEB'][i % 4]}"/>`).join('');
+// เส้นทาง BTS สายสุขุมวิท: สยาม → 7 สถานี → หมอชิต (ไปทางคูคต) → เดินไปตลาด
+$('route').innerHTML = `<g transform="translate(0 430)"><rect x="40" y="-70" width="1000" height="210" rx="30" fill="#fff" stroke="#0F1B33" stroke-width="7"/>
+  <line x1="150" y1="40" x2="760" y2="40" stroke="#7CB342" stroke-width="22" stroke-linecap="round"/>
+  ${Array.from({ length: 8 }, (_, i) => `<circle class="st" data-i="${i}" cx="${150 + i * (610 / 7)}" cy="40" r="${i === 0 || i === 7 ? 30 : 16}" fill="#fff" stroke="#0F1B33" stroke-width="7"/>`).join('')}
+  <text x="150" y="120" text-anchor="middle" font-family="K" font-weight="800" font-size="40" fill="#0F1B33">สยาม</text>
+  <text x="760" y="120" text-anchor="middle" font-family="K" font-weight="800" font-size="40" fill="#0F1B33">หมอชิต</text>
+  <text x="455" y="-14" text-anchor="middle" font-family="K" font-weight="800" font-size="40" fill="#E5484D">→ ไปทาง คูคต</text>
+  <g id="rWalk" opacity="0"><path d="M800 40 h70" stroke="#0F1B33" stroke-width="8" stroke-dasharray="14 10"/><text x="940" y="58" text-anchor="middle" font-size="64">🛍️</text><text x="940" y="122" text-anchor="middle" font-family="K" font-weight="800" font-size="34" fill="#0F1B33">ตลาด</text></g>
+  <g id="rCnt" opacity="0"><rect x="380" y="70" width="150" height="58" rx="29" fill="#FFD43B" stroke="#0F1B33" stroke-width="5"/><text x="455" y="112" text-anchor="middle" font-family="K" font-weight="800" font-size="36" fill="#0F1B33">7 สถานี</text></g></g>`;
+$('route').innerHTML += `<g id="train2" transform="translate(150 470)"><rect x="-44" y="-30" width="88" height="44" rx="14" fill="#F4F6FA" stroke="#0F1B33" stroke-width="5"/><rect x="-44" y="0" width="88" height="8" fill="#2DBE6C"/></g>`;
+
+// ---------- ไทม์ไลน์จากบท ----------
+const L = {}, H = [], SFX = []; let T = 0.4;
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const red = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b>$1</b>');
+const EM = ['Chatuchak', 'toward', 'Get off', 'stops', 'slow down'];
+for (const ln of window.EP) {
+  const a = T, b = T + ln.dur; L[ln.k] = { a, b, ch: (ln.chunks || []).map((c) => a + c[0]) }; SFX.push([+a.toFixed(2), `ep4/${ln.k}.wav`]);
+  if (ln.kind === 'narr') ln.chunks.forEach(([s, e, txt]) => H.push(`<div class="sub" data-in="${(a + s).toFixed(2)}" data-out="${(a + e - 0.02).toFixed(2)}" data-anim="pop">${red(txt)}</div>`));
+  else {
+    const who = ln.kind === 'fen' ? 'l' : 'r', cls = ln.k === 'm1' ? 'bad' : ln.kind === 'men' ? 'ok' : '';
+    let txt = esc(ln.text); EM.forEach((w) => { txt = txt.replace(w, `<em>${w}</em>`); });
+    const top = ['m2', 'm3', 'm4'].includes(ln.k) ? 592 : ln.k === 'm1' ? 560 : 580, sz = ln.k === 'm1' ? 'font-size:42px;' : '';
+    H.push(`<div class="bub ${who} ${cls}" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="pop" style="${who === 'l' ? 'left:40px' : 'right:40px'};top:${top}px;${sz}">${txt}</div>`);
+    H.push(`<div class="sub en" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="none">${esc(ln.th).replace(' / ', '<br>')}</div>`);
+  }
+  T = b + (ln.kind === 'narr' ? 0.35 : 0.55);
+}
+const at = (k, i) => L[k].ch[i];
+// hook: ป้ายใหญ่ 3 วิแรก
+H.push(`<div class="title" data-in="0.30" data-out="${(at('n1', 3) - 0.1).toFixed(2)}" data-anim="pop"><small>ฝรั่งถามทาง ภาค 2</small>คราวนี้มิวตอบได้!</div>`);
+// การ์ดกฎ
+H.push(`<div class="rule" data-in="${L.n2.a.toFixed(2)}" data-out="${(L.n2.b + 0.3).toFixed(2)}" data-anim="pop"><small>กฎข้อ 2</small><div>จับแค่คำสำคัญ<p style="font-size:56px;margin-top:6px;color:#1F6FEB">Chatuchak = จตุจักร</p></div></div>`);
+H.push(`<div class="rule" data-in="${at('n3', 2).toFixed(2)}" data-out="${(L.n3.b + 0.3).toFixed(2)}" data-anim="pop"><small>กฎข้อ 3</small><div>ตอบสั้นๆ ทีละขั้น</div></div>`);
+// สรุป 3 คำ (จอมืด)
+const W0 = L.n4.a;
+[['toward', 'ไปทาง'], ['get off', 'ลงจากรถ'], ['stops', 'จำนวนสถานี']].forEach(([en, th], i) => H.push(`<div class="word" data-in="${at('n4', i + 1).toFixed(2)}" data-out="${(L.n4.b + 0.3).toFixed(2)}" data-anim="pop" style="top:${380 + i * 170}px"><span>${en}</span><u>${th}</u></div>`));
+// จบ: ชวนเมนต์ + ติดตาม
+const E0 = T;
+H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4.2).toFixed(2)}" data-anim="pop" style="font-size:66px">ไปเยาวราชบอกยังไง? เมนต์เลย 👇<br><b>+ ติดตาม</b> รอตอนต่อไป</div>`);
+// 🔤 คำอังกฤษเด้ง (ไม่ซ้ำประโยคในบับเบิลและการ์ดสรุป)
+const POP = [[at('n1', 2) + 0.3, 'directions', 'การบอกทาง'], [at('n2', 3) + 0.25, 'market', 'ตลาด'], [at('n3', 1) + 0.1, 'confused', 'งง'], [at('n3', 4) + 0.1, 'step by step', 'ทีละขั้น'], [at('n5', 1) + 0.9, 'Chinatown', 'เยาวราช']];
+H.push(popWords(POP));
+SFX.push([0.3, 'pop'], [+(L.f2.a).toFixed(2), 'boing'], [+(L.n2.a).toFixed(2), 'ding'], [+(at('n3', 2)).toFixed(2), 'ding'], [+(L.m2.a).toFixed(2), 'whoosh'], [+(L.f3.a).toFixed(2), 'chime'], [+(L.n4.a).toFixed(2), 'whoosh'], [+E0.toFixed(2), 'tada']);
+window.DURATION = +(E0 + 4.4).toFixed(2); window.SFX = SFX;
+$('dyn').innerHTML = H.join('');
+document.querySelectorAll('.sub,.word').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); while (el.scrollWidth > el.clientWidth && f > 40) { f -= 4; el.style.fontSize = f + 'px'; } });
+const els = [...document.querySelectorAll('[data-in]')];
+const inL = (k, t, pad = 0) => t >= L[k].a - pad && t < L[k].b + pad;
+
+function seek(t) {
+  tick(els, t);
+  $('train').setAttribute('transform', `translate(${-1000 + ((t * 420) % 3200)} 0)`);
+  // ฝรั่งเดินกลับมา (ช่วง n1)
+  const walk = cl((t - 0.8) / 2.6), fx = 1250 - 950 * outc(walk);
+  $('fx').setAttribute('transform', `translate(${fx} ${1330 + (walk < 1 ? Math.abs(Math.sin(t * 7)) * -10 : Math.sin(t * 2.5) * 4)}) scale(0.7)`);
+  $('mew').setAttribute('transform', `translate(780 ${1330 + Math.sin(t * 3) * 4}) scale(0.7)`);
+  let fm = 'smile', mm = 'smile';
+  if (t >= L.f1.b && t < L.n2.a) mm = 'shock';
+  if (t >= L.n2.a && t < L.m1.a) mm = 'determined';
+  if (inL('m1', t)) fm = 'shock';
+  if (t >= L.f2.a && t < L.m2.a) { fm = 'cringe'; mm = 'sad'; }
+  if (t >= at('n3', 2) && t < L.m2.a) mm = 'determined';
+  if (t >= L.m2.a) { fm = 'think'; mm = 'smile'; }
+  if (t >= L.f3.a) { fm = 'happy'; mm = 'happy'; }
+  const talkF = ['f1', 'f2', 'f3'].some((k) => inL(k, t)), talkM = ['m1', 'm2', 'm3', 'm4'].some((k) => inL(k, t));
+  face('f', talkF ? 'talk' : fm, t + 1.2); face('m', talkM ? 'talk' : mm, t);
+  const fast = inL('m1', t);
+  arms('f', fm === 'happy' ? 150 : 14, talkF ? -45 - Math.sin(t * 6) * 16 : fm === 'cringe' ? -150 : fm === 'shock' ? -160 : -14);
+  arms('m', fast ? 40 + Math.sin(t * 14) * 50 : mm === 'happy' ? 160 : mm === 'determined' ? 30 : 14, fast ? -40 - Math.sin(t * 14 + 1) * 60 : ['m2', 'm3', 'm4'].some((k) => inL(k, t)) ? -95 : mm === 'happy' ? -160 : mm === 'sad' ? -150 : -14);
+  // m1 พูดรัว: มิวสั่นเล็กน้อย
+  if (fast) $('mew').setAttribute('transform', `translate(${780 + Math.sin(t * 40) * 6} ${1330}) scale(0.7)`);
+  // จอมืด + พี่ชีทโผล่ ตอนนึกถึงกฎข้อ 3 และตอนสรุปคำ
+  const dim = (t >= at('n3', 2) && t < L.n3.b + 0.2) || inL('n4', t, 0.2); $('tint').style.opacity = dim ? 0.35 : 0;
+  const sgOn = t >= at('n3', 2) && t < L.n3.b + 0.2, sp = cl((t - at('n3', 2)) / 0.5);
+  $('sg').setAttribute('opacity', sgOn ? 1 : 0);
+  $('sg').setAttribute('transform', `translate(540 ${1230 - 240 * back(sp) - Math.abs(Math.sin(t * 5)) * 20}) scale(1.3)`);
+  // เส้นทาง: m2–f3
+  const rOn = t >= L.m2.a && t < L.f3.b + 0.4; $('route').setAttribute('opacity', rOn ? 1 : 0);
+  const ride = cl((t - L.m2.b) / Math.max(0.5, L.m3.b - L.m2.b)); $('train2').setAttribute('transform', `translate(${150 + 610 * outc(ride)} 470)`);
+  $('rCnt').setAttribute('opacity', t >= L.m3.a + 1.2 ? 1 : 0); $('rWalk').setAttribute('opacity', t >= L.m4.a ? 1 : 0);
+  // กระดาษสีตอนขอบคุณ
+  const tt = t - L.f3.a; document.querySelectorAll('.cf').forEach((c, i) => { if (tt < 0 || tt > 1.6) { c.setAttribute('opacity', 0); return; } const vx = ((i * 37) % 21 - 10) * 30, vy = -700 - ((i * 53) % 9) * 70; c.setAttribute('opacity', 1); c.setAttribute('transform', `translate(${540 + vx * tt} ${900 + vy * tt + 900 * tt * tt}) rotate(${i * 40 + tt * 400})`); });
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>
