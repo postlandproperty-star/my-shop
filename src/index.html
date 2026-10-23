@@ -820,7 +820,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .cbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
 .cstat{display:flex;gap:6px 14px;align-items:center;flex-wrap:wrap;font-size:14px;color:var(--muted)}
 .cstat .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#9ca3af;margin-right:5px;vertical-align:middle}.cstat .dot.on{background:#16a34a}.cstat .dot.off{background:#ef4444}
-.wk-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 2px}.wk-sum{margin:0 0 8px;text-align:center}.wk-day{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px 10px;margin-bottom:8px}.wk-day.today{border-color:var(--accent,#1F5FBF);box-shadow:0 0 0 2px #1F5FBF22}.wk-dh{font-weight:700;font-size:14px;margin-bottom:4px}.wk-none{margin:2px 0}.wk-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--ink);background:none;border:0;border-top:1px solid var(--line);padding:8px 2px;cursor:pointer}.wk-row:first-of-type{border-top:0}.wk-tm{font-size:13px;color:var(--muted);width:42px;flex:none}.wk-th{width:40px;height:40px;border-radius:8px;object-fit:cover;flex:none;background:var(--bg)}.wk-txt{display:flex;align-items:center;justify-content:center}.wk-b{flex:1;min-width:0;font-size:14px}.wk-tt{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wk-ch i{font-style:normal;font-size:11px;border:1px solid var(--line);border-radius:99px;padding:0 6px;margin-right:4px}.wk-st{font-size:12px;white-space:nowrap;flex:none}.wk-st.ok{color:var(--ok)}.wk-st.bad{color:var(--bad)}.wk-st.warn{color:#b45309}
+.wk-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 6px}.wk-f{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 0 6px}.wk-sum{margin:0 0 8px;text-align:center}.wk-day{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:8px 12px;margin-bottom:8px}.wk-day.today{border-color:#1F5FBF;box-shadow:0 0 0 2px #1F5FBF22}.wk-day.past{background:transparent}.wk-day.past>summary,.wk-dh{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;cursor:pointer}.wk-dh{cursor:default;margin-bottom:2px}.wk-row{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;color:var(--ink);background:none;border:0;padding:6px 0;cursor:pointer}.wk-tm{font-size:12px;color:var(--muted);width:38px;flex:none}.wk-ic{flex:none;width:20px;text-align:center}.wk-b{flex:1;min-width:0;font-size:14px;line-height:1.35}.wk-tt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wk-ch{display:block;font-size:12px;color:var(--muted)}.wk-st{font-size:12px;white-space:nowrap;flex:none}.wk-st.bad{color:var(--bad)}.wk-st.warn{color:#b45309}
 .daysep{font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 6px;display:flex;align-items:center;gap:8px}.daysep:after{content:'';flex:1;height:1px;background:var(--line)}.daysep.urgent{color:#b91c1c}
 .filters.sticky{position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 0;margin:0}
 .chip .n{opacity:.65;font-size:12px;margin-left:5px}.chip .n.alert{opacity:1;background:#ef4444;color:#fff;border-radius:999px;padding:0 6px;font-weight:700}
@@ -5257,21 +5257,25 @@ function contentTab(){
    โพสต์เดียวกันหลายช่องทาง (เพจ+IG+Threads) รวมเป็นแถวเดียว · กดแถวเพื่อเปิดดูเต็ม/แก้ไข */
 function wkRange(off){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7)+7*off);return [d.getTime(),d.getTime()+7*864e5];}
 function wkPosts(all,off){const [a,b]=wkRange(off);return all.filter(p=>{if(p.status==='rejected')return false;const t=Date.parse(p.status==='published'&&p.published_at?p.published_at:p.scheduled_at||'');return t>=a&&t<b;});}
-function weekView(all){const off=S.cwk||0,[a]=wkRange(off),L=wkPosts(all,off),isVid=u=>/\.(mp4|mov|m4v)(\?|$)/i.test(u||'');
+function weekView(all){const off=S.cwk||0,[a]=wkRange(off),L=wkPosts(all,off),isVid=u=>/\.(mp4|mov|m4v)(\?|$)/i.test(u||''),tf=S.cwkT||'all';
   const t=p=>Date.parse(p.status==='published'&&p.published_at?p.published_at:p.scheduled_at),G={};
   L.forEach(p=>{const d=new Date(t(p));d.setHours(0,0,0,0);const k=d.getTime()+'|'+(p.image_url||String(p.text||'').slice(0,50));(G[k]=G[k]||[]).push(p);});
-  const groups=Object.values(G).map(ps=>{ps.sort((x,y)=>(x.channel==='threads')-(y.channel==='threads'));const m=ps[0],v=isVid(m.image_url);
+  const all2=Object.values(G).map(ps=>{ps.sort((x,y)=>(x.channel==='threads')-(y.channel==='threads'));const m=ps[0],v=isVid(m.image_url);
     const st=ps.some(p=>p.status==='failed')?['❌','ไม่สำเร็จ','bad']:ps.some(p=>p.status==='needs_owner'||p.status==='draft')?['⚠️','รออนุมัติ','warn']:ps.every(p=>p.status==='published')?['✅','โพสต์แล้ว','ok']:['⏳','รอเวลา','gray'];
     const ch=[];ps.forEach(p=>{if(p.channel==='threads')ch.push('Threads');else{ch.push('เพจ');if(v&&FB.ig||/^IG ✓/m.test(p.notes||''))ch.push('IG');}});
-    const ty=v?'🎬 คลิป':m.image_url?'🖼 '+(KIND_TH[m.kind]||'รูป'):'💬 '+(KIND_TH[m.kind]||'ข้อความ');
-    return {t:Math.min(...ps.map(t)),m,v,st,ch:[...new Set(ch)],ty,title:String(m.text||'').split('\n')[0].slice(0,70)};}).sort((x,y)=>x.t-y.t);
-  const n=k=>groups.filter(g=>k(g)).length,today=new Date();today.setHours(0,0,0,0);
-  const sum=`🎬 คลิป ${n(g=>g.v)} · 🖼 รูป ${n(g=>!g.v&&g.m.image_url)} · 💬 ข้อความ ${n(g=>!g.m.image_url)} · ✅ โพสต์แล้ว ${n(g=>g.st[1]==='โพสต์แล้ว')}/${groups.length}`;
-  const days=[...Array(7)].map((_,i)=>{const d0=a+i*864e5,gs=groups.filter(g=>g.t>=d0&&g.t<d0+864e5),dd=new Date(d0);
-    return `<div class="wk-day${d0===today.getTime()?' today':''}"><div class="wk-dh">${dd.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})}${d0===today.getTime()?' · วันนี้':''}</div>
-      ${gs.length?gs.map(g=>`<button class="wk-row" data-a="cweekOpen" data-id="${g.m.id}"><span class="wk-tm">${new Date(g.t).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</span>${g.m.image_url?`<img class="wk-th" src="${esc(g.v?vidCover(g.m.image_url):g.m.image_url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="wk-th wk-txt">💬</span>'}<span class="wk-b"><b>${esc(g.ty)}</b> <span class="wk-tt">${esc(g.title)}</span><span class="wk-ch">${g.ch.map(c=>`<i>${c}</i>`).join('')}</span></span><span class="wk-st ${g.st[2]}" title="${g.st[1]}">${g.st[0]} ${g.st[1]}</span></button>`).join(''):'<p class="fine wk-none">— ยังไม่มีโพสต์ —</p>'}</div>`;}).join('');
+    const ty=v?'clip':m.image_url?'img':'txt';
+    return {t:Math.min(...ps.map(t)),m,v,st,ch:[...new Set(ch)],ty,kd:KIND_TH[m.kind]||'',title:String(m.text||'').split('\n')[0].slice(0,70)};}).sort((x,y)=>x.t-y.t);
+  const groups=all2.filter(g=>tf==='all'||g.ty===tf),IC={clip:'🎬',img:'🖼',txt:'💬'},today=new Date();today.setHours(0,0,0,0);
+  const cnt=k=>all2.filter(g=>g.ty===k).length;
+  const fbar=`<div class="wk-f">${[['all','ทั้งหมด',all2.length],['clip','🎬 คลิป',cnt('clip')],['img','🖼 รูป',cnt('img')],['txt','💬 ข้อความ',cnt('txt')]].map(x=>`<button class="chip" data-a="cweekT" data-v="${x[0]}" aria-pressed="${tf===x[0]}">${x[1]} <span class="n">${x[2]}</span></button>`).join('')}</div>`;
+  const row=g=>`<button class="wk-row" data-a="cweekOpen" data-id="${g.m.id}"><span class="wk-tm">${new Date(g.t).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</span><span class="wk-ic" aria-hidden="true">${IC[g.ty]}</span><span class="wk-b"><span class="wk-tt">${esc(g.title)}</span><span class="wk-ch">${esc(g.ch.join(' · '))}${g.kd&&!g.v?' · '+esc(g.kd):''}</span></span><span class="wk-st ${g.st[2]}" title="${g.st[1]}">${g.st[0]}${g.st[2]==='bad'||g.st[2]==='warn'?' '+g.st[1]:''}</span></button>`;
+  const days=[...Array(7)].map((_,i)=>{const d0=a+i*864e5,gs=groups.filter(g=>g.t>=d0&&g.t<d0+864e5),dd=new Date(d0),past=d0<today.getTime(),isT=d0===today.getTime();
+    const head=dd.toLocaleDateString('th-TH',{weekday:'short',day:'numeric',month:'short'})+(isT?' · วันนี้':'');
+    const sum=gs.length?['clip','img','txt'].map(k=>{const n=gs.filter(g=>g.ty===k).length;return n?IC[k]+' '+n:'';}).filter(Boolean).join(' · '):'ไม่มีโพสต์';
+    if(past)return `<details class="wk-day past"><summary><b>${head}</b><span class="fine">${gs.length?'✅ '+sum:sum}</span></summary>${gs.map(row).join('')}</details>`;
+    return `<div class="wk-day${isT?' today':''}"><div class="wk-dh"><b>${head}</b><span class="fine">${sum}</span></div>${gs.map(row).join('')}</div>`;}).join('');
   return `<div class="wk"><div class="wk-nav"><button class="btn btn-line btn-sm" data-a="cweek" data-v="-1" aria-label="สัปดาห์ก่อน">‹</button><b>${off===0?'สัปดาห์นี้':off===1?'สัปดาห์หน้า':off===-1?'สัปดาห์ที่แล้ว':''} ${new Date(a).toLocaleDateString('th-TH',{day:'numeric',month:'short'})} – ${new Date(a+6*864e5).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</b><button class="btn btn-line btn-sm" data-a="cweek" data-v="1" aria-label="สัปดาห์หน้า">›</button></div>
-    <p class="fine wk-sum">${sum}</p>${days}</div>`;}
+    ${fbar}<p class="fine wk-sum">✅ โพสต์แล้ว ${groups.filter(g=>g.st[2]==='ok').length}/${groups.length}${off===0?' · วันที่ผ่านไปแล้วย่อไว้ กดเพื่อดู':''}</p>${days}</div>`;}
 function sheetlabContent(){
   if(!postsLoaded&&!postsLoading){postsLoading=true;Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).catch(()=>{}).finally(()=>{postsLoading=false;postsLoaded=true;render(true);});}
   const f=S.cfilter||'week';
@@ -7006,6 +7010,7 @@ function act(a,el){
     case 'syncOrders':autoSync(true);break;
     case 'cfilter':S.cfilter=el.dataset.v;render(true);break;
     case 'cweek':S.cwk=(S.cwk||0)+Number(el.dataset.v);render(true);break;
+    case 'cweekT':S.cwkT=el.dataset.v;render(true);break;
     case 'cweekOpen':{S.cfilter='all';S.pexp={[id]:1};render(true);setTimeout(()=>{const x=document.querySelector('[data-pid="'+id+'"]');x&&x.scrollIntoView({block:'center'});},60);break;}
     case 'cbrand':S.cbrand=el.dataset.v;if(S.cbrand==='readlab'&&!RL.data)loadRL();render(true);break;
     case 'rlf':S.rlf=el.dataset.v;render(true);break;
