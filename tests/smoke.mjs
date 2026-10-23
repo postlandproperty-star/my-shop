@@ -23,6 +23,7 @@ fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(OUT, { recursive:
 const { TOPICS, topicItems, topicPage } = await import(path.join(ROOT, '..', 'lib/topics.js'));
 const { vipPage, accountPage, vipMockPage, appPage } = await import(path.join(ROOT, '..', 'lib/vipPage.js'));
 const { learnPage } = await import(path.join(ROOT, '..', 'lib/learn.js'));
+const VOC = await import(path.join(ROOT, '..', 'lib/vocab.js'));
 const { SITE_NAV } = await import(path.join(ROOT, '..', 'lib/quiz.js'));
 const { GOV_EXAMS, govIndex, govPage, govArticlePage, govQuizPage, GOV_ARTICLES, GOV_QUIZZES } = await import(path.join(ROOT, '..', 'lib/gov.js'));
 const MOCK_Q = [0, 1, 2].map((i) => ({ quiz: 'toeic-tense-quiz', cat: 'grammar', title: 'Tense', i, q: `She ___ here since ${2020 + i}.`, choices: ['has worked', 'work', 'working', 'works'], answer: 0, explain: 'since → Present Perfect' }));
@@ -40,6 +41,7 @@ const server = http.createServer((req, res) => {
   if (u === '/__free') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(freePage(FREEBIES[0], { site: BASE, upsell: SHOP.products.find((p) => p.status === 'published' && p.type !== 'bundle') })); }
   const fi = u.match(/^\/free-(img|file)\/([\w.-]+)$/); if (fi) { const f = path.join(SRC, 'free', fi[2]); if (fs.existsSync(f)) return res.end(fs.readFileSync(f)); res.statusCode = 404; return res.end(); }
   if (u === '/__app') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(appPage({ site: BASE })); }
+  if (u === '/__vocab') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); const L = VOC.loadLevel('a1'); return res.end(VOC.unitPage('a1', L.units[0], { site: BASE })); }
   if (u === '/__learn') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(learnPage({ site: BASE })); }
   if (u === '/__account' || u === '/__mock') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(u === '/__account' ? accountPage({ site: BASE }) : vipMockPage({ site: BASE })); }
   const vm = u.match(/^\/__vip\/(open|closed)$/); if (vm) { res.setHeader('Content-Type', 'text/html; charset=utf-8'); return res.end(vipPage(vm[1] === 'open' ? { open: true, monthly: 149, yearly: 1290, packs: { 1: 159, 3: 399, 12: 0 } } : { open: false, monthly: 0, yearly: 0, packs: { 1: 0, 3: 0, 12: 0 } }, { site: BASE })); }
@@ -405,6 +407,21 @@ try {
       pass(`[${kind}] บัญชีของฉัน (/app = /account): คำศัพท์ปุ่มใหญ่ + 10 ปุ่ม · ยังไม่เข้าระบบ = ปุ่มสมาชิกพาไปช่องสมัคร · ไม่เข้าระบบก็เห็นช่องอีเมล ใส่แล้วได้ช่องรหัส 6 หลัก · มี manifest ให้เพิ่มลงหน้าจอ`, ap.tiles === 10 && ap.big && ap.lock === 2 && ap.vipHref === '#join' && ap.manifest && ap.ios && codeShown, JSON.stringify({ ...ap, codeShown }));
       await page.context().close();
     } catch (e) { pass(`[${kind}] แอป SheetLab: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
+
+    // 3.594) 🎤 ลองออกเสียงใน /vocab: เบราว์เซอร์ฟังแล้วเทียบกับคำ (จำลองตัวฟังเสียง) · พูดถูก = ✅ · ได้ยินเป็นคำอื่น = 🔁 · เบราว์เซอร์ไม่มีตัวฟังเสียง = ไม่มีปุ่ม
+    try { page = await newPage(kind); page.setDefaultTimeout(8000);
+      await page.addInitScript(() => { window.__heard = []; window.webkitSpeechRecognition = function () { const r = this; r.start = () => setTimeout(() => { const t = window.__heard.shift() || ''; const alt = [{ transcript: t }]; r.onresult && r.onresult({ results: [alt] }); r.onend && r.onend(); }, 30); r.abort = () => {}; }; window.SpeechRecognition = window.webkitSpeechRecognition; });
+      await page.goto(`${BASE}/__vocab`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('#vc-skip', { timeout: 5000 }); await page.click('#vc-skip'); await page.waitForSelector('[data-pr]', { timeout: 3000 });
+      const w = await page.getAttribute('[data-pr]', 'data-pr');
+      await page.evaluate((w) => { window.__heard.push(w.toUpperCase() + '.'); }, w); await page.click('[data-pr]'); await page.waitForTimeout(300); const good = await page.textContent('.vc-prr');
+      await page.evaluate(() => { window.__heard.push('banana'); }); await page.click('[data-pr]'); await page.waitForTimeout(300); const bad = await page.textContent('.vc-prr');
+      await page.context().close();
+      page = await newPage(kind); await page.addInitScript(() => { delete window.webkitSpeechRecognition; delete window.SpeechRecognition; });
+      await page.goto(`${BASE}/__vocab`, { waitUntil: 'domcontentloaded' }); await page.waitForSelector('#vc-skip', { timeout: 5000 }); await page.click('#vc-skip'); await page.waitForTimeout(150);
+      const none = await page.evaluate(() => !document.querySelector('[data-pr]') && !!document.querySelector('#vc-nx'));
+      pass(`[${kind}] คำศัพท์: 🎤 ลองออกเสียง (พูดถูก = ✅ · ได้ยินเป็นคำอื่น = 🔁 ลองใหม่ · เบราว์เซอร์ไม่รองรับ = ไม่มีปุ่ม)`, /✅/.test(good) && /🔁/.test(bad) && /banana/.test(bad) && none, JSON.stringify({ w, good, bad, none }));
+      await page.context().close();
+    } catch (e) { pass(`[${kind}] คำศัพท์ ลองออกเสียง: ทดสอบจนจบ`, false, String(e.message || e).split('\n')[0].slice(0, 160)); }
 
     // 3.595) สมาชิกใหม่เข้าระบบครั้งแรก (?in=1 ยังไม่เคยฝึก) → ปุ่มใหญ่พาเข้าคำศัพท์ A1 บทที่ 1 · คนที่ฝึกแล้วไม่เห็นปุ่มนี้
     try { page = await newPage(kind); page.setDefaultTimeout(8000);
