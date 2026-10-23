@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 📈 "IELTS Process 60 วิ" EP.1 กาแฟจากเมล็ดถึงแก้ว (คุณแดน 23 ต.ค. 69 "ขอดูตัวอย่าง" คลิปแผนภาพขั้นตอนแบบ How does a transistor work?)
+     IELTS Writing Task 1 แบบ process: แผนภาพ 6 ขั้นค่อยๆ โผล่ + ประโยค Band 7 (คำเชื่อมลำดับ + passive) · เสียง/เวลาใน process1/data.js (process1/gen.py)
+     📱 กรอบปลอดภัย IG/FB: ไม่มีตัวหนังสือใน 250px บนสุด และ 380px ล่างสุด -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#fff;font-family:K,sans-serif}
+svg{position:absolute;inset:0}
+.pill{position:absolute;top:270px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8}
+.head{position:absolute;left:40px;right:40px;top:365px;z-index:6;text-align:center;font-weight:800;font-size:56px;color:#0F1B33}
+.head span{color:#E8590C}
+.sub{position:absolute;left:30px;right:30px;top:1360px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.sub b{color:#FF4B4B}
+.sub.en{font-size:60px;color:#FFE27A;-webkit-text-stroke:12px #0F1B33}
+.bub{position:absolute;left:40px;right:150px;top:1105px;z-index:7;background:#fff;border:7px solid #0F1B33;border-radius:32px;padding:16px 26px;font-weight:800;font-size:46px;line-height:1.22;color:#0F1B33}
+.bub em{font-style:normal;color:#E8590C}.bub strong{color:#1F6FEB}
+.chip{position:absolute;z-index:7;padding:10px 28px;border-radius:24px;background:#FFD43B;border:6px solid #0F1B33;font-weight:800;font-size:58px;color:#0F1B33;white-space:nowrap}
+.title{position:absolute;left:40px;right:150px;top:1090px;z-index:7;text-align:center;font-weight:800;font-size:84px;line-height:1.1;color:#E8590C;-webkit-text-stroke:14px #fff;paint-order:stroke fill}
+.recap{position:absolute;left:50px;right:50px;top:350px;height:730px;z-index:7;background:#FFF8EC;border:8px solid #0F1B33;border-radius:40px;padding:30px 40px;color:#0F1B33}
+.recap h3{font-weight:800;font-size:56px;margin-bottom:10px}
+.seq{display:flex;align-items:center;gap:18px;font-weight:800;font-size:50px;line-height:1.15;margin:4px 0}
+.seq i{font-style:normal;display:inline-flex;width:62px;height:62px;border-radius:50%;background:#1F6FEB;color:#fff;font-size:36px;align-items:center;justify-content:center}
+.seq u{text-decoration:none;font-weight:600;font-size:34px;color:#56637D}
+.v3{margin-top:18px;text-align:center;font-weight:800;font-size:66px;color:#E8590C;background:#fff;border:6px dashed #E8590C;border-radius:26px;padding:8px 0 10px}
+.v3 small{display:block;font-size:36px;color:#0F1B33}
+[data-in]{opacity:0;transform-origin:center}
+</style></head><body>
+<svg viewBox="0 0 1080 1920">
+  <defs>
+    <pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0 H0 V54" fill="none" stroke="#E7ECF3" stroke-width="2"/></pattern>
+    <marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#0F1B33"/></marker>
+    <g id="BEAN"><ellipse rx="13" ry="18" fill="#8B5A2B" stroke="#0F1B33" stroke-width="3"/><path d="M0 -15 C-6 -5 6 5 0 15" stroke="#0F1B33" stroke-width="3" fill="none"/></g>
+    <g id="GBEAN"><ellipse rx="13" ry="18" fill="#D8C99B" stroke="#0F1B33" stroke-width="3"/><path d="M0 -15 C-6 -5 6 5 0 15" stroke="#0F1B33" stroke-width="3" fill="none"/></g>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#grid)"/>
+  <g id="arrows" fill="none" stroke="#0F1B33" stroke-width="9" stroke-linecap="round"></g>
+  <g id="stages"></g>
+  <rect y="1320" width="1080" height="600" fill="#0F1B33" opacity=".9"/>
+  <g id="host"></g>
+</svg>
+<div class="pill" style="left:46px">📈 IELTS Process 60 วิ · EP.1</div>
+<div class="head" id="head" data-in="0" data-anim="none">☕ How is <span>coffee</span> produced?</div>
+<div id="dyn"></div>
+<script src="process1/data.js"></script>
+<script src="cast.js"></script>
+<script>
+// ---------- แผนภาพ 6 ขั้น (งูเลื้อย: แถวบน 1→2→3 · ลงขวา · แถวล่าง 4→5→6) ----------
+const R = 105, P = [[200, 600], [540, 600], [880, 600], [880, 920], [540, 920], [200, 920]];
+const NAME = ['Picking', 'Pulping', 'Drying', 'Roasting', 'Grinding', 'Brewing'];
+const ICON = [
+  // 1 เก็บผลกาแฟ: กิ่ง ใบ ผลสีแดง
+  `<path d="M-70 55 C-20 20 20 -10 70 -55" stroke="#7A4B2A" stroke-width="10" fill="none" stroke-linecap="round"/><ellipse cx="-30" cy="-5" rx="34" ry="15" fill="#2F9E44" stroke="#0F1B33" stroke-width="3" transform="rotate(-50 -30 -5)"/><ellipse cx="40" cy="5" rx="34" ry="15" fill="#2F9E44" stroke="#0F1B33" stroke-width="3" transform="rotate(20 40 5)"/>` + [[-8, 28], [12, 30], [2, 46], [24, 14], [-20, 44]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="15" fill="#E03131" stroke="#0F1B33" stroke-width="3"/>`).join(''),
+  // 2 เอาเนื้อผลออก: ผลแดงผ่าครึ่ง + เมล็ดดิบหลุดออกมา
+  `<path d="M-25 -55 A48 48 0 0 0 -25 41 z" fill="#E03131" stroke="#0F1B33" stroke-width="4"/><path d="M-13 -55 A48 48 0 0 1 -13 41 z" fill="#E03131" stroke="#0F1B33" stroke-width="4" transform="translate(-6 0)"/>` + `<g transform="translate(48 30) rotate(25) scale(1.2)"><use href="#GBEAN"/></g><g transform="translate(55 -25) rotate(-20) scale(1.1)"><use href="#GBEAN"/></g>`,
+  // 3 ตากแดด: ดวงอาทิตย์ + แคร่ตากเมล็ด
+  `<g transform="translate(30 -40)"><circle r="24" fill="#FFD43B" stroke="#0F1B33" stroke-width="4"/>` + Array.from({ length: 8 }, (_, i) => `<line x1="0" y1="-32" x2="0" y2="-46" stroke="#F59F00" stroke-width="6" stroke-linecap="round" transform="rotate(${i * 45})"/>`).join('') + `</g><rect x="-72" y="22" width="144" height="22" rx="8" fill="#A0703F" stroke="#0F1B33" stroke-width="4"/>` + [-50, -25, 0, 25, 50].map((x) => `<g transform="translate(${x} 10) rotate(90) scale(.7)"><use href="#GBEAN"/></g>`).join(''),
+  // 4 คั่ว: ถังคั่ว + ไฟ + เมล็ดสีน้ำตาล
+  `<rect x="-58" y="-48" width="116" height="66" rx="18" fill="#495057" stroke="#0F1B33" stroke-width="4"/><circle cx="-18" cy="-15" r="12" fill="#8B5A2B"/><circle cx="14" cy="-20" r="12" fill="#8B5A2B"/><circle cx="30" cy="2" r="10" fill="#8B5A2B"/>` + [-36, -6, 24].map((x) => `<path class="fl" d="M${x - 14} 58 Q${x} 18 ${x + 14} 58z" fill="#FF8A3D" stroke="#0F1B33" stroke-width="3"/>`).join(''),
+  // 5 บด: เครื่องบด (กรวย + ตัวเครื่อง + มือหมุน) + กองผงกาแฟ
+  `<path d="M-48 -62 L28 -62 L12 -24 L-32 -24z" fill="#ADB5BD" stroke="#0F1B33" stroke-width="4"/><rect x="-44" y="-24" width="60" height="62" rx="8" fill="#868E96" stroke="#0F1B33" stroke-width="4"/><g class="crank"><line x1="-10" y1="-62" x2="-10" y2="-78" stroke="#0F1B33" stroke-width="6"/><line x1="-10" y1="-78" x2="22" y2="-78" stroke="#0F1B33" stroke-width="6" stroke-linecap="round"/><circle cx="22" cy="-78" r="7" fill="#E8590C"/></g><path d="M22 52 Q50 14 78 52z" fill="#6B3E1E" stroke="#0F1B33" stroke-width="3"/>`,
+  // 6 ชง: แก้วกาแฟ + ไอน้ำ
+  `<path d="M-50 -20 L50 -20 L40 50 Q0 62 -40 50z" fill="#fff" stroke="#0F1B33" stroke-width="5"/><ellipse cx="0" cy="-20" rx="50" ry="12" fill="#6B3E1E" stroke="#0F1B33" stroke-width="4"/><path d="M50 -6 C80 -6 80 34 44 34" fill="none" stroke="#0F1B33" stroke-width="7"/>` + [-22, 0, 22].map((x) => `<path class="st" d="M${x} -40 c-10 -12 10 -22 0 -34" fill="none" stroke="#ADB5BD" stroke-width="6" stroke-linecap="round"/>`).join(''),
+];
+$('stages').innerHTML = P.map(([x, y], i) => `<g id="st${i}" transform="translate(${x} ${y})">
+  <circle class="ring" r="${R + 14}" fill="none" stroke="#FFD43B" stroke-width="14" opacity="0"/>
+  <g class="ghost"><circle r="${R}" fill="#F1F3F5" stroke="#ADB5BD" stroke-width="6" stroke-dasharray="18 12"/><text y="34" text-anchor="middle" font-family="K" font-weight="800" font-size="96" fill="#ADB5BD">?</text></g>
+  <g class="real" opacity="0"><circle r="${R}" fill="#FFF4E2" stroke="#0F1B33" stroke-width="7"/>${ICON[i]}
+    <text y="${R + 52}" text-anchor="middle" font-family="K" font-weight="800" font-size="40" fill="#0F1B33">${NAME[i]}</text></g>
+  <g transform="translate(${-R + 8} ${-R + 8})"><circle r="30" fill="#FF8A3D" stroke="#0F1B33" stroke-width="5"/><text y="12" text-anchor="middle" font-family="K" font-weight="800" font-size="34" fill="#fff">${i + 1}</text></g></g>`).join('');
+const AR = [`M${200 + R + 12} 600 H${540 - R - 22}`, `M${540 + R + 12} 600 H${880 - R - 22}`, `M${880 + R + 8} 600 C1062 600 1062 920 ${880 + R + 16} 920`, `M${880 - R - 12} 920 H${540 + R + 22}`, `M${540 - R - 12} 920 H${200 + R + 22}`];
+$('arrows').innerHTML = AR.map((d, i) => `<path id="ar${i}" d="${d}" marker-end="url(#ah)" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>`).join('');
+$('host').innerHTML = `<g id="hg">${SHEETGUY}</g>`;
+
+// ---------- ไทม์ไลน์ ----------
+const L = {}, H = [], SFX = []; let T = 0.4;
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const red = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b>$1</b>');
+const PASSIVE = ['are picked', 'is removed', 'are dried', 'are roasted', 'are ground', 'is brewed'], SEQ = ['First', 'Next', 'After that', 'Subsequently', 'Finally'];
+for (const ln of window.EP) {
+  const a = T, b = T + ln.dur; L[ln.k] = { a, b, ch: (ln.chunks || []).map((c) => a + c[0]) }; SFX.push([+a.toFixed(2), `process1/${ln.k}.wav`]);
+  if (ln.kind === 'narr') ln.chunks.forEach(([s, e, txt]) => H.push(`<div class="sub" data-in="${(a + s).toFixed(2)}" data-out="${(a + e - 0.02).toFixed(2)}" data-anim="pop">${red(txt)}</div>`));
+  else { let tx = esc(ln.text); PASSIVE.forEach((w) => { tx = tx.replace(w, `<em>${w}</em>`); }); SEQ.forEach((w) => { tx = tx.replace(new RegExp('^' + w), `<strong>${w}</strong>`); });
+    H.push(`<div class="bub" data-in="${a.toFixed(2)}" data-out="${(b + 0.6).toFixed(2)}" data-anim="pop">🔊 ${tx}</div>`); H.push(`<div class="sub en" data-in="${a.toFixed(2)}" data-out="${(b + 0.6).toFixed(2)}" data-anim="none">${esc(ln.th)}</div>`); }
+  T = b + (ln.kind === 'narr' ? 0.4 : 0.7);
+}
+const at = (k, i) => L[k].ch[i];
+const chip = (a, b, style, html) => H.push(`<div class="chip" data-in="${a.toFixed(2)}" data-out="${b.toFixed(2)}" data-anim="pop" style="${style}">${html}</div>`);
+// ฮุก: แผนภาพว่าง + ข้อความใหญ่
+H.push(`<div class="title" data-in="0.15" data-out="${(L.n1.b + 0.3).toFixed(2)}" data-anim="pop">😱 ข้อนี้คนไทย<br>เสียคะแนนเยอะสุด!</div>`);
+chip(at('n2', 0), L.n2.b + 0.3, 'left:60px;top:1130px', '☕ เมล็ด → แก้ว');
+chip(at('n2', 2), L.n2.b + 0.3, 'left:520px;top:1130px;background:#8CE99A', '🎯 Band 7');
+// ขั้นโผล่ตามคำพากย์
+const SHOW = [at('n3', 1), at('n4', 1), at('n4', 2), at('n5', 0), at('n5', 2), at('n6', 1)];
+// การ์ดสรุป
+const R0 = L.n7.a, R1 = L.n7.b + 0.3;
+H.push(`<div class="recap" data-in="${R0.toFixed(2)}" data-out="${R1.toFixed(2)}" data-anim="pop"><h3>🏆 สูตร Band 7 เขียน Process</h3>` +
+  SEQ.map((w, i) => `<div class="seq" data-in="${(at('n7', 1) + i * 0.32).toFixed(2)}" data-out="${R1.toFixed(2)}" data-anim="quick"><i>${i + 1}</i>${w}<u>${['ขั้นแรก', 'ต่อมา', 'หลังจากนั้น', 'ถัดมา', 'สุดท้าย'][i]}</u></div>`).join('') +
+  `<div class="v3" data-in="${at('n7', 3).toFixed(2)}" data-out="${R1.toFixed(2)}" data-anim="pop">is / are + V3<small>are roasted · is brewed</small></div></div>`);
+const E0 = T;
+H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px">เมนต์บอกหน่อย 👇<br><b>+ ติดตาม</b> รอ Process ตอนต่อไป</div>`);
+SFX.push([0.15, 'boing'], [+at('n2', 0).toFixed(2), 'whoosh'], [+at('n2', 2).toFixed(2), 'ding'], ...SHOW.map((s) => [+s.toFixed(2), 'pop']), [+R0.toFixed(2), 'whoosh'], [+at('n7', 3).toFixed(2), 'ding'], [+E0.toFixed(2), 'tada']);
+window.DURATION = +(E0 + 4.2).toFixed(2); window.SFX = SFX;
+// 🔤 คำอังกฤษเด้ง: กริยา → V3 ตอนพากย์ถึงขั้นนั้น (grind → ground คือจุดที่คนพลาด)
+const POP = [[at('n3', 1) + 0.3, 'pick → picked', 'เก็บ'], [at('n4', 1) + 0.25, 'remove → removed', 'เอาออก'], [at('n4', 2) + 0.3, 'dry → dried', 'ตากแห้ง'],
+  [at('n5', 0) + 0.25, 'roast → roasted', 'คั่ว'], [at('n5', 2) + 0.2, 'grind → ground', 'บด (V3 ไม่ใช่ grinded!)'], [at('n6', 1) + 0.25, 'brew → brewed', 'ชง']];
+H.push(popWords(POP));
+$('dyn').innerHTML = H.join('');
+document.querySelectorAll('.sub,.chip').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); const max = el.classList.contains('chip') ? 920 : el.clientWidth; while ((el.classList.contains('chip') ? el.scrollWidth > max : el.scrollWidth > el.clientWidth) && f > 36) { f -= 4; el.style.fontSize = f + 'px'; } });
+const els = [...document.querySelectorAll('[data-in]')];
+const inR = (a, b, t) => t >= a && t < b;
+// ขั้นที่กำลังพูดถึง (วงเหลือง): ช่วงพากย์ + ประโยคอังกฤษของขั้นนั้น
+const HI = [[[SHOW[0], L.e1.b + 0.6]], [[SHOW[1], SHOW[2]], [L.e2.a, L.e2.b + 0.6]], [[SHOW[2], L.n5.a], [L.e2.a, L.e2.b + 0.6]], [[SHOW[3], SHOW[4]], [L.e3.a, L.e3.b + 0.6]], [[SHOW[4], L.n6.a], [L.e4.a, L.e4.b + 0.6]], [[SHOW[5], L.e5.b + 0.6]]];
+
+function seek(t) {
+  tick(els, t);
+  const recap = inR(R0, R1, t);
+  $('stages').setAttribute('opacity', recap ? 0.12 : 1); $('arrows').setAttribute('opacity', recap ? 0.12 : 1);
+  P.forEach((_, i) => {
+    const g = $('st' + i), p = cl((t - SHOW[i]) / 0.45), on = t >= SHOW[i];
+    g.querySelector('.ghost').setAttribute('opacity', on ? 0 : 1);
+    g.querySelector('.real').setAttribute('opacity', on ? 1 : 0);
+    const s = on ? 0.5 + 0.5 * back(p) : 1 + (t < L.n2.a ? Math.sin(t * 5 + i) * 0.03 : 0);
+    g.setAttribute('transform', `translate(${P[i][0]} ${P[i][1]}) scale(${s})`);
+    const hi = HI[i].some(([a, b]) => inR(a, b, t));
+    const ring = g.querySelector('.ring'); ring.setAttribute('opacity', hi ? 1 : 0); ring.setAttribute('r', R + 14 + Math.abs(Math.sin(t * 5)) * 8);
+    if (i) { const ap = cl((t - SHOW[i] + 0.35) / 0.4), ar = $('ar' + (i - 1)); ar.setAttribute('stroke-dashoffset', 100 * (1 - outc(ap))); ar.setAttribute('opacity', ap > 0.6 ? 1 : 0); }
+  });
+  // ของขยับเล็กๆ: ไฟคั่วกระพริบ · มือหมุนเครื่องบด · ไอน้ำลอย
+  document.querySelectorAll('.fl').forEach((f, k) => f.setAttribute('transform', `translate(0 ${Math.sin(t * 12 + k) * 3}) scale(1 ${1 + Math.sin(t * 14 + k * 2) * 0.12})`));
+  document.querySelectorAll('.crank').forEach((c) => c.setAttribute('transform', `rotate(${(t * 180) % 360} -10 -62)`));
+  document.querySelectorAll('.st').forEach((s, k) => { const q = ((t * 0.8 + k * 0.33) % 1); s.setAttribute('transform', `translate(0 ${-q * 18})`); s.setAttribute('opacity', 1 - q); });
+  const talking = window.EP.some((e) => e.kind === 'narr' && inR(L[e.k].a, L[e.k].b, t));
+  $('host').setAttribute('transform', `translate(960 ${1310 - (talking ? Math.abs(Math.sin(t * 7)) * 18 : 0)}) scale(.42)`);
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>
