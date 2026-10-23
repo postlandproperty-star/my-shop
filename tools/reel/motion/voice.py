@@ -11,6 +11,8 @@ import vocab as V
 FF = os.path.join(HERE, '../../../node_modules/ffmpeg-static/ffmpeg')
 NARR = os.environ.get('NARR', 'Aria')
 ENGINE = os.environ.get('VOICE_ENGINE', 'free')
+# พากย์ไทยคลิป = ElevenLabs v3 (Aria) ผ่าน fal + ถอดเสียงตรวจบท · คุณแดน 25 ต.ค. 69 "ไม่เอาเสียงไทยของ google เพราะมันผิด" (เสียเงินเฉพาะพากย์ไทยคลิป · อังกฤษยังเป็น Kokoro ฟรี · หนังสือฟรีเหมือนเดิม)
+TH_ENGINE = os.environ.get('TH_ENGINE', 'eleven')  # eleven (ค่าเริ่ม) | google (ปิดไว้สำหรับคลิป ใช้เมื่อสั่งเองเท่านั้น)
 TH_VOICE = os.environ.get('TH_VOICE', 'th-TH-Chirp3-HD-Kore')  # เปลี่ยนได้: Achernar Aoede Kore Leda Zephyr (ผู้หญิง)
 EN_VOICE = {'fen': os.environ.get('EN_MALE', 'bm_george'), 'men': os.environ.get('EN_FEMALE', 'bf_emma')}  # Kokoro อังกฤษสำเนียงบริติช
 KOKORO = os.path.expanduser('~/Documents/Academic/_kit/kokoro/venv/bin/python')
@@ -90,13 +92,17 @@ def _free(d, LINES):
     """ทำเสียงทั้งตอนแบบฟรี → <k>.wav (44.1k สเตอริโอ ตัดเงียบหัวท้าย) · คืน {k: วินาที}"""
     cut = 'silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.03'
     lvl = 'loudnorm=I=-19:TP=-2:LRA=11'  # ดังเท่าเสียงชุดเดิม (Kokoro ออกมาเบากว่า ~5 dB)
-    prev = os.environ.get('VOICE_PREVIEW') == '1'; jobs = []; th = 0
+    prev = os.environ.get('VOICE_PREVIEW') == '1'; jobs = []; th = 0; el = 0
     for row in LINES:
         k, kind, text = row[:3]; wav = os.path.join(d, k + '.wav'); clean = text.replace('|', ' ').replace('*', '')
         if os.path.exists(wav) and not os.path.exists(wav + '.preview'): continue
         if kind == 'narr':
             if prev:  # ช่วงเงียบยาวตามจำนวนตัวอักษร (ไทยราว 0.085 วิ/ตัว)
                 subprocess.run([FF, '-v', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-t', f'{max(1.2, len(clean) * 0.085):.2f}', wav], check=True); open(wav + '.preview', 'w').write('1'); continue
+            if TH_ENGINE != 'google':  # ElevenLabs Aria + ถอดเสียงเทียบบท (ratio ≥ 0.8 · ลองได้ 3 รอบ) เหมือนคลิปชุดแรกที่คนดูเยอะ
+                _tts(d, k, 'narr', text); el += len(clean)
+                if os.path.exists(wav + '.preview'): os.remove(wav + '.preview')
+                continue
             mp3 = os.path.join(d, k + '.mp3'); th += _google_th(th_say(clean), mp3)
             subprocess.run([FF, '-v', 'error', '-y', '-i', mp3, '-af', f'{cut},areverse,{cut},areverse,{lvl}', '-ar', '44100', '-ac', '2', wav], check=True)
             if os.path.exists(wav + '.preview'): os.remove(wav + '.preview')
@@ -112,6 +118,7 @@ def _free(d, LINES):
         with wave.open(os.path.join(d, k + '.wav')) as w: durs[k] = round(w.getnframes() / w.getframerate(), 2)
         spc = durs[k] / max(1, len(text.replace('|', '').replace('*', '')))
         if not os.path.exists(os.path.join(d, k + '.wav.preview')) and not (0.03 <= spc <= 0.2): print(f'⚠️ เสียง {k} ยาวผิดปกติ ({durs[k]} วิ สำหรับ {len(text)} ตัวอักษร) ฟังเช็กก่อนโพสต์')
+    if el: print(f'พากย์ไทย ElevenLabs (fal): {el:,} ตัวอักษร')
     if th: print(f'โควตาเสียงฟรี Google: ใช้รอบนี้ {th:,} ตัวอักษร · เดือนนี้รวม {_usage()[1]:,} / 1,000,000')
     if prev: print('⚠️ VOICE_PREVIEW: พากย์ไทยยังเป็นช่วงเงียบ ห้ามโพสต์ · รันใหม่ไม่ใส่ VOICE_PREVIEW เมื่อมีโควตา')
     return durs
