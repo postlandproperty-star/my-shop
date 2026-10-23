@@ -193,6 +193,10 @@
       "destination": "/api/page?doc=terms"
     },
     {
+      "source": "/tiktok/callback",
+      "destination": "/api/content?action=tiktok_cb"
+    },
+    {
       "source": "/tiktokChETbSg96OIdrHtkBOrV9NG9okPmNkk7.txt",
       "destination": "/api/page?seo=tiktok"
     },

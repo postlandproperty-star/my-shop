@@ -25,6 +25,7 @@ import { adsAccess, launchAd, isGovProduct, setCampaignStatus, campaignStats, ad
 import { checkPolicy, policyMark, policyState, POLICY_BOARD, MARKET_PLAN } from '../lib/policy.js';
 import { sendRecoveries, recoverStatus, recoverCfg } from '../lib/recover.js';
 import { loadThreads, publishToThreads, threadsConnected, refreshIfNeeded, thGet } from '../lib/threads.js';
+import { loadTT, saveTT, ttAuthUrl, ttExchange, ttUser, ttPublic, pushToTikTok, crossToTikTok, ttLine, withTt } from '../lib/tiktok.js';
 
 const SB_URL = 'https://lpeqaorswhwzlplsaqpe.supabase.co';
 const SECRET = process.env.SUPABASE_SECRET_KEY || '';
@@ -3638,6 +3639,51 @@ ${books}`;
       const r = await fetch(`https://graph.facebook.com/v21.0/${pid}/events`, { method: 'POST', body }); const j = await r.json().catch(() => ({}));
       return res.status(200).json({ ok: !!(r.ok && !j.error && j.events_received), received: j.events_received || 0, error: j.error?.message || null, test_code: body.get('test_event_code') });
     }
+    if (action === 'tiktok_cb') { // 🎵 ปลายทาง OAuth ของ TikTok (rewrite /tiktok/callback) → แลกโทเค็น → บันทึก → กลับหลังบ้าน
+      const site = await siteUrl(), back = (q) => { res.statusCode = 302; res.setHeader('Location', `${site}/?${q}`); return res.end(); };
+      const d = await loadTT(), code = String(req.query.code || ''), state = String(req.query.state || '');
+      if (req.query.error) return back('tiktok=error&msg=' + encodeURIComponent(String(req.query.error_description || req.query.error).slice(0, 160)));
+      if (!d.clientKey || !d.clientSecret) return back('tiktok=error&msg=' + encodeURIComponent('ยังไม่ได้ใส่ Client key / Client secret'));
+      if (!code || !state || state !== d.state || Date.now() - Date.parse(d.stateAt || 0) > 15 * 60e3) return back('tiktok=error&msg=' + encodeURIComponent('ลิงก์อนุญาตหมดอายุหรือไม่ตรง ลองกดเชื่อมใหม่'));
+      try {
+        const token = await ttExchange(d, code); let user = {};
+        try { user = await ttUser(token.access_token); } catch (e) {}
+        await saveTT({ ...d, state: '', stateAt: '', token, user: { display_name: user.display_name || '', avatar_url: user.avatar_url || '' }, connectedAt: new Date().toISOString() });
+        return back('tiktok=ok');
+      } catch (e) { return back('tiktok=error&msg=' + encodeURIComponent(String(e.message || e).slice(0, 160))); }
+    }
+    if (action.startsWith('tiktok_')) { // 🎵 TikTok ตั้งค่า/เชื่อมบัญชี/ส่งคลิปทดสอบ (เฉพาะแอดมิน · ไม่ส่งรหัสลับกลับไปหน้าเว็บ)
+      const admin = req.headers.authorization ? await verifyAdmin(req.headers.authorization) : null;
+      if (!admin) return res.status(401).json({ ok: false, error: 'ต้องล็อกอินแอดมิน' });
+      const d = await loadTT();
+      if (action === 'tiktok_status') return res.status(200).json({ ok: true, ...ttPublic(d) });
+      if (req.method !== 'POST') return res.status(405).json({ ok: false });
+      const b = await readBody(req);
+      if (action === 'tiktok_cfg') {
+        const nd = { ...d }, key = String(b.clientKey || '').trim(), sec = String(b.clientSecret || '').trim();
+        if (key) { if (!/^[A-Za-z0-9_-]{6,64}$/.test(key)) return res.status(400).json({ ok: false, error: 'Client key ไม่ถูกต้อง' }); if (key !== nd.clientKey) { delete nd.token; delete nd.user; } nd.clientKey = key; }
+        if (sec) { if (sec.length < 8 || sec.length > 200) return res.status(400).json({ ok: false, error: 'Client secret ไม่ถูกต้อง' }); nd.clientSecret = sec; }
+        if (b.mode === 'inbox' || b.mode === 'direct') nd.mode = b.mode;
+        if (typeof b.auto === 'boolean') nd.auto = b.auto;
+        await saveTT(nd); return res.status(200).json({ ok: true, ...ttPublic(nd) });
+      }
+      if (action === 'tiktok_auth') {
+        if (!d.clientKey || !d.clientSecret) return res.status(400).json({ ok: false, error: 'ใส่ Client key และ Client secret ก่อน' });
+        const state = 'tt' + globalThis.crypto.randomUUID().replace(/-/g, '');
+        await saveTT({ ...d, state, stateAt: new Date().toISOString() });
+        return res.status(200).json({ ok: true, url: ttAuthUrl(d.clientKey, state) });
+      }
+      if (action === 'tiktok_disconnect') { const nd = { ...d }; delete nd.token; delete nd.user; await saveTT(nd); return res.status(200).json({ ok: true, ...ttPublic(nd) }); }
+      if (action === 'tiktok_test') { // ส่งคลิป Reels ล่าสุดที่ขึ้นเพจแล้วไป TikTok หนึ่งคลิป
+        const rows = (await sb('posts?status=eq.published&channel=eq.facebook&kind=eq.reel&select=id,text,image_url,notes&order=published_at.desc&limit=10')) || [];
+        const p = rows.find((x) => isVideoUrl(x.image_url));
+        if (!p) return res.status(200).json({ ok: false, error: 'ยังไม่มีคลิป Reels ที่โพสต์แล้ว' });
+        let r; try { r = await pushToTikTok(d, p.image_url, p.text); } catch (e) { r = { ok: false, error: String(e.message || e) }; }
+        await saveTT({ ...(await loadTT()), last: { at: new Date().toISOString(), ok: !!r.ok, line: ttLine(r) } }).catch(() => {});
+        return res.status(200).json({ ok: !!r.ok, line: ttLine(r), error: r.ok ? undefined : r.error });
+      }
+      return res.status(404).json({ ok: false, error: 'unknown tiktok action' });
+    }
     if (action === 'gads_sync') { // 🔎 Google Ads Script (บัญชี 953-253-3805) ส่งตัวเลขแอดมาทุกชั่วโมง · คุณแดน 22 ต.ค. 69 "ระบบหลังบ้านเหมือน facebook ads" · กุญแจแยก private.gadsKey เขียนได้แค่ตัวเลขแอด
       const priv = (await sb('shop_state?id=eq.private&select=data'))?.[0]?.data || {}, gk = String(req.headers['x-gads-key'] || '');
       if (!priv.gadsKey || gk.length < 24 || gk !== priv.gadsKey) return res.status(401).json({ ok: false });
@@ -3879,9 +3925,12 @@ ${books}`;
             const fbId = await publishToPage(fb, p);
             await sbPatch(`posts?id=eq.${p.id}`, { status: 'published', published_at: new Date().toISOString(), fb_post_id: String(fbId), error: null });
             const ig = await crossToIg(fb, p); // คลิป Reels ลง Instagram ด้วย
+            // 🎵 คลิป Reels ไป TikTok ด้วย (ถ้าเชื่อมแล้ว · ล้มก็ไม่กระทบเพจ/IG) · บันทึก "TT ✓ ..." ในโน้ต
+            const tt = p.kind === 'reel' && isVideoUrl(p.image_url) ? await crossToTikTok(p.image_url, p.text).catch(() => '') : '';
+            if (tt) { p.notes = withTt(p.notes, tt); if (!ig) await sbPatch(`posts?id=eq.${p.id}`, { notes: p.notes }).catch(() => {}); }
             if (ig) { await sbPatch(`posts?id=eq.${p.id}`, { notes: withIg(p.notes, ig) }); if (ig.startsWith('IG ✓')) await chatEvent('clip', pick(['คลิปลง Instagram Reels ด้วยแล้วครับ 📸', 'IG Reels ขึ้นแล้วครับ ลูกค้าสาย IG ก็เห็นแล้ว']), 'published'); }
             await chatEvent(p.kind === 'reel' ? 'clip' : 'writer', p.kind === 'reel' ? pick(['Reels ขึ้นเพจแล้วครับ ใครว่างไปกดหัวใจให้หน่อย 🎬', 'คลิปขึ้นเพจแล้วครับ ลุ้นยอดวิวกัน 👀', 'ปล่อยคลิปแล้วครับ ถ้าคอมเมนต์เยอะเลี้ยงชานม']) : pick(['โพสต์ขึ้นเพจแล้วค่ะ ✨', 'โพสต์ขึ้นแล้วน้า ไปกดไลก์ให้กำลังใจกันหน่อยค่ะ 🙏', 'ส่งขึ้นเพจแล้วค่ะ วันนี้ขอยอดแชร์เยอะๆ']), 'published');
-            results.push({ id: p.id, ok: true, fb_post_id: fbId, ...(ig ? { ig } : {}) });
+            results.push({ id: p.id, ok: true, fb_post_id: fbId, ...(ig ? { ig } : {}), ...(tt ? { tt } : {}) });
           }
         } catch (e) {
           await sbPatch(`posts?id=eq.${p.id}`, { status: 'failed', error: ((p._retry ? '[ลองซ้ำแล้ว] ' : '') + String(e.message || e)).slice(0, 500) });
