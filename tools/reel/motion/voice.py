@@ -58,6 +58,21 @@ def _usage():
     return m, (u.get('chars', 0) if u.get('month') == m else 0)
 
 
+# คำอังกฤษในบทพากย์ไทย: ส่งให้เสียงไทยอ่านเป็นคำอ่านไทย (คุณแดน 25 ต.ค. 69 "ทำไมพูดว่า T O E I C") · ใช้เฉพาะข้อความที่ส่งเข้า TTS ซับบนจอไม่เปลี่ยน
+TH_SAY = [('For here or to go', 'ฟอร์เฮียร์ ออร์ทูโก'), ('Not Given', 'น็อตกิฟเว่น'), ('for here', 'ฟอร์เฮียร์'), ('to go', 'ทูโก'), ('small ice', 'สมอลล์ไอซ์'),
+          ('TOEIC', 'โทอิค'), ('IELTS', 'ไอเอลส์'), ('TOEFL', 'โทเฟิล'), ('TGAT', 'ทีแก็ต'), ('EP.', 'อีพี '), ('Part', 'พาร์ท'), ('Reading', 'รีดดิ้ง'), ('Writing', 'ไรท์ติ้ง'),
+          ('Listening', 'ลิสเซินนิ่ง'), ('Speaking', 'สปีคกิ้ง'), ('Task', 'ทาสก์'), ('Band', 'แบนด์'), ('True', 'ทรู'), ('False', 'ฟอลส์'), ('Yes', 'เยส'), ('No', 'โน'),
+          ('passive', 'พาสซีฟ'), ('V3', 'วีสาม'), ('is', 'อิส'), ('are', 'อาร์'), ('When', 'เวน'), ('Where', 'แวร์'), ('Who', 'ฮู'), ('copy', 'ค็อปปี้'), ('coffee', 'คอฟฟี่'),
+          ('tion', 'ชั่น'), ('ment', 'เมนท์'), ('ness', 'เนส'), ('ity', 'อิตี้'), ('ful', 'ฟูล'), ('ive', 'อีฟ'), ('able', 'เอเบิล'), ('ous', 'อัส'), ('ly', 'ลี่'),
+          ('friendly', 'เฟรนด์ลี่'), ('the', 'เดอะ'), ('of', 'ออฟ'), ('efficiency', 'เอฟฟิเชียนซี'), ('read', 'รีด'), ('carefully', 'แคร์ฟูลลี่'), ('iced', 'ไอซ์ท')]
+
+
+def th_say(text):
+    for en, th in TH_SAY:
+        text = re.sub(r'(?<![A-Za-z])' + re.escape(en) + r'(?![A-Za-z])', th, text)
+    return text
+
+
 def _google_th(text, mp3):
     """พากย์ไทยด้วย Google Chirp 3 HD (โควตาฟรี) · เกินเพดาน CAP (ค่าเริ่ม 900,000) ในเดือนนี้ = หยุด"""
     import urllib.request, base64
@@ -82,7 +97,7 @@ def _free(d, LINES):
         if kind == 'narr':
             if prev:  # ช่วงเงียบยาวตามจำนวนตัวอักษร (ไทยราว 0.085 วิ/ตัว)
                 subprocess.run([FF, '-v', 'error', '-y', '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-t', f'{max(1.2, len(clean) * 0.085):.2f}', wav], check=True); open(wav + '.preview', 'w').write('1'); continue
-            mp3 = os.path.join(d, k + '.mp3'); th += _google_th(clean, mp3)
+            mp3 = os.path.join(d, k + '.mp3'); th += _google_th(th_say(clean), mp3)
             subprocess.run([FF, '-v', 'error', '-y', '-i', mp3, '-af', f'{cut},areverse,{cut},areverse,{lvl}', '-ar', '44100', '-ac', '2', wav], check=True)
             if os.path.exists(wav + '.preview'): os.remove(wav + '.preview')
         else: jobs.append({'out': os.path.join(d, k + '.raw.wav'), 'voice': EN_VOICE.get(kind, 'bf_emma'), 'text': clean, 'k': k})
