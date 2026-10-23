@@ -208,6 +208,18 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   ok('💬 แชทบอทเพจ: แก้คำลงท้ายผิด (นะคะค่ะ → นะคะ · ค่ะค่ะ → ค่ะ · นะค่ะ → นะคะ · ไหมค่ะ → ไหมคะ) ประโยคที่ถูกอยู่แล้วไม่แตะ', !bad.length, JSON.stringify(bad)); }
 { const P = await import('../lib/policies.js'); const h = P.policyPage('terms') || ''; const v = JSON.parse((await import('node:fs')).readFileSync(new URL('../vercel.json', import.meta.url), 'utf8')).rewrites;
   ok('📜 หน้า /terms ข้อตกลงการใช้งาน (TikTok ต้องมี) + ไฟล์ยืนยันเว็บ TikTok มีเส้นทาง', /ข้อตกลงการใช้งาน/.test(h) && /href="\/privacy"/.test(h) && /TikTok/.test(h) && v.some((r) => r.source === '/terms') && v.some((r) => /^\/tiktok\w+\.txt$/.test(r.source)), ''); }
+{ const T = await import('../lib/tiktok.js'); const now = Date.parse('2026-10-24T05:00:00Z');
+  const u = new URL(T.ttAuthUrl('awkey123', 'ttSTATE'));
+  const url = u.origin + u.pathname === 'https://www.tiktok.com/v2/auth/authorize/' && u.searchParams.get('client_key') === 'awkey123' && u.searchParams.get('scope') === 'user.info.basic,video.upload,video.publish' && u.searchParams.get('response_type') === 'code' && u.searchParams.get('redirect_uri') === 'https://sheetlabth.com/tiktok/callback' && u.searchParams.get('state') === 'ttSTATE';
+  const tok = (min) => ({ access_token: 'a', refresh_token: 'r', expires_at: new Date(now + min * 6e4).toISOString(), refresh_expires_at: new Date(now + 300 * 864e5).toISOString() });
+  const refresh = T.ttNeedsRefresh(tok(5), now) && !T.ttNeedsRefresh(tok(60), now) && T.ttNeedsRefresh({ access_token: 'a' }, now);
+  const conn = T.ttConnected({ token: tok(60) }, now) && !T.ttConnected({ token: { ...tok(60), refresh_expires_at: new Date(now - 1).toISOString() } }, now) && !T.ttConnected({}, now);
+  const notes = T.withTt(T.withTt('IG ✓ 123', T.ttLine({ ok: true, publish_id: 'p1', mode: 'inbox' })), T.ttLine({ ok: false, error: 'spam_risk_too_many_posts' }));
+  const lines = notes === 'IG ✓ 123\nTT ไม่ผ่าน: spam_risk_too_many_posts' && /^IG ✓ 123$/m.test(notes);
+  const cap = T.ttCaption('หัวข้อ\n🤖 เสียงในคลิปสร้างด้วย AI\n#IELTS') === 'หัวข้อ\n#IELTS';
+  const pub = T.ttPublic({ clientKey: 'awkey123', clientSecret: 'SUPERSECRET', token: tok(60), user: { display_name: 'sheetlabth' } }), safe = !JSON.stringify(pub).includes('SUPERSECRET') && !JSON.stringify(pub).includes('"a"') && pub.mode === 'inbox' && pub.clientKeyTail === 'y123' && pub.hasApp;
+  ok('🎵 TikTok: ลิงก์อนุญาต (client_key · scope 3 สิทธิ์ · redirect /tiktok/callback · state) · โทเค็นเหลือ < 10 นาทีต่ออายุ · บรรทัด TT ในโน้ตไม่ทับ IG · แคปชันไม่มีบรรทัด AI · สถานะที่ส่งหน้าเว็บไม่มีรหัสลับ/โทเค็น',
+    url && refresh && conn && lines && cap && safe, JSON.stringify({ url, refresh, conn, lines, cap, safe, notes })); }
 { const { ssrShell } = await import('../api/page.js'); const P = [{ id: 'a', price: 179, fullPrice: 249, name: 'A <b>', headline: 'หัว A', images: ['https://x/a.jpg'] }, { id: 'b', price: 149 },
     { id: 's', type: 'bundle', name: 'ชุด 2 เล่ม', headline: 'ชุดดี', items: ['a', 'b'], plans: [{ key: 'basic', price: 290 }, { key: 'pro', price: 490 }], price: 290, cover: 'https://x/s.jpg' }];
   const one = ssrShell(P[0], P), set = ssrShell(P[2], P);

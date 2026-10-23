@@ -4882,8 +4882,9 @@ function factoryBox(){
 let POSTS=[],postsLoaded=false;
 const KIND_TH={salepage:'รายงาน salepage',store:'รายงานหน้าร้าน',deck:'สไลด์รายงาน',handoff:'รับงานแทนคุณแดน',reply:'สั่งงาน',brief:'โจทย์ให้ทีม',meeting:'บันทึกประชุม',people:'รายงานทีม (ฝ่ายบุคคล)',handbook:'คู่มือพนักงาน',tip:'ทิปฟรี',quiz:'ควิซ',engage:'ชวนคุย',sale:'ขาย',intro:'แนะนำร้าน',review:'รีวิว',other:'อื่นๆ',report:'รายงานผู้จัดการ',ads:'วิเคราะห์แอด',community:'คอมเมนต์ที่ต้องตอบ',care:'อีเมลติดตามลูกค้า',product:'ข้อเสนอสินค้าใหม่',finance:'สรุปบัญชี',trend:'หัวข้อแนะนำสัปดาห์นี้',design:'ตรวจรูป',log:'บันทึกงาน',note:'บันทึก',reply:'ข้อความจากคุณ',plan:'แผนสัปดาห์ (ประชุมทีม)',health:'ตรวจสุขภาพระบบ',guard:'รายงานฝ่ายดูแลระบบ',chat:'ห้องพักทีม',market:'รายงานตลาด',reel:'คลิป Reels'};
 const STATUS_TH={draft:['รอพี่ต้นตรวจ','warn'],needs_owner:['⚠️ รอคุณอนุมัติ','bad'],approved:['อนุมัติแล้ว รอเวลาโพสต์','ok'],publishing:['กำลังโพสต์','gray'],published:['โพสต์แล้ว','ok'],failed:['โพสต์ไม่สำเร็จ','bad'],rejected:['ปัดตก','gray'],note:['บันทึก','gray']};
-let FB={},TH={};
-(function(){try{const q=new URLSearchParams(location.search);if(q.get('threads')){const rl=q.get('brand')==='readlab';if(rl){S.tab='content';S.cbrand='readlab';}setTimeout(()=>{toast(q.get('threads')==='ok'?(rl?'เชื่อม Threads เพจราชการ เรียบร้อย โพสต์ที่อนุมัติจะขึ้นเอง':'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ'):'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
+let FB={},TH={},TT={};
+(function(){try{const q=new URLSearchParams(location.search);if(q.get('tiktok')){S.tab='content';S.cbrand='sheetlab';setTimeout(()=>{toast(q.get('tiktok')==='ok'?'เชื่อม TikTok เรียบร้อย คลิป Reels จะส่งไป TikTok ด้วยอัตโนมัติ':'เชื่อม TikTok ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}if(q.get('threads')){const rl=q.get('brand')==='readlab';if(rl){S.tab='content';S.cbrand='readlab';}setTimeout(()=>{toast(q.get('threads')==='ok'?(rl?'เชื่อม Threads เพจราชการ เรียบร้อย โพสต์ที่อนุมัติจะขึ้นเอง':'เชื่อม Threads เรียบร้อย โพสต์ช่อง Threads จะขึ้นอัตโนมัติ'):'เชื่อม Threads ไม่สำเร็จ: '+(q.get('msg')||''));},900);history.replaceState(null,'',location.pathname+location.hash);}}catch(e){}})();
+async function loadTtStatus(){try{const j=await adminApi('/api/content?action=tiktok_status');if(j.ok)TT=Object.assign(TT,j);}catch(e){}}
 async function loadThStatus(){try{const j=await adminApi('/api/threads?action=status');if(j.ok)TH=Object.assign(TH,{connected:j.connected,user:j.user,app:j.app,redirect:j.redirect});}catch(e){}}
 async function loadFbStatus(){try{const j=await adminApi('/api/fb?action=status');if(j.ok)FB=Object.assign(FB,{connected:j.connected,page:j.page,app:j.app,ig:j.ig||null});}catch(e){}}
 async function adminPost(path,body){return authFetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});}
@@ -5277,7 +5278,7 @@ function weekView(all){const off=S.cwk||0,[a]=wkRange(off),L=wkPosts(all,off),is
   return `<div class="wk"><div class="wk-nav"><button class="btn btn-line btn-sm" data-a="cweek" data-v="-1" aria-label="สัปดาห์ก่อน">‹</button><b>${off===0?'สัปดาห์นี้':off===1?'สัปดาห์หน้า':off===-1?'สัปดาห์ที่แล้ว':''} ${new Date(a).toLocaleDateString('th-TH',{day:'numeric',month:'short'})} – ${new Date(a+6*864e5).toLocaleDateString('th-TH',{day:'numeric',month:'short'})}</b><button class="btn btn-line btn-sm" data-a="cweek" data-v="1" aria-label="สัปดาห์หน้า">›</button></div>
     ${fbar}<p class="fine wk-sum">✅ โพสต์แล้ว ${groups.filter(g=>g.st[2]==='ok').length}/${groups.length}${off===0?' · วันที่ผ่านไปแล้วย่อไว้ กดเพื่อดู':''}</p>${days}</div>`;}
 function sheetlabContent(){
-  if(!postsLoaded&&!postsLoading){postsLoading=true;Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).catch(()=>{}).finally(()=>{postsLoading=false;postsLoaded=true;render(true);});}
+  if(!postsLoaded&&!postsLoading){postsLoading=true;Promise.all([loadPosts(),loadFbStatus(),loadThStatus(),loadTtStatus()]).catch(()=>{}).finally(()=>{postsLoading=false;postsLoaded=true;render(true);});}
   const f=S.cfilter||'week';
   const all=POSTS.filter(p=>p.status!=='note'&&p.status!=='log');
   const QUEUE=['needs_owner','draft','approved','failed','publishing'];
@@ -5323,18 +5324,32 @@ function sheetlabContent(){
       </div></div>`;};
   let lastDay=null;
   const rows=list.map(p=>{const t=p.status==='published'?when(p):(p.scheduled_at?Date.parse(p.scheduled_at):0);const k=(f==='queue'&&rank(p)<2)?'urgent':(t?dayKey(t):'none');let sep='';if(k!==lastDay){lastDay=k;sep=`<div class="daysep${k==='urgent'?' urgent':''}">${k==='urgent'?'⚠️ ต้องจัดการก่อน':dayLabel(t)}</div>`;}return sep+card(p);}).join('');
-  const setupOpen=!!S.csetup||(!fb&&!th)||S.fbOpen||S.thOpen||S.igOpen;
+  const setupOpen=!!S.csetup||(!fb&&!th)||S.fbOpen||S.thOpen||S.igOpen||S.ttOpen;
   return `
   <div class="cbar">
-    <span class="cstat"><span><i class="dot ${fb?'on':'off'}"></i>เพจ ${fb?'<b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${th?'on':'off'}"></i>Threads ${th?'<b>@'+esc(TH.user&&TH.user.username||'')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${FB.ig?'on':'off'}"></i>Instagram ${FB.ig?'<b>@'+esc(FB.ig.username||'')+'</b>':'ยังไม่เชื่อม'}</span><button class="btn btn-line btn-sm" data-a="csetup" aria-expanded="${setupOpen}">${setupOpen?'ซ่อนการตั้งค่า':'ตั้งค่า / ทดสอบ'}</button></span>
+    <span class="cstat"><span><i class="dot ${fb?'on':'off'}"></i>เพจ ${fb?'<b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${th?'on':'off'}"></i>Threads ${th?'<b>@'+esc(TH.user&&TH.user.username||'')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${FB.ig?'on':'off'}"></i>Instagram ${FB.ig?'<b>@'+esc(FB.ig.username||'')+'</b>':'ยังไม่เชื่อม'}</span><span><i class="dot ${TT.connected?'on':'off'}"></i>TikTok ${TT.connected?'<b>'+esc(TT.user&&TT.user.display_name||'เชื่อมแล้ว')+'</b>':'ยังไม่เชื่อม'}</span><button class="btn btn-line btn-sm" data-a="csetup" aria-expanded="${setupOpen}">${setupOpen?'ซ่อนการตั้งค่า':'ตั้งค่า / ทดสอบ'}</button></span>
     <span class="row" style="gap:8px"><button class="btn btn-line btn-sm" data-a="postRefresh">รีเฟรช</button><button class="btn btn-dark btn-sm" data-a="postNew">+ เพิ่มโพสต์เอง</button></span>
   </div>
   ${setupOpen?`<div class="card" style="padding:12px 14px;margin-bottom:10px">
     <span class="fine">${fb?'✅ เชื่อมเพจ <b>'+esc(FB.page&&FB.page.name||'Facebook')+'</b> แล้ว โพสต์ที่อนุมัติจะขึ้นเพจอัตโนมัติวันละ 2 รอบ 10:00 และ 19:05 น. <button class="btn btn-line btn-sm" data-a="fbTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="fbDisconnect">ยกเลิกการเชื่อม</button>':'⚠️ ยังไม่ได้เชื่อมเพจ Facebook — โพสต์ที่อนุมัติต้องคัดลอกไปโพสต์เอง <button class="btn btn-cta btn-sm" data-a="fbOpen">เชื่อมเพจ Facebook</button>'}</span>
     <span class="fine" style="display:block;margin-top:6px">${TH.connected?'✅ เชื่อม Threads <b>@'+esc(TH.user&&TH.user.username||'')+'</b> แล้ว โพสต์ช่อง Threads ที่อนุมัติจะขึ้นอัตโนมัติวันละ 2 รอบ 10:00 และ 19:05 น. <button class="btn btn-line btn-sm" data-a="thTest">ทดสอบ</button> <button class="btn btn-line btn-sm" data-a="thDisconnect">ยกเลิก</button>':'○ ยังไม่ได้เชื่อม Threads (ทำการตลาดคู่กับเพจ) <button class="btn btn-line btn-sm" data-a="thOpen">เชื่อม Threads</button>'}</span>
     ${fb?`<span class="fine" style="display:block;margin-top:6px">${FB.ig?'✅ เชื่อม Instagram <b>@'+esc(FB.ig.username||'')+'</b> แล้ว คลิป Reels ที่ขึ้นเพจจะลง Instagram Reels ด้วยอัตโนมัติ <button class="btn btn-line btn-sm" data-a="igCheck">ตรวจอีกครั้ง</button>':'○ ยังไม่ได้เชื่อม Instagram (คลิป Reels ลง IG ด้วย ได้ลูกค้าเพิ่ม) <button class="btn '+(S.igOpen?'btn-line':'btn-cta')+' btn-sm" data-a="igOpen">'+(S.igOpen?'ปิด':'เชื่อม Instagram')+'</button>'}</span>`:''}
+    <span class="fine tt-line" style="display:block;margin-top:6px">${TT.connected?`✅ เชื่อม TikTok <b>${esc(TT.user&&TT.user.display_name||'')}</b> แล้ว คลิป Reels ที่ขึ้นเพจจะส่งไป TikTok ด้วย (${TT.mode==='direct'?'โพสต์เลย':'เข้ากล่องร่างในแอป TikTok ให้กดโพสต์เอง'}) <button class="btn btn-line btn-sm" data-a="ttTest">ส่งคลิปทดสอบ</button> <button class="btn btn-line btn-sm" data-a="ttOpen">ตั้งค่า</button>`:`○ ยังไม่ได้เชื่อม TikTok (คลิป Reels ส่งไป TikTok ด้วยอัตโนมัติ) <button class="btn btn-line btn-sm" data-a="ttOpen">เชื่อม TikTok</button>`}</span>
   </div>
   ${S.igOpen&&fb&&!FB.ig?`<div class="card" style="padding:4px 14px 14px;margin-bottom:12px">${igSteps('เพจ '+(FB.page&&FB.page.name||'SheetLab'),'ig-token','igConnect',FB.igMsg)}</div>`:''}
+  ${S.ttOpen?`<div class="card tt-box" style="padding:16px;margin-bottom:12px">
+    <b>🎵 เชื่อม TikTok ของร้าน</b>
+    <ol class="fine" style="margin:8px 0 0 18px;line-height:1.7">
+      <li>เปิด <a href="https://developers.tiktok.com/apps" target="_blank" rel="noopener noreferrer">developers.tiktok.com → แอป SheetLab</a> → กดลูกศรช่อง <b>Client key</b> และ <b>Client secret</b> แล้วคัดลอกมาวางด้านล่าง</li>
+      <li>กด "บันทึกและเชื่อมบัญชี" → ล็อกอิน TikTok ของร้าน → กดอนุญาต แล้วระบบพากลับมาหน้านี้</li>
+    </ol>
+    <div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><input class="input" id="tt-key" autocomplete="off" placeholder="${TT.hasApp?'Client key (ใส่แล้ว ลงท้าย '+esc(TT.clientKeyTail||'')+' · เว้นว่างถ้าไม่เปลี่ยน)':'Client key'}" style="flex:1;min-width:180px"><input class="input" id="tt-secret" type="password" autocomplete="new-password" placeholder="${TT.hasApp?'Client secret (ใส่แล้ว · เว้นว่างถ้าไม่เปลี่ยน)':'Client secret'}" style="flex:1;min-width:180px"></div>
+    <p class="fine" style="margin:10px 0 4px">ส่งคลิปไป TikTok แบบ</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap"><button class="chip" data-a="ttMode" data-v="inbox" aria-pressed="${TT.mode!=='direct'}">📥 เข้ากล่องร่าง (กดโพสต์เองในแอป)</button><button class="chip" data-a="ttMode" data-v="direct" aria-pressed="${TT.mode==='direct'}">🚀 โพสต์เลย</button></div>
+    ${TT.mode==='direct'?'<p class="fine" style="margin:4px 0 0">⚠️ โพสต์เลยใช้ได้จริงหลัง TikTok อนุมัติแอป ก่อนอนุมัติคลิปจะขึ้นแบบส่วนตัว (เห็นคนเดียว)</p>':''}
+    <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn btn-cta btn-sm" data-a="ttConnect">บันทึกและเชื่อมบัญชี</button><button class="btn btn-line btn-sm" data-a="ttSave">บันทึก</button>${TT.connected?'<button class="btn btn-line btn-sm" data-a="ttDisconnect">ยกเลิกการเชื่อม</button>':''}<button class="btn btn-line btn-sm" data-a="ttOpen">ปิด</button></div>
+    ${TT.msg?`<p class="fine" style="margin-top:8px">${esc(TT.msg)}</p>`:''}
+  </div>`:''}
   ${S.fbOpen&&!fb?`<div class="card" style="padding:16px;margin-bottom:12px">
     <h3 class="h3" style="margin-top:0">เชื่อมเพจ Facebook (ทำครั้งเดียว)</h3>
     ${FB.app===false?`<p class="err">ยังไม่ได้ใส่ FB_APP_ID / FB_APP_SECRET บน Vercel — ทำข้อ 1 ก่อน</p>`:''}
@@ -7064,7 +7079,7 @@ function act(a,el){
     case 'noteCopy':{const p=POSTS.find(x=>x.id===id);copyText(p&&p.text||'','คัดลอกแล้ว');break;}
     case 'fReply':{const p=POSTS.find(x=>x.id===id);const m=member(p&&p.source||'manager');S.chatDraft='@'+m.name+' ';S.tab='chat';render(true);setTimeout(()=>{const i=$('#chat-new');if(i){i.value=S.chatDraft;i.focus();}},50);break;}
     case 'csetup':S.csetup=!S.csetup;if(!S.csetup){S.fbOpen=false;S.thOpen=false;}render(true);break;
-    case 'postRefresh':Promise.all([loadPosts(),loadFbStatus(),loadThStatus()]).then(()=>render(true));break;
+    case 'postRefresh':Promise.all([loadPosts(),loadFbStatus(),loadThStatus(),loadTtStatus()]).then(()=>render(true));break;
     case 'fbOpen':S.fbOpen=!S.fbOpen;FB.msg='';FB.choose=null;render(true);break;
     case 'thOpen':S.thOpen=!S.thOpen;TH.msg='';render(true);break;
     case 'thConnect':{const a=$('#th-appid'),b=$('#th-secret');const appId=a?a.value.trim():'',appSecret=b?b.value.trim():'';if(!appId||!appSecret){toast('ใส่ Threads App ID และ App Secret ก่อน');break;}TH.msg='กำลังบันทึก...';render(true);adminPost('/api/threads?action=setup',{appId,appSecret}).then(j=>{if(!j.ok)throw new Error(j.error||'บันทึกไม่สำเร็จ');return adminApi('/api/threads?action=authurl');}).then(j=>{if(!j.ok)throw new Error(j.error||'สร้างลิงก์ไม่ได้');window.location.href=j.url;}).catch(e=>{TH.msg='ไม่สำเร็จ: '+e.message;render(true);});break;}
@@ -7105,6 +7120,13 @@ function act(a,el){
     case 'todoAnsOpen':{S.todoAns=id;render(true);setTimeout(()=>{const t=document.getElementById('todo-ans-'+id);if(t)t.focus();},0);break;}
     case 'todoAnsCancel':{S.todoAns=null;render(true);break;}
     case 'todoAnsSend':{const t=document.getElementById('todo-ans-'+id);const answer=t?t.value.trim():'';if(!answer){toast('พิมพ์คำตอบก่อน');break;}el.disabled=true;adminPost('/api/content?action=todo',{id,answer}).then(j=>{if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');TODO.items=j.items;S.todoAns=null;render(true);toast('ส่งคำตอบให้ทีมแล้ว');}).catch(e=>{toast(e.message);el.disabled=false;});break;}
+    case 'ttOpen':S.ttOpen=!S.ttOpen;TT.msg='';render(true);break;
+    case 'ttMode':TT.mode=el.dataset.v==='direct'?'direct':'inbox';render(true);break;
+    case 'ttSave':case 'ttConnect':{const k=$('#tt-key'),c=$('#tt-secret'),body={mode:TT.mode==='direct'?'direct':'inbox'};const kv=k?k.value.trim():'',cv=c?c.value.trim():'';if(kv)body.clientKey=kv;if(cv)body.clientSecret=cv;
+      if(!TT.hasApp&&(!kv||!cv)){toast('ใส่ Client key และ Client secret ก่อน');break;}TT.msg='กำลังบันทึก...';render(true);
+      adminPost('/api/content?action=tiktok_cfg',body).then(j=>{if(!j.ok)throw new Error(j.error||'บันทึกไม่สำเร็จ');Object.assign(TT,j);if(k)k.value='';if(c)c.value='';if(a==='ttSave'){TT.msg='บันทึกแล้ว';render(true);return null;}return adminPost('/api/content?action=tiktok_auth',{});}).then(j=>{if(!j)return;if(!j.ok)throw new Error(j.error||'สร้างลิงก์ไม่ได้');window.location.href=j.url;}).catch(e=>{TT.msg='ไม่สำเร็จ: '+e.message;render(true);});break;}
+    case 'ttDisconnect':if(!confirm('ยกเลิกการเชื่อม TikTok? (คลิปจะไม่ส่งไป TikTok จนกว่าจะเชื่อมใหม่)'))break;adminPost('/api/content?action=tiktok_disconnect',{}).then(j=>{if(j.ok)Object.assign(TT,j);toast(j.ok?'ยกเลิกการเชื่อม TikTok แล้ว':'ไม่สำเร็จ');render(true);}).catch(()=>toast('เชื่อมต่อไม่ได้'));break;
+    case 'ttTest':toast('กำลังส่งคลิปทดสอบไป TikTok...');adminPost('/api/content?action=tiktok_test',{}).then(j=>toast(j.ok?(TT.mode==='direct'?'ส่งคลิปไป TikTok แล้ว':'ส่งคลิปเข้ากล่องร่าง TikTok แล้ว เปิดแอป TikTok ดูการแจ้งเตือน'):'ส่งไม่สำเร็จ: '+(j.error||''))).catch(()=>toast('เชื่อมต่อไม่ได้'));break;
     case 'thTest':adminApi('/api/threads?action=test').then(j=>toast(j.ok?'Threads @'+j.user.username+' ใช้งานได้':'ใช้ไม่ได้: '+(j.error||''))).catch(()=>toast('เชื่อมต่อไม่ได้'));break;
     case 'thDisconnect':if(!confirm('ยกเลิกการเชื่อม Threads? โพสต์ช่อง Threads จะหยุดจนกว่าจะเชื่อมใหม่'))break;adminPost('/api/threads?action=disconnect').then(async()=>{await loadThStatus();render(true);toast('ยกเลิกแล้ว');});break;
     case 'fbConnect':{const ta=$('#fb-token');const token=ta?ta.value.trim():'';if(!token){toast('วางโทเค็นก่อน');break;}FB.msg='กำลังเชื่อม...';render(true);
