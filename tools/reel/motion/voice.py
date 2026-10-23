@@ -20,11 +20,43 @@ GKEY = os.path.expanduser('~/Documents/Academic/.google_tts_key')
 USAGE = '/Volumes/PortableSSD/Sheetlab/_factory/tts_usage.json'; CAP = min(990_000, int(os.environ.get('TTS_CAP', 900_000)))  # TTS_CAP ยกเพดานได้ชั่วคราว แต่ไม่เกิน 990,000 (ฟรี 1 ล้าน)
 
 
+# 💸 บันทึกค่าใช้ fal ทุกครั้ง (คุณแดนอยากรู้ค่าใช้จ่าย 25 ต.ค. 69) · eleven-v3 $0.10/1,000 ตัวอักษร · scribe-v2 $0.008/นาที · 36 บาท/USD
+FAL_USAGE = '/Volumes/PortableSSD/Sheetlab/_factory/fal_usage.json'; TTS_USD, STT_USD, THB = 0.10 / 1000, 0.008 / 60, 36
+
+
+def _slug(path): return os.path.relpath(os.path.dirname(os.path.abspath(path)), HERE)
+
+
+def _secs(f):
+    m = re.search(r'Duration: (\d+):(\d+):([\d.]+)', subprocess.run([FF, '-i', f], capture_output=True, text=True).stderr)
+    return int(m[1]) * 3600 + int(m[2]) * 60 + float(m[3]) if m else 0.0
+
+
+def _log(path, tts=0, stt=0.0):
+    import datetime
+    m = datetime.datetime.now().strftime('%Y-%m')
+    try: u = json.load(open(FAL_USAGE))
+    except (FileNotFoundError, ValueError): u = {}
+    if u.get('month') != m: u = {'month': m, 'tts_chars': 0, 'stt_sec': 0.0, 'clips': {}}
+    c = u['clips'].setdefault(_slug(path), {'tts_chars': 0, 'stt_sec': 0.0})
+    u['tts_chars'] += tts; u['stt_sec'] = round(u['stt_sec'] + stt, 2); c['tts_chars'] += tts; c['stt_sec'] = round(c['stt_sec'] + stt, 2)
+    json.dump(u, open(FAL_USAGE, 'w'), ensure_ascii=False, indent=1)
+
+
+def cost_line(d):
+    try: c = json.load(open(FAL_USAGE))['clips'].get(_slug(os.path.join(d, 'x')))
+    except (FileNotFoundError, ValueError, KeyError): c = None
+    if not c: return
+    usd = c['tts_chars'] * TTS_USD + c['stt_sec'] * STT_USD
+    print(f"💸 ค่าเสียง fal ({_slug(os.path.join(d, 'x'))}) เดือนนี้: TTS {c['tts_chars']:,} ตัวอักษร · STT {c['stt_sec']:.0f} วิ = ${usd:.3f} (~฿{usd * THB:.1f})")
+
+
 def _norm(x): return re.sub(r'[^0-9a-z\u0E00-\u0E7F]', '', x.lower())
 
 
 def heard(mp3, lang):
     """ถอดเสียงกลับเป็นข้อความ (ElevenLabs Scribe) ไว้ตรวจว่าเสียงพูดตรงบท"""
+    _log(mp3, stt=_secs(mp3))
     r = V.req('https://fal.run/fal-ai/elevenlabs/speech-to-text/scribe-v2', {'audio_url': V.data_uri(mp3, 'audio/mpeg'), 'language_code': lang}, timeout=180)
     return re.sub(r'\[[^\]]*\]', '', r.get('text') or '')
 
@@ -32,7 +64,8 @@ def heard(mp3, lang):
 def _gen(kind, text, mp3):
     # อังกฤษใช้ ElevenLabs (22 ต.ค. 69: Gemini TTS อ่านคำสั่ง style ออกเสียงเป็นบทพูด เช่น "Friendly tourist, natural pace." และปัดประโยคสั้นๆ)
     voice = NARR if kind == 'narr' else 'Brian' if kind == 'fen' else 'Sarah'
-    j = V.fal('fal-ai/elevenlabs/tts/eleven-v3', {'text': text.replace('|', ' ').replace('*', ''), 'voice': voice}, wait=300)
+    t = text.replace('|', ' ').replace('*', ''); _log(mp3, tts=len(t))
+    j = V.fal('fal-ai/elevenlabs/tts/eleven-v3', {'text': t, 'voice': voice}, wait=300)
     V.download(j['audio']['url'], mp3)
 
 
@@ -135,3 +168,4 @@ def build(d, LINES):
             for p in parts: L = len(p.replace('*', '')) / n * dur; item['chunks'].append([round(at, 2), round(at + L, 2), p]); at += L
         out.append(item); print(k, dur)
     open(os.path.join(d, 'data.js'), 'w', encoding='utf-8').write('window.EP = ' + json.dumps(out, ensure_ascii=False) + ';\n')
+    cost_line(d)
