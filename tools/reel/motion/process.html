@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 📈 แม่แบบ "IELTS Process 60 วิ" (ต่อยอดจาก process1.html กาแฟ · คุณแดน 23 ต.ค. 69 "แบบคลิป reel แบบนี้เป็นหลักเลยนะ")
+     ห้ามเปิดไฟล์นี้ตรงๆ: process.py <slug> สร้าง process-<slug>.html จากแม่แบบนี้ (แทน __EP__ ด้วย slug) แล้วอัดคลิป
+     ข้อมูลตอน: process/<slug>/spec.json → spec.js (window.SPEC) · เสียง/เวลา: process/<slug>/data.js (window.EP)
+     📱 กรอบปลอดภัย IG/FB: ไม่มีตัวหนังสือใน 250px บนสุด และ 380px ล่างสุด -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#fff;font-family:K,sans-serif}
+svg{position:absolute;inset:0}
+.pill{position:absolute;top:270px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8}
+.head{position:absolute;left:40px;right:40px;top:365px;z-index:6;text-align:center;font-weight:800;font-size:56px;color:#0F1B33}
+.head span{color:#E8590C}
+.sub{position:absolute;left:30px;right:30px;top:1360px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.sub b{color:#FF4B4B}
+.sub.en{font-size:60px;color:#FFE27A;-webkit-text-stroke:12px #0F1B33}
+.bub{position:absolute;left:40px;right:150px;top:1105px;z-index:7;background:#fff;border:7px solid #0F1B33;border-radius:32px;padding:16px 26px;font-weight:800;font-size:46px;line-height:1.22;color:#0F1B33}
+.bub em{font-style:normal;color:#E8590C}.bub strong{color:#1F6FEB}
+.chip{position:absolute;z-index:7;padding:10px 28px;border-radius:24px;background:#FFD43B;border:6px solid #0F1B33;font-weight:800;font-size:58px;color:#0F1B33;white-space:nowrap}
+.title{position:absolute;left:40px;right:150px;top:1090px;z-index:7;text-align:center;font-weight:800;font-size:84px;line-height:1.1;color:#E8590C;-webkit-text-stroke:14px #fff;paint-order:stroke fill}
+.recap{position:absolute;left:50px;right:50px;top:350px;height:730px;z-index:7;background:#FFF8EC;border:8px solid #0F1B33;border-radius:40px;padding:30px 40px;color:#0F1B33}
+.recap h3{font-weight:800;font-size:56px;margin-bottom:10px}
+.seq{display:flex;align-items:center;gap:18px;font-weight:800;font-size:50px;line-height:1.15;margin:4px 0}
+.seq i{font-style:normal;display:inline-flex;width:62px;height:62px;border-radius:50%;background:#1F6FEB;color:#fff;font-size:36px;align-items:center;justify-content:center}
+.seq u{text-decoration:none;font-weight:600;font-size:34px;color:#56637D}
+.v3{margin-top:18px;text-align:center;font-weight:800;font-size:66px;color:#E8590C;background:#fff;border:6px dashed #E8590C;border-radius:26px;padding:8px 0 10px}
+.v3 small{display:block;font-size:36px;color:#0F1B33}
+[data-in]{opacity:0;transform-origin:center}
+</style></head><body>
+<svg viewBox="0 0 1080 1920">
+  <defs>
+    <pattern id="grid" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M54 0 H0 V54" fill="none" stroke="#E7ECF3" stroke-width="2"/></pattern>
+    <marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#0F1B33"/></marker>
+    <g id="BEAN"><ellipse rx="13" ry="18" fill="#8B5A2B" stroke="#0F1B33" stroke-width="3"/><path d="M0 -15 C-6 -5 6 5 0 15" stroke="#0F1B33" stroke-width="3" fill="none"/></g>
+    <g id="GBEAN"><ellipse rx="13" ry="18" fill="#D8C99B" stroke="#0F1B33" stroke-width="3"/><path d="M0 -15 C-6 -5 6 5 0 15" stroke="#0F1B33" stroke-width="3" fill="none"/></g>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#grid)"/>
+  <g id="arrows" fill="none" stroke="#0F1B33" stroke-width="9" stroke-linecap="round"></g>
+  <g id="stages"></g>
+  <rect y="1320" width="1080" height="600" fill="#0F1B33" opacity=".9"/>
+  <g id="host"></g>
+</svg>
+<div class="pill" style="left:46px" id="pill"></div>
+<div class="head" id="head" data-in="0" data-anim="none"></div>
+<div id="dyn"></div>
+<script src="process/__EP__/spec.js"></script>
+<script src="process/__EP__/data.js"></script>
+<script src="cast.js"></script>
+<script>
+const S = window.SPEC, N = S.stages.length;
+$('pill').textContent = `📈 IELTS Process 60 วิ · EP.${S.ep}`; $('head').innerHTML = S.head;
+// ---------- แผนภาพ (งูเลื้อย: แถวบน 1→2→3 · ลงขวา · แถวล่าง 4→5→6) · 4–6 ขั้น ----------
+const R = 105, P = [[200, 600], [540, 600], [880, 600], [880, 920], [540, 920], [200, 920]].slice(0, N);
+$('stages').innerHTML = S.stages.map((st, i) => `<g id="st${i}" transform="translate(${P[i][0]} ${P[i][1]})">
+  <circle class="ring" r="${R + 14}" fill="none" stroke="#FFD43B" stroke-width="14" opacity="0"/>
+  <g class="ghost"><circle r="${R}" fill="#F1F3F5" stroke="#ADB5BD" stroke-width="6" stroke-dasharray="18 12"/><text y="34" text-anchor="middle" font-family="K" font-weight="800" font-size="96" fill="#ADB5BD">?</text></g>
+  <g class="real" opacity="0"><circle r="${R}" fill="${st.bg || '#FFF4E2'}" stroke="#0F1B33" stroke-width="7"/>${st.icon}
+    <text y="${R + 52}" text-anchor="middle" font-family="K" font-weight="800" font-size="${st.name.length > 12 ? 34 : 40}" fill="#0F1B33">${st.name}</text></g>
+  <g transform="translate(${-R + 8} ${-R + 8})"><circle r="30" fill="#FF8A3D" stroke="#0F1B33" stroke-width="5"/><text y="12" text-anchor="middle" font-family="K" font-weight="800" font-size="34" fill="#fff">${i + 1}</text></g></g>`).join('');
+const AR = [`M${200 + R + 12} 600 H${540 - R - 22}`, `M${540 + R + 12} 600 H${880 - R - 22}`, `M${880 + R + 8} 600 C1062 600 1062 920 ${880 + R + 16} 920`, `M${880 - R - 12} 920 H${540 + R + 22}`, `M${540 - R - 12} 920 H${200 + R + 22}`].slice(0, N - 1);
+$('arrows').innerHTML = AR.map((d, i) => `<path id="ar${i}" d="${d}" marker-end="url(#ah)" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>`).join('');
+$('host').innerHTML = `<g id="hg">${SHEETGUY}</g>`;
+
+// ---------- ไทม์ไลน์ ----------
+const L = {}, H = [], SFX = []; let T = 0.4;
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const red = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b>$1</b>');
+const stOf = (k) => (/^e(\d+)$/.exec(k) || [])[1];
+for (const ln of window.EP) {
+  const a = T, b = T + ln.dur; L[ln.k] = { a, b, ch: (ln.chunks || []).map((c) => a + c[0]) }; SFX.push([+a.toFixed(2), `process/__EP__/${ln.k}.wav`]);
+  if (ln.kind === 'narr') ln.chunks.forEach(([s, e, txt]) => H.push(`<div class="sub" data-in="${(a + s).toFixed(2)}" data-out="${(a + e - 0.02).toFixed(2)}" data-anim="pop">${red(txt)}</div>`));
+  else { const st = S.stages[stOf(ln.k) - 1] || {}; let tx = esc(ln.text);
+    (st.passive ? [].concat(st.passive) : []).forEach((w) => { tx = tx.replace(w, `<em>${w}</em>`); });
+    tx = tx.replace(/^([A-Z][A-Za-z ]*?),/, '<strong>$1</strong>,');
+    H.push(`<div class="bub" data-in="${a.toFixed(2)}" data-out="${(b + 0.6).toFixed(2)}" data-anim="pop">🔊 ${tx}</div>`); H.push(`<div class="sub en" data-in="${a.toFixed(2)}" data-out="${(b + 0.6).toFixed(2)}" data-anim="none">${esc(ln.th)}</div>`); }
+  T = b + (ln.kind === 'narr' ? 0.4 : 0.7);
+}
+const at = (k, i) => L[k].ch[Math.min(i, L[k].ch.length - 1)];
+const chip = (a, b, style, html) => H.push(`<div class="chip" data-in="${a.toFixed(2)}" data-out="${b.toFixed(2)}" data-anim="pop" style="${style}">${html}</div>`);
+// ฮุก: แผนภาพว่าง + ข้อความใหญ่ · ชิปช่วงแนะนำ
+H.push(`<div class="title" data-in="0.15" data-out="${(L.n1.b + 0.3).toFixed(2)}" data-anim="pop">${S.hook}</div>`);
+(S.chips || []).forEach(([k, i, html, style]) => chip(at(k, i), L[k].b + 0.3, style, html));
+// ขั้นโผล่ตามคำพากย์ (ท่อนที่ show ของบรรทัด sN · ไม่ระบุ = ท่อนที่ 2)
+const SHOW = S.stages.map((st, i) => at('s' + (i + 1), st.show ?? 1));
+// การ์ดสรุป (บรรทัด r 4 ท่อน: หัว · คำเชื่อม · passive · V3)
+const R0 = L.r.a, R1 = L.r.b + 0.3, RC = S.recap;
+H.push(`<div class="recap" data-in="${R0.toFixed(2)}" data-out="${R1.toFixed(2)}" data-anim="pop"><h3>${RC.title || '🏆 สูตร Band 7 เขียน Process'}</h3>` +
+  RC.seq.map(([w, th], i) => `<div class="seq" data-in="${(at('r', 1) + i * 0.32).toFixed(2)}" data-out="${R1.toFixed(2)}" data-anim="quick"${RC.seq.length > 5 ? ' style="font-size:44px;margin:2px 0"' : ''}><i>${i + 1}</i>${w}<u>${th}</u></div>`).join('') +
+  `<div class="v3" data-in="${at('r', 3).toFixed(2)}" data-out="${R1.toFixed(2)}" data-anim="pop">is / are + V3<small>${RC.v3}</small></div></div>`);
+const E0 = T;
+H.push(`<div class="sub" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4).toFixed(2)}" data-anim="pop" style="font-size:66px">${S.end_card || 'เมนต์บอกหน่อย 👇<br><b>+ ติดตาม</b> รอ Process ตอนต่อไป'}</div>`);
+SFX.push([0.15, 'boing'], ...(S.chips || []).map(([k, i], j) => [+at(k, i).toFixed(2), j ? 'ding' : 'whoosh']), ...SHOW.map((s) => [+s.toFixed(2), 'pop']), [+R0.toFixed(2), 'whoosh'], [+at('r', 3).toFixed(2), 'ding'], [+E0.toFixed(2), 'tada']);
+window.DURATION = +(E0 + 4.2).toFixed(2); window.SFX = SFX;
+// 🔤 คำอังกฤษเด้งตอนพากย์ถึงขั้นนั้น
+H.push(popWords(S.stages.map((st, i) => st.pop && [SHOW[i] + 0.3, st.pop[0], st.pop[1]]).filter(Boolean)));
+$('dyn').innerHTML = H.join('');
+document.querySelectorAll('.sub,.chip').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); const max = el.classList.contains('chip') ? 920 : el.clientWidth; while ((el.classList.contains('chip') ? el.scrollWidth > max : el.scrollWidth > el.clientWidth) && f > 36) { f -= 4; el.style.fontSize = f + 'px'; } });
+const els = [...document.querySelectorAll('[data-in]')];
+const inR = (a, b, t) => t >= a && t < b;
+// วงเหลือง = ขั้นที่กำลังพูดถึง (ตั้งแต่โผล่จนจบประโยคอังกฤษของขั้นนั้น)
+const HI = S.stages.map((_, i) => [[SHOW[i], (L['e' + (i + 1)] || L['s' + (i + 1)]).b + 0.6]]);
+
+function seek(t) {
+  tick(els, t);
+  const recap = inR(R0, R1, t);
+  $('stages').setAttribute('opacity', recap ? 0.12 : 1); $('arrows').setAttribute('opacity', recap ? 0.12 : 1);
+  P.forEach((_, i) => {
+    const g = $('st' + i), p = cl((t - SHOW[i]) / 0.45), on = t >= SHOW[i];
+    g.querySelector('.ghost').setAttribute('opacity', on ? 0 : 1);
+    g.querySelector('.real').setAttribute('opacity', on ? 1 : 0);
+    const s = on ? 0.5 + 0.5 * back(p) : 1 + (t < L.n2.a ? Math.sin(t * 5 + i) * 0.03 : 0);
+    g.setAttribute('transform', `translate(${P[i][0]} ${P[i][1]}) scale(${s})`);
+    const hi = HI[i].some(([a, b]) => inR(a, b, t));
+    const ring = g.querySelector('.ring'); ring.setAttribute('opacity', hi ? 1 : 0); ring.setAttribute('r', R + 14 + Math.abs(Math.sin(t * 5)) * 8);
+    if (i) { const ap = cl((t - SHOW[i] + 0.35) / 0.4), ar = $('ar' + (i - 1)); ar.setAttribute('stroke-dashoffset', 100 * (1 - outc(ap))); ar.setAttribute('opacity', ap > 0.6 ? 1 : 0); }
+  });
+  // ของขยับเล็กๆ (ใส่ class ใน icon ของ spec): .fl ไฟกระพริบ · .crank หมุนรอบ (-10,-62) · .st ไอลอย · .drop หยดตก · .spin หมุนรอบจุดกลางของมัน (data-c="x y") · .bob ลอยขึ้นลง
+  document.querySelectorAll('.fl').forEach((f, k) => f.setAttribute('transform', `translate(0 ${Math.sin(t * 12 + k) * 3}) scale(1 ${1 + Math.sin(t * 14 + k * 2) * 0.12})`));
+  document.querySelectorAll('.crank').forEach((c) => c.setAttribute('transform', `rotate(${(t * 180) % 360} -10 -62)`));
+  document.querySelectorAll('.st').forEach((s, k) => { const q = ((t * 0.8 + k * 0.33) % 1); s.setAttribute('transform', `translate(0 ${-q * 18})`); s.setAttribute('opacity', 1 - q); });
+  document.querySelectorAll('.drop').forEach((s, k) => { const q = ((t * 1.1 + k * 0.37) % 1); s.setAttribute('transform', `translate(0 ${q * 26})`); s.setAttribute('opacity', q < 0.85 ? 1 : (1 - q) / 0.15); });
+  document.querySelectorAll('.spin').forEach((s) => s.setAttribute('transform', `rotate(${(t * 120) % 360} ${s.dataset.c || '0 0'})`));
+  document.querySelectorAll('.bob').forEach((s, k) => s.setAttribute('transform', `translate(0 ${Math.sin(t * 3 + k) * 5})`));
+  const talking = window.EP.some((e) => e.kind === 'narr' && inR(L[e.k].a, L[e.k].b, t));
+  $('host').setAttribute('transform', `translate(960 ${1310 - (talking ? Math.abs(Math.sin(t * 7)) * 18 : 0)}) scale(.42)`);
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>

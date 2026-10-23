@@ -18,3 +18,11 @@ tools/reel/motion/.work/
 tools/reel/motion/ep*/*.wav
 tools/reel/motion/ep*/*.mp3
 tools/reel/motion/ep*/*.aiff
+tools/reel/motion/process/*/*.wav
+tools/reel/motion/process/*/*.mp3
+tools/reel/motion/process/*/*.preview
+tools/reel/motion/process/*/spec.js
+tools/reel/motion/process/*/data.js
+tools/reel/motion/process-*.html
+tools/reel/motion/*/*.wav
+tools/reel/motion/*/*.mp3

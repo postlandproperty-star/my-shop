@@ -1,0 +1,137 @@
+{
+ "_facts": "น้ำประปาแบบทั่วไป (conventional treatment ตามที่ US EPA/WHO อธิบาย): รับน้ำดิบ + ตะแกรงกรองขยะชิ้นใหญ่ → เติมสารเคมี (เช่น สารส้ม) ให้อนุภาคเล็กจับตัวเป็นก้อน (coagulation/flocculation) → ตกตะกอน (sedimentation) → กรองผ่านทรายและกรวด (filtration) → ฆ่าเชื้อด้วยคลอรีน (disinfection) → เก็บในถังพักแล้วส่งตามท่อ · ไม่ระบุชื่อสารหรือปริมาณ",
+ "ep": 2,
+ "cover_at": 1.2,
+ "head": "🚰 How is <span>tap water</span> treated?",
+ "hook": "🚰 น้ำประปาผ่านกี่ขั้น<br>กว่าจะถึงก๊อก?",
+ "n1": "น้ำประปาที่เราใช้ทุกวัน|ผ่าน*กี่ขั้น*|กว่าจะถึง*ก๊อกน้ำ*?",
+ "n2": "IELTS Writing Task 1|ชอบออก*แผนภาพแบบนี้*|มาดูวิธีเขียนให้ได้ *Band 7*",
+ "chips": [
+  [
+   "n2",
+   1,
+   "📈 Writing Task 1",
+   "left:60px;top:1130px"
+  ],
+  [
+   "n2",
+   2,
+   "🎯 Band 7",
+   "left:640px;top:1130px;background:#8CE99A"
+  ]
+ ],
+ "stages": [
+  {
+   "name": "Intake",
+   "show": 1,
+   "th": "ขั้นแรก|*สูบน้ำจากแม่น้ำ*|ผ่าน*ตะแกรง*กรองขยะชิ้นใหญ่",
+   "en": "First, water is pumped from a river and passed through screens.",
+   "en_th": "ขั้นแรก น้ำถูกสูบจากแม่น้ำ และผ่านตะแกรงกรอง",
+   "passive": "is pumped",
+   "pop": [
+    "pump → pumped",
+    "สูบ"
+   ],
+   "icon": "<path d=\"M-88 22 Q-66 10 -44 22 T0 22 T44 22 T88 22 L82 58 Q0 92 -82 58z\" fill=\"#74C0FC\" stroke=\"#0F1B33\" stroke-width=\"3\"/><path d=\"M-58 44 V-44 H-8\" stroke=\"#495057\" stroke-width=\"14\" fill=\"none\" stroke-linecap=\"round\"/><rect x=\"8\" y=\"-62\" width=\"56\" height=\"78\" rx=\"4\" fill=\"#E9ECEF\" stroke=\"#0F1B33\" stroke-width=\"4\"/><line x1=\"22\" y1=\"-62\" x2=\"22\" y2=\"16\" stroke=\"#0F1B33\" stroke-width=\"3\"/><line x1=\"36\" y1=\"-62\" x2=\"36\" y2=\"16\" stroke=\"#0F1B33\" stroke-width=\"3\"/><line x1=\"50\" y1=\"-62\" x2=\"50\" y2=\"16\" stroke=\"#0F1B33\" stroke-width=\"3\"/><line x1=\"8\" y1=\"-42\" x2=\"64\" y2=\"-42\" stroke=\"#0F1B33\" stroke-width=\"3\"/><line x1=\"8\" y1=\"-22\" x2=\"64\" y2=\"-22\" stroke=\"#0F1B33\" stroke-width=\"3\"/><line x1=\"8\" y1=\"-2\" x2=\"64\" y2=\"-2\" stroke=\"#0F1B33\" stroke-width=\"3\"/><ellipse class=\"bob\" cx=\"-20\" cy=\"6\" rx=\"16\" ry=\"8\" fill=\"#2F9E44\" stroke=\"#0F1B33\" stroke-width=\"3\"/>"
+  },
+  {
+   "name": "Coagulation",
+   "show": 1,
+   "bg": "#F3F0FF",
+   "th": "จากนั้น|*เติมสารเคมี*|ให้ตะกอนเล็กๆ*จับตัวเป็นก้อน*",
+   "en": "Next, chemicals are added so that tiny particles stick together.",
+   "en_th": "ต่อมา มีการเติมสารเคมี เพื่อให้ตะกอนเล็กๆ จับตัวกัน",
+   "passive": "are added",
+   "pop": [
+    "particles",
+    "อนุภาค/ตะกอนเล็กๆ"
+   ],
+   "icon": "<path d=\"M-52 -26 L-52 50 Q-52 62 -40 62 L40 62 Q52 62 52 50 L52 -26\" fill=\"#D0EBFF\" stroke=\"#0F1B33\" stroke-width=\"5\"/><rect x=\"-9\" y=\"-92\" width=\"18\" height=\"34\" rx=\"6\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"3\"/><path class=\"drop\" d=\"M0 -54 q-8 11 0 17 q8 -6 0 -17z\" fill=\"#FAB005\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"-20\" cy=\"20\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"-10\" cy=\"26\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"-16\" cy=\"34\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"-4\" cy=\"36\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"18\" cy=\"30\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"26\" cy=\"40\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"14\" cy=\"44\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"30\" cy=\"18\" r=\"7\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/>"
+  },
+  {
+   "name": "Sedimentation",
+   "show": 1,
+   "th": "ปล่อยให้*ก้อนตะกอน*|*ตกลงก้นถัง*",
+   "en": "After that, the heavy clumps are left to settle at the bottom.",
+   "en_th": "หลังจากนั้น ก้อนตะกอนหนักๆ ถูกปล่อยให้ตกลงก้นถัง",
+   "passive": "are left",
+   "pop": [
+    "settle",
+    "ตกตะกอน/ตกลงก้น"
+   ],
+   "icon": "<rect x=\"-72\" y=\"-52\" width=\"144\" height=\"112\" rx=\"10\" fill=\"#D0EBFF\" stroke=\"#0F1B33\" stroke-width=\"5\"/><rect x=\"-67\" y=\"30\" width=\"134\" height=\"26\" rx=\"6\" fill=\"#A0703F\"/><path d=\"M-72 -30 H72\" stroke=\"#74C0FC\" stroke-width=\"4\"/><circle class=\"drop\" cx=\"-36\" cy=\"-14\" r=\"8\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle class=\"drop\" cx=\"0\" cy=\"-14\" r=\"8\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle class=\"drop\" cx=\"36\" cy=\"-14\" r=\"8\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"2\"/>"
+  },
+  {
+   "name": "Filtration",
+   "show": 1,
+   "th": "ต่อมา|*กรองน้ำ*ผ่าน*ทราย*และ*กรวด*",
+   "en": "Subsequently, the water is filtered through sand and gravel.",
+   "en_th": "ถัดมา น้ำถูกกรองผ่านทรายและกรวด",
+   "passive": "is filtered",
+   "pop": [
+    "filter → filtered",
+    "กรอง"
+   ],
+   "icon": "<rect x=\"-46\" y=\"-78\" width=\"92\" height=\"140\" rx=\"8\" fill=\"#fff\" stroke=\"#0F1B33\" stroke-width=\"5\"/><rect x=\"-42\" y=\"-74\" width=\"84\" height=\"28\" fill=\"#74C0FC\"/><rect x=\"-42\" y=\"-46\" width=\"84\" height=\"44\" fill=\"#FFD8A8\"/><circle cx=\"-28\" cy=\"-34\" r=\"2.5\" fill=\"#E8590C\"/><circle cx=\"-6\" cy=\"-22\" r=\"2.5\" fill=\"#E8590C\"/><circle cx=\"16\" cy=\"-36\" r=\"2.5\" fill=\"#E8590C\"/><circle cx=\"30\" cy=\"-16\" r=\"2.5\" fill=\"#E8590C\"/><circle cx=\"-20\" cy=\"-12\" r=\"2.5\" fill=\"#E8590C\"/><circle cx=\"6\" cy=\"-40\" r=\"2.5\" fill=\"#E8590C\"/><circle cx=\"-28\" cy=\"10\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"-8\" cy=\"14\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"12\" cy=\"10\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"30\" cy=\"14\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"-20\" cy=\"32\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"2\" cy=\"34\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"24\" cy=\"34\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"-32\" cy=\"48\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><circle cx=\"34\" cy=\"50\" r=\"9\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"2\"/><rect x=\"-7\" y=\"62\" width=\"14\" height=\"12\" fill=\"#495057\"/><circle class=\"drop\" cx=\"0\" cy=\"82\" r=\"6\" fill=\"#339AF0\"/>"
+  },
+  {
+   "name": "Disinfection",
+   "show": 0,
+   "bg": "#EBFBEE",
+   "th": "แล้วเติม*คลอรีน*|เพื่อ*ฆ่าเชื้อโรค*",
+   "en": "Following this, chlorine is added to kill harmful bacteria.",
+   "en_th": "จากนั้น มีการเติมคลอรีนเพื่อฆ่าเชื้อโรค",
+   "passive": "is added",
+   "pop": [
+    "bacteria",
+    "แบคทีเรีย/เชื้อโรค"
+   ],
+   "icon": "<rect x=\"-66\" y=\"-36\" width=\"56\" height=\"88\" rx=\"10\" fill=\"#B2F2BB\" stroke=\"#0F1B33\" stroke-width=\"4\"/><rect x=\"-50\" y=\"-56\" width=\"24\" height=\"22\" fill=\"#2F9E44\" stroke=\"#0F1B33\" stroke-width=\"4\"/><text x=\"-38\" y=\"20\" text-anchor=\"middle\" font-family=\"K\" font-weight=\"800\" font-size=\"32\" fill=\"#0F1B33\">Cl</text><g transform=\"translate(40 4)\"><g class=\"bob\"><ellipse rx=\"30\" ry=\"20\" fill=\"#B197FC\" stroke=\"#0F1B33\" stroke-width=\"4\"/><circle cx=\"-9\" cy=\"-4\" r=\"4\" fill=\"#0F1B33\"/><circle cx=\"9\" cy=\"-4\" r=\"4\" fill=\"#0F1B33\"/><path d=\"M-30 0 l-12 -8 M30 0 l12 -8 M-22 14 l-8 12 M22 14 l8 12\" stroke=\"#0F1B33\" stroke-width=\"4\"/></g><path d=\"M-30 -30 L30 30 M30 -30 L-30 30\" stroke=\"#E03131\" stroke-width=\"10\" stroke-linecap=\"round\"/></g>"
+  },
+  {
+   "name": "Distribution",
+   "show": 1,
+   "th": "สุดท้าย|เก็บใน*ถังพักน้ำ*|แล้ว*ส่งตามท่อ*ถึงบ้าน",
+   "en": "Finally, the clean water is stored in tanks and distributed to homes.",
+   "en_th": "สุดท้าย น้ำสะอาดถูกเก็บในถังพัก และส่งไปยังบ้านเรือน",
+   "passive": "is stored",
+   "pop": [
+    "distribute → distributed",
+    "ส่งจ่าย/กระจาย"
+   ],
+   "icon": "<rect x=\"-76\" y=\"-72\" width=\"60\" height=\"46\" rx=\"8\" fill=\"#74C0FC\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path d=\"M-68 -26 L-72 44 M-24 -26 L-20 44 M-70 10 H-22\" stroke=\"#0F1B33\" stroke-width=\"5\"/><path d=\"M-46 44 V54 H34\" stroke=\"#495057\" stroke-width=\"10\" fill=\"none\"/><path d=\"M18 -6 L50 -36 L82 -6 V44 H18z\" fill=\"#FFE8CC\" stroke=\"#0F1B33\" stroke-width=\"4\"/><rect x=\"40\" y=\"14\" width=\"18\" height=\"30\" fill=\"#E8590C\" stroke=\"#0F1B33\" stroke-width=\"3\"/><circle class=\"drop\" cx=\"-4\" cy=\"62\" r=\"6\" fill=\"#339AF0\"/>"
+  }
+ ],
+ "recap": {
+  "title": "🏆 สูตร Band 7 เขียน Process",
+  "text": "เคล็ดลับ *Band 7* มีแค่สองอย่าง|ใช้*คำเชื่อมลำดับ*|และประโยค *passive*|is หรือ are ตามด้วย *V3*",
+  "seq": [
+   [
+    "First",
+    "ขั้นแรก"
+   ],
+   [
+    "Next",
+    "ต่อมา"
+   ],
+   [
+    "After that",
+    "หลังจากนั้น"
+   ],
+   [
+    "Subsequently",
+    "ถัดมา"
+   ],
+   [
+    "Following this",
+    "จากนั้น"
+   ],
+   [
+    "Finally",
+    "สุดท้าย"
+   ]
+  ],
+  "v3": "is filtered · are added"
+ },
+ "end": "ขั้นไหนที่คุณ*ไม่เคยรู้*มาก่อน?|*เมนต์เลย*"
+}
