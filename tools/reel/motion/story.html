@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🎭 แม่แบบ "เรื่องสั้นมีตัวละคร" (มิว · ป้าแจ่ม · ต้น · ...) ต่อยอดจาก mew-ep5.html (คุณแดน 24 ต.ค. 69 วันละ 5 คลิป)
+     ห้ามเปิดไฟล์นี้ตรงๆ: story.py <slug> สร้าง story-<slug>.html (แทน __EP__) แล้วอัดคลิป
+     ข้อมูล: story/<slug>/spec.json → spec.js (window.SPEC) · เสียง/เวลา: story/<slug>/data.js (window.EP)
+     ฉาก: office | zoom | lunch | stall | airport (วาดด้วยโค้ด ไม่ใช้รูป AI) · ตัวละครจาก cast.js person()
+     📱 กรอบปลอดภัย IG/FB: ไม่มีตัวหนังสือใน 250px บนสุด และ 380px ล่างสุด -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#EAF0F7;font-family:K,sans-serif}
+svg.stage{position:absolute;inset:0}
+.pill{position:absolute;top:270px;left:46px;padding:12px 30px;border-radius:60px;background:#0F1B33E6;color:#fff;font-weight:600;font-size:40px;z-index:8;white-space:nowrap}
+.sub{position:absolute;left:30px;right:30px;top:1365px;z-index:8;text-align:center;white-space:nowrap;font-weight:800;font-size:96px;line-height:1.15;color:#fff;-webkit-text-stroke:15px #0F1B33;paint-order:stroke fill}
+.sub b{color:#FF4B4B}
+.sub.en{font-size:64px;-webkit-text-stroke:12px #0F1B33;color:#FFE27A}
+.bub{position:absolute;z-index:6;background:#fff;border:8px solid #0F1B33;border-radius:38px;padding:18px 30px;font-weight:800;font-size:54px;line-height:1.2;color:#0F1B33;text-align:center}
+.bub:after{content:"";position:absolute;bottom:-44px;border:22px solid transparent;border-top:28px solid #0F1B33}
+.bub.l:after{left:110px}.bub.r:after{right:110px}.bub.up:after{display:none}
+.bub.bad{border-color:#E5484D}.bub.bad:after{border-top-color:#E5484D}
+.bub.ok{border-color:#2DBE6C;background:#F0FCF4}.bub.ok:after{border-top-color:#2DBE6C}
+.bub em{font-style:normal;background:#FFD43B;border-radius:10px;padding:0 8px}
+.rule{position:absolute;left:46px;right:46px;top:360px;z-index:7;background:#FFF8EC;border:6px solid #0F1B33;border-radius:16px;padding:22px 34px 30px;box-shadow:0 14px 0 #0F1B3330}
+.rule small{display:inline-block;background:#E5484D;color:#fff;font-weight:800;font-size:38px;padding:2px 18px;border-radius:10px;margin-bottom:10px}
+.rule div{font-weight:800;font-size:60px;color:#0F1B33;line-height:1.2}
+.rule div p{font-size:46px;color:#1F6FEB;margin-top:8px}
+[data-in]{opacity:0;transform-origin:center}
+.title{position:absolute;left:40px;right:40px;top:390px;z-index:9;text-align:center;font-weight:800;font-size:104px;line-height:1.1;color:#E5484D;-webkit-text-stroke:14px #fff;paint-order:stroke fill}
+.title small{display:block;font-size:64px;color:#0F1B33}
+.word{position:absolute;left:60px;right:60px;z-index:7;background:#fff;border:8px solid #0F1B33;border-radius:30px;padding:16px 36px;display:flex;align-items:baseline;gap:24px;font-weight:800;color:#0F1B33;white-space:nowrap}
+.word span{font-size:62px;color:#E8590C}.word u{text-decoration:none;font-size:46px;margin-left:auto}
+.endc{position:absolute;left:30px;right:30px;top:560px;z-index:9;display:flex;flex-direction:column;align-items:center;gap:22px}
+.endc div{font-weight:800;font-size:84px;line-height:1.1;color:#FFD43B;-webkit-text-stroke:14px #0F1B33;paint-order:stroke fill;text-align:center;white-space:nowrap}
+.endc div.r{color:#fff;background:#E5484D;-webkit-text-stroke:0;padding:4px 34px 14px;border-radius:18px;box-shadow:0 10px 0 #9E2A2E;font-size:62px}
+#tint{position:absolute;inset:0;z-index:5;background:#0F1B33;opacity:0}
+.prop{position:absolute;z-index:4}
+.prop svg{width:100%;height:auto;display:block}
+.win{position:absolute;left:560px;top:380px;width:480px;height:330px;z-index:3;border:10px solid #0F1B33;border-radius:26px;background:#DCE7F5;overflow:hidden;box-shadow:0 14px 0 #0F1B3333}
+.win .bar{position:absolute;left:0;right:0;bottom:0;height:52px;background:#0F1B33E0;display:flex;align-items:center;justify-content:center;gap:22px}
+.win .bar i{width:28px;height:28px;border-radius:50%;background:#56637D;display:block}.win .bar i.r{background:#E5484D}
+.win .glitch{position:absolute;inset:0;opacity:0;background:repeating-linear-gradient(0deg,#0F1B33 0 14px,#56637D 14px 22px,#DCE7F5 22px 40px)}
+.win .rec{position:absolute;left:0;right:0;top:110px;text-align:center;font-weight:800;font-size:44px;color:#fff;-webkit-text-stroke:8px #0F1B33;paint-order:stroke fill;opacity:0}
+</style></head><body>
+<svg class="stage" viewBox="0 0 1080 1920"><g id="bg"></g><g id="chars"></g><g id="fg"></g><g id="sg"></g><g id="conf"></g></svg>
+<div id="winbox"></div>
+<div id="tint"></div>
+<div class="pill" id="pill"></div>
+<div id="dyn"></div>
+<script src="story/__EP__/spec.js"></script>
+<script src="story/__EP__/data.js"></script>
+<script src="cast.js"></script>
+<script>
+const S = window.SPEC, CH = S.chars;
+$('pill').textContent = S.pill;
+const txt = (x, y, s, sz, fill, w = 800, a = 'middle') => `<text x="${x}" y="${y}" text-anchor="${a}" font-family="K" font-weight="${w}" font-size="${sz}" fill="${fill}">${s}</text>`;
+// 🏙 ฉาก (พื้นหลัง bg · ของด้านหน้าตัวละคร fg)
+const SCENE = {
+  office: { bg: `<rect width="1080" height="1920" fill="#E7EEF7"/><rect y="0" width="1080" height="1050" fill="#DCE6F2"/><g transform="translate(70 560)"><rect width="330" height="300" rx="12" fill="#9EC3EE" stroke="#0F1B33" stroke-width="10"/><line x1="165" y1="0" x2="165" y2="300" stroke="#0F1B33" stroke-width="8"/><line x1="0" y1="150" x2="330" y2="150" stroke="#0F1B33" stroke-width="8"/><circle cx="250" cy="80" r="36" fill="#FFF3BF"/></g><g transform="translate(990 1060)"><rect x="-50" y="-120" width="100" height="120" rx="14" fill="#C08A5C"/><circle cy="-170" r="70" fill="#2F9E44"/><circle cx="-50" cy="-210" r="50" fill="#37B24D"/><circle cx="45" cy="-220" r="55" fill="#2B8A3E"/></g><rect y="1330" width="1080" height="590" fill="#ADB5BD"/>`,
+            fg: `<rect x="0" y="1060" width="1080" height="40" rx="8" fill="#C08A5C"/><rect x="40" y="1100" width="1000" height="230" fill="#8A5A36"/><g transform="translate(470 1060)"><rect x="-120" y="-150" width="240" height="150" rx="12" fill="#495057" stroke="#0F1B33" stroke-width="7"/><rect x="-104" y="-136" width="208" height="122" rx="6" fill="#A5D8FF"/><rect x="-150" y="-8" width="300" height="16" rx="8" fill="#343A40"/></g><g transform="translate(160 1050)"><rect x="-34" y="-60" width="68" height="60" rx="10" fill="#fff" stroke="#0F1B33" stroke-width="6"/><path d="M34 -46 q30 0 30 18 q0 18 -30 18" fill="none" stroke="#0F1B33" stroke-width="6"/></g>` },
+  lunch: { bg: `<rect width="1080" height="1920" fill="#FFF1D6"/><g opacity=".5">${Array.from({ length: 9 }, (_, i) => `<rect x="${i * 120}" y="0" width="60" height="1050" fill="#FFE3A8"/>`).join('')}</g><g transform="translate(540 600)"><rect x="-230" y="-60" width="460" height="120" rx="20" fill="#2B2B2B" stroke="#6B4423" stroke-width="10"/>${txt(0, 22, 'LUNCH', 64, '#FFD43B')}</g><rect y="1330" width="1080" height="590" fill="#C9B79C"/>`,
+           fg: `<rect x="0" y="1070" width="1080" height="36" rx="8" fill="#E8C496"/><rect x="40" y="1106" width="1000" height="224" fill="#B8865B"/><g transform="translate(330 1062)"><ellipse rx="110" ry="26" fill="#fff" stroke="#0F1B33" stroke-width="6"/><ellipse cy="-14" rx="70" ry="22" fill="#F59F00"/></g><g transform="translate(760 1062)"><ellipse rx="110" ry="26" fill="#fff" stroke="#0F1B33" stroke-width="6"/><ellipse cy="-14" rx="70" ry="22" fill="#74B816"/></g>` },
+  stall: { bg: `<rect width="1080" height="1920" fill="#A5D8FF"/><g fill="#868E96">${[[0, 380, 220], [240, 300, 300], [560, 420, 200], [780, 340, 300]].map(([x, y, w]) => `<rect x="${x}" y="${y}" width="${w}" height="${1330 - y}"/>`).join('')}</g><g fill="#DEE2E6">${Array.from({ length: 14 }, (_, i) => `<rect x="${40 + (i % 7) * 145}" y="${640 + Math.floor(i / 7) * 120}" width="60" height="70" rx="6"/>`).join('')}</g><g transform="translate(300 640)"><path d="M-330 40 Q0 -120 330 40z" fill="#E5484D" stroke="#0F1B33" stroke-width="8"/><path d="M-330 40 Q-220 -40 -110 40z M110 40 Q220 -40 330 40z" fill="#fff" opacity=".85"/><rect x="-8" y="40" width="16" height="420" fill="#495057"/></g><rect y="1330" width="1080" height="590" fill="#868E96"/>`,
+           fg: `<g transform="translate(300 1050)"><rect x="-300" y="0" width="600" height="280" rx="14" fill="#2F9E44" stroke="#0F1B33" stroke-width="8"/><rect x="-260" y="40" width="520" height="120" rx="12" fill="#FFF8EC" stroke="#0F1B33" stroke-width="6"/>${txt(0, 125, 'ส้มตำป้าแจ่ม', 74, '#E5484D')}<circle cx="-200" cy="-30" r="54" fill="#C08A5C" stroke="#0F1B33" stroke-width="6"/><circle cx="-200" cy="-48" r="40" fill="#8A5A36"/><rect x="40" y="-46" width="200" height="46" rx="10" fill="#fff" stroke="#0F1B33" stroke-width="5"/><g fill="#74B816"><circle cx="80" cy="-50" r="16"/><circle cx="130" cy="-56" r="18"/><circle cx="180" cy="-48" r="15"/></g><g fill="#E5484D"><circle cx="110" cy="-44" r="9"/><circle cx="160" cy="-40" r="9"/></g></g><g transform="translate(300 1330)"><circle cx="-220" r="40" fill="#0F1B33"/><circle cx="220" r="40" fill="#0F1B33"/></g>` },
+  airport: { bg: `<rect width="1080" height="1920" fill="#E3EAF2"/><rect y="0" width="1080" height="1060" fill="#D5DFEA"/><g transform="translate(830 400)"><rect x="-200" y="-48" width="400" height="96" rx="14" fill="#1C3D6E"/>${txt(0, 18, 'IMMIGRATION', 50, '#fff')}</g><g opacity=".5" fill="#B9C7D8">${Array.from({ length: 6 }, (_, i) => `<rect x="${i * 190}" y="520" width="120" height="420" rx="10"/>`).join('')}</g><rect y="1330" width="1080" height="590" fill="#ADB5BD"/><g opacity=".4" stroke="#868E96" stroke-width="4">${Array.from({ length: 8 }, (_, i) => `<line x1="${i * 150}" y1="1330" x2="${i * 150 - 200}" y2="1920"/>`).join('')}</g>`,
+             fg: `<g transform="translate(800 1030)"><rect x="-250" y="0" width="500" height="300" rx="16" fill="#E9ECEF" stroke="#0F1B33" stroke-width="8"/><rect x="-250" y="-26" width="500" height="40" rx="10" fill="#1C3D6E"/><rect x="-200" y="60" width="400" height="16" rx="8" fill="#ADB5BD"/><rect x="-150" y="-80" width="110" height="60" rx="8" fill="#343A40"/></g>` },
+};
+SCENE.zoom = SCENE.office;
+const sc = SCENE[S.scene] || SCENE.office;
+$('bg').innerHTML = sc.bg; $('fg').innerHTML = sc.fg; $('sg').innerHTML = SHEETGUY;
+// 👥 ตัวละคร: คนบนฉาก (เท้าที่ y 1330) · screen = อยู่ในหน้าต่างวิดีโอคอล (ฉาก zoom)
+for (const [id, c] of Object.entries(CH)) {
+  if (c.screen) { $('winbox').innerHTML = `<div class="win" data-in="${(S.win_in || 3).toFixed(2)}" data-anim="pop"><svg viewBox="-240 -590 480 330" style="position:absolute;inset:0;width:100%;height:100%"><rect x="-240" y="-590" width="480" height="330" fill="#DCE7F5"/><rect x="-240" y="-590" width="480" height="60" fill="#C5D6EC"/><g id="${id}-g">${person(id, c.look)}</g></svg><div class="glitch" id="gl"></div><div class="rec" id="rec">Reconnecting...</div><div class="bar"><i></i><i></i><i class="r"></i></div></div>`; continue; }
+  $('chars').insertAdjacentHTML('beforeend', `<g id="${id}-g">${c.bag ? `<rect x="70" y="-570" width="110" height="250" rx="28" fill="${c.bag}" stroke="#0F1B33" stroke-width="6"/>` : ''}${person(id, c.look)}</g>`);
+}
+$('conf').innerHTML = Array.from({ length: 30 }, (_, i) => `<rect class="cf" width="22" height="34" rx="4" fill="${['#FFD43B', '#E5484D', '#2DBE6C', '#1F6FEB'][i % 4]}"/>`).join('');
+// ⏱ เวลาแต่ละบรรทัด + ซับ + บับเบิล
+const L = {}, H = [], SFX = [], MOOD = []; let T = 0.4;
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const red = (s) => esc(s).replace(/\*([^*]+)\*/g, '<b>$1</b>');
+const SP = {}; S.lines.forEach((ln) => { SP[ln[0]] = { who: ln[1], opt: (ln[1] === 'narr' ? ln[3] : ln[4]) || {} }; });
+const EM = S.em || [];
+const mood = Object.fromEntries(Object.keys(CH).map((k) => [k, 'smile']));
+for (const ln of window.EP) {
+  const a = T, b = T + ln.dur, sp = SP[ln.k], o = sp.opt; L[ln.k] = { a, b, ch: (ln.chunks || []).map((c) => a + c[0]), who: sp.who };
+  SFX.push([+a.toFixed(2), `story/__EP__/${ln.k}.wav`]);
+  Object.assign(mood, o.mood || {}); MOOD.push([a, { ...mood }]);
+  if (ln.kind === 'narr') ln.chunks.forEach(([s, e, tx]) => H.push(`<div class="sub" data-in="${(a + s).toFixed(2)}" data-out="${(a + e - 0.02).toFixed(2)}" data-anim="pop">${red(tx)}</div>`));
+  else {
+    const c = CH[sp.who], side = c.side || 'l', top = c.screen ? (S.win_bub_top || 730) : (c.bub_top || S.bub_top || 560), bw = c.bub_w || S.bub_w || 720;
+    let t2 = esc(ln.text); EM.forEach((w) => { t2 = t2.replace(new RegExp(`(^|[^>\\w])(${w.replace(/[.?*+']/g, '\\$&')})(?![\\w<])`, 'i'), (m, p, x) => `${p}<em>${x}</em>`); });
+    H.push(`<div class="bub ${c.screen ? 'up' : side} ${o.bub || ''}" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="pop" style="${side === 'l' ? 'left:40px' : 'right:40px'};top:${top}px;max-width:${bw}px">${t2}</div>`);
+    H.push(`<div class="sub en" data-in="${a.toFixed(2)}" data-out="${(b + 0.5).toFixed(2)}" data-anim="none">${esc(ln.th)}</div>`);
+  }
+  T = b + (ln.kind === 'narr' ? 0.35 : 0.55);
+}
+const at = (k, i) => L[k].ch.length ? L[k].ch[Math.min(i, L[k].ch.length - 1)] : L[k].a;
+const tm = (s, end) => { const [k, i] = String(s).split('.'); if (!L[k]) return 0; return end ? L[k].b + 0.3 : i != null ? at(k, +i) : L[k].a; };
+// 🪧 การ์ดกฎ / คำศัพท์ตามบรรทัดพากย์
+for (const ln of S.lines) { if (ln[1] !== 'narr') continue; const o = ln[3] || {}, k = ln[0];
+  if (o.card) H.push(`<div class="rule" data-in="${L[k].a.toFixed(2)}" data-out="${(L[k].b + 0.3).toFixed(2)}" data-anim="pop"><small>${esc(o.card.tag)}</small><div>${o.card.body}</div></div>`);
+  if (o.words) o.words.forEach(([en, th], i) => H.push(`<div class="word" data-in="${at(k, i + 1).toFixed(2)}" data-out="${(L[k].b + 0.3).toFixed(2)}" data-anim="pop" style="top:${380 + i * 170}px"><span>${esc(en)}</span><u>${esc(th)}</u></div>`)); }
+// 🎁 ของประกอบ (HTML/SVG) ตามช่วงเวลา
+(S.props || []).forEach((p) => H.push(`<div class="prop" data-in="${tm(p.in).toFixed(2)}" data-out="${tm(p.out, true).toFixed(2)}" data-anim="${p.anim || 'pop'}" style="left:${p.x}px;top:${p.y}px;width:${p.w || 200}px">${p.html}</div>`));
+// 🔖 ฮุก 3 วิแรก
+H.push(`<div class="title" data-in="0.25" data-out="${(S.hook_out ? tm(S.hook_out) : at(S.lines[0][0], 2)).toFixed(2)}" data-anim="pop"><small>${esc(S.title[0])}</small>${esc(S.title[1])}</div>`);
+// 🔤 คำอังกฤษเด้ง
+H.push(popWords((S.pop || []).map(([k, i, en, th, o]) => [at(k, i) + 0.2, en, th, o || { top: 1175 }])));
+// 🏁 การ์ดจบ
+const E0 = T;
+H.push(`<div class="endc" data-in="${E0.toFixed(2)}" data-out="${(E0 + 4.2).toFixed(2)}" data-anim="none">${S.end.map((t, i) => `<div class="${i ? 'r' : ''}" data-in="${(E0 + i * 0.45).toFixed(2)}" data-anim="pop">${esc(t)}</div>`).join('')}</div>`);
+SFX.push([0.25, 'pop'], [+E0.toFixed(2), 'tada']);
+(S.sfx || []).forEach(([s, nm]) => SFX.push([+tm(s).toFixed(2), nm]));
+window.DURATION = +(E0 + 4.4).toFixed(2); window.SFX = SFX;
+$('dyn').innerHTML = H.join('');
+document.querySelectorAll('.sub,.word,.title,.endc div').forEach((el) => { let f = parseFloat(getComputedStyle(el).fontSize); const max = el.classList.contains('word') || el.classList.contains('sub') ? el.clientWidth : 1000; while (el.scrollWidth > max && f > 34) { f -= 4; el.style.fontSize = f + 'px'; } });
+const els = [...document.querySelectorAll('[data-in]')];
+const inL = (k, t, pad = 0) => L[k] && t >= L[k].a - pad && t < L[k].b + pad;
+const GL = S.glitch || [];
+const CONF = S.confetti ? tm(S.confetti) : -9;
+function seek(t) {
+  tick(els, t);
+  let m = MOOD[0][1]; for (const [a, mm] of MOOD) if (t >= a) m = mm;
+  for (const [id, c] of Object.entries(CH)) {
+    const walk = c.walk_in ? cl((t - 0.5) / 2) : 1, x = c.walk_in ? c.x + (c.side === 'r' ? 1 : -1) * 520 * (1 - outc(walk)) : c.x;
+    if (!c.screen) $(`${id}-g`).setAttribute('transform', `translate(${x} ${1330 + (walk < 1 ? -Math.abs(Math.sin(t * 7)) * 10 : Math.sin(t * 2.5 + x) * 4)}) scale(${c.scale || 0.72})`);
+    else $(`${id}-g`).setAttribute('transform', `translate(0 ${Math.sin(t * 2) * 3}) scale(0.62)`);
+    const talk = Object.keys(L).some((k) => L[k].who === id && inL(k, t)), md = talk ? 'talk' : m[id] || 'smile';
+    face(id, md, t + id.length);
+    const up = md === 'shock' || md === 'happy';
+    arms(id, up ? 160 : 14, talk ? -60 - Math.sin(t * 6) * 14 : up ? -160 : md === 'think' ? -150 : -14);
+  }
+  const g = GL.some((k) => inL(k, t)); if ($('gl')) { $('gl').style.opacity = g ? 0.75 + 0.25 * Math.sin(t * 40) : 0; $('rec').style.opacity = g ? 1 : 0; }
+  const dim = S.lines.some((ln) => ln[1] === 'narr' && (ln[3] || {}).dim && inL(ln[0], t, 0.2)); $('tint').style.opacity = dim ? 0.35 : 0;
+  const sgk = S.lines.find((ln) => ln[1] === 'narr' && (ln[3] || {}).sheet && inL(ln[0], t, 0.1));
+  $('sg').setAttribute('opacity', sgk ? 1 : 0); if (sgk) { const sp = cl((t - L[sgk[0]].a) / 0.5); $('sg').setAttribute('transform', `translate(540 ${1230 - 240 * back(sp) - Math.abs(Math.sin(t * 5)) * 20}) scale(1.3)`); }
+  const tt = t - CONF; document.querySelectorAll('.cf').forEach((c, i) => { if (tt < 0 || tt > 1.6) { c.setAttribute('opacity', 0); return; } const vx = ((i * 37) % 21 - 10) * 30, vy = -700 - ((i * 53) % 9) * 70; c.setAttribute('opacity', 1); c.setAttribute('transform', `translate(${540 + vx * tt} ${900 + vy * tt + 900 * tt * tt}) rotate(${i * 40 + tt * 400})`); });
+}
+window.seek = seek; seek(0);
+</script>
+</body></html>

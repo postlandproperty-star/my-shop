@@ -4,7 +4,7 @@
 #     VOICE_PREVIEW=1 = พากย์ไทยเป็นช่วงเงียบตามความยาวประมาณ (ดูเลย์เอาต์ก่อนมีโควตา) ห้ามเอาไปโพสต์
 #   paid (VOICE_ENGINE=paid): ElevenLabs v3 ผ่าน fal ทั้งพากย์ไทยและบทอังกฤษ · ทุกท่อนถอดเสียงกลับมาเทียบบท ไม่ตรง = ทำใหม่
 # build(dir, LINES) → <dir>/<k>.wav + <dir>/data.js (window.EP = [{k, kind, text, dur, th?, chunks?}])
-#   kind: narr = พากย์ไทย (ท่อนซับคั่นด้วย | · *คำ* = ตัวแดง) · fen = ผู้ชายอังกฤษ · men = ผู้หญิงอังกฤษ
+#   kind: narr = พากย์ไทย (ท่อนซับคั่นด้วย | · *คำ* = ตัวแดง) · fen = ผู้ชายอังกฤษ · men = ผู้หญิงอังกฤษ · v:<เสียง Kokoro> = เลือกเสียงเอง (เช่น v:am_adam)
 import os, re, sys, json, difflib, subprocess, wave
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(HERE, '..')); sys.argv = sys.argv[:1]
 import vocab as V
@@ -72,6 +72,11 @@ def _gen(kind, text, mp3):
 def _tts(d, k, kind, text):
     mp3 = os.path.join(d, k + '.mp3'); wav = os.path.join(d, k + '.wav')
     want = _norm(text.replace('|', '').replace('*', ''))
+    # ประหยัดค่าถอดเสียง (คุณแดนอนุมัติ 25 ต.ค. 69): พากย์ไทยล้วนไม่ถอดเสียงกลับ (ElevenLabs อ่านไทยตรงบท) · ถอดเฉพาะท่อนที่มีคำอังกฤษปน · STT_ALL=1 = ถอดทุกท่อนแบบเดิม
+    if kind == 'narr' and not re.search('[A-Za-z]', text) and os.environ.get('STT_ALL') != '1':
+        if not os.path.exists(mp3): _gen(kind, text, mp3)
+        if not os.path.exists(wav): subprocess.run([FF, '-v', 'error', '-y', '-i', V.trim(mp3), '-ar', '44100', '-ac', '2', wav], check=True)
+        with wave.open(wav) as w: return round(w.getnframes() / w.getframerate(), 2)
     for attempt in range(3):
         if not os.path.exists(mp3): _gen(kind, text, mp3)
         got = _norm(heard(mp3, 'tha' if kind == 'narr' else 'eng'))
@@ -139,7 +144,7 @@ def _free(d, LINES):
             mp3 = os.path.join(d, k + '.mp3'); th += _google_th(th_say(clean), mp3)
             subprocess.run([FF, '-v', 'error', '-y', '-i', mp3, '-af', f'{cut},areverse,{cut},areverse,{lvl}', '-ar', '44100', '-ac', '2', wav], check=True)
             if os.path.exists(wav + '.preview'): os.remove(wav + '.preview')
-        else: jobs.append({'out': os.path.join(d, k + '.raw.wav'), 'voice': EN_VOICE.get(kind, 'bf_emma'), 'text': clean, 'k': k})
+        else: jobs.append({'out': os.path.join(d, k + '.raw.wav'), 'voice': EN_VOICE.get(kind) or (kind[2:] if kind.startswith('v:') else 'bf_emma'), 'text': clean, 'k': k})  # kind 'v:am_adam' = เลือกเสียง Kokoro เอง (ตัวละครหลายคน)
     if jobs:
         jf = os.path.join(d, '.kokoro-jobs.json'); json.dump(jobs, open(jf, 'w'))
         subprocess.run([KOKORO, os.path.join(HERE, 'kokoro_lines.py'), jf], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); os.remove(jf)
