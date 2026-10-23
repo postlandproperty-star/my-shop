@@ -203,6 +203,9 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
     !off.cmds.length && to(spread, '1') === 200 && to(spread, '2') === 200 && !spread.cmds.some((x) => x.id === '3') && spread.info.allowedDaily === 400 && to(cap2x, '1') === 200
       && !small.cmds.length && !cool.cmds.some((x) => x.id === '1') && cool.cmds.some((x) => x.id === '2') && over.cmds.filter((x) => x.type === 'gpause').length === 2 && nextM.cmds.some((x) => x.id === '3' && x.type === 'gresume'),
     JSON.stringify({ spread: spread.cmds.map((x) => [x.id, x.to]), info: spread.info, small: small.cmds.length, over: over.cmds.map((x) => x.type), next: nextM.cmds.map((x) => [x.id, x.type]) })); }
+{ const { thaiFix } = await import('../lib/chatbot.js'); const T = { 'สอบถามได้เลยนะคะค่ะ': 'สอบถามได้เลยนะคะ', 'ได้เลยค่ะค่ะ': 'ได้เลยค่ะ', 'รอสักครู่นะค่ะ': 'รอสักครู่นะคะ', 'สนใจไหมค่ะ': 'สนใจไหมคะ', 'ไฟล์ไม่มีวันหมดอายุค่ะ': 'ไฟล์ไม่มีวันหมดอายุค่ะ', 'ขอบคุณค่ะ สนใจชุดไหนคะ': 'ขอบคุณค่ะ สนใจชุดไหนคะ' };
+  const bad = Object.entries(T).filter(([a, b]) => thaiFix(a) !== b).map(([a]) => [a, thaiFix(a)]);
+  ok('💬 แชทบอทเพจ: แก้คำลงท้ายผิด (นะคะค่ะ → นะคะ · ค่ะค่ะ → ค่ะ · นะค่ะ → นะคะ · ไหมค่ะ → ไหมคะ) ประโยคที่ถูกอยู่แล้วไม่แตะ', !bad.length, JSON.stringify(bad)); }
 { const { ssrShell } = await import('../api/page.js'); const P = [{ id: 'a', price: 179, fullPrice: 249, name: 'A <b>', headline: 'หัว A', images: ['https://x/a.jpg'] }, { id: 'b', price: 149 },
     { id: 's', type: 'bundle', name: 'ชุด 2 เล่ม', headline: 'ชุดดี', items: ['a', 'b'], plans: [{ key: 'basic', price: 290 }, { key: 'pro', price: 490 }], price: 290, cover: 'https://x/s.jpg' }];
   const one = ssrShell(P[0], P), set = ssrShell(P[2], P);
