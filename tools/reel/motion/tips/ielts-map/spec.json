@@ -1,0 +1,99 @@
+{
+ "_facts": "IELTS Listening มีข้อแบบ map/plan labelling · คำบอกตำแหน่งทั่วไป: opposite (ตรงข้าม), next to/beside (ติดกัน), at the end of (สุดทาง), between (ระหว่าง), on your left/right · ตัวอย่างแต่งเอง",
+ "pill": "🗺️ IELTS Listening · แผนที่",
+ "cover_at": 1.6,
+ "hook": [
+  "ข้อแผนที่ IELTS",
+  "หลงทางเพราะ",
+  "ไม่รู้คำบอกทิศ!"
+ ],
+ "n1": "IELTS Listening|ข้อ*แผนที่*|ใครฟังคำบอกตำแหน่งไม่ทัน|*หลงทันที*|มาจำ 4 คำนี้",
+ "tips": [
+  {
+   "title": [
+    "opposite",
+    "ตรงข้าม"
+   ],
+   "th": "*opposite*|แปลว่า*อยู่ตรงข้าม*|อีกฝั่งของถนนหรือทางเดิน",
+   "en": [
+    [
+     "fen",
+     "The café is opposite the library.",
+     "ร้านกาแฟอยู่ตรงข้ามห้องสมุด"
+    ]
+   ],
+   "board": "<p class=\"h\">↔️ opposite</p><p class=\"big\" data-c=\"1\">☕ Café ⟷ 📚 Library</p><p class=\"note\" data-c=\"2\">คนละฝั่งทางเดิน หันหน้าเข้าหากัน</p>",
+   "pop": [
+    "opposite",
+    "ตรงข้าม"
+   ],
+   "pop_at": 0
+  },
+  {
+   "title": [
+    "next to",
+    "ติดกัน"
+   ],
+   "th": "*next to* หรือ *beside*|แปลว่า*อยู่ติดกัน*|ฝั่งเดียวกัน",
+   "en": [
+    [
+     "men",
+     "The toilets are next to the main entrance.",
+     "ห้องน้ำอยู่ติดกับทางเข้าหลัก"
+    ]
+   ],
+   "board": "<p class=\"h\">⬅️➡️ next to / beside</p><p class=\"big\" data-c=\"1\">🚻 Toilets | 🚪 Entrance</p>",
+   "pop": [
+    "beside",
+    "ข้างๆ"
+   ],
+   "pop_at": 0
+  },
+  {
+   "title": [
+    "at the end of",
+    "สุดทาง"
+   ],
+   "th": "*at the end of*|แปลว่า*อยู่สุดทาง*|เดินไปจนสุดทางเดิน",
+   "en": [
+    [
+     "fen",
+     "The gift shop is at the end of the corridor.",
+     "ร้านของที่ระลึกอยู่สุดทางเดิน"
+    ]
+   ],
+   "board": "<p class=\"h\">⬆️ at the end of</p><p class=\"big\" data-c=\"1\">🚶 ······· 🎁 Gift shop</p>",
+   "pop": [
+    "corridor",
+    "ทางเดิน"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "between",
+    "อยู่ระหว่าง"
+   ],
+   "th": "*between* A *and* B|แปลว่า*อยู่ตรงกลาง*ระหว่างสองที่|ฟังให้ครบทั้ง*สองชื่อ*",
+   "en": [
+    [
+     "men",
+     "The museum is between the bank and the post office.",
+     "พิพิธภัณฑ์อยู่ระหว่างธนาคารกับไปรษณีย์"
+    ]
+   ],
+   "board": "<p class=\"h\">🔀 between … and …</p><p class=\"big\" data-c=\"1\">🏦 Bank | 🏛️ Museum | 📮 Post office</p>",
+   "pop": [
+    "between",
+    "ระหว่าง"
+   ],
+   "pop_at": 0
+  }
+ ],
+ "z": "จำ 4 คำนี้|ข้อแผนที่จะ*ไม่หลงอีก*|เมนต์บอกหน่อย|อยากได้คำบอกทางเพิ่มไหม?",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "อยากได้คำบอกทางเพิ่มไหม?",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

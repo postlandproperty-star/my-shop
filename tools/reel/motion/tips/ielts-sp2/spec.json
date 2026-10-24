@@ -1,0 +1,92 @@
+{
+ "_facts": "IELTS Speaking Part 2: ได้หัวข้อ (cue card) มีเวลาเตรียม 1 นาที จดโน้ตได้ แล้วพูด 1–2 นาที · สูตร 3 ช่องเป็นเทคนิคทั่วไป (เล่าเหตุการณ์ → ความรู้สึก → ทำไมสำคัญ) ไม่ใช่กฎของข้อสอบ · ตัวอย่างแต่งเอง",
+ "pill": "🗣️ IELTS Speaking Part 2",
+ "cover_at": 1.6,
+ "hook": [
+  "Speaking Part 2",
+  "พูดไม่ถึง 2 นาที?",
+  "ใช้สูตรนี้!"
+ ],
+ "n1": "Speaking Part 2|เตรียม*หนึ่งนาที*|พูด*เกือบสองนาที*|ใช้*สูตรสามช่อง*นี้",
+ "tips": [
+  {
+   "title": [
+    "เตรียม 1 นาที",
+    "จดแค่คีย์เวิร์ด"
+   ],
+   "th": "ตอนเตรียม|*อย่าจดเป็นประโยค*|จดแค่*คีย์เวิร์ด*|แบ่งเป็น*สามช่อง*",
+   "board": "<p class=\"h\">📝 Describe a trip you enjoyed.</p><div class=\"chips\"><span data-c=\"3\">① What happened</span><span data-c=\"3\">② Feeling</span><span data-c=\"3\">③ Why</span></div>",
+   "pop": [
+    "keywords",
+    "คำสำคัญ"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "ช่อง 1",
+    "เล่าเรื่อง (อดีต)"
+   ],
+   "th": "ช่องแรก|เล่าว่า*ไปไหน กับใคร เมื่อไหร่*|ใช้*กริยาช่องสอง*",
+   "en": [
+    [
+     "fen",
+     "Last year, I went to Chiang Mai with my best friend.",
+     "ปีที่แล้ว ฉันไปเชียงใหม่กับเพื่อนสนิท"
+    ]
+   ],
+   "board": "<p class=\"h\">① What happened</p><p class=\"ex\" data-x=\"x2a\">Last year, I <u>went</u> to Chiang Mai with my best friend.</p>",
+   "pop": [
+    "went",
+    "ไป (อดีต)"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "ช่อง 2",
+    "บอกความรู้สึก"
+   ],
+   "th": "ช่องสอง|บอก*ความรู้สึก*|ใช้ *I felt* หรือ *It was*",
+   "en": [
+    [
+     "fen",
+     "I felt really relaxed because the weather was cool.",
+     "ฉันรู้สึกผ่อนคลายมาก เพราะอากาศเย็นสบาย"
+    ]
+   ],
+   "board": "<p class=\"h\">② Feeling</p><p class=\"ex\" data-x=\"x3a\"><u>I felt</u> really relaxed because the weather was cool.</p>",
+   "pop": [
+    "relaxed",
+    "ผ่อนคลาย"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "ช่อง 3",
+    "ทำไมสำคัญ"
+   ],
+   "th": "ช่องสาม|บอกว่า*ทำไมถึงพิเศษ*|ปิดท้ายแบบนี้|*ได้คะแนนเพิ่ม*",
+   "en": [
+    [
+     "fen",
+     "It was special because it was our first trip together.",
+     "ทริปนี้พิเศษเพราะเป็นทริปแรกที่เราไปด้วยกัน"
+    ]
+   ],
+   "board": "<p class=\"h\">③ Why</p><p class=\"ex\" data-x=\"x4a\">It was special <u>because</u> it was our first trip together.</p>",
+   "pop": [
+    "special",
+    "พิเศษ"
+   ],
+   "pop_at": 1
+  }
+ ],
+ "z": "เล่าเรื่อง ความรู้สึก เหตุผล|พูด*ได้ยาวไม่ติด*|จะเล่าทริปไหน? เมนต์เลย",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "จะเล่าทริปไหน? เมนต์เลย",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

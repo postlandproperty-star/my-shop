@@ -1,0 +1,137 @@
+{
+ "_facts": "ชาดำแบบดั้งเดิม (orthodox): เด็ดใบชา → ผึ่งใบให้เหี่ยว (withering) → นวด/ม้วนใบ (rolling) → ปล่อยให้ทำปฏิกิริยากับอากาศจนสีเข้ม (oxidation) → อบแห้งด้วยความร้อน (drying) → คัดเกรดและบรรจุ · ไม่ระบุเวลา/อุณหภูมิ",
+ "ep": 5,
+ "cover_at": 1.2,
+ "head": "🍵 How is <span>black tea</span> made?",
+ "hook": "🍵 ชาดำ<br>ทำมาจากอะไร?",
+ "n1": "ชาดำ|ทำจาก*ใบชาสีเขียว*|ผ่าน*กี่ขั้น*?",
+ "n2": "Writing Task 1|ออก*แผนภาพแบบนี้*บ่อย|เขียนให้ได้ *Band 7*",
+ "chips": [
+  [
+   "n2",
+   1,
+   "📈 Writing Task 1",
+   "left:60px;top:1130px"
+  ],
+  [
+   "n2",
+   2,
+   "🎯 Band 7",
+   "left:640px;top:1130px;background:#8CE99A"
+  ]
+ ],
+ "stages": [
+  {
+   "name": "Plucking",
+   "show": 1,
+   "th": "ขั้นแรก|*เด็ดใบชา*|จากยอดต้นชา",
+   "en": "First, the young tea leaves are picked by hand.",
+   "en_th": "ขั้นแรก ใบชาอ่อนถูกเด็ดด้วยมือ",
+   "passive": "are picked",
+   "pop": [
+    "pick → picked",
+    "เด็ด/เก็บ"
+   ],
+   "icon": "<path transform=\"translate(-30 0) scale(1.3)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#40C057\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(-30 0) scale(1.3)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/><path transform=\"translate(26 -10) scale(1.1)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#40C057\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(26 -10) scale(1.1)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/><path transform=\"translate(10 30) scale(0.9)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#69DB7C\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(10 30) scale(0.9)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/>"
+  },
+  {
+   "name": "Withering",
+   "show": 1,
+   "bg": "#FFF9DB",
+   "th": "จากนั้น|*ผึ่งใบชา*|ให้*เหี่ยวลง*",
+   "en": "Next, the leaves are spread out to wither.",
+   "en_th": "ต่อมา ใบชาถูกเกลี่ยผึ่งให้เหี่ยว",
+   "passive": "are spread",
+   "pop": [
+    "wither",
+    "เหี่ยว"
+   ],
+   "icon": "<rect x=\"-80\" y=\"20\" width=\"160\" height=\"16\" rx=\"6\" fill=\"#C08A5C\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(-44 0) scale(0.9)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#94D82D\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(-44 0) scale(0.9)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/><path transform=\"translate(0 4) scale(0.9)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#94D82D\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(0 4) scale(0.9)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/><path transform=\"translate(44 0) scale(0.9)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#94D82D\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(44 0) scale(0.9)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/><circle cx=\"48\" cy=\"-58\" r=\"20\" fill=\"#FFD43B\" stroke=\"#0F1B33\" stroke-width=\"4\"/>"
+  },
+  {
+   "name": "Rolling",
+   "show": 1,
+   "th": "ต่อมา|*นวดและม้วนใบชา*|ให้ใบแตกและขดตัว",
+   "en": "After that, the leaves are rolled to break them open.",
+   "en_th": "หลังจากนั้น ใบชาถูกนวดม้วนให้ใบแตก",
+   "passive": "are rolled",
+   "pop": [
+    "roll → rolled",
+    "ม้วน/นวด"
+   ],
+   "icon": "<rect x=\"-70\" y=\"-30\" width=\"140\" height=\"60\" rx=\"30\" fill=\"#ADB5BD\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path d=\"M-40 -6 q20 -16 40 0 t40 0\" stroke=\"#2B8A3E\" stroke-width=\"10\" fill=\"none\" stroke-linecap=\"round\"/><path class=\"bob\" d=\"M-50 50 q50 18 100 0\" stroke=\"#0F1B33\" stroke-width=\"5\" fill=\"none\"/>"
+  },
+  {
+   "name": "Oxidation",
+   "show": 1,
+   "bg": "#FFF4E6",
+   "th": "จากนั้น|ปล่อยให้*โดนอากาศ*|ใบชาจะ*ค่อยๆ เปลี่ยนเป็นสีเข้ม*",
+   "en": "Subsequently, the leaves are left in the air and slowly turn dark.",
+   "en_th": "ถัดมา ใบชาถูกปล่อยให้โดนอากาศ และค่อยๆ กลายเป็นสีเข้ม",
+   "passive": "are left",
+   "pop": [
+    "oxidation",
+    "ปฏิกิริยากับอากาศ"
+   ],
+   "icon": "<path transform=\"translate(-36 0) scale(1.1)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#2B8A3E\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(-36 0) scale(1.1)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/><path d=\"M-6 0 H14\" stroke=\"#0F1B33\" stroke-width=\"6\"/><path d=\"M8 -10 L20 0 L8 10\" fill=\"none\" stroke=\"#0F1B33\" stroke-width=\"6\"/><path transform=\"translate(46 0) scale(1.1)\" d=\"M0 -34 C26 -22 26 18 0 34 C-26 18 -26 -22 0 -34z\" fill=\"#8B5A2B\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path transform=\"translate(46 0) scale(1.1)\" d=\"M0 -30 V30\" stroke=\"#0F1B33\" stroke-width=\"3\"/>"
+  },
+  {
+   "name": "Drying",
+   "show": 1,
+   "th": "แล้ว*อบให้แห้ง*|ด้วย*ความร้อน*",
+   "en": "Following this, the leaves are dried with hot air.",
+   "en_th": "จากนั้น ใบชาถูกอบแห้งด้วยลมร้อน",
+   "passive": "are dried",
+   "pop": [
+    "dry → dried",
+    "ทำให้แห้ง"
+   ],
+   "icon": "<rect x=\"-70\" y=\"-50\" width=\"140\" height=\"100\" rx=\"12\" fill=\"#E9ECEF\" stroke=\"#0F1B33\" stroke-width=\"4\"/><rect x=\"-54\" y=\"-34\" width=\"108\" height=\"50\" rx=\"6\" fill=\"#FFE8CC\" stroke=\"#0F1B33\" stroke-width=\"4\"/><path class=\"bob\" d=\"M-30 -20 q8 -10 0 -20 M0 -20 q8 -10 0 -20 M30 -20 q8 -10 0 -20\" stroke=\"#E8590C\" stroke-width=\"5\" fill=\"none\"/><circle cx=\"-40\" cy=\"34\" r=\"6\" fill=\"#E03131\"/>"
+  },
+  {
+   "name": "Packing",
+   "show": 1,
+   "th": "สุดท้าย|*คัดเกรด*และ*บรรจุ*|ส่งไปขาย",
+   "en": "Finally, the dry tea is sorted and packed.",
+   "en_th": "สุดท้าย ชาแห้งถูกคัดเกรดและบรรจุ",
+   "passive": "is sorted",
+   "pop": [
+    "pack → packed",
+    "บรรจุ"
+   ],
+   "icon": "<rect x=\"-50\" y=\"-40\" width=\"100\" height=\"90\" rx=\"8\" fill=\"#C92A2A\" stroke=\"#0F1B33\" stroke-width=\"4\"/><rect x=\"-36\" y=\"-20\" width=\"72\" height=\"34\" rx=\"4\" fill=\"#FFF\" stroke=\"#0F1B33\" stroke-width=\"4\"/><text x=\"0\" y=\"5\" text-anchor=\"middle\" font-family=\"K\" font-weight=\"800\" font-size=\"24\" fill=\"#0F1B33\">TEA</text>"
+  }
+ ],
+ "recap": {
+  "title": "🏆 สูตร Band 7 เขียน Process",
+  "text": "สูตร *Band 7*|ใช้*คำเชื่อมลำดับ*|กับ *is are* ตามด้วย *V3*",
+  "seq": [
+   [
+    "First",
+    "ขั้นแรก"
+   ],
+   [
+    "Next",
+    "ต่อมา"
+   ],
+   [
+    "After that",
+    "หลังจากนั้น"
+   ],
+   [
+    "Subsequently",
+    "ถัดมา"
+   ],
+   [
+    "Following this",
+    "จากนั้น"
+   ],
+   [
+    "Finally",
+    "สุดท้าย"
+   ]
+  ],
+  "v3": "are picked · is sorted"
+ },
+ "end": "ชอบ*ชาดำ*หรือ*ชาเขียว*?|*เมนต์เลย*"
+}

@@ -1,0 +1,92 @@
+{
+ "_facts": "TOEIC Listening Part 3: บทสนทนา แต่ละบทมี 3 คำถามพิมพ์ในข้อสอบ · เทคนิคทั่วไปคืออ่านคำถาม (และตัวเลือกถ้าทัน) ก่อนบทสนทนาเริ่ม · คำตอบส่วนใหญ่มาตามลำดับคำถาม (ไม่เสมอไป) · ตัวอย่างแต่งเอง",
+ "pill": "🎧 TOEIC Part 3 · บทสนทนา",
+ "cover_at": 1.6,
+ "hook": [
+  "Part 3 ฟังไม่ทัน?",
+  "เพราะยัง",
+  "ไม่อ่านคำถามก่อน!"
+ ],
+ "n1": "TOEIC Part 3|ฟังจบแล้ว*จำไม่ได้*|เพราะ*ไม่รู้ว่าต้องฟังอะไร*",
+ "tips": [
+  {
+   "title": [
+    "อ่านคำถามก่อน",
+    "ทั้ง 3 ข้อ"
+   ],
+   "th": "ก่อนบทสนทนาเริ่ม|*อ่านคำถามสามข้อ*|จะรู้ว่า*ต้องฟังหาอะไร*",
+   "board": "<p class=\"h\">📝 1 บทสนทนา = 3 คำถาม</p><p class=\"ex\" data-c=\"1\">32. Where most likely are the speakers?</p><p class=\"ex\" data-c=\"1\">33. What problem does the man mention?</p><p class=\"ex\" data-c=\"2\">34. What will the woman do next?</p>",
+   "pop": [
+    "preview",
+    "อ่านล่วงหน้า"
+   ],
+   "pop_at": 1,
+   "en": [
+    [
+     "fen",
+     "Where most likely are the speakers?",
+     "ผู้พูดน่าจะอยู่ที่ไหน?"
+    ]
+   ]
+  },
+  {
+   "title": [
+    "ขีดคำสำคัญ",
+    "Who Where What"
+   ],
+   "th": "ขีดเส้นใต้*คำสำคัญ*|เช่น *Where* ถามสถานที่|*problem* ถามปัญหา|*next* ถามสิ่งที่จะทำต่อ",
+   "board": "<p class=\"h\">🔍 คำที่ต้องจับ</p><div class=\"chips\"><span data-c=\"1\">Where</span><span data-c=\"2\">problem</span><span data-c=\"3\">next</span></div><p class=\"note\" data-c=\"3\">จับคำพวกนี้ ฟังแค่ส่วนที่เกี่ยว</p>",
+   "pop": [
+    "keyword",
+    "คำสำคัญ"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "คำตอบ",
+    "มักมาตามลำดับ"
+   ],
+   "th": "ส่วนใหญ่|*ข้อแรก*อยู่*ต้นบท*|*ข้อสุดท้าย*อยู่*ท้ายบท*",
+   "board": "<p class=\"h\">⏱️ ลำดับคำตอบ</p><div class=\"opt\" data-c=\"1\"><b>1</b>ต้นบทสนทนา<i></i></div><div class=\"opt\" data-c=\"1\"><b>2</b>กลางบท<i></i></div><div class=\"opt\" data-c=\"2\"><b>3</b>ท้ายบท<i></i></div>",
+   "pop": [
+    "in order",
+    "ตามลำดับ"
+   ],
+   "pop_at": 1,
+   "en": [
+    [
+     "men",
+     "I'll email you the report this afternoon.",
+     "บ่ายนี้ผมจะส่งรายงานให้ทางอีเมล (ตอบข้อ next ท้ายบท)"
+    ]
+   ]
+  },
+  {
+   "title": [
+    "ลองข้อจริง",
+    "ที่ไหน?"
+   ],
+   "th": "ได้ยินคำว่า *check in*|กับ*มีการจองไว้*|ข้อ Where ตอบ*โรงแรม*",
+   "en": [
+    [
+     "men",
+     "Hi, I'd like to check in. I have a reservation under Smith.",
+     "สวัสดีครับ ขอเช็กอิน จองไว้ในชื่อ Smith"
+    ]
+   ],
+   "board": "<p class=\"h\">32. Where most likely are the speakers?</p><div class=\"opt \"><b>A</b>At a bank<i></i></div><div class=\"opt ok\" data-c=\"2\"><b>B</b>At a hotel<i>✓</i></div><div class=\"opt \"><b>C</b>At a library<i></i></div>",
+   "pop": [
+    "reservation",
+    "การจอง"
+   ],
+   "pop_at": 1
+  }
+ ],
+ "z": "อ่านคำถามก่อนฟัง|Part 3 *ง่ายขึ้นเยอะ*|ฟังไม่ทันตรงไหน? เมนต์เลย",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "ฟังไม่ทันตรงไหน? เมนต์เลย",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

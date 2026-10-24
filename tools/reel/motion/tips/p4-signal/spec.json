@@ -1,0 +1,85 @@
+{
+ "_facts": "TOEIC Listening Part 4: talks/announcements พูดคนเดียว · signal words ทั่วไป: First/To begin with (ลำดับ), However/But (เปลี่ยน/ข้อมูลใหม่), So/Therefore (ผล/สิ่งที่ต้องทำ) · ข้อมูลหลัง however มักถูกถาม (ใช้ 'มัก') · ตัวอย่างแต่งเอง",
+ "pill": "📢 TOEIC Part 4 · คำสัญญาณ",
+ "cover_at": 1.6,
+ "hook": [
+  "Part 4 ยาวจนงง?",
+  "จับแค่",
+  "3 คำนี้!"
+ ],
+ "n1": "TOEIC Part 4|พูดยาวคนเดียว|จับ*คำสัญญาณ*|รู้ทันทีว่า*ตรงไหนสำคัญ*",
+ "tips": [
+  {
+   "title": [
+    "First",
+    "เริ่มเรื่องแรก"
+   ],
+   "th": "ได้ยิน *First*|หรือ *To begin with*|คือ*เรื่องแรก*",
+   "board": "<p class=\"h\">1️⃣ ลำดับ</p><div class=\"chips\"><span data-c=\"0\">First</span><span data-c=\"1\">To begin with</span></div><p class=\"note\" data-c=\"2\">= เริ่มเรื่องแรก</p>",
+   "pop": [
+    "first",
+    "อันดับแรก"
+   ],
+   "pop_at": 0
+  },
+  {
+   "title": [
+    "However",
+    "ข้อมูลเปลี่ยน!"
+   ],
+   "th": "ได้ยิน *However* หรือ *But*|แปลว่า*มีอะไรเปลี่ยน*|ประโยคหลังคำนี้|*มักเป็นคำตอบ*",
+   "board": "<p class=\"h\">⚠️ เปลี่ยนแผน</p><div class=\"chips\"><span data-c=\"0\">However</span><span data-c=\"0\">But</span></div><p class=\"note\" data-c=\"2\">ฟังประโยคหลังคำนี้ให้ดี</p>",
+   "pop": [
+    "however",
+    "อย่างไรก็ตาม"
+   ],
+   "pop_at": 0,
+   "en": [
+    [
+     "men",
+     "However, the meeting has moved to Room B.",
+     "อย่างไรก็ตาม การประชุมย้ายไปห้อง B"
+    ]
+   ]
+  },
+  {
+   "title": [
+    "So",
+    "ต้องทำอะไรต่อ"
+   ],
+   "th": "ได้ยิน *So* หรือ *Therefore*|คือ*ผลลัพธ์*|หรือ*สิ่งที่ต้องทำ*",
+   "board": "<p class=\"h\">➡️ ผลลัพธ์</p><div class=\"chips\"><span data-c=\"0\">So</span><span data-c=\"0\">Therefore</span></div><p class=\"note\" data-c=\"2\">= ผลลัพธ์ / สิ่งที่ต้องทำ</p>",
+   "pop": [
+    "therefore",
+    "ดังนั้น"
+   ],
+   "pop_at": 0
+  },
+  {
+   "title": [
+    "ลองข้อจริง",
+    "รถไฟออกกี่โมง?"
+   ],
+   "th": "เดิม*บ่ายสาม*|แต่หลัง *However*|บอกว่าออก*สี่โมงครึ่ง*|ตอบ *4:30*|ไม่ใช่ 3 โมง",
+   "en": [
+    [
+     "fen",
+     "The train to Bangkok was scheduled for 3 p.m. However, it will now leave at 4:30.",
+     "รถไฟไปกรุงเทพฯ เดิมกำหนดบ่ายสาม แต่ตอนนี้จะออกสี่โมงครึ่ง"
+    ]
+   ],
+   "board": "<p class=\"h\">Q: When will the train leave?</p><div class=\"opt bad\" data-c=\"1\"><b>A</b>3:00 p.m.<i>✗</i></div><div class=\"opt ok\" data-c=\"3\"><b>B</b>4:30 p.m.<i>✓</i></div>",
+   "pop": [
+    "scheduled",
+    "กำหนดไว้"
+   ],
+   "pop_at": 1
+  }
+ ],
+ "z": "จับ *First However So*|Part 4 *ไม่หลงอีก*|เคยโดนแบบนี้ไหม? เมนต์เลย",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "เคยโดนแบบนี้ไหม? เมนต์เลย",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

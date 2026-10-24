@@ -1,0 +1,88 @@
+{
+ "_facts": "TOEIC Reading Part 6 (Text Completion): แต่ละบทมีข้อที่ให้เลือกประโยคใส่ช่องว่าง · วิธีทั่วไป: อ่านประโยคก่อนและหลังช่อง ดูคำเชื่อม/สรรพนาม (It, This, These, However) ที่ต้องโยงกับประโยครอบๆ · ตัวอย่างแต่งเอง",
+ "pill": "✉️ TOEIC Part 6 · เติมประโยค",
+ "cover_at": 1.6,
+ "hook": [
+  "Part 6 เติมประโยค",
+  "ดูแค่",
+  "ก่อนกับหลังช่อง!"
+ ],
+ "n1": "TOEIC Part 6|ข้อ*เลือกประโยคใส่ช่อง*|ดูแค่*ก่อนกับหลังช่อง*",
+ "tips": [
+  {
+   "title": [
+    "อ่านก่อน-หลัง",
+    "ช่องว่าง"
+   ],
+   "th": "อ่าน*ประโยคก่อนช่อง*|กับ*หลังช่อง*|ตัวที่ถูก|ต้อง*เชื่อมได้ทั้งสองฝั่ง*",
+   "board": "<p class=\"h\">✉️ ดูรอบๆ ช่อง</p><p class=\"psg\" data-c=\"1\">… <u>ประโยคก่อน</u> ____ <u>ประโยคหลัง</u> …</p><p class=\"note\" data-c=\"3\">ตัวเลือกต้องต่อเนื่องกับทั้งสองฝั่ง</p>",
+   "pop": [
+    "connect",
+    "เชื่อมโยง"
+   ],
+   "pop_at": 3
+  },
+  {
+   "title": [
+    "ดูคำโยง",
+    "It This These"
+   ],
+   "th": "ดูคำ *It This These*|หรือ *However*|ต้องมีสิ่งที่|มัน*ชี้กลับไป*",
+   "board": "<p class=\"h\">🔗 คำที่ต้องมีเจ้าของ</p><div class=\"chips\"><span data-c=\"0\">It</span><span data-c=\"0\">This</span><span data-c=\"0\">These</span><span data-c=\"1\">However</span></div><p class=\"note\" data-c=\"3\">It หมายถึงอะไร? ต้องหาเจอในช่องก่อนหน้า</p>",
+   "pop": [
+    "refer to",
+    "อ้างถึง"
+   ],
+   "pop_at": 3
+  },
+  {
+   "title": [
+    "ลองข้อจริง",
+    "ใส่ประโยคไหน?"
+   ],
+   "th": "ประโยคหลังช่องบอกว่า|*It* จะมาถึงในสามวัน|It ต้องหมายถึง*พัสดุ*|ตอบ *A*",
+   "en": [
+    [
+     "fen",
+     "Thank you for your order. Blank. It will arrive within three days.",
+     "ขอบคุณที่สั่งซื้อ ___ มันจะมาถึงภายในสามวัน"
+    ]
+   ],
+   "board": "<p class=\"psg\">Thank you for your order. ____ <u>It</u> will arrive within three days.</p><div class=\"opt ok\" data-c=\"3\"><b>A</b>Your package was shipped today.<i>✓</i></div><div class=\"opt \"><b>B</b>We hope to see you next year.<i></i></div><div class=\"opt \"><b>C</b>Our store opens at 9 a.m.<i></i></div>",
+   "pop": [
+    "package",
+    "พัสดุ"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "ระวัง!",
+    "เรื่องใหม่โผล่"
+   ],
+   "th": "ตัวเลือก*เรื่องใหม่*|ไม่เกี่ยวช่วงนั้น|ถึงจะถูกไวยากรณ์|ก็*มักผิด*",
+   "board": "<p class=\"h\">🚫 ตัดทิ้ง</p><div class=\"opt bad\" data-c=\"1\"><b>B</b>We hope to see you next year.<i>✗</i></div><div class=\"opt bad\" data-c=\"1\"><b>C</b>Our store opens at 9 a.m.<i>✗</i></div><p class=\"note\" data-c=\"3\">ประโยคถูกไวยากรณ์ แต่ไม่ต่อเนื่อง</p>",
+   "pop": [
+    "off-topic",
+    "นอกเรื่อง"
+   ],
+   "pop_at": 1,
+   "en": [
+    [
+     "fen",
+     "We hope to see you next year.",
+     "หวังว่าจะได้พบคุณปีหน้า (ไม่เกี่ยวกับพัสดุ)"
+    ]
+   ],
+   "en_mood": {
+    "x4a": "bad"
+   }
+  }
+ ],
+ "z": "ดูก่อนหลังช่อง กับคำโยง|อยากได้ Part ไหนต่อ?|เมนต์เลย",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "อยากได้ Part ไหนต่อ?",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

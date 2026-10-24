@@ -1,0 +1,92 @@
+{
+ "_facts": "IELTS Writing Task 2: เรียงความอย่างน้อย 250 คำ แนะนำใช้เวลาประมาณ 40 นาที · โครง 4 ย่อหน้า (บทนำ · เนื้อหา 2 ย่อหน้า · สรุป) เป็นโครงที่นิยม ไม่ใช่กฎบังคับ · ประโยคตัวอย่างแต่งเอง",
+ "pill": "✍️ IELTS Writing Task 2",
+ "cover_at": 1.6,
+ "hook": [
+  "Writing Task 2",
+  "เขียนไม่ออก?",
+  "ใช้โครง 4 ย่อหน้า!"
+ ],
+ "n1": "Writing Task 2|ต้องเขียน*สองร้อยห้าสิบคำ*|ไม่มีโครง*เขียนวน*|ใช้โครงนี้",
+ "tips": [
+  {
+   "title": [
+    "ย่อหน้า 1",
+    "บทนำ"
+   ],
+   "th": "ย่อหน้าแรก|*เขียนโจทย์ใหม่ด้วยคำของเรา*|แล้ว*บอกจุดยืน*ให้ชัด",
+   "en": [
+    [
+     "men",
+     "Some people believe that university should be free. I completely agree.",
+     "บางคนเชื่อว่ามหาวิทยาลัยควรเรียนฟรี ผมเห็นด้วยอย่างยิ่ง"
+    ]
+   ],
+   "board": "<p class=\"h\">① Introduction</p><div class=\"chips\"><span data-c=\"1\">paraphrase</span><span data-c=\"2\">opinion</span></div><p class=\"ex\" data-x=\"x1a\">… <u>I completely agree.</u></p>",
+   "pop": [
+    "paraphrase",
+    "เขียนใหม่ด้วยคำของเรา"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "ย่อหน้า 2",
+    "เหตุผลที่ 1"
+   ],
+   "th": "ย่อหน้าสอง|*เหตุผลหลัก*|ตามด้วย*ตัวอย่าง*|ประโยคเดียวพอ",
+   "en": [
+    [
+     "men",
+     "Firstly, free education gives poorer students a fair chance.",
+     "ประการแรก การเรียนฟรีให้โอกาสที่ยุติธรรมกับนักเรียนที่ยากจน"
+    ]
+   ],
+   "board": "<p class=\"h\">② Body 1</p><div class=\"chips\"><span data-c=\"1\">reason</span><span data-c=\"2\">example</span></div><p class=\"ex\" data-x=\"x2a\"><u>Firstly,</u> free education gives poorer students a fair chance.</p>",
+   "pop": [
+    "firstly",
+    "ประการแรก"
+   ],
+   "pop_at": 1
+  },
+  {
+   "title": [
+    "ย่อหน้า 3",
+    "เหตุผลที่ 2"
+   ],
+   "th": "ย่อหน้าสาม|*เหตุผลที่สอง*|หรือ*อีกมุมมอง*|ใช้ *Moreover*",
+   "board": "<p class=\"h\">③ Body 2</p><div class=\"chips\"><span data-c=\"1\">2nd reason</span><span data-c=\"2\">other view</span></div><div class=\"chips\"><span data-c=\"3\">Moreover</span><span data-c=\"3\">On the other hand</span></div>",
+   "pop": [
+    "moreover",
+    "ยิ่งไปกว่านั้น"
+   ],
+   "pop_at": 3
+  },
+  {
+   "title": [
+    "ย่อหน้า 4",
+    "สรุป"
+   ],
+   "th": "ย่อหน้าสุดท้าย|*สรุปจุดยืนอีกครั้ง*|*ห้ามเพิ่มเรื่องใหม่*",
+   "en": [
+    [
+     "men",
+     "In conclusion, I believe free university education benefits society.",
+     "โดยสรุป ผมเชื่อว่าการเรียนมหาวิทยาลัยฟรีเป็นประโยชน์ต่อสังคม"
+    ]
+   ],
+   "board": "<p class=\"h\">④ Conclusion</p><p class=\"ex\" data-x=\"x4a\"><u>In conclusion,</u> I believe free university education benefits society.</p><p class=\"note\" data-c=\"2\">❌ ห้ามเพิ่มไอเดียใหม่</p>",
+   "pop": [
+    "in conclusion",
+    "โดยสรุป"
+   ],
+   "pop_at": 1
+  }
+ ],
+ "z": "เขียนครบ*สี่ย่อหน้า*|อยากได้หัวข้อไหนไปฝึก?|เมนต์เลย",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "อยากได้หัวข้อไหนไปฝึก?",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}

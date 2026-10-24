@@ -1,0 +1,95 @@
+{
+ "_facts": "TOEIC Listening Part 1 (Photographs): เลือกประโยคที่บรรยายภาพถูก · ภาพมีคน มักใช้ is/are + V-ing บรรยายการกระทำ · ภาพสิ่งของไม่มีคน มักใช้ has/have been + V3 หรือ are + V3 (stacked/parked) · is being + V3 = กำลังถูกทำ (ต้องมีคนกำลังทำ) จึงมักผิดเมื่อภาพไม่มีคน · ใช้คำว่า 'มัก' ไม่อ้างว่าทุกข้อ",
+ "pill": "📷 TOEIC Part 1 · ภาพถ่าย",
+ "cover_at": 1.6,
+ "hook": [
+  "Part 1 ภาพถ่าย",
+  "ดูแค่ว่า",
+  "มีคนหรือไม่มีคน!"
+ ],
+ "n1": "TOEIC Part 1|ดูก่อนว่าภาพ|*มีคน*หรือ*ไม่มีคน*",
+ "tips": [
+  {
+   "title": [
+    "ภาพมีคน",
+    "ฟังกริยา -ing"
+   ],
+   "th": "ภาพ*มีคน*|มักใช้|*is are* กับ*กริยา ing*|บอกว่ากำลังทำอะไร",
+   "en": [
+    [
+     "fen",
+     "The woman is typing on a laptop.",
+     "ผู้หญิงกำลังพิมพ์บนแล็ปท็อป"
+    ]
+   ],
+   "board": "<p class=\"h\">👩‍💻 ภาพมีคน</p><div class=\"chips\" data-c=\"2\"><span>is + V-ing</span></div><p class=\"ex\" data-x=\"x1a\">The woman <u>is typing</u> on a laptop.</p>",
+   "pop": [
+    "typing",
+    "กำลังพิมพ์"
+   ],
+   "pop_at": 3
+  },
+  {
+   "title": [
+    "ภาพสิ่งของ",
+    "ฟัง been + V3"
+   ],
+   "th": "ภาพ*ไม่มีคน*|มีแค่สิ่งของ|มักใช้|*has been* หรือ *are* กับ *V3*",
+   "en": [
+    [
+     "men",
+     "Some chairs have been stacked against the wall.",
+     "เก้าอี้ถูกวางซ้อนไว้ชิดกำแพง"
+    ]
+   ],
+   "board": "<p class=\"h\">🪑 ภาพไม่มีคน</p><div class=\"chips\" data-c=\"3\"><span>has been + V3</span><span>are + V3</span></div><p class=\"ex\" data-x=\"x2a\">Some chairs <u>have been stacked</u> against the wall.</p>",
+   "pop": [
+    "stacked",
+    "วางซ้อนกัน"
+   ],
+   "pop_at": 3
+  },
+  {
+   "title": [
+    "กับดัก!",
+    "is being + V3"
+   ],
+   "th": "ระวัง*กับดัก*|ภาพไม่มีคน|แต่ได้ยิน *is being*|แปลว่า*มีคนกำลังทำ*|*มักผิด*",
+   "en": [
+    [
+     "fen",
+     "The floor is being cleaned.",
+     "พื้นกำลังถูกถู (แต่ในภาพไม่มีใครถู!)"
+    ]
+   ],
+   "en_mood": {
+    "x3a": "bad"
+   },
+   "board": "<p class=\"h\">⚠️ ภาพไม่มีคน</p><p class=\"ex\" data-x=\"x3a\">The floor <u>is being cleaned</u>.</p><p class=\"note\" data-after=\"x3a\">❌ is being = มีคนกำลังทำ แต่ในภาพไม่มีใคร</p>",
+   "pop": [
+    "is being cleaned",
+    "กำลังถูกทำความสะอาด"
+   ],
+   "pop_at": 2
+  },
+  {
+   "title": [
+    "ลองข้อจริง",
+    "ภาพจักรยานจอด"
+   ],
+   "th": "ไม่มีคน|ตัด A ที่มีคนขี่|ตัด C ที่ is being|เหลือ *B*|ตอบ *B*",
+   "board": "<p class=\"h\">🚲🚲🚲 ไม่มีคนในภาพ</p><div class=\"opt bad\" data-c=\"2\"><b>A</b>A man is riding a bicycle.<i>✗</i></div><div class=\"opt ok\" data-c=\"4\"><b>B</b>Some bicycles are parked by a wall.<i>✓</i></div><div class=\"opt bad\" data-c=\"3\"><b>C</b>The bicycles are being repaired.<i>✗</i></div>",
+   "pop": [
+    "parked",
+    "จอดอยู่"
+   ],
+   "pop_at": 4
+  }
+ ],
+ "z": "*มีคน* ฟัง ing|*ไม่มีคน* ฟัง been กับ V3|Part ไหนยากสุด? เมนต์เลย",
+ "end_lines": [
+  "เซฟไว้ทวนก่อนสอบ!",
+  "Part ไหนยากสุด? เมนต์เลย",
+  "+ ติดตาม มีคลิปใหม่ทุกวัน"
+ ]
+}
