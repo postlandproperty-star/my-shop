@@ -6,7 +6,7 @@
 คีย์ R2 ที่ ~/.config/sheetlab/r2.json (ไม่อยู่ในโค้ด) · ไฟล์ใน R2: <SKU>/<ชื่อไฟล์> (โฟลเดอร์ย่อยต่อชื่อด้วย __) · อัปซ้ำได้ ข้ามไฟล์ที่ขนาดเท่าเดิม
 ไฟล์เดิมใน Google Drive ไม่ลบ (QR ในเล่มที่ขายไปแล้วยังชี้ไปที่ Drive)
 """
-import sys, os, re, json, subprocess, argparse, urllib.request, warnings
+import sys, os, re, json, subprocess, argparse, urllib.request, warnings, hashlib
 from pathlib import Path
 warnings.filterwarnings('ignore')
 import boto3
@@ -87,7 +87,7 @@ def sync(b, d):
     up = skip = 0; listing = []
     for f in files:
         rel = str(f.relative_to(d)).replace(os.sep, '__'); key = f"{b['sku']}/{rel}"
-        try: same = S3.head_object(Bucket=CFG['bucket'], Key=key)['ContentLength'] == f.stat().st_size
+        try: same = S3.head_object(Bucket=CFG['bucket'], Key=key)['ETag'].strip('"') == hashlib.md5(f.read_bytes()).hexdigest()  # เทียบเนื้อไฟล์ (เดิมเทียบแค่ขนาด เสียงที่ทำใหม่ยาวเท่าเดิมเลยไม่ถูกอัป 25 ต.ค. 69)
         except Exception: same = False
         if same: skip += 1
         else:
