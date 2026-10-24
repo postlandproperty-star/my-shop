@@ -204,9 +204,9 @@ ok('พฤติกรรม: สรุปคนเข้า ดูหน้า�
   const cool = G({ gMonthTHB: 5000, gcamp: { 1: { changedAt: new Date(now - 5 * 36e5).toISOString() } } }), over = G({ gMonthTHB: 1000 });
   const nextM = G({ gMonthTHB: 5000, gPaused: { month: '2026-10', ids: ['3'] } }, Date.parse('2026-11-01T05:00:00Z'));
   const to = (p, id) => (p.cmds.find((x) => x.id === id && x.type === 'gbudget') || {}).to;
-  ok('🔎 ออโต้ไพลอต Google: งบ 0 = ไม่แตะ · เกลี่ยงบที่เหลือเท่าๆ กันให้แคมเปญที่เปิด (ไม่แตะตัวที่หยุด) · เพิ่มไม่เกิน 2 เท่า · เปลี่ยน < 10% ไม่ขยับ · ห่าง ≥ 20 ชม. · งบหมดหยุด · เดือนใหม่เปิดกลับเฉพาะตัวที่ระบบหยุด',
-    !off.cmds.length && to(spread, '1') === 200 && to(spread, '2') === 200 && !spread.cmds.some((x) => x.id === '3') && spread.info.allowedDaily === 400 && to(cap2x, '1') === 200
-      && !small.cmds.length && !cool.cmds.some((x) => x.id === '1') && cool.cmds.some((x) => x.id === '2') && over.cmds.filter((x) => x.type === 'gpause').length === 2 && nextM.cmds.some((x) => x.id === '3' && x.type === 'gresume'),
+  ok('🔎 ออโต้ไพลอต Google: งบ 0 = ไม่แตะ · เกลี่ยงบที่เหลือเท่าๆ กันให้แคมเปญที่เปิด แต่ไม่เกินวันละงบเดือน/จำนวนวัน (เริ่มกลางเดือนไม่เทงบ) (ไม่แตะตัวที่หยุด) · เพิ่มไม่เกิน 2 เท่า · เปลี่ยน < 10% ไม่ขยับ · ห่าง ≥ 20 ชม. · งบหมดหยุด · เดือนใหม่เปิดกลับเฉพาะตัวที่ระบบหยุด',
+    !off.cmds.length && to(spread, '1') === 80 && to(spread, '2') === 80 && !spread.cmds.some((x) => x.id === '3') && spread.info.allowedDaily === 161 && to(cap2x, '1') === 200
+      && to(small, '1') === 48 && !cool.cmds.some((x) => x.id === '1') && cool.cmds.some((x) => x.id === '2') && over.cmds.filter((x) => x.type === 'gpause').length === 2 && nextM.cmds.some((x) => x.id === '3' && x.type === 'gresume'),
     JSON.stringify({ spread: spread.cmds.map((x) => [x.id, x.to]), info: spread.info, small: small.cmds.length, over: over.cmds.map((x) => x.type), next: nextM.cmds.map((x) => [x.id, x.type]) })); }
 { const { thaiFix } = await import('../lib/chatbot.js'); const T = { 'สอบถามได้เลยนะคะค่ะ': 'สอบถามได้เลยนะคะ', 'ได้เลยค่ะค่ะ': 'ได้เลยค่ะ', 'รอสักครู่นะค่ะ': 'รอสักครู่นะคะ', 'สนใจไหมค่ะ': 'สนใจไหมคะ', 'ไฟล์ไม่มีวันหมดอายุค่ะ': 'ไฟล์ไม่มีวันหมดอายุค่ะ', 'ขอบคุณค่ะ สนใจชุดไหนคะ': 'ขอบคุณค่ะ สนใจชุดไหนคะ' };
   const bad = Object.entries(T).filter(([a, b]) => thaiFix(a) !== b).map(([a]) => [a, thaiFix(a)]);
