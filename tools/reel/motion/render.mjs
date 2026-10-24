@@ -14,6 +14,8 @@ const FPS = 30, work = path.join(HERE, '.work', path.basename(src, '.html')); fs
 const b = await chromium.launch({ executablePath: CHROME, headless: true });
 const page = await b.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
 await page.goto(pathToFileURL(path.resolve(src)).href); await page.evaluate(() => document.fonts.ready);
+// ขนาดอื่นนอกจาก 9:16 (เช่นวิดีโอสินค้า Shopee 1:1): หน้าเว็บกำหนด window.SIZE = [กว้าง, สูง]
+const size = await page.evaluate(() => window.SIZE || null); if (size) await page.setViewportSize({ width: size[0], height: size[1] });
 const { dur, sfx } = await page.evaluate(() => ({ dur: window.DURATION, sfx: window.SFX || [] }));
 const silent = path.join(work, 'silent.mp4'), n = Math.round(dur * FPS);
 const ff = spawn(FF, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-c:v', 'mjpeg', '-r', String(FPS), '-i', '-', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'medium', '-crf', '20', '-r', String(FPS), silent], { stdio: ['pipe', 'inherit', 'inherit'] });

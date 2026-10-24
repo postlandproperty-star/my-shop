@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8">
+<!-- 🛒 วิดีโอสินค้า Shopee ของชุด "IELTS Academic Practice Tests" (คุณแดน 24 ต.ค. 69 "ทำโฆษณาวีดีโอของเล่มนี้ จะเอาไปลงขายใน shopee")
+     แม่แบบ: shopee.py เติม window.CFG (เลขเล่ม รูปปก หน้าตัวอย่าง ข้อความ) แล้วอัดด้วย render.mjs · 1:1 (1080×1080) และ 9:16 (1080×1920)
+     ดูรู้เรื่องแม้ปิดเสียง (Shopee เล่นแบบไม่มีเสียง) · ไม่มีราคา (คุณแดนตั้งเอง) · ไม่บอกจำนวนหน้า · ไม่อ้างว่าเป็นข้อสอบทางการ -->
+<style>
+@font-face{font-family:K;src:url(../fonts/Kanit-ExtraBold.ttf);font-weight:800}
+@font-face{font-family:K;src:url(../fonts/Kanit-SemiBold.ttf);font-weight:600}
+*{box-sizing:border-box;margin:0}
+html,body{overflow:hidden;background:#14213D;font-family:K,sans-serif;color:#fff}
+#st{position:absolute;inset:0;overflow:hidden;background:linear-gradient(160deg,#14213D 0%,#1B3366 60%,#14213D 100%)}
+.stripe{position:absolute;left:0;right:0;height:14px;background:repeating-linear-gradient(90deg,#FF8A3D 0 26px,transparent 26px 40px);opacity:.85}
+.abs{position:absolute;will-change:transform,opacity}
+#pill{left:50%;padding:10px 28px;border-radius:60px;background:#0B1530E6;border:3px solid #4FD1C5;font-weight:600;white-space:nowrap;transform:translateX(-50%)}
+#hook{left:40px;right:40px;text-align:center;font-weight:800;line-height:1.12}
+#hook .a{display:block;color:#fff}
+#hook .b{display:block;color:#FF8A3D}
+.shadow{box-shadow:0 30px 70px #0009}
+#cover,#pageimg{border-radius:10px}
+#pagewrap{left:50%;perspective:2200px}
+#pageimg{display:block;width:100%;height:100%;object-fit:cover;object-position:top;background:#fff;border:8px solid #fff;transform-origin:left center}
+#call{left:36px;right:36px;padding:18px 26px;border-radius:26px;background:#FF8A3D;color:#14213D;text-align:center;font-weight:800;line-height:1.15;border:5px solid #fff}
+#call .s{display:block;font-weight:600;color:#14213D}
+#title{left:40px;right:40px;text-align:center;font-weight:800;line-height:1.15}
+#title .t2{color:#4FD1C5}
+#chips{left:30px;right:30px;display:flex;justify-content:center;flex-wrap:wrap;gap:14px}
+.chip{padding:10px 22px;border-radius:40px;background:#fff;color:#14213D;font-weight:800}
+#series{left:40px;right:40px;text-align:center;font-weight:800;line-height:1.15}
+#series .n{color:#FF8A3D}
+#cta{left:50%;padding:22px 64px;border-radius:80px;background:#EE4D2D;color:#fff;font-weight:800;border:6px solid #fff;white-space:nowrap}
+#brand{left:0;right:0;text-align:center;font-weight:600;color:#ffffffcc}
+</style></head><body>
+<div id="st">
+  <div class="stripe" id="s1"></div><div class="stripe" id="s2"></div>
+  <div class="abs" id="pill"></div>
+  <div class="abs" id="hook"><span class="a"></span><span class="b"></span></div>
+  <div class="abs" id="title"><span class="t1"></span><br><span class="t2"></span></div>
+  <div class="abs" id="chips"><span class="chip">🎧 Listening</span><span class="chip">📖 Reading</span><span class="chip">✍️ Writing</span><span class="chip">🗣️ Speaking</span></div>
+  <img class="abs shadow" id="cover" alt="">
+  <div class="abs" id="pagewrap"><img id="pageimg" class="shadow" alt=""></div>
+  <div class="abs" id="call"><span class="m"></span><span class="s"></span></div>
+  <div class="abs" id="series"><span class="n"></span><br><span class="d"></span></div>
+  <div class="abs" id="cta">สั่งเลย 🛒</div>
+  <div class="abs" id="brand">ชีทแล็บ SheetLab</div>
+</div>
+<script>
+/*CFG*/
+const C = window.CFG, W = C.size[0], H = C.size[1], TALL = H > W * 1.4;
+window.SIZE = [W, H];
+document.documentElement.style.width = document.body.style.width = W + 'px'; document.documentElement.style.height = document.body.style.height = H + 'px';
+const $ = (id) => document.getElementById(id);
+// ── จังหวะ (วินาที) ──
+const T = { hook: 0, title: 3.2, pages: 5.6, per: 2.9 }; T.series = T.pages + C.pages.length * T.per; T.end = T.series + 2.7;
+window.DURATION = T.end + 3.6;
+window.SFX = [[0.15, 'whoosh'], [0.7, 'pop'], [1.4, 'pop'], [T.title, 'whoosh'], ...C.pages.flatMap((p, i) => [[T.pages + i * T.per, 'whoosh'], [T.pages + i * T.per + 0.45, 'pop']]), [T.series, 'chime'], [T.end + 0.2, 'tada']];
+// ── ข้อความ ──
+$('pill').textContent = 'IELTS Academic Practice Tests · เล่ม ' + C.vol;
+$('hook').querySelector('.a').textContent = 'สอบ IELTS'; $('hook').querySelector('.b').textContent = 'ต้องฝึกข้อสอบเสมือนจริง!';
+$('title').querySelector('.t1').textContent = 'ข้อสอบเต็ม 4 ชุด'; $('title').querySelector('.t2').textContent = 'ครบ 4 ทักษะ';
+$('series').querySelector('.n').textContent = 'เล่ม ' + C.vol; $('series').querySelector('.d').textContent = 'จากชุด IELTS Practice Tests 21 เล่ม';
+$('cover').src = C.base + C.cover;
+// ── ขนาดตามสัดส่วนจอ ──
+const L = TALL ? {
+  pillY: 110, pillF: 40, hookY: 230, hookF: [118, 82], coverHook: [540, 700, 900], titleY: 230, titleF: 96, chipsY: 520, chipF: 33,
+  coverSide: [540, 680, 880], page: [230, 1180], callY: 1460, callF: [58, 36], seriesY: 300, seriesF: [150, 56], coverEnd: [540, 330, 1000], ctaY: 1420, ctaF: 70, brandY: 1600, brandF: 34, s1: 40, s2: H - 54,
+} : {
+  pillY: 44, pillF: 32, hookY: 70, hookF: [86, 58], coverHook: [540, 400, 640], titleY: 120, titleF: 74, chipsY: 340, chipF: 32,
+  coverSide: [540, 430, 600], page: [120, 700], callY: 845, callF: [46, 28], seriesY: 150, seriesF: [110, 42], coverEnd: [540, 90, 620], ctaY: 770, ctaF: 54, brandY: H - 50, brandF: 26, s1: 0, s2: H - 14,
+};
+$('s1').style.top = L.s1 + 'px'; $('s2').style.top = L.s2 + 'px';
+$('pill').style.top = L.pillY + 'px'; $('pill').style.fontSize = L.pillF + 'px';
+$('hook').style.top = L.hookY + 'px'; $('hook').querySelector('.a').style.fontSize = L.hookF[0] + 'px'; $('hook').querySelector('.b').style.fontSize = L.hookF[1] + 'px';
+$('title').style.top = L.titleY + 'px'; $('title').style.fontSize = L.titleF + 'px';
+$('chips').style.top = L.chipsY + 'px'; [...document.querySelectorAll('.chip')].forEach((c) => (c.style.fontSize = L.chipF + 'px'));
+const pw = Math.round(L.page[1] * 0.707); Object.assign($('pagewrap').style, { top: L.page[0] + 'px', width: pw + 'px', height: L.page[1] + 'px', marginLeft: -pw / 2 + 'px' });
+$('call').style.top = L.callY + 'px'; $('call').querySelector('.m').style.fontSize = L.callF[0] + 'px'; $('call').querySelector('.s').style.fontSize = L.callF[1] + 'px';
+$('series').style.top = L.seriesY + 'px'; $('series').querySelector('.n').style.fontSize = L.seriesF[0] + 'px'; $('series').querySelector('.d').style.fontSize = L.seriesF[1] + 'px';
+$('cta').style.top = L.ctaY + 'px'; $('cta').style.fontSize = L.ctaF + 'px';
+$('brand').style.top = L.brandY + 'px'; $('brand').style.fontSize = L.brandF + 'px';
+// โหลดหน้าตัวอย่างไว้ก่อน (สลับ src ตอน seek ได้ทันที)
+const imgs = C.pages.map((p) => { const im = new Image(); im.src = C.base + p.img; return im; });
+// ── ตัวช่วย ──
+const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), ease = (x) => 1 - Math.pow(1 - cl(x), 3), back = (x) => { x = cl(x); const c = 1.7; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const win = (t, a, b, fi = 0.3, fo = 0.3) => Math.min(cl((t - a) / fi), cl((b - t) / fo));
+function put(el, o, tf) { el.style.opacity = o; el.style.transform = tf || ''; }
+function coverAt(c, s) { const ch = c[2], cw = ch * 2 / 3; const e = $('cover'); Object.assign(e.style, { width: cw + 'px', height: ch + 'px', left: c[0] - cw / 2 + 'px', top: c[1] + 'px' }); return s; }
+window.seek = function (t) {
+  // หัวข้อชุด (หลังฮุก)
+  put($('pill'), cl((t - T.title) / 0.3) * (t < T.end ? 1 : 1 - cl((t - T.end) / 0.3)), 'translateX(-50%)');
+  // ฮุก
+  const hk = win(t, 0.5, T.title, 0.25, 0.3); put($('hook'), hk, `scale(${0.7 + 0.3 * back((t - 0.5) / 0.45)})`);
+  $('hook').querySelector('.b').style.opacity = cl((t - 1.3) / 0.25);
+  // ปก: ฮุก → ด้านล่างของหน้าหัวข้อ → หายตอนเปิดหน้า → กลับมาตอนจบ
+  let cv = 0, cs = 1, ctf = '';
+  if (t < T.pages) {
+    const inn = back((t - 0.6) / 0.55); cv = cl((t - 0.6) / 0.2) * (1 - cl((t - (T.pages - 0.35)) / 0.35));
+    const toSide = ease((t - T.title) / 0.6), a = L.coverHook, b = L.coverSide;
+    coverAt([a[0] + (b[0] - a[0]) * toSide, a[1] + (b[1] - a[1]) * toSide, a[2] + (b[2] - a[2]) * toSide]);
+    ctf = `scale(${0.6 + 0.4 * inn}) rotate(${(1 - inn) * -8}deg)`;
+  } else if (t >= T.end) { coverAt(L.coverEnd); cv = cl((t - T.end) / 0.25); ctf = `scale(${0.7 + 0.3 * back((t - T.end) / 0.5)})`; }
+  put($('cover'), cv, ctf);
+  // หัวข้อ "ข้อสอบเต็ม 4 ชุด ครบ 4 ทักษะ" + ชิปทักษะ
+  const tt = win(t, T.title + 0.15, T.pages, 0.3, 0.3); put($('title'), tt, `translateY(${(1 - ease((t - T.title - 0.15) / 0.4)) * 40}px)`);
+  const chipsOn = win(t, T.title + 0.5, T.pages, 0.2, 0.3); $('chips').style.opacity = chipsOn;
+  [...document.querySelectorAll('.chip')].forEach((c, i) => { const k = back((t - T.title - 0.5 - i * 0.18) / 0.35); c.style.opacity = cl((t - T.title - 0.5 - i * 0.18) / 0.15); c.style.transform = `scale(${0.4 + 0.6 * k})`; });
+  // หน้าตัวอย่าง: พลิกเข้า (หมุนแกนซ้ายเหมือนเปิดหนังสือ) แล้วพลิกออก
+  const pi = Math.floor((t - T.pages) / T.per), on = t >= T.pages && t < T.series;
+  if (on) {
+    const p = C.pages[pi], lt = t - T.pages - pi * T.per, pg = $('pageimg');
+    if (pg.getAttribute('data-i') !== String(pi)) { pg.src = imgs[pi].src; pg.setAttribute('data-i', pi); }
+    const inA = ease(lt / 0.45), outA = cl((lt - (T.per - 0.35)) / 0.35);
+    // ซูมช้าๆ ให้หน้าดูมีชีวิต (Ken Burns)
+    put($('pagewrap'), 1, `scale(${1 + lt * 0.012})`);
+    pg.style.transform = `rotateY(${(1 - inA) * -75 + outA * 80}deg)`; pg.style.opacity = cl(lt / 0.15) * (1 - outA);
+    const cm = $('call'); cm.querySelector('.m').textContent = p.cap; cm.querySelector('.s').textContent = p.sub || '';
+    const ca = back((lt - 0.45) / 0.35); put(cm, cl((lt - 0.45) / 0.15) * (1 - outA), `scale(${0.6 + 0.4 * ca})`);
+  } else { put($('pagewrap'), 0); put($('call'), 0); }
+  // เล่ม N จากชุด 21 เล่ม
+  put($('series'), win(t, T.series, T.end, 0.25, 0.3), `scale(${0.7 + 0.3 * back((t - T.series) / 0.45)})`);
+  // ปุ่มสั่งซื้อ (เต้นเบาๆ)
+  const ct = cl((t - T.end - 0.5) / 0.25); put($('cta'), ct, `translateX(-50%) scale(${(0.6 + 0.4 * back((t - T.end - 0.5) / 0.4)) * (1 + 0.04 * Math.sin((t - T.end) * 7))})`);
+  put($('brand'), cl((t - T.end - 0.8) / 0.3));
+};
+window.seek(0);
+</script></body></html>

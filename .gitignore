@@ -32,3 +32,5 @@ tools/reel/motion/tips/*/*.preview
 tools/reel/motion/tips-*.html
 tools/reel/motion/tips/*/*.wav
 tools/reel/motion/tips/*/*.mp3
+tools/reel/motion/shopee/
+tools/reel/motion/shopee-pt*.html
