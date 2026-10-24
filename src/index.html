@@ -721,6 +721,7 @@ button.topbar:not(.flat){border-color:var(--brand)}.topbar.flat{border:0;padding
 .paysafe svg{flex:none;margin-top:3px;color:#16a34a}
 .stripe-w{color:#635BFF;font-family:Arial,Helvetica,sans-serif;font-weight:800;letter-spacing:-.3px}
 .sp-perks{display:flex;flex-wrap:wrap;gap:6px 14px;margin:14px 0;font-size:14px;color:var(--muted)}
+.bx-top{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:4px;font-size:15px}.bx-top li{color:var(--ink)}
 .sf{margin:12px 0;padding:16px}.sf-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.sf-h b{font-size:17px}.sf-ex{display:flex;gap:6px}.sf-row{display:flex;gap:8px;align-items:end;margin-top:10px}.sf-l{display:grid;gap:3px;flex:1;font-size:13px;color:var(--muted)}.sf-l select{width:100%}.sf-ar{padding-bottom:10px;font-weight:700;color:var(--muted)}.sf-res{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px}.sf-why{margin:0 0 10px;font-size:14.5px;line-height:1.55}.sf-ps{display:grid;gap:8px}.sf-p{display:flex;gap:8px;align-items:center;flex:1;min-width:200px;padding:8px;border:1px solid var(--line);border-radius:12px;color:inherit;text-decoration:none;background:var(--surface)}.sf-p img{width:52px;height:52px;object-fit:cover;border-radius:8px}.sf-p span{display:grid;gap:2px;font-size:14px}.sf-p em{font-style:normal;color:#E8432E;font-weight:700}.sf-plus{font-weight:700;font-size:18px;color:var(--muted)}.sf-cta{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 6px}.sf-only{margin:-2px 0 4px 8px;font-size:12.5px;color:var(--ok,#0F7A55)}.sf-alt{margin:0 0 4px;font-size:13px;color:var(--muted)}.sf-link{border:0;background:none;padding:0;font:inherit;color:var(--muted);text-decoration:underline;cursor:pointer}.sf-cta .btn-cta{flex:1;justify-content:center}
 .sf-note{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
 .sp-try{display:flex;align-items:center;gap:10px;margin:6px 0 4px;padding:9px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:inherit;text-decoration:none;font-size:14.5px}.sp-try em{margin-left:auto;font-style:normal;color:var(--brand);font-weight:600;white-space:nowrap}
@@ -2524,6 +2525,7 @@ function bundleView(p){
     ['เปิดบนมือถือได้ไหม','ได้ เปิดได้ทั้งมือถือ แท็บเล็ต และคอมพิวเตอร์']];
   const reviews=lines(p.reviews).map(pair);
   const payTotal=sel?sel.price:p.price;
+  const was=x=>Math.max(sum,Number(x&&x.fullPrice)||0); // ราคาขีดฆ่าเดียวกันทั้งหน้า (เดิมบนสุด ฿2,106 แต่แถบล่าง ฿1,918 คุณแดน 24 ต.ค. 69)
   return `${shopHead(p)}
   ${p.status==='draft'?`<div class="draftnote">ฉบับร่าง ลูกค้ายังเปิดหน้านี้ไม่ได้ จนกว่าคุณจะเผยแพร่</div>`:''}
   <div class="bx">
@@ -2542,8 +2544,9 @@ function bundleView(p){
       <span class="bx-kicker">📦 ชุด ${books.length} เล่ม${sum>minP?` · ราคาแยกเล่ม ${baht(sum)} ประหยัด ${baht(sum-minP)}`:''}</span>
       <h1>${esc(p.name)}</h1>
       ${sold>=SOLD_MIN_SET||rvTop(p)?`<div class="sp-meta">${rvTop(p)}${sold>=SOLD_MIN_SET?`<span>🔥 ขายแล้ว ${sold.toLocaleString('th-TH')} ชุด</span>`:''}</div>`:''}
-      ${p.headline&&p.headline!==p.name||p.desc?`<p class="lead" style="display:block">${p.headline&&p.headline!==p.name?`<b>${esc(p.headline)}</b>${p.desc?'<br>':''}`:''}${esc(p.desc||'')}</p>`:''}
-      <div class="sp-perks"><span>⚡ รับไฟล์ทุกเล่มทันทีหลังชำระเงิน</span><span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${pvN?`<span>👀 ดูตัวอย่างได้ ${pvN} เล่ม</span>`:''}</div>
+      ${(()=>{const top=lines(p.features).slice(0,3),hl=p.headline&&p.headline!==p.name,ds=top.length?'':p.desc||''; // จุดเด่น 3 ข้อแรก (คนออกจากหน้าใน 30 วิ ต้องเห็นว่าชุดนี้ได้อะไร)
+        return `${hl||ds?`<p class="lead" style="display:block">${hl?`<b>${esc(p.headline)}</b>${ds?'<br>':''}`:''}${esc(ds)}</p>`:''}${top.length?`<ul class="bx-top">${top.map(x=>`<li>✓ ${esc(x)}</li>`).join('')}</ul>`:''}`;})()}
+      <div class="sp-perks"><span>⚡ รับไฟล์ทุกเล่มทันทีหลังชำระเงิน</span><span>🔒 ชำระปลอดภัยผ่าน Stripe</span>${pvN?`<span>👀 ดูตัวอย่างได้ ${pvN} เล่ม</span>`:''}${p.guarantee?'<span>🛡 ไฟล์มีปัญหา คืนเงินเต็มจำนวน</span>':''}</div>
       <div class="hero-cta">
         <button class="btn btn-buy" data-a="toCheckout">${plans.length>1?'ดูแพ็กเกจและสั่งซื้อ':'สั่งซื้อและรับไฟล์ทันที'}</button>
         ${pvN?`<a class="btn btn-line" href="#bx-preview">ดูตัวอย่างเนื้อหา</a>`:''}${books.some(b=>b.audioDemo&&b.audioDemo.n)?`<a class="btn btn-line" href="#listen">🎧 ฟังตัวอย่างเสียง</a>`:''}
@@ -2576,7 +2579,7 @@ function bundleView(p){
       <div class="lsn">${L.slice(0,3).map(y=>`<div class="lsn-row"><b>${esc(String(y.b.name).replace(/\s+/g,' '))}</b><span class="fine">${esc(y.x.l)}</span><audio controls preload="none" controlslist="nodownload" src="${esc(y.x.u)}"></audio></div>`).join('')}</div></section>`:'';})()}
 
     <section class="bx-sec" id="checkout"><h2>เลือกแพ็กเกจ</h2>
-      ${plans.length?`<div class="bx-plans">${plans.map(x=>`<button class="bx-plan" data-a="bxPlan" data-slug="${esc(p.slug)}" data-v="${x.key}" aria-pressed="${sel&&sel.key===x.key}">${x.key===p.planDefault&&plans.length>1?'<span class="bx-best">คุ้มที่สุด</span>':''}<h3>${esc(x.name)}</h3><div class="bx-pp">${baht(x.price)}${x.fullPrice>x.price?` <s>${baht(x.fullPrice)}</s>`:''}</div><ul>${lines2(x.features).map(f=>`<li>${esc(f)}</li>`).join('')}</ul></button>`).join('')}</div>`:'<p class="fine">ยังไม่ได้ตั้งราคาแพ็กเกจ</p>'}
+      ${plans.length?`<div class="bx-plans">${plans.map(x=>`<button class="bx-plan" data-a="bxPlan" data-slug="${esc(p.slug)}" data-v="${x.key}" aria-pressed="${sel&&sel.key===x.key}">${x.key===p.planDefault&&plans.length>1?'<span class="bx-best">คุ้มที่สุด</span>':''}<h3>${esc(x.name)}</h3><div class="bx-pp">${baht(x.price)}${was(x)>x.price?` <s>${baht(was(x))}</s>`:''}</div><ul>${lines2(x.features).map(f=>`<li>${esc(f)}</li>`).join('')}</ul></button>`).join('')}</div>`:'<p class="fine">ยังไม่ได้ตั้งราคาแพ็กเกจ</p>'}
       <div class="card" style="margin-top:14px">
         <div class="bx-sum"><span>ยอดชำระ <span class="fine">· แพ็กเกจ ${esc(sel?sel.name:'')}</span></span><b>${baht(payTotal)}</b></div>
         ${qrBox(p,false,payTotal)}
@@ -2595,7 +2598,7 @@ function bundleView(p){
   </div>
   <footer class="fine">${D.settings.shopName?`<b>${esc(D.settings.shopName)}</b><br>`:''}${esc(p.name)}${D.settings.chatLink?` · <a href="${esc(D.settings.chatLink)}" target="_blank" rel="noopener noreferrer">ทักแชท</a>`:''}<br>${storeMode()?'<a href="/store" data-go="">ดูสินค้าทั้งหมด</a> · ':''}${QUIZZES.length?'<a href="/quiz">คลังข้อสอบ</a> · ':''}${ARTICLES.length?'<a href="/learn">คลังความรู้</a> · ':''}<a href="/order" data-go="">หาออเดอร์ของฉัน</a> · <a href="/refund">นโยบายการคืนเงิน</a> · <a href="/privacy">นโยบายความเป็นส่วนตัว</a></footer>
   <div class="sticky" id="sticky"><div class="sticky-in">
-    <div class="sp-sp"><span class="p">${baht(payTotal)}</span>${sel&&sel.fullPrice>sel.price?`<s>${baht(sel.fullPrice)}</s>`:''}</div>
+    <div class="sp-sp"><span class="p">${baht(payTotal)}</span>${was(sel)>payTotal?`<s>${baht(was(sel))}</s>`:''}</div>
     <button class="btn btn-buy" data-a="toCheckout">ซื้อชุดนี้</button>
   </div></div>`;
 }
